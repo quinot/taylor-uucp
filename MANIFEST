@@ -17,8 +17,11 @@ log.c
 parse.c
 port.c
 port.h
+prot.c
 prot.h
+protf.c
 protg.c
+prott.c
 prtinf.c
 sys1.unx
 sys2.unx
@@ -29,6 +32,7 @@ sys6.unx
 sysh.unx
 sysinf.c
 system.h
+tcp.c
 time.c
 tstout.c
 tstuu.c
