@@ -360,6 +360,16 @@ flocal_send_request (qtrans, qdaemon)
     return flocal_send_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			     "too large for receiver");
 
+  /* Make sure the file still exists--it may have been removed between
+     the conversation startup and now.  After we have sent over the S
+     command we must give an error if we can't find the file.  */
+  if (! fsysdep_file_exists (qinfo->zfile))
+    {
+      (void) fsysdep_did_work (qtrans->s.pseq);
+      usfree_send (qtrans);
+      return TRUE;
+    }
+
   /* Construct the notify string to send.  If we are going to send a
      size or an execution command, it must be non-empty.  */
   znotify = qtrans->s.znotify;
