@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.55  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.54  1992/03/11  22:06:37  ian
    Marty Shannon: added max-uuxqts command
 
@@ -703,6 +706,8 @@ struct scmd
   /* Command ('S' for send, 'R' for receive, 'X' for execute, 'H' for
      hangup, 'Y' for hangup confirm, 'N' for hangup deny).  */
   char bcmd;
+  /* At least one compiler needs an explicit padding byte here.  */
+  char bdummy;
   /* Sequence handle for fsysdep_did_work.  */
   pointer pseq;
   /* File name to transfer from.  */
