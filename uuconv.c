@@ -34,6 +34,7 @@ const char uuconv_rcsid[] = "$Id$";
 /* Local functions.  */
 
 static void uvusage P((void));
+static void uvhelp P((void));
 static void uvwrite_time P((FILE *e, struct uuconf_timespan *qtime));
 static void uvwrite_string P((FILE *e, const char *zarg, const char *zcmd));
 static void uvwrite_size P((FILE *e, struct uuconf_timespan *qsize,
@@ -76,6 +77,9 @@ static void uvwrite_taylor_dialer P((FILE *e, struct uuconf_dialer *qdialer,
 static void uvwrite_hdb_dialer P((FILE *e, struct uuconf_dialer *qdialer));
 static void uvuuconf_error P((pointer puuconf, int iret));
 
+/* The program name.  */
+const char *zProgram;
+
 /* A list of Permissions entries built when writing out HDB system
    information.  */
 static struct shpermissions *qVperms;
@@ -89,7 +93,17 @@ enum tconfig
 };
 
 /* Long getopt options.  */
-static const struct option asVlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asVlongopts[] =
+{
+  { "input", required_argument, NULL, 'i' },
+  { "output", required_argument, NULL, 'o' },
+  { "program", required_argument, NULL, 'p' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -109,7 +123,9 @@ main (argc, argv)
   int iret;
   pointer pinput;
 
-  while ((iopt = getopt_long (argc, argv, "i:I:o:p:x:", asVlongopts,
+  zProgram = argv[0];
+
+  while ((iopt = getopt_long (argc, argv, "i:I:o:p:vx:", asVlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -138,8 +154,23 @@ main (argc, argv)
 	  /* Set the debugging level.  */
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  uvhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
-	  /* Long option found and flag set.  */
+	  /* Long option found, and flag value set.  */
 	  break;
 
 	default:
@@ -481,17 +512,35 @@ uvusage ()
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
-  fprintf (stderr,
-	   "Usage: uuconv -i input -o output [-p program] [-I file]\n");
-  fprintf (stderr,
-	   " -i input: Set input type (one of taylor, v2, hdb)\n");
-  fprintf (stderr,
-	   " -o output: Set output type (one of taylor, v2, hdb)\n");
-  fprintf (stderr,
-	   " -p program: Program to convert (e.g., uucp or cu)\n");
-  fprintf (stderr,
-	   " -I file: Set Taylor UUCP configuration file to use\n");
+  fprintf (stderr, "Usage: %s -i input-type -o output-type [-p program]\n",
+	   zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
   exit (EXIT_FAILURE);
+}
+
+/* Print a help message.  */
+
+static void
+uvhelp ()
+{
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	   VERSION);
+  fprintf (stderr, "Converts UUCP configuration files from one format to another.\n");
+  fprintf (stderr,
+	   "Usage: %s -i input -o output [-p program] [-I file]\n", zProgram);
+  fprintf (stderr,
+	   " -i,--input input: Set input type (one of taylor, v2, hdb)\n");
+  fprintf (stderr,
+	   " -o,--output output: Set output type (one of taylor, v2, hdb)\n");
+  fprintf (stderr,
+	   " -p,--program program: Program to convert (e.g., uucp or cu)\n");
+  fprintf (stderr,
+	   " -I,--config file: Set Taylor UUCP configuration file to use\n");
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help and exit\n");
 }
 
 /* Write out a timespan.  */
