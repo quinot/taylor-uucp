@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.59  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.58  1992/02/24  22:38:45  ian
    Don't treat an extra argument as a port
 
@@ -265,7 +268,7 @@ static boolean fdo_xcmd P((const struct ssysteminfo *qsys,
 			   boolean fcaller,
 			   const struct scmd *qcmd));
 static boolean fok_to_send P((const char *zfrom, boolean flocal,
-			      boolean fcaller,
+			      boolean fcaller, boolean fspool,
 			      const struct ssysteminfo *qsys,
 			      const char *zuser));
 static boolean fok_to_receive P((const char *zto, boolean flocal,
@@ -637,13 +640,8 @@ main (argc, argv)
 		fret = flogin_prompt (qport);
 	      else
 		{
-		  const char *zlogin;
-
-		  zlogin = zsysdep_login_name ();
-		  if (zlogin == NULL)
-		    ulog (LOG_FATAL, "Can't get login name");
 		  iholddebug = iDebug;
-		  fret = faccept_call (zlogin, qport);
+		  fret = faccept_call (zsysdep_login_name (), qport);
 		  iDebug = iholddebug;
 		}
 	    }
@@ -2099,7 +2097,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		      break;
 		    }
 
-		  if (! fok_to_send (zuse, TRUE, fcaller, qsys,
+		  /* The 'C' option means that the file has been
+		     copied to the spool directory.  */
+		  if (strchr (s.zoptions, 'C') != NULL)
+		    fspool = TRUE;
+
+		  if (! fok_to_send (zuse, TRUE, fcaller, fspool, qsys,
 				     s.zuser))
 		    {
 		      ulog (LOG_ERROR, "Not permitted to send %s", zuse);
@@ -2112,15 +2115,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		      break;
 		    }
 
-		  /* The 'C' option means that the file has been
-		     copied to the spool directory.  If it hasn't been
-		     copied, we use the real mode of the file rather
-		     than what was recorded in the command file.  */
-		  if (strchr (s.zoptions, 'C') != NULL)
-		    fspool = TRUE;
-		  else
-		    e = esysdep_open_send (qsys, zuse, &s.imode,
-					   &s.cbytes);
+		  /* If we're copying the real file, use its mode
+		     directly rather than the mode copied into the
+		     command file.  */
+		  if (! fspool)
+		    e = esysdep_open_send (qsys, zuse, TRUE, s.zuser,
+					   &s.imode, &s.cbytes);
 		}
 
 	      if (fspool)
@@ -2138,7 +2138,9 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
-		  e = esysdep_open_send (qsys, zuse, &idummy, &s.cbytes);
+		  e = esysdep_open_send (qsys, zuse, FALSE,
+					 (const char *) NULL, &idummy,
+					 &s.cbytes);
 		}
 
 	      if (! ffileisopen (e))
@@ -2203,7 +2205,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		     difficult we require a special option '9'.  This
 		     is used only by uux when a file must be requested
 		     from one system and then sent to another.  */
-		  if (strchr (s.zoptions, '9') == NULL)
+		  if (s.zto[0] != 'D'
+		      || strchr (s.zoptions, '9') == NULL)
 		    {
 		      ulog (LOG_ERROR, "Not permitted to receive %s",
 			    s.zto);
@@ -2394,7 +2397,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	      if (fspool_file (s.zto))
 		{
 		  zuse = zsysdep_spool_file_name (qsys, s.zto);
-		  if (zuse == NULL)
+		  /* We don't accept remote command files.  */
+		  if (zuse == NULL || s.zto[0] == 'C')
 		    {
 		      if (! ftransfer_fail ('S', FAILURE_PERM))
 			return FALSE;
@@ -2503,7 +2507,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		  break;
 		}
 
-	      if (! fok_to_send (zuse, FALSE, fcaller, qsys, s.zuser))
+	      if (! fok_to_send (zuse, FALSE, fcaller, FALSE, qsys,
+				 s.zuser))
 		{
 		  ulog (LOG_ERROR, "No permission to send %s", zuse);
 		  if (! ftransfer_fail ('R', FAILURE_PERM))
@@ -2511,7 +2516,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		  break;
 		}
 
-	      e = esysdep_open_send (qsys, zuse, &s.imode, &cbytes);
+	      e = esysdep_open_send (qsys, zuse, TRUE, (const char *) NULL,
+				     &s.imode, &cbytes);
 	      if (! ffileisopen (e))
 		{
 		  if (! ftransfer_fail ('R', FAILURE_OPEN))
@@ -2708,7 +2714,8 @@ fdo_xcmd (qsys, fcaller, q)
       if (! fcaller && qsys->zcalled_remote_send != NULL)
 	zsend = qsys->zcalled_remote_send;
 
-      if (! fin_directory_list (qsys, zfile, zsend, FALSE))
+      if (! fin_directory_list (qsys, zfile, zsend, TRUE, TRUE,
+				(const char *) NULL))
 	{
 	  ulog (LOG_ERROR, "Not permitted to send %s", zfile);
 	  (void) fsysdep_wildcard_end ();
@@ -2738,7 +2745,8 @@ fdo_xcmd (qsys, fcaller, q)
 	  if (! fcaller && qsys->zcalled_remote_receive != NULL)
 	    zrec = qsys->zcalled_remote_receive;
 
-	  if (! fin_directory_list (qsys, zto, zrec, TRUE))
+	  if (! fin_directory_list (qsys, zto, zrec, TRUE, FALSE,
+				    (const char *) NULL))
 	    {
 	      ulog (LOG_ERROR, "Not permitted to receive %s", zto);
 	      (void) fsysdep_wildcard_end ();
@@ -2791,20 +2799,23 @@ fdo_xcmd (qsys, fcaller, q)
 }
 
 /* See whether it's OK to send a file to another system, according to
-   the permissions recorded for that system.
+   the permissions recorded for that system.  If the file is not in
+   the spool directory, this also makes sure that the user has
+   permission to access the file and all its containing directories.
 
    zfile -- file to send
    flocal -- TRUE if the send was requested locally
    fcaller -- TRUE if the local system called the other system
+   fspool -- TRUE if file was copied to spool directory
    qsys -- remote system information
-   zuser -- user who requested the action (not currently used)  */
+   zuser -- user who requested the action  */
 
-/*ARGSUSED*/
 static boolean
-fok_to_send (zfile, flocal, fcaller, qsys, zuser)
+fok_to_send (zfile, flocal, fcaller, fspool, qsys, zuser)
      const char *zfile;
      boolean flocal;
      boolean fcaller;
+     boolean fspool;
      const struct ssysteminfo *qsys;
      const char *zuser;
 {
@@ -2826,7 +2837,11 @@ fok_to_send (zfile, flocal, fcaller, qsys, zuser)
 	z = qsys->zcalled_remote_send;
     }
 
-  return fin_directory_list (qsys, zfile, z, FALSE);
+  /* If fspool is TRUE, we don't want to check file accessibility.  If
+     this was not a local request, we pass a NULL down as the user
+     name, since zuser has no meaning on this system.  */
+  return fin_directory_list (qsys, zfile, z, ! fspool, TRUE,
+			     flocal ? zuser : (const char *) NULL);
 }
 
 /* See whether it's OK to receive a file from another system.  */
@@ -2858,7 +2873,8 @@ fok_to_receive (zto, flocal, fcaller, qsys, zuser)
 	z = qsys->zcalled_remote_receive;
     }
 
-  return fin_directory_list (qsys, zto, z, TRUE);
+  return fin_directory_list (qsys, zto, z, TRUE, FALSE,
+			     flocal ? zuser : (const char *) NULL);
 }
 
 /* See whether a request is OK.  This depends on which system placed

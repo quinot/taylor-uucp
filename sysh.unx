@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.39  1992/02/28  05:06:15  ian
+   T. William Wells: fsysdep_catch must be a macro
+
    Revision 1.38  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -196,6 +199,7 @@
 #define fsysdep_catch() (TRUE)
 #define usysdep_start_catch()
 #define usysdep_end_catch()
+#define CATCH_PROTECT
 
 #else /* HAVE_RESTARTABLE_SYSCALLS */
 
@@ -222,6 +226,8 @@ extern volatile jmp_buf sSjmp_buf;
 #define usysdep_start_catch() (fSjmp = TRUE)
 
 #define usysdep_end_catch() (fSjmp = FALSE)
+
+#define CATCH_PROTECT volatile
 
 #endif /* HAVE_RESTARTABLE_SYSCALLS */
 
@@ -299,23 +305,42 @@ typedef struct termios sterminal;
 #include <sys/types.h>
 #include <sys/stat.h>
 
-/* We create files with these modes (should this be configurable?).  */
-#ifdef S_IRUSR
-#define IPRIVATE_FILE_MODE (S_IRUSR | S_IWUSR)
-#define IPUBLIC_FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
-#else /* ! defined (S_IRUSR) */
-#define IPRIVATE_FILE_MODE (0600)
-#define IPUBLIC_FILE_MODE (0644)
+/* Get definitions for the file permission bits.  */
+
+#ifndef S_IRUSR
+
+#define S_IRWXU 0700
+#define S_IRUSR 0400
+#define S_IWUSR 0200
+#define S_IXUSR 0100
+
+#define S_IRWXG 0070
+#define S_IRGRP 0040
+#define S_IWGRP 0020
+#define S_IXGRP 0010
+
+#define S_IRWXO 0007
+#define S_IROTH 0004
+#define S_IWOTH 0002
+#define S_IXOTH 0001
+
 #endif /* ! defined (S_IRUSR) */
 
+#ifndef S_ISDIR
+#ifdef S_IFDIR
+#define S_ISDIR(i) (((i) & S_IFMT) == S_IFDIR)
+#else /* ! defined (S_IFDIR) */
+#define S_ISDIR(i) (((i) & 0170000) == 040000)
+#endif /* ! defined (S_IFDIR) */
+#endif /* ! defined (S_ISDIR) */
+
+/* We create files with these modes (should this be configurable?).  */
+#define IPRIVATE_FILE_MODE (S_IRUSR | S_IWUSR)
+#define IPUBLIC_FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+
 /* We create directories with this mode (should this be configurable?).  */
-#ifdef S_IXUSR
 #define IDIRECTORY_MODE (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 #define IPUBLIC_DIRECTORY_MODE (S_IRWXU | S_IRWXG | S_IRWXO)
-#else /* ! defined (S_IXUSR) */
-#define IDIRECTORY_MODE (0755)
-#define IPUBLIC_DIRECTORY_MODE (0777)
-#endif /* ! defined (S_IXUSR) */
 
 /* The wait status stuff is complex enough that we do it in here.  I
    could create a new header file but it's too much trouble.  */
@@ -454,6 +479,10 @@ extern boolean fsdirectory_exists P((const char *));
    directory.  */
 extern const char *zstilde_expand P((const struct ssysteminfo *qsys,
 				     const char *zfile));
+
+/* Check access for a particular user name.  */
+extern boolean fsuser_access P((const struct stat *, int imode,
+				const char *zuser));
 
 /* Copy a string to the common static buffer.  */
 extern const char *zscopy P((const char *z));

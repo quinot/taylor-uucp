@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.19  1992/02/24  04:58:47  ian
    Only permit files to be received into directories that are world-writeable
 
@@ -294,8 +297,6 @@ main (argc, argv)
   ulog_fatal_fn (ucabort);
 
   zuser = zsysdep_login_name ();
-  if (zuser == NULL)
-    zuser = "unknown";
 
   /* Set up the options.  */
 
@@ -382,6 +383,17 @@ main (argc, argv)
       zdestfile = xstrdup (zconst);
     }
 
+  /* Check that we have permission to receive into the desired
+     directory.  If we don't have permission, uucico will fail.  */
+
+  if (flocaldest)
+    {
+      if (! fin_directory_list (&sLocalsys, zdestfile,
+				sLocalsys.zlocal_receive,
+				TRUE, FALSE, zuser))
+	ulog (LOG_FATAL, "Not permitted to receive to %s", zdestfile);
+    }
+
   /* Process each file.  */
 
   for (i = optind; i < argc - 1 && iSignal == 0; i++)
@@ -411,15 +423,7 @@ main (argc, argv)
 	    {
 	      char *zto;
 
-	      /* Copy one local file to another.  We have to check the
-		 destination to make sure we are allowed to copy files
-		 there, and we have to know whether the destination is
-		 a directory.  */
-
-	      if (! fin_directory_list (&sLocalsys, zdestfile,
-					sLocalsys.zremote_receive,
-					TRUE))
-		ulog (LOG_FATAL, "Permission denied for %s", zdestfile);
+	      /* Copy one local file to another.  */
 
 	      zconst = zsysdep_real_file_name (&sLocalsys, zdestfile,
 					       argv[i]);
@@ -446,11 +450,15 @@ main (argc, argv)
 
 	      if (! fcopy)
 		{
-		  /* Make sure the daemon will have access to this
-		     file.  This is not a critical check, but it will
-		     help prevent user misconceptions.  */
+		  /* Make sure the daemon will be permitted to send
+		     this file.  */
 		  if (! fsysdep_daemon_access (zfrom))
 		    ucabort ();
+		  if (! fin_directory_list (&sLocalsys, zfrom,
+					    sLocalsys.zlocal_send,
+					    TRUE, TRUE, zuser))
+		    ulog (LOG_FATAL, "Not permitted to send from %s",
+			  zfrom);
 		  strcpy (abtname, "D.0");
 		}
 	      else
@@ -529,14 +537,7 @@ main (argc, argv)
 		 filespec is wildcarded, we must generate an 'X'
 		 request.  We currently check for Unix shell
 		 wildcards.  Note that it should do no harm to mistake
-		 a non-wildcard for a wildcard.  We doublecheck that
-		 the daemon will be able to receive into the
-		 directory; this is not critical, but it will give an
-		 error early rather than late.  */
-	      if (! fin_directory_list (qfromsys, zdestfile,
-					qfromsys->zlocal_receive,
-					TRUE))
-		ulog (LOG_FATAL, "Not permitted to receive %s", zdestfile);
+		 a non-wildcard for a wildcard.  */
 
 	      if (strchr (zconst, '*') != NULL
 		  || strchr (zconst, '?') != NULL

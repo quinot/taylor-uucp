@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.42  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.41  1992/02/24  18:38:42  ian
    John Theus: don't declare ulog with ellipsis if we don't have vprintf
 
@@ -807,13 +810,20 @@ extern boolean fmail_transfer P((boolean fok, const char *zuser,
 				 const char *zfrom, const char *zfromsys,
 				 const char *zto, const char *ztosys));
 
-/* See whether a file is one of a list of directories.  The qsys and
-   zsystem arguments are passed down to allow ~ expansion.  If
-   fwriteable is TRUE it must be legal to write in the directory.  */
+/* See whether a file is in one of a list of directories.  The qsys
+   argument are passed down to allow ~ expansion.  If fcheck is FALSE,
+   this does not check accessibility.  Otherwise, if freadable is
+   TRUE, the user zuser must have read access to the file and all
+   appropriate directories; if freadable is FALSE zuser must have
+   write access to the appropriate directories.  The zuser argument
+   may be NULL, in which case all users must have the appropriate
+   access (this is used for a remote request).  */
 extern boolean fin_directory_list P((const struct ssysteminfo *qsys,
 				     const char *zfile,
 				     const char *zdirs,
-				     boolean fwriteable));
+				     boolean fcheck,
+				     boolean freadable,
+				     const char *zuser));
 
 /* Get the login name and password to use when calling a system out
    of the call out login file.  The pzlog and pzpass arguments are set

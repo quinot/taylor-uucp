@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.28  1992/02/24  04:58:47  ian
    Only permit files to be received into directories that are world-writeable
 
@@ -903,7 +906,10 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 
   if (zQinput != NULL)
     {
-      if (fspool_file (zQinput))
+      boolean fspool;
+
+      fspool = fspool_file (zQinput);
+      if (fspool)
 	zQinput = zsysdep_spool_file_name (qsys, zQinput);
       else
 	zQinput = zsysdep_real_file_name (qsys, zQinput,
@@ -915,8 +921,36 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  *pfprocessed = FALSE;
 	  return;
 	}
+
       zQinput = xstrdup (zQinput);
       iclean |= FREE_QINPUT;
+
+      if (! fspool
+	  && ! fin_directory_list (qsys, zQinput,
+				   qsys->zremote_send, TRUE, TRUE,
+				   (const char *) NULL))
+	{
+	  ulog (LOG_ERROR, "Not permitted to read %s", zQinput);
+	      
+	  if (zmail != NULL && ! fQno_ack)
+	    {
+	      const char *az[20];
+
+	      i = 0;
+	      az[i++] = "Your execution request failed because you are";
+	      az[i++] = " not permitted to read\n\t";
+	      az[i++] = zQinput;
+	      az[i++] = "\non this system.\n";
+	      az[i++] = "Execution requested was:\n\t";
+	      az[i++] = zQcmd;
+	      az[i++] = "\n";
+
+	      (void) fsysdep_mail (zmail, "Execution failed", i, az);
+	    }
+
+	  uqcleanup (zfile, iclean);
+	  return;
+	}
     }
 
   if (zQoutfile == NULL)
@@ -1010,12 +1044,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	     would be nice to allow them to direct the output to their
 	     home directory.  */
       
-	  fok = (fin_directory_list (qsys, zQoutfile, qsys->zremote_receive,
-				     TRUE)
-		 && (qsys->zcalled_remote_receive == NULL
-		     || fin_directory_list (qsys, zQoutfile,
-					    qsys->zcalled_remote_receive,
-					    TRUE)));
+	  fok = fin_directory_list (qsys, zQoutfile, qsys->zremote_receive,
+				    TRUE, FALSE, (const char *) NULL);
 	}
 
       if (! fok)
@@ -1066,7 +1096,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	      *pfprocessed = FALSE;
 	      return;
 	    }
-	  if (! fsysdep_move_file (azQfiles[i], zname, 0))
+	  if (! fsysdep_move_file (azQfiles[i], zname, 0, FALSE,
+				   (const char *) NULL))
 	    {
 	      /* If we get an error, try again later.  This may not be
 		 correct, depending on what kind of error we get.  */

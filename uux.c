@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/02/28  05:06:15  ian
+   T. William Wells: fsysdep_catch must be a macro
+
    Revision 1.26  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -164,6 +167,7 @@ static void uxusage P((void));
 static void uxadd_xqt_line P((int bchar, const char *z1, const char *z2));
 static void uxadd_send_file P((const char *zfrom, const char *zto,
 			       const char *zoptions, const char *ztemp));
+static void uxcopy_stdin P((FILE *e));
 static void uxrecord_file P((const char *zfile));
 static void uxabort P((void));
 
@@ -353,10 +357,7 @@ main (argc, argv)
 
   if (! FGRADE_LEGAL (bgrade))
     {
-      /* We use LOG_NORMAL rather than LOG_ERROR because this is going
-	 to stderr rather than to the log file, and we don't need the
-	 ERROR header string.  */
-      ulog (LOG_NORMAL, "Ignoring illegal grade");
+      ulog (LOG_ERROR, "Ignoring illegal grade");
       bgrade = BDEFAULT_UUX_GRADE;
     }
 
@@ -485,8 +486,6 @@ main (argc, argv)
   ulog_fatal_fn (uxabort);
 
   zuser = zsysdep_login_name ();
-  if (zuser == NULL)
-    zuser = "unknown";
 
   /* Figure out which system the command is to be executed on.  */
   zexclam = strchr (zcmd, '!');
@@ -568,11 +567,7 @@ main (argc, argv)
 	{
 	  clen = strlen (pzargs[i]);
 	  if (pzargs[i][clen - 1] != ')')
-	    {
-	      /* Use LOG_NORMAL because we don't need the ERROR:
-		 header.  */
-	      ulog (LOG_NORMAL, "Mismatched parentheses");
-	    }
+	    ulog (LOG_ERROR, "Mismatched parentheses");
 	  else
 	    pzargs[i][clen - 1] = '\0';
 	  ++pzargs[i];
@@ -642,6 +637,14 @@ main (argc, argv)
 
       if (foutput)
 	{
+	  if (flocal)
+	    {
+	      if (! fin_directory_list (qxqtsys, zfile,
+					qxqtsys->zremote_receive, TRUE,
+					FALSE, (const char *) NULL))
+		ulog (LOG_FATAL, "Not permitted to create %s", zfile);
+	    }
+
 	  if (strcmp (zsystem, qxqtsys->zname) == 0)
 	    uxadd_xqt_line ('O', zfile, (const char *) NULL);
 	  else
@@ -667,14 +670,18 @@ main (argc, argv)
 	  /* It's a local file.  If requested by -C, copy the file to
 	     the spool directory.  If requested by -l, link the file
 	     to the spool directory; if the link fails, we copy the
-	     file, unless -c was explictly used.  If the file is being
-	     shipped to another system, we must set up a transfer
-	     request.  First make sure the user has legitimate access,
-	     since we are running setuid.  */
+	     file, unless -c was explictly used.  If the execution is
+	     occurring on the local system, we force the copy as well,
+	     because otherwise we would have to have some way to tell
+	     uuxqt not to move the file.  If the file is being shipped
+	     to another system, we must set up a transfer request.
+	     First make sure the user has legitimate access, since we
+	     are running setuid.  */
+
 	  if (! fsysdep_access (zfile))
 	    uxabort ();
 
-	  if (fcopy || flink)
+	  if (fcopy || flink || fxqtlocal)
 	    {
 	      char *zdup;
 	      boolean fdid;
@@ -717,18 +724,20 @@ main (argc, argv)
 	      /* Make sure the daemon can access the file.  */
 	      if (! fsysdep_daemon_access (zfile))
 		uxabort ();
+	      if (! fin_directory_list (&sLocalsys, zfile,
+					sLocalsys.zlocal_send,
+					TRUE, TRUE, zuser))
+		ulog (LOG_FATAL, "Not permitted to send from %s",
+		      zfile);
 
 	      zuse = zfile;
 
-	      if (! fxqtlocal)
-		{
-		  zdata = zsysdep_data_file_name (qxqtsys, bgrade,
-						  (char *) NULL, abdname,
-						  (char *) NULL);
-		  if (zdata == NULL)
-		    uxabort ();
-		  strcpy (abtname, "D.0");
-		}
+	      zdata = zsysdep_data_file_name (qxqtsys, bgrade,
+					      (char *) NULL, abdname,
+					      (char *) NULL);
+	      if (zdata == NULL)
+		uxabort ();
+	      strcpy (abtname, "D.0");
 	    }
 
 	  if (fxqtlocal)
@@ -741,7 +750,7 @@ main (argc, argv)
 	  else
 	    {
 	      uxadd_send_file (zuse, abdname,
-			       fcopy || flink ? "C" : "c",
+			       fcopy || flink || fxqtlocal ? "C" : "c",
 			       abtname);
 
 	      if (finput)
@@ -919,8 +928,6 @@ main (argc, argv)
       char abtname[CFILE_NAME_LEN];
       char abdname[CFILE_NAME_LEN];
       FILE *e;
-      int cread;
-      char ab[1024];
 
       zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname, abdname,
 				      (char *) NULL);
@@ -934,35 +941,7 @@ main (argc, argv)
       eXclose = e;
       uxrecord_file (xstrdup (zdata));
 
-      do
-	{
-	  int cwrite;
-
-	  if (fsysdep_catch ())
-	    {
-	      usysdep_start_catch ();
-	      cread = fread (ab, sizeof (char), sizeof ab, stdin);
-	    }
-
-	  usysdep_end_catch ();
-
-	  if (iSignal != 0)
-	    uxabort ();
-
-	  if (cread > 0)
-	    {
-	      cwrite = fwrite (ab, sizeof (char), cread, e);
-	      if (cwrite != cread)
-		{
-		  if (cwrite == EOF)
-		    ulog (LOG_FATAL, "fwrite: %s", strerror (errno));
-		  else
-		    ulog (LOG_FATAL, "fwrite: Wrote %d when attempted %d",
-			  cwrite, cread);
-		}
-	    }
-	}
-      while (cread == sizeof ab);
+      uxcopy_stdin (e);
 
       eXclose = NULL;
       if (fclose (e) != 0)
@@ -1190,6 +1169,47 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp)
   pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
 				       cXcmds * sizeof (struct scmd));
   pasXcmds[cXcmds - 1] = s;
+}
+
+/* Copy stdin to a file.  This is a separate function because it may
+   call setjump.  */
+
+static void
+uxcopy_stdin (e)
+     FILE *e;
+{
+  CATCH_PROTECT int cread;
+  char ab[1024];
+
+  do
+    {
+      int cwrite;
+
+      if (fsysdep_catch ())
+	{
+	  usysdep_start_catch ();
+	  cread = fread (ab, sizeof (char), sizeof ab, stdin);
+	}
+
+      usysdep_end_catch ();
+
+      if (iSignal != 0)
+	uxabort ();
+
+      if (cread > 0)
+	{
+	  cwrite = fwrite (ab, sizeof (char), cread, e);
+	  if (cwrite != cread)
+	    {
+	      if (cwrite == EOF)
+		ulog (LOG_FATAL, "fwrite: %s", strerror (errno));
+	      else
+		ulog (LOG_FATAL, "fwrite: Wrote %d when attempted %d",
+		      cwrite, cread);
+	    }
+	}
+    }
+  while (cread == sizeof ab);
 }
 
 /* Keep track of all files we have created so that we can delete them

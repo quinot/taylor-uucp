@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/02/28  05:06:15  ian
+   T. William Wells: fsysdep_catch must be a macro
+
    Revision 1.23  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -148,14 +151,15 @@ extern const char *zsysdep_local_name P((void));
 /* Get the login name.  This is used when uucico is started up with no
    arguments in slave mode, which causes it to assume that somebody
    has logged in.  It also used by uucp and uux for recording the user
-   name.  It should return NULL on error.  The return value should
-   point to a static buffer.  */
+   name.  This may not return NULL.  The return value should point to
+   a static buffer.  */
 extern const char *zsysdep_login_name P((void));
 
 /* Set a signal handler for a signal.  If the signal occurs, iSignal
    should be set to the signal number and fSignal_logged should be set
    to FALSE.  This routine might be able to just use signal, but 4.3
-   BSD requires more complex handling.  */
+   BSD requires more complex handling.  This is called before
+   usysdep_initialize.  */
 extern void usysdep_signal P((int isig));
 
 /* Catch a signal.  This is actually defined as a macro in the system
@@ -206,23 +210,28 @@ extern const char *zsysdep_port_name P((boolean *pftcp_port));
    the system might be accessed.  It should return FALSE on error.  */
 extern boolean fsysdep_make_spool_dir P((const struct ssysteminfo *qsys));
 
-/* Return whether a file name is in a directory.  The zfile argument
-   may itself be a directory; if it is the same as zdir, the function
-   should return TRUE.  Note that this deals with file names only; it
-   is not checking whether there actually is a file named zfile.  This
-   should return TRUE if the file name is in the directory, FALSE
-   otherwise.  If the file name is in the directory, and fwriteable is
-   TRUE, the function should also check that it is permissible to
-   receive a file into the most local directory containing the file
-   (on Unix this means the directory must be world writeable); if not,
-   the function should return FALSE.  There is no way to return error.
-   The qsys argument should be used to expand ~ into the public
-   directory.  */
-
+/* Return whether a file name is in a directory, and check for read or
+   write access.  This should check whether zfile is within zdir (or
+   is zdir itself).  If it is not, it should return FALSE.  If zfile
+   is in zdir, then fcheck indicates whether further checking should
+   be done.  If fcheck is FALSE, no further checking is done.
+   Otherwise, if freadable is TRUE the user zuser should have search
+   access to all directories from zdir down to zfile and should have
+   read access on zfile itself (if zfile does not exist, or is not a
+   regular file, this function may return FALSE but does not have to).
+   If freadable is FALSE, the user zuser should have search access to
+   all directories from zdir down to zfile and should have write
+   access on zfile (which may be a directory, or may not actually
+   exist, which is acceptable).  The zuser argument may be NULL, in
+   which case the check should be made for any user, not just zuser.
+   There is no way for this function to return error.  The qsys
+   argument should be used to expand ~ into the public directory.  */
 extern boolean fsysdep_in_directory P((const struct ssysteminfo *qsys,
 				       const char *zfile,
 				       const char *zdir,
-				       boolean fwriteable));
+				       boolean fcheck,
+				       boolean freadable,
+				       const char *zuser));
 
 /* Return TRUE if a file exists, FALSE otherwise.  There is no way to
    return error.  */
@@ -385,12 +394,18 @@ extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
 			      boolean fappend, boolean fmkdirs));
 
 /* Open a file to send to another system; the qsys argument is the
-   system the file is being sent to.  This should set *pimode to the
-   mode that should be sent over (this should be a UNIX style file
-   mode number).  This should set *pcbytes to the number of bytes
-   contained in the file.  It should return EFILECLOSED on error.  */
+   system the file is being sent to.  If fcheck is TRUE, it should
+   make sure that the file is readable by zuser (if zuser is NULL the
+   file must be readable by anybody).  This is to eliminate a window
+   between fsysdep_in_directory and esysdep_open_send.  The function
+   should set *pimode to the mode that should be sent over (this
+   should be a UNIX style file mode number).  It should set *pcbytes
+   to the number of bytes contained in the file.  It should return
+   EFILECLOSED on error.  */
 extern openfile_t esysdep_open_send P((const struct ssysteminfo *qsys,
 				       const char *zname,
+				       boolean fcheck,
+				       const char *zuser,
 				       unsigned int *pimode,
 				       long *pcbytes));
 
@@ -422,10 +437,15 @@ extern openfile_t esysdep_open_receive P((const struct ssysteminfo *qsys,
    zorig argument is the name of the file to move.  The imode argument
    is the Unix file mode to use for the final file; if it is zero, it
    should be ignored and the file should be kept private to the UUCP
-   system.  This should return FALSE on error; the zorig file should
-   be removed even if an error occurs.  */
+   system.  If fcheck is TRUE, this should make sure the directory is
+   writeable by the user zuser (if zuser is NULL, then it must be
+   writeable by any user); this is to avoid a window of vulnerability
+   between fsysdep_in_directory and fsysdep_move_file.  This function
+   should return FALSE on error; the zorig file should be removed even
+   if an error occurs.  */
 extern boolean fsysdep_move_file P((const char *zorig, const char *zto,
-				    unsigned int imode));
+				    unsigned int imode, boolean fcheck,
+				    const char *zuser));
 
 /* Truncate a file which we are receiving into.  This may be done by
    closing the original file, removing it and reopening it.  This
