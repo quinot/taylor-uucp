@@ -1,3 +1,15 @@
+Changes in version 1.07:
+
+    As usual, various bugs were fixed.
+
+    uuchk now reports the configuration file names which it uses.
+    This makes it easier to figure out how to configure a binary
+    installation.
+
+    Certain options which could previously be set in Makefile.in are
+    now set as options to configure: --with-user, --with-newconfigdir,
+    --with-oldconfigdir.
+
 Changes in version 1.06:
 
     As usual, many bugs were fixed.
