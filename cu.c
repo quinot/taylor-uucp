@@ -359,7 +359,7 @@ main (argc, argv)
       && ibaud == 0L)
     ucuusage ();
 
-  if (fprompt != NULL)
+  if (fprompt)
     {
       size_t cphone;
 
