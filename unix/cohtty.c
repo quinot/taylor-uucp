@@ -1,0 +1,133 @@
+/* Coherent tty locking support.  This file was contributed by Bob
+   Hemedinger <bob@dalek.mwc.com> of Mark Williams Corporation and
+   lightly edited by Ian Lance Taylor.  */
+
+#include "uucp.h"
+
+#if HAVE_COHERENT_LOCKFILES
+
+/* cohtty.c:	Given a serial device name, read /etc/ttys and determine if
+ *		the device is already enabled. If it is, disable the
+ *		device and return a string so that it can be re-enabled
+ * 		at the completion of the uucico session as part of the
+ *		function that resets the serial device before uucico
+ *		terminates.
+ *
+ */
+
+#include <ctype.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+
+/* fscoherent_disable_tty() is a COHERENT specific function. It takes the name
+ * of a serial device and then scans /etc/ttys for a match. If it finds one,
+ * it checks the first field of the entry. If it is a '1', then it will disable
+ * the port and set a flag. The flag will be checked later when uucico wants to
+ * reset the serial device to see if the device needs to be re-enabled.
+ */
+
+boolean
+fscoherent_disable_tty (zdevice, pzenable)
+     const char *zdevice;
+     char **pzenable;
+{
+
+
+struct ttyentry{			/* this is an /etc/ttys entry */
+	char enable_disable[1];
+	char remote_local[1];
+	char baud_rate[1];
+	char tty_device[16];
+};
+
+struct ttyentry sought_tty;
+
+int x,y,z;				/* dummy */
+FILE *	infp;				/* this will point to /etc/ttys */
+char disable_command[66];		/* this will be the disable command
+					 * passed to the system.
+					 */
+char enable_device[16];			/* this will hold our device name
+					 * to enable.
+					 */
+
+	*pzenable = NULL;
+
+	strcpy(enable_device,"");	/* initialize our strings */
+	strcpy(sought_tty.tty_device,"");
+
+	if( (infp = fopen("/etc/ttys","r")) == NULL){
+		ulog(LOG_ERROR,"Error: check_disable_tty: failed to open /etc/ttys\n");
+		return TRUE;
+	}
+
+	while (NULL !=(fgets(&sought_tty, sizeof (sought_tty), infp ))){
+		sought_tty.tty_device[strlen(sought_tty.tty_device) -1] = '\0';
+		strcpy(enable_device,sought_tty.tty_device);
+
+		/* we must strip away the suffix to the com port name or
+		 * we will never find a match. For example, if we are passed
+		 * /dev/com4l to call out with and the port is already enabled,
+		 * 9/10 the port enabled will be com4r. After we strip away the
+		 * suffix of the port found in /etc/ttys, then we can test
+		 * if the base port name appears in the device name string
+		 * passed to us.
+		 */
+
+		for(z = strlen(sought_tty.tty_device) ; z > 0 ; z--){
+			if(isdigit(sought_tty.tty_device[z])){
+				break;
+			}
+		}
+		y = strlen(sought_tty.tty_device);
+		for(x = z+1 ; x <= y; x++){
+			sought_tty.tty_device[x] = '\0';
+		}
+
+
+/*		ulog(LOG_NORMAL,"found device {%s}\n",sought_tty.tty_device); */
+		if(strstr(zdevice, sought_tty.tty_device)){
+			if(sought_tty.enable_disable[0] == '1'){
+				ulog(LOG_NORMAL, "coh_tty: Disabling device %s {%s}\n",
+					zdevice, sought_tty.tty_device);
+					sprintf(disable_command, "/etc/disable %s",enable_device);
+				{
+				  pid_t ipid;
+				  const char *azargs[3];
+				  int aidescs[3];
+
+				  azargs[0] = "/etc/disable";
+				  azargs[1] = enable_device;
+				  azargs[2] = NULL;
+				  aidescs[0] = SPAWN_NULL;
+				  aidescs[1] = SPAWN_NULL;
+				  aidescs[2] = SPAWN_NULL;
+				  ipid = ixsspawn (azargs, aidescs, TRUE,
+						   FALSE,
+						   (const char *) NULL, TRUE,
+						   TRUE,
+						   (const char *) NULL,
+						   (const char *) NULL,
+						   (const char *) NULL);
+				  if (ipid < 0)
+				    x = 1;
+				  else
+				    x = ixswait ((unsigned long) ipid,
+						 (const char *) NULL);
+				}
+				*pzenable = zbufalc (sizeof "/dev/"
+						     + strlen (enable_device));
+				sprintf(*pzenable,"/dev/%s", enable_device);
+/*				ulog(LOG_NORMAL,"Enable string is {%s}",*pzenable); */
+				return(x==0? TRUE : FALSE); /* disable either failed
+							   or succeded */
+			}else{
+				return FALSE;	/* device in tty entry not enabled */
+			}
+		}
+	}
+	return FALSE;	/* no ttys entry found */
+}
+
+#endif /* HAVE_COHERENT_LOCKFILES */
