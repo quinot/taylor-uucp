@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1992/03/30  04:49:10  ian
+   Niels Baggesen: added debugging types abnormal and uucp-proto
+
    Revision 1.6  1992/03/17  01:03:03  ian
    Miscellaneous cleanup
 
@@ -100,7 +103,8 @@ boolean
 festart (fmaster)
      boolean fmaster;
 {
-  if (! fport_set (PORTSETTING_EIGHT))
+  if (! fport_set (PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
+		   XONXOFF_OFF))
     return FALSE;
   zEbuf = (char *) xmalloc (CEBUFSIZE);
   fEfile = FALSE;

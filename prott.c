@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/03/30  04:49:10  ian
+   Niels Baggesen: added debugging types abnormal and uucp-proto
+
    Revision 1.15  1992/03/17  01:03:03  ian
    Miscellaneous cleanup
 
@@ -76,7 +79,6 @@
 char prott_rcsid[] = "$Id$";
 #endif
 
-
 #include "prot.h"
 #include "port.h"
 #include "system.h"
@@ -124,7 +126,8 @@ boolean
 ftstart (fmaster)
      boolean fmaster;
 {
-  if (! fport_set (PORTSETTING_EIGHT))
+  if (! fport_set (PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
+		   XONXOFF_OFF))
     return FALSE;
   zTbuf = (char *) xmalloc (CTBUFSIZE + CTFRAMELEN);
   /* The first two bytes of the buffer are always zero.  */

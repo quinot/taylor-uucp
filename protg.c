@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1992/03/31  19:39:08  ian
+   Niels Baggesen: packet to retransmit did not get reset correctly
+
    Revision 1.30  1992/03/30  04:49:10  ian
    Niels Baggesen: added debugging types abnormal and uucp-proto
 
@@ -462,7 +465,8 @@ fgstart (fmaster)
   boolean fgota, fgotb;
 
   /* The 'g' protocol requires a full eight bit interface.  */
-  if (! fport_set (PORTSETTING_EIGHT))
+  if (! fport_set (PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
+		   XONXOFF_OFF))
     return FALSE;
 
   iGsendseq = 1;

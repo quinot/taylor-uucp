@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/03/30  04:49:10  ian
+   Niels Baggesen: added debugging types abnormal and uucp-proto
+
    Revision 1.14  1992/03/17  01:03:03  ian
    Miscellaneous cleanup
 
@@ -169,8 +172,9 @@ ffstart (fmaster)
   cFsend_retries = 0;
   cFrec_retries = 0;
 
-  /* Allow XON/XOFF to work.  */
-  if (! fport_set (PORTSETTING_SEVEN))
+  /* Use XON/XOFF handshaking.  */
+  if (! fport_set (PARITYSETTING_DEFAULT, STRIPSETTING_SEVENBITS,
+		   XONXOFF_ON))
     return FALSE;
 
   /* We sleep to allow the other side to reset the terminal; this is
