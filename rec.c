@@ -304,6 +304,9 @@ flocal_rec_send_request (qtrans, qdaemon)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   long cbytes, cbytes2;
+  boolean fquote;
+  const struct scmd *qcmd;
+  struct scmd squoted;
   size_t clen;
   char *zsend;
   boolean fret;
@@ -342,28 +345,43 @@ flocal_rec_send_request (qtrans, qdaemon)
       && (cbytes == -1 || qdaemon->clocal_size < cbytes))
     cbytes = qdaemon->clocal_size;
 
+  fquote = fcmd_needs_quotes (&qtrans->s);
+  if (! fquote)
+    qcmd = &qtrans->s;
+  else
+    {
+      if ((qdaemon->ifeatures & FEATURE_QUOTES) == 0)
+	return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
+				"remote system does not support required quoting");
+      uquote_cmd (&qtrans->s, &squoted);
+      qcmd = &squoted;
+    }
+
   /* We send the string
      R from to user options
 
      We put a dash in front of options.  If we are talking to a
      counterpart, we also send the maximum size file we are prepared
      to accept, as returned by esysdep_open_receive.  */
-  clen = (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-	  + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions) + 30);
+  clen = (strlen (qcmd->zfrom) + strlen (qcmd->zto)
+	  + strlen (qcmd->zuser) + strlen (qcmd->zoptions) + 30);
   zsend = zbufalc (clen);
   if ((qdaemon->ifeatures & FEATURE_SIZES) == 0)
-    sprintf (zsend, "R %s %s %s -%s", qtrans->s.zfrom, qtrans->s.zto,
-	     qtrans->s.zuser, qtrans->s.zoptions);
+    sprintf (zsend, "R %s %s %s -%s", qcmd->zfrom, qcmd->zto,
+	     qcmd->zuser, qcmd->zoptions);
   else if ((qdaemon->ifeatures & FEATURE_V103) == 0)
-    sprintf (zsend, "R %s %s %s -%s 0x%lx", qtrans->s.zfrom, qtrans->s.zto,
-	     qtrans->s.zuser, qtrans->s.zoptions, (unsigned long) cbytes);
+    sprintf (zsend, "R %s %s %s -%s 0x%lx", qcmd->zfrom, qcmd->zto,
+	     qcmd->zuser, qcmd->zoptions, (unsigned long) cbytes);
   else
-    sprintf (zsend, "R %s %s %s -%s %ld", qtrans->s.zfrom, qtrans->s.zto,
-	     qtrans->s.zuser, qtrans->s.zoptions, cbytes);
+    sprintf (zsend, "R %s %s %s -%s %ld", qcmd->zfrom, qcmd->zto,
+	     qcmd->zuser, qcmd->zoptions, cbytes);
 
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 					qtrans->iremote);
   ubuffree (zsend);
+
+  if (fquote)
+    ufree_quoted_cmd (&squoted);
 
   /* There is a potential space leak here: if pfsendcmd fails, we
      might need to free qtrans.  However, it is possible that by the
@@ -1171,18 +1189,52 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	  return FALSE;
 	}
 
-      fprintf (e, "U %s %s\n", qtrans->s.zuser, qdaemon->qsys->uuconf_zname);
-      fprintf (e, "F %s\n", qtrans->s.zto);
-      fprintf (e, "I %s\n", qtrans->s.zto);
+      if (! fcmd_needs_quotes (&qtrans->s))
+	{
+	  fprintf (e, "U %s %s\n", qtrans->s.zuser,
+		   qdaemon->qsys->uuconf_zname);
+	  fprintf (e, "F %s\n", qtrans->s.zto);
+	  fprintf (e, "I %s\n", qtrans->s.zto);
+	  if (strchr (qtrans->s.zoptions, 'R') != NULL)
+	    fprintf (e, "R %s\n", qtrans->s.znotify);
+	  fprintf (e, "C %s\n", qtrans->s.zcmd);
+	}
+      else
+	{
+	  char *z1;
+	  char *z2;
+
+	  fprintf (e, "Q\n");
+
+	  z1 = zquote_cmd_string (qtrans->s.zuser, FALSE);
+	  z2 = zquote_cmd_string (qdaemon->qsys->uuconf_zname, FALSE);
+	  fprintf (e, "U %s %s\n", z1, z2);
+	  ubuffree (z1);
+	  ubuffree (z2);
+
+	  z1 = zquote_cmd_string (qtrans->s.zto, FALSE);
+	  fprintf (e, "F %s\n", z1);
+	  fprintf (e, "I %s\n", z1);
+	  ubuffree (z1);
+
+	  if (strchr (qtrans->s.zoptions, 'R') != NULL)
+	    {
+	      z1 = zquote_cmd_string (qtrans->s.znotify, FALSE);
+	      fprintf (e, "R %s\n", z1);
+	      ubuffree (z1);
+	    }
+
+	  z1 = zquote_cmd_string (qtrans->s.zcmd, TRUE);
+	  fprintf (e, "C %s\n", z1);
+	  ubuffree (z1);
+	}
+
       if (strchr (qtrans->s.zoptions, 'N') != NULL)
 	fprintf (e, "N\n");
       if (strchr (qtrans->s.zoptions, 'Z') != NULL)
 	fprintf (e, "Z\n");
-      if (strchr (qtrans->s.zoptions, 'R') != NULL)
-	fprintf (e, "R %s\n", qtrans->s.znotify);
       if (strchr (qtrans->s.zoptions, 'e') != NULL)
 	fprintf (e, "e\n");
-      fprintf (e, "C %s\n", qtrans->s.zcmd);
 
       fbad = FALSE;
 

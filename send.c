@@ -91,7 +91,8 @@ static boolean fsend_await_confirm P((struct stransfer *qtrans,
 static boolean fsend_exec_file_init P((struct stransfer *qtrans,
 				       struct sdaemon *qdaemon));
 static void usadd_exec_line P((char **pz, size_t *pcalc, size_t *pclen,
-			       int bcmd, const char *z1, const char *z2));
+			       int bcmd, const char *z1, const char *z2,
+			       boolean fquote));
 static boolean fsend_exec_file P((struct stransfer *qtrans,
 				  struct sdaemon *qdaemon));
 
@@ -359,9 +360,12 @@ flocal_send_request (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-  char *zsend;
+  boolean fquote;
+  const struct scmd *qcmd;
+  struct scmd squoted;
   const char *znotify;
   char absize[20];
+  char *zsend;
   boolean fret;
 
   /* Make sure the file meets any remote size restrictions.  */
@@ -401,13 +405,29 @@ flocal_send_request (qtrans, qdaemon)
   if (! fret)
     return FALSE;
 
+  fquote = fcmd_needs_quotes (&qtrans->s);
+  if (! fquote)
+    qcmd = &qtrans->s;
+  else
+    {
+      if ((qdaemon->ifeatures & FEATURE_QUOTES) == 0)
+	{
+	  fret = flocal_send_fail (&qtrans->s, qdaemon,
+				   "remote system does not support required quoting");
+	  usfree_send (qtrans);
+	  return fret;
+	}
+      uquote_cmd (&qtrans->s, &squoted);
+      qcmd = &squoted;
+    }
+
   /* Construct the notify string to send.  If we are going to send a
      size or an execution command, it must be non-empty.  */
-  znotify = qtrans->s.znotify;
+  znotify = qcmd->znotify;
   if (znotify == NULL)
     znotify = "";
   if ((qdaemon->ifeatures & FEATURE_SIZES) != 0
-      || (qtrans->s.bcmd == 'E'
+      || (qcmd->bcmd == 'E'
 	  && (qdaemon->ifeatures & FEATURE_EXEC) != 0))
     {
       if (*znotify == '\0')
@@ -423,7 +443,7 @@ flocal_send_request (qtrans, qdaemon)
 
   /* Construct the size string to send.  */
   if ((qdaemon->ifeatures & FEATURE_SIZES) == 0
-      && (qtrans->s.bcmd != 'E'
+      && (qcmd->bcmd != 'E'
 	  || (qdaemon->ifeatures & FEATURE_EXEC) == 0))
     absize[0] = '\0';
   else if ((qdaemon->ifeatures & FEATURE_V103) == 0)
@@ -431,11 +451,11 @@ flocal_send_request (qtrans, qdaemon)
   else
     sprintf (absize, "%ld", qinfo->cbytes);
 
-  zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-		   + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions)
-		   + strlen (qtrans->s.ztemp) + strlen (znotify)
+  zsend = zbufalc (strlen (qcmd->zfrom) + strlen (qcmd->zto)
+		   + strlen (qcmd->zuser) + strlen (qcmd->zoptions)
+		   + strlen (qcmd->ztemp) + strlen (znotify)
 		   + strlen (absize)
-		   + (qtrans->s.zcmd != NULL ? strlen (qtrans->s.zcmd) : 0)
+		   + (qcmd->zcmd != NULL ? strlen (qcmd->zcmd) : 0)
 		   + 50);
 
   /* If this an execution request and the other side supports
@@ -443,17 +463,17 @@ flocal_send_request (qtrans, qdaemon)
      command.  The case of an execution request when we are sending
      the fake execution file is handled just like an S request at this
      point.  */
-  if (qtrans->s.bcmd == 'E'
+  if (qcmd->bcmd == 'E'
       && (qdaemon->ifeatures & FEATURE_EXEC) != 0)
     {
       /* Send the string
 	 E zfrom zto zuser zoptions ztemp imode znotify size zcmd
 	 to the remote system.  We put a '-' in front of the (possibly
 	 empty) options and a '0' in front of the mode.  */
-      sprintf (zsend, "E %s %s %s -%s %s 0%o %s %s %s", qtrans->s.zfrom,
-	       qtrans->s.zto, qtrans->s.zuser, qtrans->s.zoptions,
-	       qtrans->s.ztemp, qtrans->s.imode, znotify, absize,
-	       qtrans->s.zcmd);
+      sprintf (zsend, "E %s %s %s -%s %s 0%o %s %s %s", qcmd->zfrom,
+	       qcmd->zto, qcmd->zuser, qcmd->zoptions,
+	       qcmd->ztemp, qcmd->imode, znotify, absize,
+	       qcmd->zcmd);
     }
   else
     {
@@ -469,9 +489,9 @@ flocal_send_request (qtrans, qdaemon)
 	 to remove the various execution options which may confuse the
 	 remote system.  SVR4 expects a string "dummy" between the
 	 notify string and the size; I don't know why.  */
-      if (qtrans->s.bcmd != 'E')
-	zoptions = qtrans->s.zoptions;
-      else if (strchr (qtrans->s.zoptions, 'C') != NULL)
+      if (qcmd->bcmd != 'E')
+	zoptions = qcmd->zoptions;
+      else if (strchr (qcmd->zoptions, 'C') != NULL)
 	{
 	  /* This should set zoptions to "C", but at least one UUCP
 	     program gets confused by it.  That means that it will
@@ -488,15 +508,18 @@ flocal_send_request (qtrans, qdaemon)
       else
 	zdummy = " ";
 
-      sprintf (zsend, "S %s %s %s -%s %s 0%o %s%s%s", qtrans->s.zfrom,
-	       qtrans->s.zto, qtrans->s.zuser, zoptions,
-	       qtrans->s.ztemp, qtrans->s.imode, znotify, zdummy,
+      sprintf (zsend, "S %s %s %s -%s %s 0%o %s%s%s", qcmd->zfrom,
+	       qcmd->zto, qcmd->zuser, zoptions,
+	       qcmd->ztemp, qcmd->imode, znotify, zdummy,
 	       absize);
     }
 
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 					qtrans->iremote);
   ubuffree (zsend);
+
+  if (fquote)
+    ufree_quoted_cmd (&squoted);
 
   /* If fret is FALSE, we should free qtrans here, but see the comment
      at the end of flocal_rec_send_request.  */
@@ -1235,24 +1258,43 @@ fsend_exec_file_init (qtrans, qdaemon)
   char abxname[CFILE_NAME_LEN];
   char *z;
   size_t calc, clen;
+  boolean fquote;
 
   z = NULL;
   calc = 0;
   clen = 0;
 
+  fquote = fcmd_needs_quotes (&qtrans->s);
+
+  if (fquote)
+    usadd_exec_line (&z, &calc, &clen, 'Q', "", "", TRUE);
+
   usadd_exec_line (&z, &calc, &clen, 'U', qtrans->s.zuser,
-		   qdaemon->zlocalname);
-  usadd_exec_line (&z, &calc, &clen, 'F', qtrans->s.zto, "");
-  usadd_exec_line (&z, &calc, &clen, 'I', qtrans->s.zto, "");
+		   qdaemon->zlocalname, fquote);
+  usadd_exec_line (&z, &calc, &clen, 'F', qtrans->s.zto, "", fquote);
+  usadd_exec_line (&z, &calc, &clen, 'I', qtrans->s.zto, "", fquote);
   if (strchr (qtrans->s.zoptions, 'N') != NULL)
-    usadd_exec_line (&z, &calc, &clen, 'N', "", "");
+    usadd_exec_line (&z, &calc, &clen, 'N', "", "", fquote);
   if (strchr (qtrans->s.zoptions, 'Z') != NULL)
-    usadd_exec_line (&z, &calc, &clen, 'Z', "", "");
+    usadd_exec_line (&z, &calc, &clen, 'Z', "", "", fquote);
   if (strchr (qtrans->s.zoptions, 'R') != NULL)
-    usadd_exec_line (&z, &calc, &clen, 'R', qtrans->s.znotify, "");
+    usadd_exec_line (&z, &calc, &clen, 'R', qtrans->s.znotify, "", fquote);
   if (strchr (qtrans->s.zoptions, 'e') != NULL)
-    usadd_exec_line (&z, &calc, &clen, 'e', "", "");
-  usadd_exec_line (&z, &calc, &clen, 'C', qtrans->s.zcmd, "");
+    usadd_exec_line (&z, &calc, &clen, 'e', "", "", fquote);
+
+  /* For the command, we only quote backslashes.  If there is anything
+     which requires fancier handling, uux will not have generated an
+     'E' command.  */
+  if (! fquote)
+    usadd_exec_line (&z, &calc, &clen, 'C', qtrans->s.zcmd, "", FALSE);
+  else
+    {
+      char *zquoted;
+
+      zquoted = zquote_cmd_string (qtrans->s.zcmd, TRUE);
+      usadd_exec_line (&z, &calc, &clen, 'C', zquoted, "", FALSE);
+      ubuffree (zquoted);
+    }
 
   qinfo->zexec = z;
   qinfo->cbytes = clen;
@@ -1292,16 +1334,36 @@ fsend_exec_file_init (qtrans, qdaemon)
 /* Add a line to the fake execution file.  */
 
 static void
-usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2)
+usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2, fquote)
      char **pz;
      size_t *pcalc;
      size_t *pclen;
      int bcmd;
      const char *z1;
      const char *z2;
+     boolean fquote;
 {
+  char *z1q;
+  char *z2q;
   size_t c1, c2;
   char *znew;
+
+  z1q = NULL;
+  z2q = NULL;
+  if (fquote)
+    {
+      if (*z1 != '\0')
+	{
+	  z1q = zquote_cmd_string (z1, FALSE);
+	  z1 = z1q;
+	}
+
+      if (*z2 != '\0')
+	{
+	  z2q = zquote_cmd_string (z2, FALSE);
+	  z2 = z2q;
+	}
+    }
 
   c1 = strlen (z1);
   c2 = strlen (z2);
@@ -1331,6 +1393,12 @@ usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2)
 	  memcpy (znew, z2, c2);
 	  znew += c2;
 	}
+    }
+
+  if (fquote)
+    {
+      ubuffree (z1q);
+      ubuffree (z2q);
     }
 
   /* In some bizarre non-Unix case we might have to worry about the

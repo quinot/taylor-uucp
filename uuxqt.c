@@ -432,6 +432,7 @@ uqabort ()
    e (process with sh)
    E (process with exec)
    M status-file
+   Q (C, I, O, F, R, U, M arguments are backslash quoted)
    # comment
 
    Unrecognized commands are ignored.  We actually do not recognize
@@ -477,6 +478,8 @@ static boolean fQsend_input;
 static boolean fQuse_exec;
 /* The status should be copied to this file on the requesting host.  */
 static const char *zQstatus_file;
+/* Whether the entries in the file are backslash quoted.  */
+static boolean fQquoted;
 #if ALLOW_SH_EXECUTION
 /* This is set by the e flag, meaning that sh should be used to
    execute the command.  */
@@ -516,6 +519,7 @@ static const struct uuconf_cmdtab asQcmds[] =
 #endif
   { "E", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQuse_exec, iqset },
   { "M", UUCONF_CMDTABTYPE_STRING, (pointer) &zQstatus_file, NULL },
+  { "Q", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQquoted, iqset },
   { NULL, 0, NULL, NULL }
 };
 
@@ -742,6 +746,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
   fQsend_input = FALSE;
   fQuse_exec = FALSE;
   zQstatus_file = NULL;
+  fQquoted = FALSE;
 #if ALLOW_SH_EXECUTION
   fQuse_sh = FALSE;
 #endif
@@ -791,6 +796,37 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	}
 
       return;
+    }
+
+  if (fQquoted)
+    {
+      if (azQargs != NULL)
+	{
+	  for (i = 0; azQargs[i] != NULL; ++i)
+	    (void) cescape (azQargs[i]);
+	}
+      if (zQcmd != NULL)
+	(void) cescape (zQcmd);
+      if (zQinput != NULL)
+	(void) cescape (zQinput);
+      if (zQoutfile != NULL)
+	(void) cescape (zQoutfile);
+      if (zQoutsys != NULL)
+	(void) cescape (zQoutsys);
+      for (i = 0; i < cQfiles; ++i)
+	{
+	  (void) cescape (azQfiles[i]);
+	  if (azQfiles_to[i] != NULL)
+	    (void) cescape (azQfiles_to[i]);
+	}
+      if (zQrequestor != NULL)
+	(void) cescape (zQrequestor);
+      if (zQuser != NULL)
+	(void) cescape ((char *) zQuser);
+      if (zQsystem != NULL)
+	(void) cescape ((char *) zQsystem);
+      if (zQstatus_file != NULL)
+	(void) cescape ((char *) zQstatus_file);
     }
 
   iclean = 0;

@@ -277,6 +277,20 @@ extern boolean fin_directory_list P((const char *zfile,
 /* Parse a command string.  */
 extern boolean fparse_cmd P((char *zcmd, struct scmd *qcmd));
 
+/* Return whether a command needs quoting.  */
+extern boolean fcmd_needs_quotes P((const struct scmd *qcmd));
+
+/* Quote the strings in a command, creating a new command.  */
+extern void uquote_cmd P((const struct scmd *qorig, struct scmd *qnew));
+
+/* Free a command structure created by uquote_cmd.  */
+extern void ufree_quoted_cmd P((struct scmd *qcmd));
+
+/* Backslash qoute a string, returning a newly allocated string.  If
+   fbackslashonly, only quote backslashes.  Otherwise, quote
+   backslashes and all nonprinting characters.  */
+extern char *zquote_cmd_string P((const char *zorig, boolean fbackslashonly));
+
 /* Make a log entry.  */
 #ifdef __GNUC__
 #define GNUC_VERSION __GNUC__

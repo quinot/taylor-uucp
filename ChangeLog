@@ -1,3 +1,38 @@
+2002-03-02  Ian Lance Taylor  <ian@airs.com>
+
+	* trans.h (FEATURE_QUOTES): Define.
+	* lib/quote.c: New file.
+	* lib/quotes.c: New file.
+	* lib/parse.c (ulunquote_cmd): New static function.
+	(fparse_cmd): Call it before returning.
+	* unix/splcmd.c (zsysdep_spool_commands): Quote command if
+	necessary.  Remove whitespace check.
+	* send.c (flocal_send_request): Quote command if necessary.
+	(fsend_exec_file_init): Quote execution file if necessary.
+	(usadd_exec_line): Add fquote parameter.
+	* rec.c (flocal_rec_send_request): Quote command if necessary.
+	(frec_file_end): Quote execution file if necessary.
+	* xcmd.c (flocal_xcmd_request): Quote command if necessary.
+	* uucico.c (fdo_call): Add FEATURE_QUOTES to -N option.
+	(faccept_call): Add FEATURE_QUOTES to ROKN argument.
+	* uuxqt.c (fQquoted): New static variable.
+	(asQcmds): Add "Q".
+	(uqdo_xqt_file): Initialize and check fQquoted.
+	* uux.c (fXquote, fXquote_output): New static variables.
+	(main): Don't check for whitespace in notification address--revert
+	patch of 2002-02-16.  Set fXquote if quoting is needed.
+	(uxadd_xqt_line): If fXquote, quote strings.
+	* uucp.c (main): Don't check for whitespace in notification
+	address--revert patch of 2002-02-16.
+	* uudefs.h: Declare fparse_cmd, fcmd_needs_quotes, uquote_cmd,
+	ufree_uoted_cmd, and zquote_cmd_string.
+	* uucp.texi (Execution File Format): Document "Q" command.
+	(The Initial Handshake): Document feature bitmask 040--
+	FEATURE_QUOTES.
+	(UUCP Protocol Commands): Document -q option for all commands.
+	* lib/Makefile.am (libuucp_a_SOURCES): Add quote.c and quotes.c.
+	* lib/Makefile.in: Rebuild.
+
 2002-02-26  Ian Lance Taylor  <ian@airs.com>
 
 	* Peter Rye: contrib/xchat.c: (do_script): Correct brace

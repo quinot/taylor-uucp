@@ -70,6 +70,9 @@ flocal_xcmd_request (qtrans, qdaemon)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
 {
+  boolean fquote;
+  const struct scmd *qcmd;
+  struct scmd squoted;
   size_t clen;
   char *zsend;
   boolean fret;
@@ -77,9 +80,32 @@ flocal_xcmd_request (qtrans, qdaemon)
   ulog (LOG_NORMAL, "Requesting work: %s to %s", qtrans->s.zfrom,
 	qtrans->s.zto);
 
-
   qtrans->fcmd = TRUE;
   qtrans->precfn = flocal_xcmd_await_reply;
+
+  fquote = fcmd_needs_quotes (&qtrans->s);
+  if (! fquote)
+    qcmd = &qtrans->s;
+  else
+    {
+      if ((qdaemon->ifeatures & FEATURE_QUOTES) == 0)
+	{
+	  ulog (LOG_ERROR,
+		"%s: remote system does not support required quoting",
+		qtrans->s.zfrom);
+	  (void) fmail_transfer (FALSE, qtrans->s.zuser, (const char *) NULL,
+				 "remote system does not support required quoting",
+				 qtrans->s.zfrom, qdaemon->qsys->uuconf_zname,
+				 qtrans->s.zto, (const char *) NULL,
+				 (const char *) NULL);
+	  (void) fsysdep_did_work (qtrans->s.pseq);
+	  utransfree (qtrans);
+	  return TRUE;
+	}
+
+      uquote_cmd (&qtrans->s, &squoted);
+      qcmd = &squoted;
+    }
 
   if (! fqueue_receive (qdaemon, qtrans))
     return FALSE;
@@ -87,15 +113,18 @@ flocal_xcmd_request (qtrans, qdaemon)
   /* We send the string
      X from to user options
      We put a dash in front of options.  */
-  clen = (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-	  + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions) + 7);
+  clen = (strlen (qcmd->zfrom) + strlen (qcmd->zto)
+	  + strlen (qcmd->zuser) + strlen (qcmd->zoptions) + 7);
   zsend = zbufalc (clen);
-  sprintf (zsend, "X %s %s %s -%s", qtrans->s.zfrom, qtrans->s.zto,
-	   qtrans->s.zuser, qtrans->s.zoptions);
+  sprintf (zsend, "X %s %s %s -%s", qcmd->zfrom, qcmd->zto,
+	   qcmd->zuser, qcmd->zoptions);
 
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 					qtrans->iremote);
   ubuffree (zsend);
+
+  if (fquote)
+    ufree_quoted_cmd (&squoted);
 
   /* If fret is FALSE, we should free qtrans here, but see the comment
      at the end of flocal_rec_send_request.  */

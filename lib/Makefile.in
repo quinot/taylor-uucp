@@ -82,7 +82,7 @@ install_sh = @install_sh@
 noinst_LIBRARIES = libuucp.a
 
 libuucp_a_SOURCES = buffer.c crc.c debug.c escape.c getopt.c getop1.c \
-	parse.c spool.c status.c xfree.c xmall.c xreall.c
+	parse.c quote.c quotes.c spool.c status.c xfree.c xmall.c xreall.c
 
 libuucp_a_LIBADD = $(LIBOBJS)
 
@@ -97,8 +97,9 @@ libuucp_a_AR = $(AR) cru
 libuucp_a_DEPENDENCIES = @LIBOBJS@
 am_libuucp_a_OBJECTS = buffer.$(OBJEXT) crc.$(OBJEXT) debug.$(OBJEXT) \
 	escape.$(OBJEXT) getopt.$(OBJEXT) getop1.$(OBJEXT) \
-	parse.$(OBJEXT) spool.$(OBJEXT) status.$(OBJEXT) \
-	xfree.$(OBJEXT) xmall.$(OBJEXT) xreall.$(OBJEXT)
+	parse.$(OBJEXT) quote.$(OBJEXT) quotes.$(OBJEXT) \
+	spool.$(OBJEXT) status.$(OBJEXT) xfree.$(OBJEXT) \
+	xmall.$(OBJEXT) xreall.$(OBJEXT)
 libuucp_a_OBJECTS = $(am_libuucp_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -113,7 +114,8 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/getlin.Po $(DEPDIR)/getop1.Po \
 @AMDEP_TRUE@	$(DEPDIR)/getopt.Po $(DEPDIR)/memchr.Po \
 @AMDEP_TRUE@	$(DEPDIR)/memcmp.Po $(DEPDIR)/memcpy.Po \
-@AMDEP_TRUE@	$(DEPDIR)/parse.Po $(DEPDIR)/spool.Po \
+@AMDEP_TRUE@	$(DEPDIR)/parse.Po $(DEPDIR)/quote.Po \
+@AMDEP_TRUE@	$(DEPDIR)/quotes.Po $(DEPDIR)/spool.Po \
 @AMDEP_TRUE@	$(DEPDIR)/status.Po $(DEPDIR)/strcas.Po \
 @AMDEP_TRUE@	$(DEPDIR)/strchr.Po $(DEPDIR)/strdup.Po \
 @AMDEP_TRUE@	$(DEPDIR)/strncs.Po $(DEPDIR)/strrch.Po \
@@ -171,6 +173,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/memcmp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/memcpy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/parse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/quote.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/quotes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/spool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/status.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strcas.Po@am__quote@

@@ -6153,6 +6153,15 @@ the default anyhow.
 This command means that instead of mailing a message, the message should
 be copied to the named file on the system named by the @samp{U} command.
 
+@item Q
+This command takes no arguments.  It means that the string arguments to
+all the other commands are backslash quoted.  Any backslash in one of
+the strings should be followed by either a backslash or three octal
+digits.  The backslash quoting is interpreted as in a C string.  If the
+@samp{Q} command does not appear, backslashes in the strings are not
+treated specially.  The @samp{Q} command was introduced in Taylor UUCP
+version 1.07.
+
 @item # comment
 This command is ignored, as is any other unrecognized command.  
 @end table
@@ -6402,6 +6411,10 @@ should not be explicitly sent.
 UUCP expects a dummy string between the notify field and the size field
 in an @samp{S} command.  This is true of SVR4 UUCP.  This bit should not
 be used.
+
+@item 040
+UUCP supports the @samp{q} option in the @samp{S}, @samp{R}, @samp{X},
+and @samp{E} commands.
 @end table
 
 After the protocol has been selected and the initial handshake has been
@@ -6433,6 +6446,15 @@ names within the spool directory by UUCP.  They always begin with
 execution, or received from another system for an execution), or
 @file{X.} (for an execution file created by @code{uux} or received from
 another system).
+
+All the commands other than the @samp{H} command support options.  The
+@samp{q} option indicates that the command argument strings are
+backslash quoted.  If the @samp{q} option appears, then any backslash in
+one of the arguments should be followed by either a backslash or three
+octal digits.  The backslash quoting is interpreted as in a C string.
+If the @samp{q} option does not appear, backslashes in the strings are
+not treated specially.  The @samp{q} option was introduced in Taylor
+UUCP version 1.07.
 
 @menu
 * The S Command::               The S Command
@@ -6495,6 +6517,10 @@ The master should send mail to @var{user} when the transfer is complete.
 @item n
 The slave should send mail to @var{notify} when the transfer is
 complete.
+@item q
+Backslash quoting is applied to the @var{from}, @var{to}, @var{user},
+and @var{notify} arguments.  @xref{UUCP Protocol Commands}.  This option
+was introduced in Taylor UUCP version 1.07.
 @end table
 
 @item temp
@@ -6632,6 +6658,10 @@ The master should not create directories if necessary, but should fail
 the transfer instead.
 @item m
 The master should send mail to @var{user} when the transfer is complete.
+@item q
+Backslash quoting is applied to the @var{from}, @var{to}, and @var{user}
+arguments.  @xref{UUCP Protocol Commands}.  This option was introduced
+in Taylor UUCP version 1.07.
 @end table
 
 @item size
@@ -6720,8 +6750,14 @@ master wishes to receive the files itself, it would use
 The name of the user who requested the transfer.
 
 @item options
-A list of options to control the transfer.  It is not clear which, if
-any, options are supported by most UUCP packages.
+A list of options to control the transfer.  As far as I know, only one
+option is defined:
+@table @samp
+@item q
+Backslash quoting is applied to the @var{from}, @var{to}, and @var{user}
+arguments.  @xref{UUCP Protocol Commands}.  This option was introduced
+in Taylor UUCP version 1.07.
+@end table
 @end table
 
 The slave then responds with an @samp{X} command response.  FSUUCP does
@@ -6783,6 +6819,13 @@ an @file{X.*} file.
 @item e
 The execution should be done with @file{/bin/sh}.  This is the
 equivalent of the @samp{e} command in an @file{X.*} file.
+@item q
+Backslash quoting is applied to the @var{from}, @var{to}, @var{user},
+and @var{notify} arguments.  @xref{UUCP Protocol Commands}.  This option
+was introduced in Taylor UUCP version 1.07.  Note that the @var{command}
+argument is not backslash quoted---that argument is defined as the
+remainder of the line, and so is already permitted to contain any
+character.
 @end table
 
 @item command

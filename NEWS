@@ -10,6 +10,10 @@ Changes in version 1.07:
     now set as options to configure: --with-user, --with-newconfigdir,
     --with-oldconfigdir.
 
+    You can now use file names and notification addresses which
+    contain spaces, but only when talking to another instance of
+    version 1.07.
+
     The exit status of uux now uses values from <sysexits.h>.
 
     TCP ports now support IPv6 on modern systems.  A new ``version''

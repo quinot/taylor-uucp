@@ -1378,13 +1378,15 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	  sprintf (zsend, "S%s -R -N0%o", qdaemon->zlocalname,
 		   (unsigned int) (FEATURE_SIZES
 				   | FEATURE_EXEC
-				   | FEATURE_RESTART));
+				   | FEATURE_RESTART
+				   | FEATURE_QUOTES));
 	else
 	  sprintf (zsend, "S%s -p%c -vgrade=%c -R -N0%o",
 		   qdaemon->zlocalname, bgrade, bgrade,
 		   (unsigned int) (FEATURE_SIZES
 				   | FEATURE_EXEC
-				   | FEATURE_RESTART));
+				   | FEATURE_RESTART
+				   | FEATURE_QUOTES));
       }
     else
       {
@@ -1397,13 +1399,15 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	  sprintf (zsend, "S%s -Q%ld -R -N0%o", qdaemon->zlocalname, iseq,
 		   (unsigned int) (FEATURE_SIZES
 				   | FEATURE_EXEC
-				   | FEATURE_RESTART));
+				   | FEATURE_RESTART
+				   | FEATURE_QUOTES));
 	else
 	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -R -N0%o",
 		   qdaemon->zlocalname, iseq, bgrade, bgrade,
 		   (unsigned int) (FEATURE_SIZES
 				   | FEATURE_EXEC
-				   | FEATURE_RESTART));
+				   | FEATURE_RESTART
+				   | FEATURE_QUOTES));
       }
 
     fret = fsend_uucp_cmd (qconn, zsend);
@@ -2398,7 +2402,8 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
 	sprintf (ab, "ROKN0%o",
 		 (unsigned int) (FEATURE_SIZES
 				 | FEATURE_EXEC
-				 | FEATURE_RESTART));
+				 | FEATURE_RESTART
+				 | FEATURE_QUOTES));
 	zreply = ab;
       }
     if (! fsend_uucp_cmd (qconn, zreply))

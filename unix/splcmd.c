@@ -49,7 +49,7 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds, pftemp)
   char *ztemp;
   FILE *e;
   int i;
-  const struct scmd *q;
+  const struct scmd *qcmd;
   char *z;
   char *zjobid;
 
@@ -75,25 +75,19 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds, pftemp)
       return NULL;
     }
 
-  for (i = 0, q = pascmds; i < ccmds; i++, q++)
+  for (i = 0, qcmd = pascmds; i < ccmds; i++, qcmd++)
     {
-      if (q->zfrom[strcspn (q->zfrom, " \t\n")] != '\0'
-	  || q->zto[strcspn (q->zto, " \t\n")] != '\0'
-	  || q->zuser[strcspn (q->zuser, " \t\n")] != '\0'
-	  || q->zoptions[strcspn (q->zoptions, " \t\n")] != '\0'
-	  || ((q->bcmd == 'S' || q->bcmd == 'E')
-	      && (q->ztemp[strcspn (q->ztemp, " \t\n")] != '\0'
-		  || (q->znotify != NULL
-		      && q->znotify[strcspn (q->znotify, " \t\n")] != '\0'))))
+      boolean fquote;
+      const struct scmd *q;
+      struct scmd squoted;
+
+      fquote = fcmd_needs_quotes (qcmd);
+      if (! fquote)
+	q = qcmd;
+      else
 	{
-	  ulog (LOG_ERROR,
-		"Unsupported use of whitespace in file name or mailing address");
-	  (void) fclose (e);
-	  (void) remove (ztemp);
-	  ubuffree (ztemp);
-	  if (pftemp != NULL)
-	    *pftemp = FALSE;
-	  return NULL;
+	  uquote_cmd (qcmd, &squoted);
+	  q = &squoted;
 	}
 
       switch (q->bcmd)
@@ -127,6 +121,9 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds, pftemp)
 	    *pftemp = FALSE;
 	  return NULL;
 	}
+
+      if (fquote)
+	ufree_quoted_cmd (&squoted);
     }
 
   if (! fstdiosync (e, ztemp))

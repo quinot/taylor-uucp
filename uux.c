@@ -94,6 +94,13 @@ const char uux_rcsid[] = "$Id$";
    operators.  */
 #define ZSHELLNONREDIRSEPS ";&*| \t"
 
+/* Whether we need to backslash quote the entries in the execution
+   file.  */
+static boolean fXquote;
+
+/* Whether we have output the 'Q' command required for quoting.  */
+static boolean fXquote_output;
+
 /* Whether this execution is occurring on the local system.  */
 static boolean fXxqtlocal;
 
@@ -389,10 +396,15 @@ main (argc, argv)
       bXgrade = BDEFAULT_UUX_GRADE;
     }
 
-  if (zrequestor != NULL
-      && zrequestor[strcspn (zrequestor, " \t\n")] != '\0')
-    ulog (LOG_FATAL,
-	  "Unsupported use of whitespace in notification address");
+  /* Check whether we need backslash quoting in the executable file.
+     We always break up the command arguments at spaces anyhow, so we
+     don't have to worry about them.  Note that this means that
+     certain commands aren't supported.  */
+  if ((zrequestor != NULL
+       && zrequestor[strcspn (zrequestor, " \t\n")] != '\0')
+      || (zstatus_file != NULL
+	  && zstatus_file[strcspn (zstatus_file, " \t\n")] != '\0'))
+    fXquote = TRUE;
 
   if (optind == argc)
     uxusage ();
@@ -1427,6 +1439,9 @@ uxadd_xqt_line (bchar, z1, z2)
      const char *z1;
      const char *z2;
 {
+  char *z1q;
+  char *z2q;
+
   if (eXxqt_file == NULL)
     {
       const char *zxqt_name;
@@ -1447,12 +1462,39 @@ uxadd_xqt_line (bchar, z1, z2)
 	uxabort (EX_OSERR);
     }
 
+  z1q = NULL;
+  z2q = NULL;
+  if (fXquote)
+    {
+      if (! fXquote_output)
+	{
+	  fprintf (eXxqt_file, "Q\n");
+	  fXquote_output = TRUE;
+	}
+
+      if (z1 != NULL)
+	{
+	  z1q = zquote_cmd_string (z1, FALSE);
+	  z1 = z1q;
+	}
+      if (z2 != NULL)
+	{
+	  z2q = zquote_cmd_string (z2, FALSE);
+	  z2 = z2q;
+	}
+    }
+
   if (z1 == NULL)
     fprintf (eXxqt_file, "%c\n", bchar);
   else if (z2 == NULL)
     fprintf (eXxqt_file, "%c %s\n", bchar, z1);
   else
     fprintf (eXxqt_file, "%c %s %s\n", bchar, z1, z2);
+
+  if (z1q != NULL)
+    ubuffree (z1q);
+  if (z2q != NULL)
+    ubuffree (z2q);
 }
 
 /* Add a file to be sent to the execute system.  */

@@ -49,6 +49,11 @@
    still be used to indicate it.  */
 #define FEATURE_SVR4 (020)
 
+/* Supports the 'q' option in UUCP protocol commands.  When the 'q'
+   option appears in a command, it means that the string fields are
+   backslash quoted.  */
+#define FEATURE_QUOTES (040)
+
 /* This structure is used to hold information concerning the
    communication link established with the remote system.  */
 
