@@ -1573,6 +1573,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 			  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 			  fbad = TRUE;
 			}
+		      ssys.uuconf_zname = zlocalname;
 		    }
 		  else if (! funknown_system (puuconf, zsystem, &ssys))
 		    {
