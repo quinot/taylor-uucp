@@ -1,10 +1,5 @@
 /* Configuration header file for Taylor UUCP.  -*- C -*-  */
 
-/* Set MAIL_PROGRAM to a program which takes a mail address as an
-   argument and accepts a mail message to send to that address on
-   stdin (e.g. "/bin/mail").  */
-#define MAIL_PROGRAM undefined
-
 /* Set ECHO_PROGRAM to a program which echoes its arguments; if echo
    is a shell builtin you can just use "echo".  */
 #define ECHO_PROGRAM undefined

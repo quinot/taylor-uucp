@@ -222,6 +222,34 @@
    have the nap function.  */
 #define HAVE_HUNDREDTHS_NAP 0
 
+/* Set MAIL_PROGRAM to a program which can be used to send mail.  It
+   will be used for mail to both local and remote users.  Set
+   MAIL_PROGRAM_TO_BODY to 1 if the recipient should be specified as a
+   To: line in the body of the message; otherwise, the recipient will
+   be provided as an argument to MAIL_PROGRAM.  Set
+   MAIL_PROGRAM_SUBJECT_BODY if the subject should be specified as a
+   Subject: line in the body of the message; otherwise, the subject
+   will be provided using the -s option to MAIL_PROGRAM (if your mail
+   program does not support the -s option, you must set
+   MAIL_PROGRAM_SUBJECT_BODY to 1).  If your system uses sendmail, use
+   the sendmail choice below.  Otherwise, select one of the other
+   choices as appropriate.  */
+#if 1
+#define MAIL_PROGRAM "/usr/lib/sendmail -t"
+#define MAIL_PROGRAM_TO_BODY 1
+#define MAIL_PROGRAM_SUBJECT_BODY 1
+#endif
+#if 0
+#define MAIL_PROGRAM "/usr/ucb/mail"
+#define MAIL_PROGRAM_TO_BODY 0
+#define MAIL_PROGRAM_SUBJECT_BODY 0
+#endif
+#if 0
+#define MAIL_PROGRAM "/bin/mail"
+#define MAIL_PROGRAM_TO_BODY 0
+#define MAIL_PROGRAM_SUBJECT_BODY 1
+#endif
+
 /* Set PS_PROGRAM to the program to run to get a process status,
    including the arguments to pass it.  This is used by ``uustat -p''.
    Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process

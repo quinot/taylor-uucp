@@ -28,16 +28,6 @@ dnl
 AC_HAVE_POUNDBANG(POUNDBANG=yes, POUNDBANG=no)
 AC_SUBST(POUNDBANG)
 dnl
-echo checking for mail program
-if test -s /usr/ucb/mail; then
- AC_DEFINE([MAIL_PROGRAM], "/usr/ucb/mail")
-elif test -s /bin/mail; then
- AC_DEFINE([MAIL_PROGRAM], "/bin/mail")
-elif test -s /usr/bin/mail; then
- AC_DEFINE([MAIL_PROGRAM], "/usr/bin/mail")
-elif test -s /usr/bin/mailx; then
- AC_DEFINE([MAIL_PROGRAM], "/usr/bin/mailx")
-fi
 echo checking for echo program
 if (PATH= echo test) 2>/dev/null | grep test >/dev/null 2>&1; then
  AC_DEFINE([ECHO_PROGRAM], "echo")
