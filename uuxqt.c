@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/02/18  04:53:26  ian
+   T. William Wells: make sure sh execution uses absolute path
+
    Revision 1.23  1992/02/14  21:32:50  ian
    Niels Baggesen: under HAVE_BNU_LOGGING, don't lost system name when dieing
 
@@ -229,7 +232,7 @@ main (argc, argv)
   (void) signal (SIGIOT, uqcatch);
 #endif
 
-  usysdep_initialize (FALSE, FALSE);
+  usysdep_initialize (TRUE, FALSE);
 
   ulog_to_file (TRUE);
 
