@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.3  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -63,15 +66,22 @@ main (argc, argv)
      char **argv;
 {
   int iopt;
+  /* -a: don't display aliases.  */
+  boolean fnoalias = FALSE;
   /* -l: if true, output local node name.  */
   boolean flocal = FALSE;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
 
-  while ((iopt = getopt (argc, argv, "lI:x:")) != EOF)
+  while ((iopt = getopt (argc, argv, "alI:x:")) != EOF)
     {
       switch (iopt)
 	{
+	case 'a':
+	  /* Don't display aliases.  */
+	  fnoalias = TRUE;
+	  break;
+
 	case 'l':
 	  /* Output local node name.  */
 	  flocal = TRUE;
@@ -117,7 +127,21 @@ main (argc, argv)
       uread_all_system_info (&c, &pas);
 
       for (i = 0; i < c; i++)
-	printf ("%s\n", pas[i].zname);
+	{
+	  printf ("%s\n", pas[i].zname);
+
+	  if (! fnoalias && pas[i].zalias != NULL)
+	    {
+	      char *zcopy, *ztok;
+
+	      zcopy = (char *) alloca (strlen (pas[i].zalias) + 1);
+	      strcpy (zcopy, pas[i].zalias);
+	      for (ztok = strtok (zcopy, " ");
+		   ztok != NULL;
+		   ztok = strtok ((char *) NULL, " "))
+		printf ("%s\n", ztok);
+	    }
+	}
     }
 
   ulog_close ();
@@ -137,7 +161,9 @@ unusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
-	   "Usage: uuname [-l] [-I file] [-x debug]\n");
+	   "Usage: uuname [-a]  [-l] [-I file] [-x debug]\n");
+  fprintf (stderr,
+	   " -a: don't display aliases\n");
   fprintf (stderr,
 	   " -l: print local name\n");
   fprintf (stderr,
