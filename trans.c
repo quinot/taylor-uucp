@@ -1362,7 +1362,7 @@ ustats_failed (qsys)
    is actually called.  */
 
 /*ARGSUSED*/
-boolean
+static boolean
 flocal_poll_file (qtrans, qdaemon)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
