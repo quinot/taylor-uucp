@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1991/12/15  03:42:33  ian
+   Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
+
    Revision 1.16  1991/12/11  19:35:48  ian
    Mark Powell: put in my own version of strtol
 
@@ -269,6 +272,8 @@ struct schat_info
   int ctimeout;
   /* The list of failure strings.  */
   char *zfail;
+  /* Whether to strip incoming characters to seven bits.  */
+  boolean fstrip;
 };
 
 /* This macro is used to initialize the entries of an schat_info
@@ -278,7 +283,8 @@ struct schat_info
   ((q)->zchat = NULL, \
    (q)->zprogram = NULL, \
    (q)->ctimeout = 60, \
-   (q)->zfail = NULL)
+   (q)->zfail = NULL, \
+   (q)->fstrip = TRUE)
 
 /* This structure holds a set of special commands executed for
    particular protocols.  */

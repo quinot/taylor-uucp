@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/15  03:42:33  ian
+   Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
+
    Revision 1.6  1991/12/13  04:27:33  ian
    Franc,ois Pinard: add some chat script debugging messages
 
@@ -60,7 +63,7 @@ char chat_rcsid[] = "$Id$";
 
 static int ccescape P((char *zbuf));
 static int icexpect P((int cstrings, char **azstrings, int *aclens,
-		       int ctimeout));
+		       int ctimeout, boolean fstrip));
 static boolean fcecho_send P((const char *z, int clen));
 static boolean fcphone P((const struct sdialer *qdial, const char *zphone,
 			  boolean (*pfwrite) P((const char *zwrite,
@@ -175,7 +178,7 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	    *znext = '\0';
 	  aclens[0] = ccescape (azstrings[0]);
 	  while ((istr = icexpect (cstrings, azstrings, aclens,
-				   qchat->ctimeout))
+				   qchat->ctimeout, qchat->fstrip))
 		 != 0)
 	    {
 	      char *zsub;
@@ -344,11 +347,12 @@ ccescape (z)
    arrives, or -1 on timeout, or -2 on error.  */
 
 static int
-icexpect (cstrings, azstrings, aclens, ctimeout)
+icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
      int cstrings;
      char **azstrings;
      int *aclens;
      int ctimeout;
+     boolean fstrip;
 {
   int i;
   int cmin, cmax;
@@ -400,11 +404,11 @@ icexpect (cstrings, azstrings, aclens, ctimeout)
       if (bchar < 0)
 	return bchar;
 
-      /* Some systems send out characters with parity bits turned on.
-	 There should be some way for the chat script to specify
-	 parity.  */
-      zhave[chave] = bchar & 0x7f;
+      /* Strip the parity bit if desired.  */
+      if (fstrip)
+	bchar &= 0x7f;
 
+      zhave[chave] = bchar;
       ++chave;
 
       /* See if any of the strings can be found in the buffer.  Since

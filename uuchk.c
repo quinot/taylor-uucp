@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/15  03:42:33  ian
+   Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
+
    Revision 1.8  1991/12/01  14:45:53  ian
    Bob Izenberg: report dialer/token pairs correctly
 
@@ -637,6 +640,8 @@ ukshow_chat (qchat, zhdr)
       printf ("%s script timeout %d\n", zhdr, qchat->ctimeout);
       if (qchat->zfail != NULL)
 	printf ("%s failure strings %s\n", zhdr, qchat->zfail);
+      if (qchat->fstrip)
+	printf ("%s script incoming bytes stripped to seven bits\n", zhdr);
     }
 }
 
