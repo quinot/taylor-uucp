@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.71  1992/03/09  05:29:20  ian
+   Ted Lindgreen: report requested grade on an incoming call
+
    Revision 1.70  1992/03/09  05:08:16  ian
    Added status for wrong time to call, not used if system can't be called
 
@@ -1280,20 +1283,22 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
     if (fsend_uucp_cmd ("OOOOOO")
 	&& fsend_uucp_cmd ("OOOOOO"))
       {
-	if (fret)
+	/* We don't even look for the hangup string from the other
+	   side unless we're in debugging mode.  */
+#if DEBUG > 2
+	if (iDebug > 2 && fret)
 	  {
 	    zstr = zget_uucp_cmd (FALSE);
-#if DEBUG > 0
 	    if (zstr != NULL)
 	      {
-		/* The Ultrix UUCP only sends six O's, although I think
-		   it should send seven.  Because of this, we only
-		   check for six.  */
+		/* The Ultrix UUCP only sends six O's, although I
+		   think it should send seven.  Because of this, we
+		   only check for six.  */
 		if (strstr (zstr, "OOOOOO") == NULL)
 		  ulog (LOG_DEBUG, "No hangup from remote");
 	      }
-#endif
 	  }
+#endif
       }
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
@@ -1971,17 +1976,19 @@ faccept_call (zlogin, qport, pqsys)
     if (fsend_uucp_cmd ("OOOOOOO")
 	&& fsend_uucp_cmd ("OOOOOOO"))
       {
-	if (fret)
+	/* We don't even look for the hangup string from the other
+	   side unless we're in debugging mode.  */
+#if DEBUG > 2
+	if (iDebug > 2 && fret)
 	  {
 	    zstr = zget_uucp_cmd (FALSE);
-#if DEBUG > 0
 	    if (zstr != NULL)
 	      {
 		if (strstr (zstr, "OOOOOO") == NULL)
 		  ulog (LOG_DEBUG, "No hangup from remote");
 	      }
-#endif
 	  }
+#endif
       }
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
