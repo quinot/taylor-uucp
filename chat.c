@@ -814,7 +814,8 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
 			iuuconf = uuconf_callout (puuconf, qsys,
 						  &zcallout_login,
 						  &zcallout_pass);
-			if (iuuconf == UUCONF_NOT_FOUND)
+			if (iuuconf == UUCONF_NOT_FOUND
+			    || zcallout_login == NULL)
 			  {
 			    ucsend_debug_end (fquote, TRUE);
 			    ulog (LOG_ERROR, "No login defined");
@@ -864,7 +865,8 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
 			iuuconf = uuconf_callout (puuconf, qsys,
 						  &zcallout_login,
 						  &zcallout_pass);
-			if (iuuconf == UUCONF_NOT_FOUND)
+			if (iuuconf == UUCONF_NOT_FOUND
+			    || zcallout_pass == NULL)
 			  {
 			    ucsend_debug_end (fquote, TRUE);
 			    ulog (LOG_ERROR, "No password defined");
@@ -1253,7 +1255,8 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 			iuuconf = uuconf_callout (puuconf, qsys,
 						  &zcallout_login,
 						  &zcallout_pass);
-			if (iuuconf == UUCONF_NOT_FOUND)
+			if (iuuconf == UUCONF_NOT_FOUND
+			    || zcallout_login == NULL)
 			  {
 			    ulog (LOG_ERROR,
 				  "chat-program: No login defined");
@@ -1294,7 +1297,8 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 			iuuconf = uuconf_callout (puuconf, qsys,
 						  &zcallout_login,
 						  &zcallout_pass);
-			if (iuuconf == UUCONF_NOT_FOUND)
+			if (iuuconf == UUCONF_NOT_FOUND
+			    || zcallout_pass == NULL)
 			  {
 			    ulog (LOG_ERROR,
 				  "chat-program: No password  defined");
