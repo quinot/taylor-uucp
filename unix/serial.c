@@ -487,6 +487,7 @@ fsserial_init (qconn, qcmds, zdevice)
       q->zdevice = zbufalc (sizeof "/dev/" + clen);
       memcpy (q->zdevice, "/dev/", sizeof "/dev/" - 1);
       memcpy (q->zdevice + sizeof "/dev/" - 1, zdevice, clen);
+      q->zdevice[sizeof "/dev/" + clen - 1] = '\0';
     }
   q->o = -1;
   q->ftli = FALSE;
@@ -598,8 +599,8 @@ fsserial_lockfile (flok, qconn)
 	z = zalc;
       }
 #else /* ! HAVE_SVR4_LOCKFILES */
-#endif /* ! HAVE_SVR4_LOCKFILES */
       z = strrchr (qsysdep->zdevice, '/') + 1;
+#endif /* ! HAVE_SVR4_LOCKFILES */
 #endif /* ! HAVE_SVR4_LOCKFILES && ! HAVE_COHERENT_LOCKFILES */
     }
 
