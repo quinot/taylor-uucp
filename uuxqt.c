@@ -179,6 +179,22 @@ main (argc, argv)
   else if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
+  fsys = FALSE;
+
+  /* If we were given a system name, canonicalize it, since the system
+     dependent layer will not be returning aliases.  */
+  if (zdosys != NULL)
+    {
+      iuuconf = uuconf_system_info (puuconf, zdosys, &ssys);
+      if (iuuconf == UUCONF_NOT_FOUND)
+	ulog (LOG_FATAL, "%s: System not found", zdosys);
+      else if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+      zdosys = zbufcpy (ssys.uuconf_zname);
+      fsys = TRUE;
+    }
+
   /* Limit the number of uuxqt processes, and make sure we're the only
      uuxqt daemon running for this command.  */
   iQlock_seq = isysdep_lock_uuxqt (zcmd, cQmaxuuxqts);
@@ -202,8 +218,6 @@ main (argc, argv)
 	  ulog_close ();
 	  usysdep_exit (FALSE);
 	}
-
-      fsys = FALSE;
 
       while ((z = zsysdep_get_xqt (&zgetsys, &ferr)) != NULL)
 	{
