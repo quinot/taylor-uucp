@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -165,10 +168,10 @@ static int iGrecseq;
 static int iGlocal_ack;
 
 /* Number of bytes sent for current file.  */
-static int cGsent_bytes;
+static long cGsent_bytes;
 
 /* Number of bytes received for current file.  */
-static int cGreceived_bytes;
+static long cGreceived_bytes;
 
 /* Whether we've reported an error for a received file.  */
 static boolean fGreceived_error;
