@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/01  01:28:44  ian
+   Mitch Mitchell: fixed comment listing supported commands
+
    Revision 1.5  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -305,8 +308,8 @@ uqcatch (isig)
    F required-file filename-to-use
    R requestor-address
    U user system
-   Z (acknowledge if command failed)
-   N (no acknowledgement)
+   Z (acknowledge if command failed; default)
+   N (no acknowledgement on failure)
    n (acknowledge if command succeeded)
    B (return command input on error)
    e (process with sh)
@@ -314,7 +317,10 @@ uqcatch (isig)
    M status-file
    # comment
 
-   Unrecognized commands are ignored.
+   Unrecognized commands are ignored.  We actually do not recognize
+   the Z command, since it requests default behaviour.  We always send
+   mail on failure, unless the N command appears.  We never send mail
+   on success, unless the n command appears.
 
    This code does not currently support the B or M commands.  */
 
@@ -340,11 +346,8 @@ static const char *zQrequestor;
 static const char *zQuser;
 /* System name.  */
 static const char *zQsystem;
-/* This is set by the Z flag, meaning that acknowledgement should
-   be mailed if the command failed.  */
-static boolean fQerror_ack;
 /* This is set by the N flag, meaning that no acknowledgement should
-   be mailed.  This is overridden by fQerror_ack.  */
+   be mailed on failure.  */
 static boolean fQno_ack;
 /* This is set by the n flag, meaning that acknowledgement should be
    mailed if the command succeeded.  */
@@ -382,7 +385,6 @@ static struct scmdtab asQcmds[] =
   { "F", CMDTABTYPE_FN | 0, NULL, tqfile },
   { "R", CMDTABTYPE_STRING, (pointer) &zQrequestor, NULL },
   { "U", CMDTABTYPE_FN | 3, NULL, tquser },
-  { "Z", CMDTABTYPE_FN | 1, (pointer) &fQerror_ack, tqset },
   { "N", CMDTABTYPE_FN | 1, (pointer) &fQno_ack, tqset },
   { "n", CMDTABTYPE_FN | 1, (pointer) &fQsuccess_ack, tqset },
   { "B", CMDTABTYPE_FN | 1, (pointer) &fQsend_input, tqset },
@@ -593,7 +595,6 @@ uqdo_xqt_file (zfile, qsys, zcmd)
   zQrequestor = NULL;
   zQuser = NULL;
   zQsystem = NULL;
-  fQerror_ack = FALSE;
   fQno_ack = FALSE;
   fQsuccess_ack = FALSE;
   fQsend_input = FALSE;
@@ -743,8 +744,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
       ulog (LOG_ERROR, "Not permitted to execute %s",
 	    azQargs[0]);
 
-      if (zmail != NULL
-	  && (! fQno_ack || fQerror_ack))
+      if (zmail != NULL && ! fQno_ack)
 	{
 	  const char *az[20];
 
@@ -880,8 +880,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 	{
 	  ulog (LOG_ERROR, "Not permitted to write to %s", zQoutfile);
 	      
-	  if (zmail != NULL
-	      && (! fQno_ack || fQerror_ack))
+	  if (zmail != NULL && ! fQno_ack)
 	    {
 	      const char *az[20];
 
@@ -952,8 +951,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
     {
       ulog (LOG_NORMAL, "Execution failed (%s)", zfile);
 
-      if (zmail != NULL
-	  && (! fQno_ack || fQerror_ack))
+      if (zmail != NULL && ! fQno_ack)
 	{
 	  const char **pz;
 	  int cgot;
@@ -1007,8 +1005,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
     }
   else
     {
-      if (zmail != NULL
-	  && (! fQno_ack && ! fQerror_ack))
+      if (zmail != NULL && fQsuccess_ack)
 	{
 	  const char *az[20];
 
@@ -1036,15 +1033,13 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 	    s.zuser = zQuser;
 	  else
 	    s.zuser = "uucp";
-	  if (zmail != NULL
-	      && (! fQno_ack && ! fQerror_ack))
+	  if (zmail != NULL && fQsuccess_ack)
 	    s.zoptions = "Cn";
 	  else
 	    s.zoptions = "C";
 	  s.ztemp = abtemp;
 	  s.imode = 0666;
-	  if (zmail != NULL
-	      && (! fQno_ack && ! fQerror_ack))
+	  if (zmail != NULL && fQsuccess_ack)
 	    s.znotify = zmail;
 	  else
 	    s.znotify = "";
