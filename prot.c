@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/10  19:24:22  ian
+   Added pffile protocol entry point for file level control
+
    Revision 1.1  1991/11/09  18:51:50  ian
    Initial revision
 
@@ -54,7 +57,6 @@ static boolean fpsendfile_confirm P((void));
 static boolean fprecfile_confirm P((void));
 static boolean fploop P((void));
 static void upadd_cmd P((const char *z, int clen, boolean flast));
-static const char *zpget_cmd P((void));
 
 /* Variables visible to the protocol-specific routines.  */
 
@@ -144,7 +146,7 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 
       /* Now we must await a reply.  */
 
-      zrec = zpget_cmd ();
+      zrec = zgetcmd ();
       if (zrec == NULL)
 	{
 	  (void) ffileclose (e);
@@ -239,7 +241,7 @@ fpsendfile_confirm ()
 {
   const char *zrec;
 
-  zrec = zpget_cmd ();
+  zrec = zgetcmd ();
   if (zrec == NULL)
     return FALSE;
 
@@ -314,7 +316,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 
       /* Wait for a reply.  */
 
-      zrec = zpget_cmd ();
+      zrec = zgetcmd ();
       if (zrec == NULL)
 	{
 	  (void) ffileclose (e);
@@ -428,7 +430,7 @@ fxcmd (qcmd)
 
   /* Wait for a reply.  */
 
-  zrec = zpget_cmd ();
+  zrec = zgetcmd ();
   if (zrec == NULL)
     return FALSE;
 
@@ -529,7 +531,7 @@ fgetcmd (fmaster, qcmd)
       const char *zcmd;
       int clen;
 
-      zcmd = zpget_cmd ();
+      zcmd = zgetcmd ();
       if (zcmd == NULL)
 	return FALSE;
 
@@ -575,7 +577,7 @@ fgetcmd (fmaster, qcmd)
 	  if (! (qProto->pfsendcmd) ("HY"))
 	    return TRUE;
 	  fPerror_ok = TRUE;
-	  zcmd = zpget_cmd ();
+	  zcmd = zgetcmd ();
 	  fPerror_ok = FALSE;
 	  if (zcmd == NULL)
 	    return TRUE;
@@ -618,7 +620,7 @@ fhangup_reply (fconfirm)
       if (! (qProto->pfsendcmd) ("HY"))
 	return FALSE;
 
-      z = zpget_cmd ();
+      z = zgetcmd ();
       if (z == NULL)
 	return FALSE;
       if (strcmp (z, "HY") != 0)
@@ -921,8 +923,8 @@ upadd_cmd (z, clen, flast)
    value of this may be treated as a static buffer; it will last
    at least until the next packet is received.  */
 
-static const char *
-zpget_cmd ()
+const char *
+zgetcmd ()
 {
   struct spcmdqueue *q;
 
@@ -931,7 +933,7 @@ zpget_cmd ()
     {
 #if DEBUG > 4
       if (iDebug > 4)
-	ulog (LOG_DEBUG, "zpget_cmd: Waiting for packet");
+	ulog (LOG_DEBUG, "zgetcmd: Waiting for packet");
 #endif
 
       if (! (qProto->pfwait) ())

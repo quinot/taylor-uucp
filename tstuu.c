@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -90,6 +93,7 @@ static int cFrom1, cFrom2;
 static int cSleep1, cSleep2;
 static char abLogout1[sizeof "tstout /dev/ptyp0"];
 static char abLogout2[sizeof "tstout /dev/ptyp0"];
+static char *zProtocols;
 
 int
 main (argc, argv)
@@ -111,10 +115,13 @@ main (argc, argv)
   zcmd2 = NULL;
   zsys = "test2";
 
-  while ((iopt = getopt (argc, argv, "p:s:t:ux1:2:")) != EOF)
+  while ((iopt = getopt (argc, argv, "c:p:s:t:ux1:2:")) != EOF)
     {
       switch (iopt)
 	{
+	case 'c':
+	  zProtocols = optarg;
+	  break;
 	case 'p':
 	  iPercent = atoi (optarg);
 	  break;
@@ -326,8 +333,8 @@ main (argc, argv)
 
   signal (SIGCHLD, uchild);
 
-  (void) fcntl (omaster1, F_SETFL, O_NONBLOCK);
-  (void) fcntl (omaster2, F_SETFL, O_NONBLOCK);
+  (void) fcntl (omaster1, F_SETFL, O_NONBLOCK | O_NDELAY);
+  (void) fcntl (omaster2, F_SETFL, O_NONBLOCK | O_NDELAY);
 
   stime.tv_sec = 5;
   stime.tv_usec = 0;
@@ -640,6 +647,8 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "protocol-parameter g window 7\n");
       fprintf (e, "protocol-parameter g packet-size 4096\n");
     }
+  if (zProtocols != NULL)
+    fprintf (e, "protocol %s\n", zProtocols);
 
   xfclose (e);
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/10  19:24:22  ian
+   Added pffile protocol entry point for file level control
+
    Revision 1.2  1991/11/09  18:53:07  ian
    Reworked protocol interface
 
@@ -151,6 +154,12 @@ extern boolean ftransfer_fail P((int bcmd, enum tfailure twhy));
    will be set to NULL.  */
 extern boolean fgetcmd P((boolean fmaster, struct scmd *qcmd));
 
+/* Get a command string from the other system, where the nature of a
+   command string is defined by the protocol.  The return value is
+   fragile, and must be saved if any other protocol related calls are
+   made.  */
+extern const char *zgetcmd P((void));
+
 /* Hangup.  This is only called by the master, and indicates that the
    master is ready to relinquish control; after calling it, the master
    becomes the slave.  If the original slave has no work to do, it
@@ -222,5 +231,17 @@ extern char *zggetspace P((int *pcdata));
 extern boolean fgsenddata P((char *z, int c));
 extern boolean fgprocess P((boolean *pfexit));
 extern boolean fgwait P((void));
+
+/* Prototypes for 'f' protocol functions.  */
+
+extern struct scmdtab asFproto_params[];
+extern boolean ffstart P((boolean fmaster));
+extern boolean ffshutdown P((void));
+extern boolean ffsendcmd P((const char *z));
+extern char *zfgetspace P((int *pcdata));
+extern boolean ffsenddata P((char *z, int c));
+extern boolean ffprocess P((boolean *pfexit));
+extern boolean ffwait P((void));
+extern boolean fffile P((boolean fstart, boolean fsend, boolean *pfredo));
 
 #endif

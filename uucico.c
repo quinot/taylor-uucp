@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/11/10  19:24:22  ian
+   Added pffile protocol entry point for file level control
+
    Revision 1.8  1991/11/09  18:53:07  ian
    Reworked protocol interface
 
@@ -72,7 +75,9 @@ char uucico_rcsid[] = "$Id$";
 static struct sprotocol asProtocols[] =
 {
   { 'g', FALSE, asGproto_params, fgstart, fgshutdown, fgsendcmd,
-      zggetspace, fgsenddata, fgprocess, fgwait, NULL }
+      zggetspace, fgsenddata, fgprocess, fgwait, NULL },
+  { 'f', FALSE, asFproto_params, ffstart, ffshutdown, ffsendcmd,
+      zfgetspace, ffsenddata, ffprocess, ffwait, fffile }
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
