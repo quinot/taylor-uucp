@@ -2066,6 +2066,7 @@ chris@@cj_net.in-berlin.de (Christof Junge)
 tron@@Veritas.COM (Ronald S. Karr)
 kent@@sparky.IMD.Sterling.COM (Kent Landfield)
 lebaron@@inrs-telecom.uquebec.ca  (Gregory LeBaron)
+libove@@libove.det.dec.com (Jay Vassos-Libove)
 bruce%blilly@@Broadcast.Sony.COM (Bruce Lilly)
 "Arne Ludwig" <arne@@rrzbu.hanse.de>
 Matthew Lyle <matt@@mips.mitek.com>
