@@ -400,7 +400,7 @@ main (argc, argv)
 
 	case 3:
 	  /* --nostop.  */
-	  txonxoff = XONXOFF_OFF:
+	  txonxoff = XONXOFF_OFF;
 	  break;
 
 	case 1:
