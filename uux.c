@@ -37,6 +37,46 @@ const char uux_rcsid[] = "$Id$";
 
 #include <ctype.h>
 #include <errno.h>
+
+#if HAVE_SYSEXITS_H
+#include <sysexits.h>
+#endif
+
+#ifndef EX_OK
+#define EX_OK (0)
+#endif
+
+#ifndef EX_USAGE
+#define EX_USAGE (64)
+#endif
+
+#ifndef EX_DATAERR
+#define EX_DATAERR (65)
+#endif
+
+#ifndef EX_NOINPUT
+#define EX_NOINPUT (66)
+#endif
+
+#ifndef EX_UNAVAILABLE
+#define EX_UNAVAILABLE (69)
+#endif
+
+#ifndef EX_OSERR
+#define EX_OSERR (71)
+#endif
+
+#ifndef EX_CANTCREAT
+#define EX_CANTCREAT (73)
+#endif
+
+#ifndef EX_TEMPFAIL
+#define EX_TEMPFAIL (75)
+#endif
+
+#ifndef EX_CONFIG
+#define EX_CONFIG (78)
+#endif
 
 /* These character lists should, perhaps, be in sysdep.h.  */
 
@@ -96,7 +136,8 @@ static void uxadd_send_file P((const char *zfrom, const char *zto,
 			       const char *zforward));
 static void uxcopy_stdin P((FILE *e));
 static void uxrecord_file P((const char *zfile));
-static void uxabort P((void));
+static void uxfatal P((void));
+static void uxabort P((int istat));
 static void uxadd_name P((const char *));
 
 /* Long getopt options.  */
@@ -183,9 +224,10 @@ main (argc, argv)
   char *zfullcmd;
   boolean fpoll;
   char aboptions[10];
-  boolean fexit;
 
   zProgram = argv[0];
+
+  ulog_fatal_fn (uxfatal);
 
   /* We need to be able to read a single - as an option, which getopt
      won't do.  We handle this by using getopt to scan the argument
@@ -319,13 +361,13 @@ main (argc, argv)
 	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
 	  printf ("This program is free software; you may redistribute it under the terms of\n");
 	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
-	  exit (EXIT_SUCCESS);
+	  exit (EX_OK);
 	  /*NOTREACHED*/
 
 	case 1:
 	  /* --help.  */
 	  uxhelp ();
-	  exit (EXIT_SUCCESS);
+	  exit (EX_OK);
 	  /*NOTREACHED*/
 
 	case 0:
@@ -488,8 +530,6 @@ main (argc, argv)
 
   usysdep_initialize (puuconf, INIT_SUID | (fgetcwd ? INIT_GETCWD : 0));
 
-  ulog_fatal_fn (uxabort);
-
   zuser = zsysdep_login_name ();
 
   /* Get the local system name.  */
@@ -498,7 +538,7 @@ main (argc, argv)
     {
       zlocalname = zsysdep_localname ();
       if (zlocalname == NULL)
-	exit (EXIT_FAILURE);
+	exit (EX_CONFIG);
     }
   else if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
@@ -688,7 +728,7 @@ main (argc, argv)
       else if (fexpand)
 	zfile = zsysdep_add_cwd (zfile);
       if (zfile == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
 
       /* Check for output redirection.  */
       if (foutput)
@@ -783,12 +823,12 @@ main (argc, argv)
 	     First make sure the user has legitimate access, since we
 	     are running setuid.  */
 	  if (! fsysdep_access (zfile))
-	    uxabort ();
+	    uxabort (EX_NOINPUT);
 
 	  zdata = zsysdep_data_file_name (&sXxqtsys, zXxqtloc, bXgrade, FALSE,
 					  abtname, abdname, (char *) NULL);
 	  if (zdata == NULL)
-	    uxabort ();
+	    uxabort (EX_OSERR);
 
 	  if (fcopy || flink || fXxqtlocal)
 	    {
@@ -802,7 +842,7 @@ main (argc, argv)
 		  boolean fworked;
 
 		  if (! fsysdep_link (zfile, zdata, &fworked))
-		    uxabort ();
+		    uxabort (EX_OSERR);
 
 		  if (fworked)
 		    fdid = TRUE;
@@ -817,9 +857,9 @@ main (argc, argv)
 
 		  efile = esysdep_user_fopen (zfile, TRUE, TRUE);
 		  if (! ffileisopen (efile))
-		    uxabort ();
+		    uxabort (EX_NOINPUT);
 		  if (! fcopy_open_file (efile, zdata, FALSE, TRUE, TRUE))
-		    uxabort ();
+		    uxabort (EX_CANTCREAT);
 		  (void) ffileclose (efile);
 		}
 
@@ -832,7 +872,7 @@ main (argc, argv)
 	      ubuffree (zdata);
 	      /* Make sure the daemon can access the file.  */
 	      if (! fsysdep_daemon_access (zfile))
-		uxabort ();
+		uxabort (EX_NOINPUT);
 	      if (! fin_directory_list (zfile, sXxqtsys.uuconf_pzlocal_send,
 					sXxqtsys.uuconf_zpubdir, TRUE,
 					TRUE, zuser))
@@ -868,7 +908,7 @@ main (argc, argv)
 				   abtname, zforward);
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
-		    uxabort ();
+		    uxabort (EX_OSERR);
 		  uxadd_xqt_line ('F', abdname, zbase);
 		  pzargs[i] = zbase;
 		}
@@ -912,6 +952,7 @@ main (argc, argv)
 	  else
 	    {
 	      char *zdata;
+	      boolean ftemp;
 
 	      if (! sfromsys.uuconf_fcall_transfer
 		  && ! sfromsys.uuconf_fcalled_transfer)
@@ -940,7 +981,7 @@ main (argc, argv)
 					      FALSE, abtname, (char *) NULL,
 					      (char *) NULL);
 	      if (zdata == NULL)
-		uxabort ();
+		uxabort (EX_OSERR);
 	      ubuffree (zdata);
 
 	      /* Request the file.  The special option '9' is a signal
@@ -961,9 +1002,10 @@ main (argc, argv)
 	      s.zcmd = NULL;
 	      s.ipos = 0;
 
-	      zjobid = zsysdep_spool_commands (&sfromsys, bXgrade, 1, &s);
+	      zjobid = zsysdep_spool_commands (&sfromsys, bXgrade, 1, &s,
+					       &ftemp);
 	      if (zjobid == NULL)
-		uxabort ();
+		uxabort (ftemp ? EX_TEMPFAIL : EX_DATAERR);
 
 	      if (fjobid)
 		printf ("%s\n", zjobid);
@@ -997,7 +1039,7 @@ main (argc, argv)
 
 		      zbase = zsysdep_base_name (zfile);
 		      if (zbase == NULL)
-			uxabort ();
+			uxabort (EX_OSERR);
 		      uxadd_xqt_line ('F', abtname, zbase);
 		      pzargs[i] = zbase;
 		    }
@@ -1017,19 +1059,19 @@ main (argc, argv)
 						  (char *) NULL,
 						  (char *) NULL);
 		  if (zdata == NULL)
-		    uxabort ();
+		    uxabort (EX_OSERR);
 		  ubuffree (zdata);
 
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
-		    uxabort ();
+		    uxabort (EX_OSERR);
 
 		  zxqt = zsysdep_xqt_file_name ();
 		  if (zxqt == NULL)
-		    uxabort ();
+		    uxabort (EX_OSERR);
 		  e = esysdep_fopen (zxqt, FALSE, FALSE, TRUE);
 		  if (e == NULL)
-		    uxabort ();
+		    uxabort (EX_OSERR);
 		  uxrecord_file (zxqt);
 
 		  fprintf (e, "U %s %s\n", zsysdep_login_name (),
@@ -1076,11 +1118,11 @@ main (argc, argv)
       zdata = zsysdep_data_file_name (&sXxqtsys, zXxqtloc, bXgrade, FALSE,
 				      abtname, abdname, (char *) NULL);
       if (zdata == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
 
       e = esysdep_fopen (zdata, FALSE, FALSE, TRUE);
       if (e == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
 
       eXclose = e;
       uxrecord_file (zdata);
@@ -1232,12 +1274,13 @@ main (argc, argv)
 
   /* If we got a signal, get out before spooling anything.  */
   if (FGOT_SIGNAL ())
-    uxabort ();
+    uxabort (EX_OSERR);
 
   /* From here on in, it's too late.  We don't call uxabort.  */
   if (cXcmds > 0 || fpoll)
     {
       char *zjobid;
+      boolean ftemp;
 
       if (! fpoll
 	  && ! sXxqtsys.uuconf_fcall_transfer
@@ -1245,11 +1288,12 @@ main (argc, argv)
 	ulog (LOG_FATAL, "Not permitted to transfer files to or from %s",
 	      sXxqtsys.uuconf_zname);
 
-      zjobid = zsysdep_spool_commands (&sXxqtsys, bXgrade, cXcmds, pasXcmds);
+      zjobid = zsysdep_spool_commands (&sXxqtsys, bXgrade, cXcmds, pasXcmds,
+				       &ftemp);
       if (zjobid == NULL)
 	{
 	  ulog_close ();
-	  usysdep_exit (FALSE);
+	  exit (ftemp ? EX_TEMPFAIL : EX_DATAERR);
 	}
 
       if (fjobid)
@@ -1288,9 +1332,7 @@ main (argc, argv)
   if (! fuucico
       || (zcall_system == NULL && ! fcall_any))
     {
-      if (! fXxqtlocal || ! fuucico)
-	fexit = TRUE;
-      else
+      if (fXxqtlocal && fuucico)
 	{
 	  char *zconfigarg;
 
@@ -1302,8 +1344,8 @@ main (argc, argv)
 	      sprintf (zconfigarg, "-I%s", zconfig);
 	    }
 
-	  fexit = fsysdep_run (FALSE, "uuxqt", zconfigarg,
-			       (const char *) NULL);
+	  (void) fsysdep_run (FALSE, "uuxqt", zconfigarg,
+			      (const char *) NULL);
 	}
     }
   else
@@ -1330,10 +1372,10 @@ main (argc, argv)
 	  sprintf (zconfigarg, "-I%s", zconfig);
 	}
 
-      fexit = fsysdep_run (FALSE, "uucico", zcicoarg, zconfigarg);
+      (void) fsysdep_run (FALSE, "uucico", zcicoarg, zconfigarg);
     }
 
-  usysdep_exit (fexit);
+  exit (EX_OK);
 
   /* Avoid error about not returning a value.  */
   return 0;
@@ -1374,7 +1416,7 @@ uxusage ()
   fprintf (stderr,
 	   "Usage: %s [options] [-] command\n", zProgram);
   fprintf (stderr, "Use %s --help for help\n", zProgram);
-  exit (EXIT_FAILURE);
+  exit (EX_USAGE);
 }
 
 /* Add a line to the execute file.  */
@@ -1396,13 +1438,13 @@ uxadd_xqt_line (bchar, z1, z2)
 					    abXxqt_tname, (char *) NULL,
 					    abXxqt_xname);
       if (zxqt_name == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
 
       uxrecord_file (zxqt_name);
 
       eXxqt_file = esysdep_fopen (zxqt_name, FALSE, FALSE, TRUE);
       if (eXxqt_file == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
     }
 
   if (z1 == NULL)
@@ -1439,15 +1481,15 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward)
 	 uucp to forward the file.  */
       zbase = zsysdep_base_name (zfrom);
       if (zbase == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
 
       zxqt = zsysdep_data_file_name (&sXxqtsys, zXxqtloc, bXgrade, TRUE,
 				     abtname, abdname, abxname);
       if (zxqt == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
       e = esysdep_fopen (zxqt, FALSE, FALSE, TRUE);
       if (e == NULL)
-	uxabort ();
+	uxabort (EX_OSERR);
       uxrecord_file (zxqt);
 
       fprintf (e, "U %s %s\n", zsysdep_login_name (), zXxqtloc);
@@ -1540,7 +1582,7 @@ uxcopy_stdin (e)
 	      int b;
 
 	      if (FGOT_SIGNAL ())
-		uxabort ();
+		uxabort (EX_OSERR);
 
 	      /* There's an unimportant race here.  If the user hits
 		 ^C between the FGOT_SIGNAL we just did and the time
@@ -1559,7 +1601,7 @@ uxcopy_stdin (e)
       usysdep_end_catch ();
 
       if (FGOT_SIGNAL ())
-	uxabort ();
+	uxabort (EX_OSERR);
 
       if (cread > 0)
 	{
@@ -1588,10 +1630,19 @@ uxrecord_file (zfile)
   ++cXfiles;
 }
 
+/* The function called for a LOG_FATAL error.  */
+
+static void
+uxfatal ()
+{
+  uxabort (EX_UNAVAILABLE);
+}
+
 /* Delete all the files we have recorded and exit.  */
 
 static void
-uxabort ()
+uxabort (istat)
+     int istat;
 {
   int i;
 
@@ -1602,7 +1653,7 @@ uxabort ()
   for (i = 0; i < cXfiles; i++)
     (void) remove (pXaz[i]);
   ulog_close ();
-  usysdep_exit (FALSE);
+  exit (istat);
 }
 
 /* Add a name to the list of file names we are going to log.  We log

@@ -1189,7 +1189,7 @@ ucspool_cmds (fjobid)
     {
       ulog_system (qjob->qsys->uuconf_zname);
       zjobid = zsysdep_spool_commands (qjob->qsys, bCgrade, qjob->ccmds,
-				       qjob->pascmds);
+				       qjob->pascmds, (boolean *) NULL);
       if (zjobid != NULL)
 	{
 	  int i;

@@ -317,10 +317,6 @@ configuration files.
 
 Ed Carp: preserve files if uuxqt execution fails.
 
-165.
-
-Marc Sheldon: use exit codes from <sysexits.h> in uux and uucp.
-
 166.
 
 Chip Salzenberg: allow chat failure strings to specify a retry time.

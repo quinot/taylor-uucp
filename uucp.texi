@@ -801,6 +801,11 @@ A request to execute an empty command (e.g., @samp{uux sys!}) will
 create a poll file for the specified system; see @ref{Calling Other
 Systems} for an example of why this might be useful.
 
+The exit status of @code{uux} is one of the codes found in the header
+file @file{sysexits.h}.  In particular, @samp{EX_OK} (@samp{0})
+indicates success, and @samp{EX_TEMPFAIL} (@samp{75}) indicates a
+temporary failure.
+
 @node uux Options, uux Examples, uux Description, Invoking uux
 @subsection uux Options
 

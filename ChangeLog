@@ -1,5 +1,18 @@
 2002-02-24  Ian Lance Taylor  <ian@airs.com>
 
+	* uux.c: Include <sysexits.h> if available.  Define macros from
+	<sysexits.h> if not defined.  Change all calls to exit to use EX_*
+	macros.  Change all calls to fsysdep_exit to use exit.
+	(main): Pass uxfatal rather than uxabort to ulog_fatal_fn.  Do it
+	at the start of the function.
+	(uxfatal): New static function.
+	(uxabort): Add istat parameter.  Change all callers.
+	* unix/splcmd.c (zsysdep_spool_commands): Add pftemp parameter.
+	Change call callers.
+	* system.h (zsysdep_spool_commands): Update declaration.
+	* uucp.texi (uux Description): Document uux exit status.
+	* uux.1: Likewise.
+
 	* unix/walk.c (iswalk_dir): Mark qstat as unused.
 
 2002-02-22  Ian Lance Taylor  <ian@airs.com>

@@ -2173,7 +2173,8 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
       (void) fsysdep_set_status (qsys, &sstat);
 
       ubuffree (zsysdep_spool_commands (qsys, UUCONF_GRADE_HIGH, 0,
-					(const struct scmd *) NULL));
+					(const struct scmd *) NULL,
+					(boolean *) NULL));
       ubuffree (zstr);
       uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return TRUE;

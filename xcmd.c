@@ -359,7 +359,7 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 	  ssend.ipos = 0;
 
 	  zjobid = zsysdep_spool_commands (qdestsys, BDEFAULT_UUCP_GRADE,
-					   1, &ssend);
+					   1, &ssend, (boolean *) NULL);
 	  if (zjobid == NULL)
 	    break;
 	  ubuffree (zjobid);

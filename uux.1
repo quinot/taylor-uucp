@@ -73,6 +73,20 @@ command on a remote system.
 A request to execute an empty command (e.g.,
 .I uux sys!)
 will create a poll file for the specified system.
+
+The exit status of
+.I uux
+is one of the codes found in the header file
+.B sysexits.h.
+In particular,
+.B EX_OK
+(
+.B 0
+) indicates success, and 
+.B EX_TEMPFAIL
+(
+.B 75
+) indicates a temporary failure.
 .SH OPTIONS
 The following options may be given to
 .I uux.

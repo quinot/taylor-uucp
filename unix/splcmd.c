@@ -38,11 +38,12 @@
    holding all the commands passed in.  It returns a jobid.  */
 
 char *
-zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
+zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds, pftemp)
      const struct uuconf_system *qsys;
      int bgrade;
      int ccmds;
      const struct scmd *pascmds;
+     boolean *pftemp;
 {
   char abtempfile[sizeof "TMP1234567890"];
   char *ztemp;
@@ -51,6 +52,9 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
   const struct scmd *q;
   char *z;
   char *zjobid;
+
+  if (pftemp != NULL)
+    *pftemp = TRUE;
 
 #if DEBUG > 0
   if (! UUCONF_GRADE_LEGAL (bgrade))
@@ -87,6 +91,8 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 	  (void) fclose (e);
 	  (void) remove (ztemp);
 	  ubuffree (ztemp);
+	  if (pftemp != NULL)
+	    *pftemp = FALSE;
 	  return NULL;
 	}
 
@@ -117,6 +123,8 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 	  (void) fclose (e);
 	  (void) remove (ztemp);
 	  ubuffree (ztemp);
+	  if (pftemp != NULL)
+	    *pftemp = FALSE;
 	  return NULL;
 	}
     }

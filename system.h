@@ -535,10 +535,13 @@ extern boolean fsysdep_wildcard_end P((void));
    in the pascmds array, which has ccmds entries.  The function should
    return NULL on error, or the jobid on success.  The jobid is a
    string that may be printed or passed to fsysdep_kill_job and
-   related functions, but is otherwise uninterpreted.  */
+   related functions, but is otherwise uninterpreted.  If pftemp is
+   not NULL, then on an error return, *pftemp will be TRUE for a
+   temporary error, FALSE for a permanent error.  */
 extern char *zsysdep_spool_commands P((const struct uuconf_system *qsys,
 				       int bgrade, int ccmds,
-				       const struct scmd *pascmds));
+				       const struct scmd *pascmds,
+				       boolean *pftemp));
 
 /* Get a file name to use for a data file to be copied to another
    system.  The ztname, zdname and zxname arguments will all either be
