@@ -1216,7 +1216,8 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
 		  "ftadd_cmd: Got command \"%s\"", zbuf);
 
-  if (! fparse_cmd (zbuf, &s))
+  if (! fparse_cmd (zbuf, &s)
+      || s.bcmd == 'P')
     {
       ulog (LOG_ERROR, "Received garbled command \"%s\"", zbuf);
       return TRUE;
