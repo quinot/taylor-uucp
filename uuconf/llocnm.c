@@ -1,5 +1,5 @@
 /* llocnm.c
-   Get the local name to use given a login name.
+   Get the local name to use, given a login name.
 
    Copyright (C) 1992 Ian Lance Taylor
 
@@ -31,7 +31,7 @@ char _uuconf_llocnm_rcsid[] = "$Id$";
 
 #include <errno.h>
 
-/* Get the local name to use, possibly given a login name.  */
+/* Get the local name to use, given a login name.  */
 
 int
 uuconf_login_localname (pglobal, zlogin, pzname)
@@ -40,23 +40,19 @@ uuconf_login_localname (pglobal, zlogin, pzname)
      char **pzname;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
-
-  if (zlogin != NULL)
-    {
-      int iret;
+  int iret;
 
 #if HAVE_TAYLOR_CONFIG
-      iret = uuconf_taylor_login_localname (pglobal, zlogin, pzname);
-      if (iret != UUCONF_NOT_FOUND)
-	return iret;
+  iret = uuconf_taylor_login_localname (pglobal, zlogin, pzname);
+  if (iret != UUCONF_NOT_FOUND)
+    return iret;
 #endif
 
 #if HAVE_HDB_CONFIG
-      iret = uuconf_hdb_login_localname (pglobal, zlogin, pzname);
-      if (iret != UUCONF_NOT_FOUND)
-	return iret;
+  iret = uuconf_hdb_login_localname (pglobal, zlogin, pzname);
+  if (iret != UUCONF_NOT_FOUND)
+    return iret;
 #endif
-    }
 
   if (qglobal->qprocess->zlocalname != NULL)
     {

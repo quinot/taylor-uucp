@@ -747,17 +747,15 @@ extern int uuconf_localname (void *uuconf_pglobal,
 			     const char **pzname);
 
 /* Get the local node name that should be used, given a login name.
-   The login name may be NULL, in which case this is similar to
-   uuconf_localname, except that it returns an malloced buffer.  If
-   zlogin is not NULL, this function will check for any special local
-   name that may be associated with the login name (as set by the
-   ``myname'' command in a Taylor configuration file, or the MYNAME
-   field in a Permissions entry).  This will set *pzname to the node
-   name.  If no node name can be determined, *pzname will be set to
-   NULL and the function will return UUCONF_NOT_FOUND; in this case
-   some system dependent function must be used to determine the node
-   name.  If the function returns UUCONF_SUCCESS, *pzname will be
-   point to an malloced buffer.  */
+   This function will check for any special local name that may be
+   associated with the login name zlogin (as set by the ``myname''
+   command in a Taylor configuration file, or the MYNAME field in a
+   Permissions entry).  This will set *pzname to the node name.  If no
+   node name can be determined, *pzname will be set to NULL and the
+   function will return UUCONF_NOT_FOUND; in this case some system
+   dependent function must be used to determine the node name.  If the
+   function returns UUCONF_SUCCESS, *pzname will be point to an
+   malloced buffer.  */
 extern int uuconf_login_localname (void *uuconf_pglobal,
 				   const char *uuconf_zlogin,
 				   char **pzname);
@@ -958,8 +956,7 @@ extern int uuconf_taylor_dialer_info (void *uuconf_pglobal,
 
 /* Get the local node name that should be used, given a login name,
    considering only the ``myname'' command in the Taylor UUCP
-   configuration files.  Unlike uuconf_login_localname, the zlogin
-   argument must not be NULL.  If the function returns UUCONF_SUCCESS,
+   configuration files.  If the function returns UUCONF_SUCCESS,
    *pzname will point to an malloced buffer.  */
 extern int uuconf_taylor_login_localname (void *uuconf_pglobal,
 					  const char *uuconf_zlogin,
@@ -1107,10 +1104,9 @@ extern int uuconf_hdb_dialer_info (void *uuconf_pglobal,
 				   struct uuconf_dialer *uuconf_qdialer);
 
 /* Get the local node name that should be used, given a login name,
-   considering only the MYNAME field in the HDB Permissions file.
-   Unlike uuconf_login_localname, the zlogin argument must not be
-   NULL.  If the function returns UUCONF_SUCCESS, *pzname will point
-   to an malloced buffer.  */
+   considering only the MYNAME field in the HDB Permissions file.  If
+   the function returns UUCONF_SUCCESS, *pzname will point to an
+   malloced buffer.  */
 extern int uuconf_hdb_login_localname (void *uuconf_pglobal,
 				       const char *uuconf_zlogin,
 				       char **pzname);
