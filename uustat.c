@@ -1688,6 +1688,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 	      break;
 	    case 'P':
 	      pz[i++] = "\tpoll ";
+	      break;
 #if DEBUG > 0
 	    case 'E':
 	      ulog (LOG_FATAL, "fsnotify: Can't happen");
