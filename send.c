@@ -233,7 +233,8 @@ flocal_send_file_init (qdaemon, qcmd)
     {
       ubuffree (zfile);
       if (cbytes != -1)
-	return FALSE;
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+				 "can not get size");
       /* A cbytes value of -1 means that the file does not exist.
 	 This can happen legitimately if it has already been sent from
 	 the spool directory.  */
@@ -305,7 +306,7 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
     {
       const char *zfrom;
       char *zfree;
-      boolean flocal;
+      const char *ztemp;
 
       if (qcmd->bcmd != 'E')
 	{
@@ -330,14 +331,13 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
 	 (local users have much simpler methods for this type of
 	 denial of service attack, so there is little point to using a
 	 more sophisticated scheme).  */
-      flocal = strchr (qcmd->zuser, '!') == NULL;
-
+      if (strchr (qcmd->zuser, '!') == NULL)
+	ztemp = zsysdep_save_temp_file (qcmd->pseq);
+      else
+	ztemp = NULL;
       (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
 			     zwhy, zfrom, (const char *) NULL,
-			     qcmd->zto, qsys->uuconf_zname,
-			     (flocal
-			      ? zsysdep_save_temp_file (qcmd->pseq)
-			      : (const char *) NULL));
+			     qcmd->zto, qsys->uuconf_zname, ztemp);
 
       ubuffree (zfree);
     }
