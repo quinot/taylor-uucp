@@ -380,7 +380,6 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
      size_t cdata;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
-  long crestart;
   const char *zlog;
 
   if (zdata[0] != 'R'
@@ -435,11 +434,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
      some way to do this, but I don't know what it is.  */
   qtrans->e = esysdep_open_receive (qdaemon->qsys, qinfo->zfile,
 				    (const char *) NULL, qinfo->ztemp,
-				    ((qdaemon->qproto->frestart
-				      && (qdaemon->ifeatures
-					  & FEATURE_RESTART) != 0)
-				     ? &crestart
-				     : (long *) NULL));
+				    (long *) NULL);
   if (! ffileisopen (qtrans->e))
     return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			    "cannot open file");
@@ -664,6 +659,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   /* Open the file to receive into.  This may find an old copy of the
      file, which will be used for file restart if the other side
      supports it.  */
+  crestart = -1;
   e = esysdep_open_receive (qsys, zfile, qcmd->ztemp, ztemp,
 			    ((qdaemon->qproto->frestart
 			      && (qdaemon->ifeatures
@@ -679,21 +675,16 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 
   if (crestart > 0)
     {
-      if ((qdaemon->ifeatures & FEATURE_RESTART) == 0)
-	crestart = -1;
-      else
+      DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
+		      "fremote_send_file_init: Restarting receive from %ld",
+		      crestart);
+      if (! ffileseek (e, crestart))
 	{
-	  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
-			  "fremote_send_file_init: Restarting receive from %ld",
-			  crestart);
-	  if (! ffileseek (e, crestart))
-	    {
-	      ulog (LOG_ERROR, "seek: %s", strerror (errno));
-	      (void) ffileclose (e);
-	      ubuffree (ztemp);
-	      ubuffree (zfile);
-	      return FALSE;
-	    }
+	  ulog (LOG_ERROR, "seek: %s", strerror (errno));
+	  (void) ffileclose (e);
+	  ubuffree (ztemp);
+	  ubuffree (zfile);
+	  return FALSE;
 	}
     }
 
