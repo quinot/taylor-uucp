@@ -36,7 +36,6 @@ struct sconnection;
 
 /* Make sure the defines do not conflict.  These are in this file
    because they are Unix dependent.  */
-
 #if HAVE_V2_LOCKFILES + HAVE_HDB_LOCKFILES + HAVE_SCO_LOCKFILES + HAVE_SVR4_LOCKFILES + HAVE_COHERENT_LOCKFILES != 1
  #error LOCKFILES define not set or duplicated
 #endif
@@ -55,8 +54,13 @@ struct sconnection;
  #error Spool directory define not set or duplicated
 #endif
 
-/* Get some standard types from the configuration header file.  */
+/* If setreuid is broken, don't use it.  */
+#if HAVE_BROKEN_SETREUID
+#undef HAVE_SETREUID
+#define HAVE_SETREUID 0
+#endif
 
+/* Get some standard types from the configuration header file.  */
 #ifdef PID_T
 typedef PID_T pid_t;
 #endif

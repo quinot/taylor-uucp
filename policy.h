@@ -187,6 +187,16 @@
    other than the uucp user uses it.  */
 #define HAVE_SAVED_SETUID 1
 
+/* On some systems, such as the DG Aviion and, possibly, the RS/6000,
+   the setreuid function is broken.  It should be possible to use
+   setreuid to swap the real and effective user ID's, but on some
+   systems it will not change the real user ID (I believe this is due
+   to a misreading of the POSIX standard).  On such a system you must
+   set HAVE_BROKEN_SETREUID to 1; if you do not, you will get error
+   messages from setreuid.  Systems on which setreuid exists but is
+   broken pretty much always have saved setuid.  */
+#define HAVE_BROKEN_SETREUID 0
+
 /* Set PS_PROGRAM to the program to run to get a process status,
    including the arguments to pass it.  This is used by ``uustat -p''.
    Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process
