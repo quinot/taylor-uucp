@@ -203,9 +203,12 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 	  if (onull < 0)
 	    {
 	      onull = open ((char *) "/dev/null", O_RDWR);
-	      if (onull < 0)
+	      if (onull < 0
+		  || fcntl (onull, F_SETFD,
+			    fcntl (onull, F_GETFD, 0) | FD_CLOEXEC) < 0)
 		{
 		  ierr = errno;
+		  (void) close (onull);
 		  ferr = TRUE;
 		  break;
 		}
@@ -309,10 +312,7 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
   for (i = 0; i < 3; i++)
     {
       if (aichild_descs[i] != i)
-	{
-	  (void) dup2 (aichild_descs[i], i);
-	  (void) close (aichild_descs[i]);
-	}
+	(void) dup2 (aichild_descs[i], i);
       /* This should only be necessary if aichild_descs[i] == i, but
 	 some systems copy the close-on-exec flag for a dupped
 	 descriptor, which is wrong according to POSIX.  */
