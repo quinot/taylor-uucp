@@ -202,8 +202,9 @@ fconn_close (qconn, puuconf, qdialer, fsuccess)
 
   fret = (*qconn->qcmds->pfclose) (qconn, puuconf, qdialer, fsuccess);
 
-  /* Make sure any signal reporting has been done before we set
-     fLog_sighup back to TRUE.  */
+  /* Ignore any SIGHUP we may have gotten, and make sure any signal
+     reporting has been done before we reset fLog_sighup.  */
+  afSignal[INDEXSIG_SIGHUP] = FALSE;
   ulog (LOG_ERROR, (const char *) NULL);
   fLog_sighup = TRUE;
 
