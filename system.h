@@ -2,7 +2,7 @@
    Header file for system dependent stuff in the Taylor UUCP package.
    This file is not itself system dependent.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -342,6 +342,12 @@ extern const char *zsysdep_save_temp_file P((pointer pseq));
    return the new name of the file (allocated by zbufalc), or NULL if
    the move failed (in which the original file should remain).  */
 extern char *zsysdep_save_corrupt_file P((const char *zfile));
+
+/* Save a file in a location used to hold failed execution files.
+   This is called if a uuxqt execution fails.  This should return the
+   new name of the file (allocated by zbufalc), or NULL if the move
+   failed (in which case the original file should remain).  */
+extern char *zsysdep_save_failed_file P((const char *zfile));
 
 /* Cleanup anything left over by fsysdep_get_work_init and
    fsysdep_get_work.  This may be called even though
