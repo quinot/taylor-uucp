@@ -22,7 +22,7 @@ a taylor.texi file.  Many things remain to do, among which:
 @end ignore
 
 @ifinfo
-This file documents Taylor UUCP, version 1.04.
+This file documents Taylor UUCP, version 1.05.
 
 Copyright @copyright{} 1992, 1993 Ian Lance Taylor
 
@@ -51,7 +51,7 @@ translation approved by the author instead of in the original English.
 
 @titlepage
 @title Taylor UUCP
-@subtitle Version 1.04
+@subtitle Version 1.05
 @author Ian Lance Taylor @code{<ian@@airs.com>}
 
 @page
@@ -77,9 +77,9 @@ translation approved by the author instead of in the original English.
 @end titlepage
 
 @node Top, Copying, (dir), (dir)
-@top Taylor UUCP 1.04
+@top Taylor UUCP 1.05
 
-This is the documentation for the Taylor UUCP package, version 1.04.
+This is the documentation for the Taylor UUCP package, version 1.05.
 The programs were written by Ian Lance Taylor.  The author can be
 reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, 4th
 Floor, Building 200, 1 Kendall Square, Cambridge, MA, 02139}.
@@ -4990,6 +4990,7 @@ Lele Gaifax @code{<piggy@@idea.sublink.org>}
 Terry Gardner @code{<cphpcom!tjg01>}
 @code{ol@@infopro.spb.su} (Oleg Girko)
 @code{jimmy@@tokyo07.info.com} (Jim Gottlieb)
+Benoit Grange @code<ben@@fizz.fdn.org>}
 @code{elg@@elgamy.jpunix.com} (Eric Lee Green)
 @code{ryan@@cs.umb.edu} (Daniel R. Guilderson)
 @code{greg@@gagme.chi.il.us} (Gregory Gulik)
@@ -5015,6 +5016,7 @@ Alan Judge @code{<aj@@dec4ie.IEunet.ie>}
 @code{chris@@cj_net.in-berlin.de} (Christof Junge)
 @code{tron@@Veritas.COM} (Ronald S. Karr)
 Brendan Kehoe @code{<brendan@@cs.widener.edu>}
+@code{warlock@@csuchico.edu} (John Kennedy)
 @code{kersing@@nlmug.nl.mugnet.org} (Jac Kersing)
 Gabor Kiss @code{<kissg@@sztaki.hu>}
 @code{gero@@gkminix.han.de} (Gero Kuhlmann)
@@ -5080,7 +5082,9 @@ Kenji Rikitake @code{<kenji@@rcac.astem.or.jp>}
 @code{arnold@@cc.gatech.edu} (Arnold Robbins)
 @code{steve@@Nyongwa.cam.org} (Steve M. Robbins)
 Serge Robyns @code{<sr@@denkart.be>}
+Lawrence E. Rosenman @code{<ler@@lerami.lerctr.org>}
 @code{ross@@sun490.fdu.edu} (Jeff Ross)
+Jeff Ross @code{<jeff@@wisdom.bubble.org>}
 Aleksey P. Rudnev @code{<alex@@kiae.su>}
 "Heiko W.Rupp" @code{<hwr@@pilhuhn.ka.sub.org>}
 @code{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
@@ -5088,6 +5092,7 @@ Aleksey P. Rudnev @code{<alex@@kiae.su>}
 @code{rsalz@@bbn.com} (Rich Salz)
 @code{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
 Nickolay Saukh @code{<nms@@ussr.EU.net>}
+@code{heiko@@lotte.sax.de} (Heiko Schlittermann)
 Eric Schnoebelen @code{<eric@@cirr.com>}
 @code{russell@@alpha3.ersys.edmonton.ab.ca} (Russell Schulz)
 @code{scott@@geom.umn.edu}
@@ -5104,6 +5109,7 @@ Christopher Sawtell @code{<chris@@gerty.equinox.gen.nz>}
 Julian Stacey @code{<stacey@@guug.de>}
 Harlan Stenn @code{<harlan@@mumps.pfcs.com>}
 Ralf Stephan @code{<ralf@@ark.abg.sub.org>}
+@code{johannes@@titan.westfalen.de} (Johannes Stille)
 @code{chs@@antic.apu.fi} (Hannu Strang)
 @code{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
 @code{sullivan@@Mathcom.com} (S. Sullivan)
@@ -5124,6 +5130,7 @@ Andrew Vignaux @code{<ajv@@ferrari.datamark.co.nz>}
 @code{vogel@@omega.ssw.de} (Andreas Vogel)
 @code{jos@@bull.nl} (Jos Vos)
 @code{jv@@nl.net} (Johan Vromans)
+David Vrona @code{<dave@@sashimi.wwa.com>}
 @code{Marcel.Waldvogel@@nice.usergroup.ethz.ch} (Marcel Waldvogel)
 @code{steve@@nshore.org} (Stephen J. Walick)
 @code{syd@@dsinc.dsi.com} (Syd Weinstein)
