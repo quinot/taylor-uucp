@@ -357,8 +357,13 @@ uucp.info: uucp.texi
 
 install-info: uucp.info
 	if test -d $(infodir); then true; else mkdir $(infodir); fi
-	for i in uucp.info*; do \
-	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
+	if test -r uucp.info; then \
+	  dir=.; \
+	else \
+	  dir=$(srcdir); \
+	fi; \
+	for i in `cd $$dir; echo uucp.info*`; do \
+	  $(INSTALL_DATA) $$dir/$$i $(infodir)/$$i; \
 	done
 
 dvi: uucp.dvi
