@@ -1,7 +1,7 @@
 /* uuconv.c
    Convert one type of UUCP configuration file to another.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -844,6 +844,20 @@ uvwrite_taylor_system (e, q)
 	       qtime = qtime->uuconf_qnext)
 	    {
 	      fprintf (e, "call-timegrade %c ", (char) qtime->uuconf_ival);
+	      uvwrite_time (e, qtime);
+	      fprintf (e, "\n");
+	    }
+	}
+
+      if (CHANGED (uuconf_qcalledtimegrade)
+	  && (q->uuconf_qcalledtimegrade
+	      != (struct uuconf_timespan *) &_uuconf_unset))
+	{
+	  for (qtime = q->uuconf_qcalledtimegrade;
+	       qtime != NULL;
+	       qtime = qtime->uuconf_qnext)
+	    {
+	      fprintf (e, "called-timegrade %c ", (char) qtime->uuconf_ival);
 	      uvwrite_time (e, qtime);
 	      fprintf (e, "\n");
 	    }
