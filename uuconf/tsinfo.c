@@ -670,7 +670,7 @@ iiport (pglobal, argc, argv, pvar, pinfo)
 
       iret = _uuconf_iport_cmd (qglobal, argc - 1, argv + 1,
 				qinfo->qsys->uuconf_qport);
-      if ((iret &~ UUCONF_CMDTABRET_KEEP) != UUCONF_SUCCESS)
+      if (UUCONF_ERROR_VALUE (iret) != UUCONF_SUCCESS)
 	iret |= UUCONF_CMDTABRET_EXIT;
       return iret;
     }
@@ -694,7 +694,7 @@ iichat (pglobal, argc, argv, pvar, pinfo)
 
   iret = _uuconf_ichat_cmd (qglobal, argc, argv, qchat,
 			    qinfo->qsys->uuconf_palloc);
-  if ((iret &~ UUCONF_CMDTABRET_KEEP) != UUCONF_SUCCESS)
+  if (UUCONF_ERROR_VALUE (iret) != UUCONF_SUCCESS)
     iret |= UUCONF_CMDTABRET_EXIT;
   return iret;
 }
@@ -762,7 +762,7 @@ iirequest (pglobal, argc, argv, pvar, pinfo)
 
   iret = _uuconf_iboolean (qglobal, argv[1],
 			   &qinfo->qsys->uuconf_fcall_request);
-  if ((iret &~ UUCONF_CMDTABRET_KEEP) == UUCONF_SUCCESS)
+  if (UUCONF_ERROR_VALUE (iret) == UUCONF_SUCCESS)
     qinfo->qsys->uuconf_fcalled_request = qinfo->qsys->uuconf_fcall_request;
 
   return iret;
@@ -786,7 +786,7 @@ iitransfer (pglobal, argc, argv, pvar, pinfo)
 
   iret = _uuconf_iboolean (qglobal, argv[1],
 			   &qinfo->qsys->uuconf_fcall_transfer);
-  if ((iret &~ UUCONF_CMDTABRET_KEEP) == UUCONF_SUCCESS)
+  if (UUCONF_ERROR_VALUE (iret) == UUCONF_SUCCESS)
     qinfo->qsys->uuconf_fcalled_transfer = qinfo->qsys->uuconf_fcall_transfer;
 
   return iret;
@@ -805,4 +805,71 @@ iiunknown (pglobal, argc, argv, pvar, pinfo)
      pointer pinfo;
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
+}
+
+/* Return information for an unknown system.  It would be better to
+   put this in a different file, but it would require breaking several
+   functions out of this file.  Perhaps I will do it sometime.  */
+
+int
+uuconf_taylor_system_unknown (pglobal, qsys)
+     pointer pglobal;
+     struct uuconf_system *qsys;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+  struct uuconf_cmdtab as[CSYSTEM_CMDS];
+  struct sinfo si;
+  struct sunknown *q;
+  int iret;
+
+  if (qglobal->qprocess->qunknown == NULL)
+    return UUCONF_NOT_FOUND;
+
+  _uuconf_ucmdtab_base (asIcmds, CSYSTEM_CMDS, (char *) qsys, as);
+
+  _uuconf_uclear_system (qsys);
+
+  si.qsys = qsys;
+  si.falternates = FALSE;
+  si.fdefault_alternates = TRUE;
+  qsys->uuconf_palloc = uuconf_malloc_block ();
+  if (qsys->uuconf_palloc == NULL)
+    {
+      qglobal->ierrno = errno;
+      return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+    }
+
+  for (q = qglobal->qprocess->qunknown; q != NULL; q = q->qnext)
+    {
+      iret = uuconf_cmd_args (pglobal, q->cargs, q->pzargs, as,
+			      (pointer) &si, iiunknown,
+			      UUCONF_CMDTABFLAG_BACKSLASH,
+			      qsys->uuconf_palloc);
+      iret &=~ UUCONF_CMDTABRET_KEEP;
+      if (UUCONF_ERROR_VALUE (iret) != UUCONF_SUCCESS)
+	{
+	  qglobal->zfilename = qglobal->qprocess->zconfigfile;
+	  qglobal->ilineno = q->ilineno;
+	  return ((iret &~ UUCONF_CMDTABRET_EXIT)
+		  | UUCONF_ERROR_FILENAME
+		  | UUCONF_ERROR_LINENO);
+	}
+      if ((iret & UUCONF_CMDTABRET_EXIT) != 0)
+	break;
+    }
+
+  if (! si.falternates)
+    uiset_call (qsys);
+  else
+    {
+      iret = iialternate (pglobal, 0, (char **) NULL, (pointer) NULL,
+			  (pointer) &si);
+      if (iret != UUCONF_SUCCESS)
+	return iret;
+    }
+
+  /* The first alternate is always available for calling in.  */
+  qsys->uuconf_fcalled = TRUE;
+
+  return _uuconf_isystem_basic_default (qglobal, qsys);
 }

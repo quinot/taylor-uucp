@@ -637,10 +637,19 @@ extern int uuconf_system_info (void *uuconf_pglobal,
 			       const char *uuconf_zsystem,
 			       struct uuconf_system *uuconf_qsys);
 
+/* Get information for an unknown (anonymous) system.  The
+   uuconf_zname field of the return system will be NULL.  If no
+   information is available for unknown systems, this will return
+   UUCONF_NOT_FOUND.  This does not run the HDB remote.unknown shell
+   script.  */
+extern int uuconf_system_unknown (void *uuconf_pglobal,
+				  struct uuconf_system *uuconf_qsys);
+
 /* Free the memory occupied by system information returned by
-   uuconf_system_info (or any of the configuration file specific
-   routines described below).  After this is called, the contents of
-   the structure shall not be referred to.  */
+   uuconf_system_info, uuconf_system_unknown or any of the
+   configuration file type specific routines described below.  After
+   this is called, the contents of the structure shall not be referred
+   to.  */
 extern int uuconf_system_free (void *uuconf_pglobal,
 			       struct uuconf_system *uuconf_qsys);
 
@@ -746,6 +755,7 @@ extern int uuconf_init ();
 extern int uuconf_init_thread ();
 extern int uuconf_system_names ();
 extern int uuconf_system_info ();
+extern int uuconf_system_unknown ();
 extern int uuconf_system_free ();
 extern int uuconf_find_port ();
 extern int uuconf_port_free ();
@@ -804,6 +814,13 @@ extern int uuconf_taylor_system_info (void *uuconf_pglobal,
 				      const char *uuconf_zsystem,
 				      struct uuconf_system *uuconf_qsys);
 
+/* Get information for an unknown (anonymous) system.  This returns
+   the values set by the ``unknown'' command in the main configuration
+   file.  If the ``unknown'' command was not used, this will return
+   UUCONF_NOT_FOUND.  */
+extern int uuconf_taylor_system_unknown (void *uuconf_pglobal,
+					 struct uuconf_system *uuconf_qsys);
+
 /* Find a port from the Taylor UUCP configuration files.  The
    arguments and return values are identical to those of
    uuconf_find_port.  */
@@ -844,6 +861,7 @@ extern int uuconf_taylor_callout (void *uuconf_pglobal,
 extern int uuconf_taylor_init ();
 extern int uuconf_taylor_system_names ();
 extern int uuconf_taylor_system_info ();
+extern int uuconf_taylor_system_unknown ();
 extern int uuconf_taylor_find_port ();
 extern int uuconf_taylor_dialer_names ();
 extern int uuconf_taylor_dialer_info ();
@@ -876,7 +894,7 @@ extern int uuconf_v2_system_info (void *uuconf_pglobal,
 				  const char *uuconf_zsystem,
 				  struct uuconf_system *uuconf_qsys);
 
-/* Find a port from the HDB configuration files.  The arguments and
+/* Find a port from the V2 configuration files.  The arguments and
    return values are identical to those of uuconf_find_port.  */
 extern int uuconf_v2_find_port (void *uuconf_pglobal,
 				const char *uuconf_zname,
@@ -926,6 +944,14 @@ extern int uuconf_hdb_system_info (void *uuconf_pglobal,
 				   const char *uuconf_zsystem,
 				   struct uuconf_system *uuconf_qsys);
 
+
+/* Get information for an unknown (anonymous) system.  If no
+   information is available for unknown systems, this will return
+   UUCONF_NOT_FOUND.  This does not run the remote.unknown shell
+   script.  */
+extern int uuconf_hdb_system_unknown (void *uuconf_pglobal,
+				      struct uuconf_system *uuconf_qsys);
+
 /* Find a port from the HDB configuration files.  The arguments and
    return values are identical to those of uuconf_find_port.  */
 extern int uuconf_hdb_find_port (void *uuconf_pglobal,
@@ -955,6 +981,7 @@ extern int uuconf_hdb_dialer_info (void *uuconf_pglobal,
 extern int uuconf_hdb_init ();
 extern int uuconf_hdb_system_names ();
 extern int uuconf_hdb_system_info ();
+extern int uuconf_hdb_system_unknown ();
 extern int uuconf_hdb_find_port ();
 extern int uuconf_hdb_dialer_names ();
 extern int uuconf_hdb_dialer_info ();

@@ -114,6 +114,7 @@ uuconf_taylor_init (ppglobal, zprogram, zname)
 {
   struct sglobal **pqglobal = (struct sglobal **) ppglobal;
   int iret;
+  char *zcopy;
   struct sglobal *qglobal;
   boolean fdefault;
   FILE *e;
@@ -129,32 +130,44 @@ uuconf_taylor_init (ppglobal, zprogram, zname)
   qglobal = *pqglobal;
 
   if (zname != NULL)
-    fdefault = FALSE;
-  else
     {
-      /* We must allocate a value so that we can return it in
-	 qerr->uuconf_zfilename.  */
-      zname = uuconf_malloc (qglobal->pblock,
-			     sizeof NEWCONFIGLIB + sizeof CONFIGFILE - 1);
-      if (zname == NULL)
+      size_t csize;
+
+      csize = strlen (zname) + 1;
+      zcopy = uuconf_malloc (qglobal->pblock, csize);
+      if (zcopy == NULL)
 	{
 	  qglobal->ierrno = errno;
 	  return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
 	}
-      memcpy ((pointer) zname, (pointer) NEWCONFIGLIB,
+      memcpy ((pointer) zcopy, (pointer) zname, csize);
+      fdefault = FALSE;
+    }
+  else
+    {
+      zcopy = uuconf_malloc (qglobal->pblock,
+			     sizeof NEWCONFIGLIB + sizeof CONFIGFILE - 1);
+      if (zcopy == NULL)
+	{
+	  qglobal->ierrno = errno;
+	  return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+	}
+      memcpy ((pointer) zcopy, (pointer) NEWCONFIGLIB,
 	      sizeof NEWCONFIGLIB - 1);
-      memcpy ((pointer) (zname + sizeof NEWCONFIGLIB - 1),
+      memcpy ((pointer) (zcopy + sizeof NEWCONFIGLIB - 1),
 	      (pointer) CONFIGFILE, sizeof CONFIGFILE);
       fdefault = TRUE;
     }
 
-  e = fopen (zname, "r");
+  qglobal->qprocess->zconfigfile = zcopy;
+
+  e = fopen (zcopy, "r");
   if (e == NULL)
     {
       if (! fdefault)
 	{
 	  qglobal->ierrno = errno;
-	  qglobal->zfilename = zname;
+	  qglobal->zfilename = zcopy;
 	  return (UUCONF_FOPEN_FAILED
 		  | UUCONF_ERROR_ERRNO
 		  | UUCONF_ERROR_FILENAME);
@@ -182,7 +195,7 @@ uuconf_taylor_init (ppglobal, zprogram, zname)
 
       if (iret != UUCONF_SUCCESS)
 	{
-	  qglobal->zfilename = zname;
+	  qglobal->zfilename = zcopy;
 	  return iret | UUCONF_ERROR_FILENAME;
 	}
     }
@@ -275,6 +288,7 @@ itunknown (pglobal, argc, argv, pvar, pinfo)
 	      | UUCONF_CMDTABRET_EXIT);
     }
   q->qnext = NULL;
+  q->ilineno = qglobal->ilineno;
   q->cargs = argc;
   q->pzargs = (char **) uuconf_malloc (qglobal->pblock,
 				       argc * sizeof (char *));

@@ -194,6 +194,8 @@ struct sprocess
      the second is the time string.  */
   char **pztimetables;
 
+  /* Taylor UUCP config file name.  */
+  char *zconfigfile;
   /* Taylor UUCP sys file names.  */
   char **pzsysfiles;
   /* Taylor UUCP port file names.  */
@@ -242,6 +244,8 @@ struct sunknown
 {
   /* Next element in linked list.  */
   struct sunknown *qnext;
+  /* Line number in config file.  */
+  int ilineno;
   /* Number of arguments.  */
   int cargs;
   /* Arguments.  */

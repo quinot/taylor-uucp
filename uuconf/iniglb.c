@@ -83,6 +83,7 @@ _uuconf_iinit_global (pqglobal)
   qprocess->fhdb = TRUE;
   qprocess->pzdialcodefiles = NULL;
   qprocess->pztimetables = NULL;
+  qprocess->zconfigfile = NULL;
   qprocess->pzsysfiles = NULL;
   qprocess->pzportfiles = NULL;
   qprocess->pzdialfiles = NULL;

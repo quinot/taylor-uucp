@@ -45,13 +45,13 @@ OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o calout.o \
 	chatc.o cmdarg.o cmdfil.o cmdlin.o dial.o diasub.o dnams.o \
 	errno.o errstr.o filnam.o freblk.o fredia.o free.o freprt.o \
 	fresys.o getlin.o grdcmp.o hdial.o hdnams.o hinit.o hport.o \
-	hsinfo.o hsnams.o hsys.o iniglb.o init.o int.o lineno.o \
+	hsinfo.o hsnams.o hsys.o hunk.o iniglb.o init.o int.o lineno.o \
 	memcpy.o mrgblk.o paramc.o port.o prtsub.o rdlocs.o rdperm.o \
 	reliab.o sinfo.o snams.o split.o strcas.o strdup.o strerr.o \
 	strncs.o strtol.o syssub.o tcalou.o tdial.o tdialc.o tdnams.o \
 	tgcmp.o thread.o time.o tinit.o tport.o tportc.o tsinfo.o \
-	tsnams.o tsys.o ugtlin.o vinit.o vport.o vsinfo.o vsnams.o \
-	vsys.o
+	tsnams.o tsys.o ugtlin.o unk.o vinit.o vport.o vsinfo.o \
+	vsnams.o vsys.o
 
 all: libuuconf.a uuchk uuconv
 
