@@ -28,7 +28,7 @@
 
 #include "system.h"
 
-#ifndef getpwname
+#ifndef getpwnam
 extern struct passwd *getpwnam ();
 #endif
 
