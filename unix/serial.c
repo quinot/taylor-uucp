@@ -1193,7 +1193,8 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
       q->ibaud = (long) 1200;
       for (i = 0; i < CBAUD_TABLE; i++)
 	{
-	  if (asSbaud_table[i].icode == ib)
+	  if (asSbaud_table[i].icode == ib
+	      && asSbaud_table[i].ibaud != 0)
 	    {
 	      q->ibaud = asSbaud_table[i].ibaud;
 	      break;
@@ -2826,9 +2827,17 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	                        / baud bits/sec)
 			       * 10 bits/byte)
 	     */
-	  stime.tv_sec = (long) 10240 / q->ibaud;
-	  stime.tv_usec = ((((long) 1024000000 / q->ibaud) * (long) 10)
-			   % (long) 1000000);
+	  if (q->fterminal)
+	    {
+	      stime.tv_sec = (long) 10240 / q->ibaud;
+	      stime.tv_usec = ((((long) 1024000000 / q->ibaud) * (long) 10)
+			       % (long) 1000000);
+	    }
+	  else
+	    {
+	      stime.tv_sec = 1;
+	      stime.tv_usec = 0;
+	    }
 
 	  imask = 1 << q->o;
 	  if (imask == 0)
@@ -2899,7 +2908,10 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
                  we don't need to use the catch stuff, since we know
                  that HAVE_RESTARTABLE_SYSCALLS is 0.  */
 	      usset_signal (SIGALRM, usalarm, TRUE, (boolean *) NULL);
-	      alarm ((int) ((long) 10240 / q->ibaud) + 1);
+	      if (q->fterminal)
+		alarm ((int) ((long) 10240 / q->ibaud) + 1);
+	      else
+		alarm (1);
 
 	      /* There is a race condition here: on a severely loaded
                  system, we could get the alarm before we start the
