@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/28  03:49:23  ian
+   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
+
    Revision 1.10  1991/12/27  06:01:55  ian
    Check for configurable maximum number of errors
 
@@ -1064,13 +1067,9 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
      int *pcneed;
      boolean *pffound;
 {
-  boolean freplied;
-
   *pfexit = FALSE;
   if (pffound != NULL)
     *pffound = FALSE;
-
-  freplied = FALSE;
 
   for (; iPrecstart != iPrecend; iPrecstart = (iPrecstart + 1) % CRECBUFLEN)
     {
@@ -1224,36 +1223,31 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    return FALSE;
 
 	  /* If the checksum failed for a data packet, then if it was
-	     the one we were expecting send an RJ, otherwise
-	     acknowledge the last packet received again.  If we've
-	     already responded to some packet in this batch of data,
-	     don't repond again.  */
+	     the one we were expecting send an RJ, otherwise ignore
+	     it.  Previously if this code got the wrong packet number
+	     it would send an RR, but that may confuse some Telebit
+	     modems and it doesn't help in any case since the receiver
+	     will probably just ignore the RR as a duplicate (that's
+	     basically what this code does).  If we totally missed the
+	     packet we will time out and send an RJ in the function
+	     fgwait_for_packet above.  */
 
-	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
-	      && ! freplied)
+	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	    {
-	      boolean facked;
-	      
-	      if (iGrecseq == iGlocal_ack)
-		facked = FALSE;
-	      else
+	      /* Make sure we've acked everything up to this point.  */
+	      if (iGrecseq != iGlocal_ack)
 		{
 		  if (! fgsend_acks ())
 		    return FALSE;
-		  facked = TRUE;
 		}
+
+	      /* If this is the packet we wanted, tell the sender that
+		 it failed.  */
 	      if (CONTROL_XXX (ab[IFRAME_CONTROL]) == INEXTSEQ (iGrecseq))
 		{
 		  if (! fgsend_control (RJ, iGrecseq))
 		    return FALSE;
 		}
-	      else if (! facked)
-		{
-		  if (! fgsend_control (RR, iGrecseq))
-		    return FALSE;
-		}  
-
-	      freplied = TRUE;
 	    }
 
 	  /* We can't skip the packet data after this, because if we
@@ -1289,6 +1283,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	{
 	  if (CONTROL_XXX (ab[IFRAME_CONTROL]) != INEXTSEQ (iGrecseq))
 	    {
+	      /* We got the wrong packet number.  */
 #if DEBUG > 7
 	      if (iDebug > 7)
 		ulog (LOG_DEBUG, "fgprocess_data: Got packet %d; expected %d",
@@ -1300,26 +1295,11 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      if (! fgcheck_errors ())
 		return FALSE;
 
-	      /* We got the wrong packet number.  Send an RR to try to
-		 get us back in synch.  If we've already
-		 responded to a bad packet in this group, though,
-		 don't respond again.  */
-
-	      if (! freplied)
-		{
-		  if (iGrecseq != iGlocal_ack)
-		    {
-		      if (! fgsend_acks ())
-			return FALSE;
-		    }
-		  else
-		    {
-		      if (! fgsend_control (RR, iGrecseq))
-			return FALSE;
-		    }
-
-		  freplied = TRUE;
-		}
+	      /* This code used to send an RR to encourage the other
+		 side to get back in synch, but that may confuse some
+		 Telebit modems and does little good in any case,
+		 since the other side will probably just ignore it
+		 anyhow (that's what this code does).  */
 
 	      /* As noted above, we must decrement iPrecstart because
 		 the loop control will increment it.  */
@@ -1337,10 +1317,6 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* Tell the caller that we found something.  */
 	  if (pffound != NULL)
 	    *pffound = TRUE;
-
-	  /* Since we something with no errors, pretend that we
-	     haven't replied to anything.  */
-	  freplied = FALSE;
 
 	  /* If we are supposed to do acknowledgements here, send back
 	     an RR packet.  */
@@ -1443,10 +1419,6 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  --iPrecstart;
 	  continue;
 	}
-
-      /* We got a valid control message, so be prepared to reply
-	 to any future errors.  */
-      freplied = FALSE;
 
       /* Handle control messages here. */
 
