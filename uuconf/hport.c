@@ -189,7 +189,7 @@ uuconf_hdb_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 	  pzsplit[1][strcspn (pzsplit[1], ",")] = '\0';
 
 	  /* Now we must construct the port information, so that we
-	     can pass it to pifn.  The port type is determined by it's
+	     can pass it to pifn.  The port type is determined by its
 	     name, unfortunately.  The name "Direct" is used for a
 	     direct port, "TCP" for a TCP port, and anything else for
 	     a modem port.  */
