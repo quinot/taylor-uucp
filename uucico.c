@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.73  1992/03/09  19:42:43  ian
+   Ted Lindgreen: don't send mail for nonexistent file
+
    Revision 1.72  1992/03/09  05:37:10  ian
    Only look for hangup string in debugging mode
 
@@ -3102,6 +3105,13 @@ zget_uucp_cmd (frequired)
 	    ulog (LOG_ERROR, "Timeout");
 	  return NULL;
 	}
+
+      /* Apparently some systems use parity on these strings, so we
+	 strip the parity bit.  This may need to be configurable at
+	 some point, although only if system names can have eight bit
+	 characters.  */
+      if (! isprint (b))
+	b &= 0x7f;
 
 #if DEBUG > 5
       if (iDebug > 5)
