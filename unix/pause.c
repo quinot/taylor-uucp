@@ -65,7 +65,11 @@ usysdep_pause ()
   napms (500);
 #endif /* HAVE_NAPMS */
 #if HAVE_NAP
+#if HAVE_HUNDREDTHS_NAP
+  nap (50L);
+#else
   nap (500L);
+#endif /* ! HAVE_HUNDREDTHS_NAP */
 #endif /* HAVE_NAP */
 #if HAVE_USLEEP
   usleep (500 * (long) 1000);

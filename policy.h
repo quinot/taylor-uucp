@@ -199,6 +199,13 @@
    broken pretty much always have saved setuid.  */
 #define HAVE_BROKEN_SETREUID 0
 
+/* On the 3B2, and possibly other systems, nap takes an argument in
+   hundredths of a second rather than milliseconds.  I don't know of
+   any way to test for this.  Set HAVE_HUNDREDTHS_NAP to 1 if this is
+   true on your system.  This does not matter if your system does not
+   have the nap function.  */
+#define HAVE_HUNDREDTHS_NAP 0
+
 /* Set PS_PROGRAM to the program to run to get a process status,
    including the arguments to pass it.  This is used by ``uustat -p''.
    Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process
