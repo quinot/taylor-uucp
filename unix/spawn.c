@@ -360,12 +360,22 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
     {
       /* Try to force the UUCP uid to be both real and effective user
 	 ID, in order to present a consistent environment regardless
-	 of the invoking user.  This won't work on System V based
-	 systems, but it will do no harm.  It would be possible to use
-	 a setuid root program to force the UID setting, but I don't
-	 think the efficiency loss is worth it.  */
+	 of the invoking user.  This won't work on older System V
+	 based systems, where it can cause trouble if ordinary users
+	 wind up executing uuxqt, perhaps via uucico; any program
+	 which uuxqt executes will have an arbitrary real user ID, so
+	 if the program is itself a setuid program, any security
+	 checks it does based on the real user ID will be incorrect.
+	 Fixing this problem would seem to require a special setuid
+	 root program; I have not used this approach because
+	 modern systems should not suffer from it.  */
+#if HAVE_SETREUID
+      (void) setreuid (geteuid (), -1);
+      (void) setregid (getegid (), -1);
+#else
       (void) setuid (geteuid ());
       (void) setgid (getegid ());
+#endif
     }
 
   if (zchdir != NULL)
