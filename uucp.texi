@@ -2044,6 +2044,7 @@ dave@@dlb.com (Dave Buck)
 gordon@@sneaky.lonestar.org (Gordon Burditt)
 mib@@gnu.ai.mit.edu (Michael I Bushnell)
 Brian Campbell <brianc@@quantum.on.ca>
+verbus@@westmark.westmark.com (Verbus M. Counts)
 cbmvax!snark.thyrsus.com!cowan (John Cowan)
 denny@@dakota.alisa.com (Bob Denny)
 peter@@ficc.ferranti.com (Peter da Silva)
