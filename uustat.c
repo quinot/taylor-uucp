@@ -1322,9 +1322,24 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
      const char *zcomment;
      int cstdin;
 {
+  const char *zlocalname;
+  int iuuconf;
   char *zfile;
   char *zsystem;
   boolean ferr;
+
+  iuuconf = uuconf_localname (puuconf, &zlocalname);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      zlocalname = zsysdep_localname ();
+      if (zlocalname == NULL)
+	return FALSE;
+    }
+  else if (iuuconf != UUCONF_SUCCESS)
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      return FALSE;
+    }
 
   if (! fsysdep_get_xqt_init ())
     return FALSE;
@@ -1408,7 +1423,6 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 	{
 	  boolean fbad, fkill;
 	  struct uuconf_system ssys;
-	  int iuuconf;
 
 	  fbad = FALSE;
 
@@ -1448,34 +1462,11 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 
 	  if (fkill)
 	    {
-	      const char *zlocalname;
-
-	      if (strcmp (zSxqt_user, zsysdep_login_name ()) != 0
+	      if ((strcmp (zSxqt_user, zsysdep_login_name ()) != 0
+		   || strcmp (zsystem, zlocalname) != 0)
 		  && ! fsysdep_privileged ())
 		{
 		  ulog (LOG_ERROR, "Job not submitted by you\n");
-		  fbad = TRUE;
-		}
-
-	      if (! fbad)
-		{
-		  iuuconf = uuconf_localname (puuconf, &zlocalname);
-		  if (iuuconf == UUCONF_NOT_FOUND)
-		    {
-		      zlocalname = zsysdep_localname ();
-		      if (zlocalname == NULL)
-			fbad = TRUE;
-		    }
-		  else if (iuuconf != UUCONF_SUCCESS)
-		    {
-		      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
-		      fbad = TRUE;
-		    }
-		}
-
-	      if (! fbad && strcmp (zsystem, zlocalname) != 0)
-		{
-		  ulog (LOG_ERROR, "Job not submitted by you");
 		  fbad = TRUE;
 		}
 	    }
@@ -1489,6 +1480,15 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 		    {
 		      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 		      fbad = TRUE;
+		    }
+		  else if (strcmp (zsystem, zlocalname) == 0)
+		    {
+		      iuuconf = uuconf_system_local (puuconf, &ssys);
+		      if (iuuconf != UUCONF_SUCCESS)
+			{
+			  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+			  fbad = TRUE;
+			}
 		    }
 		  else if (! funknown_system (puuconf, zsystem, &ssys))
 		    {
