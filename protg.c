@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/01/02  05:01:28  ian
+   Count rejections separately from resent packets
+
    Revision 1.13  1991/12/31  21:17:32  ian
    Franc,ois Pinard: forgot to initialize cGdelayed_packets
 
@@ -293,7 +296,7 @@ static long cGremote_rejects;
 /* Local functions.  */
 
 static boolean fgexchange_init P((boolean fmaster, int ictl, int ival,
-				 int *piset, boolean fgot));
+				 int *piset));
 static boolean fgsend_control P((int ictl, int ival));
 static void ugadjust_ack P((int iseq));
 static boolean fgwait_for_packet P((boolean freturncontrol, int ctimeout,
@@ -363,16 +366,34 @@ fgstart (fmaster)
   fgotb = FALSE;
   for (i = 0; i < cGstartup_retries; i++)
     {
-      if (! fgexchange_init (fmaster, INITA, iGlocal_winsize,
-			     &iGremote_winsize, fgota))
-	continue;
+      if (fgota)
+	{
+	  if (! fgsend_control (INITA, iGlocal_winsize))
+	    return FALSE;
+	}
+      else
+	{
+	  if (! fgexchange_init (fmaster, INITA, iGlocal_winsize,
+				 &iGremote_winsize))
+	    continue;
+	}
       fgota = TRUE;
-      if (! fgexchange_init (fmaster, INITB, iseg,
-			     &iGremote_segsize, fgotb))
-	continue;
+
+      if (fgotb)
+	{
+	  if (! fgsend_control (INITB, iseg))
+	    return FALSE;
+	}
+      else
+	{
+	  if (! fgexchange_init (fmaster, INITB, iseg,
+				 &iGremote_segsize))
+	    continue;
+	}
       fgotb = TRUE;
+
       if (! fgexchange_init (fmaster, INITC, iGlocal_winsize,
-			     &iGremote_winsize, FALSE))
+			     &iGremote_winsize))
 	continue;
 
       /* We have succesfully connected.  Determine the remote packet
@@ -426,42 +447,39 @@ fgstart (fmaster)
    Unfortunately, this doesn't work for the other case, in which we
    are sending INITB but the other side has not yet seen INITA.  As
    far as I can see, if this happens we just have to wait until we
-   time out and resend INITA.
-
-   If we have timed out and gone back, and we have already received
-   the counterpart packet, fgot is passed in as true.  In this case
-   the other side probably dropped our packet while we saw the one it
-   sent and moved on.  We just resend the appropriate packet but don't
-   wait for a response, since it may well think that it has already
-   responded.  This should speed up connecting when a packet is
-   dropped.  */
+   time out and resend INITA.  */
 
 /*ARGSUSED*/
 static boolean
-fgexchange_init (fmaster, ictl, ival, piset, fgot)
+fgexchange_init (fmaster, ictl, ival, piset)
      boolean fmaster;
      int ictl;
      int ival;
      int *piset;
-     boolean fgot;
 {
   int i;
 
   /* The three-way handshake should be independent of who initializes
-     it, so we ignore the fmaster argument.  If some other UUCP turns
-     out to care about this, we can change it.  */
+     it, but it seems that some versions of uucico assume that the
+     master sends first and the slave responds.  This only matters if
+     we are the slave and the first packet is garbled.  If we send a
+     packet, the other side will assume that we must have seen the
+     packet they sent and will never time out and send it again.
+     Therefore, if we are the slave we don't send a packet the first
+     time through the loop.  This can still fail, but should usually
+     work, and, after all, if the initialization packets are received
+     correctly there will be no problem no matter what we do.  */
 
   for (i = 0; i < cGexchange_init_retries; i++)
     {
       long itime;
       int ctimeout;
 
-      if (! fgsend_control (ictl, ival))
-	return FALSE;
-      
-      /* If we've already seen the response packet, get out now.  */
-      if (fgot)
-	return TRUE;
+      if (fmaster || i > 0)
+	{
+	  if (! fgsend_control (ictl, ival))
+	    return FALSE;
+	}
 
       itime = isysdep_time ();
       ctimeout = cGexchange_init_timeout;
@@ -482,6 +500,15 @@ fgexchange_init (fmaster, ictl, ival, piset, fgot)
 	      if (CONTROL_XXX (iGpacket_control) == ictl)
 		{
 		  *piset = CONTROL_YYY (iGpacket_control);
+
+		  /* If we didn't already send our initialization
+		     packet, send it now.  */
+		  if (! fmaster && i == 0)
+		    {
+		      if (! fgsend_control (ictl, ival))
+			return FALSE;
+		    }
+
 		  return TRUE;
 		}
 
