@@ -8,6 +8,7 @@ bnu.c
 chat.c
 conf.h-dist
 config.c
+configure
 copy.c
 file.c
 getopt.c
