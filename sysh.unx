@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.45  1992/03/11  00:18:50  ian
+   Save temporary file if file send fails
+
    Revision 1.44  1992/03/10  17:39:57  ian
    Some systems don't permit both <termios.h> and <sys/ioctl.h> to be included
 
@@ -511,6 +514,9 @@ extern void usset_signal P((int isig, SIGtype (*pfn) P((int)),
    sets fSignal_logged to FALSE.  If system calls are automatically
    restarted, it may do a longjmp to an fsysdep_catch.  */
 extern SIGtype ussignal P((int isig));
+
+/* Try to fork, repeating several times.  */
+extern pid_t isfork P((void));
 
 /* Lock a string.  */
 extern boolean fsdo_lock P((const char *, boolean fspooldir));
