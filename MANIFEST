@@ -36,6 +36,7 @@ util.c
 uuchk.c
 uucico.8
 uucico.c
+uuconf.h
 uuconv.c
 uucp.1
 uucp.c
