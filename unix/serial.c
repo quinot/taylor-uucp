@@ -1530,8 +1530,6 @@ fsmodem_carrier (qconn, fcarrier)
       {
 	int onew;
  
-	z = q->zdevice;
- 
 	onew = open ((char *) q->zdevice, O_RDWR);
 	if (onew < 0)
 	  {
