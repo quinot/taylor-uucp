@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/07  22:52:49  ian
+   Chip Salzenberg: avoid recursive strtok, handle redirection better
+
    Revision 1.4  1991/09/19  03:23:34  ian
    Chip Salzenberg: append to private debugging file, don't overwrite it
 
@@ -141,15 +144,24 @@ main (argc, argv)
 	  const char *z;
 
 	  for (z = argv[i] + 1; *z != '\0'; z++)
-	    if (*z == 'a' || *z == 'I' || *z == 's' || *z == 'x')
-	      i++;
+	    {
+	      /* If the option takes an argument, and the argument is
+		 not appended, then skip the next argument.  */
+	      if (*z == 'a' || *z == 'g' || *z == 'I'
+		  || *z == 's' || *z == 'x')
+		{
+		  if (z[1] == '\0')
+		    i++;
+		  break;
+		}
+	    }
 	}
     }
 
   /* The leading + in the getopt string means to stop processing
      options as soon as a non-option argument is seen.  */
 
-  while ((iopt = getopt (argc, argv, "+a:bcCI:jg:lnprs:x:z")) != EOF)
+  while ((iopt = getopt (argc, argv, "+a:bcCg:I:jlnprs:x:z")) != EOF)
     {
       switch (iopt)
 	{
