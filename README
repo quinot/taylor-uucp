@@ -1,5 +1,4 @@
-This is the README file for the beta release of version 1.03 of the
-Taylor UUCP package.
+This is the README file for version 1.03 of the Taylor UUCP package.
 
 It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
 or, equivalently, uunet!airs!ian, or c/o Infinity Development, P.O.
@@ -54,13 +53,14 @@ On the other hand:
     dependent and system independent portions, so it should be
     possible to port it to other systems.  It would not be trivial.
 
-    You don't get uusched, uuclean, uuq, uusnap, uumonitor, uuto,
-    uupick, uutry, uupoll, etc.  If you have current copies of these
-    programs, you may be able to use them.  I expect to eventually
-    write some form of uusched and uuclean, though uuclean especially
-    may not resemble the usual version.  I believe the supplied uustat
-    program allows you to do everything that uuq, uusnap and uumonitor
-    do.  uuto, uupick, uutry and uupoll can be done as shell scripts.
+    You don't get uusched, uuclean, uusend, uuq, uusnap, uumonitor,
+    uuto, uupick, uutry, uupoll, etc.  If you have current copies of
+    these programs, you may be able to use them.  I expect to
+    eventually write some form of uusched and uuclean, though uuclean
+    especially may not resemble the usual version.  I believe the
+    supplied uustat program allows you to do everything that uuq,
+    uusnap and uumonitor do.  uuto, uupick, uutry and uupoll can be
+    done as shell scripts.
 
     The package does not read modemcap or acucap files, although you
     can use V2 configuration files with a BNU Dialers file or a dialer
@@ -131,6 +131,9 @@ for uustat, uuname or uulog.
     A new status type, ``wrong time to call'' is now be written to the
     system status file.
 
+    The configuration files may now continue lines by using a
+    backslash as the last character of the line.
+
     A new ``max-uuxqts'' command was added to the configuration file
     to control that maximum number of uuxqt processes which may
     execute simultaneously.  If the code is compiled to support only
@@ -147,6 +150,9 @@ for uustat, uuname or uulog.
 
     A retry time can now be specified with the ``time'' or
     ``timegrade'' commands.
+
+    A name may now be given to an alternate; this name will appears in
+    the log file when the alternate is used.
 
     The TCP server code is somewhat more robust, but still has no way
     to bind a reserved port.
@@ -179,7 +185,23 @@ The compilation instructions are in uucp.texi.  Here is a summary.
 
     Edit Makefile.in to set installation directories.
 
-    Type ``configure''.
+    Type ``sh configure''.  You can pass a number of arguments in the
+    environment (using bash or sh, enter something like ``CC=gcc
+    configure''; using csh, enter something like ``setenv CC gcc; sh
+    configure''):
+        CC: C compiler to use; default is gcc -O if it exists, else cc
+        CFLAGS: Flags to pass to $CC; default -g
+        LDFLAGS: Flags to pass to $CC when only linking; default none
+        LIBS: Library arguments to pass to $CC; default none
+        INSTALL: Install program; default install -c or cp
+        INSTALLDATA: Install data; default install -c -m 0644 or cp
+    The configure script will compile a number of test programs to see
+    what is available on your system, so if your system is at all
+    unusual you will need to pass in $CC and $LIBS correctly.
+
+    The configure script will create conf.h, and copy Makefile.in to
+    Makefile with substitutions.  It will also create config.status,
+    which may be ignored.
 
     Examine conf.h and Makefile to make sure they're right.
 
