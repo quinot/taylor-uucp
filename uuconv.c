@@ -502,6 +502,9 @@ main (argc, argv)
     }
 
   exit (EXIT_SUCCESS);
+
+  /* Avoid complaints about not returning.  */
+  return 0;
 }
 
 /* Print out a usage message and die.  */
