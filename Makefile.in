@@ -99,8 +99,10 @@ install: uucico uuxqt uux uucp uuchk uucp.info
 	-$(INSTALL_DATA) uucp.info-3 $(infodir)/uucp.info-3
 
 uninstall:
+	rm -f $(libdir)/uucico $(libdir)/uuxqt
 	cp $(libdir)/uucico.old $(libdir)/uucico
 	cp $(libdir)/uuxqt.old $(libdir)/uuxqt
+	rm -f $(bindir)/uux $(bindir)/uucp
 	cp $(bindir)/uux.old $(bindir)/uux
 	cp $(bindir)/uucp.old $(bindir)/uucp
 
