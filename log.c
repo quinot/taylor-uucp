@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/02/14  07:51:49  ian
+   Michael Nolan: don't refer to eLdebug if DEBUG is 0
+
    Revision 1.19  1992/02/08  20:33:57  ian
    Handle all possible signals raised by abort
 
@@ -402,11 +405,11 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       fprintf (e, ") ");
       if (edebug != NULL)
 	fprintf (edebug, ") ");
-    }
 
-  fprintf (e, "%s", zhdr);
-  if (edebug != NULL)
-    fprintf (edebug, "%s", zhdr);
+      fprintf (e, "%s", zhdr);
+      if (edebug != NULL)
+	fprintf (edebug, "%s", zhdr);
+    }
 
 #if HAVE_VPRINTF
   va_start (parg, zmsg);
