@@ -153,9 +153,8 @@ void
 uqueue_remote (qtrans)
      struct stransfer *qtrans;
 {
-  DEBUG_MESSAGE2 (DEBUG_UUCP_PROTO,
-		  "uqueue_remote: Queuing %c (channel %d)",
-		  qtrans->s.bcmd, qtrans->iremote);
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "uqueue_remote: Channel %d",
+		  qtrans->iremote);
   if (qtrans->iremote > 0)
     aqTremote[qtrans->iremote] = qtrans;
   utdequeue (qtrans);
@@ -1007,25 +1006,29 @@ fremote_hangup_reply (qtrans, qdaemon)
 {
   boolean fret;
 
-  if (! fqueue (qdaemon, (boolean *) NULL))
-    return FALSE;
-
-  if (qTlocal == NULL)
-    {
-      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fremote_hangup_reply: No work");
-      fret = ((*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, 0)
-	      && (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, 0));
-      qdaemon->fhangup = TRUE;
-    }
-  else
-    {
-      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fremote_hangup_reply: Found work");
-      fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "HN", 0, 0);
-      qdaemon->fmaster = TRUE;
-    }
-
   utransfree (qtrans);
 
+  if (qTremote == NULL
+      && qTlocal == NULL
+      && qTsend == NULL
+      && qTreceive == NULL)
+    {
+      if (! fqueue (qdaemon, (boolean *) NULL))
+	return FALSE;
+
+      if (qTlocal == NULL)
+	{
+	  DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fremote_hangup_reply: No work");
+	  fret = ((*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, 0)
+		  && (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, 0));
+	  qdaemon->fhangup = TRUE;
+	  return fret;
+	}
+    }
+
+  DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fremote_hangup_reply: Found work");
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "HN", 0, 0);
+  qdaemon->fmaster = TRUE;
   return fret;
 }
 
