@@ -1,7 +1,7 @@
 /* proctm.c
    Get the time spent in the process.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
