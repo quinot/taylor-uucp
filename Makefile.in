@@ -86,7 +86,7 @@ VERSION = 1.03
 
 MORECFLAGS = -I$(srcdir) -I. -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
-PROGRAMS = uucico uuxqt uux uucp uuchk uustat uuname uulog
+PROGRAMS = uucico uuxqt uux uucp uuchk uustat uuname uulog cu
 
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
 	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
@@ -107,13 +107,16 @@ UUNAMEOBJS = uuname.o config.o v2.o bnu.o util.o sysinf.o prtinf.o \
 	log.o sys1.o version.o getopt.o $(ALLOCA)
 UULOGOBJS = uulog.o config.o v2.o bnu.o util.o sysinf.o prtinf.o \
 	log.o sys1.o version.o getopt.o $(ALLOCA)
+CUOBJS = cu.o prot.o config.o v2.o bnu.o file.o util.o sysinf.o \
+	prtinf.o log.o chat.o port.o tcp.o parse.o copy.o sys1.o sys2.o \
+	sys3.o sys4.o sys6.o sys8.o version.o getopt.o $(ALLOCA)
 TSTOBJS = tstuu.o version.o getopt.o $(ALLOCA)
 
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uustat.o uuname.o uulog.o \
-	uudir.o tstuu.o prot.o protg.o protf.o prott.o prote.o config.o v2.o \
-	bnu.o file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o \
-	tcp.o parse.o copy.o sys1.o sys2.o sys3.o sys4.o sys5.o sys6.o \
-	sys7.o version.o getopt.o
+	cu.o uudir.o tstuu.o prot.o protg.o protf.o prott.o prote.o config.o \
+	v2.o bnu.o file.o util.o sysinf.o prtinf.o time.o log.o chat.o \
+	port.o tcp.o parse.o copy.o sys1.o sys2.o sys3.o sys4.o sys5.o \
+	sys6.o sys7.o sys8.o version.o getopt.o
 
 all: $(PROGRAMS) $(TSTUU) $(UUDIR)
 
@@ -133,17 +136,19 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	-ln $(bindir)/uustat $(bindir)/uustat.old
 	-ln $(bindir)/uuname $(bindir)/uuname.old
 	-ln $(bindir)/uulog $(bindir)/uulog.old
+	-ln $(bindir)/cu $(bindir)/cu.old
 	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
-	rm -f $(bindir)/uuname $(bindir)/uulog
+	rm -f $(bindir)/uuname $(bindir)/uulog $(bindir)/cu
 	$(INSTALL_PROGRAM) uux $(bindir)/uux
 	$(INSTALL_PROGRAM) uucp $(bindir)/uucp
 	$(INSTALL_PROGRAM) uustat $(bindir)/uustat
 	$(INSTALL_PROGRAM) uuname $(bindir)/uuname
 	$(INSTALL_PROGRAM) uulog $(bindir)/uulog
+	$(INSTALL_PROGRAM) cu $(bindir)/cu
 	chown $(owner) $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
-	chown $(owner) $(bindir)/uuname
+	chown $(owner) $(bindir)/uuname $(bindir)/cu
 	chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
-	chmod 4555 $(bindir)/uuname
+	chmod 4555 $(bindir)/uuname $(bindir)/cu
 	$(INSTALL_DATA) $(srcdir)/uucico.8 $(man8dir)/uucico$(man8ext)
 	$(INSTALL_DATA) $(srcdir)/uuxqt.8 $(man8dir)/uuxqt$(man8ext)
 	$(INSTALL_DATA) $(srcdir)/uux.1 $(man1dir)/uux$(man1ext)
@@ -162,16 +167,17 @@ uninstall:
 	-chown $(owner) $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
 	-chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
 	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uustat
-	rm -f $(bindir)/uuname $(bindir)/uulog
+	rm -f $(bindir)/uuname $(bindir)/uulog $(bindir)/cu
 	-cp $(bindir)/uux.old $(bindir)/uux
 	-cp $(bindir)/uucp.old $(bindir)/uucp
 	-cp $(bindir)/uustat.old $(bindir)/uustat
 	-cp $(bindir)/uuname.old $(bindir)/uuname
 	-cp $(bindir)/uulog.old $(bindir)/uulog
+	-cp $(bindir)/cu.old $(bindir)/cu
 	-chown $(owner) $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
-	-chown $(owner) $(bindir)/uuname
+	-chown $(owner) $(bindir)/uuname $(bindir)/cu
 	-chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
-	-chmod 4555 $(bindir)/uuname
+	-chmod 4555 $(bindir)/uuname $(bindir)/cu
 
 uucico: $(UUOBJS)
 	$(CC) $(LDFLAGS) -o uucico $(UUOBJS) $(LIBS)
@@ -196,6 +202,9 @@ uuname: $(UUNAMEOBJS)
 
 uulog: $(UULOGOBJS)
 	$(CC) $(LDFLAGS) -o uulog $(UULOGOBJS) $(LIBS)
+
+cu: $(CUOBJS)
+	$(CC) $(LDFLAGS) -o cu $(CUOBJS) $(LIBS)
 
 tstuu: $(TSTOBJS)
 	$(CC) $(LDFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
@@ -272,6 +281,7 @@ uuchk.o: uucp.h conf.h policy.h port.h sysdep.h system.h uutime.h getopt.h
 uustat.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
 uuname.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
 uulog.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
+cu.o: uucp.h conf.h policy.h cu.h sysdep.h port.h prot.h system.h getopt.h
 tstuu.o: uucp.h conf.h policy.h sysdep.h getopt.h
 uudir.o: uucp.h conf.h policy.h sysdep.h
 prot.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h
@@ -300,6 +310,7 @@ sys4.o: uucp.h conf.h policy.h system.h sysdep.h sys4.c
 sys5.o: uucp.h conf.h policy.h system.h sysdep.h sys5.c
 sys6.o: uucp.h conf.h policy.h system.h sysdep.h sys6.c
 sys7.o: uucp.h conf.h policy.h system.h sysdep.h sys7.c
+sys8.o: uucp.h conf.h policy.h cu.h port.h system.h sysdep.h sys8.c
 version.o: uucp.h conf.h policy.h
 getopt.o: getopt.h
 alloca.o: uucp.h conf.h policy.h
