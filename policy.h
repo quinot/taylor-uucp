@@ -215,6 +215,12 @@
    broken pretty much always have saved setuid.  */
 #define HAVE_BROKEN_SETREUID 0
 
+/* On a few systems, such as NextStep 3.3, the POSIX macro F_SETLKW is
+   defined, but does not work.  On such systems, you must set
+   HAVE_BROKEN_SETLKW to 1.  If you do not, uux will hang, or log
+   peculiar error messages, every time it is run.  */
+#define HAVE_BROKEN_SETLKW 0
+
 /* On the 3B2, and possibly other systems, nap takes an argument in
    hundredths of a second rather than milliseconds.  I don't know of
    any way to test for this.  Set HAVE_HUNDREDTHS_NAP to 1 if this is
