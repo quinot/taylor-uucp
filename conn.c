@@ -246,6 +246,7 @@ fconn_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialerfound)
     ptdialerfound = &tfound;
       
   qdialer->uuconf_zname = NULL;
+  *ptdialerfound = DIALERFOUND_FALSE;
 
   pfdial = qconn->qcmds->pfdial;
   if (pfdial == NULL)
