@@ -345,8 +345,9 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 	  ssend.zoptions = aboptions;
 	  ssend.ztemp = abtname;
 	  ssend.imode = isysdep_file_mode (zfile);
-	  ssend.znotify = (char *) "";
+	  ssend.znotify = "";
 	  ssend.cbytes = -1;
+	  ssend.zcmd = NULL;
 
 	  zjobid = zsysdep_spool_commands (qdestsys, BDEFAULT_UUCP_GRADE,
 					   1, &ssend);

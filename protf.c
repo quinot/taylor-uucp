@@ -318,6 +318,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
   int i;
   register unsigned int itmpchk;
 
+  *pfexit = FALSE;
   if (pcneed != NULL)
     *pcneed = 1;
 
@@ -362,7 +363,6 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	  iPrecstart = i % CRECBUFLEN;
 	}
 
-      *pfexit = FALSE;
       return TRUE;
     }
 
@@ -520,7 +520,6 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	*pcneed = 7;
     }
 
-  *pfexit = FALSE;
   return TRUE;
 }
 

@@ -1061,7 +1061,9 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
       /* Get the ack from the packet, if appropriate.  */
       iack = IHDRWIN_GETSEQ (ab[IHDR_REMOTE]);
       if (iIrequest_winsize > 0
-	  && CSEQDIFF (iack, iIremote_ack) <= iIrequest_winsize)
+	  && iseq != iIsendseq
+	  && CSEQDIFF (iseq, iIremote_ack) <= iIrequest_winsize
+	  && CSEQDIFF (iIsendseq, iseq) <= iIrequest_winsize)
 	iIremote_ack = iack;
 
       /* If we haven't handled all previous packets, we must save off this
@@ -1278,7 +1280,9 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
 
 	if (iIrequest_winsize > 0
-	    && CSEQDIFF (iseq, iIremote_ack) > iIrequest_winsize)
+	    && (iseq == iIsendseq
+		|| CSEQDIFF (iseq, iIremote_ack) > iIrequest_winsize
+		|| CSEQDIFF (iIsendseq, iseq) > iIrequest_winsize))
 	  {
 	    DEBUG_MESSAGE1 (DEBUG_PROTO,
 			    "fiprocess_packet: Ignoring out of order NAK %d",

@@ -69,6 +69,7 @@ struct srecfailinfo
 
 /* Local functions.  */
 
+static void urrec_free P((struct stransfer *qtrans));
 static boolean flocal_rec_fail P((struct stransfer *qtrans,
 				  struct scmd *qcmd,
 				  const struct uuconf_system *qsys,
@@ -82,6 +83,7 @@ static boolean flocal_rec_await_reply P((struct stransfer *qtrans,
 static boolean fremote_send_reply P((struct stransfer *qtrans,
 				     struct sdaemon *qdaemon));
 static boolean fremote_send_fail P((struct sdaemon *qdaemon,
+				    struct scmd *qcmd,
 				    enum tfailure twhy,
 				    int iremote));
 static boolean fremote_send_fail_send P((struct stransfer *qtrans,
@@ -94,6 +96,24 @@ static boolean frec_file_end P((struct stransfer *qtrans,
 				const char *zdata, size_t cdata));
 static boolean frec_file_send_confirm P((struct stransfer *qtrans,
 					 struct sdaemon *qdaemon));
+
+/* Free up a receive stransfer structure.  */
+
+static void
+urrec_free (qtrans)
+     struct stransfer *qtrans;
+{
+  struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+
+  if (qinfo != NULL)
+    {
+      ubuffree (qinfo->zmail);
+      ubuffree (qinfo->zfile);
+      xfree (qtrans->pinfo);
+    }
+
+  utransfree (qtrans);
+}       
 
 /* Set up a request for a file from the remote system.  This may be
    called before the remote system has been called.
@@ -222,14 +242,7 @@ flocal_rec_fail (qtrans, qcmd, qsys, zwhy)
       (void) fsysdep_did_work (qcmd->pseq);
     }
   if (qtrans != NULL)
-    {
-      struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
-
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
-    }
+    urrec_free (qtrans);
   return TRUE;
 }
 
@@ -251,10 +264,7 @@ flocal_rec_send_request (qtrans, qdaemon)
 					  &cbytes);
   if (qtrans->s.ztemp == NULL)
     {
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      urrec_free (qtrans);
       return FALSE;
     }
 
@@ -278,7 +288,7 @@ flocal_rec_send_request (qtrans, qdaemon)
   clen = (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
 	  + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions) + 30);
   zsend = zbufalc (clen);
-  if (! qdaemon->fnew)
+  if ((qdaemon->ifeatures & FEATURE_SIZES) == 0)
     sprintf (zsend, "R %s %s %s -%s", qtrans->s.zfrom, qtrans->s.zto,
 	     qtrans->s.zuser, qtrans->s.zoptions);
   else
@@ -290,10 +300,7 @@ flocal_rec_send_request (qtrans, qdaemon)
   ubuffree (zsend);
   if (! fret)
     {
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      urrec_free (qtrans);
       return FALSE;
     }
 
@@ -323,10 +330,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
     {
       ulog (LOG_ERROR, "%s: bad response to receive request: \"%s\"",
 	    qtrans->s.zfrom, zdata);
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      urrec_free (qtrans);
       return FALSE;
     }
 
@@ -356,10 +360,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
 
       ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
 
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      urrec_free (qtrans);
 
       return TRUE;
     }
@@ -407,7 +408,8 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
   return TRUE;
 }
 
-/* A remote request to send a file to the local system.
+/* A remote request to send a file to the local system, meaning that
+   we are going to receive a file.
 
    If we are using a protocol which does not support multiple
    channels, the remote system will not start sending us the file
@@ -430,7 +432,10 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
    If the send request is rejected, via fremote_send_fail, and the
    protocol supports multiple channels, we must accept and discard
    data until a zero byte buffer is received from the other side,
-   indicating that it has received our rejection.  */
+   indicating that it has received our rejection.
+
+   This code also handles execution requests, which are very similar
+   to send requests.  */
 
 boolean
 fremote_send_file_init (qdaemon, qcmd, iremote)
@@ -454,20 +459,23 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
     {
       ulog (LOG_ERROR, "%s: remote system not permitted to send files",
 	    qcmd->zfrom);
-      return fremote_send_fail (qdaemon, FAILURE_PERM, iremote);
+      return fremote_send_fail (qdaemon, qcmd, FAILURE_PERM, iremote);
     }
 		  
   fspool = fspool_file (qcmd->zto);
 
+  /* We don't accept remote command files.  An execution request may
+     only send a simple data file.  */
+  if ((fspool && qcmd->zto[0] == 'C')
+      || (qcmd->bcmd == 'E'
+	  && (! fspool || qcmd->zto[0] != 'D')))
+    {
+      ulog (LOG_ERROR, "%s: not permitted to receive", qcmd->zfrom);
+      return fremote_send_fail (qdaemon, qcmd, FAILURE_PERM, iremote);
+    }
+
   if (fspool)
     {
-      /* We don't accept remote command files.  */
-      if (qcmd->zto[0] == 'C')
-	{
-	  ulog (LOG_ERROR, "%s: not permitted to receive", qcmd->zfrom);
-	  return fremote_send_fail (qdaemon, FAILURE_PERM, iremote);
-	}
-
       zfile = zsysdep_spool_file_name (qsys, qcmd->zto);
       if (zfile == NULL)
 	return FALSE;
@@ -493,7 +501,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	{
 	  ulog (LOG_ERROR, "%s: not permitted to receive", zfile);
 	  ubuffree (zfile);
-	  return fremote_send_fail (qdaemon, FAILURE_PERM, iremote);
+	  return fremote_send_fail (qdaemon, qcmd, FAILURE_PERM, iremote);
 	}
 
       if (strchr (qcmd->zoptions, 'f') == NULL)
@@ -501,7 +509,8 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	  if (! fsysdep_make_dirs (zfile, TRUE))
 	    {
 	      ubuffree (zfile);
-	      return fremote_send_fail (qdaemon, FAILURE_OPEN, iremote);
+	      return fremote_send_fail (qdaemon, qcmd, FAILURE_OPEN,
+					iremote);
 	    }
 	}
     }
@@ -532,7 +541,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	  ulog (LOG_ERROR, "%s: too big to receive", zfile);
 	  ubuffree (ztemp);
 	  ubuffree (zfile);
-	  return fremote_send_fail (qdaemon, FAILURE_SIZE, iremote);
+	  return fremote_send_fail (qdaemon, qcmd, FAILURE_SIZE, iremote);
 	}
     }
 
@@ -541,7 +550,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
     {
       ubuffree (ztemp);
       ubuffree (zfile);
-      return fremote_send_fail (qdaemon, FAILURE_OPEN, iremote);
+      return fremote_send_fail (qdaemon, qcmd, FAILURE_OPEN, iremote);
     }
 
   qinfo = (struct srecinfo *) xmalloc (sizeof (struct srecinfo));
@@ -564,10 +573,15 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   qtrans->e = e;
   qtrans->s.ztemp = ztemp;
 
-  if (qinfo->fspool)
-    zlog = qtrans->s.zto;
+  if (qcmd->bcmd == 'E')
+    zlog = qcmd->zcmd;
   else
-    zlog = qinfo->zfile;
+    {
+      if (qinfo->fspool)
+	zlog = qcmd->zto;
+      else
+	zlog = qinfo->zfile;
+    }
   qtrans->zlog = zbufalc (sizeof "Receiving " + strlen (zlog));
   sprintf (qtrans->zlog, "Receiving %s", zlog);
 
@@ -584,16 +598,19 @@ fremote_send_reply (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+  const char *zsend;
 
-  if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, "SY", qtrans->ilocal,
+  if (qtrans->s.bcmd == 'S')
+    zsend = "SY";
+  else
+    zsend = "EY";
+
+  if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
       (void) remove (qtrans->s.ztemp);
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      urrec_free (qtrans);
       return FALSE;
     }
 
@@ -608,10 +625,7 @@ fremote_send_reply (qtrans, qdaemon)
 	{
 	  (void) ffileclose (qtrans->e);
 	  (void) remove (qtrans->s.ztemp);
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
+	  urrec_free (qtrans);
 	  return FALSE;
 	}
       if (fhandled)
@@ -634,8 +648,9 @@ fremote_send_reply (qtrans, qdaemon)
    system.  */
 
 static boolean
-fremote_send_fail (qdaemon, twhy, iremote)
+fremote_send_fail (qdaemon, qcmd, twhy, iremote)
      struct sdaemon *qdaemon;
+     struct scmd *qcmd;
      enum tfailure twhy;
      int iremote;
 {
@@ -650,7 +665,7 @@ fremote_send_fail (qdaemon, twhy, iremote)
      then we have essentially already received the entire file.  */
   qinfo->freceived = qdaemon->qproto->cchans <= 1;
 
-  qtrans = qtransalc ((struct scmd *) NULL);
+  qtrans = qtransalc (qcmd);
   qtrans->psendfn = fremote_send_fail_send;
   qtrans->precfn = fremote_discard;
   qtrans->iremote = iremote;
@@ -670,26 +685,31 @@ fremote_send_fail_send (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct srecfailinfo *qinfo = (struct srecfailinfo *) qtrans->pinfo;
-  const char *z;
+  char ab[4];
   boolean fret;
+
+  ab[0] = qtrans->s.bcmd;
+  ab[1] = 'N';
 
   switch (qinfo->twhy)
     {
     case FAILURE_PERM:
-      z = "SN2";
+      ab[2] = '2';
       break;
     case FAILURE_OPEN:
-      z = "SN4";
+      ab[2] = '4';
       break;
     case FAILURE_SIZE:
-      z = "SN6";
+      ab[2] = '6';
       break;
     default:
-      z = "SN";
+      ab[2] = '\0';
       break;
     }
   
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, z, qtrans->ilocal,
+  ab[3] = '\0';
+
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, ab, qtrans->ilocal,
 					qtrans->iremote);
 
   qinfo->fsent = TRUE;
@@ -756,8 +776,9 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
   const char *zerr;
   boolean fnever;
 
-  DEBUG_MESSAGE2 (DEBUG_UUCP_PROTO, "frec_file_end: %s to %s",
-		  qtrans->s.zfrom, qtrans->s.zto);
+  DEBUG_MESSAGE3 (DEBUG_UUCP_PROTO, "frec_file_end: %s to %s (freplied %s)",
+		  qtrans->s.zfrom, qtrans->s.zto,
+		  qinfo->freplied ? "TRUE" : "FALSE");
 
   if (qdaemon->qproto->pffile != NULL)
     {
@@ -768,15 +789,14 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	{
 	  (void) ffileclose (qtrans->e);
 	  (void) remove (qtrans->s.ztemp);
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
+	  urrec_free (qtrans);
 	  return FALSE;
 	}
       if (fhandled)
 	return TRUE;
     }
+
+  qinfo->freceived = TRUE;
 
   fnever = FALSE;
 
@@ -847,6 +867,58 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	}
     }
 
+  /* If this is an execution request, we must create the execution
+     file itself.  */
+  if (qtrans->s.bcmd == 'E' && zerr == NULL)
+    {
+      char *zxqt, *zxqtfile;
+      FILE *e;
+
+      e = NULL;
+
+      /* We get an execution file name by simply replacing the leading
+	 D in the received file name with an X.  This pretty much
+	 always has to work since we can always receive a file name
+	 starting with X, so the system dependent code must be
+	 prepared to see one.  */
+      zxqt = zbufcpy (qtrans->s.zto);
+      zxqt[0] = 'X';
+      zxqtfile = zsysdep_spool_file_name (qdaemon->qsys, zxqt);
+      ubuffree (zxqt);
+
+      if (zxqtfile != NULL)
+	{
+	  e = esysdep_fopen (zxqtfile, FALSE, FALSE, TRUE);
+	  ubuffree (zxqtfile);
+	}
+
+      if (e == NULL)
+	{
+	  urrec_free (qtrans);
+	  return FALSE;
+	}
+
+      fprintf (e, "U %s %s\n", qtrans->s.zuser, qdaemon->qsys->uuconf_zname);
+      fprintf (e, "C %s\n", qtrans->s.zcmd);
+      fprintf (e, "F %s\n", qtrans->s.zto);
+      fprintf (e, "I %s\n", qtrans->s.zto);
+      if (strchr (qtrans->s.zoptions, 'N') != NULL)
+	fprintf (e, "N\n");
+      if (strchr (qtrans->s.zoptions, 'Z') != NULL)
+	fprintf (e, "Z\n");
+      if (strchr (qtrans->s.zoptions, 'R') != NULL)
+	fprintf (e, "R %s\n", qtrans->s.znotify);
+      if (strchr (qtrans->s.zoptions, 'e') != NULL)
+	fprintf (e, "e\n");
+
+      if (fclose (e) == EOF)
+	{
+	  ulog (LOG_ERROR, "fclose: %s", strerror (errno));
+	  urrec_free (qtrans);
+	  return FALSE;
+	}
+    }      
+
   /* Prepare to send the completion string to the remote system.  If
      we have not yet replied to the remote send request, we leave the
      transfer structure on the remote queue.  Otherwise we add it to
@@ -873,11 +945,6 @@ frec_file_send_confirm (qtrans, qdaemon)
 
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, qinfo->zsend,
 					qtrans->ilocal, qtrans->iremote);
-
-  ubuffree (qinfo->zmail);
-  ubuffree (qinfo->zfile);
-  xfree (qtrans->pinfo);
-  utransfree (qtrans);
-
+  urrec_free (qtrans);
   return fret;
 }

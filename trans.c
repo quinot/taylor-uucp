@@ -275,6 +275,7 @@ qtransalc (qcmd)
       q->s.zoptions = zbufcpy (qcmd->zoptions);
       q->s.ztemp = zbufcpy (qcmd->ztemp);
       q->s.znotify = zbufcpy (qcmd->znotify);
+      q->s.zcmd = zbufcpy (qcmd->zcmd);
     }
   else
     {
@@ -284,6 +285,7 @@ qtransalc (qcmd)
       q->s.zoptions = NULL;
       q->s.ztemp = NULL;
       q->s.znotify = NULL;
+      q->s.zcmd = NULL;
     }
   q->isecs = 0;
   q->imicros = 0;
@@ -306,6 +308,7 @@ utransfree (q)
   ubuffree ((char *) q->s.zoptions);
   ubuffree ((char *) q->s.ztemp);
   ubuffree ((char *) q->s.znotify);
+  ubuffree ((char *) q->s.zcmd);
   
   utchanfree (q);    
   if (q->iremote > 0)
@@ -322,6 +325,7 @@ utransfree (q)
   q->s.zoptions = NULL;
   q->s.ztemp = NULL;
   q->s.znotify = NULL;
+  q->s.zcmd = NULL;
   q->psendfn = NULL;
   q->precfn = NULL;
 #endif
@@ -405,6 +409,7 @@ fqueue (qdaemon, pfany)
       switch (s.bcmd)
 	{
 	case 'S':
+	case 'E':
 	  if (! flocal_send_file_init (qdaemon, &s))
 	    return FALSE;
 	  break;
@@ -416,6 +421,11 @@ fqueue (qdaemon, pfany)
 	  if (! flocal_xcmd_init (qdaemon, &s))
 	    return FALSE;
 	  break;
+#if DEBUG > 0
+	default:
+	  ulog (LOG_FATAL, "fqueue: Can't happen");
+	  break;
+#endif
 	}
     }	  
 
@@ -635,7 +645,8 @@ floop (qdaemon)
    the protocol receive loop should exit back to the main floop
    routine, above.  It is only important to set *pfexit to TRUE if the
    main loop called the pfwait entry point, so we need never set it to
-   TRUE if we just receive data for a file.  */
+   TRUE if we just receive data for a file.  This routine never sets
+   *pfexit to FALSE.  */
 
 boolean 
 fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
@@ -659,9 +670,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 
   if (isecs == 0)
     isecs = isysdep_process_time (&imicros);
-
-  if (pfexit != NULL)
-    *pfexit = FALSE;
 
   /* Now we have to decide which transfer structure gets the data.  If
      ilocal is -1, it means that the protocol does not know where to
@@ -702,8 +710,8 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	    }
 	}
 
-      if (pfexit != NULL)
-	*pfexit = qdaemon->fhangup || qTremote != NULL;
+      if (pfexit != NULL && (qdaemon->fhangup || qTremote != NULL))
+	*pfexit = TRUE;
 
       /* The time spent to gather a new command does not get charged
 	 to any one command.  */
@@ -781,10 +789,11 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	  ubuffree (zcmd);
 	}
 
-      if (pfexit != NULL)
-	*pfexit = (qdaemon->fhangup
-		   || qdaemon->fmaster
-		   || qTsend != NULL);
+      if (pfexit != NULL
+	  && (qdaemon->fhangup
+	      || qdaemon->fmaster
+	      || qTsend != NULL))
+	*pfexit = TRUE;
     }
   else if (! q->frecfile || cfirst == 0)
     {
@@ -796,10 +805,11 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	return fgot_data (qdaemon, zsecond, csecond,
 			  (const char *) NULL, (size_t) 0,
 			  ilocal, iremote, ipos + cfirst, pfexit);
-      if (pfexit != NULL)
-	*pfexit = (qdaemon->fhangup
-		   || qdaemon->fmaster
-		   || qTsend != NULL);
+      if (pfexit != NULL
+	  && (qdaemon->fhangup
+	      || qdaemon->fmaster
+	      || qTsend != NULL))
+	*pfexit = TRUE;
     }
   else
     {
@@ -860,8 +870,8 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	    }
 	}
 
-      if (pfexit != NULL)
-	*pfexit = qdaemon->fhangup;
+      if (pfexit != NULL && qdaemon->fhangup)
+	*pfexit = TRUE;
     }
 
   inextsecs = isysdep_process_time (&inextmicros);
@@ -935,6 +945,7 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
   switch (s.bcmd)
     {
     case 'S':
+    case 'E':
       return fremote_send_file_init (qdaemon, &s, iremote);
     case 'R':
       return fremote_rec_file_init (qdaemon, &s, iremote);
@@ -954,7 +965,6 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
 	uqueue_remote (q);
       }
       return TRUE;
-    default:
     case 'N':
       /* This means a hangup request is being denied; we just ignore
 	 this and wait for further commands.  */
@@ -974,6 +984,11 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
       (void) (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, iremote);
       qdaemon->fhangup = TRUE;
       return TRUE;
+#if DEBUG > 0
+    default:
+      ulog (LOG_FATAL, "ftadd_cmd: Can't happen");
+      return FALSE;
+#endif
     }
 }
 

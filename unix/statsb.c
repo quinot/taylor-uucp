@@ -221,7 +221,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 	  return FALSE;
 	}
 
-      if (s.bcmd == 'S')
+      if (s.bcmd == 'S' || s.bcmd == 'E')
 	{
 	  char *ztemp;
 

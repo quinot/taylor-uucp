@@ -743,7 +743,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
   sdaem.cremote_size = -1;
   sdaem.cmax_ever = -2;
   sdaem.cmax_receive = -1;
-  sdaem.fnew = FALSE;
+  sdaem.ifeatures = 0;
   sdaem.fhangup = FALSE;
   sdaem.fmaster = TRUE;
   sdaem.fcaller = TRUE;
@@ -1088,8 +1088,8 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
      argument with the sequence number.  If the call-timegrade command
      was used, we send a -p argument and a -vgrade= argument with the
      grade to send us (we send both argument to make it more likely
-     that one is recognized).  We always send a -N (for new) switch to
-     indicate that we are prepared to accept file sizes.  */
+     that one is recognized).  We always send a -N (for new) switch
+     indicating what new features we support.  */
   {
     long ival;
     char bgrade;
@@ -1127,10 +1127,12 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     if (! qsys->uuconf_fsequence)
       {
 	if (bgrade == '\0')
-	  sprintf (zsend, "S%s -N", qdaemon->zlocalname);
+	  sprintf (zsend, "S%s -N0%o", qdaemon->zlocalname,
+		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
 	else
-	  sprintf (zsend, "S%s -p%c -vgrade=%c -N", qdaemon->zlocalname,
-		   bgrade, bgrade);
+	  sprintf (zsend, "S%s -p%c -vgrade=%c -N0%o", qdaemon->zlocalname,
+		   bgrade, bgrade,
+		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
       }
     else
       {
@@ -1140,10 +1142,12 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	if (iseq < 0)
 	  return FALSE;
 	if (bgrade == '\0')
-	  sprintf (zsend, "S%s -Q%ld -N", qdaemon->zlocalname, iseq);
+	  sprintf (zsend, "S%s -Q%ld -N0%o", qdaemon->zlocalname, iseq,
+		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
 	else
-	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -N",
-		   qdaemon->zlocalname, iseq, bgrade, bgrade);
+	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -N0%o",
+		   qdaemon->zlocalname, iseq, bgrade, bgrade,
+		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
       }
 
     fret = fsend_uucp_cmd (qconn, zsend);
@@ -1154,7 +1158,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
   /* Now we should see ROK or Rreason where reason gives a cryptic
      reason for failure.  If we are talking to a counterpart, we will
-     get back ROKN.  */
+     get back ROKN, possibly with a feature bitfield attached.  */
   zstr = zget_uucp_cmd (qconn, TRUE);
   if (zstr == NULL)
     return FALSE;
@@ -1167,10 +1171,16 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
       return FALSE;
     }
 
-  if (strcmp (zstr + 1, "OKN") == 0)
-    qdaemon->fnew = TRUE;
+  if (strncmp (zstr + 1, "OKN", sizeof "OKN" - 1) == 0)
+    {
+      if (zstr[sizeof "ROKN" - 1] == '\0')
+	qdaemon->ifeatures |= FEATURE_SIZES;
+      else
+	qdaemon->ifeatures |= (int) strtol (zstr + sizeof "ROKN" - 1,
+					   (char **) NULL, 0);
+    }
   else if (strcmp (zstr + 1, "OK") == 0)
-    qdaemon->fnew = FALSE;
+    ;
   else if (strcmp (zstr + 1, "CB") == 0)
     {
       ulog (LOG_NORMAL, "Remote system will call back");
@@ -1470,7 +1480,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   struct sdaemon sdaem;
   char *zloc;
   struct sstatus sstat;
-  boolean frestart;
+  boolean fgotseq, fgotn, fgotnval;
   int i;
 
   if (pzsystem != NULL)
@@ -1552,7 +1562,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sdaem.cremote_size = -1;
   sdaem.cmax_ever = -2;
   sdaem.cmax_receive = -1;
-  sdaem.fnew = FALSE;
+  sdaem.ifeatures = 0;
   sdaem.fhangup = FALSE;
   sdaem.fmaster = FALSE;
   sdaem.fcaller = FALSE;
@@ -1628,7 +1638,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       if (qsys->uuconf_zcalled_login == NULL
 	  || strcmp (qsys->uuconf_zcalled_login, "ANY") == 0)
 	{
-	  if (qany != NULL)
+	  if (qany == NULL)
 	    qany = qsys;
 	}
       else if (strcmp (qsys->uuconf_zcalled_login, zlogin) == 0)
@@ -1657,8 +1667,6 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
-  ubuffree (zstr);
-
   sdaem.qsys = qsys;
 
   if (pzsystem != NULL)
@@ -1680,6 +1688,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       ulog (LOG_NORMAL, "Will call back");
       ubuffree (zsysdep_spool_commands (qsys, UUCONF_GRADE_HIGH, 0,
 					(const struct scmd *) NULL));
+      ubuffree (zstr);
       return TRUE;
     }
 
@@ -1688,6 +1697,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       (void) fsend_uucp_cmd (qconn, "RLCK");
       ulog (LOG_ERROR, "System already locked");
+      ubuffree (zstr);
       return FALSE;
     }
   sLocked_system = *qsys;
@@ -1702,155 +1712,190 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sstat.cwait = 0;
   (void) fsysdep_set_status (qsys, &sstat);
 
-  /* Check the arguments of the remote system.  We accept -x# to set
-     our debugging level and -Q# for a sequence number.  We may insist
-     on a sequence number.  The -p and -vgrade= arguments are taken to
-     specify the lowest job grade that we should transfer; I think
-     this is the traditional meaning, but I don't know.  The -N switch
-     means that we are talking to another instance of ourselves.  The
-     -U switch specifies the ulimit of the remote system, which we
-     treat as the maximum file size that may be sent.  The -R switch
-     means that the remote system supports file restart; we don't.  */
-  frestart = FALSE;
+  /* Check the arguments of the remote system, if any.  */
+  fgotseq = FALSE;
+  fgotn = FALSE;
+  fgotnval = FALSE;
+  if (zspace != NULL)
+    {
+      char **paz;
+      char **pzset;
 
-  if (zspace == NULL)
-    {
-      if (qsys->uuconf_fsequence)
-	{
-	  (void) fsend_uucp_cmd (qconn, "RBADSEQ");
-	  ulog (LOG_ERROR, "No sequence number (call rejected)");
-	  sstat.ttype = STATUS_FAILED;
-	  (void) fsysdep_set_status (qsys, &sstat);
-	  return FALSE;
-	}
-    }
-  else
-    {
       ++zspace;
-      while (isspace (BUCHAR (*zspace)))
-	++zspace;
 
-      while (*zspace != '\0')
+      /* Break the introduction line up into arguments.  */
+      paz = (char **) xmalloc ((strlen (zspace) / 2 + 2) * sizeof (char *));
+      pzset = paz;
+      *pzset++ = NULL;
+      while (TRUE)
 	{
-	  boolean frecognized;
-	  char *znext;
+	  while (*zspace != '\0' && isspace (BUCHAR (*zspace)))
+	    ++zspace;
+	  if (*zspace == '\0')
+	    break;
+	  *pzset++ = zspace;
+	  ++zspace;
+	  while (*zspace != '\0' && ! isspace (BUCHAR (*zspace)))
+	    ++zspace;
+	  if (*zspace == '\0')
+	    break;
+	  *zspace++ = '\0';
+	}
+
+      if (pzset != paz + 1)
+	{
+	  int iopt;
+
+	  *pzset = NULL;
+
+	  /* We are going to use getopt to parse the arguments.  We
+	     must clear optind to force getopt to reinitialize, and
+	     clear opterr to prevent getopt from printing an error
+	     message.  This approach assumes we are using the GNU
+	     getopt, which is distributed with the program anyhow.  */
+	  optind = 0;
+	  opterr = 0;
 	  
-	  frecognized = FALSE;
-	  if (*zspace == '-')
+	  while ((iopt = getopt (pzset - paz, paz,
+				 "N::p:Q:RU:v:x:")) != EOF)
 	    {
-	      switch (zspace[1])
+	      long iseq;
+	      long c;
+	      char b;
+	      int iwant;
+
+	      switch (iopt)
 		{
-		case 'x':
-		  frecognized = TRUE;
-#if DEBUG > 1
-		  {
-		    int iwant;
-
-		    iwant = (int) strtol (zspace + 2, (char **) NULL, 10);
-		    if (! sdaem.fnew)
-		      iwant = (1 << iwant) - 1;
-		    if (qsys->uuconf_zmax_remote_debug != NULL)
-		      iwant &= idebug_parse (qsys->uuconf_zmax_remote_debug);
-		    if ((iDebug | iwant) != iDebug)
-		      {
-			iDebug |= iwant;
-			ulog (LOG_NORMAL, "Setting debugging mode to 0%o",
-			      iDebug);
-		      }
-		  }
-#endif
-		  break;
-		case 'Q':
-		  frecognized = TRUE;
-		  {
-		    long iseq;
-
-		    if (! qsys->uuconf_fsequence)
-		      break;
-		    iseq = strtol (zspace + 2, (char **) NULL, 10);
-		    if (iseq != isysdep_get_sequence (qsys))
-		      {
-			(void) fsend_uucp_cmd (qconn, "RBADSEQ");
-			ulog (LOG_ERROR, "Out of sequence call rejected");
-			sstat.ttype = STATUS_FAILED;
-			(void) fsysdep_set_status (qsys, &sstat);
-			return FALSE;
-		      }
-		  }
-		  break;
-		case 'p':
-		  /* We don't accept a space between the -p and the
-		     grade, although we should.  */
-		  frecognized = TRUE;
-		  if (UUCONF_GRADE_LEGAL (zspace[2]))
-		    sdaem.bgrade = zspace[2];
-		  break;
-		case 'v':
-		  if (strncmp (zspace + 1, "vgrade=",
-			       sizeof "vgrade=" - 1) == 0)
+		case 'N':
+		  /* This is used to indicate support for Taylor UUCP
+		     extensions.  An plain -N mean support for size
+		     negotiation.  If -N is followed by a number (with
+		     no intervening space), the number is a bit field
+		     of feature flags as defined in trans.h.  Note
+		     that the argument may start with 0x for hex or 0
+		     for octal.  */
+		  fgotn = TRUE;
+		  if (optarg == NULL)
+		    sdaem.ifeatures |= FEATURE_SIZES;
+		  else
 		    {
-		      frecognized = TRUE;
-		      if (UUCONF_GRADE_LEGAL (zspace[sizeof "vgrade="]))
-			sdaem.bgrade = zspace[sizeof "vgrade="];
+		      sdaem.ifeatures |= (int) strtol (optarg,
+						       (char **) NULL,
+						       0);
+		      fgotnval = TRUE;
 		    }
 		  break;
-		case 'N':
-		  frecognized = TRUE;
-		  sdaem.fnew = TRUE;
-		  break;
-		case 'U':
-		  frecognized = TRUE;
-		  {
-		    long c;
 
-		    c = strtol (zspace + 2, (char **) NULL, 0);
-		    if (c > 0)
-		      sdaem.cmax_receive = c * (long) 512;
-		  }
+		case 'p':
+		  /* The argument is the lowest grade of work the
+		     local system should send.  */
+		  if (UUCONF_GRADE_LEGAL (optarg[0]))
+		    sdaem.bgrade = optarg[0];
 		  break;
+
+		case 'Q':
+		  /* The conversation sequence number.  */
+		  iseq = strtol (optarg, (char **) NULL, 10);
+		  if (qsys->uuconf_fsequence
+		      && iseq != isysdep_get_sequence (qsys))
+		    {
+		      (void) fsend_uucp_cmd (qconn, "RBADSEQ");
+		      ulog (LOG_ERROR, "Out of sequence call rejected");
+		      sstat.ttype = STATUS_FAILED;
+		      (void) fsysdep_set_status (qsys, &sstat);
+		      xfree ((pointer) paz);
+		      ubuffree (zstr);
+		      return FALSE;
+		    }
+		  fgotseq = TRUE;
+		  break;
+
 		case 'R':
-		  frecognized = TRUE;
-		  frestart = TRUE;
+		  /* The remote system supports file restart.  */
+		  sdaem.ifeatures |= FEATURE_RESTART;
 		  break;
+
+		case 'U':
+		  /* The maximum file size the remote system is
+		     prepared to received, in blocks where each block
+		     is 512 bytes.  */
+		  c = strtol (optarg, (char **) NULL, 0);
+		  if (c > 0)
+		    sdaem.cmax_receive = c * (long) 512;
+		  break;
+
+		case 'v':
+		  /* -vgrade=X can be used to set the lowest grade of
+		     work the local system should send.  */
+		  if (strncmp (optarg, "grade=", sizeof "grade=" - 1) == 0)
+		    {
+		      b = optarg[sizeof "grade=" - 1];
+		      if (UUCONF_GRADE_LEGAL (b))
+			sdaem.bgrade = b;
+		    }
+		  break;
+
+		case 'x':
+		  iwant = (int) strtol (optarg, (char **) NULL, 10);
+#if DEBUG > 1
+		  if (iwant <= 9)
+		    iwant = (1 << iwant) - 1;
+		  if (qsys->uuconf_zmax_remote_debug != NULL)
+		    iwant &= idebug_parse (qsys->uuconf_zmax_remote_debug);
+		  if ((iDebug | iwant) != iDebug)
+		    {
+		      iDebug |= iwant;
+		      ulog (LOG_NORMAL, "Setting debugging mode to 0%o",
+			    iDebug);
+		    }
+#endif
+		  break;
+
 		default:
 		  break;
 		}
 	    }
-
-	  znext = zspace;
-	  while (*znext != '\0' && ! isspace (BUCHAR (*znext)))
-	    ++znext;
-
-	  if (! frecognized)
-	    {
-	      size_t clen;
-	      char *zcopy;
-
-	      /* We could just use %.*s for this, but it's probably
-		 not portable.  */
-	      clen = znext - zspace;
-	      zcopy = zbufalc (clen + 1);
-	      memcpy (zcopy, zspace, clen);
-	      zcopy[clen] = '\0';
-	      ulog (LOG_NORMAL, "Unrecognized argument %s", zcopy);
-	      ubuffree (zcopy);
-	    }
-
-	  zspace = znext;
-	  while (isspace (BUCHAR (*zspace)))
-	    ++zspace;
 	}
+
+      xfree ((pointer) paz);
     }
 
-  /* We recognized the system, and the sequence number (if any) was
-     OK.  Send an ROK, and send a list of protocols.  If we got the -N
-     switch, send ROKN to confirm it.  */
-  if (! fsend_uucp_cmd (qconn, sdaem.fnew ? "ROKN" : "ROK"))
+  ubuffree (zstr);
+
+  if (qsys->uuconf_fsequence && ! fgotseq)
     {
+      (void) fsend_uucp_cmd (qconn, "RBADSEQ");
+      ulog (LOG_ERROR, "No sequence number (call rejected)");
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
       return FALSE;
     }
+
+  /* We recognized the system, and the sequence number (if any) was
+     OK.  Send an ROK, and send a list of protocols.  If we got the -N
+     switch, send ROKN to confirm it; if the -N switch was followed by
+     a feature bitfield, return our own feature bitfield.  */
+  {
+    char ab[20];
+    const char *zreply;
+
+    if (! fgotn)
+      zreply = "ROK";
+    else if (! fgotnval)
+      zreply = "ROKN";
+    else
+      {
+	sprintf (ab, "ROKN0%o",
+		 (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
+	zreply = ab;
+      }
+    if (! fsend_uucp_cmd (qconn, zreply))
+      {
+	sstat.ttype = STATUS_FAILED;
+	(void) fsysdep_set_status (qsys, &sstat);
+	return FALSE;
+      }
+  }
 
   /* Determine the reliability of the connection based on the
      reliability of the port and the dialer.  If we have no

@@ -626,6 +626,7 @@ fsxqt_file_read (puuconf, zfile)
 
   zSxqt_user = NULL;
   zSxqt_system = NULL;
+  zSxqt_stdin = NULL;
   zSxqt_requestor = NULL;
   zSxqt_prog = NULL;
   zSxqt_cmd = NULL;
@@ -665,12 +666,20 @@ usxqt_file_free ()
   int i;
 
   ubuffree (zSxqt_user);
+  zSxqt_user = NULL;
   ubuffree (zSxqt_system);
+  zSxqt_system = NULL;
   ubuffree (zSxqt_prog);
+  zSxqt_prog = NULL;
   ubuffree (zSxqt_cmd);
+  zSxqt_cmd = NULL;
   for (i = 0; i < cSxqt_files; i++)
     ubuffree (pazSxqt_files[i]);
+  cSxqt_files = 0;
   xfree ((pointer) pazSxqt_files);
+  pazSxqt_files = NULL;
+  zSxqt_stdin = NULL;
+  zSxqt_requestor = NULL;
 }
 
 /* Get the command from an execution file.  */
@@ -982,35 +991,36 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 
   /* Here we have found a different job ID, so we print the scmd
      structures that we have accumulated.  We look for the special
-     case of an execution (one of the destination files begins with
-     X.).  We could be more clever about other situations as well.  */
+     case of an execution (an E command, or one of the destination
+     files begins with X.).  We could be more clever about other
+     situations as well.  */
   if (qlist != NULL)
     {
       boolean fmatch;
-      const char *zstdin;
+      const char *zprog, *zcmd, *zrequestor, *zstdin;
+      char *zfree;
       struct scmdlist *qxqt;
       struct scmdlist *qfree;
 
       fmatch = FALSE;
-      zstdin = NULL;
+      zprog = zcmd = zrequestor = zstdin = NULL;
+      zfree = NULL;
 
       for (qxqt = qlist; qxqt != NULL; qxqt = qxqt->qnext)
-	if (qxqt->s.bcmd == 'S'
-	    && qxqt->s.zto[0] == 'X'
-	    && qxqt->s.zto[1] == '.'
-	    && fspool_file (qxqt->s.zfrom))
+	if (qxqt->s.bcmd == 'E'
+	    || (qxqt->s.bcmd == 'S'
+		&& qxqt->s.zto[0] == 'X'
+		&& qxqt->s.zto[1] == '.'
+		&& fspool_file (qxqt->s.zfrom)))
 	  break;
 
       if (qxqt == NULL)
 	{
-	  zSxqt_cmd = NULL;
-	  zSxqt_requestor = NULL;
 	  if (ccommands == 0
 	      || (fnotcommands
 		  && strcmp (pazcommands[0], "ALL") == 0))
 	    {
 	      /* Show all the lines in a regular work file.  */
-
 	      fmatch = TRUE;
 
 	      if ((icmd & JOB_SHOW) != 0)
@@ -1061,27 +1071,44 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	}
       else
 	{
-	  char *zxqt;
 	  long csize;
 	  struct scmdlist *qsize;
 
 	  /* Show the command for an execution file.  */
-	  zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom);
-	  if (zxqt == NULL)
-	    return FALSE;
-
-	  if (! fsxqt_file_read (puuconf, zxqt))
+	  if (qxqt->s.bcmd == 'E')
 	    {
-	      ubuffree (zxqt);
-	      return FALSE;
+	      zfree = zbufcpy (qxqt->s.zcmd);
+	      zfree[strcspn (zfree, " \t")] = '\0';
+	      zprog = zfree;
+	      zcmd = qxqt->s.zcmd;
+	      if (strchr (qxqt->s.zoptions, 'R') != NULL)
+		zrequestor = qxqt->s.znotify;
 	    }
+	  else
+	    {
+	      char *zxqt;
 
-	  ubuffree (zxqt);
+	      zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom);
+	      if (zxqt == NULL)
+		return FALSE;
+
+	      if (! fsxqt_file_read (puuconf, zxqt))
+		{
+		  ubuffree (zxqt);
+		  return FALSE;
+		}
+
+	      ubuffree (zxqt);
+
+	      zprog = zSxqt_prog;
+	      zcmd = zSxqt_cmd;
+	      zrequestor = zSxqt_requestor;
+	    }
 
 	  csize = 0L;
 	  for (qsize = qlist; qsize != NULL; qsize = qsize->qnext)
 	    {
-	      if (qsize->s.bcmd == 'S')
+	      if (qsize->s.bcmd == 'S' || qsize->s.bcmd == 'E')
 		{
 		  char *zfile;
 
@@ -1108,7 +1135,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	      for (i = 0; i < ccommands; i++)
 		{
 		  if (strcmp (pazcommands[i], "ALL") == 0
-		      || strcmp (pazcommands[i], zSxqt_prog) == 0)
+		      || strcmp (pazcommands[i], zprog) == 0)
 		    {
 		      fmatch = ! fmatch;
 		      break;
@@ -1123,18 +1150,27 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	    {
 	      struct scmdlist *qstdin;
 
-	      for (qstdin = qlist; qstdin != NULL; qstdin = qstdin->qnext)
+	      if (qxqt->s.bcmd == 'E')
+		qstdin = qxqt;
+	      else if (zSxqt_stdin != NULL)
 		{
-		  if (qstdin->s.bcmd == 'S'
-		      && strcmp (qstdin->s.zto, zSxqt_stdin) == 0)
-		    {
-		      if (strchr (qstdin->s.zoptions, 'C') != NULL
-			  || fspool_file (qstdin->s.zfrom))
-			zstdin = qstdin->s.ztemp;
-		      else
-			zstdin = qstdin->s.zfrom;
+		  for (qstdin = qlist;
+		       qstdin != NULL;
+		       qstdin = qstdin->qnext)
+		    if (qstdin->s.bcmd == 'S'
+			&& strcmp (qstdin->s.zto, zSxqt_stdin) == 0)
 		      break;
-		    }
+		}
+	      else
+		qstdin = NULL;
+
+	      if (qstdin != NULL)
+		{
+		  if (strchr (qstdin->s.zoptions, 'C') != NULL
+		      || fspool_file (qstdin->s.zfrom))
+		    zstdin = qstdin->s.ztemp;
+		  else
+		    zstdin = qstdin->s.zfrom;
 		}
 	    }
 
@@ -1142,8 +1178,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	    {
 	      usworkfile_header (qsys, &qxqt->s, zlistid, qxqt->itime,
 				 TRUE);
-	      printf ("Executing %s (sending %ld bytes)\n",
-		      zSxqt_cmd, csize);
+	      printf ("Executing %s (sending %ld bytes)\n", zcmd, csize);
 	    }
 	}
 
@@ -1176,8 +1211,8 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	      if ((icmd & (JOB_MAIL | JOB_NOTIFY)) != 0)
 		{
 		  if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
-				  zSxqt_cmd, qlist, zlistid, qlist->s.zuser,
-				  qsys, zstdin, zSxqt_requestor))
+				  zcmd, qlist, zlistid, qlist->s.zuser,
+				  qsys, zstdin, zrequestor))
 		    return FALSE;
 		}
 
@@ -1190,7 +1225,12 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	}
 
       if (qxqt != NULL)
-	usxqt_file_free ();
+	{
+	  if (qxqt->s.bcmd == 'E')
+	    ubuffree (zfree);
+	  else
+	    usxqt_file_free ();
+	}
 
       /* Free up the list of entries.  */
       qfree = qlist;
@@ -1583,6 +1623,11 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 	    case 'X':
 	      pz[i++] = "\trequest ";
 	      break;
+#if DEBUG > 0
+	    case 'E':
+	      ulog (LOG_FATAL, "fsnotify: Can't happen");
+	      break;
+#endif
 	    }
 	  pz[i++] = qshow->s.zfrom;
 	  pz[i++] = " to ";

@@ -70,7 +70,7 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 	case 'S':
 	  fprintf (e, "S %s %s %s -%s %s 0%o %s\n", q->zfrom, q->zto,
 		   q->zuser, q->zoptions, q->ztemp, q->imode,
-		   q->znotify);
+		   q->znotify == NULL ? "" : q->znotify);
 	  break;
 	case 'R':
 	  fprintf (e, "R %s %s %s -%s\n", q->zfrom, q->zto, q->zuser,
@@ -79,6 +79,11 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 	case 'X':
 	  fprintf (e, "X %s %s %s -%s\n", q->zfrom, q->zto, q->zuser,
 		   q->zoptions);
+	  break;
+	case 'E':
+	  fprintf (e, "E %s %s %s -%s %s 0%o %s 0 %s\n", q->zfrom, q->zto,
+		   q->zuser, q->zoptions, q->ztemp, q->imode,
+		   q->znotify, q->zcmd);
 	  break;
 	default:
 	  ulog (LOG_ERROR,

@@ -844,6 +844,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "system test1\n");
       fprintf (e, "called-login test1\n");
       fprintf (e, "called-request true\n");
+      fprintf (e, "commands cat\n");
       if (zProtocols != NULL)
 	fprintf (e, "protocol %s\n", zProtocols);
 
@@ -883,7 +884,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test transferring a file from the first system to the second.  */
-
   if (itest == 0 || itest == 1)
     {
       zfrom = "/usr/tmp/tstuu/from1";
@@ -900,7 +900,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test having the first system request a file from the second.  */
-
   if (itest == 0 || itest == 2)
     {
       if (fcall_uucico)
@@ -917,7 +916,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test having the second system send a file to the first.  */
-
   if (itest == 0 || itest == 3)
     {
       if (fcall_uucico)
@@ -934,7 +932,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test having the second system request a file from the first.  */
-
   if (itest == 0 || itest == 4)
     {
       zfrom = "/usr/tmp/tstuu/from4";
@@ -951,7 +948,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test having the second system make an execution request.  */
-
   if (itest == 0 || itest == 5)
     {
       zfrom = "/usr/tmp/tstuu/from5";
@@ -968,7 +964,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test having the first system request a wildcard.  */
-
   if (itest == 0 || itest == 6)
     {
       const char *zfrom1, *zfrom2;
@@ -996,7 +991,6 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
 
   /* Test having the second system request a wildcard.  */
-
   if (itest == 0 || itest == 7)
     {
       const char *zto1, *zto2;
@@ -1021,6 +1015,14 @@ uprepare_test (itest, fcall_uucico, zsys)
 
       sprintf (ab, "%s test1!/usr/tmp/tstuu/spool1/to7.\\* %s", zuucp2,
 	       zto);
+      xsystem (ab);
+    }
+
+  /* Test an E command.  This runs cat, discarding the output.  */
+  if ((itest == 0 || itest == 8) && ! fcall_uucico)
+    {
+      umake_file ("/usr/tmp/tstuu/from8", 30);
+      sprintf (ab, "%s - test2!cat < /usr/tmp/tstuu/from8", zuux1);
       xsystem (ab);
     }
 }

@@ -56,6 +56,7 @@ static char *zQoutput;
 static void uqusage P((void));
 static void uqabort P((void));
 static void uqdo_xqt_file P((pointer puuconf, const char *zfile,
+			     const char *zbase,
 			     const struct uuconf_system *qsys,
 			     const char *zlocalname,
 			     const char *zcmd, boolean *pfprocessed));
@@ -206,6 +207,7 @@ main (argc, argv)
 	{
 	  const char *zloc;
 	  boolean fprocessed;
+	  char *zbase;
 
 #if ! HAVE_ALLOCA
 	  /* Clear out any accumulated alloca buffers.  */
@@ -280,7 +282,9 @@ main (argc, argv)
 	    zloc = zlocalname;
 
 	  ulog_system (ssys.uuconf_zname);
-	  uqdo_xqt_file (puuconf, z, &ssys, zloc, zcmd, &fprocessed);
+	  zbase = zsysdep_base_name (z);
+	  uqdo_xqt_file (puuconf, z, zbase, &ssys, zloc, zcmd, &fprocessed);
+	  ubuffree (zbase);
 	  ulog_system ((const char *) NULL);
 	  ulog_user ((const char *) NULL);
 
@@ -501,12 +505,12 @@ iqout (puuconf, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  const char *zfile = (const char *) pinfo;
+  const char *zbase = (const char *) pinfo;
 
   if (argc != 2 && argc != 3)
     {
       ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zfile, argv[0]);
+	    zbase, argv[0]);
       return UUCONF_CMDTABRET_CONTINUE;
     }
 
@@ -528,12 +532,12 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  const char *zfile = (const char *) pinfo;
+  const char *zbase = (const char *) pinfo;
 
   if (argc != 2 && argc != 3)
     {
       ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zfile, argv[0]);
+	    zbase, argv[0]);
       return UUCONF_CMDTABRET_CONTINUE;
     }
 
@@ -602,15 +606,17 @@ iqset (puuconf, argc, argv, pvar, pinfo)
 #define FREE_OUTPUT (020)
 
 /* Process an execute file.  The zfile argument is the name of the
-   execute file.  The qsys argument describes the system it came from.
-   The zcmd argument is the name of the command we are executing (from
-   the -c option) or NULL if any command is OK.  This sets
-   *pfprocessed to TRUE if the file is ready to be executed.  */
+   execute file.  The zbase argument is the base name of zfile.  The
+   qsys argument describes the system it came from.  The zcmd argument
+   is the name of the command we are executing (from the -c option) or
+   NULL if any command is OK.  This sets *pfprocessed to TRUE if the
+   file is ready to be executed.  */
 
 static void
-uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
+uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
      pointer puuconf;
      const char *zfile;
+     const char *zbase;
      const struct uuconf_system *qsys;
      const char *zlocalname;
      const char *zcmd;
@@ -641,7 +647,7 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
   if (qsys->uuconf_pzcmds == NULL)
     {
       ulog (LOG_ERROR, "%s: No commands permitted for system %s",
-	    zfile, qsys->uuconf_zname);
+	    zbase, qsys->uuconf_zname);
       (void) remove (zfile);
       return;
     }
@@ -670,7 +676,7 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
   fQuse_sh = FALSE;
 #endif
 
-  iuuconf = uuconf_cmd_file (puuconf, e, asQcmds, (pointer) zfile,
+  iuuconf = uuconf_cmd_file (puuconf, e, asQcmds, (pointer) zbase,
 			     (uuconf_cmdtabfn) NULL,
 			     UUCONF_CMDTABFLAG_CASE, (pointer) NULL);
   (void) fclose (e);
@@ -685,7 +691,7 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
 
   if (azQargs == NULL)
     {
-      ulog (LOG_ERROR, "%s: No command given", zfile);
+      ulog (LOG_ERROR, "%s: No command given", zbase);
       uqcleanup (zfile, iclean | REMOVE_FILE);
       return;
     }
@@ -856,13 +862,7 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
 
 #endif /* ! ALLOW_FILENAME_ARGUMENTS */
 
-  {
-    char *zbase;
-
-    zbase = zsysdep_base_name (zfile);
-    ulog (LOG_NORMAL, "Executing %s (%s)", zbase, zQcmd);
-    ubuffree (zbase);
-  }
+  ulog (LOG_NORMAL, "Executing %s (%s)", zbase, zQcmd);
 
   if (zQinput != NULL)
     {
@@ -1065,7 +1065,7 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
     {
       if (ftemp)
 	{
-	  ulog (LOG_NORMAL, "Will retry later (%s)", zfile);
+	  ulog (LOG_NORMAL, "Will retry later (%s)", zbase);
 	  if (zoutput != NULL)
 	    (void) remove (zoutput);
 	  if (zerror != NULL)
@@ -1082,7 +1082,7 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
 	  return;
 	}
 
-      ulog (LOG_NORMAL, "Execution failed (%s)", zfile);
+      ulog (LOG_NORMAL, "Execution failed (%s)", zbase);
 
       if (zmail != NULL && ! fQno_ack)
 	{
@@ -1183,9 +1183,8 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
 	    s.znotify = zmail;
 	  else
 	    s.znotify = "";
-	  /* The number of bytes will be filled in when the file is
-	     actually sent.  */
 	  s.cbytes = -1;
+	  s.zcmd = NULL;
 
 	  ubuffree (zsysdep_spool_commands (qoutsys, BDEFAULT_UUX_GRADE,
 					    1, &s));

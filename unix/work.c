@@ -475,7 +475,7 @@ fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
 	      continue;
 	    }
 
-	  if (qcmd->bcmd == 'S')
+	  if (qcmd->bcmd == 'S' || qcmd->bcmd == 'E')
 	    {
 	      char *zreal;
 

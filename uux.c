@@ -56,25 +56,20 @@ const char uux_rcsid[] = "$Id$";
 /* The program name.  */
 char abProgram[] = "uux";
 
-/* Long getopt options.  */
-
-static const struct option asXlongopts[] = { { NULL, 0, NULL, 0 } };
+/* The name of the execute file.  */
+const char *zXxqt_name;
 
 /* The execute file we are creating.  */
-
 static FILE *eXxqt_file;
 
 /* A list of commands to be spooled.  */
-
 static struct scmd *pasXcmds;
 static int cXcmds;
 
 /* A file to close if we're forced to exit.  */
-
 static FILE *eXclose;
-
+
 /* Local functions.  */
-
 static void uxusage P((void));
 static void uxadd_xqt_line P((int bchar, const char *z1, const char *z2));
 static void uxadd_send_file P((const char *zfrom, const char *zto,
@@ -82,6 +77,11 @@ static void uxadd_send_file P((const char *zfrom, const char *zto,
 static void uxcopy_stdin P((FILE *e));
 static void uxrecord_file P((const char *zfile));
 static void uxabort P((void));
+
+/* Long getopt options.  */
+static const struct option asXlongopts[] = { { NULL, 0, NULL, 0 } };
+
+/* The main routine.  */
 
 int
 main (argc, argv)
@@ -136,13 +136,16 @@ main (argc, argv)
   char **pzargs;
   int calloc_args;
   int cargs;
-  char *zxqtname;
   char abxqt_tname[CFILE_NAME_LEN];
   char abxqt_xname[CFILE_NAME_LEN];
-  boolean fneedshell;
-  char *zprint;
+  const char *zinput_from;
+  const char *zinput_to;
+  const char *zinput_temp;
+  boolean finputcopied;
   char *zcall_system;
   boolean fcall_any;
+  boolean fneedshell;
+  char *zfullcmd;
   boolean fexit;
 
   /* We need to be able to read a single - as an option, which getopt
@@ -303,7 +306,7 @@ main (argc, argv)
   for (i = optind; i < argc; i++)
     clen += strlen (argv[i]) + 1;
 
-  zargs = (char *) alloca (clen);
+  zargs = zbufalc (clen);
   *zargs = '\0';
   for (i = optind; i < argc; i++)
     {
@@ -313,7 +316,7 @@ main (argc, argv)
 
   /* The first argument is the command to execute.  */
   clen = strcspn (zargs, ZSHELLSEPS);
-  zcmd = (char *) alloca (clen + 1);
+  zcmd = zbufalc (clen + 1);
   strncpy (zcmd, zargs, clen);
   zcmd[clen] = '\0';
   zargs += clen;
@@ -456,7 +459,6 @@ main (argc, argv)
 	  iuuconf = uuconf_system_local (puuconf, &sxqtsys);
 	  if (iuuconf != UUCONF_SUCCESS)
 	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-	  sxqtsys.uuconf_zname = (char *) zlocalname;
 	}
       else
 	{
@@ -470,28 +472,28 @@ main (argc, argv)
   if (zxqtloc == NULL)
     zxqtloc = zlocalname;
 
-  /* Name and open the execute file.  If the execution is to occur on
-     a remote system, we must create a data file and copy it over.  */
+  /* We can send this as an E command if the execution is on a
+     different system and the only file used is the standard input and
+     comes from this system.  This is true of the common cases of
+     rmail and rnews.  We get an execute file name here in case we
+     need it.  */
   if (fxqtlocal)
-    zxqtname = zsysdep_xqt_file_name ();
+    zXxqt_name = zsysdep_xqt_file_name ();
   else
-    zxqtname = zsysdep_data_file_name (&sxqtsys, zxqtloc, 'X', abxqt_tname,
-				       (char *) NULL, abxqt_xname);
-  if (zxqtname == NULL)
+    zXxqt_name = zsysdep_data_file_name (&sxqtsys, zxqtloc, 'X', abxqt_tname,
+					 (char *) NULL, abxqt_xname);
+  if (zXxqt_name == NULL)
     uxabort ();
 
-  eXxqt_file = esysdep_fopen (zxqtname, FALSE, FALSE, TRUE);
-  if (eXxqt_file == NULL)
-    uxabort ();
-
-  uxrecord_file (zxqtname);
-
-  /* Specify the user.  */
-  uxadd_xqt_line ('U', zuser, zxqtloc);
+  uxrecord_file (zXxqt_name);
 
   /* Look through the arguments.  Any argument containing an
      exclamation point character is interpreted as a file name, and is
      sent to the appropriate system.  */
+  zinput_from = NULL;
+  zinput_to = NULL;
+  zinput_temp = NULL;
+  finputcopied = FALSE;
   zcall_system = NULL;
   fcall_any = FALSE;
 
@@ -500,7 +502,7 @@ main (argc, argv)
       const char *zsystem;
       char *zfile;
       boolean finput, foutput;
-      boolean flocal;
+      boolean flocal, fonxqt;
 
       /* Check for a parenthesized argument; remove the parentheses
 	 and otherwise ignore it (this is how an exclamation point is
@@ -560,6 +562,30 @@ main (argc, argv)
 	  zfile = zexclam + 1;
 	}
 
+      /* Check if the file is already on the execution system.  */
+      if (flocal)
+	fonxqt = fxqtlocal;
+      else if (fxqtlocal)
+	fonxqt = FALSE;
+      else if (strcmp (zsystem, sxqtsys.uuconf_zname) == 0)
+	fonxqt = TRUE;
+      else if (sxqtsys.uuconf_pzalias == NULL)
+	fonxqt = FALSE;
+      else
+	{
+	  char **pzal;
+
+	  fonxqt = FALSE;
+	  for (pzal = sxqtsys.uuconf_pzalias; *pzal != NULL; pzal++)
+	    {
+	      if (strcmp (zsystem, *pzal) == 0)
+		{
+		  fonxqt = TRUE;
+		  break;
+		}
+	    }
+	}
+
       /* Turn the file into an absolute path.  */
       if (flocal)
 	zfile = zsysdep_local_file_cwd (zfile, sxqtsys.uuconf_zpubdir);
@@ -568,9 +594,7 @@ main (argc, argv)
       if (zfile == NULL)
 	uxabort ();
 
-      /* Check for output redirection.  We strip this argument out,
-	 and create an O command which tells uuxqt where to send the
-	 output.  */
+      /* Check for output redirection.  */
       if (foutput)
 	{
 	  if (flocal)
@@ -582,10 +606,12 @@ main (argc, argv)
 		ulog (LOG_FATAL, "Not permitted to create %s", zfile);
 	    }
 
-	  if (strcmp (zsystem, sxqtsys.uuconf_zname) == 0)
+	  if (fonxqt)
 	    uxadd_xqt_line ('O', zfile, (const char *) NULL);
+	  else if (flocal)
+	    uxadd_xqt_line ('O', zfile, zxqtloc);
 	  else
-	    uxadd_xqt_line ('O', zfile, flocal ? zxqtloc : zsystem);
+	    uxadd_xqt_line ('O', zfile, zsystem);
 	  pzargs[i] = NULL;
 	  continue;
 	}
@@ -683,19 +709,21 @@ main (argc, argv)
 	    }
 	  else
 	    {
-	      uxadd_send_file (zuse, abdname,
-			       fcopy || flink || fxqtlocal ? "C" : "c",
-			       abtname);
+	      finputcopied = fcopy || flink;
 
 	      if (finput)
 		{
-		  uxadd_xqt_line ('F', abdname, (char *) NULL);
-		  uxadd_xqt_line ('I', abdname, (char *) NULL);
+		  zinput_from = zuse;
+		  zinput_to = zbufcpy (abdname);
+		  zinput_temp = zbufcpy (abtname);
 		}
 	      else
 		{
 		  char *zbase;
 
+		  uxadd_send_file (zuse, abdname,
+				   finputcopied ? "C" : "c",
+				   abtname);
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
 		    uxabort ();
@@ -704,7 +732,7 @@ main (argc, argv)
 		}
 	    }
 	}
-      else if (strcmp (sxqtsys.uuconf_zname, zsystem) == 0)
+      else if (fonxqt)
 	{
 	  /* The file is already on the system where the command is to
 	     be executed.  */
@@ -730,7 +758,7 @@ main (argc, argv)
 		ulog (LOG_FATAL, "%s: System not found", zsystem);
 	    }
 
-	  if (strcmp (sfromsys.uuconf_zname, sxqtsys.uuconf_zname) == 0)
+	  if (fonxqt)
 	    {
 	      /* The file is already on the system where the command is to
 		 be executed.  */
@@ -766,6 +794,7 @@ main (argc, argv)
 	      s.imode = 0600;
 	      s.znotify = "";
 	      s.cbytes = -1;
+	      s.zcmd = NULL;
 
 	      zjobid = zsysdep_spool_commands (&sfromsys, bgrade, 1, &s);
 	      if (zjobid == NULL)
@@ -812,7 +841,6 @@ main (argc, argv)
 
   /* If standard input is to be read from the stdin of uux, we read it
      here into a temporary file and send it to the execute system.  */
-
   if (fread_stdin)
     {
       char *zdata;
@@ -842,73 +870,126 @@ main (argc, argv)
 	uxadd_xqt_line ('I', abtname, (const char *) NULL);
       else
 	{
-	  uxadd_xqt_line ('F', abdname, (const char *) NULL);
-	  uxadd_xqt_line ('I', abdname, (const char *) NULL);
-	  uxadd_send_file (abtname, abdname, "C", abtname);
+	  zinput_from = zbufcpy (abtname);
+	  zinput_to = zbufcpy (abdname);
+	  zinput_temp = zinput_from;
+	  finputcopied = TRUE;
 	}
     }
 
-  /* Here all the arguments have been determined, so the command can
-     be written out.  If any of the arguments contain shell
-     metacharacters, we request remote execution with /bin/sh (this is
-     the 'e' command in the execute file).  The default is assumed to
-     be remote execution with execve.  */
-  fprintf (eXxqt_file, "C %s", zcmd);
-
-  fneedshell = FALSE;
-
-  if (zcmd[strcspn (zcmd, ZSHELLCHARS)] != '\0')
-    fneedshell = TRUE;
-
-  for (i = 0; i < cargs; i++)
-    {
-      if (pzargs[i] != NULL)
-	{
-	  fprintf (eXxqt_file, " %s", pzargs[i]);
-	  if (pzargs[i][strcspn (pzargs[i], ZSHELLCHARS)] != '\0')
-	    fneedshell = TRUE;
-	}
-    }
-
-  fprintf (eXxqt_file, "\n");
-
-  /* Write out all the other miscellaneous junk.  */
-
-  if (fno_ack)
-    uxadd_xqt_line ('N', (const char *) NULL, (const char *) NULL);
-
-  if (ferror_ack)
-    uxadd_xqt_line ('Z', (const char *) NULL, (const char *) NULL);
-
-  if (zrequestor != NULL)
-    uxadd_xqt_line ('R', zrequestor, (const char *) NULL);
-
+  /* If we are returning standard input, or we're putting the status
+     in a file, we can't use an E command.  */
   if (fretstdin)
     uxadd_xqt_line ('B', (const char *) NULL, (const char *) NULL);
 
   if (zstatus_file != NULL)
     uxadd_xqt_line ('M', zstatus_file, (const char *) NULL);
 
-  if (fneedshell)
-    uxadd_xqt_line ('e', (const char *) NULL, (const char *) NULL);
+  /* Get the complete command line, and decide whether the command
+     needs to be executed by the shell.  */
+  fneedshell = FALSE;
 
-  if (fclose (eXxqt_file) != 0)
-    ulog (LOG_FATAL, "fclose: %s", strerror (errno));
-  eXxqt_file = NULL;
+  if (zcmd[strcspn (zcmd, ZSHELLCHARS)] != '\0')
+    fneedshell = TRUE;
 
-  /* If the execution is to occur on another system, we must now
-     arrange to copy the execute file to this system.  */
+  clen = strlen (zcmd) + 1;
+  for (i = 0; i < cargs; i++)
+    {
+      if (pzargs[i] != NULL)
+	{
+	  clen += strlen (pzargs[i]) + 1;
+	  if (pzargs[i][strcspn (pzargs[i], ZSHELLCHARS)] != '\0')
+	    fneedshell = TRUE;
+	}
+    }
 
-  if (! fxqtlocal)
-    uxadd_send_file (abxqt_tname, abxqt_xname, "C", abxqt_tname);
+  zfullcmd = zbufalc (clen);
+
+  strcpy (zfullcmd, zcmd);
+  for (i = 0; i < cargs; i++)
+    {
+      if (pzargs[i] != NULL)
+	{
+	  strcat (zfullcmd, " ");
+	  strcat (zfullcmd, pzargs[i]);
+	}
+    }
+
+  /* If we haven't written anything to the execution file yet, and we
+     have a standard input file, then every other option can be
+     handled in an E command.  */
+  if (eXxqt_file == NULL && zinput_from != NULL)
+    {
+      struct scmd s;
+      char aboptions[10];
+      char *zoptions;
+
+      /* Set up an E command.  */
+      s.bcmd = 'E';
+      s.pseq = NULL;
+      s.zuser = zuser;
+      s.zfrom = zinput_from;
+      s.zto = zinput_to;
+      s.zoptions = aboptions;
+      zoptions = aboptions;
+      *zoptions++ = finputcopied ? 'C' : 'c';
+      if (fno_ack)
+	*zoptions++ = 'N';
+      if (ferror_ack)
+	*zoptions++ = 'Z';
+      if (zrequestor != NULL)
+	*zoptions++ = 'R';
+      if (fneedshell)
+	*zoptions++ = 'e';
+      s.ztemp = zinput_temp;
+      s.imode = 0666;
+      if (zrequestor == NULL)
+	zrequestor = "\"\"";
+      s.znotify = zrequestor;
+      s.cbytes = -1;
+      s.zcmd = zfullcmd;
+      
+      ++cXcmds;
+      pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
+					   cXcmds * sizeof (struct scmd));
+      pasXcmds[cXcmds - 1] = s;
+    }
+  else
+    {
+      /* Finish up the execute file.  */
+      uxadd_xqt_line ('U', zuser, zxqtloc);
+      uxadd_xqt_line ('C', zfullcmd, (const char *) NULL);
+      if (zinput_from != NULL)
+	{
+	  uxadd_xqt_line ('F', zinput_to, (char *) NULL);
+	  uxadd_xqt_line ('I', zinput_to, (char *) NULL);
+	  uxadd_send_file (zinput_from, zinput_to,
+			   finputcopied ? "C" : "c",
+			   zinput_temp);
+	}
+      if (fno_ack)
+	uxadd_xqt_line ('N', (const char *) NULL, (const char *) NULL);
+      if (ferror_ack)
+	uxadd_xqt_line ('Z', (const char *) NULL, (const char *) NULL);
+      if (zrequestor != NULL)
+	uxadd_xqt_line ('R', zrequestor, (const char *) NULL);
+      if (fneedshell)
+	uxadd_xqt_line ('e', (const char *) NULL, (const char *) NULL);
+      if (fclose (eXxqt_file) != 0)
+	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
+      eXxqt_file = NULL;
+
+      /* If the execution is to occur on another system, we must now
+	 arrange to copy the execute file to this system.  */
+      if (! fxqtlocal)
+	uxadd_send_file (abxqt_tname, abxqt_xname, "C", abxqt_tname);
+    }
 
   /* If we got a signal, get out before spooling anything.  */
-
   if (FGOT_SIGNAL ())
     uxabort ();
 
   /* From here on in, it's too late.  We don't call uxabort.  */
-
   if (cXcmds > 0)
     {
       char *zjobid;
@@ -939,30 +1020,11 @@ main (argc, argv)
 
   /* If all that worked, make a log file entry.  All log file reports
      up to this point went to stderr.  */
-
   ulog_to_file (puuconf, TRUE);
   ulog_system (sxqtsys.uuconf_zname);
   ulog_user (zuser);
 
-  clen = strlen (zcmd) + 2;
-  for (i = 0; i < cargs; i++)
-    if (pzargs[i] != NULL)
-      clen += strlen (pzargs[i]) + 1;
-
-  zprint = (char *) alloca (clen);
-  strcpy (zprint, zcmd);
-  strcat (zprint, " ");
-  for (i = 0; i < cargs; i++)
-    {
-      if (pzargs[i] != NULL)
-	{
-	  strcat (zprint, pzargs[i]);
-	  strcat (zprint, " ");
-	}
-    }
-  zprint[strlen (zprint) - 1] = '\0';
-
-  ulog (LOG_NORMAL, "Queuing %s", zprint);
+  ulog (LOG_NORMAL, "Queuing %s", zfullcmd);
 
   ulog_close ();
 
@@ -1035,6 +1097,13 @@ uxadd_xqt_line (bchar, z1, z2)
      const char *z1;
      const char *z2;
 {
+  if (eXxqt_file == NULL)
+    {
+      eXxqt_file = esysdep_fopen (zXxqt_name, FALSE, FALSE, TRUE);
+      if (eXxqt_file == NULL)
+	uxabort ();
+    }
+
   if (z1 == NULL)
     fprintf (eXxqt_file, "%c\n", bchar);
   else if (z2 == NULL)
@@ -1064,6 +1133,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp)
   s.imode = 0666;
   s.znotify = "";
   s.cbytes = -1;
+  s.zcmd = NULL;
 
   ++cXcmds;
   pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,

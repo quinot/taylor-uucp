@@ -644,6 +644,7 @@ uccopy (zfile, zdest)
 	  s.imode = imode;
 	  s.znotify = zCnotify;
 	  s.cbytes = -1;
+	  s.zcmd = NULL;
 
 	  ucadd_cmd (&sCdestsys, &s);
 	}
@@ -730,6 +731,7 @@ uccopy (zfile, zdest)
 	  s.imode = 0;
 	  s.znotify = "";
 	  s.cbytes = -1;
+	  s.zcmd = NULL;
 
 	  ucadd_cmd (qfromsys, &s);
 	}
@@ -752,6 +754,7 @@ uccopy (zfile, zdest)
 	  s.imode = 0;
 	  s.znotify = "";
 	  s.cbytes = -1;
+	  s.zcmd = NULL;
 
 	  ucadd_cmd (qfromsys, &s);
 	}

@@ -51,10 +51,13 @@ struct ssendinfo
   boolean fspool;
   /* TRUE if the file has been completely sent.  */
   boolean fsent;
+  /* Execution file for sending an unsupported E request.  */
+  char *zexec;
 };
 
 /* Local functions.  */
 
+static void usfree_send P((struct stransfer *qtrans));
 static boolean flocal_send_fail P((struct stransfer *qtrans,
 				   struct scmd *qcmd,
 				   const struct uuconf_system *qsys,
@@ -78,6 +81,31 @@ static boolean fsend_file_end P((struct stransfer *qtrans,
 static boolean fsend_await_confirm P((struct stransfer *qtrans,
 				      struct sdaemon *qdaemon,
 				      const char *zdata, size_t cdata));
+static boolean fsend_exec_file_init P((struct stransfer *qtrans,
+				       struct sdaemon *qdaemon));
+static void usadd_exec_line P((char **pz, size_t *pcalc, size_t *pclen,
+			       int bcmd, const char *z1, const char *z2));
+static boolean fsend_exec_file P((struct stransfer *qtrans,
+				  struct sdaemon *qdaemon));
+
+/* Free up a send stransfer structure.  */
+
+static void
+usfree_send (qtrans)
+     struct stransfer *qtrans;
+{
+  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
+
+  if (qinfo != NULL)
+    {
+      ubuffree (qinfo->zmail);
+      ubuffree (qinfo->zfile);
+      ubuffree (qinfo->zexec);
+      xfree (qtrans->pinfo);
+    }
+
+  utransfree (qtrans);
+}      
 
 /* Set up a local request to send a file.  This may be called before
    we have even tried to call the remote system.
@@ -131,7 +159,18 @@ static boolean fsend_await_confirm P((struct stransfer *qtrans,
    If the request is not deleted, flocal_send_await_reply must arrange
    for the next string to be passed to fsend_await_confirm.
    Presumably fsend_await_confirm will only be called after the entire
-   file has been sent.  */
+   file has been sent.
+
+   Just to make things even more complex, these same routines support
+   sending execution requests, since that is much like sending a file.
+   For an execution request, the bcmd character will be E rather than
+   S.  If an execution request is being sent to a system which does
+   not support them, it must be sent as two S requests instead.  The
+   second one will be the execution file, but no actual file is
+   created; instead the zexec and znext fields in the ssendinfo
+   structure are used.  So if the bcmd character is E, then if the
+   zexec field is NULL, the data file is being sent, otherwise the
+   fake execution file is being sent.  */
 
 boolean
 flocal_send_file_init (qdaemon, qcmd)
@@ -225,8 +264,8 @@ flocal_send_file_init (qdaemon, qcmd)
       return TRUE;
     }
 
-  /* We are now prepared to send the 'S' command to the remote system.
-     We queue up a transfer request to send the command when we are
+  /* We are now prepared to send the command to the remote system.  We
+     queue up a transfer request to send the command when we are
      ready.  */
   qinfo = (struct ssendinfo *) xmalloc (sizeof (struct ssendinfo));
   if (strchr (qcmd->zoptions, 'm') == NULL)
@@ -238,6 +277,7 @@ flocal_send_file_init (qdaemon, qcmd)
   qinfo->flocal = TRUE;
   qinfo->fspool = fspool;
   qinfo->fsent = FALSE;
+  qinfo->zexec = NULL;
 
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = flocal_send_request;
@@ -257,22 +297,33 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
      const struct uuconf_system *qsys;
      const char *zwhy;
 {
+  char *zfree;
+
+  if (qcmd->bcmd != 'E' || zwhy == NULL)
+    zfree = NULL;
+  else
+    {
+      zfree = zbufalc (sizeof "Execution of \"\": "
+		       + strlen (qcmd->zcmd)
+		       + strlen (zwhy));
+      sprintf (zfree, "Execution of \"%s\": %s", qcmd->zcmd, zwhy);
+      zwhy = zfree;
+    }
+
   if (zwhy != NULL)
     ulog (LOG_ERROR, "%s: %s", qcmd->zfrom, zwhy);
   (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
 			 zwhy, qcmd->zfrom, (const char *) NULL,
 			 qcmd->zto, qsys->uuconf_zname,
 			 zsysdep_save_temp_file (qcmd->pseq));
-  (void) fsysdep_did_work (qcmd->pseq);
-  if (qtrans != NULL)
-    {
-      struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
 
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
-    }
+  ubuffree (zfree);
+
+  (void) fsysdep_did_work (qcmd->pseq);
+
+  if (qtrans != NULL)
+    usfree_send (qtrans);
+
   return TRUE;
 }
 
@@ -288,6 +339,7 @@ flocal_send_request (qtrans, qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char *zsend;
+  const char *znotify;
   boolean fret;
 
   /* Make sure the file meets any remote size restrictions.  */
@@ -296,31 +348,71 @@ flocal_send_request (qtrans, qdaemon)
     return flocal_send_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			     "too large for receiver");
 
-  /* Send the string
-     S zfrom zto zuser zoptions ztemp imode znotify
-     to the remote system.  We put a '-' in front of the (possibly
-     empty) options and a '0' in front of the mode.  If fnew is TRUE,
-     we also send the size; in this case if znotify is empty we must
-     send it as "".  */
-  zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-		   + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions)
-		   + strlen (qtrans->s.ztemp) + strlen (qtrans->s.znotify)
-		   + 50);
-  if (! qdaemon->fnew)
-    sprintf (zsend, "S %s %s %s -%s %s 0%o %s", qtrans->s.zfrom,
-	     qtrans->s.zto, qtrans->s.zuser, qtrans->s.zoptions,
-	     qtrans->s.ztemp, qtrans->s.imode, qtrans->s.znotify);
+  /* If this an execution request and the other side supports
+     execution requests, we send an E command.  Otherwise we send an S
+     command.  The case of an execution request when we are sending
+     the fake execution file is handled just like an S request at this
+     point.  */
+  if (qtrans->s.bcmd == 'E'
+      && (qdaemon->ifeatures & FEATURE_EXEC) != 0)
+    {
+      /* Send the string
+	 E zfrom zto zuser zoptions ztemp imode znotify size zcmd
+	 to the remote system.  We put a '-' in front of the (possibly
+	 empty) options and a '0' in front of the mode.  */
+      znotify = qtrans->s.znotify;
+      if (znotify == NULL || *znotify == '\0')
+	znotify = "\"\"";
+      zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
+		       + strlen (qtrans->s.zuser)
+		       + strlen (qtrans->s.zoptions)
+		       + strlen (qtrans->s.ztemp)
+		       + strlen (znotify) + strlen (qtrans->s.zcmd)
+		       + 50);
+      sprintf (zsend, "E %s %s %s -%s %s 0%o %s %ld %s", qtrans->s.zfrom,
+	       qtrans->s.zto, qtrans->s.zuser, qtrans->s.zoptions,
+	       qtrans->s.ztemp, qtrans->s.imode, znotify, qinfo->cbytes,
+	       qtrans->s.zcmd);
+    }
   else
     {
-      const char *znotify;
+      const char *zoptions;
 
-      if (qtrans->s.znotify[0] != '\0')
-	znotify = qtrans->s.znotify;
+      /* Send the string
+	 S zfrom zto zuser zoptions ztemp imode znotify
+	 to the remote system.  We put a '-' in front of the (possibly
+	 empty) options and a '0' in front of the mode.  If size
+	 negotiation is supported, we also send the size; in this case
+	 if znotify is empty we must send it as "".  If this is really
+	 an execution request, we have to simplify the options string
+	 to remove the various execution options which may confuse the
+	 remote system.  */
+      if (qtrans->s.bcmd != 'E')
+	zoptions = qtrans->s.zoptions;
+      else if (strchr (qtrans->s.zoptions, 'C') != NULL)
+	zoptions = "C";
       else
-	znotify = "\"\"";
-      sprintf (zsend, "S %s %s %s -%s %s 0%o %s %ld", qtrans->s.zfrom,
-	       qtrans->s.zto, qtrans->s.zuser, qtrans->s.zoptions,
-	       qtrans->s.ztemp, qtrans->s.imode, znotify, qinfo->cbytes);
+	zoptions = "c";
+
+      znotify = qtrans->s.znotify;
+      if (znotify == NULL)
+	znotify = "";
+      zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
+		       + strlen (qtrans->s.zuser) + strlen (zoptions)
+		       + strlen (qtrans->s.ztemp) + strlen (znotify) + 50);
+      if ((qdaemon->ifeatures & FEATURE_SIZES) == 0)
+	sprintf (zsend, "S %s %s %s -%s %s 0%o %s", qtrans->s.zfrom,
+		 qtrans->s.zto, qtrans->s.zuser, zoptions,
+		 qtrans->s.ztemp, qtrans->s.imode, znotify);
+      else
+	{
+	  if (*znotify == '\0')
+	    znotify = "\"\"";
+	  sprintf (zsend, "S %s %s %s -%s %s 0%o %s %ld", qtrans->s.zfrom,
+		   qtrans->s.zto, qtrans->s.zuser, zoptions,
+		   qtrans->s.ztemp, qtrans->s.imode, znotify,
+		   qinfo->cbytes);
+	}
     }
 
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
@@ -328,10 +420,7 @@ flocal_send_request (qtrans, qdaemon)
   ubuffree (zsend);
   if (! fret)
     {
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      usfree_send (qtrans);
       return FALSE;
     }
 
@@ -367,16 +456,19 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
      size_t cdata;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
+  char bcmd;
 
-  if (zdata[0] != 'S'
+  if (qtrans->s.bcmd == 'E'
+      && (qdaemon->ifeatures & FEATURE_EXEC) != 0)
+    bcmd = 'E';
+  else
+    bcmd = 'S';
+  if (zdata[0] != bcmd
       || (zdata[1] != 'Y' && zdata[1] != 'N'))
     {
-      ulog (LOG_ERROR, "%s: Bad response to send request: \"%s\"",
-	    qtrans->s.zfrom, zdata);
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      ulog (LOG_ERROR, "%s: Bad response to %c request: \"%s\"",
+	    qtrans->s.zfrom, bcmd, zdata);
+      usfree_send (qtrans);
       return FALSE;
     }
 
@@ -407,7 +499,13 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	zerr = "unknown reason";
 
       if (! fnever)
-	ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
+	{
+	  if (qtrans->s.bcmd == 'E')
+	    ulog (LOG_ERROR, "Execution of \"%s\": %s", qtrans->s.zcmd,
+		  zerr);
+	  else
+	    ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
+	}
       else
 	{
 	  if (! flocal_send_fail ((struct stransfer *) NULL, &qtrans->s,
@@ -420,44 +518,34 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	 the remote side knows that we have finished sending the file
 	 data.  If we have already sent the entire file, there will be
 	 no confusion.  */
-      if (qdaemon->qproto->cchans > 1 && ! qinfo->fsent)
+      if (qdaemon->qproto->cchans == 1 || qinfo->fsent)
+	usfree_send (qtrans);
+      else
 	{
 	  qtrans->psendfn = flocal_send_cancelled;
 	  qtrans->precfn = NULL;
 	  uqueue_send (qtrans);
 	}
-      else
-	{
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
-	}
 
       return TRUE;
     }
 
-  /* A number following the SY is the file position to start sending
-     from.  If we are already sending the file, we must set the
-     position accordingly.  */
+  /* A number following the SY or EY is the file position to start
+     sending from.  If we are already sending the file, we must set
+     the position accordingly.  */
   if (zdata[2] != '\0')
     {
       long cskip;
 
       cskip = strtol (zdata + 2, (char **) NULL, 0);
-      if (cskip > 0)
+      if (cskip > 0 && qtrans->ipos < cskip)
 	{
-	  if (qtrans->fsendfile
-	      && ! qinfo->fsent
-	      && qtrans->ipos < cskip)
+	  if (qtrans->fsendfile && ! qinfo->fsent)
 	    {
 	      if (! ffileseek (qtrans->e, cskip))
 		{
 		  ulog (LOG_ERROR, "seek: %s", strerror (errno));
-		  ubuffree (qinfo->zmail);
-		  ubuffree (qinfo->zfile);
-		  xfree (qtrans->pinfo);
-		  utransfree (qtrans);
+		  usfree_send (qtrans);
 		  return FALSE;
 		}
 	    }
@@ -469,7 +557,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
      We already set psendfn at the end of flocal_send_request.  If the
      protocol supports multiple channels, we have already called
      uqueue_send; calling it again would move the request in the
-     queue, which can make the log file a bit confusing.  */
+     queue, which would make the log file a bit confusing.  */
   qtrans->precfn = fsend_await_confirm;
   if (qinfo->fsent)
     uqueue_receive (qtrans);
@@ -479,7 +567,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
   return TRUE;
 }
 
-/* Open the file and prepare to send it.  */
+/* Open the file, if any, and prepare to send it.  */
 
 static boolean
 flocal_send_open_file (qtrans, qdaemon)
@@ -489,52 +577,69 @@ flocal_send_open_file (qtrans, qdaemon)
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   const char *zuser;
 
-  /* If there is an ! in the user name, this is a remote request
-     queued up by fremote_xcmd_init.  */
-  zuser = qtrans->s.zuser;
-  if (strchr (zuser, '!') != NULL)
-    zuser = NULL;
-
-  qtrans->e = esysdep_open_send (qdaemon->qsys, qinfo->zfile,
-				 ! qinfo->fspool, zuser);
-  if (! ffileisopen (qtrans->e))
+  /* If this is not a fake execution file, open it.  */
+  if (qinfo->zexec == NULL)
     {
-      (void) fmail_transfer (FALSE, qtrans->s.zuser,
-			     (const char *) NULL,
-			     "cannot open file",
-			     qtrans->s.zfrom, (const char *) NULL,
-			     qtrans->s.zto, qdaemon->qsys->uuconf_zname,
-			     zsysdep_save_temp_file (qtrans->s.pseq));
-      (void) fsysdep_did_work (qtrans->s.pseq);
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      /* If there is an ! in the user name, this is a remote request
+	 queued up by fremote_xcmd_init.  */
+      zuser = qtrans->s.zuser;
+      if (strchr (zuser, '!') != NULL)
+	zuser = NULL;
 
-      /* Unfortunately, there is no way (at the moment) to cancel a
-	 file send after we've already put it in progress.  So we have
-	 to return FALSE to drop the connection.  */
-      return FALSE;
-    }
-
-  /* If flocal_send_await_reply has received an SY request with a file
-     position, it will have set qtrans->ipos to the position at which
-     to start.  */
-  if (qtrans->ipos > 0)
-    {
-      if (! ffileseek (qtrans->e, qtrans->ipos))
+      qtrans->e = esysdep_open_send (qdaemon->qsys, qinfo->zfile,
+				     ! qinfo->fspool, zuser);
+      if (! ffileisopen (qtrans->e))
 	{
-	  ulog (LOG_ERROR, "seek: %s", strerror (errno));
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
+	  (void) fmail_transfer (FALSE, qtrans->s.zuser,
+				 (const char *) NULL,
+				 "cannot open file",
+				 qtrans->s.zfrom, (const char *) NULL,
+				 qtrans->s.zto,
+				 qdaemon->qsys->uuconf_zname,
+				 zsysdep_save_temp_file (qtrans->s.pseq));
+	  (void) fsysdep_did_work (qtrans->s.pseq);
+	  usfree_send (qtrans);
+
+	  /* Unfortunately, there is no way to cancel a file send
+	     after we've already put it in progress.  So we have to
+	     return FALSE to drop the connection.  */
 	  return FALSE;
 	}
     }
 
-  qtrans->zlog = zbufalc (sizeof "Sending " + strlen (qtrans->s.zfrom));
-  sprintf (qtrans->zlog, "Sending %s", qtrans->s.zfrom);
+  /* If flocal_send_await_reply has received a reply with a file
+     position, it will have set qtrans->ipos to the position at which
+     to start.  */
+  if (qtrans->ipos > 0)
+    {
+      if (qinfo->zexec != NULL)
+	{
+	  if (qtrans->ipos > qtrans->cbytes)
+	    qtrans->ipos = qtrans->cbytes;
+	}
+      else
+	{
+	  if (! ffileseek (qtrans->e, qtrans->ipos))
+	    {
+	      ulog (LOG_ERROR, "seek: %s", strerror (errno));
+	      usfree_send (qtrans);
+	      return FALSE;
+	    }
+	}
+    }
+
+  /* We don't bother to log sending the execution file.  */
+  if (qinfo->zexec == NULL)
+    {
+      const char *zsend;
+
+      if (qtrans->s.bcmd == 'E')
+	zsend = qtrans->s.zcmd;
+      else
+	zsend = qtrans->s.zfrom;
+      qtrans->zlog = zbufalc (sizeof "Sending " + strlen (zsend));
+      sprintf (qtrans->zlog, "Sending %s", zsend);
+    }
 
   if (qdaemon->qproto->pffile != NULL)
     {
@@ -543,10 +648,7 @@ flocal_send_open_file (qtrans, qdaemon)
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, TRUE, TRUE,
 					qinfo->cbytes, &fhandled))
 	{
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
+	  usfree_send (qtrans);
 	  return FALSE;
 	}
 
@@ -554,8 +656,13 @@ flocal_send_open_file (qtrans, qdaemon)
 	return TRUE;
     }
 
-  qtrans->fsendfile = TRUE;
-  qtrans->psendfn = fsend_file_end;
+  if (qinfo->zexec != NULL)
+    qtrans->psendfn = fsend_exec_file;
+  else
+    {
+      qtrans->fsendfile = TRUE;
+      qtrans->psendfn = fsend_file_end;
+    }
 
   uqueue_send (qtrans);
 
@@ -572,18 +679,12 @@ flocal_send_cancelled (qtrans, qdaemon)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
 {
-  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   boolean fret;
   
   fret = (*qdaemon->qproto->pfsenddata) (qdaemon, (char *) NULL,
 					 (size_t) 0, qtrans->ilocal,
 					 qtrans->iremote, qtrans->ipos);
-
-  ubuffree (qinfo->zmail);
-  ubuffree (qinfo->zfile);
-  xfree (qtrans->pinfo);
-  utransfree (qtrans);
-
+  usfree_send (qtrans);
   return fret;
 }
 
@@ -670,6 +771,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
   qinfo->flocal = FALSE;
   qinfo->fspool = FALSE;
   qinfo->fsent = FALSE;
+  qinfo->zexec = NULL;
 
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = fremote_rec_reply;
@@ -699,10 +801,7 @@ fremote_rec_reply (qtrans, qdaemon)
 				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      usfree_send (qtrans);
       return FALSE;
     }
 
@@ -716,10 +815,7 @@ fremote_rec_reply (qtrans, qdaemon)
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, TRUE, TRUE,
 					qinfo->cbytes, &fhandled))
 	{
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
+	  usfree_send (qtrans);
 	  return FALSE;
 	}
 
@@ -813,10 +909,7 @@ fsend_file_end (qtrans, qdaemon)
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, FALSE, TRUE,
 					(long) -1, &fhandled))
 	{
-	  ubuffree (qinfo->zmail);
-	  ubuffree (qinfo->zfile);
-	  xfree (qtrans->pinfo);
-	  utransfree (qtrans);
+	  usfree_send (qtrans);
 	  return FALSE;
 	}
 
@@ -847,14 +940,15 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
   boolean fnever;
   const char *zerr;
 
-  (void) ffileclose (qtrans->e);
+  if (qinfo->zexec == NULL)
+    (void) ffileclose (qtrans->e);
 
   fnever = FALSE;
   if (zdata[0] != 'C'
       || (zdata[1] != 'Y' && zdata[1] != 'N'))
     {
       zerr = "bad confirmation from remote";
-      ulog (LOG_ERROR, "%s: %s \"%s\"", qinfo->zfile, zerr, zdata);
+      ulog (LOG_ERROR, "%s: %s \"%s\"", qtrans->s.zfrom, zerr, zdata);
     }
   else if (zdata[1] == 'N')
     {
@@ -862,12 +956,12 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
       if (zdata[2] == '5')
 	{
 	  zerr = "file could not be stored in final location";
-	  ulog (LOG_ERROR, "%s: %s", qinfo->zfile, zerr);
+	  ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
 	}
       else
 	{
 	  zerr = "file send failed for unknown reason";
-	  ulog (LOG_ERROR, "%s: %s \"%s\"", qinfo->zfile, zerr, zdata);
+	  ulog (LOG_ERROR, "%s: %s \"%s\"", qtrans->s.zfrom, zerr, zdata);
 	}
     }
   else
@@ -878,6 +972,14 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
 
   if (zerr == NULL)
     {
+      /* If this is an execution request, and the remote system
+	 doesn't support execution requests, we have to set up the
+	 fake execution file and loop around again.  */
+      if (qtrans->s.bcmd == 'E'
+	  && (qdaemon->ifeatures & FEATURE_EXEC) == 0
+	  && qinfo->zexec == NULL)
+	return fsend_exec_file_init (qtrans, qdaemon);
+
       /* Send mail about the transfer if requested.  */
       if (qinfo->zmail != NULL && *qinfo->zmail != '\0')
 	(void) fmail_transfer (TRUE, qtrans->s.zuser, qinfo->zmail,
@@ -905,10 +1007,160 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
 	}
     }
 
-  ubuffree (qinfo->zmail);
-  ubuffree (qinfo->zfile);
-  xfree (qtrans->pinfo);
-  utransfree (qtrans);
+  usfree_send (qtrans);
+
+  return TRUE;
+}
+
+/* Prepare to send an execution file to a system which does not
+   support execution requests.  We build the execution file in memory,
+   and then call flocal_send_request as though we were sending a real
+   file.  Instead of sending a file, the code in flocal_send_open_file
+   will arrange to call fsend_exec_file which will send data out of
+   the buffer we have created.  */
+
+static boolean
+fsend_exec_file_init (qtrans, qdaemon)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+{
+  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
+  char *zxqtfile;
+  char abtname[CFILE_NAME_LEN];
+  char abxname[CFILE_NAME_LEN];
+  char *z;
+  size_t calc, clen;
+
+  z = NULL;
+  calc = 0;
+  clen = 0;
+
+  usadd_exec_line (&z, &calc, &clen, 'U', qtrans->s.zuser,
+		   qdaemon->zlocalname);
+  usadd_exec_line (&z, &calc, &clen, 'C', qtrans->s.zcmd, "");
+  usadd_exec_line (&z, &calc, &clen, 'F', qtrans->s.zto, "");
+  usadd_exec_line (&z, &calc, &clen, 'I', qtrans->s.zto, "");
+  if (strchr (qtrans->s.zoptions, 'N') != NULL)
+    usadd_exec_line (&z, &calc, &clen, 'N', "", "");
+  if (strchr (qtrans->s.zoptions, 'Z') != NULL)
+    usadd_exec_line (&z, &calc, &clen, 'Z', "", "");
+  if (strchr (qtrans->s.zoptions, 'R') != NULL)
+    usadd_exec_line (&z, &calc, &clen, 'R', qtrans->s.znotify, "");
+  if (strchr (qtrans->s.zoptions, 'e') != NULL)
+    usadd_exec_line (&z, &calc, &clen, 'e', "", "");
+
+  qinfo->zexec = z;
+  qinfo->cbytes = clen;
+
+  zxqtfile = zsysdep_data_file_name (qdaemon->qsys, qdaemon->zlocalname,
+				     'X', abtname, (char *) NULL,
+				     abxname);
+  if (zxqtfile == NULL)
+    {
+      usfree_send (qtrans);
+      return FALSE;
+    }
+
+  ubuffree ((char *) qtrans->s.zfrom);
+  qtrans->s.zfrom = zbufcpy (abtname);
+  ubuffree ((char *) qtrans->s.zto);
+  qtrans->s.zto = zbufcpy (abxname);
+  ubuffree ((char *) qtrans->s.zoptions);
+  qtrans->s.zoptions = zbufcpy ("C");
+  ubuffree ((char *) qtrans->s.ztemp);
+  qtrans->s.ztemp = zbufcpy (abtname);
+
+  qtrans->psendfn = flocal_send_request;
+  qtrans->precfn = NULL;
+  qtrans->ipos = 0;
+
+  uqueue_send (qtrans);
+
+  return TRUE;
+}
+
+/* Add a line to the fake execution file.  */
+
+static void
+usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2)
+     char **pz;
+     size_t *pcalc;
+     size_t *pclen;
+     int bcmd;
+     const char *z1;
+     const char *z2;
+{
+  size_t cadd;
+
+  cadd = 4 + strlen (z1) + strlen (z2);
+
+  if (*pclen + cadd + 1 >= *pcalc)
+    {
+      char *znew;
+
+      *pcalc += cadd + 100;
+      znew = zbufalc (*pcalc);
+      if (*pclen > 0)
+	{
+	  memcpy (znew, *pz, *pclen);
+	  ubuffree (*pz);
+	}
+      *pz = znew;
+    }
+
+  /* In some bizarre non-Unix case we might have to worry about the
+     newline here.  We don't know how a newline is normally written
+     out to a file, but whatever is written to a file is what we will
+     normally transfer.  If that is not simply \n then this fake
+     execution file will not look like other execution files.  */
+  sprintf (*pz + *pclen, "%c %s %s\n", bcmd, z1, z2);
+
+  *pclen += cadd;
+}
+
+/* This routine is called to send the contents of the fake execution
+   file.  Normally file data is sent by the floop routine in trans.c,
+   but since we don't have an actual file we must do it here.  This
+   routine sends the complete buffer, followed by a zero length
+   packet, and then calls fsend_file_end.  */
+
+static boolean
+fsend_exec_file (qtrans, qdaemon)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+{
+  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
+  char *zdata;
+  size_t cdata;
+  size_t csend;
+
+  zdata = (*qdaemon->qproto->pzgetspace) (qdaemon, &cdata);
+  if (zdata == NULL)
+    {
+      usfree_send (qtrans);
+      return FALSE;
+    }
+
+  csend = qinfo->cbytes - qtrans->ipos;
+  if (csend > cdata)
+    csend = cdata;
+
+  memcpy (zdata, qinfo->zexec + qtrans->ipos, csend);
+
+  if (! (*qdaemon->qproto->pfsenddata) (qdaemon, zdata, csend,
+					qtrans->ilocal, qtrans->iremote,
+					qtrans->ipos))
+    {
+      usfree_send (qtrans);
+      return FALSE;
+    }
+
+  qtrans->ipos += csend;
+
+  if (csend == 0)
+    return fsend_file_end (qtrans, qdaemon);
+
+  /* Leave the job on the send queue.  */
 
   return TRUE;
 }

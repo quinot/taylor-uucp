@@ -382,8 +382,9 @@ struct sstatus
 
 struct scmd
 {
-  /* Command ('S' for send, 'R' for receive, 'X' for execute, 'H' for
-     hangup, 'Y' for hangup confirm, 'N' for hangup deny).  */
+  /* Command ('S' for send, 'R' for receive, 'X' for execute, 'E' for
+     simple execution, 'H' for hangup, 'Y' for hangup confirm, 'N' for
+     hangup deny).  */
   char bcmd;
   /* At least one compiler needs an explicit padding byte here.  */
   char bdummy;
@@ -397,14 +398,16 @@ struct scmd
   const char *zuser;
   /* Options.  */
   const char *zoptions;
-  /* Temporary file name ('S' and pfreceive protocol function).  */
+  /* Temporary file name ('S' and 'E').  */
   const char *ztemp;
-  /* Mode to give newly created file ('S' and pfreceive protocol fn).  */
+  /* Mode to give newly created file ('S' and 'E').  */
   unsigned int imode;
-  /* User to notify on remote system (optional; 'S' only).  */
+  /* User to notify on remote system (optional; 'S' and 'E').  */
   const char *znotify;
-  /* File size (-1 if not supplied) ('S' and pfreceive protocol fn).  */
+  /* File size (-1 if not supplied) ('S', 'E' and 'R').  */
   long cbytes;
+  /* Command to execute ('E').  */
+  const char *zcmd;
 };
 
 #if DEBUG > 1

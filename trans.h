@@ -26,6 +26,19 @@
 /* The maximum possible number of channels.  */
 #define IMAX_CHAN (16)
 
+/* The ifeatures field of the sdaemon structure is an or of the
+   following values.  These values are sent during the uucico
+   handshake, and MUST NOT CHANGE.  */
+
+/* File size negotiation.  */
+#define FEATURE_SIZES (01)
+
+/* File transfer restart.  */
+#define FEATURE_RESTART (02)
+
+/* The E (execute) command.  */
+#define FEATURE_EXEC (04)
+
 /* This structure is used to hold information concerning the
    communication link established with the remote system.  */
 
@@ -49,8 +62,8 @@ struct sdaemon
   long cmax_ever;
   /* The remote system ulimit.  */
   long cmax_receive;
-  /* TRUE if the remote side is Taylor UUCP.  */
-  boolean fnew;
+  /* Features supported by the remote side.  */
+  int ifeatures;
   /* TRUE if we are hanging up.  */
   boolean fhangup;
   /* TRUE if the local system is currently the master.  */
@@ -174,7 +187,10 @@ extern boolean fremote_xcmd_init P((struct sdaemon *qdaemon,
    *pfexit to TRUE if there is something for the main loop to do.  A
    file is complete is when a zero length buffer is passed (cfirst ==
    0).  A command is complete when data containing a null byte is
-   passed.  This will return FALSE on error.  */
+   passed.  This will return FALSE on error.  If the protocol pfwait
+   entry point should exit and let the top level loop continue,
+   *pfexit will be set to TRUE (if pfexit is not NULL).  This will not
+   set *pfexit to FALSE, so the caller must do that.  */
 extern boolean fgot_data P((struct sdaemon *qdaemon,
 			    const char *zfirst, size_t cfirst,
 			    const char *zsecond, size_t csecond,
