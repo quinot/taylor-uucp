@@ -153,6 +153,9 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       /* Loop over subexpects and subsends.  */
       while (TRUE)
 	{
+	  char *ztimeout;
+	  int ctimeout;
+
 	  /* Copy the expect string into the buffer so that we can
 	     modify it in cescape.  */
 	  clen = strlen (*pzchat);
@@ -167,6 +170,23 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	  azstrings[0] = zbuf;
 	  if (azstrings[0][0] == '-')
 	    ++azstrings[0];
+
+	  /* \Wnum at the end of the string is a timeout.  */
+	  ctimeout = qchat->uuconf_ctimeout;
+	  ztimeout = strrchr (azstrings[0], '\\');
+	  if (ztimeout != NULL && ztimeout[1] == 'W')
+	    {
+	      char *zend;
+	      int cval;
+
+	      cval = (int) strtol (ztimeout + 2, &zend, 10);
+	      if (zend != ztimeout + 2 && *zend == '\0')
+		{
+		  ctimeout = cval;
+		  *ztimeout = '\0';
+		}
+	    }
+
 	  aclens[0] = cescape (azstrings[0]);
 
 	  if (aclens[0] == 0
@@ -185,8 +205,7 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	      int istr;
 
 	      istr = icexpect (qconn, cstrings, azstrings, aclens,
-			       qchat->uuconf_ctimeout,
-			       qchat->uuconf_fstrip);
+			       ctimeout, qchat->uuconf_fstrip);
 
 	      /* If we found the string, break out of the
 		 subexpect/subsend loop.  */
