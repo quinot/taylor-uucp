@@ -382,9 +382,14 @@ main (argc, argv)
 	    feven = TRUE;
 	  else if (strncmp (optarg, "odd", strlen (optarg)) == 0)
 	    fodd = TRUE;
+	  else if (strncmp (optarg, "none", strlen (optarg)) == 0)
+	    {
+	      feven = TRUE;
+	      fodd = TRUE;
+	    }
 	  else
 	    {
-	      fprintf (stderr, "%s: --parity requires even or odd\n",
+	      fprintf (stderr, "%s: --parity requires even, odd or none\n",
 		       zProgram);
 	      ucuusage ();
 	    }
@@ -846,7 +851,7 @@ ucuhelp ()
   fprintf (stderr,
 	   " -v,--version: Print version and exit\n");
   fprintf (stderr,
-	   " --help: Print help\n");
+	   " --help: Print help and exit\n");
 }
 
 /* This function is called when a fatal error occurs.  */
