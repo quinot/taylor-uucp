@@ -62,7 +62,7 @@ extern off_t lseek ();
 #endif
 
 #define ZCHARS \
-  "0123456789ABCDEFGHIJKLMNOPQRTSUVWXYZabcdefghijklmnopqrstuvwxyz"
+  "0123456789ABCDEFGHIJKLMNOPQRTSUVWXYZ"
 
 /* Local functions.  */
 
