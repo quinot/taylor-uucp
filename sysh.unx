@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/09/19  16:15:58  ian
+   Chip Salzenberg: configuration option for permitting execution via sh
+
    Revision 1.2  1991/09/19  03:06:04  ian
    Chip Salzenberg: put BNU temporary files in system's directory
 
@@ -52,6 +55,16 @@
    particular system may be given a specific public directory by
    using the ``pubdir'' command in the system file.  */
 #define PUBDIR "/usr/spool/uucppublic"
+
+/* If you use other programs that also access devices, the other
+   programs must agree on whether a device is locked.  This is
+   typically done by creating a lock file in a specific directory.
+   The lock file is named LCK.. followed by the name of the device.
+   Remote systems are also locked the same way.  If the LOCKDIR macro
+   is defined, these lock files will be placed in the named directory;
+   otherwise they will be placed in the default spool directory.  On
+   some BNU systems the lock files are placed in /etc/locks.  */
+/* #define LOCKDIR "/etc/locks" */
 
 #if HAVE_TAYLOR_CONFIG
 
@@ -336,10 +349,10 @@ struct ssysdep_direct_port
 #define SYSDEP_DIRECT_INIT(q) ((q)->s.oread = -1)
 
 /* Lock a string.  */
-extern boolean fsdo_lock P((const char *));
+extern boolean fsdo_lock P((const char *, boolean fspooldir));
 
 /* Unlock a string.  */
-extern boolean fsdo_unlock P((const char *));
+extern boolean fsdo_unlock P((const char *, boolean fspooldir));
 
 /* See whether a directory exists.  */
 extern boolean fsdirectory_exists P((const char *));
