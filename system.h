@@ -2,7 +2,7 @@
    Header file for system dependent stuff in the Taylor UUCP package.
    This file is not itself system dependent.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -72,6 +72,11 @@ extern size_t cSysdep_max_name_len;
 /* This program needs special access to the spool directories.  That
    means, on Unix, this program is normally installed setuid.  */
 #define INIT_SUID (04)
+
+/* Do not close all open descriptors.  This is not used by the UUCP
+   code, but it is used by other programs which share some of the
+   system dependent libraries.  */
+#define INIT_NOCLOSE (010)
 
 extern void usysdep_initialize P((pointer puuconf, int iflags));
 
