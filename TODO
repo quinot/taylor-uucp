@@ -265,3 +265,7 @@ Bob Denny: warn if can't open C. or X. file because of permission
 problem.
 
 89.
+
+Michael Nolan: some systems don't have dup2.
+
+90.
