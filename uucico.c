@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.41  1992/01/19  02:27:00  ian
+   Marty Shannon: update .Status file on incoming calls
+
    Revision 1.40  1992/01/18  22:48:53  ian
    Reworked sending of mail and general handling of failed transfers
 
@@ -740,7 +743,14 @@ static boolean fcall (qsys, qport, fforce, bgrade)
   while (qsys != NULL);
 
   if (fbadtime)
-    ulog (LOG_ERROR, "Wrong time to call");
+    {
+      ulog (LOG_ERROR, "Wrong time to call");
+
+      /* We should probably indicate that it was the wrong time to
+	 call in the status file.  */
+      sstat.ilast = isysdep_time ();
+      (void) fsysdep_set_status (qsys, &sstat);
+    }
 
   return FALSE;
 }
@@ -1508,11 +1518,11 @@ static boolean faccept_call (zlogin, qport)
   if (! fsysdep_get_status (qsys, &sstat))
     {
       sstat.cretries = 0;
-      sstat.ilast = 0;
       sstat.cwait = 0;
     }
 
   sstat.ttype = STATUS_TALKING;
+  sstat.ilast = isysdep_time ();
   (void) fsysdep_set_status (qsys, &sstat);
 
   /* Check the arguments of the remote system.  We accept -x# to set
