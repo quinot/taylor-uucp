@@ -4849,6 +4849,7 @@ Peter Honeyman @file{<honey@@citi.umich.edu>}
 @file{bei@@dogface.austin.tx.us} (Bob Izenberg)
 Rob Janssen @file{<cmgit!rob@@relay.nluug.nl>}
 @file{harvee!esj} (Eric S Johansson)
+Alan Judge @file{<aj@@dec4ie.IEunet.ie>}
 @file{chris@@cj_net.in-berlin.de} (Christof Junge)
 @file{tron@@Veritas.COM} (Ronald S. Karr)
 Brendan Kehoe @file{<brendan@@cs.widener.edu>}
@@ -4921,10 +4922,12 @@ Ralf Stephan @file{<ralf@@ark.abg.sub.org>}
 @file{chs@@antic.apu.fi} (Hannu Strang)
 @file{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
 Shigeya Suzuki @file{<shigeya@@dink.foretune.co.jp>}
+Karl Swartz @file{<kls@@ohare.Chicago.COM>}
 @file{swiers@@plains.NoDak.edu}
 Oleg Tabarovsky @file{<olg@@olghome.pccentre.msk.su>}
 John Theus @file{<john@@theus.rain.com>}
 Karsten Thygesen @file{<karthy@@dannug.dk>}
+Graham Toal @file{<gtoal@@pizzabox.demon.co.uk>}
 @file{rmtodd@@servalan.servalan.com} (Richard Todd)
 Len Tower @file{<tower-prep@@ai.mit.edu>}
 Mark Towfiq @file{<justice!towfiq@@Eingedi.Newton.MA.US>}
