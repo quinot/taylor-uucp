@@ -27,6 +27,8 @@ elif test -s /bin/mail; then
  AC_DEFINE([MAIL_PROGRAM], `echo '"/bin/mail"'`)
 elif test -s /usr/bin/mail; then
  AC_DEFINE([MAIL_PROGRAM], `echo '"/usr/bin/mail"'`)
+elif test -s /usr/bin/mailx; then
+ AC_DEFINE([MAIL_PROGRAM], `echo '"/usr/bin/mailx"'`)
 fi
 echo checking for echo program
 if (PATH= echo test) 2>/dev/null | grep test >/dev/null 2>&1; then
