@@ -1073,7 +1073,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  FALSE, qtrans->cbytes, qtrans->isecs, qtrans->imicros,
-	  qdaemon->fmaster);
+	  qdaemon->fcaller);
   qdaemon->creceived += qtrans->cbytes;
 
   if (zerr == NULL)

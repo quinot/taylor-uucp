@@ -1167,7 +1167,7 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  TRUE, qtrans->cbytes, qtrans->isecs, qtrans->imicros,
-	  qdaemon->fmaster);
+	  qdaemon->fcaller);
   qdaemon->csent += qtrans->cbytes;
 
   if (zerr == NULL)

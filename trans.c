@@ -1423,7 +1423,7 @@ ufailed (qdaemon)
 	    {
 	      ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
 		      q->fsendfile, q->cbytes, q->isecs, q->imicros,
-		      FALSE);
+		      qdaemon->fcaller);
 	      if (q->fsendfile)
 		qdaemon->csent += q->cbytes;
 	      else
@@ -1446,7 +1446,7 @@ ufailed (qdaemon)
 	    {
 	      ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
 		      q->fsendfile, q->cbytes, q->isecs, q->imicros,
-		      FALSE);
+		      qdaemon->fcaller);
 	      if (q->fsendfile)
 		qdaemon->csent += q->cbytes;
 	      else
