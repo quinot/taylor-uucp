@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.53  1992/04/14  17:34:03  ian
+   Zacharias Beckman: minor touchups for NeXT
+
    Revision 1.52  1992/04/02  23:02:40  ian
    Conditionally declare times
 
@@ -197,7 +200,9 @@ char tstuu_rcsid[] = "$Id$";
 
 #include "sysdep.h"
 
+#if HAVE_SYS_TIMES_H
 #include <sys/times.h>
+#endif
 
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
