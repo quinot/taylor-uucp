@@ -35,8 +35,8 @@ const char _uuconf_tinit_rcsid[] = "$Id$";
 
 static int itset_default P((struct sglobal *qglobal, char ***ppzvar,
 			    const char *zfile));
-static int itadd P((pointer pglobal, int argc, char **argv, pointer pvar,
-		    pointer pinfo));
+static int itaddfile P((pointer pglobal, int argc, char **argv, pointer pvar,
+			pointer pinfo));
 static int itunknown P((pointer pglobal, int argc, char **argv, pointer pvar,
 			pointer pinfo));
 static int itprogram P((pointer pglobal, int argc, char **argv, pointer pvar,
@@ -67,17 +67,17 @@ static const struct cmdtab_offset asCmds[] =
   { "max-uuxqts", UUCONF_CMDTABTYPE_INT,
       offsetof (struct sprocess, cmaxuuxqts), NULL },
   { "sysfile", UUCONF_CMDTABTYPE_FN | 0,
-      offsetof (struct sprocess, pzsysfiles), itadd },
+      offsetof (struct sprocess, pzsysfiles), itaddfile },
   { "portfile", UUCONF_CMDTABTYPE_FN | 0,
-      offsetof (struct sprocess, pzportfiles), itadd },
+      offsetof (struct sprocess, pzportfiles), itaddfile },
   { "dialfile", UUCONF_CMDTABTYPE_FN | 0,
-      offsetof (struct sprocess, pzdialfiles), itadd },
+      offsetof (struct sprocess, pzdialfiles), itaddfile },
   { "dialcodefile", UUCONF_CMDTABTYPE_FN | 0,
-      offsetof (struct sprocess, pzdialcodefiles), itadd },
+      offsetof (struct sprocess, pzdialcodefiles), itaddfile },
   { "callfile", UUCONF_CMDTABTYPE_FN | 0,
-      offsetof (struct sprocess, pzcallfiles), itadd },
+      offsetof (struct sprocess, pzcallfiles), itaddfile },
   { "passwdfile", UUCONF_CMDTABTYPE_FN | 0,
-      offsetof (struct sprocess, pzpwdfiles), itadd },
+      offsetof (struct sprocess, pzpwdfiles), itaddfile },
   { "unknown", UUCONF_CMDTABTYPE_FN, offsetof (struct sprocess, qunknown),
       itunknown },
   { "v2-files", UUCONF_CMDTABTYPE_BOOLEAN,
@@ -227,11 +227,11 @@ uuconf_taylor_init (ppglobal, zprogram, zname)
   return UUCONF_SUCCESS;
 }
 
-/* Add new strings to a variable.  */
+/* Add new filenames to a list of files.  */
 
 /*ARGSUSED*/
 static int
-itadd (pglobal, argc, argv, pvar, pinfo)
+itaddfile (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
@@ -254,7 +254,19 @@ itadd (pglobal, argc, argv, pvar, pinfo)
     {
       for (i = 1; i < argc; i++)
 	{
-	  iret = _uuconf_iadd_string (qglobal, argv[i], TRUE, FALSE, ppz,
+	  char *z;
+	  boolean fallocated;
+
+	  MAKE_ABSOLUTE (z, fallocated, argv[i], NEWCONFIGLIB,
+			 qglobal->pblock);
+	  if (z == NULL)
+	    {
+	      qglobal->ierrno = errno;
+	      return (UUCONF_MALLOC_FAILED
+		      | UUCONF_ERROR_ERRNO
+		      | UUCONF_CMDTABRET_EXIT);
+	    }
+	  iret = _uuconf_iadd_string (qglobal, z, ! fallocated, FALSE, ppz,
 				      qglobal->pblock);
 	  if (iret != UUCONF_SUCCESS)
 	    return iret;
