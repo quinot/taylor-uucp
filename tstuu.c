@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.27  1991/12/29  00:55:23  ian
    Monty Solomon: added HAVE_UNION_WAIT
 
@@ -740,21 +743,21 @@ uprepare_test (itest, fcall_uucico, zsys)
   const char *zfrom;
   const char *zto;
 
-  if (mkdir ("/usr/tmp/tstuu", S_IRWXU | S_IRWXG | S_IRWXO) != 0
+  if (mkdir ("/usr/tmp/tstuu", IPUBLIC_DIRECTORY_MODE) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
       exit (EXIT_FAILURE);
     }
 
-  if (mkdir ("/usr/tmp/tstuu/spool1", S_IRWXU | S_IRWXG | S_IRWXO) != 0
+  if (mkdir ("/usr/tmp/tstuu/spool1", IPUBLIC_DIRECTORY_MODE) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
       exit (EXIT_FAILURE);
     }
 
-  if (mkdir ("/usr/tmp/tstuu/spool2", S_IRWXU | S_IRWXG | S_IRWXO) != 0
+  if (mkdir ("/usr/tmp/tstuu/spool2", IPUBLIC_DIRECTORY_MODE) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
