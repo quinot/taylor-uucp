@@ -235,7 +235,7 @@ fystart (qdaemon, pzlog)
     iYlocal_packsize = IYPACKSIZE;
 
   /* Exhange SYNC packets */
-  if (! fyxchg_syncs(qdaemon))
+  if (! fyxchg_syncs (qdaemon))
     {
       /* Restore defaults */
       cYtimeout = CYTIMEOUT;
