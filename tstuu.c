@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1991/12/28  06:10:50  ian
+   Added HAVE_STRCHR and HAVE_INDEX to conf.h
+
    Revision 1.24  1991/12/28  04:05:13  ian
    Create spool directories
 
@@ -169,7 +172,8 @@ char tstuu_rcsid[] = "$Id$";
 #endif /* ! defined (EWOULDBLOCK) */
 #endif /* defined (EAGAIN) */
 
-/* Make sure we have a CLK_TCK definition, even if it makes no sense.  */
+/* Make sure we have a CLK_TCK definition, even if it makes no sense.
+   This is in case TIMES_TICK is defined as CLK_TCK.  */
 #ifndef CLK_TCK
 #define CLK_TCK (60)
 #endif
@@ -551,12 +555,12 @@ uchild (isig)
 
   fprintf (stderr,
 	   " First child: user: %g; system: %g\n",
-	   (double) (s1.tms_cutime - sbase.tms_cutime) / (double) CLK_TCK,
-	   (double) (s1.tms_cstime - sbase.tms_cstime) / (double) CLK_TCK);
+	   (double) (s1.tms_cutime - sbase.tms_cutime) / (double) TIMES_TICK,
+	   (double) (s1.tms_cstime - sbase.tms_cstime) / (double) TIMES_TICK);
   fprintf (stderr,
 	   "Second child: user: %g; system: %g\n",
-	   (double) (s2.tms_cutime - s1.tms_cutime) / (double) CLK_TCK,
-	   (double) (s2.tms_cstime - s1.tms_cstime) / (double) CLK_TCK);
+	   (double) (s2.tms_cutime - s1.tms_cutime) / (double) TIMES_TICK,
+	   (double) (s2.tms_cstime - s1.tms_cstime) / (double) TIMES_TICK);
 
   ucheck_test (iTest, fCall_uucico);
 
