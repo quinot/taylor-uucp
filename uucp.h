@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1991/12/21  23:10:43  ian
+   Terry Gardner: record failed file transfers in statistics file
+
    Revision 1.20  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -737,12 +740,6 @@ extern char *zmulti_gets P((struct smulti_file *q, boolean *pffirst,
    buffer.  If the fbackslash argument is true, lines may be continued
    by using a backslash as the last character before the newline.  */
 extern char *zfgets P((FILE *e, boolean fbackslash));
-
-/* Compare strings case insensitively.  */
-extern int strcasecmp P((const char *z1, const char *z2));
-
-/* Compare strings case insensitively up to a point.  */
-extern int strncasecmp P((const char *z1, const char *z2, int c));
 
 /* Copy a string into memory without fail.  */
 extern char *xstrdup P((const char *));
