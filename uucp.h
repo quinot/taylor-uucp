@@ -41,11 +41,11 @@
 
 /* We always include some standard header files.  We need <signal.h>
    to define sig_atomic_t.  */
+#include <stdio.h>
+#include <signal.h>
 #if HAVE_STDDEF_H
 #include <stddef.h>
 #endif
-#include <stdio.h>
-#include <signal.h>
 
 /* On some systems we need <sys/types.h> to get sig_atomic_t or
    size_t or time_t.  */
