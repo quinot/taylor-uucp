@@ -59,9 +59,21 @@
 #define HDB_DIALCODES "/Dialcodes"
 #define HDB_MAXUUXQTS "/Maxuuxqts"
 
+#if ! HAVE_STRERROR
+
+/* We need a definition for strerror; normally the function in the
+   unix directory is used, but we want to be independent of that
+   library.  This macro evaluates its argument multiple times.  */
+extern int sys_nerr;
+extern char *sys_errlist[];
+
+#define strerror(ierr) \
+  ((ierr) >= 0 && (ierr) < sys_nerr ? sys_errlist[ierr] : "unknown error")
+
+#endif /* ! HAVE_STRERROR */
+
 /* We want to be able to mark the Taylor UUCP system files as close on
    exec.  */
-
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #else
