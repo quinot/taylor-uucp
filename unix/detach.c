@@ -157,9 +157,7 @@ usysdep_detach ()
      another controlling terminal (it does not change our process
      group, and Ultrix 4.0 prevents us from setting our process group
      to 0).  */
-
-  if (setsid () < 0)
-    ulog (LOG_ERROR, "setsid: %s", strerror (errno));
+  (void) setsid ();
 
 #else /* ! HAVE_SETSID */
 
