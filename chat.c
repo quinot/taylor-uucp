@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/15  04:17:11  ian
+   Added chat-seven-bit command to control parity bit stripping
+
    Revision 1.7  1991/12/15  03:42:33  ian
    Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
 
@@ -64,6 +67,11 @@ char chat_rcsid[] = "$Id$";
 static int ccescape P((char *zbuf));
 static int icexpect P((int cstrings, char **azstrings, int *aclens,
 		       int ctimeout, boolean fstrip));
+static boolean fcsend P((const char *zsend,
+			 const struct ssysteminfo *qsys,
+			 const struct sdialer *qdial,
+			 const char *zphone,
+			 boolean ftranslate));
 static boolean fcecho_send P((const char *z, int clen));
 static boolean fcphone P((const struct sdialer *qdial, const char *zphone,
 			  boolean (*pfwrite) P((const char *zwrite,
@@ -219,7 +227,7 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	      znext = strchr (zsub, '-');
 	      if (znext != NULL)
 		*znext = '\0';
-	      if (! fchat_send (zsub, qsys, qdial, zphone, ftranslate))
+	      if (! fcsend (zsub, qsys, qdial, zphone, ftranslate))
 		return FALSE;
 
 	      if (znext == NULL)
@@ -244,7 +252,7 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       if (*zchat != '\0')
 	++zchat;
 
-      if (! fchat_send (zbuf, qsys, qdial, zphone, ftranslate))
+      if (! fcsend (zbuf, qsys, qdial, zphone, ftranslate))
 	return FALSE;
     }
 
@@ -431,7 +439,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
    although they make no sense for chatting with a system.  */
 
 boolean
-fchat_send (z, qsys, qdial, zphone, ftranslate)
+fcsend (z, qsys, qdial, zphone, ftranslate)
      const char *z;
      const struct ssysteminfo *qsys;
      const struct sdialer *qdial;
@@ -514,7 +522,7 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	    case 'd':
 #if DEBUG > 5
 	      if (iDebug > 5)
-		ulog (LOG_DEBUG, "fchat_send: Sleeping for one second");
+		ulog (LOG_DEBUG, "fcsend: Sleeping for one second");
 #endif
 	      usysdep_sleep (1);
 	      break;
@@ -539,7 +547,7 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	    case 'p':
 #if DEBUG > 5
 	      if (iDebug > 5)
-		ulog (LOG_DEBUG, "fchat_send: Pausing for half second");
+		ulog (LOG_DEBUG, "fcsend: Pausing for half second");
 #endif
 	      usysdep_pause ();
 	      break;
@@ -684,7 +692,7 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	  break;
 #if DEBUG > 0
 	default:
-	  ulog (LOG_FATAL, "fchat_send: Can't happen");
+	  ulog (LOG_FATAL, "fcsend: Can't happen");
 	  break;
 #endif /* DEBUG */
 	}

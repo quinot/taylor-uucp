@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/15  04:17:11  ian
+   Added chat-seven-bit command to control parity bit stripping
+
    Revision 1.9  1991/12/15  03:42:33  ian
    Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
 
@@ -616,10 +619,8 @@ ukshow_dialer (q)
 	printf (" and wait");
       printf ("\n");
     }
-  if (q->zcomplete)
-    printf ("    When complete %s\n", q->zcomplete);
-  if (q->zabort)
-    printf ("    When aborting %s\n", q->zabort);
+  ukshow_chat (&q->scomplete, "    When complete chat");
+  ukshow_chat (&q->sabort, "    When aborting chat");
   if (q->cproto_params != 0)
     ukshow_proto_params (q->cproto_params, q->qproto_params, 4);
 }
