@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.6  1991/12/11  03:59:19  ian
    Create directories when necessary; don't just assume they exist
 
@@ -197,7 +200,10 @@ main (argc, argv)
 
   if (! FGRADE_LEGAL (bgrade))
     {
-      fprintf (stderr, "uucp: Ignoring illegal grade\n");
+      /* We use LOG_NORMAL rather than LOG_ERROR because this is going
+	 to stderr rather than to the log file, and we don't need the
+	 ERROR header string.  */
+      ulog (LOG_NORMAL, "Ignoring illegal grade");
       bgrade = BDEFAULT_UUCP_GRADE;
     }
 
