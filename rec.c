@@ -994,7 +994,13 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 
   zalc = NULL;
 
-  if (! ffileclose (qtrans->e))
+  if (! fsysdep_sync (qtrans->e, qtrans->s.zto))
+    {
+      zerr = strerror (errno);
+      (void) ffileclose (qtrans->e);
+      (void) remove (qinfo->ztemp);
+    }
+  else if (! ffileclose (qtrans->e))
     {
       zerr = strerror (errno);
       ulog (LOG_ERROR, "%s: close: %s", qtrans->s.zto, zerr);
@@ -1177,11 +1183,22 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
       fprintf (e, "C %s\n", qtrans->s.zcmd);
 
       fbad = FALSE;
-      if (fclose (e) == EOF)
+
+      if (! fstdiosync (e, ztemp))
 	{
-	  ulog (LOG_ERROR, "fclose: %s", strerror (errno));
+	  (void) fclose (e);
 	  (void) remove (ztemp);
 	  fbad = TRUE;
+	}
+
+      if (! fbad)
+	{
+	  if (fclose (e) == EOF)
+	    {
+	      ulog (LOG_ERROR, "fclose: %s", strerror (errno));
+	      (void) remove (ztemp);
+	      fbad = TRUE;
+	    }
 	}
 
       if (! fbad)
