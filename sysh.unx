@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/11/21  21:07:46  ian
+   Brian Campbell: offer ltrunc as an alternative to ftruncate
+
    Revision 1.7  1991/11/10  19:24:22  ian
    Added pffile protocol entry point for file level control
 
@@ -81,7 +84,7 @@
 #if HAVE_TAYLOR_CONFIG
 
 /* The name of the default configuration file.  This may be overridden
-   by the -C command line argument.  */
+   by the -I command line argument.  */
 #define CONFIGFILE "/usr/lib/uucp/config"
 
 /* The name of the default system file.  This may be overridden by
@@ -134,55 +137,61 @@
 /* One of the following macros must be defined if you want to be able
    to default the system name (not specify it in the configuration
    file).  */
-#define HAVE_GETHOSTNAME 1
-/* #define HAVE_UNAME 1 */
 
-/* Exactly one of the following macros must be defined.
+/* If you want to be able to use a default for the system name without
+   specifying it with the ``nodename'' command in the configuration
+   file, one of the following macros must be set to 1.  Set
+   HAVE_GETHOSTNAME to 1 if you have the gethostname call.  Set
+   HAVE_UNAME to 1 if you have the uname call.  */
+#define HAVE_GETHOSTNAME 1
+#define HAVE_UNAME 0
+
+/* Exactly one of the following macros must be set to 1.
 
    HAVE_BSD_TTY -- Use the 4.2BSD tty routines
    HAVE_SYSV_TERMIO -- Use the System V termio routines
    HAVE_POSIX_TERMIOS -- Use the POSIX termios routines
    */
 #define HAVE_BSD_TTY 1
-/* #define HAVE_SYSV_TERMIO 1 */
-/* #define HAVE_POSIX_TERMIOS 1 */
+#define HAVE_SYSV_TERMIO 0
+#define HAVE_POSIX_TERMIOS 0
 
 /* On QNX 4, and possibly other systems, including <sys/ioctl.h>
-   interferes with <termios.h>.  On such a system, comment out the
-   following macro to avoid include <sys/ioctl.h>.  On any normal
-   system, or any system which does not use HAVE_POSIX_TERMIOS, do not
-   change this line.  */
+   interferes with <termios.h>.  On such a system, set the following
+   macro to 0 to avoid include <sys/ioctl.h>.  On any normal system,
+   or any system which does not use HAVE_POSIX_TERMIOS, do not change
+   this line.  */
 #define HAVE_SYSIOCTL_H 1
 
-/* Define HAVE_SETITIMER if you have the setitimer routine.
-   Alternatively, define HAVE_NAPMS if you have the napms routine
+/* Set HAVE_SETITIMER to 1 if you have the setitimer routine.
+   Alternatively, set HAVE_NAPMS to 1 if you have the napms routine
    which takes a number of milliseconds to sleep.  Alternatively
-   again, define HAVE_NAP if you have the nap routine which takes a
+   again, set HAVE_NAP to 1 if you have the nap routine which takes a
    longword which is the number of milliseconds to sleep.  If you are
    using HAVE_BSD_TTY, these will be used to improve CPU performance
    when reading from a serial line.  They are also used to sleep half
    a second in a chat script.  */
 #define HAVE_SETITIMER 1
-/* #define HAVE_NAPMS 1 */
-/* #define HAVE_NAP 1 */
+#define HAVE_NAPMS 0
+#define HAVE_NAP 0
 
-/* Define HAVE_SIGSETJMP if you have the sigsetjmp and siglongjmp
+/* Set HAVE_SIGSETJMP to 1 if you have the sigsetjmp and siglongjmp
    calls, and they should be used to jump out of signal handler.  */
 #define HAVE_SIGSETJMP 1
 
-/* Define HAVE_EUID if it makes sense to call setuid (geteuid ()).
+/* Set HAVE_EUID to 1 if it makes sense to call setuid (geteuid ()).
    This is mainly done to avoid running with root permissions, which
    make locking complex.  */
 #define HAVE_EUID 1
 
-/* Define HAVE_FTRUNCATE if you have the ftruncate call which
-   truncates an open file to a specified length.  Define HAVE_LTRUNC
-   if you have the ltrunc call which also truncates a file but takes
-   different arguments.  */
+/* Set HAVE_FTRUNCATE to 1 if you have the ftruncate call which
+   truncates an open file to a specified length.  Alternatively, set
+   HAVE_LTRUNC to 1 if you have the ltrunc call which also truncates a
+   file but takes different arguments.  */
 #define HAVE_FTRUNCATE 1
-/* #define HAVE_LTRUNC 1 */
+#define HAVE_LTRUNC 0
 
-/* Exactly one of the following macros must be defined.  The exact
+/* Exactly one of the following macros must be set to 1.  The exact
    format of the spool directories is explained in sys3.unx.
 
    SPOOLDIR_V2 -- Use a Version 2 (original UUCP) style spool directory
@@ -194,23 +203,24 @@
 
    If you are not worried about compatibility with a currently running
    UUCP, use SPOOLDIR_TAYLOR.  */
-/* #define SPOOLDIR_V2 1 */
-/* #define SPOOLDIR_BSD42 1 */
-/* #define SPOOLDIR_BSD43 1 */
-/* #define SPOOLDIR_BNU 1 */
-/* #define SPOOLDIR_ULTRIX 1 */
+
+#define SPOOLDIR_V2 0
+#define SPOOLDIR_BSD42 0
+#define SPOOLDIR_BSD43 0
+#define SPOOLDIR_BNU 0
+#define SPOOLDIR_ULTRIX 0
 #define SPOOLDIR_TAYLOR 1
 
-/* Define one of the following macros to determine how directories
-   should be read.
+/* Set exactly one of the following macros to 1 to determine how
+   directories should be read.
 
    HAVE_POSIX_DIRENT -- Use POSIX (and System V) dirent structure
    HAVE_BSD_DIRECT -- Use BSD direct structure  */
 #define HAVE_POSIX_DIRENT 1
-/* #define HAVE_BSD_DIRECT 1 */
+#define HAVE_BSD_DIRECT 0
 
 /* If the system supports file names longer than 14 characters,
-   HAVE_LONG_NAMES should be defined.  */
+   set HAVE_LONG_NAMES to 1.  */
 #define HAVE_LONG_NAMES 1
 
 /* Define the mail program to use.  This will be called with the user
@@ -226,25 +236,25 @@
    check the amount of free disk space to make sure there is enough
    room before accepting a transferred file.  Unfortunately, there is
    no standard way to determine the amount of free disk space.  One of
-   the following macros must be defined in order for the amount of
+   the following macros must be set to 1 in order for the amount of
    free space to be discovered.
 
    HAVE_ULTRIX_STATFS -- Use the statfs call as found on Ultrix systems
    HAVE_SCO_STATFS -- Use the statfs call as found on SCO Unix
    HAVE_USTAT -- Use the System V ustat call  */
 #define HAVE_ULTRIX_STATFS 1
-/* #define HAVE_SCO_STATFS 1 */
-/* #define HAVE_USTAT 1 */
+#define HAVE_SCO_STATFS 0
+#define HAVE_USTAT 0
 
 /* The default amount of free space to require for systems that do
-   not specify an amount.  */
+   not specify an amount with the ``free-space'' command.  */
 #define DEFAULT_FREE_SPACE (50000)
 
 /* It is possible for an execute job to request to be executed using
    /bin/sh(1), rather than execve(2).  This is such a security risk,
-   it is being disabled by default; to allow such jobs, uncomment the
-   following macro.  */
-/* #define ALLOW_SH_EXECUTION 1 */
+   it is being disabled by default; to allow such jobs, set the
+   following macro to 1.  */
+#define ALLOW_SH_EXECUTION 0
 
 /*
 
