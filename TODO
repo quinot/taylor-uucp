@@ -328,10 +328,6 @@ the following values which determine when uuxqt should be run:
 	- periodic (per 5 or 10 incoming X. files - BSDish)
 	- perturnaround?
 
-163.
-
-Sort jobs in the send queue by size.  Pretty easy.  How about grade?
-
 164.
 
 Ed Carp: preserve files if uuxqt execution fails.
@@ -415,14 +411,6 @@ number''.
 
 Don Phillips: should there be some way to restrict of grade of
 transfers even when the other system places the call?
-
-179.
-
-Nickolay Saukh: add something to chat scripts to specify the timeout
-for an expect string, e.g. AT\c OK\W3 to wait for 3 seconds.  Except
-that perhaps the unit should not be seconds.  Berkeley apparently uses
-~number, not \W number, but I don't see any reason to prevent use of
-the ~ character in an expect string.
 
 180.
 
@@ -576,14 +564,6 @@ the -pM argument would work fine.
 Tom Rushworth: perhaps there should be some program which can be used
 to retrieve the current spool directory.  Perhaps on option on uustat.
 
-205.
-
-Should the -c option to uucico also suppress the ``No work'' message?
-
-206.
-
-Joe Wells: pass the -I option from uucico down to uuxqt.
-
 207.
 
 James B. O'Connor: use additional messages in the status file when
@@ -599,3 +579,161 @@ This would enable sites which use different uids for each incoming
 UUCP login to have better control over security.
 
 209.
+
+Jon Vos: add an alias command for ports.
+
+210.
+
+Joe Wells: I'd like to have a way so that if the dial chat fails due
+to "NO CARRIER", in addition to this log message:
+
+  ERROR: Chat script failed: Got "NO\sCARRIER"
+
+I would get another log message right next to it that would look like
+this:
+
+  ERROR: Chat script failed: 5 "RRING" strings seen
+
+Ian: I doubt this is worth implementing in uucico, but it might make
+sense for an external, or otherwise more independent and controllable,
+chat program.
+
+211.
+
+Joe Wells: In some cases it would be nice to be able to change the set
+of chat-fail strings in the middle of the chat script.  Personally, I
+think this is too complex for the simple chat scripts currently
+implemented.
+
+212.
+
+Joe Wells: There should be an option to all programs directing them to
+send all debugging output to the log file.  This would just involve
+calling ulog_to_file at some point just after reporting any usage
+messages.
+
+213.
+
+Joe Wells: There should be a way to specify the execution directory
+used by uuxqt.  This would avoid certain sorts of permissions
+problems.  Some mechanism would still be needed for using multiple
+directories.
+
+214.
+
+Joe Wells: uuto should be documented.
+
+215.
+
+Joe Wells: Perhaps it should be possible to use multiple spool
+directories.  It would be a lot of work, though.
+
+216.
+
+Joe Wells: It should be possible to specify only one of complete or
+abort.
+
+217.
+
+Dan Everhart: It would be nice if the chat-fail string could affect
+the error message reported by uustat, so that uustat could say
+something ``Line was busy''.
+
+218.
+
+Andrew A. Chernov: Add a chat-char-delay xx configuration parameter,
+which has the effect of adding \p after each character, with delay xx.
+This is to accommodate modems which can't accept command characters at
+a given baud rate.
+
+219.
+
+Gert Doering: Provide some mechanism for specifying the maximum length
+of a call.  Convenient for anonymous UUCP sites.
+
+220.
+
+Joe Wells: There should be some way for "cu" to obey user commands
+during the dial chat.  Right now, the only thing the user can do is
+send signals (e.g. type Control-C).  This leads to user complaints
+that "cu" is not obeying its documentation.
+
+221.
+
+Joe Wells: Right now, if there is any failure in the dial or login
+chat scripts, the remote system alternate is skipped even though the
+cause of the failure may have been the local serial port or modem.
+"uucico" will not try another modem with the same remote system
+alternate.  If the remote system only has one alternate, then it is
+skipped entirely.
+
+Thus, there should be a way to specify that when certain expect
+strings are not seen or certain chat-fail strings are seen that the
+port is skipped instead of the remote system alternate.
+
+222.
+
+Richard H. Gumpertz: Support pipelines in uuxqt.  Right now they are
+only supported if uux puts in an 'e' line (which it does) and shell
+executions are permitted (which they normally are not).  It would be
+possible to permit restricted pipelines by handling the pipe character
+specially and making sure all commands in the pipeline were permitted.
+
+223.
+
+Bill Sommerfeld: When dialing out, set the status to DIALING rather
+than CONNECTION CLOSED.  Setting the status takes a bit of time; it's
+hard to tell where the right break-even point is.
+
+224.
+
+Joe Wells: Keep track of the last successful incoming call separately
+from the last successful outgoing call.  Currently the two times are
+both put together in the status file.
+
+225.
+
+Joe Wells: It would be nice if uustat would provide a way to avoid
+bouncing mail that it sent itself, to avoid sending notification
+e-mail for notification e-mail.  I can't think of a mechanism, though
+(using a special grade for uustat does not work because most mail
+programs do not provide a mechanism for passing a grade through to
+uux).
+
+226.
+
+Joe Wells: It would be nice if uustat could know whether it had sent
+mail for a particular job, to avoid generating multiple messages for
+the job.
+
+227.
+
+Joe Wells: It would be nice if dialcode suffixes were supported, as
+well as prefixes.
+
+228.
+
+Joe Wells: It would be nice to support another spool directory scheme
+which split stuff up more to avoid very large directories.  This would
+be most useful for the files which are named in C. and X. files,
+rather than for the C. and X. files themselves (since C. and X. files
+are rarely looked up by name).  Basically, some sort of partition of
+the D. directory is called for.
+
+229.
+
+Joe Wells: ``It would be nice if the exit sequence of "cu", where it
+runs the complete chat script and then disconnects could be aborted
+without disconnecting.  (Yes, I know, this is a strange desire.)  It
+would be nice to be able to reinvoke the dial chat by user command in
+"cu".  It would be nice to be able to invoke an arbitrary named chat
+script in "cu".''
+
+230.
+
+Kevin Johnson: Provide some mechanism such that all requests to a
+particular system were automatically forwarded through some other
+system.  This would be useful to hide details of a non-strongly-
+connected network, particularly if the details were subject to change.
+
+231.
