@@ -57,7 +57,7 @@ boolean fCuvar_delay = TRUE;
    only recognized following one of these characters.  The default is
    carriage return, ^U, ^C, ^O, ^D, ^S, ^Q, ^R, which I got from the
    Ultrix /etc/remote file.  */
-const char *zCuvar_eol = "\r\003\017\004\023\021\022";
+const char *zCuvar_eol = "\r\025\003\017\004\023\021\022";
 
 /* Whether to transfer binary data (nonprintable characters other than
    newline and tab) when sending a file.  If this is FALSE, then
@@ -71,12 +71,12 @@ const char *zCuvar_binary_prefix = "\026";
 
 /* Whether to check for echoes of characters sent when sending a file.
    This is ignored if fCuvar_binary is TRUE.  */
-boolean fCuvar_echocheck = TRUE;
+boolean fCuvar_echocheck = FALSE;
 
 /* A character to look for after each newline is sent when sending a
    file.  The character is the first character in this string, except
    that a '\0' means that no echo check is done.  */
-const char *zCuvar_echonl = "";
+const char *zCuvar_echonl = "\r";
 
 /* The timeout to use when looking for an character.  */
 int cCuvar_timeout = 30;
@@ -101,7 +101,7 @@ const char *zCuvar_eofread = "$";
 
 /* Whether to provide verbose information when sending or receiving a
    file.  */
-boolean fCuvar_verbose = FALSE;
+boolean fCuvar_verbose = TRUE;
 
 /* The table used to give a value to a variable, and to print all the
    variable values.  */
@@ -241,7 +241,7 @@ main (argc, argv)
 	  char *z;
 
 	  clen = strlen (argv[i]);
-	  z = (char *) alloca (clen + 2);
+	  z = zbufalc (clen + 2);
 	  z[0] = '-';
 	  z[1] = 's';
 	  memcpy (z + 2, argv[i] + 1, clen);
@@ -642,13 +642,8 @@ main (argc, argv)
   fCustarted = TRUE;
 
   while (fsysdep_cu (&sconn, &bcmd, zlocalname))
-    {
-#if ! HAVE_ALLOCA
-      (void) alloca (0);
-#endif
-      if (! fcudo_cmd (puuconf, &sconn, bcmd))
-	break;
-    }
+    if (! fcudo_cmd (puuconf, &sconn, bcmd))
+      break;
 
   fCustarted = FALSE;
   if (! fsysdep_cu_finish ())
@@ -836,6 +831,7 @@ fcudo_cmd (puuconf, qconn, bcmd)
   char *z;
   char abescape[5];
   boolean fret;
+  size_t clen;
   char abbuf[100];
 
   /* Some commands take a string up to the next newline character.  */
@@ -932,10 +928,15 @@ fcudo_cmd (puuconf, qconn, bcmd)
     case '<':
     case 'p':
     case 't':
-      z = (char *) alloca (strlen (zline) + 2);
-      sprintf (z, "%c %s", bcmd, zline);
+      clen = strlen (zline);
+      z = zbufalc (clen + 3);
+      z[0] = bcmd;
+      z[1] = ' ';
+      memcpy (z + 2, zline, clen + 1);
       ubuffree (zline);
-      return fcudo_subcmd (puuconf, qconn, z);
+      fret = fcudo_subcmd (puuconf, qconn, z);
+      ubuffree (z);
+      return fret;
 
     case 'z':
       if (! fsysdep_cu_copy (FALSE)
@@ -1032,6 +1033,7 @@ fcuset_var (puuconf, zline)
 {
   char *zvar, *zval;
   char *azargs[2];
+  char azbool[2];
   int iuuconf;
 
   zvar = strtok (zline, "= \t");
@@ -1046,15 +1048,15 @@ fcuset_var (puuconf, zline)
   if (zval == NULL)
     {
       azargs[0] = zvar;
-      azargs[1] = (char *) alloca (2);
       if (azargs[0][0] != '!')
-	azargs[1][0] = 't';
+	azbool[0] = 't';
       else
 	{
 	  ++azargs[0];
-	  azargs[1][0] = 'f';
+	  azbool[0] = 'f';
 	}
-      azargs[1][1] = '\0';
+      azbool[1] = '\0';
+      azargs[1] = azbool;
     }
   else
     {
@@ -1366,10 +1368,11 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 	  if (zbase == NULL)
 	    ucuabort ();
 
-	  zprompt = (char *) alloca (sizeof "Remote file name []: " +
-				     strlen (zbase));
+	  zprompt = zbufalc (sizeof "Remote file name []: " +
+			     strlen (zbase));
 	  sprintf (zprompt, "Remote file name [%s]: ", zbase);
 	  zto = zsysdep_terminal_line (zprompt);
+	  ubuffree (zprompt);
 	  if (zto == NULL)
 	    ucuabort ();
 
@@ -1392,11 +1395,11 @@ icuput (puuconf, argc, argv, pvar, pinfo)
       if (pvar == NULL)
 	ubuffree (zto);
       zerrstr = strerror (errno);
-      zalc = (char *) alloca (strlen (zfrom) + sizeof ": "
-			      + strlen (zerrstr));
+      zalc = zbufalc (strlen (zfrom) + sizeof ": " + strlen (zerrstr));
       sprintf (zalc, "%s: %s", zfrom, zerrstr);
       ubuffree (zfrom);
       ucuputs (zalc);
+      ubuffree (zalc);
       ucuputs (abCuconnected);
       return UUCONF_CMDTABRET_CONTINUE;
     }
@@ -1416,10 +1419,14 @@ icuput (puuconf, argc, argv, pvar, pinfo)
      action was needed to receive the file.  */
   if (pvar == NULL)
     {
-      zalc = (char *) alloca (sizeof "cat > \n" + strlen (zto));
+      boolean fret;
+
+      zalc = zbufalc (sizeof "cat > \n" + strlen (zto));
       sprintf (zalc, "cat > %s\n", zto);
       ubuffree (zto);
-      if (! fcusend_buf (qconn, zalc, strlen (zalc)))
+      fret = fcusend_buf (qconn, zalc, strlen (zalc));
+      ubuffree (zalc);
+      if (! fret)
 	{
 	  (void) fclose (e);
 	  if (! fsysdep_cu_copy (TRUE)
@@ -1483,10 +1490,22 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 
   (void) fclose (e);
 
-  if (pvar != NULL && *zCuvar_eofwrite != '\0')
+  if (pvar == NULL)
     {
-      if (! fconn_write (qconn, zCuvar_eofwrite, strlen (zCuvar_eofwrite)))
+      char beof;
+
+      beof = '\004';
+      if (! fconn_write (qconn, &beof, 1))
 	ucuabort ();
+    }
+  else
+    {
+      if (*zCuvar_eofwrite != '\0')
+	{
+	  if (! fconn_write (qconn, zCuvar_eofwrite,
+			     strlen (zCuvar_eofwrite)))
+	    ucuabort ();
+	}
     }
 
   if (fCuvar_verbose)
@@ -1553,10 +1572,10 @@ icutake (puuconf, argc, argv, pvar, pinfo)
       if (zbase == NULL)
 	ucuabort ();
 
-      zprompt = (char *) alloca (sizeof "Local file name []: " +
-				 strlen (zbase));
+      zprompt = zbufalc (sizeof "Local file name []: " + strlen (zbase));
       sprintf (zprompt, "Local file name [%s]: ", zbase);
       zto = zsysdep_terminal_line (zprompt);
+      ubuffree (zprompt);
       if (zto == NULL)
 	ucuabort ();
 
@@ -1595,10 +1614,10 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 
       ubuffree (zcmd);
       zerrstr = strerror (errno);
-      zalc = (char *) alloca (strlen (zto) + sizeof ": "
-			      + strlen (zerrstr));
+      zalc = zbufalc (strlen (zto) + sizeof ": " + strlen (zerrstr));
       sprintf (zalc, "%s: %s\n", zto, zerrstr);
       ucuputs (zalc);
+      ubuffree (zalc);
       ucuputs (abCuconnected);
       ubuffree (zto);
       return UUCONF_CMDTABRET_CONTINUE;
@@ -1643,8 +1662,7 @@ icutake (puuconf, argc, argv, pvar, pinfo)
     }
 
   ceoflen = strlen (zeof);
-  if (ceoflen > 0)
-    zlook = (char *) alloca (ceoflen);
+  zlook = zbufalc (ceoflen);
   ceofhave = 0;
 
   while (TRUE)
@@ -1656,6 +1674,9 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 	  /* Make sure the signal is logged.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
 	  ucuputs ("[file receive aborted]");
+	  /* Reset the SIGINT flag so that it does not confuse us in
+	     the future.  */
+	  afSignal[INDEXSIG_SIGINT] = FALSE;
 	  break;
 	}	
 
@@ -1700,6 +1721,8 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 	}
     }
 
+  ubuffree (zlook);
+
   ferr = FALSE;
   if (ferror (e))
     ferr = TRUE;
@@ -1743,7 +1766,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
     cbplen = strlen (zCuvar_binary_prefix);
   else
     cbplen = 1;
-  zsendbuf = (char *) alloca (64 * (cbplen + 1));
+  zsendbuf = zbufalc (64 * (cbplen + 1));
 
   /* Loop while we still have characters to send.  The value of cbuf
      will be reset to cbufarg if an echo failure occurs while sending
@@ -1753,13 +1776,18 @@ fcusend_buf (qconn, zbufarg, cbufarg)
       int csend;
       char *zput;
       const char *zget;
+      boolean fnl;
       int i;
 
       if (FGOT_SIGNAL ())
 	{
 	  /* Make sure the signal is logged.  */
+	  ubuffree (zsendbuf);
 	  ulog (LOG_ERROR, (const char *) NULL);
 	  ucuputs ("[file send aborted]");
+	  /* Reset the SIGINT flag so that it does not confuse us in
+	     the future.  */
+	  afSignal[INDEXSIG_SIGINT] = FALSE;
 	  return FALSE;
 	}
 
@@ -1791,6 +1819,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 	 mode, we translate \n to \r, and ignore any nonprintable
 	 characters.  */
       zput = zsendbuf;
+      fnl = FALSE;
       for (i = 0, zget = zbuf; i < csend; i++, zget++)
 	{
 	  if (isprint (*zget)
@@ -1802,6 +1831,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 		*zput++ = '\n';
 	      else
 		*zput++ = '\r';
+	      fnl = TRUE;
 	    }
 	  else if (fCuvar_binary)
 	    {
@@ -1826,17 +1856,17 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 	 of normal characters; when we send a newline we look for
 	 *zCuvar_echonl.  */
       if ((fCuvar_echocheck && ! fCuvar_binary)
-	  || (*zbuf == '\n' && *zCuvar_echonl != '\0'))
+	  || (fnl && *zCuvar_echonl != '\0'))
 	{
 	  long iend;
 
 	  iend = isysdep_time ((long *) NULL) + (long) cCuvar_timeout;
-	  for (i = 0, zget = zbuf; i < csend; i++, zget++)
+	  for (zget = zsendbuf; zget < zput; zget++)
 	    {
 	      int bread;
 	      int bwant;
 
-	      if (*zget == '\n')
+	      if (fCuvar_binary ? *zget == '\n' : *zget == '\r')
 		{
 		  bwant = *zCuvar_echonl;
 		  if (bwant == '\0')
@@ -1844,13 +1874,25 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 		}
 	      else
 		{
-		  if (! isprint (*zget))
+		  if (! fCuvar_echocheck || ! isprint (*zget))
 		    continue;
 		  bwant = *zget;
 		}
 
 	      do
 		{
+		  if (FGOT_SIGNAL ())
+		    {
+		      /* Make sure the signal is logged.  */
+		      ubuffree (zsendbuf);
+		      ulog (LOG_ERROR, (const char *) NULL);
+		      ucuputs ("[file send aborted]");
+		      /* Reset the SIGINT flag so that it does not
+			 confuse us in the future.  */
+		      afSignal[INDEXSIG_SIGINT] = FALSE;
+		      return FALSE;
+		    }
+
 		  bread = breceive_char (qconn,
 					 iend - isysdep_time ((long *) NULL),
 					 TRUE);
@@ -1880,6 +1922,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 			      break;
 			    }
 			}
+		      ubuffree (zsendbuf);
 		      ucuputs ("[timed out looking for echo]");
 		      return FALSE;
 		    }
@@ -1891,6 +1934,8 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 	    }
 	}
     }
+
+  ubuffree (zsendbuf);
 
   return TRUE;
 }
