@@ -605,7 +605,7 @@ ushelp ()
   printf (" -U,--not-user user: list all jobs for other than specified user\n");
   printf (" -W,--comment comment: comment to include in mail messages\n");
   printf (" -y,--younger-than hours: list all jobs younger than given number of hours\n");
-  printf (" -x,--debug debug: Set debugging level (0 for none, 9 is max)\n");
+  printf (" -x,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
