@@ -2249,7 +2249,7 @@ fsysdep_conn_write (qconn, zwrite, cwrite)
 #if HAVE_TLI
 	  if (q->ftli)
 	    {
-	      cdid = t_snd (q->o, zwrite, cwrite, 0);
+	      cdid = t_snd (q->o, (char *) zwrite, cwrite, 0);
 	      if (cdid < 0 && t_errno != TSYSERR)
 		{
 		  ulog (LOG_ERROR, "t_snd: %s",
@@ -2474,7 +2474,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 #if HAVE_TLI
 	  if (q->ftli)
 	    {
-	      cdid = t_snd (q->o, zwrite, cdo, 0);
+	      cdid = t_snd (q->o, (char *) zwrite, cdo, 0);
 	      if (cdid < 0)
 		{
 		  if (t_errno == TFLOW)
@@ -2556,7 +2556,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 #if HAVE_TLI
 	      if (q->ftli)
 		{
-		  cdid = t_snd (q->o, zwrite, cdo, 0);
+		  cdid = t_snd (q->o, (char *) zwrite, cdo, 0);
 		  if (cdid < 0 && t_errno != TSYSERR)
 		    {
 		      ulog (LOG_ERROR, "t_snd: %s",
