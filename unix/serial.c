@@ -82,7 +82,7 @@ const char serial_rcsid[] = "$Id$";
 #include <sys/ioctl.h>
 #endif
 
-#if HAVE_BSD_TTY
+#if HAVE_SELECT
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -92,7 +92,7 @@ const char serial_rcsid[] = "$Id$";
 #endif
 
 #if HAVE_TIME_H
-#if ! HAVE_SYS_TIME_H || ! HAVE_BSD_TTY || TIME_WITH_SYS_TIME
+#if ! HAVE_SYS_TIME_H || ! HAVE_SELECT || TIME_WITH_SYS_TIME
 #include <time.h>
 #endif
 #endif
@@ -2571,7 +2571,10 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	         write up to SINGLE_WRITE bytes
 	       if all data written, return
 	       if no data written
-	         blocked write of up to SINGLE_WRITE bytes
+	         if select works
+		   select on the write descriptor with a ten second timeout
+		 else
+		   blocked write of one byte with a ten second alarm
 
 	 This algorithm should work whether the system supports
 	 unblocked writes on terminals or not.  If the system supports
@@ -2581,7 +2584,28 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	 then the write may hang so long that incoming data is lost.
 	 This is actually possible at high baud rates on any system
 	 when a blocking write is done; there is no solution, except
-	 hardware handshaking.  */
+	 hardware handshaking.
+
+	 If we were not able to write any data, then we need to block
+	 until we can write something.  The code used to simply do a
+	 blocking write.  However, that fails when a bidirectional
+	 protocol is permitted to push out enough bytes to fill the
+	 entire pipe between the two communicating uucico processes.
+	 They can both block on writing, because neither is reading.
+
+	 In this case, we use select.  We could select on both the
+	 read and write descriptor, but on some systems that would
+	 lead to calling read on each byte, which would be very
+	 inefficient.  Instead, we select only on the write
+	 descriptor.  We use a ten second timeout (perhaps the
+	 protocol should specify this) after which we retry the read.
+
+	 Of course, some systems don't have select, and on some
+	 systems that have it it doesn't work on terminal devices.  If
+	 we can't use select, then we do a blocked write of a single
+	 byte after setting an alarm.  We only write a single byte to
+	 avoid any confusion as to whether or not the byte was
+	 actually written.  */
 
       /* If we are running on standard input, we switch the file
 	 descriptors by hand.  */
@@ -2726,38 +2750,98 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	}
       else
 	{
-	  /* We didn't write any data.  Do a blocking write.  */
+#if HAVE_SELECT
+	  struct timeval stime;
+	  int imask;
+	  int c;
 
-	  if (q->ord >= 0)
-	    q->o = q->ord;
+	  /* We didn't write any data.  Call select.  */
 
-	  if (! fsblock (q, TRUE))
+	  stime.tv_sec = 10;
+	  stime.tv_usec = 0;
+	  imask = 1 << q->o;
+	  if (imask == 0)
+	    ulog (LOG_FATAL, "fsysdep_conn_io: File descriptors too large");
+
+	  /* If we've received a signal, don't continue.  */
+	  if (FGOT_QUIT_SIGNAL ())
 	    return FALSE;
 
-	  cdo = cwrite;
-	  if (cdo > SINGLE_WRITE)
-	    cdo = SINGLE_WRITE;
+	  DEBUG_MESSAGE0 (DEBUG_PORT, "fsysdep_conn_io: Calling select");
 
-	  DEBUG_MESSAGE1 (DEBUG_PORT,
-			  "fsysdep_conn_io: Blocking write of %lu",
-			  (unsigned long) cdo);
-
-	  if (q->owr >= 0)
-	    q->o = q->owr;
-
-	  /* Loop until we get something besides EINTR.  */
-	  while (TRUE)
+	  /* We don't bother to loop on EINTR.  If we get a signal, we
+             just loop around and try the read and write again.  */
+	  c = select (q->o + 1, (pointer) NULL, (pointer) &imask,
+		      (pointer) NULL, &stime);
+	  if (c < 0 && errno == EINTR)
 	    {
+	      /* We got interrupted by a signal.  Log it.  */
+	      ulog (LOG_ERROR, (const char *) NULL);
+	    }
+	  else if (c >= 0)
+	    {
+	      /* The select either discovered that we could write
+                 something, or it timed out.  Either way, we go around
+                 the main read/write loop again.  */
+	    }
+	  else
+#endif /* HAVE_SELECT */
+	    {
+	      int ierr;
+
+	      /* Either the select failed for some reason other than
+	      	 EINTR, or the system does not support select at all.
+	      	 Fall back on a timed write.  We don't worry about why
+	      	 the select might have failed, we just assume that it
+	      	 will not succeed on this descriptor.  */
+
+#if HAVE_RESTARTABLE_SYSCALLS
+	      /* If HAVE_RESTARTABLE_SYSCALLS, then receiving an alarm
+                 signal in the middle of a write will not cause the
+                 write to return EINTR, and the only way to interrupt
+                 the write is to longjmp out of it (see sysh.unx).
+                 That is unreliable, because it means that we won't
+                 know whether the byte was actually written or not.
+                 However, I believe that the only system on which we
+                 need to do this longjmp is BSD 4.2, and that system
+                 supports select, so we should never execute this
+                 case.  */
+	      ulog (LOG_FATAL, "fsysdep_conn_io: Unsupported case; see code");
+#endif
+
+	      if (q->ord >= 0)
+		q->o = q->ord;
+
+	      if (! fsblock (q, TRUE))
+		return FALSE;
+
+	      DEBUG_MESSAGE0 (DEBUG_PORT, "fsysdep_conn_io: Blocking write");
+
+	      if (q->owr >= 0)
+		q->o = q->owr;
+
 	      /* If we've received a signal, don't continue.  */
 	      if (FGOT_QUIT_SIGNAL ())
 		return FALSE;
 
+	      /* Start up an alarm to interrupt the write.  Note that
+                 we don't need to use the catch stuff, since we know
+                 that HAVE_RESTARTABLE_SYSCALLS is 0.  */
+	      usset_signal (SIGALRM, usalarm, TRUE, (boolean *) NULL);
+	      alarm (10);
+
+	      /* There is a race condition here: on a severely loaded
+                 system, we could get the alarm before we start the
+                 write call.  This would not be a disaster; often the
+                 write will succeed anyhow.  */
 #if HAVE_TLI
 	      if (q->ftli)
 		{
-		  cdid = t_snd (q->o, (char *) zwrite, cdo, 0);
+		  cdid = t_snd (q->o, (char *) zwrite, 1, 0);
 		  if (cdid < 0 && t_errno != TSYSERR)
 		    {
+		      usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
+		      alarm (0);
 		      ulog (LOG_ERROR, "t_snd: %s",
 			    (t_errno >= 0 && t_errno < t_nerr
 			     ? t_errlist[t_errno]
@@ -2767,44 +2851,54 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 		}
 	      else
 #endif
-		cdid = write (q->o, zwrite, cdo);
+		cdid = write (q->o, zwrite, 1);
 
-	      if (cdid >= 0)
-		break;
-	      if (errno != EINTR)
-		break;
+	      ierr = errno;
 
-	      /* We got interrupted by a signal.  Log it.  */
-	      ulog (LOG_ERROR, (const char *) NULL);
-	    }
-	  
-	  if (cdid < 0)
-	    {
-	      ulog (LOG_ERROR, "write: %s", strerror (errno));
-	      return FALSE;
-	    }
+	      /* Note that we don't really care whether the write
+                 finished because the byte was written out or whether
+                 it finished because the alarm was triggered.  Either
+                 way, we are going to loop around and try another
+                 read.  */
 
-	  if (cdid == 0)
-	    {
-	      /* On some systems write will return 0 if carrier is
-		 lost.  If we fail to write anything ten times in a
-		 row, we assume that this has happened.  This is
-		 hacked in like this because there seems to be no
-		 reliable way to tell exactly why the write returned
-		 0.  */
-	      ++czero;
-	      if (czero >= 10)
+	      usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
+	      alarm (0);
+
+	      if (cdid < 0)
 		{
-		  ulog (LOG_ERROR, "Line disconnected");
-		  return FALSE;
+		  if (ierr == EINTR)
+		    {
+		      /* We got interrupted by a signal.  Log it.  */
+		      ulog (LOG_ERROR, (const char *) NULL);
+		    }
+		  else
+		    {
+		      ulog (LOG_ERROR, "write: %s", strerror (ierr));
+		      return FALSE;
+		    }
 		}
-	    }
-	  else
-	    {
-	      cwrite -= cdid;
-	      zwrite += cdid;
-	      *pcwrite += cdid;
-	      czero = 0;
+	      else if (cdid == 0)
+		{
+		  /* On some systems write will return 0 if carrier is
+		     lost.  If we fail to write anything ten times in
+		     a row, we assume that this has happened.  This is
+		     hacked in like this because there seems to be no
+		     reliable way to tell exactly why the write
+		     returned 0.  */
+		  ++czero;
+		  if (czero >= 10)
+		    {
+		      ulog (LOG_ERROR, "Line disconnected");
+		      return FALSE;
+		    }
+		}
+	      else
+		{
+		  cwrite -= cdid;
+		  zwrite += cdid;
+		  *pcwrite += cdid;
+		  czero = 0;
+		}
 	    }
 	}
     }
