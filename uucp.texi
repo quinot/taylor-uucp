@@ -753,9 +753,17 @@ to the end of the line is ignored unless the @kbd{#} is preceded by a
 @kbd{\} (backslash); if the @kbd{#} is preceeded by a @kbd{\}, the
 @kbd{\} is removed but the @kbd{#} remains in the line.  This can be
 useful for a phone number containing a @kbd{#}.  To enter the sequence
-@samp{\#}, you would use @samp{\\#}.  However, the backslash is not a
-general quoting character; for example, you cannot use it to get an
-embedded space in a string argument.
+@samp{\#}, you would use @samp{\\#}.  
+
+The backslash character may be used to continue lines.  If the last
+character in a line is a backslash, the backslash is removed and the
+line is continued by the next line.  The second line is attached to the
+first with no intervening characters; if you want any whitespace between
+the end of the first line and the start of the second line, you must
+insert it yourself.
+
+However, the backslash is not a general quoting character.  For example,
+you cannot use it to get an embedded space in a string argument.
 
 Everything after the keyword must be on the same line.  A @var{boolean}
 may be specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/03/28  21:28:00  ian
+   David J. MacKenzie: handle empty subexpect strings correctly
+
    Revision 1.23  1992/03/28  19:57:22  ian
    David J. MacKenzie: send port device for /Y rather than port name
 
@@ -1144,7 +1147,8 @@ fctranslate (zphone, pzprefix, pzsuffix)
 
       zpre = NULL;
 
-      uprocesscmds ((FILE *) NULL, qmulti, as, (const char *) NULL, 0);
+      uprocesscmds ((FILE *) NULL, qmulti, as, (const char *) NULL,
+		    CMDFLAG_BACKSLASH);
 
       (void) fmulti_close (qmulti);
 
