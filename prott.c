@@ -120,6 +120,7 @@ ftsendcmd (qdaemon, z, ilocal, iremote)
 {
   size_t clen, csend;
   char *zalc;
+  boolean fret;
 
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "ftsendcmd: Sending command \"%s\"", z);
 
@@ -130,11 +131,13 @@ ftsendcmd (qdaemon, z, ilocal, iremote)
      null byte).  */
   csend = ((clen / CTPACKSIZE) + 1) * CTPACKSIZE;
 
-  zalc = (char *) alloca (csend);
+  zalc = zbufalc (csend);
   memcpy (zalc, z, clen);
   bzero (zalc + clen, csend - clen);
 
-  return fsend_data (qdaemon->qconn, zalc, csend, TRUE);
+  fret = fsend_data (qdaemon->qconn, zalc, csend, TRUE);
+  ubuffree (zalc);
+  return fret;
 }
 
 /* Get space to be filled with data.  We provide a buffer which has

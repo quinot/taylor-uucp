@@ -202,13 +202,18 @@ ffsendcmd (qdaemon, z, ilocal, iremote)
 {
   size_t clen;
   char *zalc;
+  boolean fret;
 
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "ffsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
-  zalc = (char *) alloca (clen + 2);
-  sprintf (zalc, "%s\r", z);
-  return fsend_data (qdaemon->qconn, zalc, clen + 1, TRUE);
+  zalc = zbufalc (clen + 2);
+  memcpy (zalc, z, clen);
+  zalc[clen] = '\r';
+  zalc[clen + 1] = '\0';
+  fret = fsend_data (qdaemon->qconn, zalc, clen + 1, TRUE);
+  ubuffree (zalc);
+  return fret;
 }
 
 /* Get space to be filled with data.  We allocate the space from the
