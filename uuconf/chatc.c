@@ -91,6 +91,13 @@ _uuconf_ichat_cmd (qglobal, argc, argv, qchat, pblock)
 
   iret = uuconf_cmd_args ((pointer) qglobal, argc, argv, as, pblock,
 			  icunknown, 0, pblock);
+
+  /* If chat-program was specified with no arguments, treat that as no
+     chat-program.  This may be used to override an earlier
+     chat-program.  There is a space leak here.  */
+  if (qchat->uuconf_pzprogram != NULL && qchat->uuconf_pzprogram[0] == NULL)
+    qchat->uuconf_pzprogram = NULL;
+
   return iret &~ UUCONF_CMDTABRET_EXIT;
 }
 

@@ -1,3 +1,8 @@
+2002-02-14  Ian Lance Taylor  <ian@airs.com>
+
+	* uuconf/chatc.c (_uuconf_ichat_cmd): Treat chat-program used with
+	no arguments as specifying no chat-program.
+
 2002-02-08  Ian Lance Taylor  <ian@airs.com>
 
 	* install-sh: Replace with current version from automake.
