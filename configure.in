@@ -24,7 +24,9 @@ elif test -s /usr/bin/mail; then
  AC_DEFINE([MAIL_PROGRAM], `echo '"/usr/bin/mail"'`)
 fi
 echo checking for echo program
-if test -s /bin/echo; then
+if (PATH= echo test) 2>/dev/null | grep test >/dev/null 2>&1; then
+ AC_DEFINE([ECHO_PROGRAM], `echo '"echo"'`)
+elif test -s /bin/echo; then
  AC_DEFINE([ECHO_PROGRAM], `echo '"/bin/echo"'`)
 fi
 AC_LN_S

@@ -7,7 +7,7 @@
 
 /* Set ECHO_PROGRAM to a program which echoes its arguments; if echo
    is a shell builtin you can just use "echo".  */
-#define ECHO_PROGRAM "echo"
+#define ECHO_PROGRAM undefined
 
 /* The following macros indicate what header files you have.  Set the
    macro to 1 if you have the corresponding header file, or 0 if you
