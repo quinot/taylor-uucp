@@ -340,6 +340,10 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	{
 	  for (i = iPrecstart; i < CRECBUFLEN && i != iPrecend; i++)
 	    {
+	      /* Some systems seem to send characters with parity, so
+		 strip the parity bit.  */
+	      abPrecbuf[i] &= 0x7f;
+
 	      if (abPrecbuf[i] == '\r')
 		{
 		  int istart;
@@ -395,7 +399,9 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	{
 	  int b;
 
-	  b = *zfrom++ & 0xff;
+	  /* Some systems seem to send characters with parity, so
+	     strip the parity bit.  */
+	  b = *zfrom++ & 0x7f;
 	  if (b < 040 || b > 0176)
 	    {
 	      ulog (LOG_ERROR, "Illegal byte %d", b);
