@@ -62,8 +62,9 @@ static struct stransfer *qTlocal;
 static struct stransfer *qTremote;
 
 /* Queue of transfer structures that have been started and want to
-   send information.  */
-static struct stransfer *qTsend;
+   send information.  This should be static, but the 'a' protocol
+   looks at it, at least for now.  */
+struct stransfer *qTsend;
 
 /* Queue of transfer structures that have been started and are waiting
    to receive information.  */
@@ -846,13 +847,12 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 		}
 	      else
 		{
-		  const char *zerr;
-
 		  if (cwrote < 0)
-		    zerr = strerror (errno);
+		    ulog (LOG_ERROR, "write: %s", strerror (errno));
 		  else
-		    zerr = "could not write all data";
-		  ulog (LOG_ERROR, "write: %s", zerr);
+		    ulog (LOG_ERROR,
+			  "Wrote %d to file when trying to write %lu",
+			  cwrote, (unsigned long) cfirst);
 
 		  /* Any write error is almost certainly a temporary
 		     condition, or else UUCP would not be functioning

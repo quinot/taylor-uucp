@@ -94,8 +94,8 @@ PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uulog uuto \
 	uupick cu
 
 UUOBJS = uucico.o trans.o send.o rec.o xcmd.o prot.o protg.o protf.o \
-	prott.o prote.o proti.o time.o log.o chat.o conn.o tcp.o tli.o \
-	util.o parse.o copy.o
+	prott.o prote.o proti.o protz.o time.o log.o chat.o conn.o \
+	tcp.o tli.o util.o parse.o copy.o
 XQTOBJS = uuxqt.o util.o log.o copy.o
 UUXOBJS = uux.o util.o log.o copy.o
 UUCPOBJS = uucp.o util.o log.o copy.o
@@ -111,7 +111,8 @@ TSTOBJS = tstuu.o
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uuconv.o uustat.o \
 	uuname.o uulog.o uupick.o cu.o uudir.o tstuu.o trans.o send.o \
 	rec.o xcmd.o prot.o protg.o protf.o prott.o prote.o proti.o \
-	util.o time.o log.o chat.o conn.o tcp.o tli.o parse.o copy.o
+	protz.o util.o time.o log.o chat.o conn.o tcp.o tli.o parse.o \
+	copy.o
 
 UULIBS = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 
@@ -318,7 +319,7 @@ cu.o: cu.h uudefs.h uuconf.h sysdep.h conn.h prot.h system.h getopt.h
 uuchk.o: uuconf.h getopt.h
 uuconv.o: $(srcdir)/uuconf/uucnfi.h uuconf.h getopt.h
 uudir.o: sysdep.h
-tstuu.o: sysdep.h getopt.h
+tstuu.o: sysdep.h getopt.h system.h
 trans.o: uudefs.h uuconf.h system.h prot.h trans.h
 send.o: uudefs.h uuconf.h system.h prot.h trans.h
 rec.o: uudefs.h uuconf.h system.h prot.h trans.h
@@ -329,6 +330,7 @@ protf.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 prott.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 prote.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 proti.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+protz.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 log.o: uudefs.h uuconf.h system.h
 chat.o: uudefs.h uuconf.h system.h prot.h conn.h
 conn.o: uudefs.h uuconf.h conn.h

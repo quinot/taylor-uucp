@@ -196,3 +196,18 @@ extern char *zigetspace P((struct sdaemon *qdaemon, size_t *pcdata));
 extern boolean fisenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
 extern boolean fiwait P((struct sdaemon *qdaemon));
+
+/* Prototypes for 'a' protocol functions (these use 'z' as the second
+   character because 'a' is a modified Zmodem protocol).  */
+extern struct uuconf_cmdtab asZproto_params[];
+extern boolean fzstart P((struct sdaemon *qdaemon, char **pzlog));
+extern boolean fzshutdown P((struct sdaemon *qdaemon));
+extern boolean fzsendcmd P((struct sdaemon *qdaemon, const char *z,
+			    int ilocal, int iremote));
+extern char *zzgetspace P((struct sdaemon *qdaemon, size_t *pcdata));
+extern boolean fzsenddata P((struct sdaemon *qdaemon, char *z, size_t c,
+			     int ilocal, int iremote, long ipos));
+extern boolean fzwait P((struct sdaemon *qdaemon));
+extern boolean fzfile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
+			 boolean fstart, boolean fsend, long cbytes,
+			 boolean *pfhandled));
