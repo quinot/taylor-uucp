@@ -243,3 +243,23 @@ specified.  It's hard to do from a shell script because some systems
 don't permit shell scripts to be executed via execl.
 
 38.
+
+Franc,ois Pinard: don't bother to warn if the other side doesn't send
+the useless final "HY".
+
+39.
+
+Franc,ois Pinard: Have the install target in the Makefile save the
+original UUCP programs, and add an uninstall target to restore them.
+
+40.
+
+Franc,ois Pinard:
+> I would like that, under some level of debugging, Taylor UUCP
+> announces:
+> 
+> 	pauses			(\p)
+> 	delays			(\d)
+> 	expected strings	(azstrings[0] in icexpect)
+
+41.
