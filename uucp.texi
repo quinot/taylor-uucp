@@ -2139,6 +2139,7 @@ mju@@mudos.ann-arbor.mi.us (Marc Unangst)
 jv@@mh.nl (Johan Vromans)
 frnkmth!twwells.com!bill (T. William Wells)
 mauxci!eci386!woods@@apple.com (Greg A. Woods)
+Eric Ziegast <uunet!ziegast>
 @end example
 
 @node Index (concepts), Index (configuration file), Acknowledgements, Top
