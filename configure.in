@@ -3,11 +3,13 @@ dnl This should be processed with autoconf to produce a configure script.
 dnl Copyright (c) 1992 Ian Lance Taylor
 dnl
 AC_INIT(uucico.c)
+AC_PREFIX(gcc)
 AC_HEADER_FILE(conf.h)
-dnl
-AC_PROG_INSTALL
 AC_PROG_GCC
+AC_PROG_CPP
 AC_GCC_TRADITIONAL
+AC_PROG_INSTALL
+dnl
 CFLAGS=${CFLAGS--g}
 AC_SUBST(CFLAGS)dnl
 AC_SUBST(LDFLAGS)dnl
@@ -122,7 +124,7 @@ AC_DEFINE([HAVE_UNSIGNED_CHAR]),
 dnl
 AC_LIBTHING_CHECK([errno],
 [#include <errno.h>], [int i = errno; errno = 1;],
-AC_DEFINE([HAVE_ERRNO_DECLARATION])
+AC_DEFINE([HAVE_ERRNO_DECLARATION]),
 :)
 dnl
 echo checking for combined use of O_NONBLOCK and O_NDELAY
@@ -268,7 +270,7 @@ AC_LIBTHING_CHECK([times declared as long],
 #endif
 extern long times ();],
 [],
-AC_DEFINE([TIMES_DECLARATION_OK])
+AC_DEFINE([TIMES_DECLARATION_OK]),
 :)
 dnl
 AC_LIBTHING_CHECK([BSD setpgrp],
@@ -288,4 +290,4 @@ AC_UTIME_NULL
 AC_LONG_FILENAMES
 AC_RESTARTABLE_SYSCALLS
 dnl
-AC_OUTPUT(.)
+AC_OUTPUT(Makefile)
