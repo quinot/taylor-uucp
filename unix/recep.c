@@ -1,7 +1,7 @@
 /* recep.c
    See whether a file has already been received.
 
-   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 

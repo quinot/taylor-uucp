@@ -1,7 +1,7 @@
 /* proty.c
    The 'y' protocol.
 
-   Copyright (C) 1994, 1995 Jorge Cwik and Ian Lance Taylor
+   Copyright (C) 1994, 1995, 2002 Jorge Cwik and Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 

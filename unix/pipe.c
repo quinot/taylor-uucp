@@ -2,7 +2,7 @@
    The pipe port communication routines for Unix.
    Contributed by Marc Boucher <marc@CAM.ORG>.
 
-   Copyright (C) 1993 Ian Lance Taylor
+   Copyright (C) 1993, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 

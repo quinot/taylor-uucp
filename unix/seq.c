@@ -1,7 +1,7 @@
 /* seq.c
    Get and increment the conversation sequence number for a system.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 

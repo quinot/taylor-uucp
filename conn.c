@@ -1,7 +1,7 @@
 /* conn.c
    Connection routines for the Taylor UUCP package.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 

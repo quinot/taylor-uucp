@@ -18,7 +18,7 @@ END-INFO-DIR-ENTRY
 
 This file documents Taylor UUCP, version 1.06.
 
-Copyright @copyright{} 1992, 1993, 1994, 1995 Ian Lance Taylor
+Copyright @copyright{} 1992, 1993, 1994, 1995, 2002 Ian Lance Taylor
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -50,7 +50,7 @@ translation approved by the author instead of in the original English.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993, 1994, 1995 Ian Lance Taylor
+Copyright @copyright{} 1992, 1993, 1994, 1995, 2002 Ian Lance Taylor
 
 Published by Ian Lance Taylor @code{<ian@@airs.com>}.
 

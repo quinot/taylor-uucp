@@ -1,7 +1,7 @@
 /* rdperm.c
    Read the HDB Permissions file.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 

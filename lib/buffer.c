@@ -1,7 +1,7 @@
 /* buffer.c
    Manipulate buffers used to hold strings.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 2002 Ian Lance Taylor
 
    This file is part of Taylor UUCP.
 

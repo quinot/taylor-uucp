@@ -1,7 +1,7 @@
 /* protj.c
    The 'j' protocol.
 
-   Copyright (C) 1992, 1994 Ian Lance Taylor
+   Copyright (C) 1992, 1994, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 

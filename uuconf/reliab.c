@@ -1,7 +1,7 @@
 /* reliab.c
    Subroutines to handle reliability commands for ports and dialers.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 

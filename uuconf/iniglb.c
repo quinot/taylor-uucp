@@ -1,7 +1,7 @@
 /* iniglb.c
    Initialize the global information structure.
 
-   Copyright (C) 1992, 1994, 1995 Ian Lance Taylor
+   Copyright (C) 1992, 1994, 1995, 2002 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
