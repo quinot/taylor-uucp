@@ -124,7 +124,7 @@ usset_signal (isig, pfn, fforce, pfignored)
 
   if (! fforce)
     {
-      (void) sigemptyset (&s.sa_mask);
+      (void) (sigemptyset (&s.sa_mask));
       if (sigaction (isig, (struct sigaction *) NULL, &s) != 0)
 	ulog (LOG_FATAL, "sigaction (%d): %s", isig, strerror (errno));
 
@@ -140,7 +140,7 @@ usset_signal (isig, pfn, fforce, pfignored)
     }
 
   s.sa_handler = pfn;
-  (void) sigemptyset (&s.sa_mask);
+  (void) (sigemptyset (&s.sa_mask));
   s.sa_flags = SA_INTERRUPT;
 
   if (sigaction (isig, &s, (struct sigaction *) NULL) != 0)

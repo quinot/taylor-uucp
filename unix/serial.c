@@ -363,11 +363,14 @@ isblocksigs ()
 {
   sigset_t sblock, sold;
 
-  (void) sigemptyset (&sblock);
-  (void) sigaddset (&sblock, SIGINT);
-  (void) sigaddset (&sblock, SIGQUIT);
-  (void) sigaddset (&sblock, SIGTERM);
-  (void) sigaddset (&sblock, SIGPIPE);
+  /* These expressions need an extra set of parentheses to avoid a bug
+     in SCO 3.2.2.  */
+  (void) (sigemptyset (&sblock));
+  (void) (sigaddset (&sblock, SIGINT));
+  (void) (sigaddset (&sblock, SIGQUIT));
+  (void) (sigaddset (&sblock, SIGTERM));
+  (void) (sigaddset (&sblock, SIGPIPE));
+
   (void) sigprocmask (SIG_BLOCK, &sblock, &sold);
   return sold;
 }
