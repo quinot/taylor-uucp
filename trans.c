@@ -1000,7 +1000,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 
   fret = TRUE;
 
-  if (q->zlog != NULL)
+  if (q->zlog != NULL && ! q->fsendfile)
     {
       ulog (LOG_NORMAL, "%s", q->zlog);
       ubuffree (q->zlog);
