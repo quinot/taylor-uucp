@@ -2051,11 +2051,13 @@ now) for permitting me to use their computers and @file{uunet} access.
 I would also like to thank Richard Stallman <rms@@gnu.ai.mit.edu> for
 founding the Free Software Foundation and John Gilmore <gnu@@cygnus.com>
 for writing the initial version of gnuucp which was a direct inspiration
-for this somewhat larger project.  Also, Chip Salzenberg <chip@@tct.com>
+for this somewhat larger project.  Chip Salzenberg <chip@@tct.com>
 contributed many early patches, and Franc,ois Pinard
 <pinard@@iro.umontreal.ca> tirelessly tested the code and suggested many
 improvements (and also put together the initial version of this
-document).
+document).  Finally, Verbus M. Counts <verbus@@westmark.com> and Centel
+Federal Systems, Inc. deserve special thanks, since they actually paid
+me money to port this code.
 
 In alphabetical order:
 
@@ -2088,6 +2090,7 @@ ryan@@cs.umb.edu (Daniel R. Guilderson)
 greg@@gagme.chi.il.us (Gregory Gulik)
 Michael Haberler <mah@@parrot.prv.univie.ac.at>
 guy@@auspex.auspex.com (Guy Harris)
+Petri Helenius <pete@@fidata.fi>
 Peter Honeyman <honey@@citi.umich.edu>
 bei@@dogface.austin.tx.us (Bob Izenberg)
 harvee!esj (Eric S Johansson)
