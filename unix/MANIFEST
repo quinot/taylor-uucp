@@ -71,6 +71,7 @@ tmpfil.c
 trunc.c
 uacces.c
 ufopen.c
+uid.c
 ultspl.c
 unknwn.c
 uuto.c
