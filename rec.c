@@ -793,6 +793,8 @@ fremote_send_reply (qtrans, qdaemon)
   else
     sprintf (ab + 2, " 0x%lx", (unsigned long) qtrans->ipos);
 
+  qinfo->freplied = TRUE;
+
   if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, ab, qtrans->ilocal,
 				       qtrans->iremote))
     {
@@ -801,8 +803,6 @@ fremote_send_reply (qtrans, qdaemon)
       urrec_free (qtrans);
       return FALSE;
     }
-
-  qinfo->freplied = TRUE;
 
   if (qdaemon->qproto->pffile != NULL)
     {
