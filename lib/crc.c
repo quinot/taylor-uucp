@@ -98,6 +98,14 @@ icrc (z, c, ick)
      size_t c;
      unsigned long ick;
 {
+  while (c > 4)
+    {
+      ick = IUPDC32 (*z++, ick);
+      ick = IUPDC32 (*z++, ick);
+      ick = IUPDC32 (*z++, ick);
+      ick = IUPDC32 (*z++, ick);
+      c -= 4;
+    }
   while (c-- != 0)
     ick = IUPDC32 (*z++, ick);
   return ick;
