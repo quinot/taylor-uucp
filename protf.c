@@ -758,7 +758,7 @@ ffawait_cksum (qtrans, qdaemon, zdata, cdata)
       return FALSE;
     }
 	  
-  icheck = (unsigned int) strtol (zdata, (char **) NULL, 16);
+  icheck = (unsigned int) strtol ((char *) zdata, (char **) NULL, 16);
 
   if (icheck != (iFcheck & 0xffff))
     {

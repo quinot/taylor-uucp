@@ -415,7 +415,8 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
 
   /* The mode should have been sent as "RY 0%o".  If it wasn't, we use
      0666.  */
-  qtrans->s.imode = (unsigned int) strtol (zdata + 2, (char **) NULL, 8);
+  qtrans->s.imode = (unsigned int) strtol ((char *) (zdata + 2),
+					   (char **) NULL, 8);
   if (qtrans->s.imode == 0)
     qtrans->s.imode = 0666;
 

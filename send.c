@@ -574,7 +574,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
     {
       long cskip;
 
-      cskip = strtol (zdata + 2, (char **) NULL, 0);
+      cskip = strtol ((char *) (zdata + 2), (char **) NULL, 0);
       if (cskip > 0 && qtrans->ipos < cskip)
 	{
 	  if (qtrans->fsendfile && ! qinfo->fsent)

@@ -566,7 +566,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
       boolean fsend;
       char bsend;
 
-      zlook = z + strcspn (z, "\\BE");
+      zlook = z + strcspn ((char *) z, "\\BE");
 
       if (zlook > z)
 	{
@@ -963,7 +963,7 @@ fcphone (qconn, puuconf, qdial, zphone, pfwrite, ftranslate, pfquote)
 	  const char *z;
 	  const char *zstr;
 
-	  z = zprefix + strcspn (zprefix, "=-");
+	  z = zprefix + strcspn ((char *) zprefix, "=-");
 	  if (z > zprefix)
 	    {
 	      size_t clen;

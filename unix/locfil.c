@@ -69,7 +69,7 @@ zsysdep_local_file (zfile, zpubdir)
 	  struct passwd *q;
 
 	  ++zfile;
-	  cuserlen = strcspn (zfile, "/");
+	  cuserlen = strcspn ((char *) zfile, "/");
 	  zcopy = zbufalc (cuserlen + 1);
 	  memcpy (zcopy, zfile, cuserlen);
 	  zcopy[cuserlen] = '\0';
