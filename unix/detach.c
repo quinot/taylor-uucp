@@ -71,6 +71,11 @@ usysdep_detach ()
 {
   pid_t igrp;
 
+  /* Make sure that we can open the log file.  We do this now so that,
+     if we can't, a message will be written to stderr.  After we leave
+     this routine, stderr will be closed.  */
+  ulog (LOG_NORMAL, (const char *) NULL);
+
   /* Make sure we are not a process group leader.  */
 #if HAVE_BSD_PGRP
   igrp = getpgrp (0);
