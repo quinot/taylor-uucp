@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/03/11  22:06:37  ian
+   Marty Shannon: added max-uuxqts command
+
    Revision 1.34  1992/03/11  17:04:53  ian
    Jon Zeeff: retry execution later if temporary failure
 
@@ -827,13 +830,14 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     zmail = zQuser;
   if (zmail != NULL
       && zQsystem != NULL
+#if HAVE_INTERNET_MAIL
+      && strchr (zmail, '@') == NULL
+#endif
       && strcmp (zQsystem, zLocalname) != 0)
     {
       char *zset;
 
       zset = (char *) alloca (strlen (zQsystem) + strlen (zmail) + 2);
-
-      /* We should permit Internet addressing here.  */
 
       sprintf (zset, "%s!%s", zQsystem, zmail);
       zmail = zset;

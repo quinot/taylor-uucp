@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1992/03/02  04:53:07  ian
+   Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
+
    Revision 1.1  1992/02/23  03:26:51  ian
    Initial revision
 
@@ -138,6 +141,12 @@
 #define HAVE_V2_LOCKFILES 0
 #define HAVE_BNU_LOCKFILES 1
 #define HAVE_SCO_LOCKFILES 0
+
+/* If your system supports Internet mail addresses, HAVE_INTERNET_MAIL
+   should be set to 1.  This is checked by uuxqt when sending error
+   (or success, if requested) notifications to the person who
+   submitted the job.  */
+#define HAVE_INTERNET_MAIL 1
 
 /* Adminstrative decisions.  */
 
