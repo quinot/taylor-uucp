@@ -40,7 +40,13 @@ AC_HAVE_HEADERS(sys/mount.h sys/fs_types.h)
 dnl
 AC_MAJOR_HEADER
 dnl
-AC_RETSIGTYPE
+AC_COMPILE_CHECK([return type of signal handlers],
+[#include <signal.h>
+#undef signal
+extern void (*signal ()) ();],
+[int i;],
+[AC_DEFINE(RETSIGTYPE, void)],
+[AC_DEFINE(RETSIGTYPE, int)])
 dnl
 AC_COMPILE_CHECK([time.h and sys/time.h being included together],
 [#include <sys/time.h>
