@@ -244,15 +244,6 @@ Les Mikesell: add TLI and TLIS connection ability.
 Les Mikesell: allow a separate program to be specified to handle the
 communications with a particular system.
 
-87.
-
-Get the grade in a file name independent way in uqdo_xqt_file.
-
-88.
-
-Bob Denny: warn if can't open C. or X. file because of permission
-problem.
-
 90.
 
 Rupert Mohr: it is possible that cmax_size_ever fails if there are
@@ -266,30 +257,6 @@ that it can be retrieved and examined later.
 92.
 
 Include Bob Denny's log file rotation shell script?
-
-98.
-
-Jeff Putsch:
-> 
-> The diff between 1.02 (patchlevel 1) and my v2.c is:
-> *** v2.c        Wed Feb  5 13:00:38 1992
-> --- v2.c.orig   Wed Feb  5 12:59:56 1992
-> ***************
-> *** 202,208 ****
->             {
->               qset->ztime = NULL;
-> 
-> ! /*          while (TRUE) */
->                 {
->                   char *zcomma;
-> 
-> --- 202,208 ----
->             {
->               qset->ztime = NULL;
-> 
-> !             while (TRUE)
->                 {
->                   char *zcomma;
 
 99.
 
