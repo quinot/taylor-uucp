@@ -293,8 +293,19 @@ itadd_span (qglobal, istart, iend, ival, cretry, picmp, pqspan, pblock)
 	  /* Just expand the old span to include the new span.  */
 	  if (istart < (*pq)->uuconf_istart)
 	    (*pq)->uuconf_istart = istart;
-	  if ((*pq)->uuconf_iend < iend)
-	    (*pq)->uuconf_iend = iend;
+	  if ((*pq)->uuconf_iend >= iend)
+	    return UUCONF_SUCCESS;
+	  if ((*pq)->uuconf_qnext == NULL
+	      || iend <= (*pq)->uuconf_qnext->uuconf_istart)
+	    {
+	      (*pq)->uuconf_iend = iend;
+	      return UUCONF_SUCCESS;
+	    }
+	  /* The span we are adding overlaps the next span as well.
+	     Expand the old span up to the next old span, and keep
+	     trying to add the new span.  */
+	  (*pq)->uuconf_iend = (*pq)->uuconf_qnext->uuconf_istart;
+	  istart = (*pq)->uuconf_iend;
 	}
       else if (icmp < 0)
 	{
@@ -321,8 +332,17 @@ itadd_span (qglobal, istart, iend, ival, cretry, picmp, pqspan, pblock)
 	    }
 	  (*pq)->uuconf_ival = ival;
 	  (*pq)->uuconf_istart = istart;
-	  (*pq)->uuconf_iend = iend;
 	  (*pq)->uuconf_cretry = cretry;
+	  if ((*pq)->uuconf_qnext == NULL
+	      || iend <= (*pq)->uuconf_qnext->uuconf_istart)
+	    {
+	      (*pq)->uuconf_iend = iend;
+	      return UUCONF_SUCCESS;
+	    }
+	  /* Move this span up to the next one, and keep trying to add
+	     the new span.  */
+	  (*pq)->uuconf_iend = (*pq)->uuconf_qnext->uuconf_istart;
+	  istart = (*pq)->uuconf_iend;
 	}
       else
 	{
@@ -336,18 +356,11 @@ itadd_span (qglobal, istart, iend, ival, cretry, picmp, pqspan, pblock)
 		return iret;
 	      pq = &(*pq)->uuconf_qnext;
 	    }
-	  if ((*pq)->uuconf_iend < iend)
-	    {
-	      /* Put in the final portion of the new span.  */
-	      iret = itnew (qglobal, &(*pq)->uuconf_qnext,
-			    (*pq)->uuconf_qnext, (*pq)->uuconf_iend,
-			    iend, ival, cretry, pblock);
-	      if (iret != UUCONF_SUCCESS)
-		return iret;
-	    }
+	  if (iend <= (*pq)->uuconf_iend)
+	    return UUCONF_SUCCESS;
+	  /* Keep trying to add the new span.  */
+	  istart = (*pq)->uuconf_iend;
 	}
-
-      return UUCONF_SUCCESS;
     }
 
   /* This is the spot for the new span, and there's no overlap.  */
