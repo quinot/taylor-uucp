@@ -923,6 +923,10 @@ struct sdaemon *qdaemon;
 			/* see if we're detecting ZRPOS packets quickly */
 			DEBUG_MESSAGE0 (DEBUG_PROTO,
 					"fzprocess: possible ZRPOS packet");
+			/* We just ate the ZPAD char that getinsync
+			   expects, so put it back.  */
+			iPrecstart = ((iPrecstart + CRECBUFLEN - 1)
+				      % CRECBUFLEN);
 			c = getinsync (qdaemon, TRUE);
 			if (c == ZACK)
 				break;
