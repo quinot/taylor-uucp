@@ -1834,7 +1834,25 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, itime,
 						     (cgot
 						      * sizeof (char *)));
 		    }
-		  pz[i++] = zbufcpy (zline);
+		  if (strncmp (zline, "From ", sizeof "From " - 1) != 0)
+		    pz[i++] = zbufcpy (zline);
+		  else
+		    {
+		      char *zalc;
+
+		      /* Escape "From " at the start of a line.  This
+			 should really be the responsibility of the
+			 mail transfer agent.  On some systems,
+			 though, the mail transfer agent does not do
+			 it, but user mail programs expect it.  We
+			 help them out here, since it doesn't matter
+			 much--we're already truncating the message
+			 anyhow.  */
+		      zalc = zbufalc (strlen (zline) + 2);
+		      zalc[0] = '>';
+		      strcpy (zalc + 1, zline);
+		      pz[i++] = zalc;
+		    }
 		}
 	      xfree ((pointer) zline);
 	      (void) fclose (e);
