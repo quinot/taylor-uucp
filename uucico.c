@@ -1031,6 +1031,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
     {
       if (! fquiet)
 	ulog (LOG_NORMAL, "No work");
+      return TRUE;
     }
 
   return FALSE;
