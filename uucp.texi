@@ -2077,6 +2077,7 @@ martelli@@cadlab.sublink.org (Alex Martelli)
 Yanek Martinson <yanek@@mthvax.cs.miami.edu>
 les@@chinet.chi.il.us (Leslie Mikesell)
 mmitchel@@digi.lonestar.org (Mitch Mitchell)
+rmohr@@infoac.rmi.de (Rupert Mohr)
 lyndon@@cs.athabascau.ca (Lyndon Nerenberg)
 nolan@@helios.unl.edu (Michael Nolan)
 david nugent <david@@csource.oz.au>
