@@ -1252,11 +1252,7 @@ utransfer (ofrom, oto, otoslave, pc)
      int *pc;
 {
   int cread;
-#ifdef FIONREAD
   char abbuf[10000];
-#else
-  char abbuf[80];
-#endif
   char *zwrite;
 
   cread = read (ofrom, abbuf, sizeof abbuf);
@@ -1347,6 +1343,28 @@ utransfer (ofrom, oto, otoslave, pc)
 	      uchild (SIGCHLD);
 	    }
 	}
+
+      /* If we weren't able to write anything, try reading some more
+	 to avoid getting deadlocked.  */
+      if (cwrote == 0)
+	{
+	  int cmore;
+
+	  cmore = read (ofrom, zwrite + cread,
+			(sizeof abbuf - (zwrite - abbuf)) - cread);
+	  if (cmore < 0)
+	    {
+	      if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
+		cmore = 0;
+	      else
+		{
+		  perror ("read");
+		  uchild (SIGCHLD);
+		}
+	    }
+	  cread += cmore;
+	}
+
       cread -= cwrote;
       zwrite += cwrote;
       *pc += cwrote;
