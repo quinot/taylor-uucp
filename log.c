@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/12/11  04:21:37  ian
+   Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
+
    Revision 1.3  1991/11/07  20:32:04  ian
    Chip Salzenberg: allow ANSI_C to be defined in conf.h
 
@@ -290,9 +293,6 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     }
 
 #if ! HAVE_BNU_LOGGING
-  fprintf (e, "%s", zhdr);
-  if (edebug != NULL)
-    fprintf (edebug, "%s", zhdr);
   if (zLprogram != NULL)
     {
       fprintf (e, "%s ", zLprogram);
@@ -348,11 +348,9 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (edebug != NULL)
     fprintf (edebug, ") ");
   
-#if HAVE_BNU_LOGGING
   fprintf (e, "%s", zhdr);
   if (edebug != NULL)
     fprintf (edebug, "%s", zhdr);
-#endif /* HAVE_BNU_LOGGING */
 
 #if HAVE_VPRINTF
   va_start (parg, zmsg);
