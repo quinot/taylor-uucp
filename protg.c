@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/15  21:00:59  ian
+   Efficiency hacks for 'f' and 't' protocols
+
    Revision 1.4  1991/11/11  00:39:45  ian
    Open port in seven bit mode, added fport_set to change to eight bit
 
@@ -865,8 +868,6 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	    }
 	}
     }
-
-  return TRUE;
 }
 
 /* Send acks for all packets we haven't acked yet.  */
