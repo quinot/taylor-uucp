@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/01/04  21:43:24  ian
+   Chip Salzenberg: added ALLOW_FILENAME_ARGUMENTS to permit them
+
    Revision 1.15  1992/01/04  04:12:54  ian
    David J. Fiander: make sure execution arguments are not bad file names
 
@@ -91,7 +94,7 @@ char uuxqt_rcsid[] = "$Id$";
 extern int fclose ();
 
 /* The program name.  */
-const char abProgram[] = "uuxqt";
+char abProgram[] = "uuxqt";
 
 /* Static variables used to unlock things if we get a signal.  */
 

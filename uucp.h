@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1991/12/30  04:28:30  ian
+   John Theus: check for EOF to work around bug in fread
+
    Revision 1.27  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -890,10 +893,10 @@ extern long strtol P((const char *, char **, int));
 
 /* The name of the program being run.  This is statically initialized,
    although it should perhaps be set from argv[0].  */
-extern const char abProgram[];
+extern char abProgram[];
 
 /* Version number string.  */
-extern const char abVersion[];
+extern char abVersion[];
 
 /* Level of debugging.  */
 extern int iDebug;

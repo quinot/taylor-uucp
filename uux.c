@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/01/05  02:51:38  ian
+   Allocate enough space for log message
+
    Revision 1.16  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -110,7 +113,7 @@ extern int fclose ();
 #define ZSHELLNONREDIRSEPS ";&*| \t"
 
 /* The program name.  */
-const char abProgram[] = "uux";
+char abProgram[] = "uux";
 
 /* Long getopt options.  */
 

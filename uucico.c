@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/01/04  21:53:36  ian
+   Start up uuxqt even if a call fails
+
    Revision 1.34  1991/12/31  19:43:13  ian
    Added 'e' protocol
 
@@ -144,7 +147,7 @@ char uucico_rcsid[] = "$Id$";
 #include "system.h"
 
 /* The program name.  */
-const char abProgram[] = "uucico";
+char abProgram[] = "uucico";
 
 /* Define the known protocols.
    bname, ffullduplex, qcmds, pfstart, pfshutdown, pfsendcmd, pzgetspace,

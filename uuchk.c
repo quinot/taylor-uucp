@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/12/23  05:15:54  ian
+   David Nugent: set debugging level for a specific system
+
    Revision 1.13  1991/12/22  22:14:53  ian
    Added externs for strcasecmp or strncasecmp
 
@@ -83,7 +86,7 @@ char uuchk_rcsid[] = "$Id$";
 extern int strcmp (), strcasecmp ();
 
 /* Program name.  */
-const char abProgram[] = "uuchk";
+char abProgram[] = "uuchk";
 
 /* Local functions.  */
 

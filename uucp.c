@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/21  21:09:01  ian
+   Use ulog to report illegal grade error message
+
    Revision 1.7  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -63,7 +66,7 @@ char uucp_rcsid[] = "$Id$";
 #include "sysdep.h"
 
 /* The program name.  */
-const char abProgram[] = "uucp";
+char abProgram[] = "uucp";
 
 /* Long getopt options.  */
 
