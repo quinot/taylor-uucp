@@ -226,7 +226,7 @@ uuconf_hdb_init (ppglobal, zprogram)
 			}
 		      memcpy ((pointer) zdir, (pointer) abHoldconfiglib,
 			      sizeof OLDCONFIGLIB - 1);
-		      memcpy ((pointer) zdir + sizeof OLDCONFIGLIB - 1,
+		      memcpy ((pointer) (zdir + sizeof OLDCONFIGLIB - 1),
 			      HDB_SEPARATOR, sizeof HDB_SEPARATOR - 1);
 		      memcpy ((pointer) (zdir
 					 + sizeof OLDCONFIGLIB - 1
