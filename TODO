@@ -270,3 +270,9 @@ Terry Gardner: record the length of time spent on a conversation when
 it is over.
 
 49.
+
+If no ! is used in the first uux command, and the command is quoted,
+the error message is screwy.  In fact, there should be no error
+message at all.
+
+50.
