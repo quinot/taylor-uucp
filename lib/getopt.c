@@ -5,28 +5,29 @@
 
    Copyright (C) 1987, 88, 89, 90, 91, 1992 Free Software Foundation, Inc.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
    This file was modified slightly by Ian Lance Taylor, June 1992, for
    Taylor UUCP.  */
 
 #include "uucp.h"
+#include "uudefs.h"
 
 /* If GETOPT_COMPAT is defined, `+' as well as `--' can introduce a
    long-named option.  Because this is not POSIX.2 compliant, it is
-   being phased out. */
+   being phased out.  */
 #undef GETOPT_COMPAT
 
 /* This version of `getopt' appears to the caller like standard Unix `getopt'
@@ -141,14 +142,18 @@ exchange (argv)
      char **argv;
 {
   int nonopts_size = (last_nonopt - first_nonopt) * sizeof (char *);
-  char **temp = (char **) alloca (nonopts_size);
+  char **temp = (char **) xmalloc (nonopts_size);
 
   /* Interchange the two blocks of data in ARGV.  */
 
-  my_bcopy (&argv[first_nonopt], temp, nonopts_size);
-  my_bcopy (&argv[last_nonopt], &argv[first_nonopt],
+  my_bcopy ((char *) &argv[first_nonopt], (char *) temp, nonopts_size);
+  my_bcopy ((char *) &argv[last_nonopt], (char *) &argv[first_nonopt],
 	    (optind - last_nonopt) * sizeof (char *));
-  my_bcopy (temp, &argv[first_nonopt + optind - last_nonopt], nonopts_size);
+  my_bcopy ((char *) temp,
+	    (char *) &argv[first_nonopt + optind - last_nonopt],
+	    nonopts_size);
+
+  xfree (temp);
 
   /* Update records for the slots the non-options now occupy.  */
 
@@ -392,7 +397,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	  if (*s)
 	    {
 	      /* Don't test has_arg with >, because some C compilers don't
-		 allow it to be used on enums. */
+		 allow it to be used on enums.  */
 	      if (pfound->has_arg)
 		optarg = s + 1;
 	      else
@@ -440,7 +445,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
       /* Can't find it as a long option.  If this is not getopt_long_only,
 	 or the option starts with '--' or is not a valid short
 	 option, then it's an error.
-	 Otherwise interpret it as a short option. */
+	 Otherwise interpret it as a short option.  */
       if (!long_only || argv[optind][1] == '-'
 #ifdef GETOPT_COMPAT
 	  || argv[optind][0] == '+'
@@ -458,7 +463,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 		fprintf (stderr, "%s: unrecognized option `%c%s'\n",
 			 argv[0], argv[optind][0], nextchar);
 	    }
-	  nextchar += strlen (nextchar);
+	  nextchar = (char *) "";
 	  optind++;
 	  return '?';
 	}
@@ -472,7 +477,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 
     /* Increment `optind' when we start to process its last character.  */
     if (*nextchar == '\0')
-      optind++;
+      ++optind;
 
     if (temp == NULL || c == ':')
       {
@@ -503,7 +508,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	else
 	  {
 	    /* This is an option that requires an argument.  */
-	    if (*nextchar != 0)
+	    if (*nextchar != '\0')
 	      {
 		optarg = nextchar;
 		/* If we end this ARGV-element by taking the rest as an arg,

@@ -54,7 +54,7 @@ buffer.o: $(srcdir)/../uudefs.h
 crc.o: $(srcdir)/../prot.h
 debug.o: $(srcdir)/../uudefs.h
 escape.o: $(srcdir)/../uudefs.h
-getopt.o: $(srcdir)/../getopt.h
+getopt.o: $(srcdir)/../getopt.h $(srcdir)/../uudefs.h
 spool.o: $(srcdir)/../uudefs.h
 status.o: $(srcdir)/../uudefs.h
 xfree.o: $(srcdir)/../uudefs.h
