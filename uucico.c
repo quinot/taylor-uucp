@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.57  1992/02/24  04:58:47  ian
+   Only permit files to be received into directories that are world-writeable
+
    Revision 1.56  1992/02/23  19:50:50  ian
    Handle READ and WRITE in Permissions correctly
 
@@ -402,12 +405,9 @@ main (argc, argv)
 	}
     }
 
-  /* Any remaining argument is the name of the port to use  */
-  if (optind < argc - 1)
+  if (optind != argc)
     uusage ();
-  else if (optind < argc)
-    zport = argv[optind];
-  
+
   uread_config (zconfig);
 
   /* Now set debugging level from command line arguments (overriding
@@ -644,9 +644,7 @@ uusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
-	   "Usage: uucico [options] [port]\n");
-  fprintf (stderr,
-	   " Specifying a port implies -e on the named port\n");
+	   "Usage: uucico [options]\n");
   fprintf (stderr,
 	   " -s,-S system: Call system (-S implies -f)\n");
   fprintf (stderr,
