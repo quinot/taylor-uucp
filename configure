@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# From configure.in Id: configure.in,v 1.98 2002/03/07 17:52:53 ian Exp 
+# From configure.in Id: configure.in,v 1.99 2002/03/07 17:56:41 ian Exp 
 # aclocal.m4 generated automatically by aclocal 1.5
 
 # Copyright 1996, 1997, 1998, 1999, 2000, 2001
@@ -1095,7 +1095,7 @@ if test "${with_newconfigdir+set}" = set; then
   withval="$with_newconfigdir"
   NEWCONFIGDIR=${withval}
 else
-  NEWCONFIGDIR="${prefix}/conf/uucp"
+  NEWCONFIGDIR='${prefix}/conf/uucp'
 fi
 
 
