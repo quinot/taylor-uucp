@@ -531,6 +531,7 @@ main (argc, argv)
     {
       enum tparitysetting tparity;
       enum tstripsetting tstrip;
+      long iusebaud;
 
       /* The uuconf_find_port function only selects directly on a port
 	 name and a speed.  To select based on the line name, we use a
@@ -599,6 +600,7 @@ main (argc, argv)
 	      if (! fsysdep_port_access (&sport))
 		ulog (LOG_FATAL, "%s: Permission denied", zline);
 	    }
+	  iusebaud = ibaud;
 	  ihighbaud = 0L;
 	}
       else
@@ -660,12 +662,12 @@ main (argc, argv)
 		ulog (LOG_FATAL, "%s: No %smatching ports", zsystem, zrem);
 	    }
 
-	  ibaud = qsys->uuconf_ibaud;
+	  iusebaud = qsys->uuconf_ibaud;
 	  ihighbaud = qsys->uuconf_ihighbaud;
 	}
 
       /* Here we have locked a connection to use.  */
-      if (! fconn_open (&sconn, ibaud, ihighbaud, FALSE))
+      if (! fconn_open (&sconn, iusebaud, ihighbaud, FALSE))
 	ucuabort ();
 
       fCuclose_conn = TRUE;
