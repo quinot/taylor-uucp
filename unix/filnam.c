@@ -100,12 +100,15 @@ fscmd_seq (zsystem, zseq)
      const char *zsystem;
      char *zseq;
 {
+  int cdelay;
   char *zfree;
   const char *zfile;
   int o;
   boolean flockfile;
   int i;
   boolean fret;
+
+  cdelay = 5;
 
 #if ! USE_POSIX_LOCKS
   {
@@ -116,7 +119,9 @@ fscmd_seq (zsystem, zseq)
       {
 	if (ferr || FGOT_SIGNAL ())
 	  return FALSE;
-	sleep (5);
+	sleep (cdelay);
+	if (cdelay < 60)
+	  ++cdelay;
       }
   }
 #endif
@@ -224,7 +229,9 @@ fscmd_seq (zsystem, zseq)
 		    (void) close (o);
 		    return FALSE;
 		  }
-		sleep (5);
+		sleep (cdelay);
+		if (cdelay < 60)
+		  ++cdelay;
 	      }
 
 	    flockfile = TRUE;
@@ -245,7 +252,9 @@ fscmd_seq (zsystem, zseq)
 #endif
 	if (fagain)
 	  {
-	    sleep (5);
+	    sleep (cdelay);
+	    if (cdelay < 60)
+	      ++cdelay;
 	    continue;
 	  }
 	ulog (LOG_ERROR, "Locking %s: %s", zfile, strerror (errno));
