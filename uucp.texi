@@ -738,6 +738,10 @@ Most systems restrict the commands which may be executed using
 @samp{uux}.  Many permit only the execution of @samp{rmail} and
 @samp{rnews}.
 
+A request to execute an empty command (e.g., @samp{uux sys!}) will
+create a poll file for the specified system; see @ref{Running uucico}
+for an example of why this might be useful.
+
 @node uux Options, uux Examples, uux Description, Invoking uux
 @subsection uux Options
 
@@ -2249,26 +2253,23 @@ create an empty UUCP command file, known as a @dfn{poll file}.  If a
 poll file exists for a system, then @samp{uucico -r1} will place a call
 to it.  If the call succeeds, the poll file will be deleted.
 
-The file can be easily created using the @samp{touch} command.  The name
-of a poll file currently depends on the type of spool directory you are
-using, as set in @file{policy.h}.  If you are using
-@code{SPOOLDIR_TAYLOR} (the default), put something like this in your
-@file{crontab} file:
+The file can be easily created using the @samp{uux} command.  If
+@samp{uux} is told to request the execution of an empty command, it will
+instead create a poll file.  To create a poll file for @var{system},
+just do something like this:
 @example
-touch /usr/spool/uucp/@var{sys}/C./C.A0000
+uux -r @var{system}!
 @end example
-In this example @var{sys} is the system you wish to call, and
-@samp{/usr/spool/uucp} is your UUCP spool directory.
-If you are using @code{SPOOLDIR_HDB}, use
-@example
-touch /usr/spool/uucp/@var{sys}/C.@var{sys}A0000
-@end example
+The @samp{-r} tells @samp{uux} to not start up @samp{uucico}
+immediately.  Of course, if you do want @samp{uucico} to start up right
+away, just omit the @samp{-r}; if the call fails, the poll file will be
+left around to cause a later call.
 
 For example, I use the following crontab entries locally:
 
 @example
 45 * * * * /bin/echo /usr/lib/uucp/uucico -r1 | /bin/su uucpa
-40 4,10,15 * * * touch /usr/spool/uucp/uunet/C./C.A0000
+40 4,10,15 * * * uux -r uunet\!
 @end example
 
 Every hour, at 45 minutes past, this will check if there is any work to
