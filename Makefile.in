@@ -106,7 +106,7 @@ TEXI2HTML = texi2html
 
 SHELL = /bin/sh
 
-VERSION = beta1.06
+VERSION = 1.06
 
 MORECFLAGS = -I. -I$(srcdir) -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
