@@ -20,100 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.30  1992/04/22  22:34:11  ian
-   Added pfLstart and pfLend functions for ulog
-
-   Revision 1.29  1992/04/01  21:58:35  ian
-   Added CLOSE_LOGFILES configuration parameter
-
-   Revision 1.28  1992/03/28  19:40:26  ian
-   Close log and statistics file at each master/slave role switch
-
-   Revision 1.27  1992/03/15  04:51:17  ian
-   Keep an array of signals we've received rather than a single variable
-
-   Revision 1.26  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.25  1992/03/08  16:42:41  ian
-   Ted Lindgreen: report port and login name in log file
-
-   Revision 1.24  1992/03/04  00:36:44  ian
-   Michael Richardson: better chat script debugging
-
-   Revision 1.23  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.22  1992/02/19  19:36:07  ian
-   Rearranged time functions
-
-   Revision 1.21  1992/02/18  04:33:38  ian
-   Don't use headers when outputting to terminal
-
-   Revision 1.20  1992/02/14  07:51:49  ian
-   Michael Nolan: don't refer to eLdebug if DEBUG is 0
-
-   Revision 1.19  1992/02/08  20:33:57  ian
-   Handle all possible signals raised by abort
-
-   Revision 1.18  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.17  1992/02/01  00:51:28  ian
-   Michael Nolan: call abort if SIGABRT is not defined
-
-   Revision 1.16  1992/01/28  04:51:34  ian
-   Marty Shannon: don't report failed transfers with BNU logging
-
-   Revision 1.15  1992/01/16  18:07:18  ian
-   Niels Baggesen: add FAILED to end of xferstats line if appropriate
-
-   Revision 1.14  1992/01/12  19:32:29  ian
-   Handle HAVE_BNU_LOGGING with no %s in zLogfile
-
-   Revision 1.13  1992/01/05  04:41:48  ian
-   Tweaked HAVE_V2_LOGGING output slightly
-
-   Revision 1.12  1991/12/29  05:00:27  ian
-   Was not allocating enough space in zldate_and_time
-
-   Revision 1.11  1991/12/29  04:04:18  ian
-   Added a bunch of extern definitions
-
-   Revision 1.10  1991/12/29  02:59:50  ian
-   Lele Gaifax: put full year in log file
-
-   Revision 1.9  1991/12/21  23:10:43  ian
-   Terry Gardner: record failed file transfers in statistics file
-
-   Revision 1.8  1991/12/18  03:54:14  ian
-   Made error messages to terminal appear more normal
-
-   Revision 1.7  1991/12/18  03:14:52  ian
-   Use a fixed number of fields in log messages
-
-   Revision 1.6  1991/12/17  07:09:58  ian
-   Record statistics in fractions of a second
-
-   Revision 1.5  1991/12/13  04:02:23  ian
-   David Nugent: move ERROR: from start of line to after date and time
-
-   Revision 1.4  1991/12/11  04:21:37  ian
-   Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
-
-   Revision 1.3  1991/11/07  20:32:04  ian
-   Chip Salzenberg: allow ANSI_C to be defined in conf.h
-
-   Revision 1.2  1991/09/19  03:23:34  ian
-   Chip Salzenberg: append to private debugging file, don't overwrite it
-
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-
-   */
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
 
 #include "uucp.h"
 
@@ -131,21 +38,9 @@ char log_rcsid[] = "$Id$";
 #include <time.h>
 #endif
 
-#if ! HAVE_TIME_T
-#if HAVE_SYS_TIME_T
-#include <sys/types.h>
-#endif /* HAVE_SYS_TIME_T */
-#endif /* ! HAVE_TIME_T */
-
 #include "system.h"
-
-/* External functions.  */
-extern int fflush (), fclose ();
-#if HAVE_VFPRINTF
-extern int vfprintf ();
-#endif
 
-/* Static functions.  */
+/* Local functions.  */
 
 static const char *zldate_and_time P((void));
 

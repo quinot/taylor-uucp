@@ -20,46 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.12  1992/03/17  00:32:40  ian
-   Cast argument to qttime_parse
-
-   Revision 1.11  1992/03/09  05:08:16  ian
-   Added status for wrong time to call, not used if system can't be called
-
-   Revision 1.10  1992/03/08  01:52:34  ian
-   Removed extraneous semicolons
-
-   Revision 1.9  1992/03/07  02:56:30  ian
-   Rewrote time routines
-
-   Revision 1.8  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.7  1992/01/11  17:30:10  ian
-   John Antypas: use memcpy instead of relying on structure assignment
-
-   Revision 1.6  1991/12/29  04:04:18  ian
-   Added a bunch of extern definitions
-
-   Revision 1.5  1991/12/22  20:57:57  ian
-   Added externs for strcasecmp or strncasecmp
-
-   Revision 1.4  1991/09/19  02:22:44  ian
-   Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
-
-   Revision 1.3  1991/09/12  05:04:44  ian
-   Wrong sense of comparison in btime_low_grade
-
-   Revision 1.2  1991/09/11  16:59:00  ian
-   fcheck_time and btime_low_grade looped endlessly on unusual grades
-  
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-  
-   */
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
 
 #include "uucp.h"
 
@@ -73,18 +34,15 @@ char time_rcsid[] = "$Id$";
 #include <time.h>
 #endif
 
-#if ! HAVE_TIME_T
-#if HAVE_SYS_TIME_T
-#include <sys/types.h>
-#endif /* HAVE_SYS_TIME_T */
-#endif /* ! HAVE_TIME_T */
-
 #include "uutime.h"
 
 /* External functions.  */
-extern int strncasecmp ();
+#ifndef time
 extern time_t time ();
+#endif
+#ifndef localtime
 extern struct tm *localtime ();
+#endif
 
 /* Local functions.  */
 
