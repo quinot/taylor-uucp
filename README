@@ -204,4 +204,7 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     Use ``uuchk'' to check configuration files.  You can use
     ``uuconv'' to convert between configuration file formats.
 
-    Type ``make install'' to install.
+    Type ``make install'' to install.  Note that by default the
+    programs are compiled with debugging information, and they are not
+    stripped when they are installed.  Read the man page for strip for
+    more information.
