@@ -26,7 +26,7 @@
    informative, and does not modify the License in any way).
 
    The author of the program may be contacted at ian@airs.com or
-   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   c/o Cygnus Support, Building 200, 1 Kendall Square, Cambridge, MA 02139.
    */
 
 #ifndef UUCONF_H
