@@ -24,15 +24,18 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/09/19  03:23:34  ian
+   Chip Salzenberg: append to private debugging file, don't overwrite it
+
    Revision 1.3  1991/09/19  03:06:04  ian
    Chip Salzenberg: put BNU temporary files in system's directory
 
    Revision 1.2  1991/09/11  02:33:14  ian
    Added ffork argument to fsysdep_run
 
- * Revision 1.1  1991/09/10  19:47:55  ian
- * Initial revision
- *
+   Revision 1.1  1991/09/10  19:47:55  ian
+   Initial revision
+ 
    */
 
 #ifndef SYSTEM_H
@@ -358,7 +361,8 @@ extern const char *zsysdep_find_command P((const char *zcmd,
    qsys -- system for which execute file was created
    zuser -- user who requested execution
    zcmd -- command to execute (from zsysdep_find_command)
-   pazargs -- list of arguments to command (only if fshell is FALSE)
+   pazargs -- list of arguments to command
+   zfullcmd -- command and arguments stuck together in one string
    zinput -- file name for standard input (may be NULL)
    zoutput -- file name for standard output (may be NULL)
    fshell -- if TRUE, use /bin/sh to execute file
@@ -371,6 +375,7 @@ extern boolean fsysdep_execute P((const struct ssysteminfo *qsys,
 				  const char *zuser,
 				  const char *zcmd,
 				  const char **pazargs,
+				  const char *zfullcmd,
 				  const char *zinput,
 				  const char *zoutput,
 				  boolean fshell,

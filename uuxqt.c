@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/09/19  16:15:58  ian
+   Chip Salzenberg: configuration option for permitting execution via sh
+
    Revision 1.2  1991/09/19  02:30:37  ian
    From Chip Salzenberg: check whether signal is ignored differently
 
@@ -933,8 +936,8 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
-			 zabsolute, azQargs, zQinput, zoutput, fshell,
-			 &zerror))
+			 zabsolute, azQargs, zQcmd, zQinput, zoutput,
+			 fshell, &zerror))
     {
       ulog (LOG_NORMAL, "Execution failed (%s)", zfile);
 
