@@ -321,9 +321,12 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     {
       if (eLlog == NULL && ! fLlog_tried)
 	{
+	  const char *zprint = NULL;
+
 	  fLlog_tried = TRUE;
 #if ! HAVE_HDB_LOGGING
 	  eLlog = esysdep_fopen (zLogfile, TRUE, TRUE, TRUE);
+	  zprint = zLogfile;
 #else /* HAVE_HDB_LOGGING */
 	  {
 	    const char *zsys;
@@ -356,7 +359,10 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    sprintf (zfile, zLogfile, zbase, zsys);
 	    ubuffree (zbase);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
-	    ubuffree (zfile);
+	    if (eLlog != NULL)
+	      ubuffree (zfile);
+	    else
+	      zprint = zfile;
 	  }
 #endif /* HAVE_HDB_LOGGING */
 
@@ -368,7 +374,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 		 connected to a remote system, but is better than
 		 doing nothing.  */
 	      fprintf (stderr, "%s: %s: can not open log file: %s\n",
-		       zProgram, zLogfile, strerror (errno));
+		       zProgram, zprint, strerror (errno));
 	      if (pfLfatal != NULL)
 		(*pfLfatal) ();
 	      usysdep_exit (FALSE);
