@@ -771,6 +771,8 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
   sDaemon.cremote_size = -1;
   sDaemon.cmax_ever = -2;
   sDaemon.cmax_receive = -1;
+  sDaemon.csent = 0;
+  sDaemon.creceived = 0;
   sDaemon.ifeatures = 0;
   sDaemon.frequest_hangup = FALSE;
   sDaemon.fhangup_requested = FALSE;
@@ -1446,8 +1448,12 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
     iend_time = ixsysdep_time ((long *) NULL);
 
-    ulog (LOG_NORMAL, "Call complete (%ld seconds)",
-	  iend_time - istart_time);
+    ulog (LOG_NORMAL, "Call complete (%ld seconds %ld bytes %ld bps)",
+	  iend_time - istart_time,
+	  qdaemon->csent + qdaemon->creceived,
+	  (iend_time != istart_time
+	   ? (qdaemon->csent + qdaemon->creceived) / (iend_time - istart_time)
+	   : 0));
 
     if (fret)
       {
@@ -1677,6 +1683,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sDaemon.cremote_size = -1;
   sDaemon.cmax_ever = -2;
   sDaemon.cmax_receive = -1;
+  sDaemon.csent = 0;
+  sDaemon.creceived = 0;
   sDaemon.ifeatures = 0;
   sDaemon.frequest_hangup = FALSE;
   sDaemon.fhangup_requested = FALSE;
@@ -2315,8 +2323,12 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
     iend_time = ixsysdep_time ((long *) NULL);
 
-    ulog (LOG_NORMAL, "Call complete (%ld seconds)",
-	  iend_time - istart_time);
+    ulog (LOG_NORMAL, "Call complete (%ld seconds %ld bytes %ld bps)",
+	  iend_time - istart_time,
+	  sDaemon.csent + sDaemon.creceived,
+	  (iend_time != istart_time
+	   ? (sDaemon.csent + sDaemon.creceived) / (iend_time - istart_time)
+	   : 0));
 
     uclear_queue (&sDaemon);
 

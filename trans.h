@@ -72,6 +72,10 @@ struct sdaemon
   long cmax_ever;
   /* The remote system ulimit.  */
   long cmax_receive;
+  /* Number of bytes sent.  */
+  long csent;
+  /* Number of bytes received.  */
+  long creceived;
   /* Features supported by the remote side.  */
   int ifeatures;
   /* TRUE if we should request the remote side to hang up.  */
