@@ -382,6 +382,20 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 #endif
     }
 
+#ifdef isc386
+#ifdef _POSIX_SOURCE
+  /* ISC has a remarkably stupid notion of environments.  If a program
+     is compiled in the POSIX environment, it sets a process state.
+     If you then exec a program which expects the USG environment, the
+     process state is not reset, so the execed program fails.  The
+     __setostype call is required to change back to the USG
+     environment.  This ought to be a switch in policy.h, but it seems
+     too trivial, so I will leave this code here and wait for it to
+     break in some fashion in the next version of ISC.  */
+  __setostype (0);
+#endif
+#endif
+
   (void) execve ((char *) zcmd, (char **) pazargs, pazenv);
 
   /* The exec failed.  If permitted, try using /bin/sh to execute a
