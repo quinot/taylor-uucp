@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/11/26  02:13:48  ian
+   Bob Denny: Add definitions for FD_SET, FD_ZERO and FD_ISSET
+
    Revision 1.7  1991/11/26  01:45:42  ian
    Marty Shannon: configuration option to not include <sys/wait.h>
 
@@ -73,6 +76,16 @@ char tstuu_rcsid[] = "$Id$";
 #endif
 
 #include "getopt.h"
+
+/* We want an O_NDELAY definition.  */
+
+#ifndef O_NDELAY
+#ifdef FNDELAY
+#define O_NDELAY FNDELAY
+#else /* ! defined (FNDELAY) */
+#define O_NDELAY 0
+#endif /* ! defined (FNDELAY) */
+#endif /* ! defined (O_NDELAY) */
 
 /* We want an O_NONBLOCK definition.  */
 
