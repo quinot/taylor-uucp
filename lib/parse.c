@@ -169,6 +169,17 @@ fparse_cmd (zcmd, qcmd)
   if (*zend != '\0')
     return FALSE;
 
+  /* As a magic special case, if the mode came out as the decimal
+     values 666 or 777, assume that they actually meant the octal
+     values.  Most systems use a leading zero, but a few do not.
+     Since both 666 and 777 are greater than the largest legal mode
+     value, which is 0777 == 511, this hack does not restrict any
+     legal values.  */
+  if (qcmd->imode == 666)
+    qcmd->imode = 0666;
+  else if (qcmd->imode == 777)
+    qcmd->imode = 0777;
+
   z = strtok ((char *) NULL, " \t\n");
   if (qcmd->bcmd == 'E' && z == NULL)
     return FALSE;
