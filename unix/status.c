@@ -41,7 +41,7 @@
 
 static const int aiMapstatus[] =
 {
-  0, 13, 7, 6, 4, 20, 3, 2
+  0, 13, 7, 6, 20, 4, 3, 2
 };
 #define CMAPENTRIES (sizeof (aiMapstatus) / sizeof (aiMapstatus[0]))
 
