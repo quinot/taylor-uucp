@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1992/03/16  01:23:08  ian
+   Make blocking writes optional
+
    Revision 1.4  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -50,10 +53,10 @@
    (including void * pointers) and unsigned char.  By default it will
    use these features if the compiler defines __STDC__.  If your
    compiler supports these features but does not define __STDC__, you
-   should define ANSI_C to 1.  If your compiler does not support these
+   should set ANSI_C to 1.  If your compiler does not support these
    features but defines __STDC__ (no compiler should do this, in my
-   opinion), you should define ANSI_C to 0.  In most cases (or if
-   you're not sure) just leave the line below commented out.  */
+   opinion), you should set ANSI_C to 0.  In most cases (or if you're
+   not sure) just leave the line below commented out.  */
 /* #define ANSI_C 1 */
 
 /* Set USE_STDIO to 1 if data files should be read using the stdio
@@ -146,14 +149,18 @@
    including the arguments to pass it.  This is used by ``uustat -p''.
    Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process
    numbers may be appended (e.g. ``ps -flp1,10,100'').  Otherwise ps
-   will be invoked multiple times, with a single process number append
+   will be invoked several times, with a single process number append
    each time.  The default definitions should work on most systems,
-   although some may complain about the 'p' option.  The commented out
-   definitions are appropriate for System V.  */
+   although some may complain about the 'p' option.  The second set of
+   definitions are appropriate for System V.  To use the second set of
+   definitions, change the ``#if 1'' to ``#if 0''.  */
+#if 1
 #define PS_PROGRAM "/bin/ps -lp"
 #define HAVE_PS_MULTIPLE 0
-/* #define PS_PROGRAM "/bin/ps -flp" */
-/* #define HAVE_PS_MULTIPLE 1 */
+#else
+#define PS_PROGRAM "/bin/ps -flp"
+#define HAVE_PS_MULTIPLE 1
+#endif
 
 /* If you use other programs that also lock devices, such as cu or
    uugetty, the other programs and UUCP must agree on whether a device
@@ -210,11 +217,11 @@
 /* Set the default grade to use for a uucp command if the -g option is
    not used.  The grades, from highest to lowest, are 0 to 9, A to Z,
    a to z.  */
-#define BDEFAULT_UUCP_GRADE ('n')
+#define BDEFAULT_UUCP_GRADE ('N')
 
 /* Set the default grade to use for a uux command if the -g option is
    not used.  */
-#define BDEFAULT_UUX_GRADE ('A')
+#define BDEFAULT_UUX_GRADE ('N')
 
 /* The maximum number of times to retry calling a system which is not
    answering.  If this many calls to the system have failed, the
@@ -223,7 +230,7 @@
    subdirectory of the main spool directory, and has the same name as
    the system name).  If this is set to 0 the system may be called
    regardless of how many previous calls have failed.  */
-#define CMAXRETRIES (26)
+#define CMAXRETRIES 26
 
 /* To compile in use of the new style of configuration files described
    in the documentation, set HAVE_TAYLOR_CONFIG to 1.  */
@@ -233,7 +240,13 @@
    and so on), set HAVE_V2_CONFIG to 1.  To compile in use of BNU
    style configuration files (Systems, Devices and so on) set
    HAVE_BNU_CONFIG to 1.  The files will be looked up in the
-   oldconfigdir directory as defined in the Makefile.  */
+   oldconfigdir directory as defined in the Makefile.
+
+   You may set any or all of HAVE_TAYLOR_CONFIG, HAVE_V2_CONFIG and
+   HAVE_BNU_CONFIG to 1 (you must set at least one of the macros).
+   When looking something up (a system, a port, etc.) the new style
+   configuration files will be read first, followed by the V2
+   configuration files, followed by the BNU configuration files.  */
 #define HAVE_V2_CONFIG 0
 #define HAVE_BNU_CONFIG 0
 
@@ -309,8 +322,12 @@
    system file.  */
 #define PUBDIR "/usr/spool/uucppublic"
 
-/* The default command path, specifying which directories the commands
-   to be executed must be located in.  */
+/* The default command path.  This is a space separated list of
+   directories.  Remote command executions requested by uux are looked
+   up using this path.  If you are using HAVE_TAYLOR_CONFIG, the
+   command path may be overridden for a particular system.  For most
+   systems, you should just make sure that the programs rmail and
+   rnews can be found using this path.  */
 #define CMDPATH "/bin /usr/bin /usr/local/bin"
 
 /* The default amount of free space to require for systems that do not
