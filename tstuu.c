@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/01  03:29:30  ian
+   Bob Izenberg: get definitions for EAGAIN and EWOULDBLOCK
+
    Revision 1.10  1991/12/01  02:23:12  ian
    Niels Baggesen: don't multiply include <unistd.h>
 
@@ -694,6 +697,12 @@ uprepare_test (itest, fcall_uucico, zsys)
   fprintf (e, "debugfile /usr/tmp/tstuu/Debug1\n");
   fprintf (e, "callfile /usr/tmp/tstuu/Call1\n");
   fprintf (e, "pubdir /usr/tmp/tstuu\n");
+#if HAVE_V2_CONFIG
+  fprintf (e, "v2-files no\n");
+#endif
+#if HAVE_BNU_CONFIG
+  fprintf (e, "bnu-files no\n");
+#endif
   if (cDebug > 0)
     fprintf (e, "debug 9\n");
 
@@ -772,6 +781,12 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "passwdfile /usr/tmp/tstuu/Pass2\n");
       fprintf (e, "pubdir /usr/tmp/tstuu\n");
       fprintf (e, "portfile /usr/tmp/tstuu/Port2\n");
+#if HAVE_V2_CONFIG
+      fprintf (e, "v2-files no\n");
+#endif
+#if HAVE_BNU_CONFIG
+      fprintf (e, "bnu-files no\n");
+#endif
       if (cDebug > 0)
 	fprintf (e, "debug 9\n");
 
