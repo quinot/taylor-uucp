@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.26  1992/03/10  21:47:39  ian
    Added protocol command for ports
 
@@ -248,7 +251,12 @@ ukshow (qsys)
       struct sspan *qtime, *qspan;
 
       if (i != 0 || qsys->qalternate != NULL)
-	printf ("Alternate %d\n", i);
+	{
+	  printf ("Alternate %d", i);
+	  if (qsys->zalternate != NULL)
+	    printf (" (%s)", qsys->zalternate);
+	  printf ("\n");
+	}
 
       /* See if this alternate could be used when calling out.  */
 

@@ -1458,10 +1458,14 @@ you are getting what you want.
 Specify the remote system name.  Subsequent commands up to the next
 @code{system} command refer to this system.
 
-@item alternate
+@item alternate [@var{STRING}]
 @findex alternate
 
-Start an alternate set of commands, as described above.
+Start an alternate set of commands, as described above.  An optional
+argument may be used to name the alternate.  This name will be put in
+the log file if the alternate is used to call the system.  There is no
+way to name the first alternate (the commands before the first
+@code{alternate} command).
 
 @item default-alternates @var{boolean}
 @findex default-alternates

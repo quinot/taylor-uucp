@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.63  1992/03/28  04:23:46  ian
+   Gerben Wierda: don't always declare bzero
+
    Revision 1.62  1992/03/28  04:04:55  ian
    Niels Baggesen: simplified debugging message macros
 
@@ -547,6 +550,8 @@ struct ssysteminfo
   char *zalias;
   /* Linked list of alternate sets of call information.  */
   struct ssysteminfo *qalternate;
+  /* Name for this alternate (may be NULL).  */
+  char *zalternate;
   /* Legal times to call.  A grade, a time string, an optional ';' and
      retry time, ' ', repeated.  */
   char *ztime;

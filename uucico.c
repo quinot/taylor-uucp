@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.87  1992/03/28  19:40:26  ian
+   Close log and statistics file at each master/slave role switch
+
    Revision 1.86  1992/03/28  04:45:31  ian
    Mark E. Mallett: minor cleanup
 
@@ -1025,8 +1028,13 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       return FALSE;
     }
 
-  ulog (LOG_NORMAL, "Calling system %s (port %s)", qsys->zname,
-	zLdevice == NULL ? "unknown" : zLdevice);
+  if (qsys->zalternate == NULL)
+    ulog (LOG_NORMAL, "Calling system %s (port %s)", qsys->zname,
+	  zLdevice == NULL ? "unknown" : zLdevice);
+  else
+    ulog (LOG_NORMAL, "Calling system %s (alternate %s, port %s)",
+	  qsys->zname, qsys->zalternate,
+	  zLdevice == NULL ? "unknown" : zLdevice);
 
   cdial_proto_params = 0;
   qdial_proto_params = NULL;
