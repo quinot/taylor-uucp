@@ -1,5 +1,7 @@
 2003-05-28  Ian Lance Taylor  <ian@airs.com>
 
+	* uucico.c (uhelp): Make capitalization consistent.
+
 	* proty.c: Add prototype declaration for fyxchg_syncs.
 
 2002-03-07  Ian Lance Taylor  <ian@airs.com>

@@ -800,7 +800,7 @@ uhelp ()
   printf (" --master: Act as master\n");
   printf (" --slave: Act as slave (default)\n");
   printf (" -p,--port port: Specify port\n");
-  printf (" -l,--prompt: prompt for login name and password\n");
+  printf (" -l,--prompt: Prompt for login name and password\n");
   printf (" -e,--loop: Endless loop of login prompts and daemon execution\n");
   printf (" -w,--wait: After calling out, wait for incoming calls\n");
   printf (" -q,--nouuxqt: Don't start uuxqt when done\n");
