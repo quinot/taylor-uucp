@@ -8,6 +8,7 @@ getcwd.c
 isfork.c
 iswait.c
 locfil.c
+mail.c
 mkdir.c
 remove.c
 rename.c

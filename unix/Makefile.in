@@ -18,7 +18,7 @@ VPATH = @srcdir@
 
 MORECFLAGS=-I$(srcdir)/.. -DOWNER=\"$(owner)\"
 
-OBJS = epopen.o isfork.o iswait.o locfil.o spawn.o srmdir.o @UNIXOBJS@
+OBJS = epopen.o isfork.o iswait.o locfil.o mail.o spawn.o srmdir.o @UNIXOBJS@
 
 all: libunix.a
 
@@ -46,4 +46,5 @@ Makefile: Makefile.in
 $(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h $(srcdir)/../sysdep.h
 
 locfil.o: $(srcdir)/../system.h
+mail.o: $(srcdir)/../system.h
 srmdir.o: $(srcdir)/../system.h
