@@ -141,7 +141,7 @@ static void
 exchange (argv)
      char **argv;
 {
-  int nonopts_size = (last_nonopt - first_nonopt) * sizeof (char *);
+  size_t nonopts_size = (last_nonopt - first_nonopt) * sizeof (char *);
   char **temp = (char **) malloc (nonopts_size);
 
   if (temp == NULL)
@@ -362,7 +362,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
       /* Test all options for either exact match or abbreviated matches.  */
       for (p = longopts, option_index = 0; p->name;
 	   p++, option_index++)
-	if (!strncmp (p->name, nextchar, s - nextchar))
+	if (!strncmp (p->name, nextchar, (size_t) (s - nextchar)))
 	  {
 	    if (s - nextchar == strlen (p->name))
 	      {

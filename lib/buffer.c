@@ -101,7 +101,7 @@ ubuffree (z)
 
   if (z == NULL)
     return;
-  q = (struct sbuf *) (z - offsetof (struct sbuf, u));
+  q = (struct sbuf *) (pointer) (z - offsetof (struct sbuf, u));
   q->qnext = qBlist;
   qBlist = q;
 }
