@@ -669,13 +669,23 @@ flocal_send_open_file (qtrans, qdaemon)
   if (qinfo->zexec == NULL)
     {
       const char *zsend;
+      char *zalc;
 
-      if (qtrans->s.bcmd == 'E')
-	zsend = qtrans->s.zcmd;
+      if (qtrans->s.bcmd != 'E')
+	{
+	  zsend = qtrans->s.zfrom;
+	  zalc = NULL;
+	}
       else
-	zsend = qtrans->s.zfrom;
+	{
+	  zalc = zbufalc (strlen (qtrans->s.zcmd) + sizeof " ()"
+			  + strlen (qtrans->s.zfrom));
+	  sprintf (zalc, "%s (%s)", qtrans->s.zcmd, qtrans->s.zfrom);
+	  zsend = zalc;
+	}
       qtrans->zlog = zbufalc (sizeof "Sending " + strlen (zsend));
       sprintf (qtrans->zlog, "Sending %s", zsend);
+      ubuffree (zalc);
     }
 
   if (qdaemon->qproto->pffile != NULL)
