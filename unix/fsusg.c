@@ -1,5 +1,5 @@
 /* fsusage.c -- return space usage of mounted filesystems
-   Copyright (C) 1991, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1992, 1993 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -178,8 +178,8 @@ get_fs_usage (path, disk, fsp)
 	|| ustat (sstat.st_dev, &s) < 0)
       return -1;
     fsp->fsu_blocks = -1;
-    fsp->fsu_bfree = f_tfree;
-    fsp->fsu_bavail = f_tfree;
+    fsp->fsu_bfree = s.f_tfree;
+    fsp->fsu_bavail = s.f_tfree;
     fsp->fsu_files = -1;
     fsp->fsu_ffree = -1;
   }
