@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/15  21:00:59  ian
+   Efficiency hacks for 'f' and 't' protocols
+
    Revision 1.6  1991/11/14  03:20:13  ian
    Added seven-bit and reliable commands to help when selecting protocols
 
@@ -90,8 +93,10 @@ struct sprotocol
   /* Handle any file level actions that need to be taken.  If fstart
      is TRUE, a file transfer is beginning.  If fstart is FALSE a file
      transfer is ending, and *pfredo should be set to TRUE if the file
-     transfer needs to be redone.  */
-  boolean (*pffile) P((boolean fstart, boolean fsend, boolean *pfredo));
+     transfer needs to be redone.  If fstart and fsend are both TRUE,
+     cbytes holds the size of the file or -1 if it is unknown.  */
+  boolean (*pffile) P((boolean fstart, boolean fsend, boolean *pfredo,
+		       long cbytes));
 };
 
 /* Send a file.
@@ -258,7 +263,8 @@ extern char *zfgetspace P((int *pcdata));
 extern boolean ffsenddata P((char *z, int c));
 extern boolean ffprocess P((boolean *pfexit));
 extern boolean ffwait P((void));
-extern boolean fffile P((boolean fstart, boolean fsend, boolean *pfredo));
+extern boolean fffile P((boolean fstart, boolean fsend, boolean *pfredo,
+			 long cbytes));
 
 /* Prototypes for 't' protocol functions.  */
 
@@ -270,6 +276,20 @@ extern char *ztgetspace P((int *pcdata));
 extern boolean ftsenddata P((char *z, int c));
 extern boolean ftprocess P((boolean *pfexit));
 extern boolean ftwait P((void));
-extern boolean ftfile P((boolean fstart, boolean fsend, boolean *pfredo));
+extern boolean ftfile P((boolean fstart, boolean fsend, boolean *pfredo,
+			 long cbytes));
+
+/* Prototypes for 'e' protocol functions.  */
+
+extern struct scmdtab asEproto_params[];
+extern boolean festart P((boolean fmaster));
+extern boolean feshutdown P((void));
+extern boolean fesendcmd P((const char *z));
+extern char *zegetspace P((int *pcdata));
+extern boolean fesenddata P((char *z, int c));
+extern boolean feprocess P((boolean *pfexit));
+extern boolean fewait P((void));
+extern boolean fefile P((boolean fstart, boolean fsend, boolean *pfredo,
+			 long cbytes));
 
 #endif

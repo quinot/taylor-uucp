@@ -18,9 +18,9 @@ TSTUU = tstuu
 
 # Nothing else to configure
 
-UUOBJS = uucico.o prot.o protg.o protf.o prott.o config.o v2.o bnu.o file.o \
-	util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o parse.o \
-	copy.o sys1.o sys2.o sys3.o sys4.o version.o getopt.o
+UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
+	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
+	parse.o copy.o sys1.o sys2.o sys3.o sys4.o version.o getopt.o
 XQTOBJS = uuxqt.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
 	copy.o sys1.o sys3.o sys5.o version.o getopt.o
 UUXOBJS = uux.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
@@ -32,7 +32,7 @@ UUCHKOBJS = uuchk.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
 TSTOBJS = tstuu.o version.o getopt.o
 
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
-	protf.o prott.o config.o v2.o bnu.o file.o util.o sysinf.o \
+	protf.o prott.o prote.o config.o v2.o bnu.o file.o util.o sysinf.o \
 	prtinf.o time.o log.o chat.o port.o tcp.o parse.o copy.o sys1.o \
 	sys2.o sys3.o sys4.o sys5.o sys6.o version.o getopt.o
 
@@ -98,6 +98,7 @@ prot.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protg.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protf.o: uucp.h conf.h prot.h port.h sysdep.h system.h
 prott.o: uucp.h conf.h prot.h port.h sysdep.h system.h
+prote.o: uucp.h conf.h prot.h port.h sysdep.h system.h
 config.o: uucp.h conf.h system.h sysdep.h
 bnu.o: uucp.h conf.h port.h sysdep.h
 v2.o: uucp.h conf.h port.h sysdep.h

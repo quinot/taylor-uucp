@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1991/12/28  04:33:09  ian
+   Set fmasterdone correctly in slave mode
+
    Revision 1.32  1991/12/23  05:15:54  ian
    David Nugent: set debugging level for a specific system
 
@@ -149,6 +152,9 @@ static struct sprotocol asProtocols[] =
   { 't', FALSE, RELIABLE_ENDTOEND | RELIABLE_RELIABLE | RELIABLE_EIGHT,
       asTproto_params, ftstart, ftshutdown, ftsendcmd, ztgetspace,
       ftsenddata, ftprocess, ftwait, ftfile },
+  { 'e', FALSE, RELIABLE_ENDTOEND | RELIABLE_RELIABLE | RELIABLE_EIGHT,
+      asEproto_params, festart, feshutdown, fesendcmd, zegetspace,
+      fesenddata, feprocess, fewait, fefile },
   { 'g', FALSE, RELIABLE_EIGHT,
       asGproto_params, fgstart, fgshutdown, fgsendcmd, zggetspace,
       fgsenddata, fgprocess, fgwait, NULL },
@@ -2269,6 +2275,9 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		}
 
 	      ulog (LOG_NORMAL, "Sending %s", zuse);
+
+	      /* Pass in the real size of the file.  */
+	      s.cbytes = cbytes;
 
 	      if (! fsend_file (FALSE, e, &s, (const char *) NULL,
 				qsys->zname, fnew))
