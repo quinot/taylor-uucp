@@ -924,6 +924,53 @@ static struct sbaud_table
 #ifdef B115200
   { B115200, 115200 },
 #endif
+#ifdef B230400
+  { B230400, 230400 },
+#else
+#ifdef _B230400
+  { _B230400, 230400 },
+#endif /* _B230400 */
+#endif /* ! defined (B230400) */
+#ifdef B460800
+  { B460800, 460800 },
+#else
+#ifdef _B460800
+  { _B460800, 460800 },
+#endif /* _B460800 */
+#endif /* ! defined (B460800) */
+#ifdef B500000
+  { B500000, 500000 },
+#endif
+#ifdef B576000
+  { B576000, 576000 },
+#endif
+#ifdef B921600
+  { B921600, 921600 },
+#endif
+#ifdef B1000000
+  { B1000000, 1000000 },
+#endif
+#ifdef B1152000
+  { B1152000, 1152000 },
+#endif
+#ifdef B1500000
+  { B1500000, 1500000 },
+#endif
+#ifdef B2000000
+  { B2000000, 2000000 },
+#endif
+#ifdef B2500000
+  { B2500000, 2500000 },
+#endif
+#ifdef B3000000
+  { B3000000, 3000000 },
+#endif
+#ifdef B3500000
+  { B3500000, 3500000 },
+#endif
+#ifdef B4000000
+  { B4000000, 4000000 },
+#endif
   { B0, 0 }
 };
 
