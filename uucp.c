@@ -659,7 +659,7 @@ uchelp ()
   printf (" -j,--jobid: Report job id\n");
   printf (" -W,--noexpand: Do not add current directory to remote filenames\n");
   printf (" -t,--uuto: Emulate uuto\n");
-  printf (" -u,--usage name: Set user name\n");
+  printf (" -u,--user name: Set user name\n");
   printf (" -x,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   printf (" -I,--config file: Set configuration file to use\n");
