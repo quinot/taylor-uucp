@@ -1206,6 +1206,12 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
       return TRUE;
     }
 
+  /* Some systems seem to sometimes send garbage at the end of the
+     command.  Avoid interpreting it as a size if sizes are not
+     supported.  */
+  if ((qdaemon->ifeatures & FEATURE_SIZES) == 0)
+    s.cbytes = -1;
+
   if (s.bcmd != 'H' && s.bcmd != 'Y' && s.bcmd != 'N')
     ulog_user (s.zuser);
   else
