@@ -9,11 +9,11 @@ AC_PROG_GCC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
 AC_PROG_INSTALL
+AC_PROG_RANLIB
 dnl
 CFLAGS=${CFLAGS--g}
 AC_SUBST(CFLAGS)dnl
 AC_SUBST(LDFLAGS)dnl
-AC_PROG_RANLIB
 dnl
 echo checking for mail program
 if test -s /usr/ucb/mail; then
@@ -142,7 +142,7 @@ AC_DEFINE([HAVE_ERRNO_DECLARATION]),
 :)
 dnl
 echo checking for combined use of O_NONBLOCK and O_NDELAY
-AC_TEST_PROGRAM([
+AC_TEST_PROG([
 #include <fcntl.h>
 #ifndef O_NDELAY
 #ifdef FNDELAY
@@ -174,7 +174,7 @@ dnl Check for the SCO buggy memmove.  This test case is from Chip
 dnl Salzenberg.  The test case must be run with cc without optimization.
 AC_FUNC_CHECK(memmove,
 [SAVECC=$CC; CC=cc
-AC_TEST_PROGRAM([
+AC_TEST_PROG([
 main()
   {
      register int x1, x2, x3;
@@ -193,7 +193,8 @@ CC=$SAVECC],
 :)
 dnl
 AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strstr)
-AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strlwr bsearch vfprintf)
+AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp strlwr)
+AC_HAVE_FUNCS(bsearch vfprintf)
 AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
 AC_HAVE_FUNCS(sigsetjmp setret)
 AC_HAVE_FUNCS(sigaction sigvec sigset)
@@ -205,7 +206,7 @@ AC_HAVE_FUNCS(gettimeofday)
 AC_HAVE_FUNCS(ftw getline)
 dnl Check for the SCO buggy ftime
 AC_FUNC_CHECK(ftime,
-[AC_TEST_PROGRAM([
+[AC_TEST_PROG([
 #include <sys/types.h>
 #include <sys/timeb.h>
 main ()
@@ -274,6 +275,65 @@ case $DEFS in
    fi ;;
 esac
 dnl
+dnl Figure out which functions we need from lib
+case $DEFS in
+*HAVE_BSEARCH*) ;;
+*) LIBOBJS="$LIBOBJS bsrch.o" ;;
+esac
+case $DEFS in
+*HAVE_BZERO*) ;;
+*HAVE_MEMSET*) ;;
+*) LIBOBJS="$LIBOBJS bzero.o" ;;
+esac
+case $DEFS in
+*HAVE_GETLINE*) ;;
+*) LIBOBJS="$LIBOBJS getlin.o" ;;
+esac
+case $DEFS in
+*HAVE_MEMCHR*) ;;
+*) LIBOBJS="$LIBOBJS memchr.o" ;;
+esac
+case $DEFS in
+*HAVE_MEMCPY*) ;;
+*HAVE_BCOPY*) ;;
+*) LIBOBJS="$LIBOBJS memcpy.o" ;;
+esac
+case $DEFS in
+*HAVE_STRCASECMP*) ;;
+*) LIBOBJS="$LIBOBJS strcas.o" ;;
+esac
+case $DEFS in
+*HAVE_STRCHR*) ;;
+*HAVE_INDEX*) ;;
+*) LIBOBJS="$LIBOBJS strchr.o" ;;
+esac
+case $DEFS in
+*HAVE_STRDUP*) ;;
+*) LIBOBJS="$LIBOBJS strdup.o" ;;
+esac
+case $DEFS in
+*HAVE_STRLWR*) ;;
+*) LIBOBJS="$LIBOBJS strlwr.o" ;;
+esac
+case $DEFS in
+*HAVE_STRNCASECMP*) ;;
+*) LIBOBJS="$LIBOBJS strncs.o" ;;
+esac
+case $DEFS in
+*HAVE_STRRCHR*) ;;
+*HAVE_RINDEX*) ;;
+*) LIBOBJS="$LIBOBJS strrch.o" ;;
+esac
+case $DEFS in
+*HAVE_STRSTR*) ;;
+*) LIBOBJS="$LIBOBJS strstr.o" ;;
+esac
+case $DEFS in
+*HAVE_STRTOL*) ;;
+*) LIBOBJS="$LIBOBJS strtol.o" ;;
+esac
+AC_SUBST(LIBOBJS)dnl
+dnl
 case $DEFS in
 *HAVE_SIGVEC*)
   AC_COMPILE_CHECK([sv_flags],
@@ -315,4 +375,4 @@ AC_UTIME_NULL
 AC_LONG_FILENAMES
 AC_RESTARTABLE_SYSCALLS
 dnl
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile lib/Makefile uuconf/Makefile)
