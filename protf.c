@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/20  03:02:01  ian
+   Oleg Tabarovsky: added statistical messages to 'g' and 'f' protocols
+
    Revision 1.5  1991/12/20  00:01:54  ian
    Franc,ois Pinard: don't crash 'f' protocol because of an illegal byte
 
@@ -522,11 +525,13 @@ ffwait ()
    or receive a file, and output the checksum when we've finished
    sending a file.  */
 
+/*ARGSUSED*/
 boolean
-fffile (fstart, fsend, pfredo)
+fffile (fstart, fsend, pfredo, cbytes)
      boolean fstart;
      boolean fsend;
      boolean *pfredo;
+     long cbytes;
 {
   if (fstart)
     {

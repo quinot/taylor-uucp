@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/30  04:28:30  ian
+   John Theus: check for EOF to work around bug in fread
+
    Revision 1.7  1991/12/21  23:10:43  ian
    Terry Gardner: record failed file transfers in statistics file
 
@@ -240,7 +243,7 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
   /* Tell the protocol that we are starting to send a file.  */
   if (qProto->pffile != NULL)
     {
-      if (! (*qProto->pffile) (TRUE, TRUE, (boolean *) NULL))
+      if (! (*qProto->pffile) (TRUE, TRUE, (boolean *) NULL, qcmd->cbytes))
 	return FALSE;
     }
 
@@ -406,7 +409,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
   /* Tell the protocol that we are starting to receive a file.  */
   if (qProto->pffile != NULL)
     {
-      if (! (*qProto->pffile) (TRUE, FALSE, (boolean *) NULL))
+      if (! (*qProto->pffile) (TRUE, FALSE, (boolean *) NULL, (long) -1))
 	return FALSE;
     }
 
@@ -737,7 +740,8 @@ fploop ()
 		    {
 		      boolean fredo;
 
-		      if (! (*qProto->pffile) (FALSE, TRUE, &fredo))
+		      if (! (*qProto->pffile) (FALSE, TRUE, &fredo,
+					       (long) -1))
 			return FALSE;
 
 		      if (fredo)
@@ -825,7 +829,7 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	    {
 	      boolean fredo;
 
-	      if (! (*qProto->pffile) (FALSE, FALSE, &fredo))
+	      if (! (*qProto->pffile) (FALSE, FALSE, &fredo, (long) -1))
 		return FALSE;
 	    
 	      if (fredo)
@@ -1065,15 +1069,16 @@ freceive_data (cneed, pcrec, ctimeout)
       zrec = abPrecbuf + iPrecend;
       *pcrec = iPrecstart - iPrecend - 1;
     }
-  else if (iPrecend < CRECBUFLEN)
+  else if (iPrecend > 0)
     {
       zrec = abPrecbuf + iPrecend;
       *pcrec = CRECBUFLEN - iPrecend;
     }
   else
     {
+      /* iPrecstart == iPrecend == 0 */
       zrec = abPrecbuf;
-      *pcrec = iPrecstart - 1;
+      *pcrec = CRECBUFLEN - 1;
     }
   
   if (*pcrec < cneed)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/28  03:49:23  ian
+   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
+
    Revision 1.7  1991/12/17  22:13:14  ian
    David Nugent: zero out garbage before sending data
 
@@ -324,11 +327,13 @@ ftwait ()
 
 /* File level routine, to set fTfile correctly.  */
 
+/*ARGSUSED*/
 boolean
-ftfile (fstart, fsend, pfredo)
+ftfile (fstart, fsend, pfredo, cbytes)
      boolean fstart;
      boolean fsend;
      boolean *pfredo;
+     long cbytes;
 {
   if (pfredo != NULL)
     *pfredo = FALSE;
