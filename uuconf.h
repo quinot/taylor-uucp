@@ -311,9 +311,8 @@ struct uuconf_system
      separated by spaces.  May be NULL if there are no systems to
      which files may be forwarded.  */
   char **uuconf_pzforwardto;
-  /* The public directory to use for this sytem.  May be NULL if the
-     global variable uuconf_pubdir should be used.  */
-  char *uuconf_zpubdir;
+  /* The public directory to use for this sytem.  */
+  const char *uuconf_zpubdir;
   /* The local name to use for this remote system.  May be NULL if the
      usual local name should be used.  */
   char *uuconf_zlocalname;

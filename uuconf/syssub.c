@@ -427,6 +427,9 @@ _uuconf_isystem_basic_default (qglobal, q)
       if (q->uuconf_cfree_space < 0)
 	q->uuconf_cfree_space = DEFAULT_FREE_SPACE;
 
+      if (q->uuconf_zpubdir == (const char *) &_uuconf_unset)
+	q->uuconf_zpubdir = qglobal->qprocess->zpubdir;
+
 #define SET(x) if (q->x == &_uuconf_unset) q->x = NULL
       SYSTEM_STRINGS(SET);
 #undef SET
