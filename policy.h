@@ -180,13 +180,19 @@
    will be invoked several times, with a single process number append
    each time.  The default definitions should work on most systems,
    although some (such as the NeXT) will complain about the 'p'
-   option.  The second set of definitions are appropriate for System
-   V.  To use the second set of definitions, change the ``#if 1'' to
-   ``#if 0''.  */
+   option; for those, use the second set of definitions.  The third
+   set of definitions are appropriate for System V.  To use the second
+   or third set of definitions, change the ``#if 1'' to ``#if 0'' and
+   change the appropriate ``#if 0'' to ``#if 1''.  */
 #if 1
 #define PS_PROGRAM "/bin/ps -lp"
 #define HAVE_PS_MULTIPLE 0
-#else
+#endif
+#if 0
+#define PS_PROGRAM "/bin/ps -l"
+#define HAVE_PS_MULTIPLE 0
+#endif
+#if 0
 #define PS_PROGRAM "/bin/ps -flp"
 #define HAVE_PS_MULTIPLE 1
 #endif
@@ -214,7 +220,8 @@
    to ten characters, followed by a newline.
 
    The V2 style is to write the locking process ID as four binary
-   bytes in the host byte order.
+   bytes in the host byte order.  Many BSD derived systems use this
+   type of lock file, including the NeXT.
 
    SCO lock files are similar to HDB lock files, but always lock the
    lowercase version of the tty (i.e., LCK..tty2a is created if you
