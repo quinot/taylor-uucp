@@ -394,7 +394,7 @@ main (argc, argv)
   }
 #endif
 
-  usysdep_initialize (puuconf, INIT_NOCHDIR);
+  usysdep_initialize (puuconf, INIT_NOCHDIR | INIT_SUID);
 
   iuuconf = uuconf_localname (puuconf, &zlocalname);
   if (iuuconf == UUCONF_NOT_FOUND)

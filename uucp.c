@@ -318,7 +318,7 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (puuconf, fgetcwd ? INIT_GETCWD : 0);
+  usysdep_initialize (puuconf, INIT_SUID | (fgetcwd ? INIT_GETCWD : 0));
 
   ulog_fatal_fn (ucabort);
 

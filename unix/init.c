@@ -132,7 +132,6 @@ char *zScwd;
 
 /* The maximum length of a system name is controlled by the type of spool
    directory we use.  */
-
 #if SPOOLDIR_V2 || SPOOLDIR_BSD42 || SPOOLDIR_BSD43 || SPOOLDIR_ULTRIX
 size_t cSysdep_max_name_len = 7;
 #endif
@@ -147,6 +146,8 @@ size_t cSysdep_max_name_len = 14;
 #endif /* ! HAVE_LONG_FILE_NAMES */
 #endif /* SPOOLDIR_TAYLOR */
 
+/* Initialize the system dependent routines.  */
+
 void
 usysdep_initialize (puuconf,iflags)
      pointer puuconf;
@@ -257,6 +258,19 @@ usysdep_initialize (puuconf,iflags)
     }
   if (z != NULL)
     zSlogin = zbufcpy (z);
+
+  /* On some old systems, an suid program run by root is started with
+     an euid of 0.  If this happens, we look up the uid we should have
+     and set ourselves to it manually.  This means that on such a
+     system root will not be able to uucp or uux files that are not
+     readable by uucp.  */
+  if ((iflags & INIT_SUID) != 0
+      && geteuid () == 0)
+    {
+      q = getpwnam (OWNER);
+      if (q != NULL)
+	setuid (q->pw_uid);
+    }
 
   if ((iflags & INIT_DAEMON) != 0)
     {

@@ -118,7 +118,7 @@ main (argc, argv)
   }
 #endif
 
-  usysdep_initialize (puuconf, 0);
+  usysdep_initialize (puuconf, INIT_SUID);
 
   if (flocal)
     {

@@ -399,7 +399,7 @@ main (argc, argv)
   }
 #endif
 
-  usysdep_initialize (puuconf, 0);
+  usysdep_initialize (puuconf, INIT_SUID);
 
   /* If no commands were specified, we list all commands for the given
      user.  */

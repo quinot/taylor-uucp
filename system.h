@@ -73,6 +73,10 @@ extern size_t cSysdep_max_name_len;
    only make sense on Unix.  It is set by cu.  */
 #define INIT_NOCHDIR (04)
 
+/* This program needs special access to the spool directories.  That
+   means, on Unix, this program is normally installed setuid.  */
+#define INIT_SUID (010)
+
 extern void usysdep_initialize P((pointer puuconf, int iflags));
 
 /* Exit the program.  The fsuccess argument indicates whether to
