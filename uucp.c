@@ -731,6 +731,7 @@ uccopy (zfile, zdest, fforcelocal)
       if (fClocaldest)
 	{
 	  boolean fok;
+	  unsigned int imode;
 
 	  /* Copy one local file to another.  */
 
@@ -760,6 +761,10 @@ uccopy (zfile, zdest, fforcelocal)
 	    ucabort ();
 	  (void) ffileclose (efrom);
 	  ubuffree (zto);
+
+	  imode = ixsysdep_user_file_mode (zfile);
+	  if (imode != 0)
+	    (void) fsysdep_change_mode (zto, imode);
 	}
       else
 	{
