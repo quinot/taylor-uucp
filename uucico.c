@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1991/12/21  23:10:43  ian
+   Terry Gardner: record failed file transfers in statistics file
+
    Revision 1.30  1991/12/21  22:17:20  ian
    Change protocol ordering to 't', 'g', 'f'
 
@@ -168,7 +171,7 @@ static boolean fcall P((const struct ssysteminfo *qsys,
 static boolean fdo_call P((const struct ssysteminfo *qsys,
 			   struct sport *qport,
 			   struct sstatus *qstat, int cretry,
-			   boolean *pfcalled, struct sport *quse));
+			   boolean *pfcalled));
 static boolean fcall_failed P((const struct ssysteminfo *qsys,
 			       enum tstatus twhy, struct sstatus *qstat,
 			       int cretry));
@@ -238,8 +241,8 @@ main (argc, argv)
   boolean floop = FALSE;
   /* Whether to wait for an inbound call after doing an outbound call  */
   boolean fwait = FALSE;
-  /* Success value of subroutines */
   boolean fret = TRUE;
+  int iholddebug;
 
   while ((iopt = getopt (argc, argv,
 			 "efI:lp:qr:s:S:x:X:w")) != EOF)
@@ -388,6 +391,10 @@ main (argc, argv)
 
 	  ulog_system (sLocked_system.zname);
 
+	  iholddebug = iDebug;
+	  if (sLocked_system.idebug != -1)
+	    iDebug = sLocked_system.idebug;
+
 	  if (! fsysdep_lock_system (&sLocked_system))
 	    {
 	      ulog (LOG_ERROR, "System already locked");
@@ -400,6 +407,8 @@ main (argc, argv)
 	      (void) fsysdep_unlock_system (&sLocked_system);
 	      fLocked_system = FALSE;
 	    }
+
+	  iDebug = iholddebug;
 
 	  ulog_system ((const char *) NULL);
 	}
@@ -422,6 +431,10 @@ main (argc, argv)
 
 		  ulog_system (pas[i].zname);
 
+		  iholddebug = iDebug;
+		  if (pas[i].idebug != -1)
+		    iDebug = pas[i].idebug;
+
 		  if (! fsysdep_lock_system (&pas[i]))
 		    {
 		      ulog (LOG_ERROR, "System already locked");
@@ -436,6 +449,8 @@ main (argc, argv)
 		      (void) fsysdep_unlock_system (&pas[i]);
 		      fLocked_system = FALSE;
 		    }
+
+		  iDebug = iholddebug;
 
 		  ulog_system ((const char *) NULL);
 		}
@@ -507,7 +522,9 @@ main (argc, argv)
 		  zlogin = zsysdep_login_name ();
 		  if (zlogin == NULL)
 		    ulog (LOG_FATAL, "Can't get login name");
+		  iholddebug = iDebug;
 		  fret = faccept_call (zlogin, qport);
+		  iDebug = iholddebug;
 		}
 	    }
 
@@ -659,12 +676,10 @@ static boolean fcall (qsys, qport, fforce, bgrade)
       if (cretry >= 0)
 	{
 	  boolean fret, fcalled;
-	  struct sport sportinfo;
 	  
 	  fbadtime = FALSE;
 
-	  fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled,
-			   &sportinfo);
+	  fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled);
 	  (void) fport_close (fret);
 	  if (fret)
 	    return TRUE;
@@ -703,16 +718,14 @@ static boolean fcall (qsys, qport, fforce, bgrade)
    argument is the port to use, and the qstat argument holds the
    current status of the ssystem.  If we log in successfully, set
    *pfcalled to TRUE; this is used to distinguish a failed dial from a
-   failure during the call.  The quse argument is used to hold port
-   information which must be preserved after the call is done.  */
+   failure during the call.  */
 
-static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
+static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled)
      const struct ssysteminfo *qsys;
      struct sport *qport;
      struct sstatus *qstat;
      int cretry;
      boolean *pfcalled;
-     struct sport *quse;
 {
   const char *zstr;
   boolean fnew;
@@ -720,6 +733,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   struct sproto_param *qdial_proto_params;
   int idial_reliable;
   long istart_time;
+  struct sport sportinfo;
 
   *pfcalled = FALSE;
 
@@ -743,9 +757,9 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   else
     {
       if (! ffind_port (qsys->zport, qsys->ibaud, qsys->ihighbaud,
-			quse, fport_lock, TRUE))
+			&sportinfo, fport_lock, TRUE))
 	return FALSE;
-      qport = quse;
+      qport = &sportinfo;
       /* The port is locked by ffind_port.  */
     }
 
@@ -1151,10 +1165,14 @@ static boolean flogin_prompt (qport)
 	{
 	  if (fcheck_login (zhold, zpass))
 	    {
+	      int iholddebug;
+
 	      /* We ignore the return value of faccept_call because we
 		 really don't care whether the call succeeded or not.
 		 We are going to reset the port anyhow.  */
+	      iholddebug = iDebug;
 	      (void) faccept_call (zhold, qport);
+	      iDebug = iholddebug;
 	    }
 	}
     }
@@ -1403,6 +1421,9 @@ static boolean faccept_call (zlogin, qport)
     }
 
   ulog_system (qsys->zname);
+
+  if (qsys->idebug != -1)
+    iDebug = qsys->idebug;
 
   /* See if we are supposed to call the system back.  This will queue
      up an empty command.  It would be better to actually call back

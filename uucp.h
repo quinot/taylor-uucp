@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1991/12/22  22:14:19  ian
+   Monty Solomon: added HAVE_UNISTD_H configuration parameter
+
    Revision 1.22  1991/12/22  20:38:50  ian
    Monty Solomon: don't define strcasecmp and strncasecmp
 
@@ -384,6 +387,8 @@ struct ssysteminfo
   struct sproto_param *qproto_params;
   /* Chat to run when called.  */
   struct schat_info scalled_chat;
+  /* Debugging level to set during a call.  */
+  int idebug;
   /* Whether the other system may request things when we call them.  */
   boolean fcall_request;
   /* Whether the other system may request things when they call us.  */

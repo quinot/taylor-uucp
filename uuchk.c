@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/22  22:14:53  ian
+   Added externs for strcasecmp or strncasecmp
+
    Revision 1.12  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -456,6 +459,9 @@ ukshow (qsys)
 
       if (fcalled)
 	ukshow_chat (&qsys->scalled_chat, " When called, chat");
+
+      if (qsys->idebug != -1)
+	printf (" Debugging level %d\n", qsys->idebug);
 
       if (fcall)
 	{
