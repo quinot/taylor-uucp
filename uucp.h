@@ -226,9 +226,9 @@ typedef FILE *openfile_t;
 #define ffilerewind(e) (fseek ((e), (long) 0, 0) == 0)
 #endif
 #ifdef SEEK_END
-#define ffileseekend(e, i) (fseek ((e), (long) 0, SEEK_END) == 0)
+#define ffileseekend(e) (fseek ((e), (long) 0, SEEK_END) == 0)
 #else
-#define ffileseekend(e, i) (fseek ((e), (long) 0, 2) == 0)
+#define ffileseekend(e) (fseek ((e), (long) 0, 2) == 0)
 #endif
 #define ffileclose(e) (fclose (e) == 0)
 
@@ -253,9 +253,9 @@ typedef int openfile_t;
 #define ffilerewind(e) (lseek ((e), (long) 0, 0) >= 0)
 #endif
 #ifdef SEEK_END
-#define ffileseekend(e, i) (lseek ((e), (long) 0, SEEK_END) >= 0)
+#define ffileseekend(e) (lseek ((e), (long) 0, SEEK_END) >= 0)
 #else
-#define ffileseekend(e, i) (lseek ((e), (long) 0, 2) >= 0)
+#define ffileseekend(e) (lseek ((e), (long) 0, 2) >= 0)
 #endif
 #define ffileclose(e) (close (e) >= 0)
 
