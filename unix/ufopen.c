@@ -80,7 +80,6 @@ isuser_perms ()
     }
 #else /* ! HAVE_SETREUID */
 #if HAVE_SAVED_SETUID
-
   /* Set the effective user id to the real user id.  Since the
      effective user id is saved (it's the saved setuid) we will able
      to set back to it later.  If the real user id is root we will not
@@ -119,7 +118,7 @@ fsuucp_perms (ieuid)
   /* Set ourselves back to our original effective user id.  */
   if (setuid ((uid_t) ieuid) < 0)
     {
-      ulog (LOG_ERROR, "setuid: %s", strerror (errno));
+      ulog (LOG_ERROR, "setuid (%ld): %s", (long) ieuid, strerror (errno));
       /* Is this error message helpful or confusing?  */
       if (errno == EPERM)
 	ulog (LOG_ERROR,
