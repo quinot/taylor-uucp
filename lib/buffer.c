@@ -97,8 +97,10 @@ void
 ubuffree (z)
      char *z;
 {
-  size_t ioff;
   struct sbuf *q;
+  /* The type of ioff should be size_t, but making it int avoids a bug
+     in some versions of the HP/UX compiler, and will always work.  */
+  int ioff;
 
   if (z == NULL)
     return;
