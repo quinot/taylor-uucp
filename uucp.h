@@ -283,6 +283,8 @@ extern char *strstr P((const char *zouter, const char *zinner));
 #if HAVE_STRICMP
 #define strcasecmp stricmp
 #else /* ! HAVE_STRICMP */
+/* Rename strcasecmp to avoid ANSI C name space.  */
+#define strcasecmp xstrcasecmp
 extern int strcasecmp P((const char *z1, const char *z2));
 #endif /* ! HAVE_STRICMP */
 #endif /* ! HAVE_STRCASECMP */
@@ -291,6 +293,8 @@ extern int strcasecmp P((const char *z1, const char *z2));
 #if HAVE_STRNICMP
 #define strncasecmp strnicmp
 #else /* ! HAVE_STRNICMP */
+/* Rename strncasecmp to avoid ANSI C name space.  */
+#define strncasecmp xstrncasecmp
 extern int strncasecmp P((const char *z1, const char *z2, size_t clen));
 #endif /* ! HAVE_STRNICMP */
 #endif /* ! HAVE_STRNCASECMP */
