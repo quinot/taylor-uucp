@@ -148,8 +148,7 @@ static void usunits_show P((long idiff));
 static boolean fsmachines P((void));
 
 /* Long getopt options.  */
-
-static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asSlongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
 main (argc, argv)
@@ -205,8 +204,9 @@ main (argc, argv)
   const char *azoneuser[1];
   boolean fret;
 
-  while ((iopt = getopt (argc, argv,
-			 "aB:c:C:eiI:k:KmMNo:pqQr:s:S:u:U:W:x:y:")) != EOF)
+  while ((iopt = getopt_long (argc, argv,
+			      "aB:c:C:eiI:k:KmMNo:pqQr:s:S:u:U:W:x:y:",
+			      asSlongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

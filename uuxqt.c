@@ -65,7 +65,6 @@ static boolean fqforward P((const char *zfile, char **pzallowed,
 			    const char *zlog, const char *zmail));
 
 /* Long getopt options.  */
-
 static const struct option asQlongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
@@ -89,7 +88,8 @@ main (argc, argv)
   boolean fsys;
   struct uuconf_system ssys;
 
-  while ((iopt = getopt (argc, argv, "c:I:s:x:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "c:I:s:x:", asQlongopts,
+			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

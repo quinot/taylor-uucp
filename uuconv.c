@@ -89,7 +89,6 @@ enum tconfig
 };
 
 /* Long getopt options.  */
-
 static const struct option asVlongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
@@ -110,7 +109,8 @@ main (argc, argv)
   int iret;
   pointer pinput;
 
-  while ((iopt = getopt (argc, argv, "i:I:o:p:x:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "i:I:o:p:x:", asVlongopts,
+			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

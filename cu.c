@@ -187,8 +187,7 @@ static boolean fcusend_buf P((struct sconnection *qconn, const char *zbuf,
        do { if (! fsysdep_terminal_puts (zline)) ucuabort (); } while (0)
 
 /* Long getopt options.  */
-
-static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asCulongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
 main (argc, argv)
@@ -249,7 +248,8 @@ main (argc, argv)
 	}
     }
 
-  while ((iopt = getopt (argc, argv, "a:c:dehnI:l:op:s:tx:z:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "a:c:dehnI:l:op:s:tx:z:",
+			      asCulongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

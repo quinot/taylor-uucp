@@ -188,7 +188,8 @@ main (argc, argv)
 
   /* The leading + in the getopt string means to stop processing
      options as soon as a non-option argument is seen.  */
-  while ((iopt = getopt (argc, argv, "+a:bcCg:I:jlnprs:Wx:z")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "+a:bcCg:I:jlnprs:Wx:z",
+			      asXlongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

@@ -129,7 +129,6 @@ static char *zget_uucp_cmd P((struct sconnection *qconn,
 static char *zget_typed_line P((struct sconnection *qconn));
 
 /* Long getopt options.  */
-
 static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
@@ -172,8 +171,9 @@ main (argc, argv)
   int iholddebug;
 #endif
 
-  while ((iopt = getopt (argc, argv,
-			 "cDefI:lp:qr:s:S:u:x:X:w")) != EOF)
+  while ((iopt = getopt_long (argc, argv,
+			      "cDefI:lp:qr:s:S:u:x:X:w",
+			      asLongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

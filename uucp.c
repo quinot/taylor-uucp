@@ -55,7 +55,6 @@ static void ucabort P((void));
 char abProgram[] = "uucp";
 
 /* Long getopt options.  */
-
 static const struct option asClongopts[] = { { NULL, 0, NULL, 0 } };
 
 /* Local variables.  There are a bunch of these, mostly set by the
@@ -144,7 +143,8 @@ main (argc, argv)
   char *zoptions;
   boolean fexit;
 
-  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:prRs:tu:Wx:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "cCdfg:I:jmn:prRs:tu:Wx:",
+			      asClongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

@@ -50,8 +50,7 @@ char abProgram[] = "uulog";
 static void ulusage P((void));
 
 /* Long getopt options.  */
-
-static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asLlongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
 main (argc, argv)
@@ -102,7 +101,8 @@ main (argc, argv)
 	}
     }
 
-  while ((iopt = getopt (argc, argv, "fI:n:s:u:xX:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "fI:n:s:u:xX:", asLlongopts,
+			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

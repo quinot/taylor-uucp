@@ -47,8 +47,7 @@ static void upmove P((const char *zfrom, const char *zto));
 char abProgram[] = "uupick";
 
 /* Long getopt options.  */
-
-static const struct option asClongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asPlongopts[] = { { NULL, 0, NULL, 0 } };
 
 /* Local functions.  */
 
@@ -72,7 +71,8 @@ main (argc, argv)
   char *zallsys;
   char ab[1000];
 
-  while ((iopt = getopt (argc, argv, "I:s:x:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "I:s:x:", asPlongopts,
+			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

@@ -63,7 +63,6 @@ struct sinfo
 };
 
 /* Long getopt options.  */
-
 static const struct option asKlongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
@@ -78,7 +77,8 @@ main (argc, argv)
   pointer puuconf;
   char **pzsystems;
 
-  while ((iopt = getopt (argc, argv, "I:x:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "I:x:", asKlongopts,
+			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{

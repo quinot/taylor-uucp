@@ -44,8 +44,7 @@ static void unusage P((void));
 static void unuuconf_error P((pointer puuconf, int iuuconf));
 
 /* Long getopt options.  */
-
-static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asNlongopts[] = { { NULL, 0, NULL, 0 } };
 
 int
 main (argc, argv)
@@ -62,7 +61,8 @@ main (argc, argv)
   pointer puuconf;
   int iuuconf;
 
-  while ((iopt = getopt (argc, argv, "alI:x:")) != EOF)
+  while ((iopt = getopt_long (argc, argv, "alI:x:", asNlongopts,
+			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{
