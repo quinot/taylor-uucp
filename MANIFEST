@@ -12,6 +12,8 @@ config.c
 configure
 configure.in
 copy.c
+cu.c
+cu.h
 file.c
 getopt.c
 getopt.h
@@ -34,6 +36,7 @@ sys4.unx
 sys5.unx
 sys6.unx
 sys7.unx
+sys8.unx
 sysh.unx
 sysinf.c
 system.h
