@@ -29,10 +29,10 @@
 char _uuconf_debfil_rcsid[] = "$Id$";
 #endif
 
-/* Get the name of the UUCP statistics file.  */
+/* Get the name of the UUCP debugging file.  */
 
 int
-uuconf_debugsfile (pglobal, pzdebug)
+uuconf_debugfile (pglobal, pzdebug)
      pointer pglobal;
      const char **pzdebug;
 {
