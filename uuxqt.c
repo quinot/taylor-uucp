@@ -710,6 +710,15 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
   zQunlock_file = zfile;
 
+  /* Now that we have the file locked, make sure it still exists.
+     Otherwise another uuxqt could have just finished processing it
+     and removed the lock file.  */
+  if (! fsysdep_file_exists (zfile))
+    {
+      uqcleanup (zfile, iclean);
+      return;
+    }
+
   if (zQuser != NULL)
     ulog_user (zQuser);
   else if (zQrequestor != NULL)
