@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.88  1992/03/28  20:31:55  ian
+   Franc,ois Pinard: allow a name to be given to an alternate
+
    Revision 1.87  1992/03/28  19:40:26  ian
    Close log and statistics file at each master/slave role switch
 
@@ -337,7 +340,8 @@ static void uusage P((void));
 static void uabort P((void));
 static boolean fcall P((const struct ssysteminfo *qsys,
 			struct sport *qport,
-			boolean fforce, int bgrade));
+			boolean fforce, int bgrade,
+			boolean fnodetach));
 static boolean fdo_call P((const struct ssysteminfo *qsys,
 			   struct sport *qport,
 			   struct sstatus *qstat, int cretry,
@@ -586,7 +590,8 @@ main (argc, argv)
 	  else
 	    {
 	      fLocked_system = TRUE;
-	      fret = fcall (&sLocked_system, qport, fforce, BGRADE_HIGH);
+	      fret = fcall (&sLocked_system, qport, fforce, BGRADE_HIGH,
+			    fnodetach);
 	      (void) fsysdep_unlock_system (&sLocked_system);
 	      fLocked_system = FALSE;
 	    }
@@ -638,7 +643,8 @@ main (argc, argv)
 		    {
 		      sLocked_system = pas[i];
 		      fLocked_system = TRUE;
-		      if (! fcall (&pas[i], qport, fforce, bgrade))
+		      if (! fcall (&pas[i], qport, fforce, bgrade,
+				   fnodetach))
 			fret = FALSE;
 
 		      /* Now ignore any SIGHUP that we got.  */
@@ -854,11 +860,12 @@ uabort ()
    highest grade of work to be done for the system.  The qstat
    argument holds the status of the system.  */
 
-static boolean fcall (qsys, qport, fforce, bgrade)
+static boolean fcall (qsys, qport, fforce, bgrade, fnodetach)
      const struct ssysteminfo *qsys;
      struct sport *qport;
      boolean fforce;
      int bgrade;
+     boolean fnodetach;
 {
   boolean fbadtime, fnevertime;
   const struct ssysteminfo *qorigsys;
@@ -902,29 +909,42 @@ static boolean fcall (qsys, qport, fforce, bgrade)
 	{
 	  long ival;
 	  int cretry;
+	  boolean fmatch;
 
 	  fnevertime = FALSE;
 
 	  /* The value returned in ival by fspan_match is the lowest
 	     grade which may be done at this time.  */
-	  if (ftimespan_match (qtime, &ival, &cretry)
-	      && igradecmp (bgrade, (int) ival) <= 0)
+
+	  fmatch = (ftimespan_match (qtime, &ival, &cretry)
+		    && igradecmp (bgrade, (int) ival) <= 0);
+
+	  utimespan_free (qtime);
+
+	  if (fmatch)
 	    {
 	      boolean fret, fcalled;
 	      struct sport sportinfo;
 	  
+	      if (FGOT_SIGNAL ())
+		return FALSE;
+
 	      fbadtime = FALSE;
 
 	      fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled,
 			       &sportinfo);
 	      (void) fport_close (fret);
+
 	      if (fret)
 		return TRUE;
 	      if (fcalled)
 		return FALSE;
-	    }
 
-	  utimespan_free (qtime);
+	      /* Now we have to dump that port so that we can aquire a
+		 new one.  */
+	      if (! fnodetach)
+		usysdep_detach ();
+	    }
 	}
 
       /* Look for the next alternate with different calling
