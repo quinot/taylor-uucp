@@ -4412,6 +4412,7 @@ Brian Campbell @file{<brianc@@quantum.on.ca>}
 @file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
 @file{denny@@dakota.alisa.com} (Bob Denny)
 @file{dje@@ersys.edmonton.ab.ca} (Doug Evans)
+Marc Evans @file{<marc@@synergytics.com>}
 @file{fenner@@jazz.psu.edu} (Bill Fenner)
 "David J. Fiander" @file{<golem!david@@news.lsuc.on.ca>}
 Thomas Fischer @file{<batman@@olorin.dark.sub.org>}
@@ -4429,6 +4430,7 @@ Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
 Petri Helenius @file{<pete@@fidata.fi>}
 Peter Honeyman @file{<honey@@citi.umich.edu>}
 @file{bei@@dogface.austin.tx.us} (Bob Izenberg)
+Rob Janssen @file{<cmgit!rob@@relay.nluug.nl>}
 @file{harvee!esj} (Eric S Johansson)
 @file{chris@@cj_net.in-berlin.de} (Christof Junge)
 @file{tron@@Veritas.COM} (Ronald S. Karr)
@@ -4453,6 +4455,7 @@ Yanek Martinson @file{<yanek@@mthvax.cs.miami.edu>}
 @file{rmohr@@infoac.rmi.de} (Rupert Mohr)
 @file{service@@infohh.rmi.de} (Dirk Musstopf)
 @file{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
+@file{rolf@@saans.north.de} (Rolf Nerstheimer)
 @file{nolan@@helios.unl.edu} (Michael Nolan)
 david nugent @file{<david@@csource.oz.au>}
 @file{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
@@ -4484,6 +4487,7 @@ John Theus @file{<john@@theus.rain.com>}
 @file{rmtodd@@servalan.servalan.com} (Richard Todd)
 Len Tower @file{<tower-prep@@ai.mit.edu>}
 @file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
+@file{vogel@@omega.ssw.de} (Andreas Vogel)
 @file{jv@@mh.nl} (Johan Vromans)
 @file{rna-nl!gerben@@relay.nluug.nl} (Drs. Gerben C. Th. Wierda)
 @file{frnkmth!twwells.com!bill} (T. William Wells)
