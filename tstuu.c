@@ -882,7 +882,12 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
 
 	  xfclose (eprog);
 
-	  (void) chmod ("/usr/tmp/tstuu/Chat1", S_IRWXU);
+	  if (chmod ("/usr/tmp/tstuu/Chat1",
+		     S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0)
+	    {
+	      perror ("chmod (/usr/tmp/tstuu/Chat1)");
+	      exit (EXIT_FAILURE);
+	    }
 
 	  fprintf (e, "chat-program /usr/tmp/tstuu/Chat1 \\P \\S\n");
 
@@ -970,6 +975,13 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
 	  fprintf (eprog, "exit 0\n");
 
 	  xfclose (eprog);
+
+	  if (chmod ("/usr/tmp/tstuu/Chat2",
+		     S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0)
+	    {
+	      perror ("chmod (/usr/tmp/tstuu/Chat2");
+	      exit (EXIT_FAILURE);
+	    }
 
 	  fprintf (e, "called-chat-program /bin/sh /usr/tmp/tstuu/Chat2 \\Y\n");
 	  fprintf (e, "time any\n");
