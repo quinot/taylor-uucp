@@ -138,8 +138,6 @@ struct stransfer
   long imicros;
   /* Number of bytes sent or received.  */
   long cbytes;
-  /* Number of times this particular structure has been used.  */
-  int calcs;
 };
 
 /* Reasons that a file transfer might fail.  */
@@ -178,16 +176,20 @@ extern boolean fqueue P((struct sdaemon *qdaemon, boolean *pfany));
 extern void uclear_queue P((struct sdaemon *qdaemon));
 
 /* Queue a new transfer request made by the local system.  */
-extern void uqueue_local P((struct stransfer *qtrans));
+extern boolean fqueue_local P((struct sdaemon *qdaemon,
+			       struct stransfer *qtrans));
 
 /* Queue a new transfer request made by the remote system.  */
-extern void uqueue_remote P((struct stransfer *qtrans));
+extern boolean fqueue_remote P((struct sdaemon *qdaemon,
+				struct stransfer *qtrans));
 
 /* Queue a transfer request which wants to send something.  */
-extern void uqueue_send P((struct stransfer *qtrans));
+extern boolean fqueue_send P((struct sdaemon *qdaemon,
+			      struct stransfer *qtrans));
 
 /* Queue a transfer request which wants to receiving something.  */
-extern void uqueue_receive P((struct stransfer *qtrans));
+extern boolean fqueue_receive P((struct sdaemon *qdaemon,
+				 struct stransfer *qtrans));
 
 /* Prepare to send a file by local or remote request.  */
 extern boolean flocal_send_file_init P((struct sdaemon *qdaemon,

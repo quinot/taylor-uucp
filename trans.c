@@ -45,6 +45,10 @@ static void utdequeue P((struct stransfer *));
 static void utchanalc P((struct sdaemon *qdaemon, struct stransfer *qtrans));
 __inline__ static struct stransfer *qtchan P((int ichan));
 __inline__ static void utchanfree P((struct stransfer *qtrans));
+static boolean ftcharge P((struct sdaemon *qdaemon,
+			   struct stransfer *qtrans,
+			   boolean fsend, boolean fforce));
+static boolean fcheck_queue P((struct sdaemon *qdaemon));
 static boolean ftadd_cmd P((struct sdaemon *qdaemon, const char *z,
 			    size_t cdata, int iremote, boolean flast));
 static boolean fremote_hangup_reply P((struct stransfer *qtrans,
@@ -89,6 +93,20 @@ static int iTchan;
    This is maintained for remote jobs.  */
 static struct stransfer *aqTremote[IMAX_CHAN + 1];
 
+/* A structure used to charge time to file transfers.  */
+struct scharge
+{
+  /* The transfer we are currently charging.  */
+  struct stransfer *qtrans;
+  /* The time at the last update.  */
+  long isecs;
+  long imicros;
+};
+
+/* We are always charging one send and one receive.  */
+static struct scharge sTsend;
+static struct scharge sTreceive;
+
 /* The minimum amount of time, in seconds, to wait between times we
    check the spool directory, if we are busy transferring data.  If we
    have nothing to do, we will check the spool directory regardless of
@@ -100,15 +118,6 @@ static struct stransfer *aqTremote[IMAX_CHAN + 1];
    from the return value of ixsysdep_process_time, not ixsysdep_time,
    for convenience in the routines which use it.  */
 static long iTchecktime;
-
-/* The stored time of the last received data.  */
-static long iTsecs;
-static long iTmicros;
-
-/* The transfer structure to add the most recent time slice to in
-   fgot_data, and its calcs field.  */
-static struct stransfer *qTtiming;
-static int cTtiming_alcs;
 
 /* The size of the command we have read so far in ftadd_cmd.  */
 static size_t cTcmdlen;
@@ -180,12 +189,15 @@ utdequeue (q)
 
 /* Queue up a transfer structure requested by the local system.  */
 
-void
-uqueue_local (qtrans)
+/*ARGSIGNORED*/
+boolean
+fqueue_local (qdaemon, qtrans)
+     struct sdaemon *qdaemon;
      struct stransfer *qtrans;
 {
   utdequeue (qtrans);
   utqueue (&qTlocal, qtrans, FALSE);
+  return TRUE;
 }
 
 /* Queue up a transfer structure requested by the remote system.  The
@@ -193,49 +205,62 @@ uqueue_local (qtrans)
    record it, so that any subsequent data associated with this
    channel can be routed to the right place.  */
 
-void
-uqueue_remote (qtrans)
+boolean
+fqueue_remote (qdaemon, qtrans)
+     struct sdaemon *qdaemon;
      struct stransfer *qtrans;
 {
-  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "uqueue_remote: Channel %d",
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fqueue_remote: Channel %d",
 		  qtrans->iremote);
   if (qtrans->iremote > 0)
     aqTremote[qtrans->iremote] = qtrans;
   utdequeue (qtrans);
   utqueue (&qTremote, qtrans, FALSE);
+
+  /* We just received data for this transfer, so start charging.  */
+  return ftcharge (qdaemon, qtrans, FALSE, FALSE);
 }
 
 /* Queue up a transfer with something to send.  */
 
-void
-uqueue_send (qtrans)
+boolean
+fqueue_send (qdaemon, qtrans)
+     struct sdaemon *qdaemon;
      struct stransfer *qtrans;
 {
 #if DEBUG > 0
   if (qtrans->psendfn == NULL)
-    ulog (LOG_FATAL, "uqueue_send: Bad call");
+    ulog (LOG_FATAL, "fqueue_send: Bad call");
 #endif
   utdequeue (qtrans);
   utqueue (&qTsend, qtrans, FALSE);
+
+  /* Since we're now going to wait to send data, don't charge this
+     transfer for receive time.  */
+  if (qtrans == sTreceive.qtrans)
+    return ftcharge (qdaemon, (struct stransfer *) NULL, FALSE, FALSE);
+  return TRUE;
 }
 
 /* Queue up a transfer with something to receive.  */
 
-void
-uqueue_receive (qtrans)
+boolean
+fqueue_receive (qdaemon, qtrans)
+     struct sdaemon *qdaemon;
      struct stransfer *qtrans;
 {
 #if DEBUG > 0
   if (qtrans->precfn == NULL)
-    ulog (LOG_FATAL, "uqueue_receive: Bad call");
+    ulog (LOG_FATAL, "fqueue_receive: Bad call");
 #endif
-  /* If the receive queue is empty, update the time.  Otherwise, we
-     would count dead time against the next transfer to receive
-     information.  */
-  if (qTreceive == NULL)
-    iTsecs = ixsysdep_process_time (&iTmicros);
   utdequeue (qtrans);
   utqueue (&qTreceive, qtrans, FALSE);
+
+  /* Since we are now going to wait to receive data, don't charge this
+     transfer for send time.  */
+  if (qtrans == sTsend.qtrans)
+    return ftcharge (qdaemon, (struct stransfer *) NULL, TRUE, FALSE);
+  return TRUE;
 }
 
 /* Get a new local channel number.  */
@@ -295,10 +320,7 @@ qtransalc (qcmd)
   if (q != NULL)
     utdequeue (q);
   else
-    {
-      q = (struct stransfer *) xmalloc (sizeof (struct stransfer));
-      q->calcs = 1;
-    }
+    q = (struct stransfer *) xmalloc (sizeof (struct stransfer));
   q->qnext = NULL;
   q->qprev = NULL;
   q->pqqueue = NULL;
@@ -378,11 +400,80 @@ utransfree (q)
   q->precfn = NULL;
 #endif
 
-  ++q->calcs;
+  /* Don't try to charge time to this structure any longer.  */
+  if (sTsend.qtrans == q)
+    sTsend.qtrans = NULL;
+  if (sTreceive.qtrans == q)
+    sTreceive.qtrans = NULL;
 
   utdequeue (q);
   utqueue (&qTavail, q, FALSE);
 }
+
+/* Handle timing of file tranfers.  This is called when processing
+   starts for a transfer structure.  All time up to the next call to
+   this function is charged to that transfer structure.  Sending time
+   and receiving time are charged separately.  Normally if we are
+   about to start charging the same structure we are already charging,
+   we do nothing; but if the fforce argument is TRUE, we charge the
+   time anyhow.  */
+
+static boolean
+ftcharge (qdaemon, qtrans, fsend, fforce)
+     struct sdaemon *qdaemon;
+     struct stransfer *qtrans;
+     boolean fsend;
+     boolean fforce;
+{
+  struct scharge *qcharge, *qother;
+  long inextsecs, inextmicros;
+
+  if (fsend)
+    {
+      qcharge = &sTsend;
+      qother = &sTreceive;
+    }
+  else
+    {
+      qcharge = &sTreceive;
+      qother = &sTsend;
+    }
+
+  if (! fforce && qtrans == qcharge->qtrans)
+    return TRUE;
+
+  inextsecs = ixsysdep_process_time (&inextmicros);
+  if (qcharge->qtrans != NULL)
+    {
+      qcharge->qtrans->isecs += inextsecs - qcharge->isecs;
+      qcharge->qtrans->imicros += inextmicros - qcharge->imicros;
+
+      /* If we are charging the same structure for both send and
+	 receive, update the time we are not currently charging so
+	 that we don't charge twice for the same time.  */
+      if (qcharge->qtrans == qother->qtrans)
+	{
+	  qother->isecs = inextsecs;
+	  qother->imicros = inextmicros;
+	}	  
+    }
+  
+  qcharge->qtrans = qtrans;
+  qcharge->isecs = inextsecs;
+  qcharge->imicros = inextmicros;
+
+  /* If enough time has elapsed since the last time we checked the
+     queue, check it again.  We do this here because we have already
+     gone to the trouble of getting the time.  */
+  if (inextsecs - iTchecktime >= CCHECKWAIT)
+    {
+      if (! fcheck_queue (qdaemon))
+	return FALSE;
+    }
+
+  return TRUE;
+}
+
 
 /* Gather local commands and queue them up for later processing.  Also
    recompute time based control values.  */
@@ -460,7 +551,8 @@ fqueue (qdaemon, pfany)
 	  ulog_user ((const char *) NULL);
 	  qtrans = qtransalc (&s);
 	  qtrans->psendfn = flocal_poll_file;
-	  uqueue_local (qtrans);
+	  if (! fqueue_local (qdaemon, qtrans))
+	    return FALSE;
 	  continue;
 	}
 
@@ -514,10 +606,8 @@ uclear_queue (qdaemon)
   qTreceive = NULL;
   cTchans = 0;
   iTchan = 0;
-  iTsecs = 0;
-  iTmicros = 0;
-  qTtiming = NULL;
-  cTtiming_alcs = 0;
+  sTsend.qtrans = NULL;
+  sTreceive.qtrans = NULL;
   cTcmdlen = 0;
   qTreceive_ack = NULL;
   for (i = 0; i < IMAX_CHAN + 1; i++)
@@ -675,9 +765,15 @@ floop (qdaemon)
 	    {
 	      /* We have room for an additional channel.  */
 	      q = qTlocal;
-	      uqueue_send (q);
+	      if (! fqueue_send (qdaemon, q))
+		{
+		  fret = FALSE;
+		  break;
+		}
 	      utchanalc (qdaemon, q);
 	    }
+	  if (! fret)
+	    break;
 	}
 
       q = qTsend;
@@ -694,20 +790,16 @@ floop (qdaemon)
 	}
       else
 	{
-	  long isecs, imicros;
-	  int calcs;
-	  boolean fgottime;
-	  long iendsecs = 0;
-	  long iendmicros;
-
-	  isecs = ixsysdep_process_time (&imicros);
-	  calcs = q->calcs;
-	  fgottime = FALSE;
-
 	  ulog_user (q->s.zuser);
 
 	  if (! q->fsendfile)
 	    {
+	      if (! ftcharge (qdaemon, q, TRUE, TRUE))
+		{
+		  fret = FALSE;
+		  break;
+		}
+
 	      if (! (*q->psendfn) (q, qdaemon))
 		{
 		  fret = FALSE;
@@ -716,6 +808,12 @@ floop (qdaemon)
 	    }
 	  else
 	    {
+	      if (! ftcharge (qdaemon, q, TRUE, FALSE))
+		{
+		  fret = FALSE;
+		  break;
+		}
+
 	      if (q->zlog != NULL)
 		{
 		  ulog (LOG_NORMAL, "%s", q->zlog);
@@ -777,11 +875,9 @@ floop (qdaemon)
 		      /* We must update the time now, because this
 			 call may make an entry in the statistics
 			 file.  */
+		      if (! ftcharge (qdaemon, q, TRUE, TRUE))
+			fret = FALSE;
 		      q->fsendfile = FALSE;
-		      iendsecs = ixsysdep_process_time (&iendmicros);
-		      q->isecs += iendsecs - isecs;
-		      q->imicros += iendmicros - imicros;
-		      fgottime = TRUE;
 		      if (! (*q->psendfn) (q, qdaemon))
 			fret = FALSE;
 		      break;
@@ -790,32 +886,6 @@ floop (qdaemon)
 
 	      if (! fret)
 		break;
-	    }
-
-	  /* If this is the same transfer, increment the time.  This
-	     is only safe because utransfree never actually frees a
-	     transfer structure, it just puts it on the available
-	     list.  */
-	  if (q->calcs == calcs && ! fgottime)
-	    {
-	      iendsecs = ixsysdep_process_time (&iendmicros);
-	      q->isecs += iendsecs - isecs;
-	      q->imicros += iendmicros - imicros;
-	      fgottime = TRUE;
-	    }
-
-	  /* If it's been long enough since the last time we checked
-	     the queue, check it again.  It doesn't really matter that
-	     this may not get called; it will certainly get called
-	     eventually.  */
-	  if (fgottime
-	      && iendsecs - iTchecktime >= CCHECKWAIT)
-	    {
-	      if (! fcheck_queue (qdaemon))
-		{
-		  fret = FALSE;
-		  break;
-		}
 	    }
 	}
     }
@@ -854,20 +924,9 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
      boolean fallacked;
      boolean *pfexit;
 {
-  long inextsecs, inextmicros;
   struct stransfer *q;
   int cwrote;
   boolean fret;
-
-  /* If we haven't initialized the time, initialize it now.  We also
-     set the time if there is nothing in the receive queue.  If the
-     receive queue is empty, it means that some time may have passed
-     since the last time we received data.  We don't want to count
-     that dead time against whatever transfer structure gets this
-     packet.  We also reset the time when putting the first entry on
-     the receive queue in uqueue_receive.  */
-  if (iTsecs == 0 || qTreceive == NULL)
-    iTsecs = ixsysdep_process_time (&iTmicros);
 
   if (fallacked && qTreceive_ack != NULL)
     uwindow_acked (qdaemon, TRUE);
@@ -933,45 +992,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
     }
 #endif
 
-  /* If we aren't timing this structure, add the most recent slice to
-     the structure we are timing.  If we are handling multiple
-     channels, this counts part of one transfer against another.  Too
-     bad.  We also add in the time if this might be the last call for
-     this structure.  */
-  if (qTtiming != q
-      || cTtiming_alcs != q->calcs
-      || q->fcmd
-      || ! q->frecfile
-      || cfirst == 0)
-    {
-      inextsecs = ixsysdep_process_time (&inextmicros);
-
-      /* If this is the same transfer structure, add in the time.  We
-	 can only get away with this because we know that the
-	 structure is not actually freed up (it's put on the qTavail
-	 list).  */
-      if (qTtiming != NULL
-	  && qTtiming->calcs == cTtiming_alcs)
-	{
-	  qTtiming->isecs += inextsecs - iTsecs;
-	  qTtiming->imicros += inextmicros - iTmicros;
-	}
-
-      iTsecs = inextsecs;
-      iTmicros = inextmicros;
-
-      qTtiming = q;
-      cTtiming_alcs = q->calcs;
-
-      /* If it's been sufficiently long since the last time we checked
-	 the work queue, check it again.  */
-      if (iTsecs - iTchecktime >= CCHECKWAIT)
-	{
-	  if (! fcheck_queue (qdaemon))
-	    fret = FALSE;
-	}
-    }
-
   ulog_user (q->s.zuser);
 
   fret = TRUE;
@@ -1014,13 +1034,21 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	  char *zcmd;
 	  size_t ccmd;
 
+	  if (! ftcharge (qdaemon, q, FALSE, TRUE))
+	    fret = FALSE;
 	  zcmd = q->zcmd;
 	  ccmd = q->ccmd;
 	  q->fcmd = FALSE;
 	  q->zcmd = NULL;
 	  q->ccmd = 0;
-	  fret = (*q->precfn) (q, qdaemon, zcmd, ccmd + 1);
+	  if (! (*q->precfn) (q, qdaemon, zcmd, ccmd + 1))
+	    fret = FALSE;
 	  ubuffree (zcmd);
+	}
+      else
+	{
+	  if (! ftcharge (qdaemon, q, FALSE, FALSE))
+	    fret = FALSE;
 	}
 
       if (pfexit != NULL
@@ -1033,8 +1061,11 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
     {
       /* We're either not receiving a file or the file transfer is
 	 complete.  */
+      if (! ftcharge (qdaemon, q, FALSE, TRUE))
+	fret = FALSE;
       q->frecfile = FALSE;
-      fret = (*q->precfn) (q, qdaemon, zfirst, cfirst);
+      if (! (*q->precfn) (q, qdaemon, zfirst, cfirst))
+	fret = FALSE;
       if (fret && csecond > 0)
 	return fgot_data (qdaemon, zsecond, csecond,
 			  (const char *) NULL, (size_t) 0,
@@ -1048,6 +1079,9 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
     }
   else
     {
+      if (! ftcharge (qdaemon, q, FALSE, FALSE))
+	fret = FALSE;
+
       if (q->zlog != NULL)
 	{
 	  ulog (LOG_NORMAL, "%s", q->zlog);
@@ -1091,7 +1125,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 		      break;
 		    }
 #endif
-
 		  q->cbytes += cfirst;
 		  q->ipos += cfirst;
 		}
@@ -1198,9 +1231,8 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
 	q = qtransalc ((struct scmd *) NULL);
 	q->psendfn = fremote_hangup_reply;
 	q->iremote = iremote;
-	uqueue_remote (q);
+	return fqueue_remote (qdaemon, q);
       }
-      return TRUE;
     case 'N':
       /* This means a hangup request is being denied; we just ignore
 	 this and wait for further commands.  */
