@@ -1,5 +1,5 @@
 ''' $Id$
-.TH uustat 1 "Taylor UUCP 1.05"
+.TH uustat 1 "Taylor UUCP 1.06"
 .SH NAME
 uustat \- UUCP status inquiry and control
 .SH SYNOPSIS
@@ -341,7 +341,7 @@ or
 .B \-\-mail
 options.
 .TP 5
-.B \-W, \-\-comment
+.B \-W comment, \-\-comment comment
 Specify a comment to be included in mail sent with the
 .B \-M,
 .B \-\-mail,
@@ -349,6 +349,17 @@ Specify a comment to be included in mail sent with the
 or
 .B \-\-notify
 options.
+.TP 5
+.B \-B lines, \-\-mail-lines lines
+When the
+.B \-M,
+.B \-\-mail,
+.B \-N,
+or
+.B \-\-notify
+options are used to send mail about an execution with standard input,
+this option controls the number of lines of standard input to include
+in the message.  The default is 100.
 .TP 5
 .B \-Q, \-\-no-list
 Do not actually list the job, but only take any actions indicated by
