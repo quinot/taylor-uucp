@@ -1,0 +1,27 @@
+Mon Nov 25 20:56:39 1991  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* tstuu.c: Bob Denny: add definitions for FD_SET, FD_ZERO and
+	FD_ISSET.
+
+	* config.c: Bob Denny: add explicit externs for strcmp and
+	strcasecmp.
+
+	* sys2.unx: the fread_blocking and fwrite_blocking fields were
+	not getting initialized correctly in the TCP support routines.
+
+	* sysh.unx, sys2.unx, sys5.unx, tstuu.c: Marty Shannon: added
+	configuration option HAVE_SYSWAIT_H.
+
+	* bnu.c (fbnu_find_port, fbnu_read_dialer_info), v2.c
+	(fv2_find_port): Marty Shannon: the ireliable field of ports
+	and dialers was	not getting initialized.
+
+Sun Nov 24 15:06:37 1991  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* tcp.c (itcp_port_number): Michael Haberler: wasn't calling
+	htons if passed a numeric string.
+
+Sat Nov 23 13:43:52 1991  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* Released version 1.01 to alt.sources and uunet
+
