@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.22  1992/02/29  04:07:08  ian
    Added -j option to uucp and uux
 
@@ -545,11 +548,18 @@ main (argc, argv)
 		  || strchr (zconst, '?') != NULL
 		  || strchr (zconst, '[') != NULL)
 		{
+		  const  char *zuse;
+
+		  if (qfromsys->zlocalname != NULL)
+		    zuse = qfromsys->zlocalname;
+		  else
+		    zuse = zLocalname;
+
 		  s.bcmd = 'X';
-		  zto = (char *) alloca (strlen (zLocalname)
+		  zto = (char *) alloca (strlen (zuse)
 					 + strlen (zdestfile)
 					 + sizeof "!");
-		  sprintf (zto, "%s!%s", zLocalname, zdestfile);
+		  sprintf (zto, "%s!%s", zuse, zdestfile);
 		  zto = xstrdup (zto);
 		}
 	      else
