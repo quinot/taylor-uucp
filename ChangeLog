@@ -1,7 +1,16 @@
 2002-02-08  Ian Lance Taylor  <ian@airs.com>
 
-	* unix/work.c (fsysdep_get_work_init): Add cmax parameter.  Change
-	all callers.
+	* unix/umode.c: New file.
+	* unix/access.c (fsysdep_daemon_access): Change error message if
+	stat returns EACCES.
+	* uucp.c (uccopy): Use ixsysdep_user_file_mode to get the file
+	mode.
+	* system.h (ixsysdep_user_file_mode): Declare.
+	* unix/Makefile.am (libunix_a_SOURCES): Add umode.c.
+	* unix/Makefile.in: Rebuild.
+
+	* Roland McGrath: unix/work.c (fsysdep_get_work_init): Add cmax
+	parameter.  Change all callers.
 	(fsysdep_get_work): Likewise.
 	* system.h (fsysdep_get_work_init): Update declaration.
 	(fsysdep_get_work): Likewise.

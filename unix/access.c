@@ -53,10 +53,15 @@ fsysdep_daemon_access (zfile)
     return TRUE;
 
  if (stat ((char *) zfile, &s) != 0)
-     {
-      ulog (LOG_ERROR, "stat (%s): %s", zfile, strerror (errno));
-      return FALSE;
-    }
+   {
+     /* If we get an EACCES error, we can't read the file using our
+        euid.  Therefore, the daemon will not have access to the file.  */
+     if (errno == EACCES)
+       ulog (LOG_ERROR, "%s: cannot be read by daemon", zfile);
+     else
+       ulog (LOG_ERROR, "stat (%s): %s", zfile, strerror (errno));
+     return FALSE;
+   }
 
   /* If our euid is not our uid, but it is the file's uid, see if the
      owner has read access.  Otherwise, if our egid is not our gid,

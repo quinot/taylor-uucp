@@ -90,7 +90,7 @@ libunix_a_SOURCES = access.c addbas.c app3.c app4.c basnam.c bytfre.c \
 	serial.c signal.c sindir.c size.c sleep.c spawn.c splcmd.c \
 	splnam.c spool.c srmdir.c statsb.c status.c sync.c tcp.c \
 	time.c tli.c tmpfil.c trunc.c uacces.c ufopen.c uid.c ultspl.c \
-	unknwn.c uuto.c walk.c wldcrd.c work.c xqtfil.c xqtsub.c
+	umode.c unknwn.c uuto.c walk.c wldcrd.c work.c xqtfil.c xqtsub.c
 
 libunix_a_LIBADD = $(UNIXOBJS)
 EXTRA_libunix_a_SOURCES = getcwd.c mkdir.c rmdir.c dirent.c dup2.c ftw.c \
@@ -128,9 +128,9 @@ am_libunix_a_OBJECTS = access.$(OBJEXT) addbas.$(OBJEXT) app3.$(OBJEXT) \
 	statsb.$(OBJEXT) status.$(OBJEXT) sync.$(OBJEXT) tcp.$(OBJEXT) \
 	time.$(OBJEXT) tli.$(OBJEXT) tmpfil.$(OBJEXT) trunc.$(OBJEXT) \
 	uacces.$(OBJEXT) ufopen.$(OBJEXT) uid.$(OBJEXT) \
-	ultspl.$(OBJEXT) unknwn.$(OBJEXT) uuto.$(OBJEXT) walk.$(OBJEXT) \
-	wldcrd.$(OBJEXT) work.$(OBJEXT) xqtfil.$(OBJEXT) \
-	xqtsub.$(OBJEXT)
+	ultspl.$(OBJEXT) umode.$(OBJEXT) unknwn.$(OBJEXT) \
+	uuto.$(OBJEXT) walk.$(OBJEXT) wldcrd.$(OBJEXT) work.$(OBJEXT) \
+	xqtfil.$(OBJEXT) xqtsub.$(OBJEXT)
 libunix_a_OBJECTS = $(am_libunix_a_OBJECTS)
 
 DEFS = @DEFS@
@@ -176,10 +176,10 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/tmpfil.Po $(DEPDIR)/trunc.Po \
 @AMDEP_TRUE@	$(DEPDIR)/uacces.Po $(DEPDIR)/ufopen.Po \
 @AMDEP_TRUE@	$(DEPDIR)/uid.Po $(DEPDIR)/ultspl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/unknwn.Po $(DEPDIR)/uuto.Po \
-@AMDEP_TRUE@	$(DEPDIR)/walk.Po $(DEPDIR)/wldcrd.Po \
-@AMDEP_TRUE@	$(DEPDIR)/work.Po $(DEPDIR)/xqtfil.Po \
-@AMDEP_TRUE@	$(DEPDIR)/xqtsub.Po
+@AMDEP_TRUE@	$(DEPDIR)/umode.Po $(DEPDIR)/unknwn.Po \
+@AMDEP_TRUE@	$(DEPDIR)/uuto.Po $(DEPDIR)/walk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/wldcrd.Po $(DEPDIR)/work.Po \
+@AMDEP_TRUE@	$(DEPDIR)/xqtfil.Po $(DEPDIR)/xqtsub.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -290,6 +290,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ufopen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/uid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ultspl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/umode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unknwn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/uuto.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/walk.Po@am__quote@

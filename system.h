@@ -740,6 +740,11 @@ extern char *zsysdep_in_dir P((const char *zdir, const char *zfile));
    It should return 0 on error.  */
 extern unsigned int ixsysdep_file_mode P((const char *zfile));
 
+/* Get the mode of a file using the permissions of the user who
+   invoked the program.  This should return a Unix style file mode.
+   It should return 0 on error.  */
+extern unsigned int ixsysdep_user_file_mode P((const char *zfile));
+
 /* See whether the user has access to a file.  This is called by uucp
    and uux to prevent copying of a file which uucp can read but the
    user cannot.  If access is denied, this should log an error message
