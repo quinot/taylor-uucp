@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1991/12/20  00:42:24  ian
+   Clear user name from error message given by getting next command
+
    Revision 1.26  1991/12/18  05:12:00  ian
    Added -l option to uucico to prompt for login name once and then exit
 
@@ -707,6 +710,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   int cdial_proto_params;
   struct sproto_param *qdial_proto_params;
   int idial_reliable;
+  long istart_time;
 
   *pfcalled = FALSE;
 
@@ -772,6 +776,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   ulog (LOG_NORMAL, "Login successful", qsys->zname);
 
   *pfcalled = TRUE;
+  istart_time = isysdep_time ();
 
   /* We should now see "Shere" from the other system.  Apparently
      some systems send "Shere=foo" where foo is the remote name.  */
@@ -1057,7 +1062,8 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 	  }
       }
 
-    ulog (LOG_NORMAL, "Call complete");
+    ulog (LOG_NORMAL, "Call complete (%ld seconds)",
+	  isysdep_time () - istart_time);
 
     if (! fret)
       {
@@ -1150,6 +1156,7 @@ static boolean faccept_call (zlogin, qport)
      const char *zlogin;
      struct sport *qport;
 {
+  long istart_time;
   int cport_proto_params, cdial_proto_params;
   struct sproto_param *qport_proto_params, *qdial_proto_params;
   int iport_reliable, idial_reliable;
@@ -1165,6 +1172,7 @@ static boolean faccept_call (zlogin, qport)
   const char *zuse_local;
 
   ulog (LOG_NORMAL, "Incoming call");
+  istart_time = isysdep_time ();
 
   /* Figure out protocol parameters determined by the port.  If no
      port was specified we're reading standard input, so try to get
@@ -1655,7 +1663,8 @@ static boolean faccept_call (zlogin, qport)
 	  }
       }
 
-    ulog (LOG_NORMAL, "Call complete");
+    ulog (LOG_NORMAL, "Call complete (%ld seconds)",
+	  isysdep_time () - istart_time);
     return fret;
   }
 }
