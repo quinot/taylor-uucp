@@ -322,5 +322,5 @@ sys5.o: uucp.h conf.h policy.h system.h sysdep.h
 sys6.o: uucp.h conf.h policy.h system.h sysdep.h
 sys7.o: uucp.h conf.h policy.h system.h sysdep.h
 version.o: uucp.h conf.h policy.h
-getopt.o: uucp.h conf.h policy.h getopt.h
+getopt.o: getopt.h
 alloca.o: uucp.h conf.h policy.h
