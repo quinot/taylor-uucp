@@ -78,6 +78,8 @@ RANLIB = @RANLIB@
 
 LN_S = @LN_S@
 
+MAKEINFO = makeinfo
+
 #
 # Nothing else to configure
 #
@@ -118,8 +120,8 @@ UULIBS = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 
 all: $(PROGRAMS) $(TSTUU) $(UUDIR)
 
-install: $(PROGRAMS) uucp.info $(UUDIR)
-	-mkdir $(sbindir) $(bindir) $(infodir)
+install: $(PROGRAMS) $(UUDIR)
+	-mkdir $(sbindir) $(bindir)
 	-ln $(sbindir)/uucico $(sbindir)/uucico.old
 	-ln $(sbindir)/uuxqt $(sbindir)/uuxqt.old
 	-ln $(sbindir)/uusched $(sbindir)/uusched.old
@@ -161,11 +163,6 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	$(INSTALL_DATA) $(srcdir)/uux.1 $(man1dir)/uux$(man1ext)
 	$(INSTALL_DATA) $(srcdir)/uucp.1 $(man1dir)/uucp$(man1ext)
 	$(INSTALL_DATA) $(srcdir)/uustat.1 $(man1dir)/uustat$(man1ext)
-	-$(INSTALL_DATA) $(srcdir)/uucp.info $(infodir)/uucp.info
-	-$(INSTALL_DATA) $(srcdir)/uucp.info-1 $(infodir)/uucp.info-1
-	-$(INSTALL_DATA) $(srcdir)/uucp.info-2 $(infodir)/uucp.info-2
-	-$(INSTALL_DATA) $(srcdir)/uucp.info-3 $(infodir)/uucp.info-3
-	-$(INSTALL_DATA) $(srcdir)/uucp.info-4 $(infodir)/uucp.info-4
 
 uninstall:
 	rm -f $(sbindir)/uucico $(sbindir)/uuxqt $(sbindir)/uusched
@@ -285,8 +282,15 @@ dist:
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
 	compress taylor-uucp-$(VERSION).tar
 
+info: uucp.info
+
 uucp.info: uucp.texi
-	makeinfo uucp.texi
+	$(MAKEINFO) uucp.texi
+
+install-info:
+	for i in uucp.info*; do \
+	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
+	done
 
 conf.h: conf.h.stamp
 
