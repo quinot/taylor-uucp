@@ -1,7 +1,7 @@
 /* tinit.c
    Initialize for reading Taylor UUCP configuration files.
 
-   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -66,6 +66,10 @@ static const struct cmdtab_offset asCmds[] =
       offsetof (struct sprocess, zdebugfile), NULL },
   { "debug", UUCONF_CMDTABTYPE_FN | 0,
       offsetof (struct sprocess, zdebug), itdebug },
+  { "strip-login", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct sprocess, fstrip_login), NULL },
+  { "strip-proto", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct sprocess, fstrip_proto), NULL },
   { "max-uuxqts", UUCONF_CMDTABTYPE_INT,
       offsetof (struct sprocess, cmaxuuxqts), NULL },
   { "run-uuxqt", UUCONF_CMDTABTYPE_STRING,
