@@ -1,5 +1,7 @@
 2002-02-08  Ian Lance Taylor  <ian@airs.com>
 
+	* install-sh: Replace with current version from automake.
+
 	* configure.in: Don't put AC_MSG_WARN for ftime on the same line
 	as AC_MSG_RESULT.
 	* configure: Rebuild.
