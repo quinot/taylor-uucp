@@ -1,7 +1,7 @@
 /* spool.c
    Find a file in the spool directory.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -203,7 +203,9 @@ zsfind_file (zsimple, zsystem, bgrade)
 #if ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 && ! SPOOLDIR_TAYLOR
   if (*zsimple == 'X')
     {
-      size_t clen;
+      static char *zbuf;
+      static size_t cbuf;
+      size_t clen, cwant;
 
       /* Files beginning with X. are execute files.  It is important
 	 for security reasons that we know the system which created
@@ -216,22 +218,19 @@ zsfind_file (zsimple, zsystem, bgrade)
 	 too short, but hopefully no problem will occur since any
 	 System V systems will be using HDB or SVR4 or TAYLOR.  */
       clen = strlen (zsimple);
-      if (clen <= 7 || strncmp (zsimple + 2, zsystem, clen - 7) != 0)
+      if (clen < 5)
 	{
-	  static char *zbuf;
-	  static size_t cbuf;
-	  size_t cwant;
-
-	  cwant = strlen (zsystem) + 8;
-	  if (cwant > cbuf)
-	    {
-	      zbuf = (char *) xrealloc ((pointer) zbuf, cwant);
-	      cbuf = cwant;
-	    }
-	  sprintf (zbuf, "X.%s%s", zsystem,
-		   clen < 5 ? zsimple : zsimple + clen - 5);
-	  zsimple = zbuf;
+	  ulog (LOG_ERROR, "Bad file name (too short) %s", zsimple);
+	  return NULL;
 	}
+      cwant = strlen (zsystem) + 8;
+      if (cwant > cbuf)
+	{
+	  zbuf = (char *) xrealloc ((pointer) zbuf, cwant);
+	  cbuf = cwant;
+	}
+      sprintf (zbuf, "X.%s%s", zsystem, zsimple + clen - 5);
+      zsimple = zbuf;
     }
 #endif /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 && ! SPOOLDIR_TAYLOR */
 
