@@ -56,6 +56,8 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
   e = fopen (qglobal->qprocess->zv2systems, "r");
   if (e == NULL)
     {
+      if (FNO_SUCH_FILE ())
+	return UUCONF_NOT_FOUND;
       qglobal->ierrno = errno;
       qglobal->zfilename = qglobal->qprocess->zv2systems;
       return (UUCONF_FOPEN_FAILED
@@ -353,7 +355,6 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	      continue;
 
 	    /* The first field is username,machinename */
-
 	    zcomma = strchr (pzsplit[0], ',');
 	    if (zcomma == NULL)
 	      continue;

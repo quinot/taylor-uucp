@@ -75,6 +75,8 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
       e = fopen (*pz, "r");
       if (e == NULL)
 	{
+	  if (FNO_SUCH_FILE ())
+	    continue;
 	  qglobal->ierrno = errno;
 	  iret = UUCONF_FOPEN_FAILED | UUCONF_ERROR_ERRNO;
 	  break;

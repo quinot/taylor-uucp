@@ -47,6 +47,8 @@ uuconf_taylor_dialer_names (pglobal, ppzdialers)
   char **pz;
   int iret;
   
+  *ppzdialers = NULL;
+
   as[0].uuconf_zcmd = "dialer";
   as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 2;
   as[0].uuconf_pvar = (pointer) ppzdialers;
@@ -63,6 +65,8 @@ uuconf_taylor_dialer_names (pglobal, ppzdialers)
       e = fopen (*pz, "r");
       if (e == NULL)
 	{
+	  if (FNO_SUCH_FILE ())
+	    continue;
 	  qglobal->ierrno = errno;
 	  iret = UUCONF_FOPEN_FAILED | UUCONF_ERROR_ERRNO;
 	  break;
@@ -84,6 +88,10 @@ uuconf_taylor_dialer_names (pglobal, ppzdialers)
       qglobal->zfilename = *pz;
       return iret | UUCONF_ERROR_FILENAME;
     }
+
+  if (*ppzdialers == NULL)
+    iret = _uuconf_iadd_string (qglobal, (char *) NULL, FALSE, FALSE,
+				ppzdialers, (pointer) NULL);
 
   return UUCONF_SUCCESS;
 }

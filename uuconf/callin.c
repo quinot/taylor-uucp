@@ -84,6 +84,8 @@ uuconf_callin (pglobal, zlogin, zpassword)
       e = fopen (*pz, "r");
       if (e == NULL)
 	{
+	  if (FNO_SUCH_FILE ())
+	    continue;
 	  qglobal->ierrno = errno;
 	  iret = UUCONF_FOPEN_FAILED | UUCONF_ERROR_ERRNO;
 	  break;
@@ -103,7 +105,8 @@ uuconf_callin (pglobal, zlogin, zpassword)
       qglobal->zfilename = *pz;
       iret |= UUCONF_ERROR_FILENAME;
     }
-  else if (strcmp (zfilepass, zpassword) != 0)
+  else if (zfilepass == NULL
+	   || strcmp (zfilepass, zpassword) != 0)
     iret = UUCONF_NOT_FOUND;
 
   if (zfilepass != NULL)

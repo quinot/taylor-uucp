@@ -64,6 +64,8 @@ uuconf_taylor_dialer_info (pglobal, zname, qdialer)
       e = fopen (*pz, "r");
       if (e == NULL)
 	{
+	  if (FNO_SUCH_FILE ())
+	    continue;
 	  qglobal->ierrno = errno;
 	  iret = UUCONF_FOPEN_FAILED | UUCONF_ERROR_ERRNO;
 	  break;

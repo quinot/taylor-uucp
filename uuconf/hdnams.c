@@ -59,6 +59,8 @@ uuconf_hdb_dialer_names (pglobal, ppzdialers)
       e = fopen (*pz, "r");
       if (e == NULL)
 	{
+	  if (FNO_SUCH_FILE ())
+	    continue;
 	  qglobal->ierrno = errno;
 	  iret = UUCONF_FOPEN_FAILED | UUCONF_ERROR_ERRNO;
 	  break;
@@ -103,5 +105,5 @@ uuconf_hdb_dialer_names (pglobal, ppzdialers)
     iret = _uuconf_iadd_string (qglobal, (char *) NULL, FALSE, FALSE,
 				ppzdialers, (pointer) NULL);
 
-  return iret;
+  return UUCONF_SUCCESS;
 }

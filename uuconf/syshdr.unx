@@ -64,6 +64,10 @@
    Sysfiles file.  */
 #define HDB_SEPARATOR "/"
 
+/* A macro to check whether fopen failed because the file did not
+   exist.  */
+#define FNO_SUCH_FILE() (errno == ENOENT)
+
 #if ! HAVE_STRERROR
 
 /* We need a definition for strerror; normally the function in the

@@ -57,6 +57,8 @@ uuconf_v2_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
   e = fopen (qglobal->qprocess->zv2devices, "r");
   if (e == NULL)
     {
+      if (FNO_SUCH_FILE ())
+	return UUCONF_NOT_FOUND;
       qglobal->ierrno = errno;
       qglobal->zfilename = qglobal->qprocess->zv2devices;
       return (UUCONF_FOPEN_FAILED

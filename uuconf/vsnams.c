@@ -53,6 +53,9 @@ uuconf_v2_system_names (pglobal, ppzsystems, falias)
   e = fopen (qglobal->qprocess->zv2systems, "r");
   if (e == NULL)
     {
+      if (FNO_SUCH_FILE ())
+	return _uuconf_iadd_string (qglobal, (char *) NULL, FALSE, FALSE,
+				    ppzsystems, (pointer) NULL);
       qglobal->ierrno = errno;
       qglobal->zfilename = qglobal->qprocess->zv2systems;
       return (UUCONF_FOPEN_FAILED
