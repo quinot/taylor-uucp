@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/04/01  21:58:35  ian
+   Added CLOSE_LOGFILES configuration parameter
+
    Revision 1.28  1992/03/28  19:40:26  ian
    Close log and statistics file at each master/slave role switch
 
@@ -144,7 +147,7 @@ extern int vfprintf ();
 static const char *zldate_and_time P((void));
 
 /* The function to call when a LOG_FATAL error occurs.  */
-static void (*fLfatal) P((void));
+static void (*pfLfatal) P((void));
 
 /* Whether to go to a file.  */
 static boolean fLfile;
@@ -201,6 +204,14 @@ volatile sig_atomic_t afLog_signal[INDEXSIG_COUNT];
 
 /* Signal names to use when logging signals.  */
 static const char * const azSignal_names[INDEXSIG_COUNT] = INDEXSIG_NAMES;
+
+/* If not NULL, ulog calls this function before outputting anything.
+   This is used to support cu.  */
+void (*pfLstart) P((void));
+
+/* If not NULL, ulog calls this function after outputting everything.
+   This is used to support cu.  */
+void (*pfLend) P((void));
 
 /* Set the function to call on a LOG_FATAL error.  */
 
@@ -208,7 +219,7 @@ void
 ulog_fatal_fn (pfn)
      void (*pfn) P((void));
 {
-  fLfatal = pfn;
+  pfLfatal = pfn;
 }
 
 /* Decide whether to send log message to the file or not.  */
@@ -408,8 +419,8 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 		 safe way to report this problem, since we may not be
 		 able to write to stderr (it may, for example, be
 		 attached to the incoming call).  */
-	      if (fLfatal != NULL)
-		(*fLfatal) ();
+	      if (pfLfatal != NULL)
+		(*pfLfatal) ();
 	      usysdep_exit (FALSE);
 	    }
 	}
@@ -421,6 +432,9 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (e == NULL)
 	return;
     }
+
+  if (pfLstart != NULL)
+    (*pfLstart) ();
 
   edebug = NULL;
 #if DEBUG > 1
@@ -563,10 +577,13 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (edebug != NULL)
     (void) fflush (edebug);
 
+  if (pfLend != NULL)
+    (*pfLend) ();
+
   if (ttype == LOG_FATAL)
     {
-      if (fLfatal != NULL)
-	(*fLfatal) ();
+      if (pfLfatal != NULL)
+	(*pfLfatal) ();
       usysdep_exit (FALSE);
     }
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.68  1992/04/14  17:34:03  ian
+   Zacharias Beckman: minor touchups for NeXT
+
    Revision 1.67  1992/04/02  22:51:09  ian
    Add gcc 2.0 format checking to ulog, and fixed discovered problems
 
@@ -1411,3 +1414,11 @@ extern openfile_t eRecfile;
 
 /* Device name to log.  This is set by fport_open.  It may be NULL.  */
 extern char *zLdevice;
+
+/* If not NULL, ulog calls this function before outputting anything.
+   This is used to support cu.  */
+extern void (*pfLstart) P((void));
+
+/* If not NULL, ulog calls this function after outputting everything.
+   This is used to support cu.  */
+extern void (*pfLend) P((void));
