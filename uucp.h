@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.69  1992/04/22  22:34:11  ian
+   Added pfLstart and pfLend functions for ulog
+
    Revision 1.68  1992/04/14  17:34:03  ian
    Zacharias Beckman: minor touchups for NeXT
 
@@ -271,10 +274,11 @@
 #if HAVE_SIG_ATOMIC_T_IN_TYPES_H
 #include <sys/types.h>
 #else /* ! HAVE_SIG_ATOMIC_T_IN_TYPES_H */
-#ifndef sig_atomic_t
+#ifndef SIG_ATOMIC_T
 /* There is no portable definition for sig_atomic_t.  */
-#define sig_atomic_t char
-#endif /* ! defined (sig_atomic_t) */
+#define SIG_ATOMIC_T char
+#endif /* ! defined (SIG_ATOMIC_T) */
+typedef SIG_ATOMIC_T sig_atomic_t;
 #endif /* ! HAVE_SIG_ATOMIC_T_IN_TYPES_H */
 #endif /* ! HAVE_SIG_ATOMIC_T_IN_SIGNAL_H */
 
