@@ -186,6 +186,7 @@ AC_HAVE_FUNCS(getdtablesize sysconf)
 AC_HAVE_FUNCS(setpgrp setsid)
 AC_HAVE_FUNCS(gethostname uname)
 AC_HAVE_FUNCS(gettimeofday)
+AC_HAVE_FUNCS(ftw)
 dnl Check for the SCO buggy ftime
 AC_FUNC_CHECK(ftime,
 [AC_TEST_PROGRAM([
