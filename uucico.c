@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.76  1992/03/10  21:47:39  ian
+   Added protocol command for ports
+
    Revision 1.75  1992/03/09  20:14:37  ian
    Ted Lindgreen: added max-remote-debug command
 
@@ -713,6 +716,14 @@ main (argc, argv)
 
   ulog_close ();
   ustats_close ();
+
+#ifdef SIGTERM
+  /* If we got a SIGTERM, perhaps because the system is going down,
+     don't run uuxqt.  We go ahead and run it for any other signal,
+     since I think they indicate more temporary conditions.  */
+  if (iSignal == SIGTERM)
+    fuuxqt = FALSE;
+#endif
 
   if (fuuxqt)
     {
