@@ -8,6 +8,11 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
 AC_PROG_INSTALL
+dnl AR was added to the Makefiles to allow building on funny systems.
+dnl Adding it here allows the environment value of AR at configure time to
+dnl be cached in config.status and in the Makefiles.
+AR=${AR-ar}
+AC_SUBST(AR)
 AC_PROG_RANLIB
 AC_ISC_POSIX
 AC_MINIX

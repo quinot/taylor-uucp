@@ -74,6 +74,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
+AR = @AR@
 RANLIB = @RANLIB@
 
 LN_S = @LN_S@
@@ -92,7 +93,7 @@ VERSION = 1.04
 
 MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
-MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)' VERSION='$(VERSION)'
+MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' AR='$(AR)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)' VERSION='$(VERSION)'
 
 PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uusched \
 	uulog uuto uupick cu

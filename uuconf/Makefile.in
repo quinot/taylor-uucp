@@ -15,6 +15,7 @@ oldconfigdir = /usr/lib/uucp
 # These values are overridden by the top level Makefile
 CC = @CC@
 CFLAGS = @CFLAGS@
+AR = @AR@
 RANLIB = @RANLIB@
 LN_S = @LN_S@
 
@@ -41,7 +42,7 @@ all: libuuconf.a
 
 libuuconf.a: $(OBJS)
 	rm -f libuuconf.a
-	ar qc libuuconf.a $(OBJS)
+	$(AR) rc libuuconf.a $(OBJS)
 	-$(RANLIB) libuuconf.a
 
 .c.o:

@@ -11,6 +11,7 @@ SHELL=/bin/sh
 # These are overridden by the call from the top level Makefile
 CC = @CC@
 CFLAGS = @CFLAGS@
+AR = @AR@
 RANLIB = @RANLIB@
 prefix = /usr/local
 sbindir = $(prefix)/lib/uucp
@@ -45,7 +46,7 @@ realclean: distclean
 
 libunix.a: $(OBJS)
 	rm -f libunix.a
-	ar qc libunix.a $(OBJS)
+	$(AR) rc libunix.a $(OBJS)
 	-$(RANLIB) libunix.a
 
 .c.o:

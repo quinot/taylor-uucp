@@ -10,6 +10,7 @@ SHELL=/bin/sh
 # These are overridden by the call from the top level Makefile
 CC = @CC@
 CFLAGS = @CFLAGS@
+AR = @AR@
 RANLIB = @RANLIB@
 
 srcdir = @srcdir@
@@ -34,7 +35,7 @@ realclean: distclean
 
 libuucp.a: $(OBJS)
 	rm -f libuucp.a
-	ar qc libuucp.a $(OBJS)
+	$(AR) rc libuucp.a $(OBJS)
 	-$(RANLIB) libuucp.a
 
 .c.o:
