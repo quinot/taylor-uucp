@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/12/20  00:01:54  ian
+   Franc,ois Pinard: don't crash 'f' protocol because of an illegal byte
+
    Revision 1.4  1991/11/16  00:31:01  ian
    Increased default 't' and 'f' protocol timeouts
 
@@ -105,6 +108,26 @@ struct scmdtab asFproto_params[] =
   { "retries", CMDTABTYPE_INT, (pointer) &cFmaxretries, NULL },
   { NULL, 0, NULL, NULL }
 };
+
+/* Statistics.  */
+
+/* The number of data bytes sent in files.  */
+static long cFsent_data;
+
+/* The number of actual bytes sent in files.  */
+static long cFsent_bytes;
+
+/* The number of data bytes received in files.  */
+static long cFrec_data;
+
+/* The number of actual bytes received in files.  */
+static long cFrec_bytes;
+
+/* The number of file retries when sending.  */
+static long cFsend_retries;
+
+/* The number of file retries when receiving.  */
+static long cFrec_retries;
 
 /* Start the protocol.  */
 
@@ -112,6 +135,13 @@ boolean
 ffstart (fmaster)
      boolean fmaster;
 {
+  cFsent_data = 0;
+  cFsent_bytes = 0;
+  cFrec_data = 0;
+  cFrec_bytes = 0;
+  cFsend_retries = 0;
+  cFrec_retries = 0;
+
   /* Allow XON/XOFF to work.  */
   if (! fport_set (PORTSETTING_SEVEN))
     return FALSE;
@@ -130,6 +160,12 @@ ffshutdown ()
 {
   xfree ((pointer) zFbuf);
   zFbuf = NULL;
+  ulog (LOG_NORMAL,
+	"Protocol 'f': sent %ld bytes for %ld, received %ld bytes for %ld",
+	cFsent_bytes, cFsent_data, cFrec_bytes, cFrec_data);
+  if (cFsend_retries != 0 || cFrec_retries != 0)
+    ulog (LOG_NORMAL, "Protocol 'f' file retries: %ld sending, %ld receiving",
+	  cFsend_retries, cFrec_retries);
   return TRUE;
 }
 
@@ -174,6 +210,8 @@ ffsenddata (zdata, cdata)
   char *ze;
   register unsigned int itmpchk;
       
+  cFsent_data += cdata;
+
   ze = ab;
   itmpchk = iFcheck;
   while (cdata-- > 0)
@@ -230,6 +268,8 @@ ffsenddata (zdata, cdata)
     }
 
   iFcheck = itmpchk;
+
+  cFsent_bytes += ze - ab;
 
   /* Passing FALSE tells fsend_data not to bother looking for incoming
      information, since we really don't expect any.  */
@@ -339,6 +379,9 @@ ffprocess_data (pfexit, pcneed)
 		  /* Pass any initial data.  */
 		  if (zto != zstart)
 		    {
+		      /* Don't count the checksum in the received bytes.  */
+		      cFrec_bytes += zfrom - zstart - 2;
+		      cFrec_data += zto - zstart;
 		      if (! fgot_data (zstart, zto - zstart, FALSE,
 				       TRUE, pfexit))
 			return FALSE;
@@ -412,9 +455,12 @@ ffprocess_data (pfexit, pcneed)
 	    ulog (LOG_DEBUG, "ffprocess: Calling fgot_data with %d bytes",
 		  zto - zstart);
 #endif
+	  cFrec_data += zto - zstart;
 	  if (! fgot_data (zstart, zto - zstart, FALSE, TRUE, pfexit))
 	    return FALSE;
 	}
+
+      cFrec_bytes += zfrom - zstart;
 
       iPrecstart = (iPrecstart + zfrom - zstart) % CRECBUFLEN;
     }
@@ -525,6 +571,7 @@ fffile (fstart, fsend, pfredo)
 		}
 	      *pfredo = TRUE;
 	      iFcheck = 0xffff;
+	      ++cFsend_retries;
 	      return TRUE;
 	    }
 
@@ -582,6 +629,7 @@ fffile (fstart, fsend, pfredo)
 	      iFcheck = 0xffff;
 	      bFspecial = 0;
 	      fFfile = TRUE;
+	      ++cFrec_retries;
 
 	      /* Send an R to tell the other side to resend the file.  */
 	      return ffsendcmd ("R");

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/17  22:13:14  ian
+   David Nugent: zero out garbage before sending data
+
    Revision 1.7  1991/12/11  15:02:45  ian
    Tweaked initialization sequence slightly for better packet loss response
 
@@ -238,6 +241,31 @@ struct scmdtab asGproto_params[] =
   { "garbage", CMDTABTYPE_INT, (pointer) &cGgarbage_data, NULL },
   { NULL, 0, NULL, NULL }
 };
+
+/* Statistics.  */
+
+/* Number of packets we have sent.  */
+static long cGsent_packets;
+
+/* Number of packets we have resent (these are not included in
+   cGsent_packets).  */
+static long cGresent_packets;
+
+/* Number of packets we have delayed sending (these should not be
+   counted in cGresent_packets).  */
+static long cGdelayed_packets;
+
+/* Number of packets we have received.  */
+static long cGrec_packets;
+
+/* Number of packets rejected because the header was bad.  */
+static long cGbad_hdr;
+
+/* Number of packets rejected because the checksum was bad.  */
+static long cGbad_checksum;
+
+/* Number of packets received out of order.  */
+static long cGbad_order;
 
 /* Local functions.  */
 
@@ -279,6 +307,12 @@ fgstart (fmaster)
   iGretransmit_seq = -1;
   iGrecseq = 0;
   iGlocal_ack = 0;
+  cGsent_packets = 0;
+  cGresent_packets = 0;
+  cGrec_packets = 0;
+  cGbad_hdr = 0;
+  cGbad_checksum = 0;
+  cGbad_order = 0;
   
   /* We must determine the segment size based on the packet size
      which may have been modified by a protocol parameter command.
@@ -458,6 +492,20 @@ fgshutdown ()
   (void) fgsend_control (CLOSE, 0);
   (void) fgsend_control (CLOSE, 0);
   (void) fginit_sendbuffers (FALSE);
+
+  /* The count of sent packets may not be accurate, because some of
+     them may have not been sent yet if the connection failed in the
+     middle (the ones that counted for cGdelayed_packets).  I don't
+     think it's worth being precise.  */
+  ulog (LOG_NORMAL,
+	"Protocol 'g' packets: sent %ld, resent %ld, received %ld",
+	cGsent_packets, cGresent_packets - cGdelayed_packets,
+	cGrec_packets);
+  if (cGbad_hdr != 0 || cGbad_checksum != 0 || cGbad_order != 0)
+    ulog (LOG_NORMAL,
+	  "Protocol 'g' receive errors: header %ld, checksum %ld, order %ld",
+	  cGbad_hdr, cGbad_checksum, cGbad_order);
+
   return TRUE;
 }
 
@@ -664,9 +712,14 @@ fgsenddata (zdata, cdata)
      for it yet.  Instead, code in fgprocess_data will send the
      outstanding packets when an ack is received.  */
 
+  ++cGsent_packets;
+
   if (iGretransmit_seq != -1
       && INEXTSEQ (INEXTSEQ (iGretransmit_seq)) != iGsendseq)
-    return TRUE;
+    {
+      ++cGdelayed_packets;
+      return TRUE;
+    }
 
   return fsend_data (z, CFRAMELEN + iGremote_packsize, TRUE);
 }
@@ -873,6 +926,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 
 	      inext = INEXTSEQ (iGremote_ack);
 	      ugadjust_ack (inext);
+	      ++cGresent_packets;
 	      if (! fsend_data (azGsendbuffers[inext],
 				CFRAMELEN + iGremote_packsize,
 				TRUE))
@@ -933,6 +987,7 @@ fggot_ack (iack)
   else
     {
       ugadjust_ack (inext);
+      ++cGresent_packets;
       if (! fsend_data (azGsendbuffers[inext],
 			CFRAMELEN + iGremote_packsize,
 			TRUE))
@@ -943,6 +998,7 @@ fggot_ack (iack)
       else
 	{
 	  ugadjust_ack (inext);
+	  ++cGresent_packets;
 	  if (! fsend_data (azGsendbuffers[inext],
 			    CFRAMELEN + iGremote_packsize,
 			    TRUE))
@@ -1021,7 +1077,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  || ab[IFRAME_XOR] != (ab[IFRAME_K] ^ ab[IFRAME_CHECKLOW]
 				^ ab[IFRAME_CHECKHIGH] ^ ab[IFRAME_CONTROL])
 	  || CONTROL_TT (ab[IFRAME_CONTROL]) == ALTCHAN)
-	continue;
+	{
+	  ++cGbad_hdr;
+	  continue;
+	}
 
       /* The zfirst and cfirst pair point to the first set of data for
 	 this packet; the zsecond and csecond point to the second set,
@@ -1036,7 +1095,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* This is a control packet.  It should not have any data.  */
 
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
-	    continue;
+	    {
+	      ++cGbad_hdr;
+	      continue;
+	    }
 
 	  idatcheck = (unsigned short) (0xaaaa - ab[IFRAME_CONTROL]);
 	  cwant = 0;
@@ -1049,7 +1111,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* This is a data packet.  It should not be type CONTROL.  */
 
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL)
-	    continue;
+	    {
+	      ++cGbad_hdr;
+	      continue;
+	    }
 
 	  if (iPrecend >= iPrecstart)
 	    cinbuf = iPrecend - iPrecstart;
@@ -1108,6 +1173,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       if (ihdrcheck != idatcheck)
 	{
+	  ++cGbad_checksum;
+
 #if DEBUG > 4
 	  if (iDebug > 4)
 	    ulog (LOG_DEBUG,
@@ -1180,6 +1247,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	{
 	  if (CONTROL_XXX (ab[IFRAME_CONTROL]) != INEXTSEQ (iGrecseq))
 	    {
+	      ++cGbad_order;
+
 #if DEBUG > 7
 	      if (iDebug > 7)
 		ulog (LOG_DEBUG, "fgprocess_data: Got packet %d; expected %d",
@@ -1209,6 +1278,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    }
 
 	  /* We got the packet we expected.  */
+
+	  ++cGrec_packets;
 
 	  iGrecseq = INEXTSEQ (iGrecseq);
 
@@ -1320,9 +1391,13 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	{
 	case CLOSE:
 	  /* The other side has closed the connection.  */
-	  if (! fPerror_ok)
-	    ulog (LOG_ERROR, "Received unexpected CLOSE packet");
-	  (void) fgsend_control (CLOSE, 0);
+	  if (fPerror_ok)
+	    (void) fgshutdown ();
+	  else
+	    {
+	      ulog (LOG_ERROR, "Received unexpected CLOSE packet");
+	      (void) fgsend_control (CLOSE, 0);
+	    }
 	  return FALSE;
 	case RJ:
 	  /* The other side dropped a packet.  Begin retransmission with
@@ -1338,6 +1413,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  else
 	    {
 	      ugadjust_ack (iGretransmit_seq);
+	      ++cGresent_packets;
 	      if (! fsend_data (azGsendbuffers[iGretransmit_seq],
 				CFRAMELEN + iGremote_packsize,
 				TRUE))
@@ -1348,6 +1424,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* Selectively reject a particular packet.  This is not used
 	     by UUCP, but it's easy to support.  */
 	  ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
+	  ++cGresent_packets;
 	  if (! fsend_data (azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])],
 			    CFRAMELEN + iGremote_packsize,
 			    TRUE))
