@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/02/09  03:14:48  ian
+   Added HAVE_OLD_DIRECTORIES for systems without readdir routines
+
    Revision 1.33  1992/02/09  02:41:58  ian
    Added HAVE_DUP2 configuration parameter and dup2 emulation function
 
@@ -365,6 +368,15 @@
 
 /* If you have the dup2 call, set HAVE_DUP2 to 1.  */
 #define HAVE_DUP2 0
+
+/* If you have the mkdir system call, set HAVE_MKDIR to 1.  Otherwise
+   make sure that MKDIR_PROGRAM is a program that will create a
+   directory, and look in the Makefile and follow the directions by
+   the UUDIR target.  A special suid program is needed because the
+   directories must be owned by uucp, not by the real uid of the
+   process.  */
+#define HAVE_MKDIR 1
+#define MKDIR_PROGRAM "/bin/mkdir"
 
 /* If the system supports file names longer than 14 characters,
    set HAVE_LONG_NAMES to 1.  */

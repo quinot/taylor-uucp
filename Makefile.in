@@ -3,6 +3,10 @@
 # Prefix directory for installation directories.
 prefix = /usr/local
 
+# The user name that should own the resulting executables, several of
+# which are suid.
+owner = uucp
+
 # Where to install uucico and uuxqt, and where to read configuration files
 # from by default.  If you use this definition, $(prefix)/lib must exist.
 libdir = $(prefix)/lib/uucp
@@ -42,6 +46,14 @@ INSTALL_DATA = $(INSTALL)
 # further in INSTALL.
 TSTUU = tstuu
 
+# If you do not have the mkdir system call, undefine the following three
+# lines.  This will install uudir as an suid root program.  This is
+# necessary because invoking /bin/mkdir from an suid program will
+# leave the directories owned by the wrong user.
+# UUDIR = uudir
+# uudirdir = $(libdir)/util
+# UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(uudirdir)/$(UUDIR)\"
+
 #
 # Nothing else to configure
 #
@@ -50,7 +62,7 @@ SHELL = /bin/sh
 
 VERSION = 1.02
 
-CONFIG = -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
+CONFIG = -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" $(UUDIRFLAGS)
 
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
 	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
@@ -70,9 +82,9 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
 	prtinf.o time.o log.o chat.o port.o tcp.o parse.o copy.o sys1.o \
 	sys2.o sys3.o sys4.o sys5.o sys6.o version.o getopt.o
 
-all: uucico uuxqt uux uucp uuchk $(TSTUU)
+all: uucico uuxqt uux uucp uuchk $(TSTUU) $(UUDIR)
 
-install: uucico uuxqt uux uucp uuchk uucp.info
+install: uucico uuxqt uux uucp uuchk uucp.info $(UUDIR)
 	-mkdir $(libdir) $(bindir)
 	-ln $(libdir)/uucico $(libdir)/uucico.old
 	-ln $(libdir)/uuxqt $(libdir)/uuxqt.old
@@ -80,14 +92,15 @@ install: uucico uuxqt uux uucp uuchk uucp.info
 	$(INSTALL_PROGRAM) uucico $(libdir)/uucico
 	$(INSTALL_PROGRAM) uuxqt $(libdir)/uuxqt
 	$(INSTALL_PROGRAM) uuchk $(libdir)/uuchk
-	chown uucp $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
+	chown $(owner) $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
 	chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
+	-if test "$(UUDIR)X" != "X"; then mkdir $(uudirdir); chown $(owner) $(uudirdir); chmod 100 $(uudirdir); $(INSTALL_PROGRAM) uudir $(uudirdir)/uudir; chown root $(uudirdir)/uudir; chmod 4555 $(uudirdir)/uudir; else true; fi
 	-ln $(bindir)/uux $(bindir)/uux.old
 	-ln $(bindir)/uucp $(bindir)/uucp.old
 	rm -f $(bindir)/uux $(bindir)/uucp
 	$(INSTALL_PROGRAM) uux $(bindir)/uux
 	$(INSTALL_PROGRAM) uucp $(bindir)/uucp
-	chown uucp $(bindir)/uux $(bindir)/uucp
+	chown $(owner) $(bindir)/uux $(bindir)/uucp
 	chmod 4555 $(bindir)/uux $(bindir)/uucp
 	$(INSTALL_DATA) uucico.8 $(man8dir)/uucico$(man8ext)
 	$(INSTALL_DATA) uuxqt.8 $(man8dir)/uuxqt$(man8ext)
@@ -124,6 +137,9 @@ uuchk: $(UUCHKOBJS)
 tstuu: $(TSTOBJS)
 	$(CC) $(CFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
 
+uudir: uudir.o
+	$(CC) $(CFLAGS) -o uudir uudir.o $(LIBS)
+
 uucico.o: uucico.c
 	$(CC) -c $(CFLAGS) $(CONFIG) uucico.c
 uuxqt.o: uuxqt.c
@@ -142,6 +158,8 @@ bnu.o: bnu.c
 	$(CC) -c $(CFLAGS) $(CONFIG) bnu.c
 sys1.o: sys1.c
 	$(CC) -c $(CFLAGS) $(CONFIG) sys1.c
+uudir.o: uudir.c
+	$(CC) -c $(CFLAGS) $(CONFIG) -DOWNER=\"$(owner)\" uudir.c
 
 configure-unix:
 	ln sysh.unx sysdep.h
@@ -189,6 +207,7 @@ uux.o: uucp.h conf.h system.h getopt.h sysdep.h
 uucp.o: uucp.h conf.h system.h getopt.h sysdep.h
 uuchk.o: uucp.h conf.h port.h sysdep.h system.h getopt.h
 tstuu.o: uucp.h conf.h sysdep.h getopt.h
+uudir.o: uucp.h conf.h sysdep.h
 prot.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protg.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protf.o: uucp.h conf.h prot.h port.h sysdep.h system.h
