@@ -176,6 +176,8 @@ static const struct cmdtab_offset asIcmds[] =
       offsetof (struct uuconf_system, uuconf_zpubdir), NULL },
   { "myname", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_system, uuconf_zlocalname), NULL },
+  { "max-file-time", UUCONF_CMDTABTYPE_LONG,
+      offsetof (struct uuconf_system, uuconf_cmax_file_time), NULL },
   { NULL, 0, 0, NULL }
 };
 

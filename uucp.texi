@@ -4884,6 +4884,15 @@ Equivalent to specifying both @samp{forward-to @var{strings}} and
 @samp{forward-from @var{strings}}.  This would normally be used rather
 than either of the more specific commands.
 
+@item max-file-time @var{number}
+@findex max-file-time
+
+The maximum amount of time which will be sent sending any one file if
+there are other files to send.  This will only be effective when using a
+protocol which permits interrupting one file send to send another file.
+This is true of the @samp{i} and @samp{j} protocols.  The default is to
+have no maximum.
+
 @end table
 
 @node Miscellaneous (sys), Default sys File Values, File Transfer Control, sys File

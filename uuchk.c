@@ -735,6 +735,9 @@ ukshow (qsys, puuconf)
 	  printf ("\n");
 	}
 	  
+      if (qsys->uuconf_cmax_file_time > 0)
+	printf (" Maximum file send time: %ld\n", qsys->uuconf_cmax_file_time);
+
       if (qsys->uuconf_zprotocols != NULL)
 	printf (" Will use protocols %s\n", qsys->uuconf_zprotocols);
       else

@@ -14,6 +14,8 @@ Changes in version 1.07:
 
     \M and \m may now be used in any chat script, not just a dialer
     chat script.
+
+    Added ``max-file-time'' command to sys file.
 
 Changes in version 1.06:
 

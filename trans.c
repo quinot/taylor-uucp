@@ -802,6 +802,8 @@ floop (qdaemon)
 	    {
 	      long isecs, imicros;
 	      boolean fcharged;
+	      long cmax_time;
+	      long istart = 0;
 	      long inextsecs = 0, inextmicros;
 
 	      if (! fttime (qdaemon, &isecs, &imicros))
@@ -818,11 +820,18 @@ floop (qdaemon)
 		  q->zlog = NULL;
 		}
 
+	      cmax_time = qdaemon->qsys->uuconf_cmax_file_time;
+	      if (qdaemon->cchans <= 1)
+		cmax_time = 0;
+	      if (cmax_time > 0)
+		istart = ixsysdep_time (NULL);
+
 	      /* We can read the file in a tight loop until we have a
 		 command to send, or the file send has been cancelled,
-		 or we have a remote job to deal with.  We can
-		 disregard any changes to qTlocal since we already
-		 have something to send anyhow.  */
+		 or we have a remote job to deal with, or the maximum
+		 file send time has been exceeded.  We can disregard
+		 any changes to qTlocal since we already have
+		 something to send anyhow.  */
 	      while (q == qTsend
 		     && q->fsendfile
 		     && qTremote == NULL)
@@ -886,6 +895,15 @@ floop (qdaemon)
 			fret = FALSE;
 
 		      break;
+		    }
+
+		  if (cmax_time > 0
+		      && q->qnext != q
+		      && ixsysdep_time (NULL) - istart >= cmax_time)
+		    {
+		      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "floop: Switch file");
+		      utdequeue (q);
+		      utqueue (&qTsend, q, FALSE);
 		    }
 		}
 

@@ -118,6 +118,7 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
       OP (uuconf_cfree_space); \
       OP (uuconf_schat.uuconf_ctimeout); \
       OP (uuconf_scalled_chat.uuconf_ctimeout); \
+      OP (uuconf_cmax_file_time); \
     } \
   while (0)
 

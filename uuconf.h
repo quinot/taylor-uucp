@@ -333,6 +333,10 @@ struct uuconf_system
   /* The local name to use for this remote system.  May be NULL if the
      usual local name should be used.  */
   char *uuconf_zlocalname;
+  /* The maximum number of seconds to spend sending one file when
+     there are other files to send when using a protocol which permits
+     interrupting a file send.  This is zero if there is no limit.  */
+  long uuconf_cmax_file_time;
   /* Memory allocation block for the system.  */
   UUCONF_POINTER uuconf_palloc;
 };
