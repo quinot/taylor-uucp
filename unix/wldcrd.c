@@ -105,6 +105,7 @@ fsysdep_wildcard_start (zfile)
 	*zto++ = '\\';
       *zto++ = *zfrom++;
     }
+  *zto = '\0';
 
   azargs[0] = "/bin/sh";
   azargs[1] = "-c";
