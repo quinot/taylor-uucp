@@ -136,6 +136,20 @@
    actually not be used and this value will not matter at all.  */
 #define TIMES_TICK 0
 
+/* If your system does not support saved set user ID, set
+   HAVE_SAVED_SETUID to 0.  However, this is ignored if your system
+   has the setreuid function.  Most modern Unixes have one or the
+   other.  If your system has the setreuid function, don't worry about
+   this define, or about the following discussion.
+
+   If you set HAVE_SAVED_SETUID to 0, you will not be able to use uucp
+   to transfer files that the uucp user can not read.  Basically, you
+   will only be able to use uucp on world-readable files.  If you set
+   HAVE_SAVED_SETUID to 1, but your system does not have saved set
+   user ID, uucp will fail with an error message whenever anybody
+   other than the uucp user uses it.  */
+#define HAVE_SAVED_SETUID 1
+
 /* Set PS_PROGRAM to the program to run to get a process status,
    including the arguments to pass it.  This is used by ``uustat -p''.
    Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process
@@ -194,7 +208,8 @@
 #define HAVE_SCO_LOCKFILES 0
 #define HAVE_SVR4_LOCKFILES 0
 
-/* If your system supports Internet mail addresses, HAVE_INTERNET_MAIL
+/* If your system supports Internet mail addresses (which look like
+   user@host.domain rather than system!user), HAVE_INTERNET_MAIL
    should be set to 1.  This is checked by uuxqt when sending error
    (or success, if requested) notifications to the person who
    submitted the job.  */
