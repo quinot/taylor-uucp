@@ -243,3 +243,14 @@ mail for failures.  Right now a send failure may not generate a mail
 message, but it should.
 
 77.
+
+Dave Platt: send short packets for commands when using the 'g'
+protocol.
+
+78.
+
+Support XCLUDE for port locking.
+
+79.
+
+Support Internet addressing when mailing uuxqt messages.
