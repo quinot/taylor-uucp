@@ -309,3 +309,9 @@ expect strings.
 Use POSIX fcntl locks when possible instead of creating a lock file.
 
 130.
+
+Chip Salzenberg: BSD lets you override the timeout for a particular
+expect string by using a trailing ~.  Some such feature would be
+desirable someday.
+
+131.
