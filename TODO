@@ -276,3 +276,8 @@ David Nugent: zero out the bytes in blocks allocated for protocols to
 avoid sending out trailing garbage data.
 
 53.
+
+Oleg Tabarovsky: record more information about protocol usage
+somewhere, such as retransmissions, timeouts, etc.
+
+54.
