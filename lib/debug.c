@@ -29,6 +29,8 @@
 
 #include "uudefs.h"
 
+#if DEBUG > 1
+
 /* The debugging level.  */
 int iDebug;
 
@@ -90,6 +92,8 @@ idebug_parse (z)
 
   return iret;
 }
+
+#endif /* DEBUG > 1 */
 
 /* A debugging routine used when displaying buffers.  */
 
