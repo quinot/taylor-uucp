@@ -384,7 +384,6 @@ ${srcdir}/configure: configure.in
 config.h: stamp-h
 stamp-h: config.h.in config.status
 	CONFIG_FILES= CONFIG_HEADERS=config.h $(SHELL) ./config.status
-	echo > stamp-h
 
 Makefile: Makefile.in config.status
 	CONFIG_FILES=Makefile CONFIG_HEADERS= $(SHELL) ./config.status
