@@ -36,6 +36,7 @@ const char uuchk_rcsid[] = "$Id$";
 /* Local functions.  */
 
 static void ukusage P((void));
+static void ukhelp P((void));
 static void ukshow P((const struct uuconf_system *qsys,
 		      pointer puuconf));
 static int ikshow_port P((struct uuconf_port *qport, pointer pinfo));
@@ -62,8 +63,18 @@ struct sinfo
   boolean fgot;
 };
 
+/* Program name.  */
+static const char *zKprogram;
+
 /* Long getopt options.  */
-static const struct option asKlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asKlongopts[] =
+{
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -77,7 +88,9 @@ main (argc, argv)
   pointer puuconf;
   char **pzsystems;
 
-  while ((iopt = getopt_long (argc, argv, "I:x:", asKlongopts,
+  zKprogram = argv[0];
+
+  while ((iopt = getopt_long (argc, argv, "I:vx:", asKlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -92,18 +105,35 @@ main (argc, argv)
 	     information for this program.  */
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf (stderr,
+		   "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		   zKprogram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+	  
+	case 1:
+	  /* --help.  */
+	  ukhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  ukusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
   if (optind != argc)
-    ukusage ();
+    {
+      fprintf (stderr, "%s: too many arguments", zKprogram);
+      ukusage ();
+    }
 
   iret = uuconf_init (&puuconf, (const char *) NULL, zconfig);
   if (iret != UUCONF_SUCCESS)
@@ -115,7 +145,7 @@ main (argc, argv)
 
   if (*pzsystems == NULL)
     {
-      fprintf (stderr, "uuchk: no systems found\n");
+      fprintf (stderr, "%s: no systems found\n", zKprogram);
       exit (EXIT_FAILURE);
     }
 
@@ -142,17 +172,30 @@ main (argc, argv)
 
 /* Print a usage message and die.  */
 
+static void ukusage ()
+{
+  fprintf (stderr, "Usage: %s [{-I,--config} file]\n", zKprogram);
+  fprintf (stderr, "Use %s --help for help\n", zKprogram);
+  exit (EXIT_FAILURE);
+}
+
+/* Print a help message.  */
+
 static void
-ukusage ()
+ukhelp ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uuchk [-I file]\n");
+	   "Usage: %s [{-I,--config} file] [-v] [--version] [--help]\n",
+	   zKprogram);
   fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
-  exit (EXIT_FAILURE);
+	   " -I,--config file: Set configuration file to use\n");
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help\n");
 }
 
 /* Dump out the information for a system.  */
@@ -871,8 +914,8 @@ ukuuconf_error (puuconf, iret)
 
   (void) uuconf_error_string (puuconf, iret, ab, sizeof ab);
   if ((iret & UUCONF_ERROR_FILENAME) == 0)
-    fprintf (stderr, "uuchk: %s\n", ab);
+    fprintf (stderr, "%s: %s\n", zKprogram, ab);
   else
-    fprintf (stderr, "uuchk:%s\n", ab);
+    fprintf (stderr, "%s:%s\n", zKprogram, ab);
   exit (EXIT_FAILURE);
 }

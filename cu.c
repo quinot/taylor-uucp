@@ -126,9 +126,6 @@ static const struct uuconf_cmdtab asCuvars[] =
   { NULL, 0, NULL, NULL}
 };
 
-/* The program name.  */
-char abProgram[] = "cu";
-
 /* The string printed at the initial connect.  */
 #if ANSI_C
 #define ZCONNMSG "\aConnected."
@@ -190,6 +187,7 @@ struct sconninfo
 /* Local functions.  */
 
 static void ucuusage P((void));
+static void ucuhelp P((void));
 static void ucuabort P((void));
 static void uculog_start P((void));
 static void uculog_end P((void));
@@ -212,7 +210,24 @@ static boolean fcusend_buf P((struct sconnection *qconn, const char *zbuf,
        do { if (! fsysdep_terminal_puts (zline)) ucuabort (); } while (0)
 
 /* Long getopt options.  */
-static const struct option asCulongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asCulongopts[] =
+{
+  { "phone", required_argument, NULL, 'c' },
+  { "parity", required_argument, NULL, 2 },
+  { "halfduplex", no_argument, NULL, 'h' },
+  { "prompt", no_argument, NULL, 'n' },
+  { "line", required_argument, NULL, 'l' },
+  { "port", required_argument, NULL, 'p' },
+  { "speed", required_argument, NULL, 's' },
+  { "baud", required_argument, NULL, 's' },
+  { "mapcr", no_argument, NULL, 't' },
+  { "system", required_argument, NULL, 'z' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -255,6 +270,8 @@ main (argc, argv)
   struct uuconf_dialer *qdialer;
   char bcmd;
 
+  zProgram = argv[0];
+
   /* We want to accept -# as a speed.  It's easiest to look through
      the arguments, replace -# with -s#, and let getopt handle it.  */
   for (i = 1; i < argc; i++)
@@ -274,7 +291,7 @@ main (argc, argv)
 	}
     }
 
-  while ((iopt = getopt_long (argc, argv, "a:c:dehnI:l:op:s:tx:z:",
+  while ((iopt = getopt_long (argc, argv, "a:c:dehnI:l:op:s:tvx:z:",
 			      asCulongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -350,13 +367,42 @@ main (argc, argv)
 #endif
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 2:
+	  /* --parity.  */
+	  if (strncmp (optarg, "even", strlen (optarg)) == 0)
+	    feven = TRUE;
+	  else if (strncmp (optarg, "odd", strlen (optarg)) == 0)
+	    fodd = TRUE;
+	  else
+	    {
+	      fprintf (stderr, "%s: --parity requires even or odd\n",
+		       zProgram);
+	      ucuusage ();
+	    }
+	  break;
+
+	case 1:
+	  /* --help.  */
+	  ucuhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  ucuusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -369,7 +415,10 @@ main (argc, argv)
       if (optind != argc - 1
 	  || zsystem != NULL
 	  || zphone != NULL)
-	ucuusage ();
+	{
+	  fprintf (stderr, "%s: too many arguments\n", zProgram);
+	  ucuusage ();
+	}
       if (strcmp (argv[optind], "dir") != 0)
 	{
 	  if (isdigit (BUCHAR (argv[optind][0])))
@@ -385,7 +434,11 @@ main (argc, argv)
       && zport == NULL
       && zline == NULL
       && ibaud == 0L)
-    ucuusage ();
+    {
+      fprintf (stderr, "%s: must specify system, line, port or speed\n",
+	       zProgram);
+      ucuusage ();
+    }
 
   if (fprompt)
     {
@@ -398,7 +451,7 @@ main (argc, argv)
       if (getline (&zphone, &cphone, stdin) <= 0
 	  || *zphone == '\0')
 	{
-	  fprintf (stderr, "%s: No phone number entered\n", abProgram);
+	  fprintf (stderr, "%s: no phone number entered\n", zProgram);
 	  exit (EXIT_FAILURE);
 	}
     }
@@ -744,41 +797,56 @@ main (argc, argv)
 static void
 ucuusage ()
 {
+  fprintf (stderr, "Usage: %s [options] [system or phone-number]\n",
+	   zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
+  exit (EXIT_FAILURE);
+}
+
+/* Print a help message.  */
+
+static void
+ucuhelp ()
+{
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: cu [options] [system or phone-number]\n");
+	   "Usage: %s [options] [system or phone-number]\n", zProgram);
   fprintf (stderr,
-	   " -a port, -p port: Use named port\n");
+	   " -a,-p,--port port: Use named port\n");
   fprintf (stderr,
-	   " -l line: Use named device (e.g. tty0)\n");
+	   " -l,--line line: Use named device (e.g. tty0)\n");
   fprintf (stderr,
-	   " -s speed, -#: Use given speed\n");
+	   " -s,--speed,--baud speed, -#: Use given speed\n");
   fprintf (stderr,
-	   " -c phone: Phone number to call\n");
+	   " -c,--phone phone: Phone number to call\n");
   fprintf (stderr,
-	   " -z system: System to call\n");
+	   " -z,--system system: System to call\n");
   fprintf (stderr,
 	   " -e: Set even parity\n");
   fprintf (stderr,
 	   " -o: Set odd parity\n");
   fprintf (stderr,
-	   " -h: Echo locally\n");
+	   " --parity={odd,even}: Set parity\n");
   fprintf (stderr,
-	   " -t: Map carriage return to carriage return/linefeed\n");
+	   " -h,--halfduplex: Echo locally\n");
   fprintf (stderr,
-	   " -n: Prompt for phone number\n");
+	   " -t,--mapcr: Map carriage return to carriage return/linefeed\n");
+  fprintf (stderr,
+	   " -n,--prompt: Prompt for phone number\n");
   fprintf (stderr,
 	   " -d: Set maximum debugging level\n");
   fprintf (stderr,
-	   " -x debug: Set debugging type\n");
+	   " -x,--debug debug: Set debugging type\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
+	   " -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-
-  exit (EXIT_FAILURE);
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help\n");
 }
 
 /* This function is called when a fatal error occurs.  */
