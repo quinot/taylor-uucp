@@ -37,6 +37,9 @@ fsysdep_make_dirs (zfile, fpublic)
 	  if (mkdir (zcopy, imode) != 0
 	      && errno != EEXIST
 	      && errno != EISDIR
+#ifdef EROFS
+	      && errno != EROFS
+#endif
 	      && (errno != EACCES || ! fsysdep_directory (zcopy)))
 	    {
 	      ulog (LOG_ERROR, "mkdir (%s): %s", zcopy,
