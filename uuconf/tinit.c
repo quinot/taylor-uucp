@@ -291,9 +291,9 @@ itunknown (pglobal, argc, argv, pvar, pinfo)
     }
   q->qnext = NULL;
   q->ilineno = qglobal->ilineno;
-  q->cargs = argc;
+  q->cargs = argc - 1;
   q->pzargs = (char **) uuconf_malloc (qglobal->pblock,
-				       argc * sizeof (char *));
+				       (argc - 1) * sizeof (char *));
   if (q->pzargs == NULL)
     {
       qglobal->ierrno = errno;
@@ -301,7 +301,8 @@ itunknown (pglobal, argc, argv, pvar, pinfo)
 	      | UUCONF_ERROR_ERRNO
 	      | UUCONF_CMDTABRET_EXIT);
     }
-  memcpy ((pointer) q->pzargs, (pointer) argv, argc * sizeof (char *));
+  memcpy ((pointer) q->pzargs, (pointer) (argv + 1),
+	  (argc - 1) * sizeof (char *));
 
   while (*pq != NULL)
     pq = &(*pq)->qnext;
