@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.47  1992/03/11  22:06:37  ian
+   Marty Shannon: added max-uuxqts command
+
    Revision 1.46  1992/03/11  02:09:57  ian
    Franc,ois Pinard: retry fork several times before giving up
 
@@ -445,7 +448,7 @@ typedef struct
 } DIR;
 
 extern DIR *opendir P((const char *zdir));
-extern struct dirent readdir P((DIR *));
+extern struct dirent *readdir P((DIR *));
 extern int closedir P((DIR *));
 
 #endif /* ! HAVE_OPENDIR */
