@@ -1,7 +1,7 @@
 /* uustat.c
    UUCP status program
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -78,8 +78,9 @@ const char uustat_rcsid[] = "$Id$";
 #define JOB_SHOW (01)
 #define JOB_INQUIRE (02)
 #define JOB_KILL (04)
-#define JOB_MAIL (010)
-#define JOB_NOTIFY (020)
+#define JOB_REJUVENATE (010)
+#define JOB_MAIL (020)
+#define JOB_NOTIFY (040)
 
 /* This structure is used to accumulate all the lines in a single
    command file, so that they can all be displayed at once and so that
@@ -168,6 +169,7 @@ static const struct option asSlongopts[] =
   { "list", no_argument, NULL, 'q' },
   { "no-list", no_argument, NULL, 'Q' },
   { "rejuvenate", required_argument, NULL, 'r' },
+  { "rejuvenate-all", no_argument, NULL, 'R' },
   { "system", required_argument, NULL, 's' },
   { "not-system", required_argument, NULL, 'S' },
   { "user", required_argument, NULL, 'u' },
@@ -238,7 +240,7 @@ main (argc, argv)
   zProgram = argv[0];
 
   while ((iopt = getopt_long (argc, argv,
-			      "aB:c:C:eiI:k:KmMNo:pqQr:s:S:u:U:vW:x:y:",
+			      "aB:c:C:eiI:k:KmMNo:pqQr:Rs:S:u:U:vW:x:y:",
 			      asSlongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -337,6 +339,11 @@ main (argc, argv)
 	  pazrejuvs[crejuvs - 1] = optarg;
 	  break;
 
+	case 'R':
+	  /* Rejuvenate each listed job.  */
+	  icmd |= JOB_REJUVENATE;
+	  break;
+
 	case 'S':
 	  /* List jobs for other than specified system.  */
 	  fnotsystems = TRUE;
@@ -429,6 +436,14 @@ main (argc, argv)
       ususage ();
     }
 
+  if ((icmd & JOB_KILL) != 0
+      && (icmd & JOB_REJUVENATE) != 0)
+    {
+      fprintf (stderr, "%s: can not both rejuvenate and kill jobs\n",
+	       zProgram);
+      ususage ();
+    }
+
   iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
@@ -518,7 +533,7 @@ main (argc, argv)
   else if (icmd != JOB_SHOW)
     {
       ulog (LOG_ERROR,
-	    "-i, -K, -M, -N, -Q not supported with -k, -m, -p, -q, -r");
+	    "-i, -K, -M, -N, -Q, -R not supported with -k, -m, -p, -q, -r");
       ususage ();
       fret = FALSE;
     }
@@ -601,6 +616,7 @@ ushelp ()
   printf (" -q,--list: list number of jobs for each system\n");
   printf (" -Q,--no-list: don't list jobs, just take actions (-i, -K, -M, -N)\n");
   printf (" -r,--rejuvenate job: rejuvenate specified UUCP job\n");
+  printf (" -R,--rejuvenate-all: rejuvenate each listed job\n");
   printf (" -s,--system system: list all jobs for specified system\n");
   printf (" -S,--not-system system: list all jobs for other than specified system\n");
   printf (" -u,--user user: list all jobs for specified user\n");
@@ -1245,25 +1261,28 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 
       if (fmatch)
 	{
-	  boolean fkill;
+	  boolean fkill_or_rejuv;
 
-	  fkill = FALSE;
+	  fkill_or_rejuv = FALSE;
 	  if ((icmd & JOB_INQUIRE) != 0)
 	    {
 	      int b;
 
 	      /* Ask stdin whether this job should be killed.  */
-	      fprintf (stderr, "%s: Kill %s? ", zProgram, zlistid);
+	      fprintf (stderr, "%s: %s %s?",
+		       (icmd & JOB_REJUVENATE) != 0 ? "Rejuvenate" : "Kill",
+		       zProgram, zlistid);
 	      (void) fflush (stderr);
 	      b = getchar ();
-	      fkill = b == 'y' || b == 'Y';
+	      fkill_or_rejuv = b == 'y' || b == 'Y';
 	      while (b != EOF && b != '\n')
 		b = getchar ();
 	    }
-	  else if ((icmd & JOB_KILL) != 0)
-	    fkill = TRUE;
+	  else if ((icmd & JOB_KILL) != 0
+		   || (icmd & JOB_REJUVENATE) != 0)
+	    fkill_or_rejuv = TRUE;
 	      
-	  if (fkill
+	  if (fkill_or_rejuv
 	      && (qlist->s.zuser == NULL
 		  || strcmp (zsysdep_login_name (), qlist->s.zuser) != 0)
 	      && ! fsysdep_privileged ())
@@ -1272,17 +1291,27 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	    {
 	      if ((icmd & (JOB_MAIL | JOB_NOTIFY)) != 0)
 		{
-		  if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
+		  if (! fsnotify (puuconf, icmd, zcomment, cstdin,
+				  (fkill_or_rejuv &&
+				   (icmd & JOB_REJUVENATE) == 0),
 				  zcmd, qlist, zlistid, qlist->itime,
 				  qlist->s.zuser, qsys, zstdin,
 				  qlist->s.pseq, zrequestor))
 		    return FALSE;
 		}
 
-	      if (fkill)
+	      if (fkill_or_rejuv)
 		{
-		  if (! fsysdep_kill_job (puuconf, zlistid))
-		    return FALSE;
+		  if ((icmd & JOB_REJUVENATE) == 0)
+		    {
+		      if (! fsysdep_kill_job (puuconf, zlistid))
+			return FALSE;
+		    }
+		  else
+		    {
+		      if (! fsysdep_rejuvenate_job (puuconf, zlistid))
+			return FALSE;
+		    }
 		}
 	    }
 	}
@@ -1473,7 +1502,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 
       if (fmatch)
 	{
-	  boolean fbad, fkill;
+	  boolean fbad, fkill_or_rejuv;
 	  struct uuconf_system ssys;
 
 	  fbad = FALSE;
@@ -1496,23 +1525,26 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 	      printf ("%s\n", zSxqt_cmd);
 	    }
 
-	  fkill = FALSE;
+	  fkill_or_rejuv = FALSE;
 	  if ((icmd & JOB_INQUIRE) != 0)
 	    {
 	      int b;
 
 	      /* Ask stdin whether this job should be killed.  */
-	      fprintf (stderr, "%s: Kill %s? ", zProgram, zSxqt_cmd);
+	      fprintf (stderr, "%s: %s %s?",
+		       (icmd & JOB_REJUVENATE) != 0 ? "Rejuvenate" : "Kill",
+		       zProgram, zSxqt_cmd);
 	      (void) fflush (stderr);
 	      b = getchar ();
-	      fkill = b == 'y' || b == 'Y';
+	      fkill_or_rejuv = b == 'y' || b == 'Y';
 	      while (b != EOF && b != '\n')
 		b = getchar ();
 	    }
-	  else if ((icmd & JOB_KILL) != 0)
-	    fkill = TRUE;
+	  else if ((icmd & JOB_KILL) != 0
+		   || (icmd & JOB_REJUVENATE) != 0)
+	    fkill_or_rejuv = TRUE;
 
-	  if (fkill)
+	  if (fkill_or_rejuv)
 	    {
 	      if ((strcmp (zSxqt_user, zsysdep_login_name ()) != 0
 		   || strcmp (zsystem, zlocalname) != 0)
@@ -1553,7 +1585,8 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 
 	  if (! fbad && (icmd & (JOB_MAIL | JOB_NOTIFY)) != 0)
 	    {
-	      if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
+	      if (! fsnotify (puuconf, icmd, zcomment, cstdin,
+			      fkill_or_rejuv && (icmd & JOB_REJUVENATE) == 0,
 			      zSxqt_cmd, (struct scmdlist *) NULL,
 			      (const char *) NULL, itime, zSxqt_user, &ssys,
 			      zSxqt_stdin, (pointer) NULL, zSxqt_requestor))
@@ -1566,7 +1599,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 		}
 	    }
 
-	  if (! fbad && fkill)
+	  if (! fbad && fkill_or_rejuv)
 	    {
 	      for (i = 0; i < cSxqt_files; i++)
 		{
@@ -1576,13 +1609,21 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 					       (pointer) NULL);
 		  if (z != NULL)
 		    {
-		      (void) remove (z);
+		      if ((icmd & JOB_REJUVENATE) != 0)
+			(void) fsysdep_touch_file (z);
+		      else
+			(void) remove (z);
 		      ubuffree (z);
 		    }
 		}
-	      if (remove (zfile) != 0)
-		ulog (LOG_ERROR, "remove (%s): %s", zfile,
-		      strerror (errno));
+	      if ((icmd & JOB_REJUVENATE) != 0)
+		(void) fsysdep_touch_file (zfile);
+	      else
+		{
+		  if (remove (zfile) != 0)
+		    ulog (LOG_ERROR, "remove (%s): %s", zfile,
+			  strerror (errno));
+		}
 	    }
 
 	  if (! fbad)

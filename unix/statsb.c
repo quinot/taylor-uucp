@@ -1,7 +1,7 @@
 /* statsb.c
    System dependent routines for uustat.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -73,7 +73,7 @@ const char statsb_rcsid[] = "$Id$";
 
 /* Local functions.  */
 
-static int ussettime P((const char *z, time_t inow));
+static int issettime P((const char *z, time_t inow));
 static boolean fskill_or_rejuv P((pointer puuconf, const char *zid,
 				  boolean fkill));
 
@@ -82,7 +82,7 @@ static boolean fskill_or_rejuv P((pointer puuconf, const char *zid,
    routine is not time critical, so we never rely on NULL.  */
 
 static int
-ussettime(z, inow)
+issettime(z, inow)
      const char *z;
      time_t inow;
 {
@@ -222,7 +222,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 	      if (fkill)
 		isys = remove (ztemp);
 	      else
-		isys = ussettime (ztemp, inow);
+		isys = issettime (ztemp, inow);
 
 	      if (isys != 0 && errno != ENOENT)
 		{
@@ -245,7 +245,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
   if (fkill)
     isys = remove (zfile);
   else
-    isys = ussettime (zfile, inow);
+    isys = issettime (zfile, inow);
 
   if (isys != 0 && errno != ENOENT)
     {
@@ -296,6 +296,21 @@ ixsysdep_file_time (zfile)
     }
 
   return (long) s.st_mtime;
+}
+
+/* Set the time of a file to the current time.  */
+
+boolean
+fsysdep_touch_file (zfile)
+     const char *zfile;
+{
+  if (issettime (zfile, time ((time_t *) NULL)) != 0)
+    {
+      ulog (LOG_ERROR, "utime (%s): %s", zfile, strerror (errno));
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 /* Start getting the status files.  */

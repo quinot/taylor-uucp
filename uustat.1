@@ -9,7 +9,7 @@ uustat \- UUCP status inquiry and control
 .PP
 .B uustat
 [
-.B \-eKiMNQ ] [
+.B \-eKRiMNQ ] [
 .B \-sS
 system ] [
 .B \-uU
@@ -23,6 +23,8 @@ lines ] [
 .B \-\-executions
 ] [
 .B \-\-kill-all
+] [
+.B \-\-rejuvenate-all
 ] [
 .B \-\-prompt
 ] [
@@ -310,6 +312,10 @@ cleanup scripts, in conjunction with the
 and
 .B \-\-notify
 options.
+.TP 5
+.B \-R, \-\-rejuvenate-all
+Automatically rejuvenate each listed job.  This may not be used with
+.B \-\-kill-all.
 .TP 5
 .B \-M, \-\-mail
 For each listed job, send mail to the UUCP administrator.  If the job
