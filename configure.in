@@ -345,7 +345,7 @@ AC_COMPILE_CHECK([union wait],
 AC_DEFINE([HAVE_UNION_WAIT]))
 dnl
 AC_LONG_FILE_NAMES
-if $cross_compiling; then
+if test -n "$cross_compiling"; then
  AC_DEFINE([HAVE_RESTARTABLE_SYSCALLS], [-1])
 else
  AC_RESTARTABLE_SYSCALLS
