@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.3  1992/03/11  22:34:25  ian
    Chip Salzenberg: support Internet mail addresses in uuxqt replies
 
@@ -91,6 +94,41 @@
 #define HAVE_SYSV_TERMIO 1
 #endif
 #endif
+
+/* On some systems a write to a serial port will block even if the
+   file descriptor has been set to not block.  File transfer can be
+   more efficient if the package knows that a write to the serial port
+   will not block; however, if the write does block unexpectedly then
+   data loss is possible at high speeds.
+
+   If writes to a serial port always block even when requested not to,
+   you should set HAVE_UNBLOCKED_WRITES to 0; otherwise you should set
+   it to 1.  In general on System V HAVE_UNBLOCKED_WRITES should be 0
+   and on BSD it should be 1.  If you have BSD style pseudo terminals
+   you may be able to use the block program in the contrib directory
+   to find out the correct value for this parameter.  Otherwise, just
+   guess.
+
+   If HAVE_UNBLOCKED_WRITES is set to 1 when it should be 0 you may
+   see an unexpectedly large number of transmission errors, or, if you
+   have hardware handshaking, transfer times may be lower than
+   expected (but then, they always are).  If HAVE_UNBLOCKED_WRITES is
+   set to 0 when it should be 1, file transfer will use more CPU time
+   than necessary, and you may get the error "write: Operation would
+   block" (if you get this error HAVE_UNBLOCKED_WRITES should
+   definitely be set to 1).  */
+#define HAVE_UNBLOCKED_WRITES 1
+
+/* When the code does do a blocking write, it wants to write the
+   largest amount of data which the kernel will accept as a single
+   unit.  On BSD this is typically the value of OBUFSIZ in
+   <sys/tty.h>, usually 100.  On System V this is typically the size
+   of a clist, CLSIZE in <sys/tty.h>, which is usually 64.  Define
+   SINGLE_WRITE to the correct value for your system.  If SINGLE_WRITE
+   is too large, data loss may occur.  If SINGLE_WRITE is too small,
+   file transfer will use more CPU time than necessary.  If you have
+   no idea, 64 should work on most modern systems.  */
+#define SINGLE_WRITE 64
 
 /* Set TIMES_TICK to the fraction of a second which times(2) returns
    (for example, if times returns 100ths of a second TIMES_TICK should

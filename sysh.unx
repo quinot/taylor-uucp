@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.51  1992/03/15  07:15:42  ian
+   T. William Wells: don't use unblocked writes
+
    Revision 1.50  1992/03/15  04:51:17  ian
    Keep an array of signals we've received rather than a single variable
 
@@ -226,6 +229,16 @@
 #ifdef SV_INTERRUPT
 #undef HAVE_RESTARTABLE_SYSCALLS
 #define HAVE_RESTARTABLE_SYSCALLS 0
+#endif
+#endif
+
+/* We don't handle sigset in combination with restartable system
+   calls, so we check for it although this combination will never
+   happen.  */
+#if ! HAVE_SIGACTION && ! HAVE_SIGVEC && HAVE_SIGSET
+#if HAVE_RESTARTABLE_SYSCALLS
+#undef HAVE_SIGSET
+#define HAVE_SIGSET 0
 #endif
 #endif
 
@@ -437,12 +450,15 @@ struct ssysdep_serial_port
   boolean fread_blocking;
   /* File descriptor to write to.  */
   int owrite;
+  /* Whether the write descriptor is blocking.  */
+  boolean fwrite_blocking;
+  /* Whether setting the read descriptor to blocking affects the write
+     descriptor and vice-versa.  */
+  boolean fblock_both;
   /* Hold the real read descriptor when using a dialer device.  */
   int oholdread;
   /* Hold the real write descriptor when using a dialer device.  */
   int oholdwrite;
-  /* TRUE if we shouldn't worry if we've received any signals.  */
-  boolean fsigsok;
   /* TRUE if this is a terminal and the remaining fields are valid.  */
   boolean fterminal;
   /* Baud rate.  */
