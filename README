@@ -127,6 +127,22 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     use -posix, instead I run gcc with -D_POSIX_SOURCE, and add
     -lcposix to LIBS.
 
+    On some versions of BSDI there is a bug in the shell which causes
+    the default value for CFLAGS to be set incorrectly.  If ``echo
+    ${CFLAGS--g}'' echoes ``g'' rather than ``-g'', then you must set
+    CFLAGS in the environment before running configure.  There is a
+    patch available from BSDI for this bug.  (From David Vrona).
+
+    On AIX 3.2.5, and possibly other versions, cc -E does not work,
+    reporting ``Option NOROCONST is not valid.''  Test this before
+    running configure by doing something like
+	touch /tmp/foo.c
+	cc -E /tmp/foo.c
+    This may give a warning about the file being empty, but it should
+    not give the ``Option NOROCONST'' warning.  The workaround is to
+    remove the ",noroconst" entry from the "options" clause in the
+    "cc" stanza in /etc/xlc.cfg.  (From Chris Lewis).
+
     Examine config.h and Makefile to make sure they're right.
 
     Edit policy.h for your local system.    
