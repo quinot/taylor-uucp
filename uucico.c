@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.2  1991/09/11  02:33:14  ian
+ * Added ffork argument to fsysdep_run
+ *
  * Revision 1.1  1991/09/10  19:40:31  ian
  * Initial revision
  *
@@ -688,10 +691,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
     else
       {
 	bgrade = btime_low_grade (qsys->zcalltimegrade);
-	/* We have no way of asking the other system not to send us
-	   anything, and \0 means to make no request at all.  */
-	if (bgrade == '\0')
-	  bgrade = BGRADE_HIGH;
+	/* A \0 in this case means that no restrictions have been made.  */
       }
 
     if (qsys->zlocalname != NULL)
