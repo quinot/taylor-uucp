@@ -113,6 +113,12 @@ main (argc, argv)
   if (iret != UUCONF_SUCCESS)
     ukuuconf_error (puuconf, iret);
 
+  if (*pzsystems == NULL)
+    {
+      fprintf (stderr, "uuchk: no systems found\n");
+      exit (EXIT_FAILURE);
+    }
+
   while (*pzsystems != NULL)
     {
       struct uuconf_system ssys;
