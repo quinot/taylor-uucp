@@ -571,6 +571,10 @@ struct uuconf_dialer
    be b1 - b2.  */
 #define UUCONF_GRADE_CMP(b1, b2) (uuconf_grade_cmp ((b1), (b2)))
 
+/* Definitions for bits returned by uuconf_strip.  */
+#define UUCONF_STRIP_LOGIN (01)
+#define UUCONF_STRIP_PROTO (02)
+
 /* uuconf_runuuxqt returns either a positive number (the number of
    execution files to receive between uuxqt invocations) or one of
    these constant values.  */
@@ -876,6 +880,11 @@ extern int uuconf_debugfile (void *uuconf_pglobal,
    freed.  */
 extern int uuconf_debuglevel (void *uuconf_pglobal,
 			      const char **uuconf_pzdebug);
+
+/* Get a combination of UUCONF_STRIP bits indicating what types of
+   global information should be stripped on input.  */
+extern int uuconf_strip (void *uuconf_pglobal,
+			 int *uuconf_pistrip);
 
 /* Get the maximum number of simultaneous uuxqt executions.  This will
    set *pcmaxuuxqt to the number.  Zero indicates no maximum.  */
