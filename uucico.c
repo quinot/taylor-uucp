@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.95  1992/04/20  15:48:32  ian
+   Added separate zphone argument to fport_dial
+
    Revision 1.94  1992/04/14  20:15:59  ian
    Petri Helenius: must relock system after detach
 
@@ -1795,18 +1798,13 @@ faccept_call (zlogin, qport, pqsys)
   sLocked_system = *qsys;
   fLocked_system = TRUE;
 
-  /* Set the system status.  We don't really care if we can't get the
-     earlier status.  We also don't want to kill the conversation just
-     because we can't output the .Status file, so we ignore any
-     errors.  */
-  if (! fsysdep_get_status (qsys, &sstat))
-    {
-      sstat.cretries = 0;
-      sstat.cwait = 0;
-    }
-
+  /* Set the system status.  We don't care what the status was before.
+     We also don't want to kill the conversation just because we can't
+     output the .Status file, so we ignore any errors.  */
   sstat.ttype = STATUS_TALKING;
+  sstat.cretries = 0;
   sstat.ilast = isysdep_time ((long *) NULL);
+  sstat.cwait = 0;
   (void) fsysdep_set_status (qsys, &sstat);
 
   /* Check the arguments of the remote system.  We accept -x# to set
