@@ -830,6 +830,7 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
   char *z;
   int itt, iseg;
   size_t csize;
+  int iclr1, iclr2;
   unsigned short icheck;
 
   /* Set the initial length bytes.  See the description at the definition
@@ -843,6 +844,8 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
     ulog (LOG_FATAL, "fgsend_packet: Packet size too large");
 #endif
 
+  iclr1 = -1;
+  iclr2 = -2;
   if (cdata < csize)
     {
       /* If the remote packet size is larger than 64, the default, we
@@ -868,6 +871,7 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 	     is.  We do this by pushing the header backward, which we
 	     can do because we allocated two extra bytes for this
 	     purpose.  */
+	  iclr2 = 0;
 	  itt = SHORTDATA;
 	  cshort = csize - cdata;
 	  if (cshort <= 127)
@@ -883,19 +887,19 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 	      zdata[0] = (char) (0x80 | (cshort & 0x7f));
 	      zdata[1] = (char) (cshort >> 7);
 	      bzero (zdata + cdata + 2, cshort - 2);
+	      iclr1 = 0;
 	    }
 	}
     }
 
   z = zdata - CFRAMELEN;
 
-  if (csize == cdata)
-    {
-      /* Zero out the preceding bytes, in case the last time this
-	 buffer was used those bytes were used.  */
-      zdata[-1] = '\0';
-      zdata[-2] = '\0';
-    }
+  /* Zero out the preceding bytes, in case the last time this buffer
+     was used those bytes were used.  We need to zero out the initial
+     bytes so that we can find the true start of the packet in
+     zgadjust_ack.  */
+  z[iclr1] = '\0';
+  z[iclr2] = '\0';
 
   z[IFRAME_DLE] = DLE;
   z[IFRAME_K] = (char) iseg;
