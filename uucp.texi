@@ -16,18 +16,12 @@ a taylor.texi file.  Many things remain to do, among which:
 
 - merging in the Taylor UUCP program man pages.
 - integrating the three documents describing the protocol.
-- adding appropriate references from here to there in the text, instead
-  of the expression `elsewhere in this document'.
-- improving the contents of the Concept index.
-- revising and cleaning out my documtaylor Babyl file.
-- translating and merging a few letters I wrote to friends about UUCP
-  installation and configuration.
 - gleaning miscellaneous information from my archives.
 ----------------------------------------------------------------------<
 @end ignore
 
 @ifinfo
-This file documents Taylor UUCP, version 1.02.
+This file documents Taylor UUCP, beta version 1.03.
 
 Copyright @copyright{} 1992 Free Software Foundation, Inc.
 
@@ -56,7 +50,7 @@ translation approved by the author instead of in the original English.
 
 @titlepage
 @title Taylor UUCP
-@subtitle Version 1.02
+@subtitle Version 1.03
 @author Ian Lance Taylor @file{<ian@@airs.com>}
 
 @page
@@ -82,10 +76,10 @@ translation approved by the author instead of in the original English.
 @end titlepage
 
 @node Top, Copying, (dir), (dir)
-@top Taylor UUCP 1.02
+@top Taylor UUCP 1.03
 
-This is the documentation for the Taylor UUCP package, version 1.02.
-The programs were written by Ian Lance Taylor.  The author can be
+This is the documentation for the Taylor UUCP package, beta version
+1.03.  The programs were written by Ian Lance Taylor.  The author can be
 reached at @file{<ian@@airs.com>}, or, equivalently,
 @file{<uunet!airs!ian>}, or @cite{c/o Infinity Development, P.O. Box
 520, Waltham MA, 02254}.
@@ -177,61 +171,165 @@ Licenses that accompany them.
 @node Introduction, Overall Installation, Copying, Top
 @chapter Introduction to Taylor UUCP
 
-This is the complete source code for a basic UUCP package.  It includes
-the programs @code{uucico}, @code{uuxqt}, @code{uux}, @code{uucp},
-@code{uustat}, @code{uulog}, and @code{uuname} as well as @code{uuchk}
-(a program to check configuration files) and @code{tstuu} (a test
-harness for the package).
+General introductions to UUCP are available, and perhaps one day I will
+write one.  In the meantime, here is a very brief one that concentrates
+on the programs provided by Taylor UUCP.
 
-The package currently supports the @samp{f}, @samp{g} (in all window and
-packet sizes), @samp{t} and @samp{e} protocols.  If you have a Berkeley
-sockets library, it can make TCP connections.  It supports a new
-configuration file mechanism which I like (but other people dislike).
+Taylor UUCP is a complete UUCP package.  It is covered by the GNU Public
+License, which means that the source code is always available.  It is
+composed of several programs, the names of which were established by
+earlier UUCP packages.
 
-The package has a few features not supplied by regular UUCP:
-@enumerate
+@table @code
 
-@item
-You can specify a chat script to run when a system calls in,
-allowing adjustment of modem parameters on a per system basis.
+@item uucp
 
-@item
-You can specify failure strings for chat scripts, allowing the
-chat script to fail immediately if the modem returns @samp{BUSY}.
+The @code{uucp} program is used to copy file between systems.  It is
+similar to the standard Unix @code{cp} program, except that you can
+refer to a file on a remote system by using @samp{system!} before the
+file name.  For example, to copy the file @file{notes.txt} to the system
+@samp{airs}, you would say @samp{uucp notes.txt airs!~/notes.txt}.  In
+this example @samp{~} is used to name the UUCP public directory on
+@samp{airs}.
 
-@item
-If you are talking to another instance of the package, you can
-restrict file transfers by size based on the time of day and who
-placed the call.
-@end enumerate
+@item uux
 
-On the other hand:
-@enumerate
+The @code{uux} program is used to request a program to be executed on a
+remote system.  This is how mail and news are transferred over UUCP.  As
+with @code{uucp}, programs and files on remote systems may be named by
+using @samp{system!}.  For example, to run the @code{rnews} program on
+@samp{airs} passing it standard input, you would say @samp{uux -
+airs!rnews}.  The @samp{-} means to read standard input and set things
+up so that when @code{rnews} runs on @samp{airs} it will receive the
+same standard input.
 
-@item
-You don't get @code{uusched} and a few other programs.  If you have
-current copies of these programs, you may be able to use them.
+@end table
 
-@item
-The package does not read @file{modemcap} or @file{acucap} files,
-although you can use V2 configuration files with a BNU Dialers file or a
-dialer file written in my new configuration file format.
+Neither @code{uucp} nor @code{uux} actually do any work immediately.
+Instead they queue up requests for later processing.  They then normally
+start a daemon process which processes the requests and calls up the
+appropriate systems.  The daemon will usually also be started regularly
+to check if there is any work to be done and to do it.  The advantage of
+this system is that it all happens automatically.  You don't have to sit
+around waiting for the files to be transferred.  The disadvantage is
+that if anything goes wrong it might be a while before anybody notices.
 
-@item
-The package cannot use BNU dialer programs directly, although it
-can with a simple shell script interface.
-@end enumerate
+@table @code
 
-If you start using this package, I suggest that you join the mailing
-list (@pxref{Top, , Mailing List}) to keep up to date on patches and new
-versions.  I am also open to suggestions for improvements and
-modifications.
+@item uustat
+
+The @code{uustat} program does several things.  It can be used to report
+the status of your jobs, and by default it will simply list all the jobs
+you have queued with @code{uucp} or @code{uux} that have not yet been
+processed.  You can use @code{uustat} to remove any of your jobs from
+the queue.  You can also it use it to show the status of the UUCP system
+in various ways, such as showing the connection status of all systems
+your system knows about.
+
+@item uuname
+
+The @code{uuname} program by default lists all the remote systems your
+system knows about.  You can also use it to get the name of your local
+system.  It is mostly useful for shell scripts.
+
+@item uulog
+
+The @code{uulog} program can be used to display entries in the UUCP log
+file.  It can select the entries for a particular system or a particular
+user.  You can use it to see what has happened to your queued jobs in
+the past.
+
+@end table
+
+These five programs, @code{uucp}, @code{uux}, @code{uustat},
+@code{uuname}, @code{uulog} are the user programs provided by Taylor
+UUCP.  The first two add requests to the work queue, the third examines
+the work queue, the fourth examines the configuration files, and the
+last examines the log files.  The real work is actually done by two
+daemon processes, which are normally run automatically rather than by a
+user.
+
+@table @code
+
+@item uucico
+
+The @code{uucico} daemon is the program which actually calls the remote
+system and transfers files and requests.  @code{uucico} is normally
+started automatically by @code{uucp} and @code{uux} and most systems
+will also run it periodically to make sure that all requests are
+handled.  @code{uucico} checks the queue to see what work needs to be
+done, and then calls the appropriate the system.  If the call fails,
+perhaps because the phone line is busy, @code{uucico} leaves the
+requests in the queue and goes on to the next system to call.  It is
+also possible to force @code{uucico} to call a remote system even if
+there is no work to be done for it, so that it can pick up any work that
+may be queued up remotely.
+
+@item uuxqt
+
+The @code{uuxqt} daemon processes execution requests made by the
+@code{uux} program on remote systems (it also processes requests made on
+the local system which require files from a remote system).  It is
+normally started by @code{uucico}.
+
+@end table
+
+Suppose you, on the system @samp{bantam}, want to copy a file to the
+system @samp{airs}.  You would run the @code{uucp} command locally,
+saying something like @samp{uucp notes.txt airs!~/notes.txt}.  This
+would queue up a request on @samp{bantam} to call @samp{airs} and start
+the @code{uucico} daemon.  @code{uucico} would see that there was a
+request for @samp{airs} and attempt to call it.  When the call
+succeeded, another copy of @code{uucico} would be started on
+@samp{airs}.  The two copies of @code{uucico} would tell each other what
+they had to do, and the file would be transferred from @samp{bantam} to
+@samp{airs}.  When the file transfer was complete the @code{uucico} on
+@samp{airs} would move it into the UUCP public directory.
+
+UUCP is often used to transfer mail.  This is normally done
+automatically by mailer programs.  When @samp{bantam} has a mail message
+to send to @samp{ian} at @samp{airs}, it executes @samp{uux - airs!rmail
+ian} and writes the mail message to the @code{uux} process as standard
+input.  The @code{uux} program, running on @samp{bantam} will read the
+standard input and store it and the @code{rmail} request on the work
+queue for @code{airs}.  @code{uux} will then start the @code{uucico}
+daemon.  The @code{uucico} daemon will call up @samp{airs}, just as in
+the @code{uucp} example, and transfer the work request and the mail
+message itself.  The @code{uucico} daemon on @samp{airs} will put the
+files on a local work queue.  When the communication session is over,
+the @code{uucico} daemon on @samp{airs} will start the @code{uuxqt}
+daemon.  @code{uuxqt} will see the request to run, and will run
+@samp{rmail ian} with the mail message as standard input.  The
+@code{rmail} program, which is not part of the UUCP package, is then
+responsible for either putting the message in the right mailbox on
+@samp{airs} or forwarding the message on to another system.
+
+Taylor UUCP comes with two other programs that are useful when
+installing and configuring UUCP.
+
+@table @code
+
+@item uuchk
+
+The @code{uuchk} program reads the UUCP configuration files and displays
+a rather lengthy description of what it finds.  This is very useful when
+configuring UUCP to make certain that the UUCP package will do what you
+expect it to do.
+
+@item tstuu
+
+The @code{tstuu} program is a test harness for the UUCP package, which
+will help ensure that it has been configured and compiled correctly.  It
+does not test everything, however, and it only runs on Unix systems
+which support Berkeley style pseudo-terminals.  It can be useful when
+initially installing Taylor UUCP.
+
+@end table
 
 @node Overall Installation, Configuration files, Introduction, Top
 @chapter Taylor UUCP Overall Installation
 
-These are the installation instructions for the Taylor UUCP package,
-version 1.02.
+These are the installation instructions for the Taylor UUCP package.
 
 @menu
 * Configuration::               Configuring Taylor UUCP
@@ -279,32 +377,53 @@ directory choices are described at somewhat tedious length in
 
 @item
 Take a look at the top of @file{Makefile.in} and set the appropriate
-values for your system.
+values for your system.  These control where the program is installed
+and which user on the system owns them (normally they will be owned by a
+special user @samp{uucp} rather than a real person; they should probably
+not be owned by @samp{root}).
 
 @item
-Run the shell script @file{configure}.  This script was generated using
-David MacKenzie's @file{autoconf} program.  It takes a while to run.  It
+Run the shell script @code{configure}.  This script was generated using
+David MacKenzie's @code{autoconf} program.  It takes a while to run.  It
 will generate a file @file{conf.h}, and copy @file{Makefile.in} to
 @file{Makefile} with substitions.  
 
-You can pass certain arguments to @file{configure} in the environment;
-for example, if you wanted to include the @file{posix} library, then
-(using @code{sh} or @code{bash}) you could enter @samp{LIBS=-lposix
-./configure}.  Useful arguments are @samp{LIBS}, @samp{CC}, and
-@samp{INSTALL}.  There are probably others.
+You can pass certain arguments to @code{configure} in the environment.
+Useful arguments are @samp{LIBS}, @samp{CC}, and @samp{INSTALL}.  For
+example, if you wanted to include the @file{posix} library, then (using
+@code{sh} or @code{bash}) you could enter @samp{LIBS=-lposix
+./configure}.
 
-If @file{configure} fails for some reason, or if you have a very wierd
+On some systems you will want to use @samp{LIBS=-lmalloc}.  On some you
+will want @samp{LIBS=-lsocket}.  On Xenix derived systems do not use
+@samp{LIBS=-lx} because this will bring in the wrong versions of certain
+routines; if you want to use @samp{-lx} you must specify @samp{LIBS=-lc
+-lx}.  I know this information is a bit sketchy; on most systems you
+will not need to give a value for @samp{LIBS} at all.
+
+If @code{configure} fails for some reason, or if you have a very wierd
 system, you may have to configure the package by hand.  To do this, copy
 the file @file{conf.h-dist} to @file{conf.h} and edit it for your
 system.  Then copy @file{Makefile.in} to @file{Makefile}, find the words
 within @kbd{@@} characters, and set them correctly for your system.
 
 @item
-You may want to verify that @file{configure} worked correctly by
-checking @file{conf.h} and @file{Makefile}.
+You should verify that @code{configure} worked correctly by checking
+the files @file{conf.h} and @file{Makefile}.  
+
+There are two known problems on SCO 3.2.2 that @code{configure} will not
+figure out.  The default version of @code{memmove} is buggy, so unless
+you have patched it you should set @code{HAVE_MEMMOVE} to 0.  The
+@code{ftime} function will sometimes go backward in time by almost a
+second; this will not cause any real harm, but it will garble your
+transfer time statistics so you may want to set @code{HAVE_FTIME} to 0.
+
+If you find any problems in @file{conf.h} and @file{Makefile} please
+tell me about them so that I can fix them or at least add more warnings
+here.
 
 @item
-This package uses the alloca function.  The @file{configure} script will
+This package uses the alloca function.  The @code{configure} script will
 try to figure out how to make it work on your system.  If alloca cannot
 be found, a simplistic substitute from @file{alloca.c} will be used.  If
 you provide your own @file{alloca.o} file, it will be used instead; you
@@ -314,23 +433,33 @@ probably work fine.
 
 @item
 Edit @file{policy.h} for your local system.  The comments should explain
-the various choices.
+the various choices.  The default values are intended to be reasonable,
+so you may not have to make any changes.
 
 @item
-Type @samp{make} to compile everything.
+Type @samp{make} to compile everything.  You may get warnings about
+implicit function declarations; ignore these (if you think they can be
+eliminated, and you really know what you are talking about, you may tell
+me about them).  You may also get warnings about @file{getopt.c} (this
+is from the GNU library and I do not want to change it) and about a
+variable not protected from @code{setjmp} in @file{sys2.c} (the data
+flow ensures that this can never be a problem).  The @file{tstuu.c} file
+is not particularly portable; if you can't figure out how to compile it
+you can safely ignore it, as it is only used for testing.  If you have
+any other problems there is probably a bug in the @code{configure}
+script.
 
 @item
-If you have any problems, please report them.  Supply a patch if you
-can, or just ask for help.  You may have trouble with @file{tstuu.c},
-which is not particularly portable.  It is only used for testing, so if
-you don't want to deal with it you don't have to.
+Please report any problems you have.  That is the only way they will get
+fixed for other people.  Supply a patch if you can, or just ask for
+help.
 
 @end enumerate
 
 @node Testing, Installation, Compilation, Overall Installation
 @section Testing Taylor UUCP
 
-This package is in use at several sites, and has been running at
+This package is in use at many sites, and has been running at
 @file{airs.com} for several months.  However, it will doubtless fail in
 some situations.  Do not rely on this code until you have proven to
 yourself that it will work.
@@ -358,12 +487,15 @@ The program will finish with an execute file @file{X.@var{something}}
 and a data file @file{D.@var{something}} in @file{/usr/tmp/tstuu/spool1}
 (or, more likely, in subdirectories, depending on the choice of
 @code{SPOOLDIR} in @file{sysdep.h}).  The log files
-@file{/usr/tmp/tstuu/Log1} and @file{/usr/tmp/tstuu/Log2} should look
-fairly normal.  You can test @code{uuxqt} by typing @samp{./uuxqt -I
+@file{/usr/tmp/tstuu/Log1} and @file{/usr/tmp/tstuu/Log2} (or, if you
+have selected @code{HAVE_BNU_LOGGING},
+@file{/usr/tmp/tstuu/Log1/uucico/test2} and
+@file{/usr/tmp/tstuu/Log2/uucico/test1}) should look fairly normal.  You
+can test @code{uuxqt} by typing @samp{./uuxqt -I
 /usr/tmp/tstuu/Config1}.  This should leave a command file
 @file{C.@var{something}} and a data file @file{D.@var{something}} in
 @file{/usr/tmp/tstuu/spool1} or in subdirectories.  Again, there should
-be no errors in the log file @file{/usr/tmp/tstuu/Log1}.
+be no errors in the log file.
 
 Assuming you compiled the code with debugging enabled, the @samp{-x}
 switch can be used to set debugging modes; see the @code{debug} command
@@ -383,16 +515,16 @@ particularly obstinate about being run as a child; I was only able to
 run it by creating a login name with no password whose shell was
 @file{/usr/lib/uucp/uucico}.  Calling login in this way will leave fake
 entries in @file{wtmp} and @file{utmp}; if you compile @file{tstout.c}
-(it's distributed in the @file{contrib} directory) as an suid
-@code{root} program, @code{tstuu} will run it to clear those entries
-out.  On most systems, such hackery should not be necessary, although on
-SCO I had to su to @code{root} (@code{uucp} might also have worked)
-before I could run @file{/usr/lib/uucp/uucico}.
+(in the @file{contrib} directory) as an suid @code{root} program,
+@code{tstuu} will run it to clear those entries out.  On most systems,
+such hackery should not be necessary, although on SCO I had to su to
+@code{root} (@code{uucp} might also have worked) before I could run
+@file{/usr/lib/uucp/uucico}.
 
-You can test @code{uucp} and @code{uux} with the @samp{-r} switch to
-make sure they create the right sorts of files (see Appendix A of the
-Nutshell Handbook @cite{Managing UUCP and Usenet} for the sorts of files
-that should be created).
+You can test @code{uucp} and @code{uux} (give them the @samp{-r} switch
+to keep them from starting @code{uucico}) to make sure they create the
+right sorts of files.  Unfortunately if you don't know what the right
+sorts of files are I'm not going to tell you here.
 
 If @code{tstuu} passes, or you can't run it for some reason or other,
 move on to testing with some other system.  Set up the configuration
@@ -474,7 +606,8 @@ be done.  Also, at 4:40am, 10:40am and 3:40pm this will create an empty
 work file for @file{uunet}, forcing the next check to call @file{uunet}.
 
 You will also want to periodically trim the log files, which by default
-are @file{/usr/spool/uucp/Log} and @file{/usr/spool/uucp/Stats}.
+are @file{/usr/spool/uucp/Log} and @file{/usr/spool/uucp/Stats}.  The
+@code{savelog} program in the @file{contrib} directory may be of use.
 
 @node TCP,  , Usage, Overall Installation
 @section TCP together with Taylor UUCP
@@ -525,20 +658,20 @@ at any time, over TCP, using port number @samp{uucp} (as found in
 @file{/etc/services}; this may be specified as a number), using remote
 host @file{foo.domain}, with some chat script.
 
-The @code{uucico} daemon can also be run as a TCP server.  This code is
-not completely solid, although it does work, sort of.  I don't recommend
-investigating it unless you are willing to tinker a bit.  Basically, you
-must define a port, either using the port file (@pxref{port file}) if
-you are using the new configuration method or with an entry in Devices
-if you are using BNU (there is no way to define a port using V2).  If
-you are using BNU the port must be named @samp{TCP} (a line as shown
-above will suffice).  You can then start @code{uucico} as @samp{uucico
--p TCP} (after the @samp{-p}, name the port; in BNU it must be
-@samp{TCP}).  This will wait for incoming connections, and fork off a
-child for each one.  Each connection will be prompted with @samp{login:}
-and @samp{Password:}, and the results will be checked against the UUCP
-(not the system) password file (@pxref{config file}).  Of course, you
-can get a similar effect by using the BSD @code{uucpd} program.
+The @code{uucico} daemon can also be run as a TCP server.  This code
+mostly works, but it's not perfect.  I don't recommend investigating it
+unless you are willing to tinker a bit.  Basically, you must define a
+port, either using the port file (@pxref{port file}) if you are using
+the new configuration method or with an entry in Devices if you are
+using BNU (there is no way to define a port using V2).  If you are using
+BNU the port must be named @samp{TCP} (a line as shown above will
+suffice).  You can then start @code{uucico} as @samp{uucico -p TCP}
+(after the @samp{-p}, name the port; in BNU it must be @samp{TCP}).
+This will wait for incoming connections, and fork off a child for each
+one.  Each connection will be prompted with @samp{login:} and
+@samp{Password:}, and the results will be checked against the UUCP (not
+the system) password file (@pxref{config file}).  Of course, you can get
+a similar effect by using the BSD @code{uucpd} program.
 
 You can also have @code{inetd} start up @code{uucico} with the @samp{-l}
 switch, which will cause it to prompt with @samp{login:} and
@@ -2174,7 +2307,8 @@ Franc,ois Pinard @file{<pinard@@iro.umontreal.ca>} tirelessly tested the
 code and suggested many improvements (and also put together the initial
 version of this document).  Finally, Verbus M. Counts
 @file{<verbus@@westmark.com>} and Centel Federal Systems, Inc. deserve
-special thanks, since they actually paid me money to port this code.
+special thanks, since they actually paid me money to port this code to
+System III.
 
 In alphabetical order:
 
