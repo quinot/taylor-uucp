@@ -363,7 +363,8 @@ dnl getdelim.
 AC_CHECK_FUNC(getdelim,
 [AC_CHECK_FUNC(getline,
 [AC_DEFINE(HAVE_GETLINE, 1, [Define if you have the getline function.])],
-[LIBOBJS="$LIBOBJS getlin.o"])])
+[LIBOBJS="$LIBOBJS getlin.o"])],
+[LIBOBJS="$LIBOBJS getlin.o"])
 dnl
 dnl Check for the SCO buggy ftime; the code can cope with the bug,
 dnl though it would prefer not to, so if we're cross-configuring we
