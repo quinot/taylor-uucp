@@ -71,5 +71,5 @@ fsysdep_run (zprogram, zarg1, zarg2)
       return FALSE;
     }
 
-  exit (EXIT_SUCCESS);
+  return TRUE;
 }
