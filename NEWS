@@ -16,6 +16,9 @@ Changes in version 1.07:
     chat script.
 
     Added ``max-file-time'' command to sys file.
+
+    When uucico automatically invokes uuxqt, it no longer passes the
+    -s option.
 
 Changes in version 1.06:
 
