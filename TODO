@@ -230,3 +230,10 @@ want some sort of configuration parameter to allow calls to be
 retried.
 
 35.
+
+Terry Gardner: there's no way to embed a # character in a phone
+number.  Also, it's possible that the BNU configuration reading may be
+wrong, because BNU may only recognize comment characters at the start
+of a line.  Is this true?
+
+36.
