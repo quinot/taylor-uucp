@@ -503,10 +503,12 @@ fgstart (qdaemon, pzlog)
       if (! fginit_sendbuffers (TRUE))
 	return FALSE;
 
-      *pzlog = zbufalc (sizeof "protocol '' packet size  window " + 50);
-      sprintf (*pzlog, "protocol '%c' packet size %d window %d",
+      *pzlog = zbufalc (sizeof "protocol '' remote packet/window / local /"
+			+ 64);
+      sprintf (*pzlog, "protocol '%c' remote packet/window %d/%d local %d/%d",
 	       qdaemon->qproto->bname, (int) iGremote_packsize,
-	       (int) iGremote_winsize);
+	       (int) iGremote_winsize, (int) iGrequest_packsize,
+	       (int) iGrequest_winsize);
 
       return TRUE;
     }

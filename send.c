@@ -711,8 +711,15 @@ flocal_send_open_file (qtrans, qdaemon)
 	  sprintf (zalc, "%s (%s)", qtrans->s.zcmd, qtrans->s.zfrom);
 	  zsend = zalc;
 	}
-      qtrans->zlog = zbufalc (sizeof "Sending " + strlen (zsend));
-      sprintf (qtrans->zlog, "Sending %s", zsend);
+
+      qtrans->zlog = zbufalc (sizeof "Sending ( bytes resume at )"
+			      + strlen (zsend) + 50);
+      sprintf (qtrans->zlog, "Sending %s (%ld bytes", zsend, qinfo->cbytes);
+      if (qtrans->ipos > 0)
+	sprintf (qtrans->zlog + strlen (qtrans->zlog), " resume at %ld",
+		 qtrans->ipos);
+      strcat (qtrans->zlog, ")");
+
       ubuffree (zalc);
     }
 
@@ -926,8 +933,10 @@ fremote_rec_reply (qtrans, qdaemon)
       return FALSE;
     }
 
-  qtrans->zlog = zbufalc (sizeof "Sending " + strlen (qtrans->s.zfrom));
-  sprintf (qtrans->zlog, "Sending %s", qtrans->s.zfrom);
+  qtrans->zlog = zbufalc (sizeof "Sending ( bytes) "
+			  + strlen (qtrans->s.zfrom) + 25);
+  sprintf (qtrans->zlog, "Sending %s (%ld bytes)", qtrans->s.zfrom,
+	   qinfo->cbytes);
 
   if (qdaemon->qproto->pffile != NULL)
     {
@@ -1098,6 +1107,7 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  TRUE, qtrans->cbytes, qtrans->isecs, qtrans->imicros,
 	  qdaemon->fmaster);
+  qdaemon->csent += qtrans->cbytes;
 
   if (zerr == NULL)
     {

@@ -728,8 +728,24 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
       else
 	zlog = qinfo->zfile;
     }
-  qtrans->zlog = zbufalc (sizeof "Receiving " + strlen (zlog));
+  qtrans->zlog = zbufalc (sizeof "Receiving ( bytes resume at )"
+			  + strlen (zlog) + 50);
   sprintf (qtrans->zlog, "Receiving %s", zlog);
+  if (crestart > 0 || qcmd->cbytes > 0)
+    {
+      strcat (qtrans->zlog, " (");
+      if (qcmd->cbytes > 0)
+	{
+	  sprintf (qtrans->zlog + strlen (qtrans->zlog), "%ld bytes",
+		   qcmd->cbytes);
+	  if (crestart > 0)
+	    strcat (qtrans->zlog, " ");
+	}
+      if (crestart > 0)
+	sprintf (qtrans->zlog + strlen (qtrans->zlog), "resume at %ld",
+		 crestart);
+      strcat (qtrans->zlog, ")");
+    }
 
   return fqueue_remote (qdaemon, qtrans);
 }
@@ -992,6 +1008,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  FALSE, qtrans->cbytes, qtrans->isecs, qtrans->imicros,
 	  qdaemon->fmaster);
+  qdaemon->creceived += qtrans->cbytes;
 
   if (zerr == NULL)
     {

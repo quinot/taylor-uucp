@@ -512,11 +512,14 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
 
       if (iseq >= IMAXSEQ)
 	{
-	  *pzlog = zbufalc (sizeof "protocol 'i' packet size %d window %d"
-			    + 50);
-	  sprintf (*pzlog, "protocol '%c' packet size %d window %d",
-		   qdaemon->qproto->bname, iIremote_packsize,
-		   iIremote_winsize);
+	  *pzlog = zbufalc (sizeof "protocol '' remote packet/window / local /"
+			+ 64);
+	  sprintf (*pzlog,
+		   "protocol '%c' remote packet/window %d/%d local %d/%d",
+		   qdaemon->qproto->bname, (int) iIremote_packsize,
+		   (int) iIremote_winsize, (int) iIrequest_packsize,
+		   (int) iIrequest_winsize);
+
 	  iIalc_packsize = iIremote_packsize;
 
 	  return TRUE;
