@@ -2084,7 +2084,7 @@ fifi:
 		cZheaders_received++;
 		break;
 	}
-	DEBUG_MESSAGE2 (DEBUG_PROTO, "izrecv_hdr: %s, data = 0x%x",
+	DEBUG_MESSAGE2 (DEBUG_PROTO, "izrecv_hdr: %s, data = 0x%lx",
 			ZZHEADER_NAME(c), rclhdr (hdr));
 
 	return c;
