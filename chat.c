@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/28  03:49:23  ian
+   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
+
    Revision 1.9  1991/12/17  23:14:08  ian
    T. William Wells: allow dialer complete and abort to be chat scripts
 
@@ -441,7 +444,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
    Note that it handles the dialer escape sequences (\e, \E, \D, \T)
    although they make no sense for chatting with a system.  */
 
-boolean
+static boolean
 fcsend (z, qsys, qdial, zphone, ftranslate)
      const char *z;
      const struct ssysteminfo *qsys;
