@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.5  1992/03/08  17:08:20  ian
+''' Ted Lindgreen: ignore -u option
+'''
 ''' Revision 1.4  1992/02/27  05:40:54  ian
 ''' T. William Wells: detach from controlling terminal, handle signals safely
 '''
@@ -13,7 +16,7 @@
 ''' Initial revision
 '''
 '''
-.TH uucico 8 "Taylor UUCP 1.02"
+.TH uucico 8 "Taylor UUCP 1.03"
 .SH NAME
 uucico \- UUCP file transfer daemon
 .SH SYNOPSIS
@@ -95,7 +98,7 @@ will permanently control a port.
 .SH OPTIONS
 The following options may be given to
 .I uucico.
-.TP5
+.TP 5
 .B \-r1
 Start in master mode (call out to a system); implied by
 .B \-s
@@ -103,19 +106,19 @@ or
 .B \-S.  If no system is specified, 
 call any system for which work is
 waiting to be done.
-.TP5
+.TP 5
 .B \-r0
 Start in slave mode.  This is the default.
-.TP5
+.TP 5
 .B \-s system
 Call the named system.
-.TP5
+.TP 5
 .B \-S system
 Call the named system, ignoring any required wait.
-.TP5
+.TP 5
 .B \-f
 Ignore any required wait for any systems to be called.
-.TP5
+.TP 5
 .B \-l
 Prompt for login name and password using "login: " and "Password:".
 This allows
@@ -124,18 +127,18 @@ to be easily run from
 .I inetd
 (8).  The login name and password are checked against the UUCP
 password file, which has no connection to the file /etc/passwd.
-.TP5
+.TP 5
 .B \-p port
 Specify a port to call out on or to listen to.  In slave mode, this
 implies
 .B \-e.
-.TP5
+.TP 5
 .B \-e
 Enter endless loop of login/password prompts and slave mode daemon
 execution.  The program will not stop by itself; you must use
 .I kill
 (1) to shut it down.
-.TP5
+.TP 5
 .B \-w
 After calling out (to a particular system when
 .B \-s
@@ -145,12 +148,12 @@ is specifed, or to all systems which have work when
 .B \-r1
 is specifed), begin an endless loop as with
 .B \-e.
-.TP5
+.TP 5
 .B \-q
 Do not start the
 .I uuxqt
 (8) daemon when finished.
-.TP5
+.TP 5
 .B \-D
 Do not detach from the controlling terminal.  Normally
 .I uucico
@@ -158,18 +161,18 @@ detaches from the terminal before each call out to another system and
 before invoking
 .I uuxqt.
 This option prevents this.
-.TP5
+.TP 5
 .B \-x number, \-X number
 Set debugging level.  Level 0 is no debugging output, level 9 is full
 debugging output.  The debugging output is sent to the debugging file,
 usually /usr/spool/uucp/Debug.
-.TP5
+.TP 5
 .B \-I file
 Set configuration file to use.  This option may not be available,
 depending upon how
 .I uucico
 was compiled.
-.TP5
+.TP 5
 .B \-u login
 This option is ignored.  It is only included because some versions of
 uucpd invoke

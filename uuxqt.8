@@ -1,10 +1,13 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.2  1992/01/20  23:52:23  ian
+''' Change to version 1.02
+'''
 ''' Revision 1.1  1991/12/14  19:05:30  ian
 ''' Initial revision
 '''
 '''
-.TH uuxqt 8 "Taylor UUCP 1.02"
+.TH uuxqt 8 "Taylor UUCP 1.03"
 .SH NAME
 uuxqt \- UUCP execution daemon
 .SH SYNOPSIS
@@ -36,21 +39,21 @@ may be run at once.
 .SH OPTIONS
 The following options may be given to
 .I uuxqt.
-.TP5
+.TP 5
 .B \-c command
 Only execute requests for the specified command.  For example:
 .EX
 uuxqt -c rmail
 .EE
-.TP5
+.TP 5
 .B \-s system
 Only execute requests originating from the specified system.
-.TP5
+.TP 5
 .B \-x number
 Set debugging level.  Level 0 is no debugging output, level 9 is full
 debugging output.  The debugging output is sent to the debugging file,
 usually /usr/spool/uucp/Debug.
-.TP5
+.TP 5
 .B \-I file
 Set configuration file to use.  This option may not be available,
 depending upon how
