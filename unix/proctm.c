@@ -149,9 +149,7 @@ ixsysdep_process_time (pimicros)
 
   if (itick == 0)
     {
-#if TIMES_TICK != 0
-      itick = TIMES_TICK;
-#else /* TIMES_TICK == 0 */
+#if TIMES_TICK == 0
       const char *z;
 
       z = getenv ("HZ");
@@ -161,6 +159,8 @@ ixsysdep_process_time (pimicros)
       /* If we really couldn't get anything, just use 60.  */
       if (itick == 0)
 	itick = 60;
+#else /* TIMES_TICK != 0 */
+      itick = TIMES_TICK;
 #endif /* TIMES_TICK == 0 */
     }
 
