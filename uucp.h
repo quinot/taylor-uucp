@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/09/19  17:43:48  ian
+   Chip Salzenberg: undef TRUE and FALSE in case system defines them
+
    Revision 1.2  1991/09/19  02:22:44  ian
    Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
 
@@ -369,9 +372,6 @@ struct sstatus
   /* Number of seconds until a retry is permitted.  */
   int cwait;
 };
-
-/* The number of retries we permit; this should probably be configurable.  */
-#define CMAXRETRIES (26)
 
 /* How long we have to wait for the next call, given the number of retries
    we have already made.  This should probably be configurable.  */
