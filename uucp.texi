@@ -24,7 +24,7 @@ a taylor.texi file.  Many things remain to do, among which:
 @ifinfo
 This file documents Taylor UUCP, version 1.05.
 
-Copyright @copyright{} 1992, 1993 Ian Lance Taylor
+Copyright @copyright{} 1992, 1993, 1994 Ian Lance Taylor
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -56,7 +56,7 @@ translation approved by the author instead of in the original English.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993 Ian Lance Taylor
+Copyright @copyright{} 1992, 1993, 1994 Ian Lance Taylor
 
 Published by Ian Lance Taylor @code{<ian@@airs.com>}.
 
@@ -81,8 +81,8 @@ translation approved by the author instead of in the original English.
 
 This is the documentation for the Taylor UUCP package, version 1.05.
 The programs were written by Ian Lance Taylor.  The author can be
-reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, 4th
-Floor, Building 200, 1 Kendall Square, Cambridge, MA, 02139}.
+reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, Building
+200, 1 Kendall Square, Cambridge, MA, 02139, USA}.
 
 There is a mailing list for discussion of the package.  To join (or get
 off) the list, send mail to
@@ -91,6 +91,10 @@ answered by a person, not a program.  When joining the list, please give
 the address at which you wish to receive mail; do not rely on the
 message headers.  To send a message to the list, send it to
 @code{<taylor-uucp@@gnu.ai.mit.edu>}.
+
+Jeff Ross has volunteered to maintain patches for UUCP releases.  They
+may be obtained via anonymous FTP from ftp.fdu.edu, in the directory
+pub/taylor-uucp.
 
 @menu
 * Copying::                     Taylor UUCP copying conditions
@@ -128,6 +132,7 @@ Using UUCP for mail and news.
 Taylor UUCP Configuration Files
 
 * Configuration File Format::   Configuration file format
+* Configuration File Overview::  Configuration File Overview
 * Configuration Examples::      Examples of configuration files
 * Time Strings::                How to write time strings
 * Chat Scripts::                How to write chat scripts
@@ -166,33 +171,6 @@ Calling Out
 * When to Call::                When to call
 * Placing the Call::            Placing the call
 * Logging In::                  Logging in
-
-UUCP protocol internals
-
-* Grades::                      UUCP grades
-* Lock Files::                  UUCP lock file format
-* UUCP Protocol::               The common UUCP protocol
-* g Protocol::                  The UUCP @samp{g} protocol
-* f Protocol::                  The UUCP @samp{f} protocol
-* t Protocol::                  The UUCP @samp{t} protocol
-* e Protocol::                  The UUCP @samp{e} protocol
-* x Protocol::                  The UUCP @samp{x} protocol
-* d Protocol::                  The UUCP @samp{d} protocol
-* Capital G Protocol::          The UUCP @samp{G} protocol
-* Documentation References::    Documentation references
-
-The Common UUCP Protocol
-
-* Initial Handshake::           Initial handshake
-* File Requests::               File requests
-* Final Handshake::             Final handshake
-
-File Requests
-
-* S Request::                   S request
-* R Request::                   R request
-* X Request::                   X request
-* H Request::                   H request
 
 Hacking Taylor UUCP
 
@@ -275,11 +253,11 @@ this example @samp{~} is used to name the UUCP public directory on
 
 @item uux
 
-The @code{uux} program is used to request a program to be executed on a
-remote system.  This is how mail and news are transferred over UUCP.  As
-with @code{uucp}, programs and files on remote systems may be named by
-using @samp{system!}.  For example, to run the @code{rnews} program on
-@samp{airs} passing it standard input, you would say @samp{uux -
+The @code{uux} program is used to request the execution of a program on
+a remote system.  This is how mail and news are transferred over UUCP.
+As with @code{uucp}, programs and files on remote systems may be named
+by using @samp{system!}.  For example, to run the @code{rnews} program
+on @samp{airs} passing it standard input, you would say @samp{uux -
 airs!rnews}.  The @samp{-} means to read standard input and set things
 up such that when @code{rnews} runs on @samp{airs} it will receive the
 same standard input.
@@ -365,6 +343,7 @@ also possible to force @code{uucico} to call a remote system even if
 there is no work to be done for it, so that it can pick up any work that
 may be queued up remotely.
 
+@need 1000
 @item uuxqt
 
 The @code{uuxqt} daemon processes execution requests made by the
@@ -419,10 +398,10 @@ expect it to do.
 @item uuconv
 
 The @code{uuconv} program can be used to convert UUCP configuration
-files from one support format to another.  This can be useful for
-administrators converting from an older UUCP.  Taylor UUCP is able to
-read and use old configuration file formats, but some new features can
-not be selected using the old formats.
+files from one format to another.  This can be useful for administrators
+converting from an older UUCP.  Taylor UUCP is able to read and use old
+configuration file formats, but some new features can not be selected
+using the old formats.
 
 @item uusched
 
@@ -432,12 +411,11 @@ systems for which work has been queued.
 
 @item tstuu
 
-The @code{tstuu} program is a test harness for the UUCP package, which
-will help ensure that it has been configured and compiled correctly.  It
-does not test everything, however.  It only runs on Unix systems which
-support Berkeley style pseudo-terminals or STREAMS style
-pseudo-terminals.  It can be useful when initially installing Taylor
-UUCP.
+The @code{tstuu} program is a test harness for the UUCP package; it can
+help check that the package has been configured and compiled correctly.
+However, it uses pseudo-terminals, which means that it is less portable
+than the rest of the package.  If it works, it can be useful when
+initially installing Taylor UUCP.
 
 @end table
 
@@ -467,18 +445,18 @@ be used at once, if you are so inclined.  Currently using just V2
 configuration files is not really possible, because there is no way to
 specify a dialer (there are no built in dialers, and the program does
 not know how to read @file{acucap} or @file{modemcap}); however, V2
-configuration files can be used with a new style dialer file
-(@pxref{dial File}), or with a HDB @file{Dialers} file.
+configuration files can be used with a new style dial file (@pxref{dial
+File}), or with a HDB @file{Dialers} file.
 
 Use of HDB configuration files has two known bugs.  A blank line in the
 middle of an entry in the @file{Permissions} file will not be ignored as
 it should be.  Dialer programs, as found in some versions of HDB, are
 not recognized directly.  If you must use a dialer program, rather than
 an entry in @file{Devices}, you must use the @code{chat-program} command
-in a new style dialer file; see @ref{dial File}.  You will have to
-invoke the dialer program via a shell script or another program, since
-an exit code of 0 is required to recognize success; the dialHDB program
-in the contrib directory may be used for this purpose.
+in a new style dial file; see @ref{dial File}.  You will have to invoke
+the dialer program via a shell script or another program, since an exit
+code of 0 is required to recognize success; the @code{dialHDB} program
+in the @file{contrib} directory may be used for this purpose.
 
 The @code{uuconv} program can be used to convert from V2 or HDB
 configuration files to the new style (it can also do the reverse
@@ -489,7 +467,7 @@ If you are installing a new system, you will, of course, have to write
 the configuration files; see @ref{Configuration Files}.
 
 You must also decide what sort of spool directory you want to use.  If
-you will only be using these programs, I recommend
+you will be using only these programs for UUCP, I recommend
 @samp{SPOOLDIR_TAYLOR}; otherwise select the spool directory
 corresponding to your existing UUCP package.  The details of the spool
 directory choices are described at somewhat tedious length in
@@ -579,6 +557,22 @@ behaviour, and it took me a day to find out the cause.  I don't use
 add @samp{-lcposix} to @samp{LIBS}.
 
 @item
+On some versions of BSDI there is a bug in the shell which causes the
+default value for @samp{CFLAGS} to be set incorrectly.  If @samp{echo
+$@{CFLAGS--g@}} echoes @samp{g} rather than @samp{-g}, then you must set
+@samp{CFLAGS} in the environment before running configure.  There is a
+patch available from BSDI for this bug.  (From David Vrona).
+
+@item
+On AIX 3.2.5, and possibly other versions, @samp{cc -E} does not work,
+reporting @samp{Option NOROCONST is not valid}.  Test this before
+running configure by doing something like @samp{touch /tmp/foo.c; cc -E
+/tmp/foo.c}.  This may give a warning about the file being empty, but it
+should not give the @samp{Option NOROCONST} warning.  The workaround is
+to remove the @samp{,noroconst} entry from the @samp{options} clause in
+the @samp{cc} stanza in @file{/etc/xlc.cfg}.  (From Chris Lewis).
+
+@item
 You should verify that @code{configure} worked correctly by checking
 @file{config.h} and the instances of @file{Makefile}.
 
@@ -606,10 +600,10 @@ just ask for help.
 @node Testing, Installation, Compilation, Overall Installation
 @section Testing Taylor UUCP
 
-This package is in use at many sites, and has been running at
-@file{airs.com} for over a year.  However, it will doubtless fail in
-some situations.  Do not rely on this code until you have proven to
-yourself that it will work.
+This package is in use at hundreds, perhaps thousands, of sites, and has
+been running at @file{airs.com} for several years.  However, it will
+doubtless fail in some situations.  Do not rely on this code until you
+have proven to yourself that it will work.
 
 You can use the @code{uuchk} program to test your configuration files.
 It will read them and print out a verbose description.  This program
@@ -637,9 +631,6 @@ spool directories @file{/usr/tmp/tstuu/spool1} and
 If your system does not support the @code{FIONREAD} call, the
 @samp{tstuu} program will run very slowly.  This may or may not get
 fixed in a later version.
-
-The @samp{tstuu} program does not seem to work under SunOS 4.1.1.  This
-seems to be due to a bug in the implementation of ptys.
 
 The program will finish with an execute file named
 @file{X.@var{something}} and a data file named @file{D.@var{something}}
@@ -702,7 +693,7 @@ one command line, or you can give it comma separated arguments as in the
 last example.  Use @samp{-x all} to turn on all possible debugging
 information.  The debugging information is written to a file, normally
 @file{/usr/spool/uucp/Debug}, although the default can be changed in
-@file{policy.h} and the configuration file can override the name with
+@file{policy.h} and the @file{config} file can override the name with
 the @code{debugfile} command.  The debugging file may contain passwords
 and some file contents as they are transmitted over the line, so the
 debugging file is only readable by the @code{uucp} user.
@@ -717,7 +708,8 @@ rapid succession.
 Again, please let me know about any problems you have and how you got
 around them.  If you do report a problem, please include the version
 number of the package you are using, and a sample of the debugging file
-showing the problem.  General questions such as ``why doesn't uucico
+showing the problem (debugging information is usually what is needed,
+not just the log file).  General questions such as ``why doesn't uucico
 dial out'' are impossible to answer without much more information.
 
 @node Installation, TCP, Testing, Overall Installation
@@ -733,11 +725,11 @@ typing @samp{make uninstall}.
 
 Note that by default the programs are compiled with debugging
 information, and they are not stripped when they are installed.  You may
-want to strip the installed programs to save disk space.  See the
-documentation for strip for more information.
+want to strip the installed programs to save disk space.  See your
+system documentation for strip for more information.
 
-Simply installing the executable files is not enough.  You must also
-arrange for them to be used correctly.
+However, simply installing the executable files is not enough.  You must
+also arrange for them to be used correctly.
 
 @menu
 * Running uucico::              Running uucico
@@ -750,13 +742,14 @@ arrange for them to be used correctly.
 
 By default @code{uucp} and @code{uux} will automatically start up
 @code{uucico} to call another system whenever work is queued up.
-However, the call may fail, or there may be time restrictions which
-prevent the call at that time (perhaps because telephone rates are high)
-(@pxref{When to Call}).  Also, a remote system may have work queued up
-for your system, but may not be calling you for some reason (perhaps you
-have agreed that your system should always place the call).  To make
-sure that works get transferred between the systems withing a reasonable
-time period, you should arrange to periodically invoke @code{uucico}.
+However, the call may fail, or you may have put in time restrictions
+which prevent the call at that time (perhaps because telephone rates are
+high) (@pxref{When to Call}).  Also, a remote system may have work
+queued up for your system, but may not be calling you for some reason
+(perhaps you have agreed that your system should always place the call).
+To make sure that works get transferred between the systems withing a
+reasonable time period, you should arrange to periodically invoke
+@code{uucico}.
 
 These periodic invocations are normally caused by entries in the
 @file{crontab} file.  The exact format of @file{crontab} files, and how
@@ -765,13 +758,15 @@ documentation (try @samp{man cron}).
 
 To attempt to call all systems with outstanding work, use the command
 @samp{uucico -r1}.  To attempt to call a particular system, use the
-command @samp{uucico -s SYSTEM}.
+command @samp{uucico -s @var{system}}.  To attempt to call a particular
+system, but only if there is work for it, use the command @samp{uucico
+-C -s @var{system}}.
 
 A common case is to want to try to call a system at a certain time, with
 periodic retries if the call fails.  A simple way to do this is to
-create an UUCP command file, known as a @dfn{poll file}.  If a poll
-file exists for a system, then @samp{uucico -r1} will place a call to
-it.  If the call succeeds, the poll file will be deleted.
+create an empty UUCP command file, known as a @dfn{poll file}.  If a
+poll file exists for a system, then @samp{uucico -r1} will place a call
+to it.  If the call succeeds, the poll file will be deleted.
 
 The file can be easily created using the @samp{touch} command.  The name
 of a poll file currently depends on the type of spool directory you are
@@ -805,8 +800,8 @@ be done, and, if there is, will call the appropriate system.  Also, at
 
 Taylor UUCP does not include a mail package.  All Unix systems come with
 some sort of mail delivery agent, typically @code{sendmail} or
-@code{MMDF}.  Source code is available for some mail delivery agents,
-such as @code{IDA sendmail} and @code{smail}.
+@code{MMDF}.  Source code is available for some alternative mail
+delivery agents, such as @code{IDA sendmail} and @code{smail}.
 
 Taylor UUCP also does not include a news package.  The two major Unix
 news packages are @code{C-news} and @code{INN}.  Both are available in
@@ -818,7 +813,8 @@ is usually simpler, but I will not be discussing that either.  I will
 merely describe the interactions between the mail and news systems and
 UUCP.
 
-A mail or news system interacts with UUCP in two ways.
+A mail or news system interacts with UUCP in two ways: sending and
+receiving.
 
 @menu
 * Sending mail or news::        Sending mail or news via UUCP
@@ -878,7 +874,7 @@ continue to grow without limit.  The names of the log files are set in
 @file{/usr/spool/uucp/Log} and @file{/usr/spool/uucp/Stats}.
 
 You may find the @code{savelog} program in the @file{contrib} directory
-may be of use.  There is a manual page for it in @file{contrib} as well.
+to be of use.  There is a manual page for it in @file{contrib} as well.
 
 @node TCP,  , Installation, Overall Installation
 @section TCP together with Taylor UUCP
@@ -914,6 +910,7 @@ over TCP, using port number @samp{uucp} (as found in
 @file{/etc/services}; this may be specified as a number), using remote
 host @file{@var{host}.@var{domain}}, with some chat script.
 
+@need 1000
 If you are using HDB configuration files, add a line like this to
 Systems:
 
@@ -980,6 +977,7 @@ revoke any setuid privileges.
 
 @menu
 * Configuration File Format::   Configuration file format
+* Configuration File Overview::  Configuration File Overview
 * Configuration Examples::      Examples of configuration files
 * Time Strings::                How to write time strings
 * Chat Scripts::                How to write chat scripts
@@ -990,7 +988,7 @@ revoke any setuid privileges.
 * Security::                    Security issues
 @end menu
 
-@node Configuration File Format, Configuration Examples, Configuration Files, Configuration Files
+@node Configuration File Format, Configuration File Overview, Configuration Files, Configuration Files
 @section Configuration File Format
 
 All the configuration files follow a simple line-oriented
@@ -1022,15 +1020,55 @@ may be specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and
 @kbd{n}, @kbd{N}, @kbd{f}, or @kbd{F} for false; any trailing characters
 are ignored, so @code{true}, @code{false}, etc., are also acceptable.
 
-@node Configuration Examples, Time Strings, Configuration File Format, Configuration Files
+@node Configuration File Overview, Configuration Examples, Configuration File Format, Configuration Files
+@section Configuration File Overview
+
+UUCP uses several different types of configuration files, each
+describing a different kind of information.  The commands permitted in
+each file are described in detail below.  This section is a brief
+description of some of the different types of files.
+
+The @file{config} file is the main configuration file.  It describes
+general information not associated with a particular remote system, such
+as the location of various log files.  There are reasonable defaults for
+everything that may be specified in the @file{config} file, so you may
+not actually need one on your system.
+
+There may be only one @file{config} file, but there may be one or more
+of each other type of file.  The default is one file for each type, but
+more may be listed in the @file{config} file.
+
+The @file{sys} files are used to describe remote systems.  Each remote
+system to which you connect must be listed in a @file{sys} file.  A
+@file{sys} file will include information for a system, such as the speed
+(baud rate) to use, or when to place calls.
+
+For each system you wish to call, you must describe one or more ports;
+these ports may be defined directly in the @file{sys} file, or they may
+be defined in a @file{port} file.
+
+The @file{port} files are used to describe ports.  A port is a
+particular hardware connection on your computer.  You would normally
+define as many ports as there are modems attached to your computer.  A
+TCP connection is also described using a port.
+
+The @file{dial} files are used to describe dialers.  Dialer is
+essentially another word for modem.  The @file{dial} file describes the
+commands UUCP should use to dial out on a particular type of modem.  You
+would normally define as many dialers as there are types of modems
+attached to your computer.  For example, if you have three Telebit
+modems used for UUCP, you would probably define three ports and one
+dialer.
+
+There are other types of configuration files, but these are the
+important ones.  The other types are described below.
+
+@node Configuration Examples, Time Strings, Configuration File Overview, Configuration Files
 @section Examples of Configuration Files
 
-All the configuration commands are explained in the following sections.
-However, I'll start by giving a few examples of configuration files.
-For a more complete description of any of the commands used here see the
-appropriate section of this chapter.  There are also sample
-configuration files in the @file{sample} subdirectory of the
-distribution.
+This section provides few typical examples of configuration files.
+There are also sample configuration files in the @file{sample}
+subdirectory of the distribution.
 
 @menu
 * config File Examples::        Examples of the main configuration file
@@ -1170,9 +1208,9 @@ increased.
 This @file{sys} file relies on certain defaults.  It will allow
 @file{uunet} to queue up @samp{rmail} and @samp{rnews} commands.  It
 will allow users to request files from @file{uunet} into the UUCP public
-directory.  It will also @file{uunet} to request files from the UUCP
-public directory; in fact @file{uunet} never requests files, but for
-additional security we could add the line @samp{request false}.
+directory.  It will also allow @file{uunet} to request files from the
+UUCP public directory; in fact @file{uunet} never requests files, but
+for additional security we could add the line @samp{request false}.
 
 @example
 # The following information is for uunet
@@ -1199,7 +1237,7 @@ chat-timeout 120
 # We are using a preconfigured Telebit 2500.
 port type modem
 port device /dev/ttyd0
-port baud 19200
+port speed 19200
 port carrier true
 port dialer chat "" ATZ\r\d\c OK ATDT\D CONNECT
 port dialer chat-fail BUSY
@@ -1607,9 +1645,9 @@ On Unix, the standard input and standard output of the program will be
 attached to the port in use.  Anything the program writes to standard
 error will be written to the UUCP log file.  No other file descriptors
 will be open.  If the program does not exit with a status of 0, it will
-be assumed to have failed; this means that the dialing programs used by
-some versions of HDB may not be used directly, although of course a
-shell script could be used as an interface.
+be assumed to have failed.  This means that the dialing programs used by
+some versions of HDB may not be used directly, but you may be able to
+run them via the @code{dialHDB} program in the @file{contrib} directory.
 
 The program will be run as the @code{uucp} user, and the environment
 will be that of the process that started @code{uucico}, so care must be
@@ -1618,7 +1656,7 @@ taken to maintain security.
 No search path is used to find the program; a full path name must be
 given.  If the program is an executable shell script, it will be passed
 to @file{/bin/sh} even on systems which are unable to execute shell
-scripts.  It is also easy to invoke @file{/bin/sh} directly.
+scripts.
 
 @end table
 
@@ -1899,7 +1937,7 @@ As a special exception, a colon may be used to separate the login name
 from the password, and a colon may be used to terminate the password.
 This means that the login name and password may not contain a colon.
 This feature, in conjunction with the @code{HAVE_ENCRYPTED_PASSWORDS}
-define in @file{policy.h}, permits using a standard Unix
+macro in @file{policy.h}, permits using a standard Unix
 @file{/etc/passwd} as a UUCP password file, providing the same set of
 login names and passwords for both @code{getty} and @code{uucico}.
 
@@ -1938,7 +1976,7 @@ Statistical information about file transfers is written to this file.
 Name the file to which all debugging information is written.  The
 default is from @file{policy.h}.  This command is only effective if the
 code has been compiled to include debugging (this is controlled by the
-@code{DEBUG} variable in @file{policy.h}).  If debugging is on, messages
+@code{DEBUG} macro in @file{policy.h}).  If debugging is on, messages
 written to the log file are also written to the debugging file to make
 it easier to keep the order of actions straight.  The debugging file is
 different from the log file because information such as passwords can
@@ -2039,7 +2077,7 @@ These files describe all remote systems known to the UUCP package.
 
 The first set of commands in the file, up to the first @code{system}
 command, specify defaults to be used for all systems in that file.  Each
-system file uses a different set of defaults.
+@file{sys} file uses a different set of defaults.
 
 Subsequently, each set of commands from @code{system} up to the next
 @code{system} command describe a particular system.  Default values may
@@ -2130,9 +2168,9 @@ default is to have no aliases.
 
 Specifies a different system name to use when calling the remote system.
 Also, if @code{called-login} is used and is not @samp{ANY}, then, when a
-system logs in with that login name, @var{string} is used as the system
-name.  Because the local system name must be determined before the
-remote system has identified itself, using @code{myname} and
+system logs in with that login name, @var{string} is used as the local
+system name.  Because the local system name must be determined before
+the remote system has identified itself, using @code{myname} and
 @code{called-login} together for any system will set the local name for
 that login; this means that each locally used system name must have a
 unique login name associated with it.  This allows a system to have
@@ -2255,23 +2293,23 @@ whatever grades of work it chooses.
 
 @table @code
 
-@item baud @var{number}
-@findex baud in sys file
 @itemx speed @var{number}
 @findex speed in sys file
+@item baud @var{number}
+@findex baud in sys file
 
 Specify the speed (the term @dfn{baud} is technically incorrect, but
 widely understood) at which to call the system.  This will try all
-available ports with that baud rate until an unlocked port is found.
-The ports are defined in the port file.  If both @code{baud} and
+available ports with that speed until an unlocked port is found.  The
+ports are defined in the port file.  If both @code{speed} and
 @code{port} commands appear, both are used when selecting a port.  To
-allow calls at more than one baud rate, the @code{alternate} command
-must be used (@pxref{Defaults and Alternates}).  If this command does
-not appear, there is no default; the baud rate may be specified in the
-port file, but if it is not then the natural baud rate of the port will
-be used (whatever that means on the system).  Specifying an explicit
-baud rate of 0 will request the natural baud rate of the port,
-overriding any default baud rate from the defaults at the top of the
+allow calls at more than one speed, the @code{alternate} command must be
+used (@pxref{Defaults and Alternates}).  If this command does not
+appear, there is no default; the speed may be specified in the port
+file, but if it is not then the natural speed of the port will be used
+(whatever that means on the system).  Specifying an explicit speed of 0
+will request the natural speed of the port (whatever the system sets it
+to), overriding any default speed from the defaults at the top of the
 file.
 
 @item port @var{string}
@@ -2281,10 +2319,10 @@ Name a particular port or type of port to use when calling the system.
 The information for this port is obtained from the port file.  If this
 command does not appear, there is no default; a port must somehow be
 specified in order to call out (it may be specified implicitly using the
-@code{baud} command or explicitly using the next version of
+@code{speed} command or explicitly using the next version of
 @code{port}).  There may be many ports with the same name; each will be
 tried in turn until an unlocked one is found which matches the desired
-baud rate.
+speed.
 
 @item port @var{string} @dots{}
 
@@ -2295,7 +2333,7 @@ File}).  If a port is named (by using a single string following
 defining the port completely in the system file rather than always
 requiring entries in two different files.  In order to call out, a port
 must be specified using some version of the @code{port} command, or by
-using the @code{baud} command to select ports from the port file.
+using the @code{speed} command to select ports from the port file.
 
 @item phone @var{string}
 @findex phone
@@ -2540,8 +2578,8 @@ be used on a serial port, the port must be completely reliable and flow
 controlled; many aren't.
 
 The @samp{v} protocol is the @samp{g} protocol as used by the DOS
-program UUPC/Extended (it is provided only so that UUPC/Extended users
-can use it; there is no particular reason to select it).
+program UUPC/Extended.  It is provided only so that UUPC/Extended users
+can use it; there is no particular reason to select it.
 
 The protocols will be considered in the order shown above.  This means
 that if neither the @code{seven-bit} nor the @code{reliable} command are
@@ -2803,8 +2841,8 @@ no size restrictions.
 With all the size control commands, the size of a file from the remote
 system (as opposed to a file from the local system) will only be checked
 if the other system is running this package; other UUCP packages will
-not understand a maximum size request, nor will they inform this package
-of the size of remote files.
+not understand a maximum size request, nor will they provide the size of
+remote files.
 
 @item call-remote-size @var{number} @var{string}
 @findex call-remote-size
@@ -3109,20 +3147,20 @@ the port name is taken as the device.  Device names are system
 dependent.  On Unix, a modem or direct connection might be something
 like @file{/dev/ttyd0}; a TLI port might be @file{/dev/inet/tcp}.
 
-@item baud @var{number} [ modem and direct only ]
-@findex baud in port file
 @itemx speed @var{number} [modem and direct only ]
 @findex speed in port file
+@item baud @var{number} [ modem and direct only ]
+@findex baud in port file
 
 The speed this port runs at.  If a system specifies a speed but no port
 name, then all ports which match the speed will be tried in order.  If
 the speed is not specified here and is not specified by the system, the
 natural speed of the port will be used by default.
 
-@item baud-range @var{number} @var{number} [ modem only ]
-@findex baud-range
 @itemx speed-range @var{number} @var{number} [ modem only ]
 @findex speed-range
+@item baud-range @var{number} @var{number} [ modem only ]
+@findex baud-range
 
 Specify a range of speeds this port can run at.  The first number is the
 minimum speed, the second number is the maximum speed.  These numbers
@@ -3166,7 +3204,7 @@ device.
 @item dialer @var{string} [ modem only ]
 @findex dialer in port file
 
-Name a dialer to use.  The information is looked up in the dialer file.
+Name a dialer to use.  The information is looked up in the dial file.
 There is no default.  Some sort of dialer information must be specified
 to call out on a modem.
 
@@ -3566,1174 +3604,11 @@ can sometimes be more trouble than it's worth.
 @node Protocols, Hacking, Configuration Files, Top
 @chapter UUCP protocol internals
 
-This chapter describes how the various UUCP protocols work, and
-discusses some other internal UUCP issues.
-
-This chapter is quite technical.  You do not need to understand it, or
-even read it, in order to use Taylor UUCP.  It is intended for people
-who are interested in how UUCP code works.
-
-This chapter is also, unfortunately, somewhat out of date, although I
-believe that is incomplete rather than inaccurate.  I post this
-information to the newsgroups @samp{comp.mail.uucp} and
-@samp{news.answers} each month; if you want to write code based on this
-information, please get the most recent copy.
-
-Most of the discussion covers the protocols used by all UUCP packages,
-not just Taylor UUCP.  Any information specific to Taylor UUCP is
-indicated as such.  There are some pointers to the actual functions in
-the Taylor UUCP source code, for those who are extremely interested in
-actual UUCP implementation.
-
-@menu
-* Grades::                      UUCP grades
-* Lock Files::                  UUCP lock file format
-* UUCP Protocol::               The common UUCP protocol
-* g Protocol::                  The UUCP @samp{g} protocol
-* f Protocol::                  The UUCP @samp{f} protocol
-* t Protocol::                  The UUCP @samp{t} protocol
-* e Protocol::                  The UUCP @samp{e} protocol
-* x Protocol::                  The UUCP @samp{x} protocol
-* d Protocol::                  The UUCP @samp{d} protocol
-* Capital G Protocol::          The UUCP @samp{G} protocol
-* Documentation References::    Documentation references
-@end menu
-
-@node Grades, Lock Files, Protocols, Protocols
-@section UUCP Grades
-@cindex grades
-
-Modern UUCP packages support grades for each command.  The grades
-generally range from @samp{A} (the highest) to @samp{Z} followed by
-@samp{a} to @samp{z}.  Taylor UUCP also supports @samp{0} to @samp{9}
-before @samp{A}.  Some UUCP packages may permit any ASCII character as a
-grade.
-
-On Unix, these grades are encoded in the name of the command file.  A
-command file name generally has the form
-
-@example
-C.nnnngssss
-@end example
-
-@noindent
-where @var{nnnn} is the remote system name for which the command is
-queued, @var{g} is a single character grade, and @var{ssss} is a four
-character sequence number.  For example, a command file created for the
-system @file{airs} at grade @samp{Z} might be named
-
-@example
-C.airsZ2551
-@end example
-
-The remote system name will be truncated to seven characters, to ensure
-that the command file name will fit in the 14 character file name limit
-of the traditional Unix file system.  UUCP packages which have no other
-means of distinguishing which command files are intended for which
-systems thus require all @emph{systems they connect to} to have names
-that are unique in the first seven characters.  Some UUCP packages use a
-variant of this format which truncates the system name to six
-characters.  HDB uses a different spool directory format, which allows
-up to fourteen characters to be used for each system name.  The Taylor
-UUCP spool directory format is configurable.  The new Taylor spool
-directory format permits system names to be as long as file names; the
-maximum length of a file name depends on the particular Unix file system
-being used.
-
-The sequence number in the command file name may be a decimal integer,
-or it may be a hexadecimal integer, or it may contain any alphanumeric
-character.  Different UUCP packages are different.
-
-Taylor UUCP creates command files in the function
-@code{zsysdep_spool_commands}.  The file name is constructed by the
-function @code{zsfile_name}, which knows about all the different types
-of spool directories supported by Taylor UUCP.  The Taylor UUCP sequence
-number can contain any alphanumeric character; the next sequence number
-is determined by the function @code{fscmd_seq}.
-
-I do not know how command grades are handled in non-Unix UUCP
-packages.
-
-Modern UUCP packages allow you to restrict file transfer by grade
-depending on the time of day.  Typically this is done with a line in
-the @file{Systems} (or @file{L.sys}) file like this:
-
-@example
-airs Any/Z,Any2305-0855 ...
-@end example
-
-This allows only grades @samp{Z} and above to be transferred at any
-time.  Lower grades may only be transferred at night.  I believe that
-this grade restriction applies to local commands as well as to remote
-commands, but I am not sure.  It may only apply if the UUCP package
-places the call, not if it is called by the remote system.  Taylor UUCP
-can use the @code{timegrade} and @code{call-timegrade} commands
-(@pxref{When to Call}) to achieve the same effect (and supports the
-above format when reading @file{Systems} or @file{L.sys}).
-
-This sort of grade restriction is most useful if you know what grades
-are being used at the remote site.  The default grades used depend on
-the UUCP package.  Generally @code{uucp} and @code{uux} have different
-defaults.  A particular grade can be specified with the @samp{-g} option
-to @code{uucp} or @code{uux}.  For example, to request execution of
-rnews on airs with grade @samp{d}, you might use something like
-
-@example
-uux -gd - airs!rnews <article
-@end example
-
-@samp{uunet} queues up mail at grade @samp{Z} and news at grade
-@samp{d}.  The example above would allow mail to be received at any
-time, but would only permit news to be transferred at night.
-
-@node Lock Files, UUCP Protocol, Grades, Protocols
-@section UUCP Lock File Format
-@cindex lock files
-
-This discussion applies only to Unix.  I have no idea how UUCP locks
-ports on other systems.
-
-UUCP creates files to lock serial ports and systems.  On most (if not
-all) systems, these same lock files are also used by cu to coordinate
-access to serial ports.  On some systems getty also uses these lock
-files.
-
-The lock file normally contains the process ID of the locking process.
-This makes it easy to determine whether a lock is still valid.  The
-algorithm is to create a temporary file and then link it to the name
-that must be locked.  If the link fails because a file with that name
-already exists, the existing file is read to get the process ID.  If the
-process still exists, the lock attempt fails.  Otherwise the lock file
-is deleted and the locking algorithm is retried.
-
-Older UUCP packages put the lock files in the main UUCP spool
-directory, /usr/spool/uucp.  HDB UUCP generally puts the lock files in
-a directory of their own, usually /usr/spool/locks or /etc/locks.
-
-The original UUCP lock file format encoded the process ID as a four byte
-binary number.  The order of the bytes was host-dependent.  HDB UUCP
-stores the process ID as a ten byte ASCII decimal number, with a
-trailing newline.  For example, if process 1570 holds a lock file, it
-would contain the eleven characters space, space, space, space, space,
-space, one, five, seven, zero, newline.  Some versions of UUCP add a
-second line indicating which program created the lock (uucp, cu, or
-getty).  I have also seen a third type of UUCP lock file which did not
-contain the process ID at all.
-
-The name of the lock file is generally "LCK.." followed by the base name
-of the device.  For example, to lock /dev/ttyd0 the file LCK..ttyd0
-would be created.  There are various exceptions.  On SCO Unix, the lock
-file name is always forced to lower case even if the device name has
-upper case letters.  System V Release 4 UUCP forms the lock file name
-using the major and minor device numbers rather than the device name
-(this is pretty sensible if you think about it).
-
-Taylor UUCP can be configured to use various different types of locking.
-The actual locking code is in the function @code{fsdo_lock}.
-
-@node UUCP Protocol, g Protocol, Lock Files, Protocols
-@section The Common UUCP Protocol
-@cindex UUCP protocol
-@cindex handshake
-@cindex protocol (UUCP)
-
-The UUCP protocol is a conversation between two UUCP packages.  A UUCP
-conversation consists of three parts: an initial handshake, a series
-of file transfer requests, and a final handshake.
-
-Before the initial handshake, the caller will usually have logged in the
-called machine and somehow started the UUCP package there.  On Unix this
-is normally done by setting the shell of the login name used to
-@file{uucico}.
-
-@menu
-* Initial Handshake::           Initial handshake
-* File Requests::               File requests
-* Final Handshake::             Final handshake
-@end menu
-
-@node Initial Handshake, File Requests, UUCP Protocol, UUCP Protocol
-@subsection Initial Handshake
-
-All messages in the initial handshake begin with a @samp{^P} (a byte
-with the octal value \020) and end with a null byte (\000).
-
-Taylor UUCP implements the initial handshake for the calling machine in
-@code{fdo_call}, and for the called machine in @code{faccept_call}.
-
-The initial handshake goes as follows.  It is begun by the called
-machine.
-
-@table @asis
-
-@item called: @samp{\020Shere=@var{hostname}\000}
-The @var{hostname} is the UUCP name of the called machine.  Older UUCP
-packages do not output it, and simply send @samp{\020Shere\000}.
-
-@item caller: @samp{\020S@var{hostname} @var{options}\000}
-The @var{hostname} is the UUCP name of the calling machine.  The
-following @var{options} may appear (or there may be none):
-
-@table @samp
-
-@item -Q@var{seq}
-Report sequence number for this conversation.  The sequence number is
-stored at both sites, and incremented after each call.  If there is a
-sequence number mismatch, something has gone wrong (somebody may have
-broken security by pretending to be one of the machines) and the call is
-denied.  If the sequence number changes on one of the machines, perhaps
-because of an attempted breakin or because a disk backup was restored,
-the sequence numbers on the two machines must be reconciled manually.
-
-@item -x@var{level}
-Requests the called system to set its debugging level to the specified
-value.  This is not supported by all systems.  Taylor UUCP currently
-never generates this switch.  When it sees it, it restricts the value
-according to @code{max-remote-debug} (@pxref{Miscellaneous (sys)}).
-
-@item -p@var{grade}
-@itemx -vgrade=@var{grade}
-Requests the called system to only transfer files of the specified grade
-or higher.  This is not supported by all systems.  Some systems support
-@samp{-p}, some support @samp{-vgrade=}.  Taylor UUCP supports both.
-
-@item -R
-Indicates that the calling UUCP understands how to restart failed file
-transmissions.  Supported only by System V Release 4 UUCP.
-
-@item -U@var{limit}
-Reports the @code{ulimit} value of the calling UUCP.  The limit is
-specified as a base 16 number in C notation (e.g., @samp{-U0x1000000}).
-This number is the number of 512 byte blocks in the largest file which
-the calling UUCP can create.  The called UUCP may not transfer a file
-larger than this.  Supported by System V Release 4 UUCP.  Taylor UUCP
-understands this option, but never generates it.
-
-@item -N
-Indicates that the calling UUCP understands the Taylor UUCP size
-limiting extensions.  Supported only by Taylor UUCP.
-
-@end table
-
-@item called: @samp{\020ROK\000}
-There are actually several possible responses.
-
-@table @samp
-
-@item ROK
-The calling UUCP is acceptable, and the handshake proceeds to the
-protocol negotiation.  Some options may also appear; see below.
-
-@item ROKN
-The calling UUCP is acceptable, it specified @samp{-N}, and the called
-UUCP also understands the Taylor UUCP size limiting extensions.
-Supported only by Taylor UUCP.
-
-@item RLCK
-The called UUCP already has a lock for the calling UUCP, which normally
-indicates the two machines are already communicating.
-
-@item RCB
-The called UUCP will call back.  This may be used to avoid impostors.
-Note that only one machine out of each pair should call back, or no
-conversation will ever begin.
-
-@item RBADSEQ
-The call sequence number is wrong (see the @samp{-Q} discussion above).
-
-@item RLOGIN
-The calling UUCP is using the wrong login name.
-
-@item RYou are unknown to me
-The calling UUCP is not known to the called UUCP, and the called UUCP
-does not permit connections from unknown systems.
-
-@end table
-
-If the response is @samp{ROK}, the following options are supported by
-System V Release 4 UUCP.
-
-@table @samp
-
-@item -R
-The called UUCP knows how to restart failed file transmissions.
-
-@item -U@var{limit}
-Reports the ulimit value of the called UUCP.  The limit is specified as
-a base 16 number in C notation.  This number is the number of 512 byte
-blocks in the largest file which the called UUCP can create.  The
-calling UUCP may not send a file larger than this.
-
-@item -x@var{level}
-I'm told that this is sometimes sent by SVR4 UUCP, but I'm not sure
-exactly what it means.  It may request the calling UUCP to set its
-debugging level to the specified value.
-
-@end table
-
-If the response is not @samp{ROK} (or @samp{ROKN}) both sides hang up
-the phone, abandoning the call.
-
-@item called: @samp{\020P@var{protocols}\000}
-The @kbd{P} is a literal character.  Note that the called UUCP outputs
-two strings in a row.  The @var{protocols} string is a list of UUCP
-protocols supported by the caller.  Each UUCP protocol has a single
-character name.  For example, the called UUCP might send
-@samp{\020Pgf\000}.
-
-@item caller: @samp{\020U@var{protocol}\000}
-The @kbd{U} is a literal character.  The calling UUCP selects which
-@var{protocol} to use out of the protocols offered by the called UUCP.
-If there are no mutually supported protocols, the calling UUCP sends
-@samp{\020UN\000} and both sides hang up the phone.  Otherwise the
-calling UUCP sends something like @samp{\020Ug\000}.
-
-@end table
-
-Most UUCP packages will consider each locally supported protocol in turn
-and select the first one supported by the called UUCP.  With some
-versions of HDB UUCP, this can be modified by giving a list of protocols
-after the device name in the Devices file or the @file{Systems} file.
-Taylor UUCP provides the @code{protocol} command which may be used
-either for a system (@pxref{Protocol Selection}) or a port (@pxref{port
-File}).
-
-After the protocol has been selected and the initial handshake has been
-completed, both sides turn on the selected protocol.  For some protocols
-(notably @samp{g}) a further handshake is done at this point.
-
-Each protocol supports a method for sending a command to the remote
-system.  This method is used to transmit a series of commands between
-the two UUCP packages.  At all times, one package is the master and the
-other is the slave.  Initially, the calling UUCP is the master.
-
-If a protocol error occurs during the exchange of commands, both sides
-move immediately to the final handshake.
-
-@node File Requests, Final Handshake, Initial Handshake, UUCP Protocol
-@subsection File Requests
-
-The master will send one of four commands: @samp{S}, @samp{R}, @samp{X}
-or @samp{H}.
-
-Any file name referred to below is either an absolute pathname beginning
-with @samp{/}, a public directory pathname beginning with @samp{~/}, a
-pathname relative to a user's home directory beginning with
-@samp{~@var{user}/}, or a spool directory file name.  File names in the
-spool directory are not pathnames, but instead are converted to
-pathnames within the spool directory by UUCP.  They always begin with
-@samp{C.} (for a command file created by @code{uucp} or @code{uux}),
-@samp{D.} (for a data file created by @code{uucp}, @code{uux} or by an
-execution, or received from another system for an execution), or
-@samp{X.} (for an execution file created by @code{uux} or received from
-another system).
-
-Taylor UUCP chooses which request to send next in the function
-@code{fuucp}.  This is also where Taylor UUCP processes incoming
-commands from the remote system.
-
-@menu
-* S Request::                   S request
-* R Request::                   R request
-* X Request::                   X request
-* H Request::                   H request
-@end menu
-
-@node S Request, R Request, File Requests, File Requests
-@subsubsection S Request
-
-master: @samp{S @var{from} @var{to} @var{user} -@var{options} @var{temp}
-@var{mode} @var{notify} @var{size}}
-
-The @samp{S} and the @samp{-} are literal characters.  This is a request
-by the master to send a file to the slave.  Taylor UUCP handles the
-@samp{S} request in the file @file{send.c}.
-
-@table @var
-
-@item from
-The name of the file to send.  If the @samp{C} option does not appear in
-@var{options}, the master will actually open and send this file.
-Otherwise the file has been copied to the spool directory, where it is
-named @var{temp}.  The slave ignores this field unless @var{to} is a
-directory, in which case the basename of @var{from} will be used as the
-file name.  If @var{from} is a spool directory filename, it must be a
-data file created for or by an execution, and must begin with @samp{D.}.
-
-@item to
-The name to give the file on the slave.  If this field names a directory
-the file is placed within that directory with the basename of
-@var{from}.  A name ending in @samp{/} is taken to be a directory even
-if one does not already exist with that name.  If @var{to} begins with
-@samp{X.}, an execution file will be created on the slave.  Otherwise,
-if @var{to} begins with @samp{D.} it names a data file to be used by
-some execution file.  Otherwise, @var{to} should not be in the spool
-directory.
-
-@item user
-The name of the user who requested the transfer.
-
-@item options
-A list of options to control the transfer.  The following options are
-defined (all options are single characters):
-
-@table @samp
-
-@item C
-The file has been copied to the spool directory (the master should use
-@var{temp} rather than @var{from}).
-
-@item c
-The file has not been copied to the spool directory (this is the
-default).
-
-@item d
-The slave should create directories as necessary (this is the default).
-
-@item f
-The slave should not create directories if necessary, but should fail
-the transfer instead.
-
-@item m
-The master should send mail to @var{user} when the transfer is complete.
-
-@item n
-The slave should send mail to @var{notify} when the transfer is
-complete.
-
-@end table
-
-@item temp
-If the @samp{C} option appears in @var{options}, this names the file to
-be sent.  Otherwise if @var{from} is in the spool directory, @var{temp}
-is the same as @var{from}.  Otherwise @var{temp} is a dummy string,
-normally @samp{D.0}.  After the transfer has been succesfully completed,
-the master will delete the file @var{temp}.
-
-@item mode
-This is an octal number giving the mode of the file on the master.  If
-the file is not in the spool directory, the slave will always create it
-with mode 0666, except that if (@var{mode} & 0111) is not zero (the file
-is executable), the slave will create the file with mode 0777.  If the
-file is in the spool directory, some UUCP packages will use the
-algorithm above and some will always create the file with mode 0600
-(Taylor UUCP does the latter).
-
-@item notify
-This field is only used if the @samp{n} option appears in @var{options}.
-Otherwise, it may not appear, or it may be the string @samp{dummy}, or
-it may simply be a pair of double quotes.  If the @samp{n} option is
-specified, then when the transfer is successfully completed the slave
-will send mail to @var{notify}, which must be a legal mailing address on
-the slave.
-
-@item size
-This field is only present when doing size negotiation, either with
-Taylor UUCP or SVR4 UUCP.  It is the size of the file in bytes.  SVR4
-UUCP sends the size in base 16 as 0x@dots{} while Taylor UUCP sends the
-size as a decimal integer (a later version of Taylor UUCP will probably
-change to the SVR4 behaviour).
-
-@end table
-
-The slave then responds with an S command response.
-
-@table @samp
-
-@item SY @var{start}
-The slave is willing to accept the file, and file transfer begins.  The
-@var{start} field will only be present when using SVR4 file restart.  It
-specifies the byte offset into the file at which to start sending.  If
-this is a new file, @var{start} will be 0x0.
-
-@item SN2
-The slave denies permission to transfer the file.  This can mean that
-the destination directory may not be accessed, or that no requests are
-permitted.  It implies that the file transfer will never succeed.
-
-@item SN4
-The slave is unable to create the necessary temporary file.  This
-implies that the file transfer might succeed later.
-
-@item SN6
-This is only used by Taylor UUCP size negotiation.  It means that the
-slave considers the file too large to transfer at the moment, but it may
-be possible to transfer it at some other time.
-
-@item SN7
-This is only used by Taylor UUCP size negotiation.  It means that the
-slave considers the file too large to ever transfer.
-
-@end table
-
-If the slave responds with @samp{SY}, a file transfer begins.  When the
-file transfer is complete, the slave sends a @samp{C} command response.
-Taylor UUCP generates this confirmation in @code{fprecfile_confirm} and
-checks it in @code{fpsendfile_confirm}.
-
-@table @samp
-
-@item CY
-The file transfer was successful.
-
-@item CN5
-The temporary file could not be moved into the final location.  This
-implies that the file transfer will never succeed.
-
-@end table
-
-After the @samp{C} command response has been received (in the @samp{SY}
-case) or immediately (in an @samp{SN} case) the master will send another
-command.
-
-@node R Request, X Request, S Request, File Requests
-@subsubsection R Request
-
-master: @samp{R @var{from} @var{to} @var{user} -@var{options}
-@var{size}}
-
-The @samp{R} and the @samp{-} are literal characters.  This is a request
-by the master to receive a file from the slave.  I do not know how SVR4
-UUCP implements file transfer restart in this case.  Taylor UUCP
-implements the @samp{R} request in the file @file{rec.c}.
-
-@table @var
-
-@item from
-This is the name of the file on the slave which the master wishes to
-receive.  It must not be in the spool directory, and it may not contain
-any wildcards.
-
-@item to
-This is the name of the file to create on the master.  I do not believe
-that it can be a directory.  It may only be in the spool directory if
-this file is being requested to support an execution either on the
-master or on some system other than the slave.
-
-@item user
-The name of the user who requested the transfer.
-
-@item options
-A list of options to control the transfer.  The following options are
-defined (all options are single characters):
-
-@table @samp
-
-@item d
-The master should create directories as necessary (this is the default).
-
-@item f
-The master should not create directories if necessary, but should fail
-the transfer instead.
-
-@item m
-The master should send mail to @var{user} when the transfer is complete.
-
-@end table
-
-@item size
-This only appears if Taylor UUCP size negotiation is being used.  It
-specifies the largest file which the master is prepared to accept (when
-using SVR4 UUCP, this was specified in the @samp{-U} option during the
-initial handshake).
-
-@end table
-
-The slave then responds with an @samp{R} command response.
-
-@table @samp
-
-@item RY @var{mode}
-The slave is willing to send the file, and file transfer begins.
-@var{mode} is the octal mode of the file on the slave.  The master uses
-this to set the mode of the file on the master's system just as the
-slave does the @var{mode} argument in the send command (@pxref{S
-Request}).
-
-@item RN2
-The slave is not willing to send the file, either because it is not
-permitted or because the file does not exist.  This implies that the
-file request will never succeed.
-
-@item RN6
-This is only used by Taylor UUCP size negotiation.  It means that the
-file is too large to send, either because of the size limit specifies by
-the master or because the slave considers it too large.  The file
-transfer might succeed later, or it might not (this will be cleared up
-in a later release of Taylor UUCP).
-
-@end table
-
-If the slave responds with @samp{RY}, a file transfer begins.  When the
-file transfer is complete, the master sends a @samp{C} command.  The
-slave pretty much ignores this, although it may log it.  Taylor UUCP
-sends this confirmation in @code{fprecfile_confirm} and checks it in
-@code{fpsendfile_confirm}.
-
-@table @samp
-
-@item CY
-The file transfer was successful.
-
-@item CN5
-The temporary file could not be moved into the final
-location.
-
-@end table
-
-After the @samp{C} command response has been sent (in the @samp{RY}
-case) or immediately (in an @samp{RN} case) the master will send another
-command.
-
-@node X Request, H Request, R Request, File Requests
-@subsubsection X Request
-
-master: @samp{X @var{from} @var{to} @var{user} -@var{options}}
-
-The @samp{X} and the @samp{-} are literal characters.  This is a request
-by the master to, in essence, execute @code{uucp} on the slave.  The
-slave should execute @samp{uucp @var{from} @var{to}}.  Taylor UUCP
-handles the @samp{X} request in the file @file{xcmd.c}.
-
-@table @var
-
-@item from
-This is the name of the file or files on the slave which the master
-wishes to transfer.  Any wildcards are expanded on the slave.  If the
-master is requesting that the files be transferred to itself, the
-request would normally contain wildcard characters, since otherwise an
-@samp{R} command would suffice.  The master can also use this command to
-request that the slave transfer files to a third system.
-
-@item to
-This is the name of the file or directory to which the files should be
-transferred.  This will normally use a UUCP name.  For example, if the
-master wishes to receive the files itself, it would use
-@file{@var{master}!@var{path}}.
-
-@item user
-The name of the user who requested the transfer.
-
-@item options
-A list of options to control the transfer.  It is not clear which, if
-any, options are supported by most UUCP packages.  Taylor UUCP ignores
-the options field.
-
-@end table
-
-The slave then responds with an X command response.
-
-@table @samp
-
-@item XY
-The request was accepted, and the appropriate file transfer commands
-have been queued up for later processing.
-
-@item XN
-The request was denied.  No particular reason is given.
-
-@end table
-
-In either case, the master will then send another command.
-
-@node H Request,  , X Request, File Requests
-@subsubsection H Request
-
-master: @samp{H}
-
-This is used by the master to hang up the connection.  The slave will
-respond with an @samp{H} command response.
-
-@table @samp
-
-@item HY
-The slave agrees to hang up the connection.  In this case the master
-sends another @samp{HY} command.  In some UUCP packages, including
-Taylor UUCP, the slave will then send a third @samp{HY} command.  At
-this point the protocol is shut down, and the final handshake is begun.
-
-@item HN
-The slave does not agree to hang up.  In this case the master and the
-slave exchange roles.  The next command will be sent by the former
-slave, which is the new master.  The roles may be reversed several times
-during a single connection.
-
-@end table
-
-@node Final Handshake,  , File Requests, UUCP Protocol
-@subsection Final Handshake
-
-After the protocol has been shut down, the final handshake is
-performed.  This handshake has no real purpose, and some UUCP packages
-simply drop the connection rather than do it (in fact, some will drop
-the connection immediately after both sides agree to hangup, without
-even closing down the protocol).
-
-@table @asis
-
-@item caller: @samp{\020OOOOOO\000}
-
-@item called: @samp{\020OOOOOOO\000}
-
-@end table
-
-That is, the calling UUCP sends six letter O's and the called UUCP
-replies with seven letter O's.  Some UUCP packages always send six O's.
-
-@node g Protocol, f Protocol, UUCP Protocol, Protocols
-@section The UUCP @samp{g} Protocol
-@cindex g protocol
-@cindex protocol (g)
-
-The @samp{g} protocol is a packet based flow controlled error correcting
-protocol that requires an eight bit clear connection.  It is the
-original UUCP protocol, and is supported by all UUCP implementations.
-Many implementations of it are only able to support small window and
-packet sizes, specifically a window size of 3 and a packet size of 64
-bytes, but the protocol itself can support up to a window size of 7 and
-a packet size of 4096 bytes.  Complaints about the inefficiency of the
-@samp{g} protocol generally refer to specific implementations, rather
-than the correctly implemented protocol.
-
-The @samp{g} protocol was originally designed for general packet drivers,
-and thus contains some features that are not used by UUCP, including
-an alternate data channel and the ability to renegotiate packet and
-window sizes during the communication session.
-
-The @samp{g} protocol is spoofed by many Telebit modems.  When spoofing is
-in effect, each Telebit modem uses the @samp{g} protocol to communicate
-with the attached computer, but the data between the modems is sent
-using a Telebit proprietary error correcting protocol.  This allows
-for very high throughput over the Telebit connection, which, because
-it is half-duplex, would not normally be able to handle the @samp{g}
-protocol very well at all.
-
-This discussion of the @samp{g} protocol explains how it works, but does
-not discuss useful error handling techniques.  Some discussion of this
-can be found in Jamie E. Hanrahan's paper (@pxref{Documentation
-References}).  A detailed examination of the source code would also be
-profitable.
-
-The Taylor UUCP code to handle the @samp{g} protocol is in the file
-@file{protg.c}.  There are a number of functions; the most important
-ones are @code{fgstart}, @code{fgsend_control}, @code{fgsenddata}, and
-@code{fgprocess_data}.
-
-All @samp{g} protocol communication is done with packets.  Each packet
-begins with a six byte header.  Control packets consist only of the
-header.  Data packets contain additional data.
-
-The header is as follows:
-
-@table @asis
-
-@item @samp{\020}
-Every packet begins with a @samp{^P}.
-
-@item @var{k} (1 <= @var{k} <= 9)
-@ifinfo
-The @var{k} value is always 9 for a control packet.  For a data packet,
-the @var{k} value indicates how much data follows the six byte header.
-The amount of data is 2 ** (@var{k} + 4), where ** indicates
-exponentiation.  Thus a @var{k} value of 1 means 32 data bytes and a
-@var{k} value of 8 means 4096 data bytes.  The @var{k} value for a data
-packet must be between 1 and 8 inclusive.
-@end ifinfo
-@iftex
-The @var{k} value is always 9 for a control packet.  For a data packet,
-the @var{k} value indicates how must data follows the six byte header.
-The amount of data is @math{2^{@var{k} + 4}}.  Thus a @var{k} value of 1
-means 32 data bytes and a @var{k} value of 8 means 4096 data bytes.  The
-@var{k} value for a data packet must be between 1 and 8 inclusive.
-@end iftex
-
-@item checksum low byte
-@itemx checksum high byte
-The checksum value is described below.
-
-@item control byte
-The control byte indicates the type of packet, and is described below.
-
-@item xor byte
-This byte is the xor of @var{k}, the checksum low byte, the checksum
-high byte and the control byte (i.e. the second, third, fourth and fifth
-header bytes).  It is used to ensure that the header data is valid.
-
-@end table
-
-The control byte in the header is composed of three bit fields, referred
-to here as @var{tt} (two bits), @var{xxx} (three bits) and @var{yyy}
-(three bits).  The complete byte is @var{ttxxxyyy}, or (@var{tt} << 6) +
-(@var{xxx} << 3) + @var{yyy}.
-
-The @var{tt} field takes on the following values:
-
-@table @asis
-
-@item 0
-This is a control packet.  In this case the @var{k} byte in the header
-must be 9.  The @var{xxx} field indicates the type of control packet;
-the types are described below.
-
-@item 1
-This is an alternate data channel packet.  This is not used by UUCP.
-
-@item 2
-This is a data packet, and the entire contents of the attached data
-field (whose length is given by the @var{k} byte in the header) are
-valid.  The @var{xxx} and @var{yyy} fields are described below.
-
-@item 3
-This is a short data packet.  Let the length of the data field (as given
-by the @var{k} byte in the header) be @code{l}.  Let the first byte in
-the data field be @code{b1}.  If @code{b1} is less than 128 (if the most
-significant bit of @code{b1} is 0), then there are @code{l - b1} valid
-bytes of data in the data field, beginning with the second byte.  If
-@code{b1 >= 128}, let @code{b2} be the second byte in the data field.
-Then there are @code{l - ((b1 & 0x7f) + (b2 << 7))} valid bytes of data
-in the data field, beginning with the third byte.  In all cases @code{l}
-bytes of data are sent (and all data bytes participate in the checksum
-calculation) but some of the trailing bytes may be dropped by the
-receiver.  The @var{xxx} and @var{yyy} fields are described below.
-
-@end table
-
-In a data packet (short or not) the @var{xxx} field gives the sequence
-number of the packet.  Thus sequence numbers can range from 0 to 7,
-inclusive.  The @var{yyy} field gives the sequence number of the last
-correctly received packet.
-
-Each communication direction uses a window which indicates how many
-unacknowledged packets may be transmitted before waiting for an
-acknowledgement.  The window may range from 1 to 7 packets, and may be
-different in each direction. For example, if the window is 3 and the
-last packet acknowledged was packet number 6, packet numbers 7, 0 and 1
-may be sent but the sender must wait for an acknowledgement before
-sending packet number 2.  This acknowledgement could come as the
-@var{yyy} field of a data packet or as the @var{yyy} field of a
-@code{RJ} or @code{RR} control packet (described below).
-
-Each packet must be transmitted in order (the sender may not skip
-sequence numbers).  Each packet must be acknowledged, and each packet
-must be acknowledged in order.
-
-In a control packet, the @var{xxx} field takes on the following values:
-
-@table @asis
-
-@item 1 @code{CLOSE}
-The connection should be closed immediately.  This is typically sent
-when one side has seen too many errors and wants to give up.  It is also
-sent when shutting down the protocol.  If an unexpected @code{CLOSE}
-packet is received, a @code{CLOSE} packet should be sent in reply and
-the @samp{g} protocol should halt, causing UUCP to enter the final
-handshake.
-
-@item 2 @code{RJ} or @code{NAK}
-The last packet was not received correctly.  The @var{yyy} field
-contains the sequence number of the last correctly received packet.
-
-@item 3 @code{SRJ}
-Selective reject.  The @var{yyy} field contains the sequence number of a
-packet that was not received correctly, and should be retransmitted.
-This is not used by UUCP, and most implementations will not recognize
-it.  Taylor UUCP will recognize it but not generate it.
-
-@item 4 @code{RR} or @code{ACK}
-Packet acknowledgement.  The @var{yyy} field contains the sequence
-number of the last correctly received packet.
-
-@item 5 @code{INITC}
-Third initialization packet.  The @var{yyy} field contains the maximum
-window size to use.
-
-@item 6 @code{INITB}
-@ifinfo
-Second initialization packet.  The @var{yyy} field contains the packet
-size to use.  It requests a size of 2 ** (@var{yyy} + 5).  Note that
-this is not the same coding used for the @var{k} byte in the packet
-header (it is 1 less).  Some UUCP implementations can handle any packet
-size up to that specified; some can only handled exactly the size
-specified.  Taylor UUCP will always accept any packet size.
-@end ifinfo
-@iftex
-Second initialization packet.  The @var{yyy} field contains the packet
-size to use.  It requests a size of @math{2^{@var{yyy}+5}}.  Note that
-this is not the same coding used for the @var{k} byte in the packet
-header (it is 1 less).  Some UUCP implementations can handle any packet
-size up to that specified; some can only handled exactly the size
-specified.  Taylor UUCP will always accept any packet size.
-@end iftex
-
-@item 7 @code{INITA}
-First initialization packet.  The @var{yyy} field contains the maximum
-window size to use.
-
-@end table
-
-To compute the checksum, call the control byte (the fifth byte in the
-header) @code{c}.
-
-The checksum of a control packet is simply @code{0xaaaa - c}.
-
-The checksum of a data packet is @code{0xaaaa - (@var{check} ^ c)}
-(@code{^} denotes exclusive or, as in C), and @code{@var{check}} is the
-result of the following routine run on the contents of the data field
-(every byte in the data field participates in the checksum, even for a
-short data packet).  Below is the routine used by Taylor UUCP; it is a
-slightly modified version of a routine which John Gilmore patched from
-G.L.  Chesson's original paper.  The @code{z} argument points to the
-data and the @code{c} argument indicates how much data there is.
-
-@example
-int
-igchecksum (z, c)
-     register const char *z;
-     register int c;
-@{
-  register unsigned int ichk1, ichk2;
-
-  ichk1 = 0xffff;
-  ichk2 = 0;
-
-  do
-    @{
-      register unsigned int b;
-
-      /* Rotate ichk1 left.  */
-      if ((ichk1 & 0x8000) == 0)
-        ichk1 <<= 1;
-      else
-        @{
-          ichk1 <<= 1;
-          ++ichk1;
-        @}
-
-      /* Add the next character to ichk1.  */
-      b = *z++ & 0xff;
-      ichk1 += b;
-
-      /* Add ichk1 xor the character position in the buffer
-         counting from the back to ichk2.  */
-      ichk2 += ichk1 ^ c;
-
-      /* If the character was zero, or adding it to ichk1
-         caused an overflow, xor ichk2 to ichk1.  */
-      if (b == 0 || (ichk1 & 0xffff) < b)
-        ichk1 ^= ichk2;
-    @}
-  while (--c > 0);
-
-  return ichk1 & 0xffff;
-@}
-@end example
-
-When the @samp{g} protocol is started, the calling UUCP sends an INITA
-control packet with the window size it wishes the called UUCP to use.
-The called UUCP responds with an INITA packet with the window size it
-wishes the calling UUCP to use.  Pairs of INITB and INITC packets are
-then similarly exchanged.  When these exchanges are completed, the
-protocol is considered to have been started.  The window size is sent
-twice, with both the INITA and the INITC packets.
-
-When a UUCP package transmits a command, it sends one or more data
-packets.  All the data packets will normally be complete, although some
-UUCP packages may send the last one as a short packet.  The command
-string is sent with a trailing null byte, to let the receiving package
-know when the command is finished.  Some UUCP packages require the last
-byte of the last packet sent to be null, even if the command ends
-earlier in the packet.  Some packages may require all the trailing bytes
-in the last packet to be null, but I have not confirmed this.
-
-When a UUCP package sends a file, it will send a sequence of data
-packets.  The end of the file is signalled by a short data packet
-containing zero valid bytes (it will normally be preceeded by a short
-data packet containing the last few bytes in the file).
-
-Note that the sequence numbers cover the entire communication session,
-including both command and file data.
-
-When the protocol is shut down, each UUCP package sends a @code{CLOSE}
-control packet.
-
-@node f Protocol, t Protocol, g Protocol, Protocols
-@section The UUCP @samp{f} Protocol
-@cindex f protocol
-@cindex protocol (f)
-
-The @samp{f} protocol is a seven bit protocol which checksums an entire
-file at a time.  It only uses the characters between \040 and \176
-(ASCII space and @samp{~}) inclusive as well as the carriage return
-character.  It can be very efficient for transferring text only data,
-but it is very inefficient at transferring eight bit data (such as
-compressed news).  It is not flow controlled, and the checksum is fairly
-insecure over large files, so using it over a serial connection requires
-handshaking (@code{XON}/@code{XOFF} can be used) and error correcting
-modems.  Some people think it should not be used even under those
-circumstances.
-
-I believe the @samp{f} protocol originated in BSD versions of UUCP.  It was
-originally intended for transmission over X.25 PAD links.
-
-The Taylor UUCP code for the @samp{f} protocol is in @file{protf.c}.
-
-The @samp{f} protocol has no startup or finish protocol.  However, both
-sides typically sleep for a couple of seconds before starting up,
-because they switch the terminal into @code{XON}/@code{XOFF} mode and
-want to allow the changes to settle before beginning transmission.
-
-When a UUCP package transmits a command, it simply sends a string
-terminated by a carriage return.
-
-When a UUCP package transmits a file, each byte b of the file is
-translated according to the following table:
-
-@example
-       0 <= b <=  037: 0172, b + 0100 (0100 to 0137)
-     040 <= b <= 0171:       b        ( 040 to 0171)
-    0172 <= b <= 0177: 0173, b - 0100 ( 072 to  077)
-    0200 <= b <= 0237: 0174, b - 0100 (0100 to 0137)
-    0240 <= b <= 0371: 0175, b - 0200 ( 040 to 0171)
-    0372 <= b <= 0377: 0176, b - 0300 ( 072 to  077)
-@end example
-
-That is, a byte between \040 and \171 inclusive is transmitted as is,
-and all other bytes are prefixed and modified as shown.
-
-When all the file data is sent, a seven byte sequence is sent: two bytes
-of \176 followed by four ASCII bytes of the checksum as printed in base
-16 followed by a carriage return.  For example, if the checksum was
-0x1234, this would be sent: "\176\1761234\r".
-
-The checksum is initialized to 0xffff.  For each byte that is sent it is
-modified as follows (where @code{b} is the byte before it has been
-transformed as described above):
-
-@example
-/* Rotate the checksum left.  */
-if ((ichk & 0x8000) == 0)
-  ichk <<= 1;
-else
-  @{
-    ichk <<= 1;
-    ++ichk;
-  @}
-
-/* Add the next byte into the checksum.  */
-ichk += b;
-@end example
-
-When the receiving UUCP sees the checksum, it compares it against its
-own calculated checksum and replies with a single character followed
-by a carriage return.
-
-@table @samp
-
-@item G
-The file was received correctly.
-
-@item R
-The checksum did not match, and the file should be resent from the
-beginning.
-
-@item Q
-The checksum did not match, but too many retries have occurred and the
-communication session should be abandoned.
-
-@end table
-
-The sending UUCP checks the returned character and acts accordingly.
-
-@node t Protocol, e Protocol, f Protocol, Protocols
-@section The UUCP @samp{t} Protocol
-@cindex t protocol
-@cindex protocol (t)
-
-The @samp{t} protocol is intended for TCP links.  It does no error
-checking or flow control, and requires an eight bit clear channel.
-
-I believe the @samp{t} protocol originated in BSD versions of UUCP.
-
-The Taylor UUCP code for the @samp{t} protocol is in @file{prott.c}.
-
-When a UUCP package transmits a command, it first gets the length of the
-command string, @var{c}.  It then sends ((@var{c} / 512) + 1) * 512
-bytes (the smallest multiple of 512 which can hold @var{c} bytes plus a
-null byte) consisting of the command string itself followed by trailing
-null bytes.
-
-When a UUCP package sends a file, it sends it in blocks.  Each block
-contains at most 1024 bytes of data.  Each block consists of four bytes
-containing the amount of data in binary (most significant byte first,
-the same format as used by the Unix function @code{htonl}) followed by
-that amount of data.  The end of the file is signalled by a block
-containing zero bytes of data.
-
-@node e Protocol, x Protocol, t Protocol, Protocols
-@section The UUCP @samp{e} Protocol
-@cindex e protocol
-@cindex protocol (e)
-
-The @samp{e} protocol is similar to the @samp{t} protocol.  It does no
-flow control or error checking and is intended for use over TCP.
-
-The @samp{e} protocol originated in versions of HDB UUCP.
-
-The Taylor UUCP code for the @samp{e} protocol is in @file{prote.c}.
-
-When a UUCP package transmits a command, it simply sends the command as
-an ASCII string terminated by a null byte.
-
-When a UUCP package transmits a file, it sends the complete size of the
-file as an ASCII decimal number.  The ASCII string is padded out to 20
-bytes with null bytes (i.e., if the file is 1000 bytes long, it sends
-@samp{1000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0}).  It then sends the entire
-file.
-
-@node x Protocol, d Protocol, e Protocol, Protocols
-@section The UUCP @samp{x} Protocol
-
-I believe that the @samp{x} protocol was intended for use over X.25
-virtual circuits.  It relies on a write of zero bytes being read as zero
-bytes without stopping communication.  I have heard that it does not
-work correctly.  If someone would care to fill this in more, I would be
-grateful.  Taylor UUCP does not implement the @samp{x} protocol.
-
-@node d Protocol, Capital G Protocol, x Protocol, Protocols
-@section The UUCP @samp{d} Protocol
-
-This is apparently used for DataKit connections, and relies on a write
-of zero bytes being read as zero bytes, much as the @samp{x} protocol
-does.  I don't really know anything else about it.  Taylor UUCP does not
-implement the @samp{d} protocol.
-
-@node Capital G Protocol, Documentation References, d Protocol, Protocols
-@section The UUCP @samp{G} Protocol
-
-The @samp{G} protocol is apparently simply the @samp{g} protocol, except
-that it is known to support all possible window and packet sizes.  It
-was introduced by SVR4 UUCP; the SVR4 implementation of the @samp{g}
-protocol is apparently fixed at a packet size of 64 and a window size of
-7.  Taylor UUCP does not recognize the @samp{G} protocol.  It does
-support all window and packet sizes for the @samp{g} protocol.
-
-@node Documentation References,  , Capital G Protocol, Protocols
-@section Documentation References
-
-I took a lot of the information from Jamie E. Hanrahan's paper in the
-Fall 1990 DECUS Symposium, and from Managing UUCP and Usenet by Tim
-O'Reilly and Grace Todino (with contributions by several other people).
-The latter includes most of the former, and is published by O'Reilly &
-Associates, Inc.
-
-Some information is originally due to a Usenet article by Chuck Wegrzyn.
-The information on the @samp{g} protocol comes partially from a paper by
-G.L. Chesson of Bell Laboratories, partially from Jamie E. Hanrahan's
-paper, and partially from source code by John Gilmore.  The information
-on the @samp{f} protocol comes from the source code by Piet Berteema.
-The information on the @samp{t} protocol comes from the source code by
-Rick Adams.  The information on the @samp{e} protocol comes from a
-Usenet article by Matthias Urlichs.
+A detailed description of how the various UUCP protocols work is posted
+monthly to the newsgroups @samp{comp.mail.uucp}, @samp{news.answers} and
+@samp{comp.answers}.  There is no need to read this information in order
+to use Taylor UUCP.  It is intended for people who are interested in how
+the UUCP code works.
 
 @node Hacking, Acknowledgements, Protocols, Top
 @chapter Hacking Taylor UUCP
@@ -4979,6 +3854,7 @@ Marc Evans @code{<marc@@synergytics.com>}
 Dan Everhart @code{<dan@@dyndata.com>}
 @code{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
 @code{fenner@@jazz.psu.edu} (Bill Fenner)
+@code{jaf@@inference.com} (Jose A. Fernandez)
 "David J. Fiander" @code{<golem!david@@news.lsuc.on.ca>}
 Thomas Fischer @code{<batman@@olorin.dark.sub.org>}
 @code{louis@@marco.de} (Ju"rgen Fluk)
@@ -4990,7 +3866,7 @@ Lele Gaifax @code{<piggy@@idea.sublink.org>}
 Terry Gardner @code{<cphpcom!tjg01>}
 @code{ol@@infopro.spb.su} (Oleg Girko)
 @code{jimmy@@tokyo07.info.com} (Jim Gottlieb)
-Benoit Grange @code<ben@@fizz.fdn.org>}
+Benoit Grange @code{<ben@@fizz.fdn.org>}
 @code{elg@@elgamy.jpunix.com} (Eric Lee Green)
 @code{ryan@@cs.umb.edu} (Daniel R. Guilderson)
 @code{greg@@gagme.chi.il.us} (Gregory Gulik)
@@ -5083,12 +3959,12 @@ Kenji Rikitake @code{<kenji@@rcac.astem.or.jp>}
 @code{steve@@Nyongwa.cam.org} (Steve M. Robbins)
 Serge Robyns @code{<sr@@denkart.be>}
 Lawrence E. Rosenman @code{<ler@@lerami.lerctr.org>}
-@code{ross@@sun490.fdu.edu} (Jeff Ross)
 Jeff Ross @code{<jeff@@wisdom.bubble.org>}
 Aleksey P. Rudnev @code{<alex@@kiae.su>}
 "Heiko W.Rupp" @code{<hwr@@pilhuhn.ka.sub.org>}
 @code{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
 @code{tbr@@tfic.bc.ca} (Tom Rushworth)
+@code{jsacco@@ssl.com} (Joseph E. Sacco)
 @code{rsalz@@bbn.com} (Rich Salz)
 @code{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
 Nickolay Saukh @code{<nms@@ussr.EU.net>}
