@@ -22,8 +22,6 @@
 #include "sysdep.h"
 #include "fsusg.h"
 
-int statfs ();
-
 #if STAT_STATFS2_BSIZE
 #ifndef _IBMR2			/* 4.3BSD, SunOS 4, HP-UX, AIX PS/2.  */
 #include <sys/vfs.h>
@@ -61,7 +59,6 @@ int statfs ();
 
 #if STAT_STATVFS		/* SVR4.  */
 #include <sys/statvfs.h>
-int statvfs ();
 #endif
 
 #define STAT_NONE 0
@@ -123,7 +120,7 @@ get_fs_usage (path, disk, fsp)
 
   if (statfs (path, &fsd) != 1)
     return -1;
-#define convert_blocks(b) adjust_blocks ((b), 1024, 512)
+#define convert_blocks(b) adjust_blocks ((long) (b), 1024, 512)
   fsp->fsu_blocks = convert_blocks (fsd.fd_req.btot);
   fsp->fsu_bfree = convert_blocks (fsd.fd_req.bfree);
   fsp->fsu_bavail = convert_blocks (fsd.fd_req.bfreen);
