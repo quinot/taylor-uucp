@@ -73,7 +73,7 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 	case 'S':
 	  fprintf (e, "S %s %s %s -%s %s 0%o %s\n", q->zfrom, q->zto,
 		   q->zuser, q->zoptions, q->ztemp, q->imode,
-		   q->znotify == NULL ? "" : q->znotify);
+		   q->znotify == NULL ? (const char *) "" : q->znotify);
 	  break;
 	case 'R':
 	  fprintf (e, "R %s %s %s -%s\n", q->zfrom, q->zto, q->zuser,
