@@ -415,6 +415,9 @@ ukshow (qsys, puuconf)
 	      printf ("\n");
 	    }
 
+	  if (qsys->cmax_retries > 0)
+	    printf (" May retry the call up to %d times", qsys->cmax_retries);
+
 	  if (qsys->uuconf_qcalltimegrade != NULL)
 	    {
 	      boolean fprint, fother;
