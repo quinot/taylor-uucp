@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1991/12/17  07:09:58  ian
+   Record statistics in fractions of a second
+
    Revision 1.14  1991/12/11  04:21:37  ian
    Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
 
@@ -239,6 +242,13 @@
    or any system which does not use HAVE_POSIX_TERMIOS, do not change
    this line.  */
 #define HAVE_SYSIOCTL_H 1
+
+/* On HPUX 8.0, and possibly other systems, fcntl returns an error if
+   you try to specify both O_NONBLOCK and O_NDELAY.  If you get an
+   invalid argument from fcntl, this may the problem.  If this macro
+   is non zero, it will be used as the argument to fcntl to force a
+   file descriptor to not block.  */
+#define USE_FOR_UNBLOCKED 0
 
 /* Set HAVE_SETITIMER to 1 if you have the setitimer routine.
    Alternatively, set HAVE_NAPMS to 1 if you have the napms routine

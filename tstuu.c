@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1991/12/19  03:55:40  ian
+   Give the uucico processes a chance to die on their own
+
    Revision 1.18  1991/12/18  05:12:00  ian
    Added -l option to uucico to prompt for login name once and then exit
 
@@ -125,6 +128,12 @@ char tstuu_rcsid[] = "$Id$";
 #define O_NONBLOCK 0
 #endif /* ! defined (FNBLOCK) */
 #endif /* ! defined (O_NONBLOCK) */
+
+#if USE_FOR_UNBLOCKED != 0
+#define FILE_UNBLOCKED USE_FOR_UNBLOCKED
+#else
+#define FILE_UNBLOCKED (O_NDELAY | O_NONBLOCK)
+#endif
 
 /* Get definitions for both EAGAIN and EWOULDBLOCK.  */
 
@@ -434,8 +443,8 @@ main (argc, argv)
 
   signal (SIGCHLD, uchild);
 
-  (void) fcntl (omaster1, F_SETFL, O_NONBLOCK | O_NDELAY);
-  (void) fcntl (omaster2, F_SETFL, O_NONBLOCK | O_NDELAY);
+  (void) fcntl (omaster1, F_SETFL, FILE_UNBLOCKED);
+  (void) fcntl (omaster2, F_SETFL, FILE_UNBLOCKED);
 
   stime.tv_sec = 5;
   stime.tv_usec = 0;
