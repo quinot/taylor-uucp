@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/01/16  18:16:14  ian
+   Corrected misspelling in debugging message
+
    Revision 1.16  1992/01/07  17:11:15  ian
    Discount out of order packets in the error count
 
@@ -572,9 +575,7 @@ fgshutdown ()
 }
 
 /* Send a command string.  We send packets containing the string until
-   the entire string has been sent.  Each packet is full.  We make
-   sure the last byte of the last packet is '\0', since that is what
-   Ultrix UUCP seems to require.  */
+   the entire string has been sent.  Each packet is full.  */
 
 boolean
 fgsendcmd (z)
@@ -600,7 +601,7 @@ fgsendcmd (z)
       if (clen < iGremote_packsize)
 	{
 	  strcpy (zpacket, z);
-	  zpacket[iGremote_packsize - 1] = '\0';
+	  bzero (zpacket + clen, iGremote_packsize - clen);
 	  fagain = FALSE;
 	}
       else
@@ -706,8 +707,9 @@ fgsenddata (zdata, cdata)
       /* We have to move the data within the packet, unfortunately.
 	 It's tough to see any way around this without going to some
 	 sort of iovec structure.  It only happens once per file
-	 transfer, but it also happens once per command.  It would
-	 also be nice if we computed the checksum as we move.  */
+	 transfer.  It would also be nice if we computed the checksum
+	 as we move.  We zero out the unused bytes, since it makes
+	 people happy.  */
 
       itt = SHORTDATA;
       cshort = iGremote_packsize - cdata;
@@ -715,12 +717,14 @@ fgsenddata (zdata, cdata)
 	{
 	  xmemmove (zdata + 1, zdata, cdata);
 	  zdata[0] = (char) cshort;
+	  bzero (zdata + cdata + 1, cshort - 1);
 	}
       else
 	{
 	  xmemmove (zdata + 2, zdata, cdata);
 	  zdata[0] = (char) (0x80 | (cshort & 0x7f));
 	  zdata[1] = (char) (cshort >> 7);
+	  bzero (zdata + cdata + 2, cshort - 2);
 	}
     }
 
