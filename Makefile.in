@@ -353,7 +353,7 @@ doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 info: uucp.info
 
 uucp.info: uucp.texi
-	$(MAKEINFO) -o uucp.info $<
+	$(MAKEINFO) -o uucp.info $(srcdir)/uucp.texi
 
 install-info: uucp.info
 	if test -d $(infodir); then true; else mkdir $(infodir); fi
@@ -369,12 +369,12 @@ install-info: uucp.info
 dvi: uucp.dvi
 
 uucp.dvi: uucp.texi
-	$(TEXI2DVI) $<
+	$(TEXI2DVI) $(srcdir)/uucp.texi
 
 ps: uucp.ps
 
 uucp.ps: uucp.dvi
-	$(DVITPS) -o uucp.ps $<
+	$(DVITPS) -o uucp.ps uucp.dvi
 
 # Suggested autoconf targets.
 
