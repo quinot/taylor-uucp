@@ -825,6 +825,16 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
   else
     ulog_user ("unknown");
 
+  /* zQsystem, if it is set, comes from the execution file, which
+     means that we do not trust it.  We only retain it if
+     qsys->uuconf_zname is a prefix of it, since that can happen with
+     a job from an anonymous system on certain spool directory types,
+     and is unlikely to cause any trouble anyhow.  */
+  if (zQsystem == NULL
+      || strncmp (zQsystem, qsys->uuconf_zname,
+		  strlen (qsys->uuconf_zname)) != 0)
+    zQsystem = qsys->uuconf_zname;
+
   /* Make sure that all the required files exist, and get their
      full names in the spool directory.  */
   for (i = 0; i < cQfiles; i++)
@@ -868,7 +878,6 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
   else if (zQuser != NULL)
     zmail = zQuser;
   if (zmail != NULL
-      && zQsystem != NULL
 #if HAVE_INTERNET_MAIL
       && strchr (zmail, '@') == NULL
 #endif
@@ -891,7 +900,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
       char *zfrom, *zto;
       boolean fmany;
       char **azargs;
-      const char *zuser, *zsystem;
+      const char *zuser;
 
       zfrom = NULL;
       zto = NULL;
@@ -949,12 +958,9 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
       zuser = zQuser;
       if (zuser == NULL)
 	zuser = "uucp";
-      zsystem = zQsystem;
-      if (zsystem == NULL)
-	zsystem = qsys->uuconf_zname;
-      azargs[1] = zbufalc (strlen (zsystem) + strlen (zuser)
+      azargs[1] = zbufalc (strlen (zQsystem) + strlen (zuser)
 			   + sizeof "-u!");
-      sprintf (azargs[1], "-u%s!%s", zsystem, zuser);
+      sprintf (azargs[1], "-u%s!%s", zQsystem, zuser);
       memcpy (azargs + 2, azQargs + 1, i * sizeof (char *));
       xfree ((pointer) azQargs);
       azQargs = azargs;
