@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/11  04:21:16  ian
+   Added 'f' protocol
+
    Revision 1.1  1991/09/10  19:40:31  ian
    Initial revision
 
@@ -633,7 +636,20 @@ uprepare_test (itest, fcall_uucico, zsys)
   fprintf (e, "system %s\n", zsys);
   if (! fcall_uucico)
     {
-      fprintf (e, "chat \"\" \\r\\c ogin: \\L word: \\P\n");
+      FILE *eprog;
+
+      eprog = xfopen ("/usr/tmp/tstuu/Chat1", "w");
+
+      fprintf (eprog,
+	       "echo password $1 speed $2 '(ignore this error)' 1>&2\n");
+      fprintf (eprog, "echo test1\n");
+      fprintf (eprog, "exit 0\n");
+
+      xfclose (eprog);
+
+      fprintf (e, "chat-program /bin/sh /usr/tmp/tstuu/Chat1 \\P \\S\n");
+
+      fprintf (e, "chat word: \\P\n");
       fprintf (e, "chat-fail login;\n");
       fprintf (e, "call-login *\n");
       fprintf (e, "call-password *\n");

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/11/11  19:32:03  ian
+   Added breceive_char to read characters through protocol buffering
+
    Revision 1.12  1991/11/11  18:55:52  ian
    Get protocol parameters from port and dialer for incoming calls
 
@@ -580,6 +583,7 @@ static boolean fcall (qsys, qport, fforce, bgrade)
 	     && qsys->qport == qnext->qport
 	     && qsys->ibaud == qnext->ibaud
 	     && qsys->zphone == qnext->zphone
+	     && qsys->zchat_program == qnext->zchat_program
 	     && qsys->zchat == qnext->zchat);
 
       qsys = qnext;
@@ -657,6 +661,18 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
     {
       (void) fcall_failed (qsys, STATUS_DIAL_FAILED, qstat, cretry);
       return FALSE;
+    }
+
+  if (qsys->zchat_program != NULL)
+    {
+      if (! fchat_program (qsys->zchat_program, qsys,
+			   (const struct sdialer *) NULL,
+			   (const char *) NULL, qPort->zname,
+			   iport_baud ()))
+	{
+	  (void) fcall_failed (qsys, STATUS_LOGIN_FAILED, qstat, cretry);
+	  return FALSE;
+	}
     }
 
   if (qsys->zchat != NULL)

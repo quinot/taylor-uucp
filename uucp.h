@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/11/11  19:32:03  ian
+   Added breceive_char to read characters through protocol buffering
+
    Revision 1.7  1991/11/10  20:05:44  ian
    Changed ffilerewind to use fseek rather than rewind
 
@@ -274,6 +277,8 @@ struct ssysteminfo
   struct sport *qport;
   /* Phone number.  */
   char *zphone;
+  /* Chat program.  */
+  const char *zchat_program;
   /* Chat script.  */
   char *zchat;
   /* Timeout to use for the chat script.  */

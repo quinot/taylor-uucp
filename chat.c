@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/11  19:32:03  ian
+   Added breceive_char to read characters through protocol buffering
+
    Revision 1.1  1991/09/10  19:38:16  ian
    Initial revision
 
@@ -40,6 +43,8 @@ char chat_rcsid[] = "$Id$";
 
 #include "port.h"
 #include "system.h"
+
+/* Local functions.  */
 
 static int ccescape P((char *zbuf));
 static int icexpect P((int cstrings, char **azstrings, int *aclens,
@@ -49,7 +54,9 @@ static boolean fcphone P((const struct sdialer *qdial, const char *zphone,
 			  boolean (*pfwrite) P((const char *zwrite,
 						int cwrite)),
 			  boolean ftranslate));
-
+static boolean fctranslate P((const char *zphone, const char **pzprefix,
+			      const char **pzsuffix));
+
 /* Run a chat script with the other system.  The chat script is a
    series of expect send pairs.  We wait for the expect string to show
    up, and then we send the send string.  The chat string for a system
@@ -246,6 +253,9 @@ ccescape (z)
 	case 't':
 	  *zto++ = '\t';
 	  break;
+	case '\0':
+	  --zfrom;
+	  /* Fall through.  */
 	case '\\':
 	  *zto++ = '\\';
 	  break;
@@ -280,7 +290,8 @@ ccescape (z)
 	  }
 	  break;
 	default:
-	  ulog (LOG_ERROR, "Unknown escape character '%d' in expect string",
+	  ulog (LOG_ERROR,
+		"Unrecognized escape sequence \\%c in expect string",
 		*zfrom);
 	  return -1;
 	}
@@ -490,6 +501,9 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	      fsend = TRUE;
 	      bsend = '\t';
 	      break;
+	    case '\0':
+	      --z;
+	      /* Fall through.  */
 	    case '\\':
 	      fsend = TRUE;
 	      bsend = '\\';
@@ -528,7 +542,7 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 		zlog = qsys->zcall_login;
 		if (zlog == NULL)
 		  {
-		    ulog (LOG_ERROR, "\\L in chat but no login defined");
+		    ulog (LOG_ERROR, "No login defined");
 		    return FALSE;
 		  }
 		if (zlog[0] == '*' && zlog[1] == '\0')
@@ -555,7 +569,7 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 		zpass = qsys->zcall_password;
 		if (zpass == NULL)
 		  {
-		    ulog (LOG_ERROR, "\\P in chat but no password defined");
+		    ulog (LOG_ERROR, "No password defined");
 		    return FALSE;
 		  }
 		if (zpass[0] == '*' && zpass[1] == '\0')
@@ -608,7 +622,8 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	      break;
 	    default:
 	      ulog (LOG_ERROR,
-		    "Unknown escape character '%d' in send string", *z);
+		    "Unrecognized escape sequence \\%c in send string",
+		    *z);
 	      return FALSE;
 	    }
 	  ++z;
@@ -665,85 +680,112 @@ fcphone (qdial, zphone, pfwrite, ftranslate)
      boolean (*pfwrite) P((const char *zwrite, int cwrite));
      boolean ftranslate;
 {
-  /* If we are doing dialcode translation, attempt to translate all
-     alphabetic characters found at the start of the phone number.  */
+  const char *zprefix, *zsuffix;
 
- if (ftranslate)
+  if (ftranslate)
     {
-      char *zdialcode, *zto;
-      const char *zfrom;
+      if (! fctranslate (zphone, &zprefix, &zsuffix))
+	return FALSE;
+    }
+  else
+    {
+      zprefix = zphone;
+      zsuffix = NULL;
+    }
 
-      zdialcode = (char *) alloca (strlen (zphone) + 1);
-      zfrom = zphone;
-      zto = zdialcode;
-      while (*zfrom != '\0' && isalpha (BUCHAR (*zfrom)))
-	*zto++ = *zfrom++;
-      *zto = '\0';
-
-      if (*zdialcode != '\0')
+  while (zprefix != NULL)
+    {
+      while (TRUE)
 	{
-	  struct smulti_file *qmulti;
-	  struct scmdtab as[2];
-	  const char *zprefix;
+	  const char *z;
+	  const char *zstr;
 
-	  qmulti = qmulti_open (zDialcodefile);
-	  if (qmulti == NULL)
-	    return FALSE;
-
-	  as[0].zcmd = zdialcode;
-	  as[0].itype = CMDTABTYPE_STRING;
-	  as[0].pvar = (pointer) &zprefix;
-	  as[0].ptfn = NULL;
-	  as[1].zcmd = NULL;
-
-	  zprefix = NULL;
-
-	  uprocesscmds ((FILE *) NULL, qmulti, as, (const char *) NULL, 0);
-
-	  (void) fmulti_close (qmulti);
-
-	  if (zprefix == NULL)
-	    ulog (LOG_ERROR, "Unknown dial code %s", zdialcode);
-	  else
+	  z = zprefix + strcspn (zprefix, "=-");
+	  if (z > zprefix)
 	    {
-	      /* Output the dialcode prefix recursively.  */
-
-	      if (! fcphone (qdial, zprefix, pfwrite, FALSE))
+	      if (! (*pfwrite) (zprefix, z - zprefix))
 		return FALSE;
-	      zphone = zfrom;
 	    }
+
+	  if (*z == '=')
+	    zstr = qdial->zdialtone;
+	  else if (*z == '-')
+	    zstr = qdial->zpause;
+	  else			/* *z == '\0' */
+	    break;
+
+	  if (zstr != NULL)
+	    {
+	      if (! (*pfwrite) (zstr, strlen (zstr)))
+		return FALSE;
+	    }
+
+	  zprefix = z + 1;
 	}
+
+      zprefix = zsuffix;
+      zsuffix = NULL;
     }
 
-  while (TRUE)
+  return TRUE;
+}
+
+/* Given a phone number, run it through dial code translation
+   returning two strings.  */
+
+static boolean
+fctranslate (zphone, pzprefix, pzsuffix)
+     const char *zphone;
+     const char **pzprefix;
+     const char **pzsuffix;
+{
+  char *zdialcode, *zto;
+  const char *zfrom;
+
+  zdialcode = (char *) alloca (strlen (zphone) + 1);
+  zfrom = zphone;
+  zto = zdialcode;
+  while (*zfrom != '\0' && isalpha (BUCHAR (*zfrom)))
+    *zto++ = *zfrom++;
+  *zto = '\0';
+
+  if (*zdialcode == '\0')
     {
-      const char *z;
-      const char *zstr;
+      *pzprefix = zphone;
+      *pzsuffix = NULL;
+    }
+  else
+    {
+      struct smulti_file *qmulti;
+      struct scmdtab as[2];
 
-      z = zphone + strcspn (zphone, "=-");
-      if (z > zphone)
+      qmulti = qmulti_open (zDialcodefile);
+      if (qmulti == NULL)
+	return FALSE;
+
+      as[0].zcmd = zdialcode;
+      as[0].itype = CMDTABTYPE_STRING;
+      as[0].pvar = (pointer) pzprefix;
+      as[0].ptfn = NULL;
+      as[1].zcmd = NULL;
+
+      *pzprefix = NULL;
+
+      uprocesscmds ((FILE *) NULL, qmulti, as, (const char *) NULL, 0);
+
+      (void) fmulti_close (qmulti);
+
+      if (*pzprefix == NULL)
 	{
-	  if (! (*pfwrite) (zphone, z - zphone))
-	    return FALSE;
+	  ulog (LOG_ERROR, "Unknown dial code %s", zdialcode);
+	  *pzprefix = zphone;
+	  *pzsuffix = NULL;
 	}
-
-      if (*z == '=')
-	zstr = qdial->zdialtone;
-      else if (*z == '-')
-	zstr = qdial->zpause;
-      else /* *z == '\0' */
-	return TRUE;
-
-      if (zstr != NULL)
-	{
-	  if (! (*pfwrite) (zstr, strlen (zstr)))
-	    return FALSE;
-	}
-
-      zphone = z + 1;
+      else
+	*pzsuffix = zfrom;
     }
 
- /*NOTREACHED*/
+  return TRUE;
 }
 
 /* Write out a string making sure the each character is echoed back.  */
@@ -779,4 +821,221 @@ fcecho_send (zwrite, cwrite)
     }
 
   return TRUE;
+}
+
+/* Run a chat program.  Expand any escape sequences and call a system
+   dependent program to run it.  */
+
+boolean
+fchat_program (zprogram, qsys, qdial, zphone, zport, ibaud)
+     const char *zprogram;
+     const struct ssysteminfo *qsys;
+     const struct sdialer *qdial;
+     const char *zphone;
+     const char *zport;
+     long ibaud;
+{
+  char *zbuf;
+  int calc, clen;
+  char *zto;
+  const char *zfrom;
+  char *zcallout_login;
+  char *zcallout_pass;
+  boolean fret;
+
+  zcallout_login = NULL;
+  zcallout_pass = NULL;
+
+  /* Copy the string into memory expanding escape sequences.  */
+
+  zbuf = (char *) xmalloc (1);
+  calc = 1;
+  clen = 0;
+  zto = zbuf;
+  for (zfrom = zprogram; *zfrom != '\0'; zfrom++)
+    {
+      const char *zadd;
+      int cadd;
+
+      if (*zfrom != '\\')
+	{
+	  if (clen + 2 > calc)
+	    {
+	      calc = clen + 80;
+	      zbuf = (char *) xrealloc ((pointer) zbuf, calc);
+	      zto = zbuf + clen;
+	    }
+	  *zto++ = *zfrom;
+	  ++clen;
+	  continue;
+	}
+
+      ++zfrom;
+      switch (*zfrom)
+	{
+	case '\0':
+	  --zfrom;
+	  /* Fall through.  */
+	case '\\':
+	  zadd = "\\";
+	  break;
+	case 'L':
+	  {
+	    const char *zlog;
+
+	    if (qsys == NULL)
+	      {
+		ulog (LOG_ERROR, "chat-program: Illegal use of \\L");
+		return FALSE;
+	      }
+	    zlog = qsys->zcall_login;
+	    if (zlog == NULL)
+	      {
+		ulog (LOG_ERROR, "chat-program: No login defined");
+		return FALSE;
+	      }
+	    if (zlog[0] == '*' && zlog[1] == '\0')
+	      {
+		if (zcallout_login == NULL
+		    && ! fcallout_login (qsys, &zcallout_login,
+					 &zcallout_pass))
+		  return FALSE;
+		zlog = zcallout_login;
+	      }
+	    zadd = zlog;
+	  }
+	  break;
+	case 'P':
+	  {
+	    const char *zpass;
+
+	    if (qsys == NULL)
+	      {
+		ulog (LOG_ERROR, "chat-program: Illegal use of \\P");
+		return FALSE;
+	      }
+	    zpass = qsys->zcall_password;
+	    if (zpass == NULL)
+	      {
+		ulog (LOG_ERROR, "chat-program: No password defined");
+		return FALSE;
+	      }
+	    if (zpass[0] == '*' && zpass[1] == '\0')
+	      {
+		if (zcallout_pass == NULL
+		    && ! fcallout_login (qsys, &zcallout_login,
+					 &zcallout_pass))
+		  return FALSE;
+		zpass = zcallout_pass;
+	      }
+	    zadd = zpass;
+	  }
+	  break;
+	case 'D':
+	  if (qdial == NULL || zphone == NULL)
+	    {
+	      ulog (LOG_ERROR, "chat-program: Illegal use of \\D");
+	      return FALSE;
+	    }
+	  zadd = zphone;
+	  break;
+	case 'T':
+	  {
+	    const char *zprefix, *zsuffix;
+
+	    if (qdial == NULL || zphone == NULL)
+	      {
+		ulog (LOG_ERROR, "chat-program: Illegal use of \\T");
+		return FALSE;
+	      }
+
+	    if (! fctranslate (zphone, &zprefix, &zsuffix))
+	      return FALSE;
+
+	    if (zsuffix == NULL)
+	      zadd = zprefix;
+	    else
+	      {
+		int cprefix;
+
+		cprefix = strlen (zprefix);
+		if (clen + cprefix + 1 > calc)
+		  {
+		    calc = clen + cprefix + 20;
+		    zbuf = (char *) xrealloc ((pointer) zbuf, calc);
+		    zto = zbuf + clen;
+		  }
+		strcpy (zto, zprefix);
+		zto += cprefix;
+		clen += cprefix;
+		zadd = zsuffix;
+	      }
+	  }
+	  break;
+	case 'Y':
+	  if (zport == NULL)
+	    {
+	      ulog (LOG_ERROR, "chat-program: Illegal use of \\Y");
+	      return FALSE;
+	    }
+	  zadd = zport;
+	  break;
+	case 'Z':
+	  if (qsys == NULL)
+	    {
+	      ulog (LOG_ERROR, "chat-program: Illegal use of \\Z");
+	      return FALSE;
+	    }
+	  zadd = qsys->zname;
+	  break;
+	case 'S':
+	  {
+	    char *zalc;
+
+	    if (ibaud == 0)
+	      {
+		ulog (LOG_ERROR, "chat-program: Illegal use of \\S");
+		return FALSE;
+	      }
+	    zalc = (char *) alloca (15);
+	    sprintf (zalc, "%ld", ibaud);
+	    zadd = zalc;
+	  }
+	  break;
+	default:
+	  {
+	    char *zset;
+
+	    ulog (LOG_ERROR,
+		  "chat-program: Unrecognized escape sequence \\%c",
+		  *zfrom);
+	    zset = (char *) alloca (2);
+	    zset[0] = *zfrom;
+	    zset[1] = '\0';
+	    zadd = zset;
+	  }
+	  break;
+	}
+
+      cadd = strlen (zadd);
+      if (clen + cadd + 1 > calc)
+	{
+	  calc = clen + cadd + 20;
+	  zbuf = (char *) xrealloc ((pointer) zbuf, calc);
+	  zto = zbuf + clen;
+	}
+      strcpy (zto, zadd);
+      zto += cadd;
+      clen += cadd;
+    }
+
+  *zto = '\0';
+
+  /* Invoke the program.  */
+
+  fret = fport_run_chat (zbuf);
+
+  xfree ((pointer) zbuf);
+
+  return fret;
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/11  16:19:21  ian
+   Added message for no protocol specified
+
    Revision 1.2  1991/09/19  02:22:44  ian
    Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
 
@@ -206,6 +209,7 @@ ukshow (qsys)
 	       || qsys->qport != qlast->qport
 	       || qsys->ibaud != qlast->ibaud
 	       || qsys->zphone != qlast->zphone
+	       || qsys->zchat_program != qlast->zchat_program
 	       || qsys->zchat != qlast->zchat);
 
       if (fcall && strcasecmp (qsys->ztime, "zNever") == 0)
@@ -301,6 +305,9 @@ ukshow (qsys)
 
 	  if (qsys->zphone != NULL)
 	    printf (" Phone number %s\n", qsys->zphone);
+
+	  if (qsys->zchat_program != NULL)
+	    printf (" Chat program %s\n", qsys->zchat_program);
 
 	  if (qsys->zchat != NULL)
 	    {
@@ -526,6 +533,8 @@ static void
 ukshow_dialer (q)
      struct sdialer *q;
 {
+  if (q->zchat_program != NULL)
+    printf ("    Chat program %s\n", q->zchat_program);
   if (q->zchat != NULL)
     {
       printf ("    Chat script %s\n", q->zchat);
