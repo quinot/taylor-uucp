@@ -4618,6 +4618,7 @@ Bob Cunningham @file{<bob@@soest.hawaii.edu>}
 @file{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @file{denny@@dakota.alisa.com} (Bob Denny)
 @file{gert@@greenie.gold.sub.org} (Gert Doering)
+Hans-Dieter Doll @file{<hd2@@Insel.DE>}
 Andrew Evans @file{<andrew@@airs.com>}
 @file{dje@@ersys.edmonton.ab.ca} (Doug Evans)
 Marc Evans @file{<marc@@synergytics.com>}
@@ -4637,6 +4638,7 @@ Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
 @file{jh@@moon.nbn.com} (John Harkin)
 @file{guy@@auspex.auspex.com} (Guy Harris)
 Petri Helenius @file{<pete@@fidata.fi>}
+Bob Hemedinger @file{<bob@@dalek.mwc.com>}
 Andrew Herbert @file{<andrew@@werple.pub.uu.oz.au>}
 Peter Honeyman @file{<honey@@citi.umich.edu>}
 @file{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
@@ -4650,6 +4652,7 @@ Brendan Kehoe @file{<brendan@@cs.widener.edu>}
 @file{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
 @file{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
 @file{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
+@file{merlyn@@digibd.com} (Merlyn LeRoy)
 @file{clewis@@ferret.ocunix.on.ca} (Chris Lewis)
 @file{gdonl@@ssi1.com} (Don Lewis)
 @file{libove@@libove.det.dec.com} (Jay Vassos-Libove)
@@ -4693,12 +4696,15 @@ Aleksey P. Rudnev @file{<alex@@kiae.su>}
 @file{tbr@@tfic.bc.ca} (Tom Rushworth)
 @file{rsalz@@bbn.com} (Rich Salz)
 @file{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
+Nickolay Saukh @file{<nms@@ussr.EU.net>}
+Eric Schnoebelen @file{<eric@@cirr.com>}
 Igor V. Semenyuk @file{<iga@@argrd0.argonaut.su>}
 @file{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
 @file{peter@@ficc.ferranti.com} (Peter da Silva)
 @file{frumious!pat} (Patrick Smith)
 @file{roscom!monty@@bu.edu} (Monty Solomon)
 Harlan Stenn @file{<harlan@@mumps.pfcs.com>}
+Ralf Stephan @file{<ralf@@ark.abg.sub.org>}
 @file{chs@@antic.apu.fi} (Hannu Strang)
 @file{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
 @file{swiers@@plains.NoDak.edu}
@@ -4716,6 +4722,7 @@ Tomi Vainio @file{<tomppa@@fidata.fi>}
 @file{frnkmth!twwells.com!bill} (T. William Wells)
 Peter Wemm @file{<Peter_Wemm@@zeus.dialix.oz.au>}
 @file{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
+Michael Yu.Yaroslavtsev @file{<mike@@yaranga.ipmce.su>}
 @file{jon@@console.ais.org} (Jon Zeeff)
 Matthias Zepf @file{<agnus@@amylnd.stgt.sub.org>}
 Eric Ziegast @file{<uunet!ziegast>}
