@@ -8326,6 +8326,7 @@ John Theus @code{<john@@theus.rain.com>}
 ppKarsten Thygesen @code{<karthy@@dannug.dk>}
 Graham Toal @code{<gtoal@@pizzabox.demon.co.uk>}
 @code{rmtodd@@servalan.servalan.com} (Richard Todd)
+Michael Ju. Tokarev @code{<mjt@@tls.msk.ru>}
 Martin Tomes @code{<mt00@@controls.eurotherm.co.uk>}
 Len Tower @code{<tower-prep@@ai.mit.edu>}
 Mark Towfiq @code{<justice!towfiq@@Eingedi.Newton.MA.US>}
