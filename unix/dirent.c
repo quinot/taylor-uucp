@@ -31,12 +31,26 @@
 
 #include "sysdep.h"
 
+#include <errno.h>
+
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#else
+#if HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+#endif
+
 #ifndef O_RDONLY
 #define O_RDONLY 0
 #endif
 
 #ifndef O_NOCTTY
 #define O_NOCTTY 0
+#endif
+
+#ifndef FD_CLOEXEC
+#define FD_CLOEXEC 1
 #endif
 
 /* Simple emulations of opendir/readdir/closedir for systems which
@@ -54,9 +68,14 @@ opendir (zdir)
   o = open ((char *) zdir, O_RDONLY | O_NOCTTY, 0);
   if (o < 0)
     return NULL;
-  if (fstat (o, &s) < 0)
+  if (fcntl (o, F_SETFD, FD_CLOEXEC) < 0
+      || fstat (o, &s) < 0)
     {
+      int isave;
+
+      isave = errno;
       (void) close (o);
+      errno = isave;
       return NULL;
     }
   if (! S_ISDIR (s.st_mode))
