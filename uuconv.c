@@ -538,14 +538,10 @@ uvwrite_time (e, qtime)
 	{
 	  int i;
 
-	  fprintf (e, "%s%02d%02d-0000,", zdays + idaystart * 3,
+	  fprintf (e, "%s%02d%02d-0000", zdays + idaystart * 3,
 		   ihourstart, iminutestart);
 	  for (i = idaystart + 1; i < idayend; i++)
-	    {
-	      fprintf (e, "%s", zdays + i * 3);
-	      if ((i + 1) < idayend)
-		fprintf (e, ",");
-	    }
+	    fprintf (e, ",%s", zdays + i * 3);
 	  if (ihourend != 0 && iminuteend != 0)
 	    fprintf (e, ",%s0000-%02d%02d", zdays + idayend * 3, ihourend,
 		     iminuteend);
