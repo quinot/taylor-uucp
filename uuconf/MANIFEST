@@ -82,7 +82,6 @@ tsys.c
 tval.c
 ugtlin.c
 unk.c
-uuconv.c
 val.c
 vinit.c
 vport.c

@@ -37,15 +37,12 @@ OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o callin.o \
 	tportc.o tsinfo.o tsnams.o tsys.o tval.o ugtlin.o unk.o val.o \
 	vinit.o vport.o vsinfo.o vsnams.o vsys.o
 
-all: libuuconf.a uuconv
+all: libuuconf.a
 
 libuuconf.a: $(OBJS)
 	rm -f libuuconf.a
 	ar rc libuuconf.a $(OBJS)
 	-$(RANLIB) libuuconf.a
-
-uuconv: uuconv.o getopt.o libuuconf.a
-	$(CC) $(LDFLAGS) -o uuconv uuconv.o getopt.o libuuconf.a $(LIBS)
 
 .c.o:
 	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
@@ -55,7 +52,7 @@ syshdr.h: syshdr.unx
 	$(LN_S) $(srcdir)/syshdr.unx syshdr.h
 
 clean:
-	rm -f $(OBJS) uuconv.o libuuconf.a uuconv
+	rm -f $(OBJS) libuuconf.a
 
 distclean: clean
 	rm -f conf.h config.status
@@ -68,9 +65,6 @@ Makefile: Makefile.in
 	(cd $(srcdir)/..; sh config.status)
 
 # Header file dependencies
-
-
-uuconv.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h getopt.h
 
 $(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
 
