@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/08  22:33:32  ian
+   Only get the current working directory if it's going to be needed
+
    Revision 1.21  1992/02/08  20:33:57  ian
    Handle all possible signals raised by abort
 
@@ -350,7 +353,11 @@ static sigret_t
 uqcatch (isig)
      int isig;
 {
+#if ! HAVE_BNU_LOGGING
+  /* When using BNU logging, it's a pain to have no system name.  */
   ulog_system ((const char *) NULL);
+#endif
+
   ulog_user ((const char *) NULL);
 
   if (! fAborting)

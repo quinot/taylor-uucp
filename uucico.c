@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.51  1992/02/09  05:21:55  ian
+   Bob Denny: call fmail_transfer before fsysdep_did_work
+
    Revision 1.50  1992/02/08  22:33:32  ian
    Only get the current working directory if it's going to be needed
 
@@ -663,7 +666,11 @@ ucatch (isig)
 {
   ustats_failed ();
 
+#if ! HAVE_BNU_LOGGING
+  /* When using BNU logging, it's a pain to have no system name.  */
   ulog_system ((const char *) NULL);
+#endif
+
   ulog_user ((const char *) NULL);
 
   if (! fAborting)
