@@ -4434,6 +4434,7 @@ Rob Janssen @file{<cmgit!rob@@relay.nluug.nl>}
 @file{harvee!esj} (Eric S Johansson)
 @file{chris@@cj_net.in-berlin.de} (Christof Junge)
 @file{tron@@Veritas.COM} (Ronald S. Karr)
+@file{kersing@@nlmug.nl.mugnet.org} (Jac Kersing)
 @file{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
 @file{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
 @file{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
