@@ -29,9 +29,9 @@ OBJS = access.o addbas.o app3.o app4.o basnam.o bytfre.o corrup.o \
 	mail.o mkdirs.o mode.o move.o opensr.o pause.o picksb.o pipe.o \
 	portnm.o priv.o proctm.o recep.o run.o seq.o serial.o signal.o \
 	sindir.o size.o sleep.o spawn.o splcmd.o splnam.o spool.o \
-	srmdir.o statsb.o status.o time.o tmpfil.o trunc.o uacces.o \
-	ufopen.o ultspl.o unknwn.o uuto.o walk.o wldcrd.o work.o \
-	xqtfil.o xqtsub.o @UNIXOBJS@
+	srmdir.o statsb.o status.o tcp.o time.o tli.o tmpfil.o trunc.o \
+	uacces.o ufopen.o ultspl.o unknwn.o uuto.o walk.o wldcrd.o \
+	work.o xqtfil.o xqtsub.o @UNIXOBJS@
 
 all: libunix.a
 
@@ -116,7 +116,11 @@ spool.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 srmdir.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 statsb.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 status.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
+tcp.o: $(srcdir)/../uudefs.h $(srcdir)/../uuconf.h $(srcdir)/../conn.h
+tcp.o: $(srcdir)/../system.h
 time.o: $(srcdir)/../system.h
+tli.o: $(srcdir)/../uudefs.h $(srcdir)/../uuconf.h $(srcdir)/../conn.h
+tli.o: $(srcdir)/../system.h
 tmpfil.o: $(srcdir)/../uudefs.h $(srcdir)/../uuconf.h $(srcdir)/../system.h
 trunc.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uacces.o: $(srcdir)/../uudefs.h

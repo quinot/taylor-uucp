@@ -64,7 +64,9 @@ srmdir.c
 statsb.c
 status.c
 strerr.c
+tcp.c
 time.c
+tli.c
 tmpfil.c
 trunc.c
 uacces.c
