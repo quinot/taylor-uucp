@@ -1,24 +1,43 @@
 # Makefile for Taylor UUCP
 
+# Prefix directory for installation directories.
+prefix = /usr/local
+
+# Where to installt uucico and uuxqt, and where to read configuration files
+# from by default.  If you use this definition, $(prefix)/lib must exist.
+libdir = $(prefix)/lib/uucp
+
+# Where to install uucp, uux and uuchk.
+bindir = $(prefix)/bin
+
+# Where to install man pages.  Section 1 for user programs, 8 for daemons.
+man1dir = $(prefix)/man/man1
+man1ext = .1
+man8dir = $(prefix)/man/man8
+man8ext = .8
+
 # Define programs and flags
 CC = gcc
 CFLAGS = -Wall -Wshadow -Wwrite-strings -g
 LIBS =
-LN = ln
+
 INSTALL = cp
 INSTALL_PROGRAM = $(INSTALL)
-
-# Define destination directories for make install
-LIBDIR = /usr/lib/uucp
-BINDIR = /usr/bin
+INSTALL_DATA = $(INSTALL)
 
 # If you don't want to compile tstuu, which requires BSD style ptys
 # and the Taylor configuration files, comment out the following line.
 # The tstuu program is only used to test the package; it is described
-# further in README.
+# further in INSTALL.
 TSTUU = tstuu
 
+#
 # Nothing else to configure
+#
+
+SHELL = /bin/sh
+
+VERSION = 1.02
 
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
 	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
@@ -41,27 +60,32 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
 all: uucico uuxqt uux uucp uuchk $(TSTUU)
 
 install: uucico uuxqt uux uucp uuchk
-	-$(LN) $(LIBDIR)/uucico $(LIBDIR)/uucico.old
-	-$(LN) $(LIBDIR)/uuxqt $(LIBDIR)/uuxqt.old
-	rm -f $(LIBDIR)/uucico $(LIBDIR)/uuxqt
-	$(INSTALL_PROGRAM) uucico $(LIBDIR)/uucico
-	$(INSTALL_PROGRAM) uuxqt $(LIBDIR)/uuxqt
-	$(INSTALL_PROGRAM) uuchk $(LIBDIR)/uuchk
-	chown uucp $(LIBDIR)/uucico $(LIBDIR)/uuxqt $(LIBDIR)/uuchk
-	chmod 4555 $(LIBDIR)/uucico $(LIBDIR)/uuxqt
-	-$(LN) $(BINDIR)/uux $(BINDIR)/uux.old
-	-$(LN) $(BINDIR)/uucp $(BINDIR)/uucp.old
-	rm -f $(BINDIR)/uux $(BINDIR)/uucp
-	$(INSTALL_PROGRAM) uux $(BINDIR)/uux
-	$(INSTALL_PROGRAM) uucp $(BINDIR)/uucp
-	chown uucp $(BINDIR)/uux $(BINDIR)/uucp
-	chmod 4555 $(BINDIR)/uux $(BINDIR)/uucp
+	-mkdir $(libdir) $(bindir)
+	-ln $(libdir)/uucico $(libdir)/uucico.old
+	-ln $(libdir)/uuxqt $(libdir)/uuxqt.old
+	rm -f $(libdir)/uucico $(libdir)/uuxqt
+	$(INSTALL_PROGRAM) uucico $(libdir)/uucico
+	$(INSTALL_PROGRAM) uuxqt $(libdir)/uuxqt
+	$(INSTALL_PROGRAM) uuchk $(libdir)/uuchk
+	chown uucp $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
+	chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
+	-ln $(bindir)/uux $(bindir)/uux.old
+	-ln $(bindir)/uucp $(bindir)/uucp.old
+	rm -f $(bindir)/uux $(bindir)/uucp
+	$(INSTALL_PROGRAM) uux $(bindir)/uux
+	$(INSTALL_PROGRAM) uucp $(bindir)/uucp
+	chown uucp $(bindir)/uux $(bindir)/uucp
+	chmod 4555 $(bindir)/uux $(bindir)/uucp
+	$(INSTALL_DATA) uucico.8 $(man8dir)/uucico$(man8ext)
+	$(INSTALL_DATA) uuxqt.8 $(man8dir)/uuxqt$(man8ext)
+	$(INSTALL_DATA) uux.1 $(man1dir)/uux$(man1ext)
+	$(INSTALL_DATA) uucp.1 $(man1dir)/uucp$(man1ext)
 
 uninstall:
-	cp $(LIBDIR)/uucico.old $(LIBDIR)/uucico
-	cp $(LIBDIR)/uuxqt.old $(LIBDIR)/uuxqt
-	cp $(BINDIR)/uux.old $(BINDIR)/uux
-	cp $(BINDIR)/uucp.old $(BINDIR)/uucp
+	cp $(libdir)/uucico.old $(libdir)/uucico
+	cp $(libdir)/uuxqt.old $(libdir)/uuxqt
+	cp $(bindir)/uux.old $(bindir)/uux
+	cp $(bindir)/uucp.old $(bindir)/uucp
 
 uucico: $(UUOBJS)
 	$(CC) $(CFLAGS) -o uucico $(UUOBJS) $(LIBS)
@@ -82,16 +106,36 @@ tstuu: $(TSTOBJS)
 	$(CC) $(CFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
 
 configure-unix:
-	$(LN) sysh.unx sysdep.h
-	$(LN) sys1.unx sys1.c
-	$(LN) sys2.unx sys2.c
-	$(LN) sys3.unx sys3.c
-	$(LN) sys4.unx sys4.c
-	$(LN) sys5.unx sys5.c
-	$(LN) sys6.unx sys6.c
+	ln sysh.unx sysdep.h
+	ln sys1.unx sys1.c
+	ln sys2.unx sys2.c
+	ln sys3.unx sys3.c
+	ln sys4.unx sys4.c
+	ln sys5.unx sys5.c
+	ln sys6.unx sys6.c
 
 clean:
 	rm -f $(ALLOBJS) uucico uuxqt uux uucp uuchk tstuu
+	rm -f uucp-$(VERSION).tar.Z
+
+dist:
+	-rm -rf uucp-$(VERSION)
+	mkdir uucp-$(VERSION)
+	ln `cat MANIFEST` uucp-$(VERSION)
+	chmod 0644 uucp-$(VERSION)/conf.h uucp-$(VERSION)/sysh.unx
+	chmod 0644 uucp-$(VERSION)/Makefile
+	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
+	compress taylor-uucp-$(VERSION).tar
+
+# GNU standards want these targets
+
+distclean: clean
+realclean: clean
+
+TAGS:
+	etags *.h *.c
+
+# Header file depedencies.  These are maintained by hand.
 
 uucico.o: uucp.h conf.h system.h prot.h port.h sysdep.h getopt.h
 uuxqt.o: uucp.h conf.h system.h getopt.h sysdep.h
