@@ -1525,44 +1525,46 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	    DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_packet: Sending ACK %d",
 			    iIrecseq);
 
-	    if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
-	      return FALSE;
+	    return (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE);
 	  }
-	else if (iseq == iIsendseq
-		 || (iIremote_winsize > 0
-		     && (CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
-			 || CSEQDIFF (iIsendseq, iseq) > iIremote_winsize)))
+	else
 	  {
-	    DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			    "fiprocess_packet: Ignoring out of order NAK %d (sendseq %d)",
-			    iseq, iIsendseq);
-	    return TRUE;
-	  }
+	    if (iseq == iIsendseq
+		|| (iIremote_winsize > 0
+		    && (CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
+			|| CSEQDIFF (iIsendseq, iseq) > iIremote_winsize)))
+	      {
+		DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+				"fiprocess_packet: Ignoring out of order NAK %d (sendseq %d)",
+				iseq, iIsendseq);
+		return TRUE;
+	      }
 
-	DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			"fiprocess_packet: Got NAK %d; resending packet",
-			iseq);
+	    DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			    "fiprocess_packet: Got NAK %d; resending packet",
+			    iseq);
 
-	/* Update the received sequence number.  */
-	zsend = azIsendbuffers[iseq] + CHDROFFSET;
-	if (IHDRWIN_GETSEQ (zsend[IHDR_REMOTE]) != iIrecseq)
-	  {
-	    int iremote;
+	    /* Update the received sequence number.  */
+	    zsend = azIsendbuffers[iseq] + CHDROFFSET;
+	    if (IHDRWIN_GETSEQ (zsend[IHDR_REMOTE]) != iIrecseq)
+	      {
+		int iremote;
 
-	    iremote = IHDRWIN_GETCHAN (zsend[IHDR_REMOTE]);
-	    zsend[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
-	    zsend[IHDR_CHECK] = IHDRCHECK_VAL (zsend);
-	    iIlocal_ack = iIrecseq;
-	  }
+		iremote = IHDRWIN_GETCHAN (zsend[IHDR_REMOTE]);
+		zsend[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
+		zsend[IHDR_CHECK] = IHDRCHECK_VAL (zsend);
+		iIlocal_ack = iIrecseq;
+	      }
 	      
-	++cIresent_packets;
+	    ++cIresent_packets;
 
-	clen = CHDRCON_GETBYTES (zsend[IHDR_CONTENTS1],
-				 zsend[IHDR_CONTENTS2]);
+	    clen = CHDRCON_GETBYTES (zsend[IHDR_CONTENTS1],
+				     zsend[IHDR_CONTENTS2]);
 
-	return (*pfIsend) (qdaemon->qconn, zsend,
-			   CHDRLEN + clen + (clen > 0 ? CCKSUMLEN : 0),
-			   TRUE);
+	    return (*pfIsend) (qdaemon->qconn, zsend,
+			       CHDRLEN + clen + (clen > 0 ? CCKSUMLEN : 0),
+			       TRUE);
+	  }
       }
 
     case SPOS:
