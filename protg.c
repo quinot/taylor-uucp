@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/01/28  16:06:24  ian
+   Correct previous patch
+
    Revision 1.20  1992/01/28  03:30:14  ian
    John Antypas: bad boundary condition for command in small packet
 
@@ -228,7 +231,7 @@ static int iGrecseq;
 static int iGlocal_ack;
 
 /* Local window size.  */
-int iGlocal_winsize = 3;
+int iGlocal_winsize = 7;
 
 /* Local packet size.  Used only during handshake.  */
 int iGlocal_packsize = 64;
