@@ -338,17 +338,24 @@ Report version information and exit.
 .B \-\-help
 Print a help message and exit.
 .SH EXAMPLES
-.EX
+.br
+.nf
 uustat --all
-.EE
+.fi
 Display status of all jobs.  A sample output line is as follows:
-.EX
+.br
+.in +0.5i
+.nf
 bugsA027h bugs ian 04-01 13:50 Executing rmail ian@airs.com (sending 1283 bytes)
-.EE
+.fi
+.in -0.5i
 The format is
-.EX
+.br
+.in +0.5i
+.nf
 jobid system user queue-date command (size)
-.EE
+.fi
+.in -0.5i
 The jobid may be passed to the
 .B \-\-kill
 or
@@ -368,18 +375,25 @@ and
 .B \-\-younger-than
 options may be used to control which jobs are listed.
 
-.EX
+.br
+.nf
 uustat --executions
-.EE
+.fi
 Display status of queued up execution requests.  A sample output line
 is as follows:
-.EX
+.br
+.in +0.5i
+.nf
 bugs bugs!ian 05-20 12:51 rmail ian
-.EE
+.fi
+.in -0.5i
 The format is
-.EX
+.br
+.in +0.5i
+.nf
 system requestor queue-date command
-.EE
+.fi
+.in -0.5i
 The
 .B \-\-system,
 .B \-\-not-system,
@@ -392,27 +406,35 @@ and
 .B \-\-younger-than
 options may be used to control which requests are listed.
 
-.EX
+.br
+.nf
 uustat --list
-.EE
+.fi
 Display status for all systems with queued up commands.  A sample
 output line is as follows:
-.EX
+.br
+.in +0.5i
+.nf
 bugs            4C (1 hour)   0X (0 secs) 04-01 14:45 Dial failed
-.EE
+.fi
+.in -0.5i
 This indicates the system, the number of queued commands, the age of
 the oldest queued command, the number of queued local executions, the
 age of the oldest queued execution, the date of the last conversation,
 and the status of that conversation.
 
-.EX
+.br
+.nf
 uustat --status
-.EE
+.fi
 Display conversation status for all remote systems.  A sample output
 line is as follows:
-.EX
+.br
+.in +0.5i
+.nf
 bugs           04-01 15:51 Conversation complete
-.EE
+.fi
+.in -0.5i
 This indicates the system, the date of the last conversation, and the
 status of that conversation.  If the last conversation failed,
 .I uustat
@@ -421,9 +443,10 @@ the retry period is currently preventing calls to that system,
 .I uustat
 also displays the time when the next call will be permitted.
 
-.EX
+.br
+.nf
 uustat --ps
-.EE
+.fi
 Display the status of all processes holding UUCP locks.  The output
 format is system dependent, as
 .I uustat
@@ -431,9 +454,12 @@ simply invokes
 .I ps
 (1) on each process holding a lock.
 
-.EX
+.br
+.in +0.5i
+.nf
 uustat --command rmail --older-than 168 --kill-all --no-list --mail --notify --comment "Queued for over 1 week"
-.EE
+.fi
+.in -0.5i
 This will kill all
 .I rmail
 commands that have been queued up waiting for delivery for over 1 week

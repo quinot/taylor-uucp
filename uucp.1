@@ -112,9 +112,12 @@ switch of
 It is possible for some complex operations to produce more than one
 jobid, in which case each will be printed on a separate line.  For
 example
-.EX
-uucp sys1!~user1/file1 sys2!~user2/file2 /usr/spool/uucppublic
-.EE
+.br
+.in +0.5i
+.nf
+uucp sys1!~user1/file1 sys2!~user2/file2 ~user3
+.fi
+.in -0.5i
 will generate two separate jobs, one for the system
 .I sys1
 and one for the system

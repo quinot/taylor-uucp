@@ -56,9 +56,12 @@ not work.
 All specified files are gathered together into a single directory
 before execution of the command begins.  This means that each file
 must have a distinct base name.  For example,
-.EX
+.br
+.in +0.5i
+.nf
 uux 'sys1!diff sys2!~user1/foo sys3!~user2/foo >!foo.diff'
-.EE
+.fi
+.in -0.5i
 will fail because both files will be copied to sys1 and stored under
 the name foo.
 
@@ -179,27 +182,32 @@ Report version information and exit.
 .B \-\-help
 Print a help message and exit.
 .SH EXAMPLES
-.EX
+.br
+.nf
 uux -z - sys1!rmail user1
-.EE
+.fi
 Execute the command ``rmail user1'' on the system sys1, giving it as
 standard input whatever is given to
 .I uux
 as standard input.  If a failure occurs, send a message using
 .I mail
 (1).
-.EX
+
+.br
+.nf
 uux 'diff -c sys1!~user1/file1 sys2!~user2/file2 >!file.diff'
-.EE
+.fi
 Fetch the two named files from system sys1 and system sys2 and execute
 .I diff
 putting the result in file.diff in the current directory.  The current
 directory must be writable by the
 .I uuxqt
 (8) daemon for this to work.
-.EX
+
+.br
+.nf
 uux 'sys1!uucp ~user1/file1 (sys2!~user2/file2)'
-.EE
+.fi
 Execute 
 .I uucp
 on the system sys1 copying file1 (on system sys1) to sys2.  This
