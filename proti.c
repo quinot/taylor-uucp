@@ -736,6 +736,7 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
      struct sdaemon *qdaemon;
      int ctimeout;
      int cretries;
+     boolean fone;
      boolean *pftimedout;
 {
   int cshort;
