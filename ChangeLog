@@ -1,3 +1,8 @@
+Mon Sep 16 21:29:10 1996  Ian Lance Taylor  <ian@airs.com>
+
+	* trans.c (floop): Don't request a hangup if we are waiting for
+	data for a job and we only have one channel.
+
 Sun Aug 20 15:12:36 1995  Ian Lance Taylor  <ian@airs.com>
 
 	* Released version 1.06.1.
