@@ -634,11 +634,12 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
 
 #if HAVE_TAYLOR_LOGGING
   fprintf (eLstats,
-	   "%s %s (%s) %s%s %ld bytes in %ld.%03ld seconds (%ld bytes/sec)\n",
+	   "%s %s (%s) %s%s %ld bytes in %ld.%03ld seconds (%ld bytes/sec) on port %s\n",
 	   zuser, zsystem, zldate_and_time (),
 	   fsucceeded ? "" : "failed after ",
 	   fsent ? "sent" : "received",
-	   cbytes, csecs, cmicros / 1000, cbps);
+	   cbytes, csecs, cmicros / 1000, cbps,
+	   zLdevice == NULL ? "unknown" : zLdevice);
 #endif /* HAVE_TAYLOR_LOGGING */
 #if HAVE_V2_LOGGING
   fprintf (eLstats,
