@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/15  23:20:59  ian
+   Changed sleep to usysdep_sleep
+
    Revision 1.3  1991/11/15  21:00:59  ian
    Efficiency hacks for 'f' and 't' protocols
 
@@ -44,6 +47,7 @@ char prott_rcsid[] = "$Id$";
 
 #include "prot.h"
 #include "port.h"
+#include "system.h"
 
 /* This implementation is based on code written by Rick Adams.
 

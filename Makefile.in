@@ -78,8 +78,8 @@ uuchk.o: uucp.h conf.h port.h sysdep.h system.h getopt.h
 tstuu.o: uucp.h conf.h getopt.h
 prot.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protg.o: uucp.h conf.h system.h prot.h port.h sysdep.h
-protf.o: uucp.h conf.h prot.h port.h sysdep.h
-prott.o: uucp.h conf.h prot.h port.h sysdep.h
+protf.o: uucp.h conf.h prot.h port.h sysdep.h system.h
+prott.o: uucp.h conf.h prot.h port.h sysdep.h system.h
 config.o: uucp.h conf.h system.h sysdep.h
 bnu.o: uucp.h conf.h port.h sysdep.h
 v2.o: uucp.h conf.h port.h sysdep.h
