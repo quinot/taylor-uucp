@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.40  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.39  1992/02/28  05:06:15  ian
    T. William Wells: fsysdep_catch must be a macro
 
@@ -156,8 +159,14 @@
 /* Make sure the defines do not conflict.  These are in this file
    because they are Unix dependent.  */
 
-#if HAVE_V2_LOCKFILES + HAVE_BNU_LOCKFILES != 1
+#if HAVE_V2_LOCKFILES + HAVE_BNU_LOCKFILES + HAVE_SCO_LOCKFILES != 1
  #error LOCKFILES define not set or duplicated
+#endif
+
+/* SCO lockfiles are basically just like BNU lockfiles.  */
+#if HAVE_SCO_LOCKFILES
+#undef HAVE_BNU_LOCKFILES
+#define HAVE_BNU_LOCKFILES 1
 #endif
 
 #if HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS != 1

@@ -142,7 +142,7 @@ M_DEFINE([COMBINED_UNBLOCK],
    specified at once on a file descriptor.  */])
 dnl
 M_ALLOCA
-ILT_FUNC_CHECK(vfprintf remove strdup strstr strcasecmp stricmp)
+ILT_FUNC_CHECK(vfprintf remove strdup strstr strcasecmp stricmp strlwr)
 ILT_FUNC_CHECK(strerror memset memcmp memchr memcpy memmove bcopy bcmp bzero)
 undefine([index])
 ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch getgrent)

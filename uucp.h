@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.43  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.42  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -1046,6 +1049,11 @@ extern long strtol P((const char *, char **, int));
 extern pointer bsearch P((constpointer pkey, constpointer parray,
 			  int celes, int cbytes,
 			  int (*pficmp) P((constpointer, constpointer))));
+#endif
+
+/* Convert a string to lower case.  */
+#if ! HAVE_STRLWR
+extern char *strlwr P((char *));
 #endif
 
 /* Global variables.  */

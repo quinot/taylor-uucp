@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1992/02/23  03:26:51  ian
+   Initial revision
+
    */
 
 /* This header file contains macro definitions which must be set by
@@ -127,9 +130,14 @@
    followed by a newline.  The V2 style is to write the locking
    process ID as four binary bytes in the host byte order.  Check an
    existing lock file to decide which of these choices is more
-   appropriate.  */
+   appropriate.  SCO lock files are similar to BNU lock files, but
+   always lock the lowercase version of the tty (i.e., LCK..tty2a is
+   created if you are locking tty2A).  They are appropriate if you are
+   using Taylor UUCP on an SCO Unix, SCO Xenix, or SCO Open Desktop
+   system. */
 #define HAVE_V2_LOCKFILES 0
 #define HAVE_BNU_LOCKFILES 1
+#define HAVE_SCO_LOCKFILES 0
 
 /* Adminstrative decisions.  */
 
