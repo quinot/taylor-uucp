@@ -77,7 +77,9 @@ also open to suggestions for improvements and modifications.
 
 CHANGES SINCE 1.02
 
-For a complete list, see ChangeLog.
+For a complete list, see ChangeLog.  The man pages are only partially
+updated for the beta release of 1.03.  There is currently no man page
+for uustat, uuname or uulog.
 
     As usual, many bugs were fixed.
 
