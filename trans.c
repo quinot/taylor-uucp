@@ -870,7 +870,7 @@ floop (qdaemon)
 		  else
 		    {
 		      cdata = cfileread (q->e, zdata, cdata);
-		      if (ffilereaderror (q->e, cdata))
+		      if (ffileioerror (q->e, cdata))
 			{
 			  /* There is no way to report a file reading
 			     error, so we just drop the connection.  */
@@ -1152,7 +1152,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 		}
 	      else
 		{
-		  if (cwrote < 0)
+		  if (ffileioerror (q->e, cwrote))
 		    ulog (LOG_ERROR, "write: %s", strerror (errno));
 		  else
 		    ulog (LOG_ERROR,
