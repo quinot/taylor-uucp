@@ -421,3 +421,12 @@
    SV_INTERRUPT is defined in <signal.h>.  In both of these cases
    system calls can be prevented from restarting.  */
 #define HAVE_RESTARTABLE_SYSCALLS 0
+
+/* Some systems supposedly need the following macros to be defined.
+   These are handled by the configure script.  If you are configuring
+   by hand, you may add appropriate definitions here, or just add them
+   to CFLAGS when running make.  */
+#undef _ALL_SOURCE
+#undef _POSIX_SOURCE
+#undef _MINIX
+#undef _POSIX_1_SOURCE
