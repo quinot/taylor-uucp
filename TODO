@@ -349,3 +349,11 @@ for pauses on systems which don't support subsecond sleeps.  For
 everything else it's a fairly minor optimization.
 
 142.
+
+Franc,ois Pinard: give uustat an option to requeue jobs to another
+system.  This only makes a lot of sense for rmail executions, but it's
+fairly easy to do for any type of command.  I think uucico does all
+the file checking needed to ensure that this doesn't break security,
+but that should be double-checked.
+
+143.
