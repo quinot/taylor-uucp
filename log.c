@@ -287,9 +287,6 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       }
   }
 
-  if (zmsg == NULL)
-    return;
-
 #if DEBUG > 1
   /* If we've had a debugging file open in the past, then we want to
      write all log file entries to the debugging file even if it's
@@ -388,6 +385,9 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (e == NULL)
 	return;
     }
+
+  if (zmsg == NULL)
+    return;
 
   if (pfLstart != NULL)
     (*pfLstart) ();
