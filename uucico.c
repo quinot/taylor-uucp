@@ -1148,7 +1148,8 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
   if (strncmp (zstr, "Shere", 5) != 0)
     {
-      ulog (LOG_ERROR, "Bad initialization string");
+      ulog (LOG_ERROR, "Bad startup string (expected \"Shere\" got \"%s\")",
+	    zstr);
       ubuffree (zstr);
       return FALSE;
     }
