@@ -160,6 +160,11 @@
 #define HAVE_STRIP_BUG 0
 
 #if HAVE_BSD_TTY
+#ifdef __ultrix__
+#ifndef ultrix
+#define ultrix
+#endif
+#endif
 #ifdef ultrix
 #undef HAVE_STRIP_BUG
 #define HAVE_STRIP_BUG 1
