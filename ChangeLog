@@ -1,5 +1,8 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* uucico.c (fconn_call): If all matching ports are in use, set
+	system status to STATUS_PORT_FAILED.
+
 	* uuchk.c (ukhelp): Update copyright.  Add bug reporting address.
 	* uucico.c (uhelp): Likewise.
 	* uucp.c (uchelp): Likewise.

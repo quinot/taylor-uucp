@@ -1109,10 +1109,20 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
 				  &sport);
       if (iuuconf == UUCONF_NOT_FOUND)
 	{
-	  if (s.fmatched)
-	    ulog (LOG_ERROR, "All matching ports in use");
-	  else
+	  if (! s.fmatched)
 	    ulog (LOG_ERROR, "No matching ports");
+	  else
+	    {
+	      ulog (LOG_ERROR, "All matching ports in use");
+	      qstat->ttype = STATUS_PORT_FAILED;
+	      /* We don't change cretries for this case.  */
+	      qstat->ilast = ixsysdep_time ((long *) NULL);
+	      if (cretry == 0)
+		qstat->cwait = CRETRY_WAIT (qstat->cretries);
+	      else
+		qstat->cwait = cretry * 60;
+	      (void) fsysdep_set_status (qsys, qstat);
+	    }
 	  return FALSE;
 	}
       else if (iuuconf != UUCONF_SUCCESS)
