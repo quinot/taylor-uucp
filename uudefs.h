@@ -1,7 +1,7 @@
 /* uudefs.h
    Miscellaneous definitions for the UUCP package.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -426,12 +426,6 @@ extern boolean fLog_sighup;
 #define FGOT_QUIT_SIGNAL() \
   (afSignal[INDEXSIG_SIGHUP] || afSignal[INDEXSIG_SIGQUIT] \
    || afSignal[INDEXSIG_SIGTERM] || afSignal[INDEXSIG_SIGPIPE])
-
-/* File being sent.  */
-extern openfile_t eSendfile;
-
-/* File being received.  */
-extern openfile_t eRecfile;
 
 /* Device name to log.  This is set by fconn_open.  It may be NULL.  */
 extern char *zLdevice;
