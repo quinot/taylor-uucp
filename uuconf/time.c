@@ -61,6 +61,7 @@ static const struct
   { "fr", 5, 5 },
   { "sa", 6, 6 },
   { "never", -1, -2 },
+  { "none", -1, -2 },
   { NULL, 0, 0 }
 };
 
