@@ -219,16 +219,13 @@ static int iIremote_packsize;
 static int iIalc_packsize;
 
 /* Forced remote packet size, used if non-zero (protocol parameter
-   ``remote-packet-size'').  */
+   ``remote-packet-size'').  There is no forced remote window size
+   because the ACK strategy requires that both sides agree on the
+   window size.  */
 static int iIforced_remote_packsize = 0;
 
-/* Remote window size (set from SYNC packet or from
-   iIforced_remote_winsize).  */
+/* Remote window size (set from SYNC packet).  */
 static int iIremote_winsize;
-
-/* Forced remote window size, used if non-zero (protocol parameter
-   ``remote-window'').  */
-static int iIforced_remote_winsize = 0;
 
 /* Timeout to use when sending the SYNC packet (protocol
    parameter ``sync-timeout'').  */
@@ -337,8 +334,6 @@ struct uuconf_cmdtab asIproto_params[] =
   { "window", UUCONF_CMDTABTYPE_INT, (pointer) &iIrequest_winsize, NULL },
   { "remote-packet-size", UUCONF_CMDTABTYPE_INT,
       (pointer) &iIforced_remote_packsize, NULL },
-  { "remote-window", UUCONF_CMDTABTYPE_INT,
-      (pointer) &iIforced_remote_winsize, NULL },
   { "sync-timeout", UUCONF_CMDTABTYPE_INT, (pointer) &cIsync_timeout,
       NULL },
   { "sync-retries", UUCONF_CMDTABTYPE_INT, (pointer) &cIsync_retries,
@@ -417,10 +412,6 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
   else
     iIremote_packsize = iIforced_remote_packsize;
   iIalc_packsize = 0;
-  if (iIforced_remote_winsize <= 0 || iIforced_remote_winsize >= IMAXSEQ)
-    iIforced_remote_winsize = 0;
-  else
-    iIremote_winsize = iIforced_remote_winsize;
 
   iIsendseq = 1;
   iIrecseq = 0;
@@ -581,7 +572,6 @@ fishutdown (qdaemon)
   iIrequest_packsize = IREQUEST_PACKSIZE;
   iIrequest_winsize = IREQUEST_WINSIZE;
   iIforced_remote_packsize = 0;
-  iIforced_remote_winsize = 0;
   cIsync_timeout = CSYNC_TIMEOUT;
   cIsync_retries = CSYNC_RETRIES;
   cItimeout = CTIMEOUT;
@@ -1473,8 +1463,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	    && (iIalc_packsize == 0
 		|| ipack <= iIalc_packsize))
 	  iIremote_packsize = ipack;
-	if (iIforced_remote_winsize == 0)
-	  iIremote_winsize = iwin;
+	iIremote_winsize = iwin;
 
 	/* We increment a static variable to tell the initialization
 	   code that a SYNC was received, and we set *pfexit to TRUE
