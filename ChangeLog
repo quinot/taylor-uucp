@@ -1,3 +1,8 @@
+2002-02-07  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/lock.c (fsdo_lock): Test for error when removing read only
+	stale lock file.
+
 2002-02-06  Ian Lance Taylor  <ian@airs.com>
 
 	* uuxqt.c (uqdo_xqt_file): Check for long versions of prohibited

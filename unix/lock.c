@@ -425,7 +425,11 @@ fsdo_lock (zlock, fspooldir, pferr)
 	{
 	  (void) close (o);
 	  o = -1;
-	  (void) remove (zpath);
+	  if (remove (zpath) != 0)
+	    {
+	      zerr = "remove";
+	      break;
+	    }
 	  fret = TRUE;
 	  continue;
 	}
