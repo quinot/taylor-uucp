@@ -45,6 +45,7 @@ const char tcp_rcsid[] = "$Id$";
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -354,17 +355,28 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
 
   errno = 0;
   q = gethostbyname ((char *) zhost);
-  if (q == NULL)
+  if (q != NULL)
     {
-      if (errno == 0)
-	ulog (LOG_ERROR, "%s: unknown host name", zhost);
-      else
-	ulog (LOG_ERROR, "gethostbyname (%s): %s", zhost, strerror (errno));
-      return FALSE;
+      s.sin_family = q->h_addrtype;
+      memcpy (&s.sin_addr.s_addr, q->h_addr, (size_t) q->h_length);
+    }
+  else
+    {
+      if (errno != 0)
+	{
+	  ulog (LOG_ERROR, "gethostbyname (%s): %s", zhost, strerror (errno));
+	  return FALSE;
+	}
+
+      s.sin_family = AF_INET;
+      s.sin_addr.s_addr = inet_addr ((char *) zhost);
+      if ((long) s.sin_addr.s_addr == (long) -1)
+	{
+	  ulog (LOG_ERROR, "%s: unknown host name", zhost);
+	  return FALSE;
+	}
     }
 
-  s.sin_family = q->h_addrtype;
-  memcpy (&s.sin_addr.s_addr, q->h_addr, (size_t) q->h_length);
   zport = qconn->qport->uuconf_u.uuconf_stcp.uuconf_zport;
   s.sin_port = itcp_port_number (zport);
 
