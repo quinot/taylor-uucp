@@ -202,6 +202,7 @@ fsdo_lock (zlock, fspooldir, pferr)
 		{
 		  /* The file was presumably removed between the link
 		     and the open.  Try the link again.  */
+		  fret = TRUE;
 		  continue;
 		}
 	      zerr = "open";
