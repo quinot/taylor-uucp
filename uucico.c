@@ -821,21 +821,24 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
      that we haven't exceeded the maximum number of retries.  Even if
      we are over the limit on retries, we permit a call to be made if
      24 hours have passed.  This 24 hour limit is still controlled by
-     the retry time.  */
+     the retry time.  We ignore times in the future, presumably the
+     result of some sort of error.  */
   inow = ixsysdep_time ((long *) NULL);
   if (! fforce)
     {
       if (qorigsys->uuconf_cmax_retries > 0
 	  && sstat.cretries >= qorigsys->uuconf_cmax_retries
+	  && sstat.ilast <= inow
 	  && sstat.ilast + SECS_PER_DAY > inow)
 	{
 	  ulog (LOG_ERROR, "Too many retries");
 	  return FALSE;
 	}
 
-      if (sstat.ttype == STATUS_COMPLETE
-	  ? sstat.ilast + qorigsys->uuconf_csuccess_wait > inow
-	  : sstat.ilast + sstat.cwait > inow)
+      if ((sstat.ttype == STATUS_COMPLETE
+	   ? sstat.ilast + qorigsys->uuconf_csuccess_wait > inow
+	   : sstat.ilast + sstat.cwait > inow)
+	  && sstat.ilast <= inow)
 	{
 	  ulog (LOG_NORMAL, "Retry time not reached");
 	  return FALSE;
