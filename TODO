@@ -250,9 +250,4 @@ return the correct answer if we add new files more than once.  Nothing
 really terrible will happen--we'll just process a given command file
 more times than we really have to--but it should be fixed.
 
-57.
-
-Franc,ois Pinard: just warn about illegal bytes encountered by 'f'
-protocol.
-
 58.
