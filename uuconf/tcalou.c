@@ -99,7 +99,7 @@ uuconf_taylor_callout (pglobal, qsys, pzlog, pzpass)
     }
 
   as[0].uuconf_zcmd = qsys->uuconf_zname;
-  as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 3;
+  as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 0;
   if (*pzlog == NULL)
     as[0].uuconf_pvar = (pointer) pzlog;
   else
@@ -168,6 +168,9 @@ icsys (pglobal, argc, argv, pvar, pinfo)
   char **pzlog = (char **) pvar;
   char **pzpass = (char **) pinfo;
 
+  if (argc < 2 || argc > 3)
+    return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
+
   if (pzlog != NULL)
     {
       *pzlog = strdup (argv[1]);
@@ -182,7 +185,10 @@ icsys (pglobal, argc, argv, pvar, pinfo)
 
   if (pzpass != NULL)
     {
-      *pzpass = strdup (argv[2]);
+      if (argc < 3)
+	*pzpass = strdup ("");
+      else
+	*pzpass = strdup (argv[2]);
       if (*pzpass == NULL)
 	{
 	  qglobal->ierrno = errno;
