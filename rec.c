@@ -208,7 +208,7 @@ flocal_rec_file_init (qdaemon, qcmd)
 	      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 	      return FALSE;
 	    }
-	  slocalsys.uuconf_zname = zlocalname;
+	  slocalsys.uuconf_zname = (char *) zlocalname;
 	}
       else if (iuuconf != UUCONF_SUCCESS)
 	{
