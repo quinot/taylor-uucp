@@ -325,6 +325,10 @@ AC_CHECK_FUNCS(getgrent)
 dnl
 case $LIBS in
 *-lnsl*) ;;
+*) AC_CHECK_LIB(nsl_s, main) ;;
+esac
+case $LIBS in
+*-lnsl*) ;;
 *) AC_CHECK_LIB(nsl, main) ;;
 esac
 case $LIBS in
