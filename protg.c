@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/01/16  23:46:40  ian
+   Zero out unused bytes in short packets
+
    Revision 1.17  1992/01/16  18:16:14  ian
    Corrected misspelling in debugging message
 
@@ -136,6 +139,9 @@ char protg_rcsid[] = "$Id$";
 
 /* DLE value.  */
 #define DLE ('\020')
+
+/* Get the length of a packet given a pointer to the header.  */
+#define CPACKLEN(z) (1 << ((z)[IFRAME_K] + 4))
 
 /* <k> field value for a control message.  */
 #define KCONTROL (9)
@@ -600,9 +606,28 @@ fgsendcmd (z)
 
       if (clen < iGremote_packsize)
 	{
+	  int csize;
+
+	  /* If the remote packet size is larger than 64 (the default,
+	     which may indicate an older UUCP package), try to fit
+	     this command into a smaller packet.  We still always send
+	     a complete packet, though.  */
+
+	  if (iGremote_packsize <= 64)
+	    csize = iGremote_packsize;
+	  else
+	    {
+	      csize = 32;
+	      while (csize < clen)
+		csize <<= 1;
+	    }
+
 	  strcpy (zpacket, z);
-	  bzero (zpacket + clen, iGremote_packsize - clen);
+	  bzero (zpacket + clen, csize - clen);
 	  fagain = FALSE;
+
+	  if (! fgsenddata (zpacket, csize))
+	    return FALSE;
 	}
       else
 	{
@@ -610,10 +635,10 @@ fgsendcmd (z)
 	  z += iGremote_packsize;
 	  clen -= iGremote_packsize;
 	  fagain = TRUE;
-	}
 
-      if (! fgsenddata (zpacket, iGremote_packsize))
-	return FALSE;
+	  if (! fgsenddata (zpacket, iGremote_packsize))
+	    return FALSE;
+	}
     }
   while (fagain);
 
@@ -679,61 +704,78 @@ fgsenddata (zdata, cdata)
      int cdata;
 {
   char *z;
-  int itt;
+  int itt, iseg, csize;
   unsigned short icheck;
 
 #if DEBUG > 4
   if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgsend_packet: Sending %d bytes", cdata);
+    ulog (LOG_DEBUG, "fgsenddata: Sending %d bytes", cdata);
 #endif
 
   /* Set the initial length bytes.  See the description at the definition
      of SHORTDATA, above.  */
 
-  if (cdata == iGremote_packsize)
-    itt = DATA;
+  itt = DATA;
+  csize = iGremote_packsize;
+  iseg = iGremote_segsize + 1;
+
 #if DEBUG > 0
-  else if (cdata > iGremote_packsize)
-    {
-      ulog (LOG_FATAL, "fgsend_packet: Packet size too large");
-      /* Avoid an uninitialized warning.  */
-      itt = DATA;
-    }
+  if (cdata > iGremote_packsize)
+    ulog (LOG_FATAL, "fgsend_packet: Packet size too large");
 #endif
-  else
+
+  if (cdata < iGremote_packsize)
     {
-      int cshort;
-
-      /* We have to move the data within the packet, unfortunately.
-	 It's tough to see any way around this without going to some
-	 sort of iovec structure.  It only happens once per file
-	 transfer.  It would also be nice if we computed the checksum
-	 as we move.  We zero out the unused bytes, since it makes
-	 people happy.  */
-
-      itt = SHORTDATA;
-      cshort = iGremote_packsize - cdata;
-      if (cshort <= 127)
+      /* If the remote packet size is larger than 64, the default, we
+	 can assume they can handle a smaller packet as well, which
+	 will be more efficient to send.  */
+      if (iGremote_packsize > 64)
 	{
-	  xmemmove (zdata + 1, zdata, cdata);
-	  zdata[0] = (char) cshort;
-	  bzero (zdata + cdata + 1, cshort - 1);
+	  /* The packet size is 1 << (iseg + 4).  */
+	  iseg = 1;
+	  csize = 32;
+	  while (csize < cdata)
+	    {
+	      csize <<= 1;
+	      ++iseg;
+	    }
 	}
-      else
+
+      if (csize != cdata)
 	{
-	  xmemmove (zdata + 2, zdata, cdata);
-	  zdata[0] = (char) (0x80 | (cshort & 0x7f));
-	  zdata[1] = (char) (cshort >> 7);
-	  bzero (zdata + cdata + 2, cshort - 2);
+	  int cshort;
+
+	  /* We have to move the data within the packet,
+	     unfortunately.  It's tough to see any way around this
+	     without going to some sort of iovec structure.  It only
+	     happens once per file transfer.  It would also be nice if
+	     we computed the checksum as we move.  We zero out the
+	     unused bytes, since it makes people happy.  */
+
+	  itt = SHORTDATA;
+	  cshort = csize - cdata;
+	  if (cshort <= 127)
+	    {
+	      xmemmove (zdata + 1, zdata, cdata);
+	      zdata[0] = (char) cshort;
+	      bzero (zdata + cdata + 1, cshort - 1);
+	    }
+	  else
+	    {
+	      xmemmove (zdata + 2, zdata, cdata);
+	      zdata[0] = (char) (0x80 | (cshort & 0x7f));
+	      zdata[1] = (char) (cshort >> 7);
+	      bzero (zdata + cdata + 2, cshort - 2);
+	    }
 	}
     }
 
   z = zdata - CFRAMELEN;
 
   z[IFRAME_DLE] = DLE;
-  z[IFRAME_K] = (char) (iGremote_segsize + 1);
+  z[IFRAME_K] = (char) iseg;
 
-  icheck = (unsigned short) igchecksum (zdata, iGremote_packsize);
+  icheck = (unsigned short) igchecksum (zdata, csize);
 
   /* We're just about ready to go.  Wait until there is room in the
      receiver's window for us to send the packet.  We do this now so
@@ -787,7 +829,7 @@ fgsenddata (zdata, cdata)
       return TRUE;
     }
 
-  return fsend_data (z, CFRAMELEN + iGremote_packsize, TRUE);
+  return fsend_data (z, CFRAMELEN + csize, TRUE);
 }
 
 /* Recompute the control byte and checksum of a packet so that it
@@ -994,7 +1036,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	      ugadjust_ack (inext);
 	      ++cGresent_packets;
 	      if (! fsend_data (azGsendbuffers[inext],
-				CFRAMELEN + iGremote_packsize,
+				CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
 				TRUE))
 		return FALSE;
 	      iGretransmit_seq = inext;
@@ -1055,7 +1097,7 @@ fggot_ack (iack)
       ugadjust_ack (inext);
       ++cGresent_packets;
       if (! fsend_data (azGsendbuffers[inext],
-			CFRAMELEN + iGremote_packsize,
+			CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
 			TRUE))
 	return FALSE;
       inext = INEXTSEQ (inext);
@@ -1066,7 +1108,7 @@ fggot_ack (iack)
 	  ugadjust_ack (inext);
 	  ++cGresent_packets;
 	  if (! fsend_data (azGsendbuffers[inext],
-			    CFRAMELEN + iGremote_packsize,
+			    CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
 			    TRUE))
 	    return FALSE;
 	  iGretransmit_seq = inext;
@@ -1225,7 +1267,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* Make sure we have enough data.  If we don't, wait for
 	     more.  */	     
 
-	  cwant = 1 << (ab[IFRAME_K] + 4);
+	  cwant = CPACKLEN (ab);
 	  if (cinbuf < cwant)
 	    {
 	      if (pcneed != NULL)
@@ -1509,27 +1551,31 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    iGretransmit_seq = -1;
 	  else
 	    {
+	      char *zpack;
+
 	      ugadjust_ack (iGretransmit_seq);
 	      ++cGresent_packets;
 	      ++cGremote_rejects;
 	      if (! fgcheck_errors ())
 		return FALSE;
-	      if (! fsend_data (azGsendbuffers[iGretransmit_seq],
-				CFRAMELEN + iGremote_packsize,
-				TRUE))
+	      zpack = azGsendbuffers[iGretransmit_seq];
+	      if (! fsend_data (zpack, CFRAMELEN + CPACKLEN (zpack), TRUE))
 		return FALSE;
 	    }
 	  break;
 	case SRJ:
 	  /* Selectively reject a particular packet.  This is not used
 	     by UUCP, but it's easy to support.  */
-	  ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
-	  ++cGresent_packets;
-	  ++cGremote_rejects;
-	  if (! fsend_data (azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])],
-			    CFRAMELEN + iGremote_packsize,
-			    TRUE))
-	    return FALSE;
+	  {
+	    char *zpack;
+
+	    ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
+	    ++cGresent_packets;
+	    ++cGremote_rejects;
+	    zpack = azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])];
+	    if (! fsend_data (zpack, CFRAMELEN + CPACKLEN (zpack), TRUE))
+	      return FALSE;
+	  }
 	  break;
 	case RR:
 	  /* Acknowledge receipt of a packet.  This was already handled
