@@ -1,7 +1,7 @@
 /* uux.c
    Prepare to execute a command on a remote system.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -399,7 +399,10 @@ main (argc, argv)
 					   calloc_args * sizeof (char *));
 	    }
 
-	  clen = strcspn (zarg, ZSHELLSEPS);
+	  if (*zarg == '(')
+	    clen = strlen (zarg);
+	  else
+	    clen = strcspn (zarg, ZSHELLSEPS);
 	  if (clen > 0)
 	    {
 	      pzargs[cargs] = zbufalc (clen + 1);
