@@ -41,17 +41,14 @@
 #define MAJOR_IN_MKDEV 0
 #define MAJOR_IN_SYSMACROS 0
 
+/* If the macro offsetof is not defined in <stddef.h>, you may give it
+   a definition here.  If you do not, the code will use a definition
+   (in uucp.h) that should be fairly portable.  */
+/* #define offsetof */
+
 /* Set RETSIGTYPE to the return type of a signal handler.  On newer
    systems this will be void; some older systems use int.  */
 #define RETSIGTYPE void
-
-/* Set HAVE_TIME_T to 1 if time_t is defined in <time.h>, as required by
-   the ANSI C standard.  */
-#define HAVE_TIME_T 0
-
-/* Set HAVE_SYS_TIME_T to 1 if time_t is defined in <sys/types.h>;  this
-   is only checked if HAVE_TIME_T is 0.  */
-#define HAVE_SYS_TIME_T 0
 
 /* Set HAVE_SYS_TIME_AND_TIME_H to 1 if <time.h> and <sys/time.h> can both
    be included in a single source file; if you don't have either or both of
@@ -117,11 +114,36 @@
 /* The type sig_atomic_t is used to hold a value which may be
    referenced in a single atomic operation.  If it is not defined in
    either <signal.h> or <sys/types.h>, you may want to give it a
-   definition here (if you don't, the code will use char).  If your
+   definition here.  If you don't, the code will use char.  If your
    compiler does not support sig_atomic_t, there is no type which is
    really correct; fortunately, for this package it does not really
    matter very much.  */
 #undef SIG_ATOMIC_T
+
+/* Set HAVE_SIZE_T_IN_STDDEF_H to 1 if the type size_t is defined in
+   <stddef.h> as required by ANSI C.  */
+#define HAVE_SIZE_T_IN_STDDEF_H 0
+
+/* Set HAVE_SIZE_T_IN_TYPES_H to 1 if the type size_t is defined in
+   <sys/types.h>.  This is ignored if HAVE_SIZE_T_IN_STDDEF_H is set
+   to 1.  */
+#define HAVE_SIZE_T_IN_TYPES_H 0
+
+/* The type size_t is used to hold the size of an object.  In
+   particular, an argument of this type is passed as the size argument
+   to the malloc and realloc functions.  If size_t is not defined in
+   either <stddef.h> or <sys/types.h>, you may want to give it a
+   definition here.  If you don't, the code will use int.  */
+#undef SIZE_T
+
+/* Set HAVE_TIME_T_IN_TIME_H to 1 if the type time_t is defined in
+   <time.h>, as required by the ANSI C standard.  */
+#define HAVE_TIME_T_IN_TIME_H 0
+
+/* Set HAVE_TIME_T_IN_TYPES_H to 1 if the type time_t is defined in
+   <sys/types.h>.  This is ignored if HAVE_TIME_T_IN_TIME_H is set to
+   1.  */
+#define HAVE_TIME_T_IN_TYPES_H 0
 
 /* When Taylor UUCP is talking to another instance of itself, it will
    tell the other side the size of a file before it is transferred.
