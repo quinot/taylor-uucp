@@ -215,7 +215,9 @@ uuconf_hdb_init (ppglobal, zprogram)
 		      clen = strlen (pzcolon[ifile]);
 		      zdir = (char *) uuconf_malloc (pblock,
 						     (sizeof OLDCONFIGLIB
-						      + clen));
+						      + sizeof HDB_SEPARATOR
+						      + clen
+						      - 1));
 		      if (zdir == NULL)
 			{
 			  qglobal->ierrno = errno;
@@ -224,7 +226,11 @@ uuconf_hdb_init (ppglobal, zprogram)
 			}
 		      memcpy ((pointer) zdir, (pointer) abHoldconfiglib,
 			      sizeof OLDCONFIGLIB - 1);
-		      memcpy ((pointer) (zdir + sizeof OLDCONFIGLIB - 1),
+		      memcpy ((pointer) zdir + sizeof OLDCONFIGLIB - 1,
+			      HDB_SEPARATOR, sizeof HDB_SEPARATOR - 1);
+		      memcpy ((pointer) (zdir
+					 + sizeof OLDCONFIGLIB - 1
+					 + sizeof HDB_SEPARATOR - 1),
 			      (pointer) pzcolon[ifile], clen + 1);
 		      iret = _uuconf_iadd_string (qglobal, zdir, FALSE, FALSE,
 						  ppz, pblock);

@@ -59,6 +59,11 @@
 #define HDB_DIALCODES "/Dialcodes"
 #define HDB_MAXUUXQTS "/Maxuuxqts"
 
+/* A string which is inserted between the value of OLDCONFIGLIB
+   (defined in the Makefile) and any names specified in the HDB
+   Sysfiles file.  */
+#define HDB_SEPARATOR "/"
+
 #if ! HAVE_STRERROR
 
 /* We need a definition for strerror; normally the function in the
