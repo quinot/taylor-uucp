@@ -36,9 +36,10 @@ static int ipcheck P((pointer pglobal, int argc, char **argv,
 
 struct sinfo
 {
-  size_t (*pfn) P((char *));
-  const char *zlogin;
-  char *zfilepass;
+  int (*pcmpfn) P((int, void *, const char *));
+  void *pinfo;
+  boolean ffound;
+  boolean fmatched;
 };
 
 /* Check a login name and password against the UUCP password file.
@@ -46,11 +47,10 @@ struct sinfo
    uuconf_taylor_init was not called.  */
 
 int
-uuconf_callin (pglobal, zlogin, zpassword, pfn)
+uuconf_callin (pglobal, pcmpfn, pinfo)
      pointer pglobal;
-     const char *zlogin;
-     const char *zpassword;
-     size_t (*pfn) P((char *));
+     int (*pcmpfn) P((int, void *, const char *));
+     void *pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;
@@ -76,9 +76,10 @@ uuconf_callin (pglobal, zlogin, zpassword, pfn)
 
   as[0].uuconf_zcmd = NULL;
 
-  s.pfn = pfn;
-  s.zlogin = zlogin;
-  s.zfilepass = NULL;
+  s.pcmpfn = pcmpfn;
+  s.pinfo = pinfo;
+  s.ffound = FALSE;
+  s.fmatched = FALSE;
 
   iret = UUCONF_SUCCESS;
 
@@ -100,7 +101,7 @@ uuconf_callin (pglobal, zlogin, zpassword, pfn)
 			      ipcheck, 0, (pointer) NULL);
       (void) fclose (e);
 
-      if (iret != UUCONF_SUCCESS || s.zfilepass != NULL)
+      if (iret != UUCONF_SUCCESS || s.ffound)
 	break;
     }
 
@@ -109,30 +110,16 @@ uuconf_callin (pglobal, zlogin, zpassword, pfn)
       qglobal->zfilename = *pz;
       iret |= UUCONF_ERROR_FILENAME;
     }
-  else if (s.zfilepass == NULL)
+  else if (! s.ffound || ! s.fmatched)
     iret = UUCONF_NOT_FOUND;
-  else
-    {
-      size_t clen;
-
-      if (pfn == NULL)
-	clen = strlen (s.zfilepass);
-      else
-	clen = (*pfn) (s.zfilepass);
-      if (strncmp (s.zfilepass, zpassword, clen) != 0
-	  || zpassword[clen] != '\0')
-	iret = UUCONF_NOT_FOUND;
-    }
-
-  if (s.zfilepass != NULL)
-    free ((pointer) s.zfilepass);
 
   return iret;
 }
 
-/* This is called on each line of the file.  It transforms the login
-   name from the file to see if it is the one we are looking for.  If
-   it is, it sets pinfo->zfilepass to the password.  */
+/* This is called on each line of the file.  It checks to see if the
+   login name from the file is the one we are looking for.  If it is,
+   it sets ffound, and then sets fmatched according to whether the
+   password matches or not.  */
 
 static int
 ipcheck (pglobal, argc, argv, pvar, pinfo)
@@ -142,42 +129,16 @@ ipcheck (pglobal, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *q = (struct sinfo *) pinfo;
-  char *z;
-  size_t clen;
 
   if (argc != 2)
     return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 
-  z = strdup (argv[0]);
-  if (z == NULL)
-    {
-      qglobal->ierrno = errno;
-      return (UUCONF_MALLOC_FAILED
-	      | UUCONF_ERROR_ERRNO
-	      | UUCONF_CMDTABRET_EXIT);
-    }
-  if (q->pfn == NULL)
-    clen = strlen (z);
-  else
-    clen = (*q->pfn) (z);
-  if (strncmp (z, q->zlogin, clen) == 0
-      && q->zlogin[clen] == '\0')
-    {
-      free ((pointer) z);
-      q->zfilepass = strdup (argv[1]);
-      if (q->zfilepass == NULL)
-	{
-	  qglobal->ierrno = errno;
-	  return (UUCONF_MALLOC_FAILED
-		  | UUCONF_ERROR_ERRNO
-		  | UUCONF_CMDTABRET_EXIT);
-	}
-      return UUCONF_CMDTABRET_EXIT;
-    }
+  if (! (*q->pcmpfn) (0, q->pinfo, argv[0]))
+    return UUCONF_CMDTABRET_CONTINUE;
 
-  free ((pointer) z);
+  q->ffound = TRUE;
+  q->fmatched = (*q->pcmpfn) (1, q->pinfo, argv[1]) != 0;
 
-  return UUCONF_CMDTABRET_CONTINUE;
+  return UUCONF_CMDTABRET_EXIT;
 }

@@ -46,6 +46,12 @@ const char uucico_rcsid[] = "$Id$";
 #include "trans.h"
 #include "system.h"
 
+#if HAVE_ENCRYPTED_PASSWORDS
+#ifndef crypt
+extern char *crypt ();
+#endif
+#endif
+
 /* Coherent already had a different meaning for the -c option.  What a
    pain.  */
 #ifdef __COHERENT__
@@ -135,6 +141,7 @@ static boolean fdo_call P((struct sdaemon *qdaemon,
 static int iuport_lock P((struct uuconf_port *qport, pointer pinfo));
 static boolean flogin_prompt P((pointer puuconf,
 				struct sconnection *qconn));
+static int icallin_cmp P((int iwhich, void *pinfo, const char *zfile));
 static boolean faccept_call P((pointer puuconf, const char *zlogin,
 			       struct sconnection *qconn,
 			       const char **pzsystem));
@@ -1569,6 +1576,15 @@ iuport_lock (qport, pinfo)
     }
 }
 
+/* The information structure used for the uuconf_callin comparison
+   function.  */
+
+struct scallin_info
+{
+  const char *zuser;
+  const char *zpass;
+};
+
 /* Prompt for a login name and a password, and run as the slave.  */
 
 static boolean
@@ -1579,6 +1595,7 @@ flogin_prompt (puuconf, qconn)
   char *zuser, *zpass;
   boolean fret;
   int iuuconf;
+  struct scallin_info s;
 
   DEBUG_MESSAGE0 (DEBUG_HANDSHAKE, "flogin_prompt: Waiting for login");
 
@@ -1610,8 +1627,12 @@ flogin_prompt (puuconf, qconn)
 
   fret = TRUE;
 
-  iuuconf = uuconf_callin (puuconf, zuser, zpass, cescape);
+  s.zuser = zuser;
+  s.zpass = zpass;
+  iuuconf = uuconf_callin (puuconf, icallin_cmp, &s);
+
   ubuffree (zpass);
+
   if (iuuconf == UUCONF_NOT_FOUND)
     ulog (LOG_ERROR, "Bad login");
   else if (iuuconf != UUCONF_SUCCESS)
@@ -1640,6 +1661,35 @@ flogin_prompt (puuconf, qconn)
   ubuffree (zuser);
 
   return fret;
+}
+
+/* The comparison function which we pass to uuconf_callin.  This
+   expands escape sequences in the login name, and either encrypts or
+   expands escape sequences in the password.  */
+
+static int
+icallin_cmp (iwhich, pinfo, zfile)
+     int iwhich;
+     void *pinfo;
+     const char *zfile;
+{
+  struct scallin_info *qinfo = (struct scallin_info *) pinfo;
+  char *zcopy;
+  int icmp;
+
+#if HAVE_ENCRYPTED_PASSWORDS
+  if (iwhich != 0)
+    return strcmp (crypt (qinfo->zpass, zfile), zfile) == 0;
+#endif
+
+  zcopy = zbufcpy (zfile);
+  (void) cescape (zcopy);
+  if (iwhich == 0)
+    icmp = strcmp (qinfo->zuser, zcopy);
+  else
+    icmp = strcmp (qinfo->zpass, zcopy);
+  ubuffree (zcopy);
+  return icmp == 0;
 }
 
 /* Accept a call from a remote system.  If pqsys is not NULL, *pqsys
