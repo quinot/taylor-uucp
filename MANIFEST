@@ -39,7 +39,6 @@ sysinf.c
 system.h
 tcp.c
 time.c
-tstout.c
 tstuu.c
 util.c
 uuchk.c
