@@ -156,6 +156,7 @@ main (argc, argv)
   int iuuconf;
   int i;
   boolean fgetcwd;
+  struct uuconf_system slocalsys;
   char *zexclam;
   char *zdestfile;
   const char *zdestsys;
@@ -369,6 +370,18 @@ main (argc, argv)
   else if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
+  /* Get the local system information.  */
+  iuuconf = uuconf_system_info (puuconf, zClocalname, &slocalsys);
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      if (iuuconf != UUCONF_NOT_FOUND)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+      iuuconf = uuconf_system_local (puuconf, &slocalsys);
+      if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+      slocalsys.uuconf_zname = (char *) zClocalname;
+    }
+
   /* If we are emulating uuto, translate the destination argument, and
      notify the destination user.  This had better not turn into
      something that requires the current directory, or we may have
@@ -411,6 +424,8 @@ main (argc, argv)
   if (fCmail)
     *zoptions++ = 'm';
   *zoptions = '\0';
+
+  argv[argc - 1] = zremove_local_sys (&slocalsys, argv[argc - 1]);
 
   zexclam = strchr (argv[argc - 1], '!');
   if (zexclam == NULL)
@@ -496,6 +511,8 @@ main (argc, argv)
       char *zfrom;
 
       fCneeds_cwd = FALSE;
+
+      argv[i] = zremove_local_sys (&slocalsys, argv[i]);
 
       if (strchr (argv[i], '!') != NULL)
 	{

@@ -487,32 +487,12 @@ main (argc, argv)
       iuuconf = uuconf_system_local (puuconf, &slocalsys);
       if (iuuconf != UUCONF_SUCCESS)
 	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+      slocalsys.uuconf_zname = (char *) zlocalname;
     }
 
-  /* Figure out which system the command is to be executed on.  Some
-     mailers apparently pass local!rmail, so we must explicitly check
-     for that.  */
+  /* Figure out which system the command is to be executed on.  */
+  zcmd = zremove_local_sys (&slocalsys, zcmd);
   zexclam = strchr (zcmd, '!');
-  while (zexclam != NULL)
-    {
-      *zexclam = '\0';
-      if (strcmp (zcmd, zlocalname) == 0)
-	;
-      else if (slocalsys.uuconf_pzalias == NULL)
-	break;
-      else
-	{
-	  char **pzal;
-
-	  for (pzal = slocalsys.uuconf_pzalias; *pzal != NULL; pzal++)
-	    if (strcmp (zcmd, *pzal) == 0)
-	      break;
-	  if (*pzal == NULL)
-	    break;
-	}
-      zcmd = zexclam + 1;
-      zexclam = strchr (zcmd, '!');
-    }
   if (zexclam == NULL)
     {
       zsys = zlocalname;
@@ -630,6 +610,12 @@ main (argc, argv)
       if (zexclam == NULL && ! finput && ! foutput)
 	continue;
 
+      if (zexclam != NULL)
+	{
+	  pzargs[i] = zremove_local_sys (&slocalsys, pzargs[i]);
+	  zexclam = strchr (pzargs[i], '!');
+	}
+
       /* Get the system name and file name for this file.  */
       if (zexclam == NULL)
 	{
@@ -642,22 +628,13 @@ main (argc, argv)
 	{
 	  *zexclam = '\0';
 	  zsystem = pzargs[i];
-	  if (*zsystem != '\0')
-	    flocal = FALSE;
-	  else
-	    {
-	      zsystem = zlocalname;
-	      flocal = TRUE;
-	    }
 	  zfile = zexclam + 1;
+	  flocal = FALSE;
 	  zexclam = strrchr (zfile, '!');
 	  if (zexclam == NULL)
 	    zforw = NULL;
 	  else
 	    {
-	      if (flocal)
-		ulog (LOG_FATAL, "!%s: Can't figure out where to get file",
-		      zfile);
 	      *zexclam = '\0';
 	      zforw = zfile;
 	      zfile = zexclam + 1;

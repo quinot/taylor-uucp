@@ -95,6 +95,46 @@ funknown_system (puuconf, zsystem, qsys)
   return TRUE;
 }
 
+/* Remove all occurrences of the local system name followed by an
+   exclamation point from the front of a string, returning the new
+   string.  This is used by uucp and uux.  */
+
+char *
+zremove_local_sys (qlocalsys, z)
+     struct uuconf_system *qlocalsys;
+     char *z;
+{
+  size_t clen;
+  char *zexclam;
+
+  clen = strlen (qlocalsys->uuconf_zname);
+  zexclam = strchr (z, '!');
+  while (zexclam != NULL)
+    {
+      if (z == zexclam
+	  || (zexclam - z == clen
+	      && strncmp (z, qlocalsys->uuconf_zname, clen) == 0))
+	;
+      else if (qlocalsys->uuconf_pzalias == NULL)
+	break;
+      else
+	{
+	  char **pzal;
+
+	  for (pzal = qlocalsys->uuconf_pzalias; *pzal != NULL; pzal++)
+	    if (strlen (*pzal) == zexclam - z
+		&& strncmp (z, *pzal, zexclam - z) == 0)
+	      break;
+	  if (*pzal == NULL)
+	    break;
+	}
+      z = zexclam + 1;
+      zexclam = strchr (z, '!');
+    }
+
+  return z;
+}
+
 /* See whether a file is in a directory list, and make sure the user
    has appropriate access.  */
 

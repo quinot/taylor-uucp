@@ -237,6 +237,12 @@ extern boolean fspool_file P((const char *zfile));
 extern boolean ftimespan_match P((const struct uuconf_timespan *qspan,
 				  long *pival, int *pcretry));
 
+/* Remove all occurrences of the local system name followed by an
+   exclamation point from the start of the argument.  Return the
+   possibly shortened argument.  */
+extern char *zremove_local_sys P((struct uuconf_system *qlocalsys,
+				  char *z));
+
 /* Determine the maximum size that may ever be transferred, given a
    timesize span.  If there are any time gaps larger than 1 hour not
    described by the timesize span, this returns -1.  Otherwise it
