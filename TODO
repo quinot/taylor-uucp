@@ -228,3 +228,10 @@ David Fiander: check the arguments to all commands executed by uuxqt
 to make sure they are not filenames we don't want people to access.
 
 70.
+
+Mark Mallett: in 'g' protocol initialization if we are the slave don't
+send out INITx until we have seen INITx.  Some standard UUCP packages
+assume that if they are the master and they get an INITA, the slave
+has already seen their INITA.
+
+71.
