@@ -231,27 +231,27 @@ fsdo_lock (zlock, fspooldir, pferr)
       ipid = strtol (ab, (char **) NULL, 10);
 #endif
 
-      /* If the process still exists, we will get EPERM rather than
-	 ESRCH.  We then return FALSE to indicate that we cannot make
-	 the lock.  */
-      if (kill (ipid, 0) == 0 || errno == EPERM)
-	break;
-
       /* On NFS, the link might have actually succeeded even though we
 	 got a failure return.  This can happen if the original
 	 acknowledgement was lost or delayed and the operation was
 	 retried.  In this case the pid will be our own.  This
 	 introduces a rather improbable race condition: if a stale
 	 lock was left with our process ID in it, and another process
-	 just did the above kill but has not yet changed the lock file
-	 to hold its own process ID, we could start up and make it all
-	 the way to here and think we have the lock.  I'm not going to
-	 worry about this possibility.  */
+	 just did the kill, below, but has not yet changed the lock
+	 file to hold its own process ID, we could start up and make
+	 it all the way to here and think we have the lock.  I'm not
+	 going to worry about this possibility.  */
       if (ipid == ime)
 	{
 	  fret = TRUE;
 	  break;
 	}
+
+      /* If the process still exists, we will get EPERM rather than
+	 ESRCH.  We then return FALSE to indicate that we cannot make
+	 the lock.  */
+      if (kill (ipid, 0) == 0 || errno == EPERM)
+	break;
 
       ulog (LOG_ERROR, "Found stale lock %s held by process %d",
 	    zpath, ipid);
