@@ -10,17 +10,17 @@ SHELL=/bin/sh
 
 # These are overridden by the call from the top level Makefile
 CC = @CC@
+CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@
 AR = @AR@
 RANLIB = @RANLIB@
-prefix = /usr/local
-sbindir = $(prefix)/lib/uucp
+sbindir = @exec_prefix@/lib/uucp
 UUDIRFLAGS =
 
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS = -I$(srcdir)/.. -I.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
+MORECFLAGS = -I.. -I$(srcdir)/.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
 OBJS = access.o addbas.o app3.o app4.o basnam.o bytfre.o corrup.o \
 	chmod.o cohtty.o cusub.o cwd.o detach.o efopen.o epopen.o \
@@ -42,7 +42,7 @@ distclean: clean
 	rm -f Makefile
 
 mostlyclean: clean
-realclean: distclean
+maintainer-clean realclean: distclean
 
 libunix.a: $(OBJS)
 	rm -f libunix.a
@@ -50,14 +50,14 @@ libunix.a: $(OBJS)
 	-$(RANLIB) libunix.a
 
 .c.o:
-	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CPPFLAGS) $(CFLAGS) $<
 
 dist:
 	mkdir ../uucp-$(VERSION)/unix
 	ln `cat MANIFEST` ../uucp-$(VERSION)/unix
 
 Makefile: Makefile.in
-	(cd ..; sh config.status)
+	cd .. && CONFIG_FILES=unix/Makefile CONFIG_HEADERS= $(SHELL) ./config.status
 
 # Header file dependencies.
 
@@ -130,4 +130,4 @@ work.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 xqtfil.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 xqtsub.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 
-.PHONY: all clean distclean mostlyclean realclean dist
+.PHONY: all clean distclean mostlyclean maintainer-clean realclean dist

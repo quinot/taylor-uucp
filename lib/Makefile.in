@@ -9,6 +9,7 @@ SHELL=/bin/sh
 
 # These are overridden by the call from the top level Makefile
 CC = @CC@
+CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@
 AR = @AR@
 RANLIB = @RANLIB@
@@ -16,7 +17,7 @@ RANLIB = @RANLIB@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS = -I$(srcdir)/.. -I..
+MORECFLAGS = -I.. -I$(srcdir)/..
 
 OBJS = buffer.o crc.o debug.o escape.o getopt.o getop1.o parse.o spool.o \
 	status.o xfree.o xmall.o xreall.o \
@@ -31,7 +32,7 @@ distclean: clean
 	rm -f Makefile
 
 mostlyclean: clean
-realclean: distclean
+maintainer-clean realclean: distclean
 
 libuucp.a: $(OBJS)
 	rm -f libuucp.a
@@ -39,14 +40,14 @@ libuucp.a: $(OBJS)
 	-$(RANLIB) libuucp.a
 
 .c.o:
-	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CPPFLAGS) $(CFLAGS) $<
 
 dist:
 	mkdir ../uucp-$(VERSION)/lib
 	ln `cat MANIFEST` ../uucp-$(VERSION)/lib
 
 Makefile: Makefile.in
-	(cd ..; sh config.status)
+	cd .. && CONFIG_FILES=lib/Makefile CONFIG_HEADERS= $(SHELL) ./config.status
 
 # Header file dependencies.
 
@@ -65,4 +66,4 @@ xfree.o: $(srcdir)/../uudefs.h
 xmall.o: $(srcdir)/../uudefs.h
 xreall.o: $(srcdir)/../uudefs.h
 
-.PHONY: all clean distclean mostlyclean realclean dist
+.PHONY: all clean distclean mostlyclean maintainer-clean realclean dist
