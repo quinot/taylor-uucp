@@ -1,3 +1,204 @@
+Tue Apr  7 01:02:17 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* Released version 1.03.
+
+Mon Apr  6 15:49:08 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uucico.c (faccept_call): Marc Boucher: set *pqsys to NULL.
+
+	* bnu.c (ubnu_read_systems, fbnu_find_port): Erik Forsberg:
+	support multiple character modem classes.
+
+Fri Apr  3 00:37:25 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* sys2.unx: Petri Helenius: only clear known bits in termio or
+	termios structure; didn't change HAVE_BSD_TTY handling--maybe next
+	version.
+
+	* configure.in: test TIMES_DECLARATION_OK correctly.
+
+	* Makefile.in: update version to 1.03, remove distclean, add
+	mostlyclean per GNU standards.
+
+	* sys1.unx, chat.c: minor cleanups for gcc 2.1.
+
+Thu Apr  2 17:51:36 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* tstuu.c: conditionally declare times.
+
+	* uucp.h, prot.c, sysinf.c, prtinf.c: added gcc 2.0 format
+	checking to ulog, and fixed a few problems it discovered.
+
+Wed Apr  1 16:21:08 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* sys3.unx (esysdep_open_receive): David J. MacKenzie: some
+	USG_STATFS systems use 512 as the block size of f_bfree, despite
+	the existence of f_bsize.
+
+	* port.c (fport_open): initialize stdin port.
+
+	* policy.h, log.c: added CLOSE_LOGFILES configuration parameter.
+
+	* sys2.unx: T. William Wells: handle a system without <poll.h> or
+	<stropts.h>.
+
+	* configure.in: Franc,ois Pinard: warn if none of napms, nap,
+	usleep, poll or select are available, since \p will sleep for a
+	full second.
+
+	* Makefile.in: Gerben Wierda: fixed uninstall to set file owner
+	and mode correctly.  Also changed install to handle uucp.info-4
+	and uustat.1.
+
+	* MANIFEST: added uucp.info-4 and uustat.1.
+
+	* uustat.1: Wrote.
+
+	* uucico.8, uuxqt.8, uucp.1, uux.1: updated -x switch, cleaned up
+	a bit.
+
+Tue Mar 31 14:40:06 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* sys1.unx (usysdep_initialize): use $PWD to get the current
+	working directory if it's defined and correct.
+
+	* sys1.unx (usysdep_initialize): Brian Antoine: use name from
+	getpwname rather than getlogin.
+
+	* uucp.texi: David J. MacKenzie: put in a number of corrections.
+	Also split sys file and config file nodes, and rearranged several
+	nodes.
+
+	* protg.c (fgsenddata): Niels Baggesen: packet to retransmit did
+	not get reset correctly.
+
+Mon Mar 30 10:03:28 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* tcp.c (ftcp_reset): Petri Helenius: TCP server never started
+	uuxqt, because it exited in ftcp_reset.
+
+	* policy.h, sysh.unx, sys2.unx (fsserial_lockfile): added
+	HAVE_SVR4_LOCKFILES configuration parameter.
+
+	* sys3.unx (esysdep_open_receive): Niels Baggesen: USG statfs has
+	an f_bsize field.
+
+Sun Mar 29 23:04:20 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uucp.h, sysinf.c, prot.c, prote.c, protf.c, protg.c, prott.c:
+	Niels Baggesen: added new debugging types abnormal and uucp-proto.
+
+	* uucico.c (fuucp), prot.c (freceive_file), file.c
+	(fstore_recfile): Dirk Musstopf: if a file receive fails before it
+	starts, perhaps because the file was too large, remember to remove
+	the temporary file.
+
+	* sys2.unx (fsserial_lock, fsserial_open, fsserial_write,
+	fsserial_io): always block and unblock the read and write
+	descriptors together.
+
+Sat Mar 28 14:40:50 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uustat.c: allow multiple systems and users to be specified at
+	once; likewise for kills and rejuvenates.  Allow old and young to
+	be combined with systems and users.  As suggested by Niels
+	Baggesen, make machine status output more columnar.
+
+	* uucp.h, uucico.c, config.c, sys3.unx: Michael I Bushnell:
+	renamed enum tstatus to tstatus_type to avoid conflict with
+	<sys/ioctl.h> on some systems.
+
+	* config.c, sysinf.c, prtinf.c, chat.c: David J. MacKenzie: allow
+	backslash newline quoting in all TAYLOR_CONFIG configuration
+	files.
+
+	* chat.c (fchat): David J. MacKenzie: handle empty subexpect
+	strings correctly.
+
+	* uucico.c (main, fcall): Petri Helenius: must dump controlling
+	terminal before going to next alternate.  Also fixed David J.
+	MacKenzie bug in which a signal did not prevent the next
+	alternates from being tried.  Also made sure qtime was always
+	freed up.
+
+	* uucp.h, uucico.c (fdo_call), sysinf.c (tialternate), uuchk.c
+	(ukshow): Franc,ois Pinard: allow a name to be given to an
+	alternate, and display the name when placing a call.
+
+	* chat.c (fcprogram), port.c (fport_open, fport_close): David J.
+	MacKenzie: send port device rather than port name to a chat
+	program using \Y; make sure port device is reset if port open
+	fails and when port is closed.
+
+	* uucico.c (fuucp), log.c (ulog, ustats, ustats_close): close log
+	and statistics file every time master and slave switch roles.
+
+Fri Mar 27 00:31:23 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uucico.c (fdo_call): Mark Mallett: minor cleanup.
+
+	* uuname.c (main): Franc,ois Pinard: output aliases, added -a
+	switch.
+
+	* uucico.8, uuxqt.8, uux.1, uucp.1: David J. MacKenzie: changed
+	.TP5 to .TP 5; also updated to 1.03.
+
+	* tstuu.c: Roberto Biancardi: if SIGCHLD is not defined, define it
+	as SIGCLD.
+
+	* config.c: David J. MacKenzie: cMaxuuxqts is independent of
+	HAVE_TAYLOR_CONFIG.
+
+	* uucp.h: Gerben Wierda: don't always declare bzero.
+
+	* sys7.unx (ussettime, fsysdep_lock_status): Niels Baggesen,
+	Gerben Wierda: minor patches.
+
+	* sys2.unx: Gerben Wierda: minor cleanups.
+
+	* uucp.h: Niels Baggesen: simplified debugging message macros to
+	avoid broken compilers.
+
+	* sys2.unx: don't use TIOCEXCL locking.
+
+	* sys2.unx: rework HAVE_UNBLOCKED_WRITES == 0 to work even if
+	writes are unblocked.  Correct initialization of fwrite_blocking.
+
+	* Makefile.in, configure.in: David J. MacKenzie: various cleanups.
+	Changed default newconfigdir definition.  Supported compilation in
+	a different directory.  Used symbolic links if available.  Changed
+	default infordir definition per Franc,ois Pinard.
+
+	* policy.h: David J. MacKenzie: various cleanups.
+
+Thu Mar 26 12:17:41 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* sys3.unx: reduced race condition in fsdo_lock.
+
+	* sys1.unx: Gerben Wierda: various cleanups.  Also don't set
+	sa_flags to SV_INTERRUPT per Chip Salzenberg.
+
+Wed Mar 25 22:20:24 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* configure.in: Overhauled for readability and functionality as
+	suggested by T. William Wells and others.  Added bug checks,
+	including for SCO memmove and ftime.
+
+Tue Mar 24 12:18:56 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* sysinf.c (uiread_systems): fixed handling of alternates in
+	file-wide defaults.
+
+Wed Mar 18 01:01:25 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* config.c (tprocess_one_cmd): handle CMDTABTYPE_FULLSTRING
+	correctly if there are no arguments.
+
+	* Released beta version 1.03
+
+	* sys1.unx (usysdep_detach): open the controlling terminal in non
+	delay mode since it might be a modem.
+
 Tue Mar 17 00:01:53 1992  Ian Lance Taylor  (ian@comton.airs.com)
 
 	* uucico.c (fdo_call, faccept_call): T. William Wells: set current
