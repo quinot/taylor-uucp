@@ -186,27 +186,38 @@ extern int t_nerr;
 
 /* Determine bits to clear for the various terminal control fields for
    HAVE_SYSV_TERMIO and HAVE_POSIX_TERMIOS.  */
+
+/* These fields are defined on some systems, and I am told that it
+   does not hurt to clear them, and it sometimes helps.  */
+#ifndef IMAXBEL
+#define IMAXBEL 0
+#endif
+
+#ifndef PENDIN
+#define PENDIN 0
+#endif
+
 #if HAVE_SYSV_TERMIO
 #define ICLEAR_IFLAG (IGNBRK | BRKINT | IGNPAR | PARMRK | INPCK \
 		      | ISTRIP | INLCR | IGNCR | ICRNL | IUCLC \
-		      | IXON | IXANY | IXOFF)
+		      | IXON | IXANY | IXOFF | IMAXBEL)
 #define ICLEAR_OFLAG (OPOST | OLCUC | ONLCR | OCRNL | ONOCR | ONLRET \
 		      | OFILL | OFDEL | NLDLY | CRDLY | TABDLY | BSDLY \
 		      | VTDLY | FFDLY)
 #define ICLEAR_CFLAG (CBAUD | CSIZE | PARENB | PARODD)
 #define ISET_CFLAG (CS8 | CREAD | HUPCL)
 #define ICLEAR_LFLAG (ISIG | ICANON | XCASE | ECHO | ECHOE | ECHOK \
-		      | ECHONL | NOFLSH)
+		      | ECHONL | NOFLSH | PENDIN)
 #endif
 #if HAVE_POSIX_TERMIOS
 #define ICLEAR_IFLAG (BRKINT | ICRNL | IGNBRK | IGNCR | IGNPAR \
 		      | INLCR | INPCK | ISTRIP | IXOFF | IXON \
-		      | PARMRK)
+		      | PARMRK | IMAXBEL)
 #define ICLEAR_OFLAG (OPOST)
 #define ICLEAR_CFLAG (CSIZE | PARENB | PARODD)
 #define ISET_CFLAG (CS8 | CREAD | HUPCL)
 #define ICLEAR_LFLAG (ECHO | ECHOE | ECHOK | ECHONL | ICANON | IEXTEN \
-		      | ISIG | NOFLSH | TOSTOP)
+		      | ISIG | NOFLSH | TOSTOP | PENDIN)
 #endif
 
 enum tclocal_setting
