@@ -41,11 +41,12 @@ const char copy_rcsid[] = "$Id$";
 #if USE_STDIO
 
 boolean
-fcopy_file (zfrom, zto, fpublic, fmkdirs)
+fcopy_file (zfrom, zto, fpublic, fmkdirs, fsignals)
      const char *zfrom;
      const char *zto;
      boolean fpublic;
      boolean fmkdirs;
+     boolean fsignals;
 {
   FILE *efrom;
   boolean fret;
@@ -57,17 +58,18 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       return FALSE;
     }
 
-  fret = fcopy_open_file (efrom, zto, fpublic, fmkdirs);
+  fret = fcopy_open_file (efrom, zto, fpublic, fmkdirs, fsignals);
   (void) fclose (efrom);
   return fret;
 }
 
 boolean
-fcopy_open_file (efrom, zto, fpublic, fmkdirs)
+fcopy_open_file (efrom, zto, fpublic, fmkdirs, fsignals)
      FILE *efrom;
      const char *zto;
      boolean fpublic;
      boolean fmkdirs;
+     boolean fsignals;
 {
   FILE *eto;
   char ab[8192];
@@ -82,6 +84,14 @@ fcopy_open_file (efrom, zto, fpublic, fmkdirs)
       if (fwrite (ab, sizeof (char), (size_t) c, eto) != c)
 	{
 	  ulog (LOG_ERROR, "fwrite: %s", strerror (errno));
+	  (void) fclose (eto);
+	  (void) remove (zto);
+	  return FALSE;
+	}
+      if (fsignals && FGOT_SIGNAL ())
+	{
+	  /* Log the signal.  */
+	  ulog (LOG_ERROR, (const char *) NULL);
 	  (void) fclose (eto);
 	  (void) remove (zto);
 	  return FALSE;
@@ -119,11 +129,12 @@ fcopy_open_file (efrom, zto, fpublic, fmkdirs)
 #endif
 
 boolean
-fcopy_file (zfrom, zto, fpublic, fmkdirs)
+fcopy_file (zfrom, zto, fpublic, fmkdirs, fsignals)
      const char *zfrom;
      const char *zto;
      boolean fpublic;
      boolean fmkdirs;
+     boolean fsignals;
 {
   int ofrom;
   boolean fret;
@@ -135,17 +146,18 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       return FALSE;
     }
 
-  fret = fcopy_open_file (ofrom, zto, fpublic, fmkdirs);
+  fret = fcopy_open_file (ofrom, zto, fpublic, fmkdirs, fsignals);
   (void) close (ofrom);
   return fret;
 }
 
 boolean
-fcopy_open_file (ofrom, zto, fpublic, fmkdirs)
+fcopy_open_file (ofrom, zto, fpublic, fmkdirs, fsignals)
      int ofrom;
      const char *zto;
      boolean fpublic;
      boolean fmkdirs;
+     boolean fsignals;
 {
   int oto;
   char ab[8192];
@@ -177,6 +189,14 @@ fcopy_open_file (ofrom, zto, fpublic, fmkdirs)
 	{
 	  ulog (LOG_ERROR, "write: %s", strerror (errno));
 	  (void) close (oto);
+	  (void) remove (zto);
+	  return FALSE;
+	}
+      if (fsignals && FGOT_SIGNAL ())
+	{
+	  /* Log the signal.  */
+	  ulog (LOG_ERROR, (const char *) NULL);
+	  (void) fclose (eto);
 	  (void) remove (zto);
 	  return FALSE;
 	}
