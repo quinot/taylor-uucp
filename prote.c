@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/12/31  19:43:30  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -108,6 +111,11 @@ boolean
 fesendcmd (z)
      const char *z;
 {
+#if DEBUG > 4
+  if (iDebug > 4)
+    ulog (LOG_DEBUG, "fesendcmd: Sending command \"%s\"", z);
+#endif
+
   return fsend_data (z, strlen (z) + 1, TRUE);
 }
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1992/01/14  04:35:23  ian
+   Chip Salzenberg: implement this patch correctly
+
    Revision 1.8  1992/01/14  04:21:59  ian
    Chip Salzenberg: avoid use before set warning
 
@@ -187,6 +190,11 @@ ffsendcmd (z)
 {
   int clen;
   char *zalc;
+
+#if DEBUG > 4
+  if (iDebug > 4)
+    ulog (LOG_DEBUG, "ffsendcmd: Sending command \"%s\"", z);
+#endif
 
   clen = strlen (z);
   zalc = (char *) alloca (clen + 2);

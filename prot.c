@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/31  19:34:19  ian
+   Added number of bytes to pffile protocol entry point
+
    Revision 1.8  1991/12/30  04:28:30  ian
    John Theus: check for EOF to work around bug in fread
 
@@ -994,6 +997,11 @@ zgetcmd ()
       q->qnext = qPcmd_free->qnext;
       qPcmd_free->qnext = q;
     }
+
+#if DEBUG > 4
+  if (iDebug > 4)
+    ulog (LOG_DEBUG, "zgetcmd: Got command \"%s\"", q->z);
+#endif
 
   return q->z;
 }

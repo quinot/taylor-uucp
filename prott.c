@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/31  19:34:19  ian
+   Added number of bytes to pffile protocol entry point
+
    Revision 1.8  1991/12/28  03:49:23  ian
    Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
 
@@ -131,6 +134,11 @@ ftsendcmd (z)
 {
   int clen;
   char *zalc;
+
+#if DEBUG > 4
+  if (iDebug > 4)
+    ulog (LOG_DEBUG, "ftsendcmd: Sending command \"%s\"", z);
+#endif
 
   clen = strlen (z);
 
