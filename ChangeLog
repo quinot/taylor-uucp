@@ -3,7 +3,8 @@ Thu Aug 10 22:42:53 1995  Ian Lance Taylor  <ian@airs.com>
 	* Released version 1.06.
 
 	* uuconf/tsinfo.c (_uuconf_itaylor_system_internal): Don't set
-	uuconf_fcall merely because uuconf_qtimegrade is not NULL.
+	uuconf_fcall merely because uuconf_qtimegrade is not set.  Check
+	values against _uuconf_unset, not NULL.
 
 	* trans.c (fgot_data): Only log when data comes in if fsendfile is
 	FALSE.
