@@ -186,9 +186,12 @@ fsysdep_xqt_check_file (qsys, zfile)
 {
   size_t clen;
 
+  /* Disallow exact "..", prefix "../", suffix "/..", internal "/../",
+     and restricted absolute paths.  */
   clen = strlen (zfile);
-  if ((clen == sizeof "../" - 1
-       && strcmp (zfile, "../") == 0)
+  if ((clen == sizeof ".." - 1
+       && strcmp (zfile, "..") == 0)
+      || strncmp (zfile, "../", sizeof "../" - 1) == 0
       || (clen >= sizeof "/.." - 1
 	  && strcmp (zfile + clen - (sizeof "/.." - 1), "/..") == 0)
       || strstr (zfile, "/../") != NULL
