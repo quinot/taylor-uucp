@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/26  01:45:42  ian
+   Marty Shannon: configuration option to not include <sys/wait.h>
+
    Revision 1.6  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -70,6 +73,30 @@ char tstuu_rcsid[] = "$Id$";
 #endif
 
 #include "getopt.h"
+
+/* We want an O_NONBLOCK definition.  */
+
+#ifndef O_NONBLOCK
+#ifdef FNBLOCK
+#define O_NONBLOCK FNBLOCK
+#else /* ! defined (FNBLOCK) */
+#define O_NONBLOCK 0
+#endif /* ! defined (FNBLOCK) */
+#endif /* ! defined (O_NONBLOCK) */
+
+/* Apparently some systems support fd_set but not FD_SET, although
+   this is hard to imagine.  This implementation assumes that no file
+   descriptor is larger than 16 (32 on normal systems), which should
+   be true for this program.  */
+#ifndef FD_SET
+#define FD_SET(o, p) ((p)->fd_bits[0] |= (1 << (o)))
+#endif
+#ifndef FD_ZERO
+#define FD_ZERO(o, p) ((p)->fd_bits[0] = 0)
+#endif
+#ifndef FD_ISSET
+#define FD_ISSET(o, p) (((p)->fd_bits[0] & (1 << (o))) != 0)
+#endif
 
 /* Make sure we have a CLK_TCK definition, even if it makes no sense.  */
 #ifndef CLK_TCK
