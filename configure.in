@@ -184,7 +184,29 @@ case $DEFS in
 esac
 dnl
 AC_HAVE_FUNCS(getgrent)
-AC_HAVE_FUNCS(socket t_open)
+dnl
+changequote(,)dnl
+trfrom='[a-z]' trto='[A-Z]'
+changequote([,])dnl
+for i in socket t_open; do
+  def=HAVE_`echo $i|tr "$trfrom" "$trto"`
+  AC_FUNC_CHECK([$i],[AC_DEFINE($def)],[missing=1])dnl
+  for lib in "-lsocket" "-lnsl" "-lxti"; do
+    if test -n "$missing"; then
+      case $LIBS in
+      *${lib}*) ;;
+      *)
+	SAVELIBS="$LIBS"
+	LIBS="$LIBS $lib"
+	missing=
+	AC_COMPILE_CHECK([$i with $lib], , [extern char $i(); $i();],
+			 [AC_DEFINE($def)],
+			 [missing=1; LIBS="$SAVELIBS"])dnl
+	;;
+      esac
+    fi
+  done
+done
 dnl
 AC_HAVE_FUNCS(getcwd getwd)
 case $DEFS in
