@@ -5,6 +5,7 @@ dnl
 AC_REVISION([$Id$])
 AC_INIT(policy.h)
 AC_CONFIG_HEADER(config.h)
+AC_PREFIX_PROGRAM(gcc)
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
 AC_PROG_INSTALL
@@ -15,7 +16,6 @@ dnl be cached in config.status and in the Makefiles.
 AR=${AR-ar}
 AC_SUBST(AR)
 AC_PROG_RANLIB
-AC_PREFIX_PROGRAM(gcc)
 AC_ISC_POSIX
 AC_MINIX
 AC_AIX
