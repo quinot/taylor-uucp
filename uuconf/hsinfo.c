@@ -112,6 +112,8 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
       FILE *e;
       int cchars;
 
+      qglobal->ilineno = 0;
+
       e = fopen (*pz, "r");
       if (e == NULL)
 	{
@@ -121,8 +123,6 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 	  iret = UUCONF_FOPEN_FAILED | UUCONF_ERROR_ERRNO;
 	  break;
 	}
-
-      qglobal->ilineno = 0;
 
       while ((cchars = _uuconf_getline (qglobal, &zline, &cline, e)) > 0)
 	{
@@ -355,7 +355,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
   if (iret != UUCONF_SUCCESS)
     {
       qglobal->zfilename = *pz;
-      return iret | UUCONF_ERROR_FILENAME;
+      return iret | UUCONF_ERROR_FILENAME | UUCONF_ERROR_LINENO;
     }
 
   if (pblock == NULL)
