@@ -1071,11 +1071,11 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
       int icmp;
 
       /* Some UUCP packages only provide seven characters in the Shere
-	 machine name.  */
+	 machine name.  Others only provide fourteen.  */
       zheresys = zstr + 6;
       clen = strlen (zheresys);
-      if (clen == 7)
-	icmp = strncmp (zheresys, qsys->uuconf_zname, 7);
+      if (clen == 7 || clen == 14)
+	icmp = strncmp (zheresys, qsys->uuconf_zname, clen);
       else
 	icmp = strcmp (zheresys, qsys->uuconf_zname);
       if (icmp != 0)
@@ -1086,8 +1086,8 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
 	      for (pz = qsys->uuconf_pzalias; *pz != NULL; pz++)
 		{
-		  if (clen == 7)
-		    icmp = strncmp (zheresys, *pz, 7);
+		  if (clen == 7 || clen == 14)
+		    icmp = strncmp (zheresys, *pz, clen);
 		  else
 		    icmp = strcmp (zheresys, *pz);
 		  if (icmp == 0)
