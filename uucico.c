@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.36  1992/01/05  03:09:17  ian
+   Changed abProgram and abVersion to non const to avoid compiler bug
+
    Revision 1.35  1992/01/04  21:53:36  ian
    Start up uuxqt even if a call fails
 
@@ -186,7 +189,7 @@ static boolean fcall P((const struct ssysteminfo *qsys,
 static boolean fdo_call P((const struct ssysteminfo *qsys,
 			   struct sport *qport,
 			   struct sstatus *qstat, int cretry,
-			   boolean *pfcalled));
+			   boolean *pfcalled, struct sport *quse));
 static boolean fcall_failed P((const struct ssysteminfo *qsys,
 			       enum tstatus twhy, struct sstatus *qstat,
 			       int cretry));
@@ -691,10 +694,12 @@ static boolean fcall (qsys, qport, fforce, bgrade)
       if (cretry >= 0)
 	{
 	  boolean fret, fcalled;
+	  struct sport sportinfo;
 	  
 	  fbadtime = FALSE;
 
-	  fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled);
+	  fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled,
+			   &sportinfo);
 	  (void) fport_close (fret);
 	  if (fret)
 	    return TRUE;
@@ -733,14 +738,17 @@ static boolean fcall (qsys, qport, fforce, bgrade)
    argument is the port to use, and the qstat argument holds the
    current status of the ssystem.  If we log in successfully, set
    *pfcalled to TRUE; this is used to distinguish a failed dial from a
-   failure during the call.  */
+   failure during the call.  The quse argument is passed in because
+   this function does not call fport_close, so if it reads in a port
+   structure to open it must not keep it on the stack.  */
 
-static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled)
+static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
      const struct ssysteminfo *qsys;
      struct sport *qport;
      struct sstatus *qstat;
      int cretry;
      boolean *pfcalled;
+     struct sport *quse;
 {
   const char *zstr;
   boolean fnew;
@@ -748,7 +756,6 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled)
   struct sproto_param *qdial_proto_params;
   int idial_reliable;
   long istart_time;
-  struct sport sportinfo;
 
   *pfcalled = FALSE;
 
@@ -772,9 +779,9 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled)
   else
     {
       if (! ffind_port (qsys->zport, qsys->ibaud, qsys->ihighbaud,
-			&sportinfo, fport_lock, TRUE))
+			quse, fport_lock, TRUE))
 	return FALSE;
-      qport = &sportinfo;
+      qport = quse;
       /* The port is locked by ffind_port.  */
     }
 
