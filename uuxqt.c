@@ -742,7 +742,9 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
   iuuconf = uuconf_cmd_file (puuconf, e, asQcmds, (pointer) zbase,
 			     (uuconf_cmdtabfn) NULL,
-			     UUCONF_CMDTABFLAG_CASE, (pointer) NULL);
+			     (UUCONF_CMDTABFLAG_CASE
+			      | UUCONF_CMDTABFLAG_NOCOMMENTS),
+			     (pointer) NULL);
   (void) fclose (e);
 
   if (iuuconf != UUCONF_SUCCESS)
