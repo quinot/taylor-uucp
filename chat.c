@@ -598,8 +598,8 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 		  ucsend_debug_end (fquote, TRUE);
 		  return FALSE;
 		}
-	      z += 5;
 	      fnocr = TRUE;
+	      z += 5;
 	    }
 	  else
 	    {
@@ -614,6 +614,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 	      fsend = TRUE;
 	      bsend = '\004';
 	      fnocr = TRUE;
+	      z += 3;
 	    }
 	  else
 	    {
