@@ -549,6 +549,15 @@ extern void usysdep_get_xqt_free P((void));
 extern char *zsysdep_find_command P((const char *zcmd, char **pzcmds,
 				     char **pzpath, boolean *pferr));
 
+/* Expand file names for uuxqt.  This exists because uuxqt on Unix has
+   to expand file names which begin with a ~.  It does not want to
+   expand any other type of file name, and it turns a double ~ into a
+   single one without expanding.  If this returns NULL, the file does
+   not need to be changed; otherwise it returns a zbufalc'ed string.
+   There is no way to report error.  */
+extern char *zsysdep_xqt_local_file P((const struct uuconf_system *qsys,
+				       const char *zfile));
+
 #if ! ALLOW_FILENAME_ARGUMENTS
 /* Check an argument to an execution command to make sure that it
    doesn't refer to a file name that may not be accessed.  This should

@@ -135,6 +135,33 @@ zsysdep_find_command (zcmd, pzcmds, pzpath, pferr)
   return NULL;
 }
 
+/* Expand a local filename for uuxqt.  This is special because uuxqt
+   only wants to expand filenames that start with ~ (it does not want
+   to prepend the current directory to other names) and if the ~ is
+   double, it is turned into a single ~.  This returns NULL to
+   indicate that no change was required; it has no way to return
+   error.  */
+
+char *
+zsysdep_xqt_local_file (qsys, zfile)
+     const struct uuconf_system *qsys;
+     const char *zfile;
+{
+  if (*zfile != '~')
+    return NULL;
+  if (zfile[1] == '~')
+    {
+      size_t clen;
+      char *zret;
+
+      clen = strlen (zfile);
+      zret = zbufalc (clen);
+      memcpy (zret, zfile + 1, clen);
+      return zret;
+    }
+  return zsysdep_local_file (zfile, qsys->uuconf_zpubdir);
+}
+
 #if ! ALLOW_FILENAME_ARGUMENTS
 
 /* Check to see whether an argument specifies a file name; if it does,

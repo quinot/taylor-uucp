@@ -473,7 +473,7 @@ iqcmd (puuconf, argc, argv, pvar, pinfo)
   clen = 0;
   for (i = 1; i < argc; i++)
     {
-      azQargs[i - 1] = argv[i];
+      azQargs[i - 1] = zbufcpy (argv[i]);
       clen += strlen (argv[i]) + 1;
     }
   azQargs[i - 1] = NULL;
@@ -487,7 +487,7 @@ iqcmd (puuconf, argc, argv, pvar, pinfo)
     }
   strcat (zQcmd, argv[i]);
 
-  return UUCONF_CMDTABRET_KEEP;
+  return UUCONF_CMDTABRET_CONTINUE;
 }
 
 /* Handle the O command, which may have one or two arguments.  */
@@ -597,10 +597,8 @@ iqset (puuconf, argc, argv, pvar, pinfo)
 #define REMOVE_FILE (01)
 #define REMOVE_NEEDED (02)
 #define FREE_QINPUT (04)
-#define FREE_QARGS0 (010)
-#define FREE_QARGS1 (020)
-#define FREE_OUTPUT (040)
-#define FREE_MAIL (0100)
+#define FREE_OUTPUT (010)
+#define FREE_MAIL (020)
 
 /* Process an execute file.  The zfile argument is the name of the
    execute file.  The zbase argument is the base name of zfile.  The
@@ -827,7 +825,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 		      else
 			{
 			  ++i;
-			  azQargs[i] = (char *) "-r";
+			  azQargs[i] = zbufcpy ("-r");
 			}
 		      break;
 		    }
@@ -862,7 +860,6 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
       memcpy (azargs + 2, azQargs + 1, i * sizeof (char *));
       xfree ((pointer) azQargs);
       azQargs = azargs;
-      iclean |= FREE_QARGS1;
 
       /* Find the uucp binary.  */
       zabsolute = zsysdep_find_command ("uucp", qsys->uuconf_pzcmds,
@@ -961,8 +958,20 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	}
     }
 
+  ubuffree (azQargs[0]);
   azQargs[0] = zabsolute;
-  iclean |= FREE_QARGS0;
+
+  for (i = 1; azQargs[i] != NULL; i++)
+    {
+      char *zlocal;
+
+      zlocal = zsysdep_xqt_local_file (qsys, azQargs[i]);
+      if (zlocal != NULL)
+	{
+	  ubuffree (azQargs[i]);
+	  azQargs[i] = zlocal;
+	}
+    }
 
 #if ! ALLOW_FILENAME_ARGUMENTS
 
@@ -1183,11 +1192,10 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 #endif
 
   /* Get a shell command which uses the full path of the command to
-     execute.  Add in azQargs[0] and azQargs[1] because they may have
-     changed.  */
-  clen = strlen (zQcmd) + strlen (azQargs[0]) + 2;
-  if (azQargs[1] != NULL)
-    clen += strlen (azQargs[1]);
+     execute.  */
+  clen = 0;
+  for (i = 0; azQargs[i] != NULL; i++)
+    clen += strlen (azQargs[i]) + 1;
   zfullcmd = zbufalc (clen);
   strcpy (zfullcmd, azQargs[0]);
   for (i = 1; azQargs[i] != NULL; i++)
@@ -1375,11 +1383,6 @@ uqcleanup (zfile, iflags)
   if ((iflags & FREE_QINPUT) != 0)
     ubuffree (zQinput);
 
-  if ((iflags & FREE_QARGS0) != 0)
-    ubuffree (azQargs[0]);
-  if ((iflags & FREE_QARGS1) != 0)
-    ubuffree (azQargs[1]);
-
   if ((iflags & FREE_OUTPUT) != 0)
     ubuffree (zQoutput);
   if ((iflags & FREE_MAIL) != 0)
@@ -1399,6 +1402,9 @@ uqcleanup (zfile, iflags)
 
   ubuffree (zQoutfile);
   ubuffree (zQoutsys);
+
+  for (i = 0; azQargs[i] != NULL; i++)
+    ubuffree (azQargs[i]);
 
   xfree ((pointer) azQargs);
   azQargs = NULL;
