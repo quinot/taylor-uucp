@@ -280,7 +280,7 @@ flocal_send_file_init (qdaemon, qcmd)
     qinfo->zmail = zbufcpy (qcmd->zuser);
   qinfo->zfile = zfile;
   qinfo->cbytes = cbytes;
-  qinfo->flocal = TRUE;
+  qinfo->flocal = strchr (qcmd->zuser, '!') == NULL;
   qinfo->fspool = fspool;
   qinfo->fsent = FALSE;
   qinfo->zexec = NULL;
@@ -306,6 +306,7 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
     {
       const char *zfrom;
       char *zfree;
+      boolean flocal;
 
       if (qcmd->bcmd != 'E')
 	{
@@ -323,10 +324,21 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
 	}
 
       ulog (LOG_ERROR, "%s: %s", zfrom, zwhy);
+
+      /* We only save the temporary file if this is a request from the
+	 local system; otherwise a remote system could launch a denial
+	 of service attack by filling up the .Preserve directory
+	 (local users have much simpler methods for this type of
+	 denial of service attack, so there is little point to using a
+	 more sophisticated scheme).  */
+      flocal = strchr (qcmd->zuser, '!') == NULL;
+
       (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
 			     zwhy, zfrom, (const char *) NULL,
 			     qcmd->zto, qsys->uuconf_zname,
-			     zsysdep_save_temp_file (qcmd->pseq));
+			     (flocal
+			      ? zsysdep_save_temp_file (qcmd->pseq)
+			      : (const char *) NULL));
 
       ubuffree (zfree);
     }
@@ -661,7 +673,9 @@ flocal_send_open_file (qtrans, qdaemon)
 				 qtrans->s.zfrom, (const char *) NULL,
 				 qtrans->s.zto,
 				 qdaemon->qsys->uuconf_zname,
-				 zsysdep_save_temp_file (qtrans->s.pseq));
+				 (qinfo->flocal
+				  ? zsysdep_save_temp_file (qtrans->s.pseq)
+				  : (const char *) NULL));
 	  (void) fsysdep_did_work (qtrans->s.pseq);
 	  usfree_send (qtrans);
 
