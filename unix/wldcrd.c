@@ -113,9 +113,10 @@ fsysdep_wildcard_start (zfile)
   azargs[2] = zcmd;
   azargs[3] = NULL;
 
+  e = espopen (azargs, TRUE, &ipid);
+
   ubuffree (zcmd);
 
-  e = espopen (azargs, TRUE, &ipid);
   if (e == NULL)
     {
       ulog (LOG_ERROR, "espopen: %s", strerror (errno));
