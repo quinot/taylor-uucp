@@ -242,3 +242,8 @@ Support restart of failed transfers a la SVR4 UUCP.  Also support SVR4
 Switch between 'M' and 'S' correctly in the BNU log file output.
 
 84.
+
+Doug Evans: Permissions READ and WRITE entries should probably only
+affect remote systems, not the local one.
+
+85.
