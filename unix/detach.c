@@ -150,7 +150,7 @@ usysdep_detach ()
      setpgrp (0, 0) will set our process group to 0 so that we can
      acquire a new controlling terminal (TIOCNOTTY may or may not have
      already done that anyhow).  */
-#if HAVE_BSD_SETPGRP
+#if HAVE_BSD_PGRP
   if (setpgrp (0, 0) < 0)
 #else
   if (setpgrp () < 0)
