@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/11/21  21:49:38  ian
+   Brian Campbell: define all macros to avoid compiler warnings
+
    Revision 1.8  1991/11/21  21:07:46  ian
    Brian Campbell: offer ltrunc as an alternative to ftruncate
 
@@ -133,10 +136,6 @@
 /* The default command path, specifying which directories the commands
    to be executed must be located in.  */
 #define CMDPATH "/bin /usr/bin /usr/local/bin"
-
-/* One of the following macros must be defined if you want to be able
-   to default the system name (not specify it in the configuration
-   file).  */
 
 /* If you want to be able to use a default for the system name without
    specifying it with the ``nodename'' command in the configuration
