@@ -55,7 +55,8 @@ AC_CHECK_HEADERS(stddef.h stdarg.h string.h strings.h unistd.h stdlib.h)
 AC_CHECK_HEADERS(limits.h time.h sys/wait.h sys/ioctl.h memory.h)
 AC_CHECK_HEADERS(fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
 AC_CHECK_HEADERS(sysexits.h poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h)
-AC_CHECK_HEADERS(glob.h sys/param.h sys/types.tcp.h)
+AC_CHECK_HEADERS(glob.h sys/param.h sys/types.tcp.h sys/mount.h sys/vfs.h)
+AC_CHECK_HEADERS(sys/filsys.h sys/statfs.h sys/dustat.h sys/fs_types.h ustat.h)
 dnl
 # Under Next 3.2 <dirent.h> apparently does not define struct dirent
 # by default.
@@ -452,51 +453,174 @@ if test $ac_cv_func_sigvec = yes; then
     AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])
   fi
 fi
-dnl
-dnl The filesystem info code is from David MacKenzie's fileutils 3.4
-dnl package.
-# SVR4
-AC_CHECK_HEADER(sys/statvfs.h,
-  [AC_CHECK_FUNC(statvfs, AC_DEFINE(STAT_STATVFS) space=1)])
-if test -z "$space"; then
-  AC_CHECK_FUNC(statfs, [dnl
-    # AIX
-    AC_EGREP_HEADER(f_nlsdirtype, sys/statfs.h, 
-      AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
-    if test -z "$space"; then
-      # SVR3
-      AC_CHECK_HEADER(sys/statfs.h, AC_DEFINE(STAT_STATFS4) space=1)
-    fi
-    if test -z "$space"; then
-      # 4.3BSD
-      AC_CHECK_HEADER(sys/vfs.h, AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
-    fi
-    if test -z "$space"; then
-      # 4.4BSD
-      AC_EGREP_CPP(found_mount_ufs, [#include <sys/mount.h>
-#ifdef MOUNT_UFS
-found_mount_ufs
-#endif],AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
-    fi
-    if test -z "$space"; then
-      # Ultrix
-      AC_CHECK_HEADER(sys/mount.h, AC_DEFINE(STAT_STATFS2_FS_DATA) space=1)
-    fi
-  ])dnl
+
+dnl The filesystem info code is from the GNU fileutils 3.12 package.
+AC_CHECKING(how to get filesystem space usage)
+space=no
+
+# Here we'll compromise a little (and perform only the link test)
+# since it seems there are no variants of the statvfs function.
+if test $space = no; then
+  # SVR4
+  AC_CHECK_FUNCS(statvfs)
+  if test $ac_cv_func_statvfs = yes; then
+    space=yes
+    AC_DEFINE(STAT_STATVFS)
+  fi
 fi
-if test -z "$space"; then
-  # AIX PS/2
-  AC_CHECK_HEADER(sys/dustat.h,
-    [AC_CHECK_FUNC(dustat, AC_DEFINE(STAT_DUSTAT) space=1)])
+
+if test $space = no; then
+  # DEC Alpha running OSF/1
+  AC_MSG_CHECKING([for 3-argument statfs function (DEC OSF/1)])
+  AC_CACHE_VAL(uucp_cv_sys_stat_statfs3_osf1,
+  [AC_TRY_RUN([
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/mount.h>
+  main ()
+  {
+    struct statfs fsd;
+    fsd.f_fsize = 0;
+    exit (statfs (".", &fsd, sizeof (struct statfs)));
+  }],
+  uucp_cv_sys_stat_statfs3_osf1=yes,
+  uucp_cv_sys_stat_statfs3_osf1=no,
+  uucp_cv_sys_stat_statfs3_osf1=no)])
+  AC_MSG_RESULT($uucp_cv_sys_stat_statfs3_osf1)
+  if test $uucp_cv_sys_stat_statfs3_osf1 = yes; then
+    space=yes
+    AC_DEFINE(STAT_STATFS3_OSF1)
+  fi
 fi
-if test -z "$space"; then
-  AC_CHECK_FUNC(ustat, AC_DEFINE(STAT_USTAT) space=1)
+
+if test $space = no; then
+# AIX
+  AC_MSG_CHECKING([for two-argument statfs with statfs.bsize dnl
+member (AIX, 4.3BSD)])
+  AC_CACHE_VAL(uucp_cv_sys_stat_statfs2_bsize,
+  [AC_TRY_RUN([
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+#ifdef HAVE_SYS_VFS_H
+#include <sys/vfs.h>
+#endif
+  main ()
+  {
+  struct statfs fsd;
+  fsd.f_bsize = 0;
+  exit (statfs (".", &fsd));
+  }],
+  uucp_cv_sys_stat_statfs2_bsize=yes,
+  uucp_cv_sys_stat_statfs2_bsize=no,
+  uucp_cv_sys_stat_statfs2_bsize=no)])
+  AC_MSG_RESULT($uucp_cv_sys_stat_statfs2_bsize)
+  if test $uucp_cv_sys_stat_statfs2_bsize = yes; then
+    space=yes
+    AC_DEFINE(STAT_STATFS2_BSIZE)
+  fi
 fi
-if test -z "$space"; then
+
+if test $space = no; then
+# SVR3
+  AC_MSG_CHECKING([for four-argument statfs (AIX-3.2.5, SVR3)])
+  AC_CACHE_VAL(uucp_cv_sys_stat_statfs4,
+  [AC_TRY_RUN([#include <sys/types.h>
+#include <sys/statfs.h>
+  main ()
+  {
+  struct statfs fsd;
+  exit (statfs (".", &fsd, sizeof fsd, 0));
+  }],
+    uucp_cv_sys_stat_statfs4=yes,
+    uucp_cv_sys_stat_statfs4=no,
+    uucp_cv_sys_stat_statfs4=no)])
+  AC_MSG_RESULT($uucp_cv_sys_stat_statfs4)
+  if test $uucp_cv_sys_stat_statfs4 = yes; then
+    space=yes
+    AC_DEFINE(STAT_STATFS4)
+  fi
+fi
+
+if test $space = no; then
+# 4.4BSD and NetBSD
+  AC_MSG_CHECKING([for two-argument statfs with statfs.fsize dnl
+member (4.4BSD and NetBSD)])
+  AC_CACHE_VAL(uucp_cv_sys_stat_statfs2_fsize,
+  [AC_TRY_RUN([#include <sys/types.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+  main ()
+  {
+  struct statfs fsd;
+  fsd.f_fsize = 0;
+  exit (statfs (".", &fsd));
+  }],
+  uucp_cv_sys_stat_statfs2_fsize=yes,
+  uucp_cv_sys_stat_statfs2_fsize=no,
+  uucp_cv_sys_stat_statfs2_fsize=no)])
+  AC_MSG_RESULT($uucp_cv_sys_stat_statfs2_fsize)
+  if test $uucp_cv_sys_stat_statfs2_fsize = yes; then
+    space=yes
+    AC_DEFINE(STAT_STATFS2_FSIZE)
+  fi
+fi
+
+if test $space = no; then
+  # Ultrix
+  AC_MSG_CHECKING([for two-argument statfs with struct fs_data (Ultrix)])
+  AC_CACHE_VAL(uucp_cv_sys_stat_fs_data,
+  [AC_TRY_RUN([#include <sys/types.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+#ifdef HAVE_SYS_FS_TYPES_H
+#include <sys/fs_types.h>
+#endif
+  main ()
+  {
+  struct fs_data fsd;
+  /* Ultrix's statfs returns 1 for success,
+     0 for not mounted, -1 for failure.  */
+  exit (statfs (".", &fsd) != 1);
+  }],
+  uucp_cv_sys_stat_fs_data=yes,
+  uucp_cv_sys_stat_fs_data=no,
+  uucp_cv_sys_stat_fs_data=no)])
+  AC_MSG_RESULT($uucp_cv_sys_stat_fs_data)
+  if test $uucp_cv_sys_stat_fs_data = yes; then
+    space=yes
+    AC_DEFINE(STAT_STATFS2_FS_DATA)
+  fi
+fi
+
+if test $space = no; then
+  AC_CHECK_FUNCS(ustat)
+  if test $ac_cv_func_ustat = yes; then
+    space=yes
+    AC_DEFINE(STAT_USTAT)
+  fi
+fi
+
+if test $space = no; then
   # QNX
-  AC_CHECK_FUNC(disk_space, AC_DEFINE(STAT_DISK_SPACE) space=1)
+  AC_CHECK_FUNCS(disk_space)
+  if test $ac_cv_func_disk_space = yes; then
+    space=yes
+    AC_DEFINE(STAT_DISK_SPACE)
+  fi
 fi
-dnl
+
 dnl See whether we can make an extern declaration
 AC_DEFUN(UUCP_CHECK_DECLARATION,
 [AC_MSG_CHECKING(for $1 declared as $2)
