@@ -2051,6 +2051,7 @@ les@@chinet.chi.il.us (Leslie Mikesell)
 mmitchel@@digi.lonestar.org (Mitch Mitchell)
 lyndon@@cs.athabascau.ca (Lyndon Nerenberg)
 david nugent <david@@csource.oz.au>
+abekas!dragoman!mikep@@decwrl.dec.com (Mike Park)
 eldorado@@tharr.UUCP (Mark Powell)
 pozar@@kumr.lns.com (Tim Pozar)
 wolfgang@@wsrcc.com (Wolfgang S. Rupprecht)
