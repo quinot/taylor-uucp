@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.46  1992/01/29  18:37:27  ian
+   Patrick Smith: only wait a short time for the hangup message
+
    Revision 1.45  1992/01/28  04:34:10  ian
    Marty Shannon: -f uucp flag not handled correctly
 
@@ -708,7 +711,7 @@ static boolean fcall (qsys, qport, fforce, bgrade)
       if (sstat.ttype != STATUS_COMPLETE
 	  && sstat.ilast + sstat.cwait > isysdep_time ())
 	{
-	  ulog (LOG_ERROR, "Retry time not reached");
+	  ulog (LOG_NORMAL, "Retry time not reached");
 	  return FALSE;
 	}
     }
