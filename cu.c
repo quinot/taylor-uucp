@@ -66,7 +66,7 @@ boolean fCuvar_binary = FALSE;
 
 /* A prefix string to use before sending a binary character from a
    file; this is only used if fCuvar_binary is TRUE.  The default is
-   ^Z. */
+   ^V. */
 const char *zCuvar_binary_prefix = "\026";
 
 /* Whether to check for echoes of characters sent when sending a file.
