@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.1  1991/09/10  19:40:31  ian
+ * Initial revision
+ *
    */
 
 #include "uucp.h"
@@ -483,7 +486,7 @@ main (argc, argv)
   ulog_close ();
 
   if (fuucico)
-    usysdep_exit (fsysdep_run ("uucico -r1"));
+    usysdep_exit (fsysdep_run ("uucico -r1", TRUE));
   else
     usysdep_exit (TRUE);
 

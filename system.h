@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.1  1991/09/10  19:47:55  ian
+ * Initial revision
+ *
    */
 
 #ifndef SYSTEM_H
@@ -91,10 +94,14 @@ extern boolean fsysdep_in_directory P((const struct ssysteminfo *qsys,
 extern boolean fsysdep_file_exists P((const char *zfile));
 
 /* Exit the current program and start a new one.  This is called with
-   a restricted set of arguments, namely "uucico -r1" and "uuxqt".  It
-   need not return.  The return value will be passed directly to
-   usysdep_exit, and should be TRUE on success, FALSE on error.  */
-extern boolean fsysdep_run P((const char *zprogram));
+   a restricted set of arguments, namely "uucico -r1" and "uuxqt".
+   The second argument indicates whether the current program should be
+   replaced with the new program, or whether the new program should be
+   started up and the current program allowed to continue (it will
+   immediately exit in any case).  The return value will be passed
+   directly to usysdep_exit, and should be TRUE on success, FALSE on
+   error.  */
+extern boolean fsysdep_run P((const char *zprogram, boolean ffork));
 
 /* Send a mail message.  This function will be passed an array of
    strings.  All necessary newlines are already included; the strings
