@@ -31,13 +31,15 @@
 
 #include <errno.h>
 
-/* Start up a new program and end the current one.  We don't have to
-   worry about SIGHUP because the current process is either not a
-   process group leader (uucp, uux) or it does not have a controlling
-   terminal (uucico).  */
+/* Start up a new program.  We don't have to worry about SIGHUP
+   because the current process is either not a process group leader
+   (uucp, uux) or it does not have a controlling terminal (uucico).
+   We ignore the ffork argument, and always fork a new process.  */
 
+/*ARGSUSED*/
 boolean
-fsysdep_run (zprogram, zarg1, zarg2)
+fsysdep_run (ffork, zprogram, zarg1, zarg2)
+     boolean ffork;
      const char *zprogram;
      const char *zarg1;
      const char *zarg2;

@@ -604,7 +604,7 @@ main (argc, argv)
 	      sprintf (zconfigarg, "-I%s", zconfig);
 	    }
 
-	  fexit = fsysdep_run ("uucico", zarg, zconfigarg);
+	  fexit = fsysdep_run (FALSE, "uucico", zarg, zconfigarg);
 	}
     }
 

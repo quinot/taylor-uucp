@@ -734,7 +734,7 @@ main (argc, argv)
 	    }
 	}
 
-      if (! fsysdep_run ("uuxqt", zsysarg, zconfigarg))
+      if (! fsysdep_run (FALSE, "uuxqt", zsysarg, zconfigarg))
 	fret = FALSE;
     }
 
