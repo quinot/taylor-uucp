@@ -429,6 +429,26 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
   cIbad_cksum = 0;
   cIremote_rejects = 0;
 
+  if (iIrequest_packsize < 0 || iIrequest_packsize > imaxpacksize)
+    {
+      ulog (LOG_ERROR, "Illegal protocol '%c' packet size; using %d",
+	    qdaemon->qproto->bname, imaxpacksize);
+      iIrequest_packsize = imaxpacksize;
+    }
+
+  /* The maximum permissible window size is 16.  Otherwise the
+     protocol can get confused because a duplicated packet may arrive
+     out of order.  If the window size is large in such a case, the
+     duplicate packet may be treated as a packet in the upcoming
+     window, causing the protocol to assume that all intermediate
+     packets have been lost, leading to immense confusion.  */
+  if (iIrequest_winsize < 0 || iIrequest_winsize > IMAXSEQ / 2)
+    {
+      ulog (LOG_ERROR, "Illegal protocol '%c' window size; using %d",
+	    qdaemon->qproto->bname, IREQUEST_WINSIZE);
+      iIrequest_winsize = IREQUEST_WINSIZE;
+    }
+
   ab[IHDR_INTRO] = IINTRO;
   ab[IHDR_LOCAL] = ab[IHDR_REMOTE] = IHDRWIN_SET (0, 0);
   ab[IHDR_CONTENTS1] = IHDRCON_SET1 (SYNC, qdaemon->fcaller, 3);
