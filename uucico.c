@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/07  18:15:38  ian
+   Chip Salzenberg: move CMAXRETRIES to conf.h for easy configuration
+
    Revision 1.6  1991/09/19  03:06:04  ian
    Chip Salzenberg: put BNU temporary files in system's directory
 
@@ -60,15 +63,13 @@ char uucico_rcsid[] = "$Id$";
 #include "system.h"
 
 /* Define the known protocols.
-   bname, ffullduplex, qcmds, pfstart, pfsend, pfreceive, pfxcmd,
-   pfxcmd_confirm, pfgetcmd, pffail, pfhangup, pfhangup_reply,
-   pfshutdown  */
+   bname, ffullduplex, qcmds, pfstart, pfshutdown, pfsendcmd, pzgetspace,
+   pfsenddata, pfprocess, pfwait  */
 
 static struct sprotocol asProtocols[] =
 {
-  { 'g', FALSE, asGproto_params, fgstart, fgsend, fgreceive,
-      fgxcmd, fgxcmd_confirm, fggetcmd, fgready, fgfail, fghangup,
-      fghangup_reply, fgshutdown }
+  { 'g', FALSE, asGproto_params, fgstart, fgshutdown, fgsendcmd,
+      zggetspace, fgsenddata, fgprocess, fgwait }
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
@@ -95,7 +96,6 @@ static boolean fcall_failed P((const struct ssysteminfo *qsys,
 static boolean fwait_for_calls P((struct sport *qport));
 static boolean faccept_call P((const char *zlogin));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
-			const struct sprotocol *qproto,
 			int bgrade, boolean fnew));
 static boolean fdo_xcmd P((const struct ssysteminfo *qsys,
 			   const struct scmd *qcmd));
@@ -590,7 +590,6 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 {
   const char *zstr;
   boolean fnew;
-  const struct sprotocol *qproto;
   int cdial_proto_params;
   struct sproto_param *qdial_proto_params;
 
@@ -848,9 +847,9 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 	return FALSE;
       }
 
-    qproto = &asProtocols[i];
+    qProto = &asProtocols[i];
 
-    sprintf (ab, "U%c", qproto->bname);
+    sprintf (ab, "U%c", qProto->bname);
     if (! fsend_uucp_cmd (ab))
       {
 	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
@@ -860,29 +859,26 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
   /* Run any protocol parameter commands.  */
 
-  if (qproto->qcmds != NULL)
+  if (qProto->qcmds != NULL)
     {
       if (qsys->cproto_params != 0)
-	uapply_proto_params (qproto->bname, qproto->qcmds,
+	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     qsys->cproto_params, qsys->qproto_params);
       if (qPort->cproto_params != 0)
-	uapply_proto_params (qproto->bname, qproto->qcmds,
+	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     qPort->cproto_params, qPort->qproto_params);
       if (cdial_proto_params != 0)
-	uapply_proto_params (qproto->bname, qproto->qcmds,
+	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     cdial_proto_params, qdial_proto_params);
     }
 
   /* Turn on the selected protocol.  */
 
-  if (qproto->pfstart != NULL)
+  if (! (*qProto->pfstart)(TRUE))
     {
-      if (! (*qproto->pfstart)(TRUE))
-	{
-	  (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
-			       cretry);
-	  return FALSE;
-	}
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
+			   cretry);
+      return FALSE;
     }
 
   /* Now we have succesfully logged in as the master.  */
@@ -892,13 +888,13 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   {
     boolean fret;
 
-    fret = fuucp (TRUE, qsys, qproto, '\0', fnew);
+    fret = fuucp (TRUE, qsys, '\0', fnew);
     ulog_user ((const char *) NULL);
     usysdep_get_work_free (qsys);
 
     /* If we jumped out due to an error, shutdown the protocol.  */
     if (! fret)
-      (void) (*qproto->pfshutdown) ();
+      (void) (*qProto->pfshutdown) ();
 
     /* Now send the hangup message.  As the caller, we send six O's
        and expect to receive seven O's.  We send the six O's twice
@@ -1040,7 +1036,6 @@ static boolean faccept_call (zlogin)
   const struct ssysteminfo *qsys;
   boolean fnew;
   char bgrade;
-  const struct sprotocol *qproto;
   const char *zuse_local;
 
   ulog (LOG_NORMAL, "Incoming call");
@@ -1359,42 +1354,39 @@ static boolean faccept_call (zlogin)
 	return FALSE;
       }
 
-    qproto = &asProtocols[i];
+    qProto = &asProtocols[i];
   }
 
   /* Run any protocol parameter commands.  There should be a way to
      read the dialer information if there is any to permit modem
      specific protocol parameters, but for now there isn't.  */
   
-  if (qproto->qcmds != NULL)
+  if (qProto->qcmds != NULL)
     {
       if (qsys->cproto_params != 0)
-	uapply_proto_params (qproto->bname, qproto->qcmds,
+	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     qsys->cproto_params, qsys->qproto_params);
       if (qPort->cproto_params != 0)
-	uapply_proto_params (qproto->bname, qproto->qcmds,
+	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     qPort->cproto_params, qPort->qproto_params);
     }
 
   /* Turn on the selected protocol.  */
 
-  if (qproto->pfstart != NULL)
-    {
-      if (! (*qproto->pfstart)(FALSE))
-	return FALSE;
-    }
+  if (! (*qProto->pfstart)(FALSE))
+    return FALSE;
 
   ulog (LOG_NORMAL, "Handshake successful");
 
   {
     boolean fret;
 
-    fret = fuucp (FALSE, qsys, qproto, bgrade, fnew);
+    fret = fuucp (FALSE, qsys, bgrade, fnew);
     ulog_user ((const char *) NULL);
 
     /* If we bombed out due to an error, shut down the protocol.  */
     if (! fret)
-      (void) (*qproto->pfshutdown) ();
+      (void) (*qProto->pfshutdown) ();
     usysdep_get_work_free (qsys);
 
     /* Hangup.  As the answerer, we send seven O's and expect to see
@@ -1506,10 +1498,9 @@ static boolean faccept_call (zlogin)
      vice-versa.  */
 
 static boolean
-fuucp (fmaster, qsys, qproto, bgrade, fnew)
+fuucp (fmaster, qsys, bgrade, fnew)
      boolean fmaster;
      const struct ssysteminfo *qsys;
-     const struct sprotocol *qproto;
      int bgrade;
      boolean fnew;
 {
@@ -1553,7 +1544,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	 this is full duplex protocol which is ready for a command and
 	 we haven't finished executing commands.  */
       if (fmaster ||
-	  (qproto->ffullduplex && ! fmasterdone && (*qproto->pfready) ()))
+	  (qProto->ffullduplex && ! fmasterdone))
 	{
 	  struct scmd s;
 	  const char *zmail, *zuse;
@@ -1662,7 +1653,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      else
 		zmail = s.zuser;
 				      
-	      if (! (*qproto->pfsend) (TRUE, e, &s, zmail, qsys->zname, fnew))
+	      if (! fsend_file (TRUE, e, &s, zmail, qsys->zname, fnew))
 		return FALSE;
 
 	      break;
@@ -1744,8 +1735,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		 with information from the remote system.  */
 	      s.imode = 0666;
 
-	      if (! (*qproto->pfreceive) (TRUE, e, &s, zmail, qsys->zname,
-					  fnew))
+	      if (! freceive_file (TRUE, e, &s, zmail, qsys->zname, fnew))
 		return FALSE;
 
 	      break;
@@ -1757,7 +1747,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      ulog (LOG_NORMAL, "Requesting work: %s to %s", s.zfrom,
 		    s.zto);
 
-	      if (! (*qproto->pfxcmd) (&s))
+	      if (! fxcmd (&s))
 		{
 		  (void) fsysdep_did_work (s.pseq);
 		  return FALSE;
@@ -1774,7 +1764,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      fmasterdone = TRUE;
 	      if (fmaster)
 		{
-		  if (! (*qproto->pfhangup) ())
+		  if (! fhangup_request ())
 		    {
 		      ulog (LOG_ERROR, "Hangup failed");
 		      return FALSE;
@@ -1793,7 +1783,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
       /* We look for a command from the other system if we are the
 	 slave or this is a full-duplex protocol and the slave still
 	 has work to do.  */
-      if (! fmaster || qproto->ffullduplex)
+      if (! fmaster || qProto->ffullduplex)
 	{
 	  struct scmd s;
 	  const char *zuse, *zmail;
@@ -1803,7 +1793,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 
 	  /* We are the slave.  Get the next command from the other
 	     system.  */
-	  if (! (*qproto->pfgetcmd) (fmaster, &s))
+	  if (! fgetcmd (fmaster, &s))
 	    return FALSE;
 
 	  if (s.bcmd == 'H' || s.bcmd == 'Y')
@@ -1821,7 +1811,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		  zuse = zsysdep_spool_file_name (qsys, s.zto);
 		  if (zuse == NULL)
 		    {
-		      if (! (*qproto->pffail) ('S', FAILURE_PERM))
+		      if (! ftransfer_fail ('S', FAILURE_PERM))
 			return FALSE;
 		      break;
 		    }
@@ -1831,7 +1821,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		  zuse = zsysdep_real_file_name (qsys, s.zto, s.zfrom);
 		  if (zuse == NULL)
 		    {
-		      if (! (*qproto->pffail) ('S', FAILURE_PERM))
+		      if (! ftransfer_fail ('S', FAILURE_PERM))
 			return FALSE;
 		      break;
 		    }
@@ -1841,7 +1831,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 					s.zuser))
 		    {
 		      ulog (LOG_ERROR, "Not permitted to receive %s", zuse);
-		      if (! (*qproto->pffail) ('S', FAILURE_PERM))
+		      if (! ftransfer_fail ('S', FAILURE_PERM))
 			return FALSE;
 		      break;
 		    }
@@ -1850,7 +1840,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		    {
 		      if (! fsysdep_make_dirs (zuse))
 			{
-			  if (! (*qproto->pffail) ('S', FAILURE_PERM))
+			  if (! ftransfer_fail ('S', FAILURE_PERM))
 			    return FALSE;
 			  break;
 			}
@@ -1860,7 +1850,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      e = esysdep_open_receive (qsys, zuse, &s.ztemp, &cbytes);
 	      if (! ffileisopen (e))
 		{
-		  if (! (*qproto->pffail) ('S', FAILURE_OPEN))
+		  if (! ftransfer_fail ('S', FAILURE_OPEN))
 		    return FALSE;
 		  break;
 		}
@@ -1890,7 +1880,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		{
 		  ulog (LOG_ERROR, "%s is too big to receive", zuse);
 		  (void) ffileclose (e);
-		  if (! (*qproto->pffail) ('S', FAILURE_SIZE))
+		  if (! ftransfer_fail ('S', FAILURE_SIZE))
 		    return FALSE;
 		  break;
 		}
@@ -1903,8 +1893,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      else
 		zmail = s.znotify;
 	      s.pseq = NULL;
-	      if (! (*qproto->pfreceive) (FALSE, e, &s, zmail, qsys->zname,
-					  fnew))
+	      if (! freceive_file (FALSE, e, &s, zmail, qsys->zname, fnew))
 		return FALSE;
 
 	      break;
@@ -1915,7 +1904,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      if (fspool_file (s.zfrom))
 		{
 		  ulog (LOG_ERROR, "No permission to send %s", s.zfrom);
-		  if (! (*qproto->pffail) ('R', FAILURE_PERM))
+		  if (! ftransfer_fail ('R', FAILURE_PERM))
 		    return FALSE;
 		  break;
 		}
@@ -1924,7 +1913,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 					     (const char *) NULL);
 	      if (zuse == NULL)
 		{
-		  if (! (*qproto->pffail) ('R', FAILURE_PERM))
+		  if (! ftransfer_fail ('R', FAILURE_PERM))
 		    return FALSE;
 		  break;
 		}
@@ -1932,7 +1921,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      if (! fok_to_send (zuse, FALSE, fcaller, qsys, s.zuser))
 		{
 		  ulog (LOG_ERROR, "No permission to send %s", zuse);
-		  if (! (*qproto->pffail) ('R', FAILURE_PERM))
+		  if (! ftransfer_fail ('R', FAILURE_PERM))
 		    return FALSE;
 		  break;
 		}
@@ -1940,7 +1929,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 	      e = esysdep_open_send (qsys, zuse, &s.imode, &cbytes);
 	      if (! ffileisopen (e))
 		{
-		  if (! (*qproto->pffail) ('R', FAILURE_OPEN))
+		  if (! ftransfer_fail ('R', FAILURE_OPEN))
 		    return FALSE;
 		  break;
 		}
@@ -1955,7 +1944,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		      || (cmax != -1 && cmax < cbytes)))
 		{
 		  ulog (LOG_ERROR, "%s is too large to send", zuse);
-		  if (! (*qproto->pffail) ('R', FAILURE_SIZE))
+		  if (! ftransfer_fail ('R', FAILURE_SIZE))
 		    return FALSE;
 		  (void) ffileclose (e);
 		  break;
@@ -1963,8 +1952,8 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 
 	      ulog (LOG_NORMAL, "Sending %s", zuse);
 
-	      if (! (*qproto->pfsend) (FALSE, e, &s, (const char *) NULL,
-				       qsys->zname, fnew))
+	      if (! fsend_file (FALSE, e, &s, (const char *) NULL,
+				qsys->zname, fnew))
 		return FALSE;
 
 	      break;
@@ -1979,12 +1968,12 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 
 	      if (fdo_xcmd (qsys, &s))
 		{
-		  if (! (*qproto->pfxcmd_confirm) ())
+		  if (! fxcmd_confirm ())
 		    return FALSE;
 		}
 	      else
 		{
-		  if (! (*qproto->pffail) ('X', FAILURE_PERM))
+		  if (! ftransfer_fail ('X', FAILURE_PERM))
 		    return FALSE;
 		}
 
@@ -2010,7 +1999,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 
 		  fmasterdone = FALSE;
 		  
-		  if (! (*qproto->pfhangup_reply) (FALSE))
+		  if (! fhangup_reply (FALSE))
 		      return FALSE;
 		  fmaster = TRUE;
 		}
@@ -2018,7 +2007,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		{
 		  /* The hangup_reply function will shut down the
 		     protocol.  */
-		  return (*qproto->pfhangup_reply) (TRUE);
+		  return fhangup_reply (TRUE);
 		}
 	      break;
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/08  04:07:04  ian
+   Brian Campbell: made cGsent_bytes and cGreceived_bytes long, not int
+
    Revision 1.1  1991/09/10  19:40:31  ian
    Initial revision
 
@@ -39,7 +42,6 @@ char protg_rcsid[] = "$Id$";
 #include <errno.h>
 
 #include "prot.h"
-#include "port.h"
 #include "system.h"
 
 /* Each 'g' protocol packet begins with six bytes.  They are:
@@ -167,15 +169,6 @@ static int iGrecseq;
 /* Last sequence number we have acked.  */
 static int iGlocal_ack;
 
-/* Number of bytes sent for current file.  */
-static long cGsent_bytes;
-
-/* Number of bytes received for current file.  */
-static long cGreceived_bytes;
-
-/* Whether we've reported an error for a received file.  */
-static boolean fGreceived_error;
-
 /* Local window size.  */
 int iGlocal_winsize = 3;
 
@@ -213,22 +206,6 @@ static int cGretries = 6;
 /* Amount of garbage data we are prepared to see before giving up.  */
 static int cGgarbage_data = 10000;
 
-/* Length of receive buffer.  */
-#define CRECBUFLEN (3 * CMAXDATA)
-
-/* Buffer to hold received data.  */
-static char abGrecbuf[CRECBUFLEN];
-
-/* Index of start of data in abGrecbuf.  */
-static int iGrecstart;
-
-/* Index of end of data (first byte not included in data) in abGrecbuf.  */
-static int iGrecend;
-
-/* Whether a CLOSE packet is OK here; this is used to avoid giving a
-   warning for systems that hang up in a hurry.  */
-static boolean fGclose_ok;
-
 /* Protocol parameter commands.  */
 
 struct scmdtab asGproto_params[] =
@@ -250,29 +227,16 @@ struct scmdtab asGproto_params[] =
 
 static boolean fgexchange_init P((boolean fmaster, int ictl, int ival,
 				 int *piset));
-static boolean fgmain_loop P((void));
-static boolean fgsendfile_confirm P((void));
-static boolean fgrecfile_confirm P((void));     
-static boolean fgsend_cmd P((const char *zcmd));
 static boolean fgsend_control P((int ictl, int ival));
-static const char *zgget_cmd P((void));
-static void ugadd_cmd P((const char *zdata, int clen, boolean flast));
-static boolean fggot_data P((const char *zfirst, int cfirst,
-			     const char *zsecond, int csecond,
-			     boolean *pferr));
-static boolean fgsend_packet P((char *zpack, int clen));
 static void ugadjust_ack P((int iseq));
 static boolean fgwait_for_packet P((boolean freturncontrol, int ctimeout,
 				    int cretries));
 static boolean fgsend_acks P((void));
 static boolean fggot_ack P((int iack));
 static boolean fgprocess_data P((boolean fdoacks, boolean freturncontrol,
-				 boolean *pferr, int *pcneed,
+				 boolean *pfexit, int *pcneed,
 				 boolean *pffound));
 static boolean fginit_sendbuffers P((void));
-static char *zgget_send_packet P((void));
-static boolean fgoutput P((const char *zpack, int clen));
-static int cgframelen P((int cpacklen));
 static int igchecksum P((const char *zdata, int clen));
 static int igchecksum2 P((const char *zfirst, int cfirst,
 			  const char *zsecond, int csecond));
@@ -448,516 +412,7 @@ fgexchange_init (fmaster, ictl, ival, piset)
   return FALSE;
 }
 
-/* Send a file.  If we are the master, we must set up a command to
-   transfer the file (the command will be read by tggetcmd) and wait
-   for a confirmation that we can begin sending the file.  If we are
-   the slave, the master is waiting in fgreceive and we must confirm
-   that we will send the file.  Either way, we begin transferring
-   data.
-
-   The 'g' protocol is not full-duplex, but with a few minor changes
-   it could be.  This code is written as though it were, and perhaps I
-   will implement a slightly modified protocol some day.  This means
-   that we accept packets as we send them; if a packet does come in,
-   we get out of this routine and let the receiving routine handle
-   everything.
-
-   When the file transfer is complete we must send mail to the local
-   used and remove the work queue entry.
-
-   This function returns FALSE if there is a communication failure.
-   It returns TRUE otherwise, even if the file transfer failed.  */
-
-boolean
-fgsend (fmaster, e, qcmd, zmail, ztosys, fnew)
-     boolean fmaster;
-     openfile_t e;
-     const struct scmd *qcmd;
-     const char *zmail;
-     const char *ztosys;
-     boolean fnew;
-{
-  if (fmaster)
-    {
-      int clen;
-      char *zsend;
-      const char *zrec;
-      
-      /* Send the string
-	 S zfrom zto zuser zoptions ztemp imode znotify
-	 to the remote system.  We put a '-' in front of the (possibly
-	 empty) options and a '0' in front of the mode.  The remote
-	 system will ignore ztemp, but it is supposed to be sent anyhow.
-	 If fnew is TRUE, we also send the size; in this case if ztemp
-	 is empty we must send it as "".  */
-      clen = (strlen (qcmd->zfrom) + strlen (qcmd->zto)
-	      + strlen (qcmd->zuser) + strlen (qcmd->zoptions)
-	      + strlen (qcmd->ztemp) + strlen (qcmd->znotify)
-	      + 50);
-      zsend = (char *) alloca (clen);
-      if (! fnew)
-	sprintf (zsend, "S %s %s %s -%s %s 0%o %s", qcmd->zfrom, qcmd->zto,
-		 qcmd->zuser, qcmd->zoptions, qcmd->ztemp, qcmd->imode,
-		 qcmd->znotify);
-      else
-	{
-	  const char *znotify;
-
-	  if (qcmd->znotify[0] != '\0')
-	    znotify = qcmd->znotify;
-	  else
-	    znotify = "\"\"";
-	  sprintf (zsend, "S %s %s %s -%s %s 0%o %s %ld", qcmd->zfrom,
-		   qcmd->zto, qcmd->zuser, qcmd->zoptions, qcmd->ztemp,
-		   qcmd->imode, znotify, qcmd->cbytes);
-	}
-
-      if (! fgsend_cmd (zsend))
-	{
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-
-      /* Now we must await a reply.  This prevents the 'g' protocol
-	 from begin full-duplex, since if there were a file transfer
-	 going on in the opposite direction it would be impossible to
-	 distinguish the command reply from the file contents.  We
-	 could make it work by using the alternate channel, which is
-	 not generally supported.  */
-
-      zrec = zgget_cmd ();
-      if (zrec == NULL)
-	{
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-
-      if (zrec[0] != 'S'
-	  || (zrec[1] != 'Y' && zrec[1] != 'N'))
-	{
-	  ulog (LOG_ERROR, "Bad response to send request");
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-
-      if (zrec[1] == 'N')
-	{
-	  const char *zerr;
-
-	  if (zrec[2] == '2')
-	    zerr = "permission denied";
-	  else if (zrec[2] == '4')
-	    {
-	      /* This means the remote system cannot create
-		 work files; log the error and try again later.  */
-	      ulog (LOG_ERROR,
-		    "Can't send %s: remote cannot create work files",
-		    qcmd->zfrom);
-	      (void) ffileclose (e);
-	      return TRUE;
-	    }
-	  else if (zrec[2] == '6')
-	    {
-	      /* The remote system says the file is too large.  It
-		 would be better if we could determine whether it will
-		 always be too large.  */
-	      ulog (LOG_ERROR, "%s is too big to send now",
-		    qcmd->zfrom);
-	      (void) ffileclose (e);
-	      return TRUE;
-	    }
-	  else
-	    zerr = "unknown reason";
-
-	  ulog (LOG_ERROR, "Can't send %s: %s", qcmd->zfrom, zerr);
-	  (void) fsysdep_did_work (qcmd->pseq);
-	  (void) ffileclose (e);
-	  return TRUE;
-	}
-    }
-  else
-    {
-      char absend[20];
-
-
-      /* We are the slave; confirm that we will send the file.  We
-	 send the file mode in the confirmation string.  */
-
-      sprintf (absend, "RY 0%o", qcmd->imode);
-
-      if (! fgsend_cmd (absend))
-	{
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-    }
-
-  /* Record the file we are sending, and enter the main loop.  */
-
-  if (! fstore_sendfile (e, qcmd->pseq, qcmd->zfrom, qcmd->zto, ztosys,
-			 qcmd->zuser, zmail))
-    return FALSE;
-
-  cGsent_bytes = 0;
-
-  return fgmain_loop ();
-}
-
-/* Confirm that a file has been sent.  Return FALSE for a
-   communication error.  We expect the receiving system to send back
-   CY; if an error occurred while moving the received file into its
-   final location, the receiving system will send back CN5.  */
-
-static boolean
-fgsendfile_confirm ()
-{
-  const char *zrec;
-
-  zrec = zgget_cmd ();
-  if (zrec == NULL)
-    return FALSE;
-
-  if (zrec[0] != 'C'
-      || (zrec[1] != 'Y' && zrec[1] != 'N'))
-    {
-      ulog (LOG_ERROR, "Bad confirmation for sent file");
-      (void) fsent_file (FALSE, cGsent_bytes);
-    }
-  else if (zrec[1] == 'N')
-    {
-      if (zrec[2] == '5')
-	ulog (LOG_ERROR, "File could not be stored in final location");
-      else
-	ulog (LOG_ERROR, "File send failed for unknown reason");
-      (void) fsent_file (FALSE, cGsent_bytes);
-    }
-  else
-    (void) fsent_file (TRUE, cGsent_bytes);
-
-  return TRUE;
-}
-
-/* Receive a file.  If we are the master, we must set up a file
-   request and wait for the other side to confirm it.  If we are the
-   slave, we must confirm a request made by the other side.  We then
-   start receiving the file.
-
-   This function must return FALSE if there is a communication error
-   and TRUE otherwise.  We return TRUE even if the file transfer
-   fails.  */
-
-boolean
-fgreceive (fmaster, e, qcmd, zmail, zfromsys, fnew)
-     boolean fmaster;
-     openfile_t e;
-     const struct scmd *qcmd;
-     const char *zmail;
-     const char *zfromsys;
-     boolean fnew;
-{
-  unsigned int imode;
-
-  if (fmaster)
-    {
-      int clen;
-      char *zsend;
-      const char *zrec;
-
-      /* We send the string
-	 R from to user options
-	 We put a dash in front of options.  If we are talking to a
-	 counterpart, we also send the maximum size file we are
-	 prepared to accept, as returned by esysdep_open_receive.  */
-      
-      clen = (strlen (qcmd->zfrom) + strlen (qcmd->zto)
-	      + strlen (qcmd->zuser) + strlen (qcmd->zoptions) + 30);
-      zsend = (char *) alloca (clen);
-
-      if (! fnew)
-	sprintf (zsend, "R %s %s %s -%s", qcmd->zfrom, qcmd->zto,
-		 qcmd->zuser, qcmd->zoptions);
-      else
-	sprintf (zsend, "R %s %s %s -%s %ld", qcmd->zfrom, qcmd->zto,
-		 qcmd->zuser, qcmd->zoptions, qcmd->cbytes);
-
-      if (! fgsend_cmd (zsend))
-	{
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-
-      /* Wait for a reply.  */
-
-      zrec = zgget_cmd ();
-      if (zrec == NULL)
-	{
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-
-      if (zrec[0] != 'R'
-	  || (zrec[1] != 'Y' && zrec[1] != 'N'))
-	{
-	  ulog (LOG_ERROR, "Bad response to receive request");
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-
-      if (zrec[1] == 'N')
-	{
-	  const char *zerr;
-
-	  if (zrec[2] == '2')
-	    zerr = "no such file";
-	  else if (zrec[2] == '6')
-	    {
-	      /* We sent over the maximum file size we were prepared
-		 to receive, and the remote system is telling us that
-		 the file is larger than that.  Try again later.  It
-		 would be better if we could know whether there will
-		 ever be enough room.  */
-	      ulog (LOG_ERROR, "%s is too big to receive",
-		    qcmd->zfrom);
-	      (void) ffileclose (e);
-	      return TRUE;
-	    }
-	  else
-	    zerr = "unknown reason";
-	  ulog (LOG_ERROR, "Can't receive %s: %s", qcmd->zfrom, zerr);
-	  (void) fsysdep_did_work (qcmd->pseq);
-	  (void) ffileclose (e);
-	  return TRUE;
-	}
-      
-      /* The mode should have been sent as "RY 0%o".  If it wasn't,
-	 we use 0666.  */
-      imode = (unsigned int) strtol (zrec + 2, (char **) NULL, 8);
-      if (imode == 0)
-	imode = 0666;
-    }
-  else
-    {
-      /* Tell the other system to go ahead and send.  */
-
-      if (! fgsend_cmd ("SY"))
-	{
-	  (void) ffileclose (e);
-	  return FALSE;
-	}
-      imode = qcmd->imode;
-    }
-
-  if (! fstore_recfile (e, qcmd->pseq, qcmd->zfrom, qcmd->zto, zfromsys,
-			qcmd->zuser, imode, zmail, qcmd->ztemp))
-    return FALSE;
-
-  cGreceived_bytes = 0;
-  fGreceived_error = FALSE;
-
-  return fgmain_loop ();
-}
-
-/* Confirm that a file was received correctly.  */
-
-static boolean
-fgrecfile_confirm ()
-{
-  boolean fok;
-
-  if (freceived_file (TRUE, cGreceived_bytes))
-    fok = fgsend_cmd ("CY");
-  else
-    fok = fgsend_cmd ("CN5");
-  if (! fok)
-    return FALSE;
-
-  /* Wait until the packet is received and acknowledged.  */
-
-  while (INEXTSEQ (iGremote_ack) != iGsendseq)
-    {
-      if (! fgwait_for_packet (TRUE, cGtimeout, cGretries))
-	return FALSE;
-    }
-
-  return TRUE;
-}
-
-/* Send a transfer request.  This is only called by the master.  It
-   ignored the pseq entry in the scmd structure.  */
-
-boolean
-fgxcmd (qcmd)
-     const struct scmd *qcmd;
-{
-  int clen;
-  char *zsend;
-  const char *zrec;
-
-  /* We send the string
-     X from to user options
-     We put a dash in front of options.  */
-      
-  clen = (strlen (qcmd->zfrom) + strlen (qcmd->zto)
-	  + strlen (qcmd->zuser) + strlen (qcmd->zoptions) + 7);
-  zsend = (char *) alloca (clen);
-
-  sprintf (zsend, "X %s %s %s -%s", qcmd->zfrom, qcmd->zto,
-	   qcmd->zuser, qcmd->zoptions);
-
-  if (! fgsend_cmd (zsend))
-    return FALSE;
-
-  /* Wait for a reply.  */
-
-  zrec = zgget_cmd ();
-  if (zrec == NULL)
-    return FALSE;
-
-  if (zrec[0] != 'X'
-      || (zrec[1] != 'Y' && zrec[1] != 'N'))
-    {
-      ulog (LOG_ERROR, "Bad response to wildcard request");
-      return FALSE;
-    }
-
-  if (zrec[1] == 'N')
-    {
-      ulog (LOG_ERROR, "Work request denied");
-      return TRUE;
-    }
-  
-  return TRUE;
-}
-
-/* Confirm a transfer request.  */
-
-boolean
-fgxcmd_confirm ()
-{
-  return fgsend_cmd ("XY");
-}
-
-/* Get and parse a command from the other system.  Handle hangups
-   specially.  */
-
-boolean
-fggetcmd (fmaster, qcmd)
-     boolean fmaster;
-     struct scmd *qcmd;
-{
-  static char *z;
-  static int c;
-
-  while (TRUE)
-    {
-      const char *zcmd;
-      int clen;
-
-      zcmd = zgget_cmd ();
-      if (zcmd == NULL)
-	return FALSE;
-
-      clen = strlen (zcmd);
-      if (clen + 1 > c)
-	{
-	  c = clen + 1;
-	  z = (char *) xrealloc ((pointer) z, c);
-	}
-      strcpy (z, zcmd);
-
-      if (! fparse_cmd (z, qcmd))
-	continue;
-
-      /* Handle hangup commands specially.  If it's just 'H', return
-	 it.  If it's 'N', the other side is denying a hangup request
-	 which we can just ignore (since the top level code assumes
-	 that hangup requests are denied).  If it's 'Y', the other
-	 side is confirming a hangup request.  In this case we confirm
-	 with an "HY", wait for yet another "HY" from the other side,
-	 and then finally shut down the protocol (I don't know why it
-	 works this way, but it does).  We then return a 'Y' command
-	 to the top level code.  */
-
-      if (qcmd->bcmd == 'N')
-	{
-#if DEBUG > 0
-	  if (fmaster)
-	    ulog (LOG_ERROR, "Got hangup reply as master");
-#endif
-	  continue;
-	}
-
-      if (qcmd->bcmd == 'Y')
-	{
-#if DEBUG > 0
-	  if (fmaster)
-	    ulog (LOG_ERROR, "Got hangup reply as master");
-#endif
-	  /* Don't check errors rigorously here, since the other side
-	     might jump the gun and hang up.  */
-
-	  if (! fgsend_cmd ("HY"))
-	    return TRUE;
-	  fGclose_ok = TRUE;
-	  zcmd = zgget_cmd ();
-	  fGclose_ok = FALSE;
-	  if (zcmd == NULL)
-	    return TRUE;
-	  if (strcmp (zcmd, "HY") != 0)
-	    ulog (LOG_ERROR, "Got \"%s\" when expecting \"HY\"",
-		  zcmd);
-	  (void) fgsend_control (CLOSE, 0);
-	  return TRUE;
-	}
-
-      return TRUE;
-    }
-
-  /*NOTREACHED*/
-}
-
-/* Make a hangup request.  */
-
-boolean
-fghangup ()
-{
-  return fgsend_cmd ("H");
-}
-
-/* Reply to a hangup request.  This is only called by the slave.  If
-   fconfirm is TRUE, we are closing down the protocol.  We send an HY
-   message.  The master responds with an HY message.  We send another
-   HY message, and then shut down the protocol.  */
-
-boolean
-fghangup_reply (fconfirm)
-     boolean fconfirm;
-{
-  if (! fconfirm)
-    return fgsend_cmd ("HN");
-  else
-    {
-      const char *z;
-
-      if (! fgsend_cmd ("HY"))
-	return FALSE;
-
-      z = zgget_cmd ();
-      if (z == NULL)
-	return FALSE;
-      if (strcmp (z, "HY") != 0)
-	ulog (LOG_ERROR, "Got \"%s\" when expecting \"HY\"", z);
-      else
-	{
-	  if (! fgsend_cmd ("HY"))
-	    return FALSE;
-	}
-
-      return fgsend_control (CLOSE, 0);
-    }
-}
-
-/* Shut down the protocol on error.  */
+/* Shut down the protocol.  */
 
 boolean
 fgshutdown ()
@@ -966,195 +421,13 @@ fgshutdown ()
   return fgsend_control (CLOSE, 0);
 }
 
-/* Signal a file transfer failure to the other side.  This is only called
-   by the slave.  */
-
-boolean
-fgfail (bcmd, twhy)
-     int bcmd;
-     enum tfailure twhy;
-{
-  const char *z;
-
-  switch (bcmd)
-    {
-    case 'S':
-      switch (twhy)
-	{
-	case FAILURE_PERM:
-	  z = "SN2";
-	  break;
-	case FAILURE_OPEN:
-	  z = "SN4";
-	  break;
-	case FAILURE_SIZE:
-	  z = "SN6";
-	  break;
-	default:
-	  z = "SN";
-	  break;
-	}
-      break;
-    case 'R':
-      switch (twhy)
-	{
-	case FAILURE_PERM:
-	case FAILURE_OPEN:
-	  z = "RN2";
-	  break;
-	case FAILURE_SIZE:
-	  z = "RN6";
-	  break;
-	default:
-	  z = "RN";
-	  break;
-	}
-      break;
-    case 'X':
-      z = "XN";
-      break;
-    default:
-#if DEBUG > 0
-      ulog (LOG_ERROR, "fgfail: Can't happen");
-#endif
-      return FALSE;
-    }
-  
-  if (! fgsend_cmd (z))
-    return FALSE;
-
-  /* Wait until the packet is received and acknowledged.  */
-
-  while (INEXTSEQ (iGremote_ack) != iGsendseq)
-    {
-      if (! fgwait_for_packet (TRUE, cGtimeout, cGretries))
-	return FALSE;
-    }
-
-  return TRUE;
-}
-
-/* Check whether we are ready for another command.  We are ready if we
-   are not in the process of sending or receiving a file.  */
-
-boolean
-fgready ()
-{
-  return ! ffileisopen (eSendfile) && ! ffileisopen (eRecfile);
-}
-
-/* The main loop of the 'g' protocol sends data from the current send
-   file and receives data into the current receive file (actually,
-   since 'g' is half-duplex, there can't be both a send and a receive
-   file, but we pretend that it could happen).
-
-   If a packet is received when there is no receive file, we exit out
-   of the main loop to permit the packet to be handled at a higher
-   level.  If we finish sending a file, we exit out to permit a higher
-   level to decide what to send next.  */
-
-static boolean
-fgmain_loop ()
-{
-#if DEBUG > 7
-  if (iDebug > 7)
-    ulog (LOG_DEBUG, "fgmain_loop: Main 'g' protocol loop");
-#endif
-
-  if (ffileisopen (eSendfile))
-    {
-      int iend;
-
-      iend = iGrecend;
-
-      while (TRUE)
-	{
-	  int clen;
-	  boolean ferr;
-
-	  /* We keep sending out packets until we have something
-	     in the receive buffer.  */
-	  while (iend == iGrecend)
-	    {
-	      char *zpacket, *zdata;
-	      int cframe;
-
-	      /* Get a packet and fill it with data.  */
-
-	      zpacket = zgget_send_packet ();
-	      zdata = zpacket + CFRAMELEN;
-
-	      clen = cfileread (eSendfile, zdata, iGremote_packsize);
-	      if (ffilereaderror (eSendfile, clen))
-		{
-		  /* The protocol gives us no way to report a file
-		     sending error, so we just drop the connection.
-		     What else can we do?  */
-		  ulog (LOG_ERROR, "read: %s", strerror (errno));
-		  usendfile_error ();
-		  return FALSE;
-		}
-
-	      /* We may have to move the data, alas.  How can we avoid
-		 this?  Moreover, if we are going to have to move the
-		 data, we really should do a checksum calculation at
-		 the same time.  */
-	      cframe = cgframelen (clen);
-	      if (cframe != CFRAMELEN && clen != 0)
-		xmemmove (zpacket + cframe, zdata, clen);
-
-	      if (! fgsend_packet (zpacket, clen))
-		return FALSE;
-
-	      cGsent_bytes += clen;
-
-	      /* If we have reached the end of the file, wait for
-		 confirmation and return out to get the next file.  */
-	      if (clen == 0)
-		return fgsendfile_confirm ();
-	    }
-
-	  /* Process the data in the receive buffer.  The
-	     fgprocess_data function will return TRUE when it either
-	     finished receiving a file or gets a complete command
-	     packet.  Either way we let the higher level functions
-	     decide what to do next.  Neither possibility can actually
-	     happen in the normal half-duplex 'g' protocol.  */
-	  if (fgprocess_data (FALSE, FALSE, &ferr, (int *) NULL,
-			      (boolean *) NULL))
-	    return TRUE;
-	  if (ferr)
-	    return FALSE;
-
-	  iend = iGrecend;
-	}
-    }
-
-#if DEBUG > 0
-  /* If there is no file to send, there really should be a file to
-     receive.  */
-
-  if (! ffileisopen(eRecfile))
-    ulog (LOG_FATAL, "fgmain_loop: No send or receive file");
-#endif
-
-  /* We have no file to send.  Wait for packets to come in.  The
-     fgwait_for_packet function will only return when fgprocess_data
-     returns TRUE, which will happen when the file has been completely
-     received.  */
-
-  return fgwait_for_packet (FALSE, cGtimeout, cGretries);
-}
-
-/* Send a command string.  This is actually just an interface to
-   fgsend_packet, but if this were a full-duplex protocol it would
-   have to be different.  We send packets containing the string until
+/* Send a command string.  We send packets containing the string until
    the entire string has been sent.  Each packet is full.  We make
    sure the last byte of the last packet is '\0', since that is what
    Ultrix UUCP seems to require.  */
 
-static boolean
-fgsend_cmd (z)
+boolean
+fgsendcmd (z)
      const char *z;
 {
   int clen;
@@ -1170,225 +443,28 @@ fgsend_cmd (z)
   do
     {
       char *zpacket;
+      int cdummy;
 
-      zpacket = zgget_send_packet ();
+      zpacket = zggetspace (&cdummy);
 
       if (clen < iGremote_packsize)
 	{
-	  strcpy (zpacket + CFRAMELEN, z);
-	  zpacket[CFRAMELEN + iGremote_packsize - 1] = '\0';
+	  strcpy (zpacket, z);
+	  zpacket[iGremote_packsize - 1] = '\0';
 	  fagain = FALSE;
 	}
       else
 	{
-	  memcpy (zpacket + CFRAMELEN, z, iGremote_packsize);
+	  memcpy (zpacket, z, iGremote_packsize);
 	  z += iGremote_packsize;
 	  clen -= iGremote_packsize;
 	  fagain = TRUE;
 	}
 
-      if (! fgsend_packet (zpacket, iGremote_packsize))
+      if (! fgsenddata (zpacket, iGremote_packsize))
 	return FALSE;
     }
   while (fagain);
-
-  return TRUE;
-}
-
-/* This function is called by the packet receive function (via
-   fggot_data) when a command string is received.  We must queue up
-   received commands since we don't know when we'll be able to get to
-   them (for example, the acknowledgements for the last few packets of
-   a sent file may contain the string indicating whether the file was
-   received correctly).  */
-
-struct scmdqueue
-{
-  struct scmdqueue *qnext;
-  int csize;
-  int clen;
-  char *z;
-};
-
-static struct scmdqueue *qGcmd_queue;
-static struct scmdqueue *qGcmd_free;
-
-static void
-ugadd_cmd (z, clen, flast)
-     const char *z;
-     int clen;
-     boolean flast;
-{
-  struct scmdqueue *q;
-
-  q = qGcmd_free;
-  if (q == NULL)
-    {
-      q = (struct scmdqueue *) xmalloc (sizeof (struct scmdqueue));
-      q->qnext = NULL;
-      q->csize = 0;
-      q->clen = 0;
-      q->z = NULL;
-      qGcmd_free = q;
-    }
-
-  if (q->clen + clen + 1 > q->csize)
-    {
-      q->csize = q->clen + clen + 1;
-      q->z = (char *) xrealloc ((pointer) q->z, q->csize);
-    }
-
-  memcpy (q->z + q->clen, z, clen);
-  q->clen += clen;
-  q->z[q->clen] = '\0';
-
-  /* If the last string in this command, add it to the queue of
-     finished commands.  */
-
-  if (flast)
-    {
-      struct scmdqueue **pq;
-
-      for (pq = &qGcmd_queue; *pq != NULL; pq = &(*pq)->qnext)
-	;
-      *pq = q;
-      qGcmd_free = q->qnext;
-      q->qnext = NULL;
-    }
-}
-
-/* Get a command string.  We just have to wait until the receive
-   packet function gives us something in qGcmd_queue.  The return
-   value of this may be treated as a static buffer; it will last
-   at least until the next packet is received.  */
-
-static const char *
-zgget_cmd ()
-{
-  struct scmdqueue *q;
-
-  while (qGcmd_queue == NULL)
-    {
-#if DEBUG > 4
-      if (iDebug > 4)
-	ulog (LOG_DEBUG, "zgget_cmd: Waiting for packet");
-#endif
-
-      /* If we are receiving a file, then this may return once when
-	 the file has been completely filled without setting
-	 qGcmd_queue.  The second time it returns qGcmd_queue will
-	 certainly be set.  */
-      if (! fgwait_for_packet (FALSE, cGtimeout, cGretries))
-	return NULL;
-    }
-
-  q = qGcmd_queue;
-  qGcmd_queue = q->qnext;
-
-  q->clen = 0;
-
-  /* We must not replace qGcmd_free, because it may already be
-     receiving a new command string.  */
-  if (qGcmd_free == NULL)
-    {
-      q->qnext = NULL;
-      qGcmd_free = q;
-    }
-  else
-    {
-      q->qnext = qGcmd_free->qnext;
-      qGcmd_free->qnext = q;
-    }
-
-  return q->z;
-}
-
-/* This function is called when a data packet is received.  If there
-   is a file to receive data into, we write the data directly to it.
-   Otherwise this must be a command of some sort, and we add it to a
-   queue of commands.  This function returns TRUE if it can accept
-   more data, FALSE if it would rather not; this return value is just
-   a heuristic that fgprocess_data uses to decide whether to try to
-   process more information or just return out.  If the function
-   returns FALSE and *pferr is TRUE, it got an error.  */
-
-static boolean
-fggot_data (zfirst, cfirst, zsecond, csecond, pferr)
-     const char *zfirst;
-     int cfirst;
-     const char *zsecond;
-     int csecond;
-     boolean *pferr;
-{
-  *pferr = FALSE;
-
-  if (ffileisopen (eRecfile))
-    {
-      if (cfirst == 0)
-	{
-	  if (! fgrecfile_confirm ())
-	    {
-	      *pferr = TRUE;
-	      return FALSE;
-	    }
-	  return FALSE;
-	}
-      else
-	{
-	  int cwrote;
-
-	  do
-	    {
-	      /* Cast zfirst to avoid warnings because of erroneous
-		 prototypes on Ultrix.  */
-	      cwrote = cfilewrite (eRecfile, (char *) zfirst, cfirst);
-	      if (cwrote != cfirst && ! fGreceived_error)
-		{
-		  if (cwrote < 0)
-		    ulog (LOG_ERROR, "write: %s", strerror (errno));
-		  else
-		    ulog (LOG_ERROR, "write of %d wrote only %d",
-			  cfirst, cwrote);
-		  urecfile_error ();
-		  fGreceived_error = TRUE;
-		}
-
-	      cGreceived_bytes += cfirst;
-
-	      zfirst = zsecond;
-	      cfirst = csecond;
-	      csecond = 0;
-	    }
-	  while (cfirst != 0);
-
-	  return TRUE;
-	}
-    }
-
-  /* We want to add this data to the current command string.  If there
-     is not null character in the data, this string will be continued
-     by the next packet.  Otherwise this must be the last string in
-     the command, and we don't care about what comes after the null
-     byte.  */
-
-  do
-    {
-      const char *z;
-
-      z = (const char *) memchr ((constpointer) zfirst, '\0', cfirst);
-      if (z == NULL)
-	ugadd_cmd (zfirst, cfirst, FALSE);
-      else
-	{
-	  ugadd_cmd (zfirst, z - zfirst, TRUE);
-	  return FALSE;
-	}
-
-      zfirst = zsecond;
-      cfirst = csecond;
-      csecond = 0;
-    }
-  while (cfirst != 0);
 
   return TRUE;
 }
@@ -1423,41 +499,43 @@ fginit_sendbuffers ()
 }
 
 /* Allocate a packet to send out.  The return value of this function
-   must be filled in and passed to fgsend_packet, or discarded.  This
-   will ensure that the buffers and iGsendseq stay in synch.  */
+   must be filled in and passed to fgsenddata, or discarded.  This
+   will ensure that the buffers and iGsendseq stay in synch.  Set
+   *pclen to the amount of data to place in the buffer.  */
 
-static char *
-zgget_send_packet ()
+char *
+zggetspace (pclen)
+     int *pclen;
 {
-  return azGsendbuffers[iGsendseq];
+  *pclen = iGremote_packsize;
+  return azGsendbuffers[iGsendseq] + CFRAMELEN;
 }
 
 /* Send out a data packet.  This computes the checksum, sets up the
-   header, and sends the packet out.  The argument should point to one
-   of the send buffers allocated above, and the data should be in the
-   buffer starting at z + cgframelen (clen).  The packet will be of
-   size iGremote_packsize.  */
+   header, and sends the packet out.  The argument should point to the
+   return value of zggetspace.  */
 
-static boolean
-fgsend_packet (z, c)
-     char *z;
-     int c;
+boolean
+fgsenddata (zdata, cdata)
+     char *zdata;
+     int cdata;
 {
+  char *z;
   int itt;
   unsigned short icheck;
 
 #if DEBUG > 4
   if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgsend_packet: Sending %d bytes", c);
+    ulog (LOG_DEBUG, "fgsend_packet: Sending %d bytes", cdata);
 #endif
 
   /* Set the initial length bytes.  See the description at the definition
      of SHORTDATA, above.  */
 
-  if (c == iGremote_packsize)
+  if (cdata == iGremote_packsize)
     itt = DATA;
 #if DEBUG > 0
-  else if (c > iGremote_packsize)
+  else if (cdata > iGremote_packsize)
     {
       ulog (LOG_FATAL, "fgsend_packet: Packet size too large");
       /* Avoid an uninitialized warning.  */
@@ -1468,21 +546,33 @@ fgsend_packet (z, c)
     {
       int cshort;
 
+      /* We have to move the data within the packet, unfortunately.
+	 It's tough to see any way around this without going to some
+	 sort of iovec structure.  It only happens once per file
+	 transfer, but it also happens once per command.  It would
+	 also be nice if we computed the checksum as we move.  */
+
       itt = SHORTDATA;
-      cshort = iGremote_packsize - c;
+      cshort = iGremote_packsize - cdata;
       if (cshort <= 127)
-	z[CFRAMELEN] = (char) cshort;
+	{
+	  xmemmove (zdata + 1, zdata, cdata);
+	  zdata[0] = (char) cshort;
+	}
       else
 	{
-	  z[CFRAMELEN] = (char) (0x80 | (cshort & 0x7f));
-	  z[CFRAMELEN + 1] = (char) (cshort >> 7);
+	  xmemmove (zdata + 2, zdata, cdata);
+	  zdata[0] = (char) (0x80 | (cshort & 0x7f));
+	  zdata[1] = (char) (cshort >> 7);
 	}
     }
+
+  z = zdata - CFRAMELEN;
 
   z[IFRAME_DLE] = DLE;
   z[IFRAME_K] = (char) (iGremote_segsize + 1);
 
-  icheck = (unsigned short) igchecksum (z + CFRAMELEN, iGremote_packsize);
+  icheck = (unsigned short) igchecksum (zdata, iGremote_packsize);
 
   /* We're just about ready to go.  Wait until there is room in the
      receiver's window for us to send the packet.  We do this now so
@@ -1531,7 +621,7 @@ fgsend_packet (z, c)
       && INEXTSEQ (INEXTSEQ (iGretransmit_seq)) != iGsendseq)
     return TRUE;
 
-  return fgoutput (z, CFRAMELEN + iGremote_packsize);
+  return fsend_data (z, CFRAMELEN + iGremote_packsize);
 }
 
 /* Recompute the control byte and checksum of a packet so that it
@@ -1607,93 +697,42 @@ fgsend_control (ixxx, iyyy)
   ab[IFRAME_XOR] = (char) (ab[IFRAME_K] ^ ab[IFRAME_CHECKLOW]
 			   ^ ab[IFRAME_CHECKHIGH] ^ ab[IFRAME_CONTROL]);
 
-  return fgoutput (ab, CFRAMELEN);
+  return fsend_data (ab, CFRAMELEN);
 }
 
-/* Return the length of the frame header that will be required for data
-   of a certain length.  See the information by the definition of
-   SHORTDATA, above.  */
+/* Process existing data.  Set *pfexit to TRUE if a file or a command
+   has been completely received.  Return FALSE on error.  */
 
-static int
-cgframelen (c)
-     int c;
+boolean
+fgprocess (pfexit)
+     boolean *pfexit;
 {
-#if DEBUG > 0
-  if (c > iGremote_packsize)
-    ulog (LOG_FATAL, "cgframelen: Packet size too large");
-#endif
-
-  if (c == iGremote_packsize)
-    return CFRAMELEN;
-  else if (iGremote_packsize - c <= 127)
-    return CFRAMELEN + 1;
-  else
-    return CFRAMELEN + 2;
+  /* Don't ack incoming data (since this is called when a file is
+     being sent and the acks can be merged onto the outgoing data),
+     don't return after receiving a control packet, and don't bother
+     to report how much more data is needed or whether any packets
+     were found.  */
+  return fgprocess_data (FALSE, FALSE, pfexit, (int *) NULL,
+			 (boolean *) NULL);
 }
 
-/* We want to output and input at the same time, if supported on this
-   machine.  If we have something to send, we send it all while
-   accepting a large amount of data.  Once we have sent everything we
-   look at whatever we have received.  This implementation is simple,
-   but it does some unnecessary memory moves which may make it too
-   slow.  If data comes in faster than we can send it, we may run out
-   of buffer space.  */
+/* Wait for data to come in.  This continues processing until a
+   complete file or command has been received.  */
 
-static boolean
-fgoutput (zsend, csend)
-     const char *zsend;
-     int csend;
+boolean
+fgwait ()
 {
-  while (csend > 0)
-    {
-      char *zrec;
-      int crec, csent;
-
-      if (iGrecend < iGrecstart)
-	{
-	  zrec = abGrecbuf + iGrecend;
-	  crec = iGrecstart - iGrecend - 1;
-	}
-      else if (iGrecend < CRECBUFLEN)
-	{
-	  zrec = abGrecbuf + iGrecend;
-	  crec = CRECBUFLEN - iGrecend;
-	}
-      else
-	{
-	  zrec = abGrecbuf;
-	  crec = iGrecstart - 1;
-	}
-
-      csent = csend;
-
-#if DEBUG > 8
-      if (iDebug > 8)
-	ulog (LOG_DEBUG, "fgoutput: iGrecstart %d; iGrecend %d; crec %d",
-	      iGrecstart, iGrecend, crec);
-#endif
-
-      if (! fport_io (zsend, &csent, zrec, &crec))
-	return FALSE;
-
-      csend -= csent;
-      zsend += csent;
-
-      iGrecend = (iGrecend + crec) % CRECBUFLEN;
-    }
-
-  return TRUE;
+  return fgwait_for_packet (FALSE, cGtimeout, cGretries);
 }
 
 /* Get a packet.  This is called when we have nothing to send, but
-   want to wait for a packet to come in.
-
-   freturncontrol -- if TRUE, return after getting a control packet
-   ctimeout -- timeout in seconds
-   cretries -- number of times to retry timeout.
-
-   This function returns TRUE when a packet comes in, or FALSE if
-   cretries timeouts of ctimeout seconds were exceeded.  */
+   want to wait for a packet to come in.  If freturncontrol is TRUE,
+   this will return after getting any control packet.  Otherwise, it
+   will continue to receive packets until a complete file or a
+   complete command has been received.  The timeout and the number of
+   retries are specified as arguments.  The function returns FALSE if
+   an error occurs or if cretries timeouts of ctimeout seconds were
+   exceeded.  */
 
 static boolean
 fgwait_for_packet (freturncontrol, ctimeout, cretries)
@@ -1701,25 +740,26 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
      int ctimeout;
      int cretries;
 {
-  boolean ferr;
-  boolean ffound;
-  int cneed;
   int ctimeouts;
   int cgarbage;
   int cshort;
 
-  ferr = FALSE;
   ctimeouts = 0;
   cgarbage = 0;
   cshort = 0;
 
-  while (! fgprocess_data (TRUE, freturncontrol, &ferr, &cneed, &ffound))
+  while (TRUE)
     {
-      char *zrec;
+      boolean fexit;
+      int cneed;
+      boolean ffound;
       int crec;
   
-      if (ferr)
+      if (! fgprocess_data (TRUE, freturncontrol, &fexit, &cneed, &ffound))
 	return FALSE;
+
+      if (fexit)
+	return TRUE;
 
 #if DEBUG > 8
       if (iDebug > 8)
@@ -1737,33 +777,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	    }
 	}
 
-      if (iGrecend < iGrecstart)
-	{
-	  zrec = abGrecbuf + iGrecend;
-	  crec = iGrecstart - iGrecend - 1;
-	}
-      else if (iGrecend < CRECBUFLEN)
-	{
-	  zrec = abGrecbuf + iGrecend;
-	  crec = CRECBUFLEN - iGrecend;
-	}
-      else
-	{
-	  zrec = abGrecbuf;
-	  crec = iGrecstart - 1;
-	}
-  
-#if DEBUG > 8
-      if (iDebug > 8)
-	ulog (LOG_DEBUG,
-	      "fgwait_for_packet: iGrecstart %d; iGrecend %d; crec %d",
-	      iGrecstart, iGrecend, crec);
-#endif
-
-      if (crec < cneed)
-	cneed = crec;
-
-      if (! fport_read (zrec, &crec, cneed, ctimeout, TRUE))
+      if (! freceive_data (cneed, &crec, ctimeout))
 	return FALSE;
 
       cgarbage += crec;
@@ -1785,7 +799,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	      ++cshort;
 	      if (cshort > 1)
 		{
-		  iGrecstart = (iGrecstart + 1) % CRECBUFLEN;
+		  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 		  cshort = 0;
 		}
 	    }
@@ -1812,8 +826,8 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 
 	      inext = INEXTSEQ (iGremote_ack);
 	      ugadjust_ack (inext);
-	      if (! fgoutput (azGsendbuffers[inext],
-			      CFRAMELEN + iGremote_packsize))
+	      if (! fsend_data (azGsendbuffers[inext],
+				CFRAMELEN + iGremote_packsize))
 		return FALSE;
 	      iGretransmit_seq = inext;
 	    }
@@ -1830,16 +844,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 		return FALSE;
 	    }
 	}
-
-      iGrecend = (iGrecend + crec) % CRECBUFLEN;
     }
-
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgwait_for_packet: Got packet %d, %d, %d",
-	  CONTROL_TT (iGpacket_control), CONTROL_XXX (iGpacket_control),
-	  CONTROL_YYY (iGpacket_control));
-#endif
 
   return TRUE;
 }
@@ -1882,8 +887,8 @@ fggot_ack (iack)
   else
     {
       ugadjust_ack (inext);
-      if (! fgoutput (azGsendbuffers[inext],
-		      CFRAMELEN + iGremote_packsize))
+      if (! fsend_data (azGsendbuffers[inext],
+			CFRAMELEN + iGremote_packsize))
 	return FALSE;
       inext = INEXTSEQ (inext);
       if (inext == iGsendseq)
@@ -1891,8 +896,8 @@ fggot_ack (iack)
       else
 	{
 	  ugadjust_ack (inext);
-	  if (! fgoutput (azGsendbuffers[inext],
-			  CFRAMELEN + iGremote_packsize))
+	  if (! fsend_data (azGsendbuffers[inext],
+			    CFRAMELEN + iGremote_packsize))
 	    return FALSE;
 	  iGretransmit_seq = inext;
 	}
@@ -1902,39 +907,35 @@ fggot_ack (iack)
 }
 
 /* Process the receive buffer into a data packet, if possible.  All
-   control packets are handled here.  This function returns TRUE if it
-   got a packet, FALSE otherwise.  When a data packet is received,
-   fgprocess_data calls fggot_data; if that returns TRUE the function
-   will continue trying to process data (unless the freturncontrol
-   argument is TRUE, in which case fgprocess_data will return
-   immediately).  If fggot_data returns FALSE (meaning that no more
-   data is needed), fgprocess_data will return TRUE (meaning that a
-   packet was received).  If some error occurs, *pferr will be set to
-   TRUE and the function will return FALSE.  If there is not enough
-   data to form a complete packet, then if the pcneed argument is not
-   NULL *pcneed will be set to the number of bytes needed to form a
-   complete packet, and fgprocess_data will return FALSE.  If this
-   function found a packet, and pffound is not NULL, it will set
-   *pffound to TRUE; this can be used to tell valid control packets
-   from an endless stream of garbage.  */
+   control packets are handled here.  When a data packet is received,
+   fgprocess_data calls fgot_data with the data; if that sets its
+   pfexit argument to TRUE fgprocess_data will set *pfexit to TRUE and
+   return TRUE.  Otherwise if the freturncontrol argument is TRUE
+   fgprocess_data will set *pfexit to FALSE and return TRUE.
+   Otherwise fgprocess_data will continue trying to process data.  If
+   some error occurs, fgprocess_data will return FALSE.  If there is
+   not enough data to form a complete packet, then *pfexit will be set
+   to FALSE, *pcneed will be set to the number of bytes needed to form
+   a complete packet (unless pcneed is NULL) and fgprocess_data will
+   return TRUE.  If this function found a packet, and pffound is not
+   NULL, it will set *pffound to TRUE; this can be used to tell valid
+   control packets from an endless stream of garbage.  If fdoacks is
+   TRUE, received packets will be acknowledged; otherwise they must be
+   acknowledged later.  */
 
 static boolean
-fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
+fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
      boolean fdoacks;
      boolean freturncontrol;
-     boolean *pferr;
+     boolean *pfexit;
      int *pcneed;
      boolean *pffound;
 {
-  *pferr = FALSE;
+  *pfexit = FALSE;
+  if (pffound != NULL)
+    *pffound = FALSE;
 
-#if DEBUG > 7
-  if (iDebug > 7)
-    ulog (LOG_DEBUG, "fgprocess_data: iGrecstart %d; iGrecend %d",
-	  iGrecstart, iGrecend);
-#endif
-
-  for (; iGrecstart != iGrecend; iGrecstart = (iGrecstart + 1) % CRECBUFLEN)
+  for (; iPrecstart != iPrecend; iPrecstart = (iPrecstart + 1) % CRECBUFLEN)
     {
       char ab[CFRAMELEN];
       int i, iget, cwant;
@@ -1944,15 +945,15 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 
       /* Look for the DLE which must start a packet.  */
 
-      if (abGrecbuf[iGrecstart] != DLE)
+      if (abPrecbuf[iPrecstart] != DLE)
 	continue;
 
       /* Get the first six bytes into ab.  */
 
-      for (i = 0, iget = iGrecstart;
-	   i < CFRAMELEN && iget != iGrecend;
+      for (i = 0, iget = iPrecstart;
+	   i < CFRAMELEN && iget != iPrecend;
 	   i++, iget = (iget + 1) % CRECBUFLEN)
-	ab[i] = abGrecbuf[iget];
+	ab[i] = abPrecbuf[iget];
 
       /* If there aren't six bytes, there is no packet.  */
 
@@ -1960,7 +961,7 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	{
 	  if (pcneed != NULL)
 	    *pcneed = CFRAMELEN - i;
-	  return FALSE;
+	  return TRUE;
 	}
 
       /* Make sure these six bytes start a packet.  If they don't,
@@ -1977,7 +978,7 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
       /* The zfirst and cfirst pair point to the first set of data for
 	 this packet; the zsecond and csecond point to the second set,
 	 in case the packet wraps around the end of the buffer.  */
-      zfirst = abGrecbuf + iGrecstart + CFRAMELEN;
+      zfirst = abPrecbuf + iPrecstart + CFRAMELEN;
       cfirst = 0;
       zsecond = NULL;
       csecond = 0;
@@ -2002,10 +1003,10 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL)
 	    continue;
 
-	  if (iGrecend >= iGrecstart)
-	    cinbuf = iGrecend - iGrecstart;
+	  if (iPrecend >= iPrecstart)
+	    cinbuf = iPrecend - iPrecstart;
 	  else
-	    cinbuf = CRECBUFLEN - (iGrecstart - iGrecend);
+	    cinbuf = CRECBUFLEN - (iPrecstart - iPrecend);
 	  cinbuf -= CFRAMELEN;
 
 	  /* Make sure we have enough data.  If we don't, wait for
@@ -2016,29 +1017,29 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	    {
 	      if (pcneed != NULL)
 		*pcneed = cwant - cinbuf;
-	      return FALSE;
+	      return TRUE;
 	    }
 	  
 	  /* Set up the data pointers and compute the checksum.  */
 
-	  if (iGrecend >= iGrecstart)
+	  if (iPrecend >= iPrecstart)
 	    cfirst = cwant;
 	  else
 	    {
-	      cfirst = CRECBUFLEN - (iGrecstart + CFRAMELEN);
+	      cfirst = CRECBUFLEN - (iPrecstart + CFRAMELEN);
 	      if (cfirst >= cwant)
 		cfirst = cwant;
 	      else if (cfirst > 0)
 		{
-		  zsecond = abGrecbuf;
+		  zsecond = abPrecbuf;
 		  csecond = cwant - cfirst;
 		}
 	      else
 		{
 		  /* Here cfirst is non-positive, so subtracting from
-		     abGrecbuf will actually skip the appropriate number
-		     of bytes at the start of abGrecbuf.  */
-		  zfirst = abGrecbuf - cfirst;
+		     abPrecbuf will actually skip the appropriate number
+		     of bytes at the start of abPrecbuf.  */
+		  zfirst = abPrecbuf - cfirst;
 		  cfirst = cwant;
 		}
 	    }
@@ -2079,27 +1080,18 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	      else
 		{
 		  if (! fgsend_acks ())
-		    {
-		      *pferr = TRUE;
-		      return FALSE;
-		    }
+		    return FALSE;
 		  facked = TRUE;
 		}
 	      if (CONTROL_XXX (ab[IFRAME_CONTROL]) == INEXTSEQ (iGrecseq))
 		{
 		  if (! fgsend_control (RJ, iGrecseq))
-		    {
-		      *pferr = TRUE;
-		      return FALSE;
-		    }
+		    return FALSE;
 		}
 	      else if (! facked)
 		{
 		  if (! fgsend_control (RR, iGrecseq))
-		    {
-		      *pferr = TRUE;
-		      return FALSE;
-		    }
+		    return FALSE;
 		}  
 	    }
 
@@ -2111,9 +1103,9 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 
       /* We have a packet; remove the processed bytes from the receive
 	 buffer.  Note that if we go around the loop again after this
-	 assignment, we must decrement iGrecstart first to account for
+	 assignment, we must decrement iPrecstart first to account for
 	 the increment which will be done by the loop control.  */
-      iGrecstart = (iGrecstart + cwant + CFRAMELEN) % CRECBUFLEN;
+      iPrecstart = (iPrecstart + cwant + CFRAMELEN) % CRECBUFLEN;
 
       /* Store the control byte for the use of calling functions.  */
       iGpacket_control = ab[IFRAME_CONTROL] & 0xff;
@@ -2129,10 +1121,7 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	  || CONTROL_XXX (ab[IFRAME_CONTROL]) == RR)
 	{
 	  if (! fggot_ack (CONTROL_YYY (ab[IFRAME_CONTROL])))
-	    {
-	      *pferr = TRUE;
-	      return FALSE;
-	    }
+	    return FALSE;
 	}
 
       /* If this isn't a control message, make sure we have received
@@ -2156,24 +1145,18 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	      if (iGrecseq != iGlocal_ack)
 		{
 		  if (! fgsend_acks ())
-		    {
-		      *pferr = TRUE;
-		      return FALSE;
-		    }
+		    return FALSE;
 		}
 	      else
 		{
 		  if (! fgsend_control (RR, iGrecseq))
-		    {
-		      *pferr = TRUE;
-		      return FALSE;
-		    }
+		    return FALSE;
 		}
 
-	      /* As noted above, we must decrement iGrecstart because
+	      /* As noted above, we must decrement iPrecstart because
 		 the loop control will increment it.  */
 
-	      --iGrecstart;
+	      --iPrecstart;
 	      continue;
 	    }
 
@@ -2187,10 +1170,7 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	  if (fdoacks)
 	    {
 	      if (! fgsend_acks ())
-		{
-		  *pferr = TRUE;
-		  return FALSE;
-		}
+		return FALSE;
 	    }
 
 	  /* If this is a short data packet, adjust the data pointers
@@ -2254,27 +1234,35 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 		cfirst = 0;
 	    }
 
-	  if (! fggot_data (zfirst, cfirst, zsecond, csecond, pferr))
+	  /* If *pfexit gets set by the first batch of data, and there
+	     is still more data, it must be the case that we are
+	     accumulating a command and encountered a null byte, so we
+	     can ignore the second batch of data.  */
+
+	  if (! fgot_data (zfirst, cfirst, FALSE, FALSE, pfexit))
+	    return FALSE;
+	  if (csecond > 0 && ! *pfexit)
 	    {
-	      /* If *pferr is TRUE, fggot_data got an error so we want
-		 to return FALSE with *pferr set to TRUE.  Otherwise
-		 fggot_data is telling us to get out without looking
-		 at any more data.  */
-	      if (*pferr)
+	      if (! fgot_data (zsecond, csecond, FALSE, FALSE, pfexit))
 		return FALSE;
-	      else
-		return TRUE;
 	    }
+
+	  /* If fgot_data told us that we were finished, get out.  */
+	  if (*pfexit)
+	    return TRUE;
 
 	  /* If we've been asked to return control packets, get out
 	     now.  */
 	  if (freturncontrol)
-	    return TRUE;
+	    {
+	      *pfexit = TRUE;
+	      return TRUE;
+	    }
 
-	  /* As noted above, we must decrement iGrecstart because
+	  /* As noted above, we must decrement iPrecstart because
 	     the loop control will increment it.  */
 
-	  --iGrecstart;
+	  --iPrecstart;
 	  continue;
 	}
 
@@ -2284,10 +1272,9 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	{
 	case CLOSE:
 	  /* The other side has closed the connection.  */
-	  if (! fGclose_ok)
+	  if (! fPerror_ok)
 	    ulog (LOG_ERROR, "Received unexpected CLOSE packet");
 	  (void) fgsend_control (CLOSE, 0);
-	  *pferr = TRUE;
 	  return FALSE;
 	case RJ:
 	  /* The other side dropped a packet.  Begin retransmission with
@@ -2303,24 +1290,18 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 	  else
 	    {
 	      ugadjust_ack (iGretransmit_seq);
-	      if (! fgoutput (azGsendbuffers[iGretransmit_seq],
-			      CFRAMELEN + iGremote_packsize))
-		{
-		  *pferr = TRUE;
-		  return FALSE;
-		}
+	      if (! fsend_data (azGsendbuffers[iGretransmit_seq],
+				CFRAMELEN + iGremote_packsize))
+		return FALSE;
 	    }
 	  break;
 	case SRJ:
 	  /* Selectively reject a particular packet.  This is not used
 	     by UUCP, but it's easy to support.  */
 	  ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
-	  if (! fgoutput (azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])],
-			  CFRAMELEN + iGremote_packsize))
-	    {
-	      *pferr = TRUE;
-	      return FALSE;
-	    }
+	  if (! fsend_data (azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])],
+			    CFRAMELEN + iGremote_packsize))
+	    return FALSE;
 	  break;
 	case RR:
 	  /* Acknowledge receipt of a packet.  This was already handled
@@ -2335,20 +1316,23 @@ fgprocess_data (fdoacks, freturncontrol, pferr, pcneed, pffound)
 
       /* If we've been asked to return control packets, get out.  */
       if (freturncontrol)
-	return TRUE;
+	{
+	  *pfexit = TRUE;
+	  return TRUE;
+	}
 
       /* Loop around to look for the next packet, if any.  As noted
-	 above, we must decrement iGrecstart since the loop control
+	 above, we must decrement iPrecstart since the loop control
 	 will increment it.  */
 
-      --iGrecstart;
+      --iPrecstart;
     }
 
   /* There is no data left in the receive buffer.  */
 
   if (pcneed != NULL)
     *pcneed = CFRAMELEN;
-  return FALSE;
+  return TRUE;
 }
 
 /* Compute the 'g' protocol checksum.  This is unfortunately rather
