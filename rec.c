@@ -1014,6 +1014,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	  az[i++] = qtrans->s.zto;
 	  az[i++] = "\nand was requested by\n\t";
 	  az[i++] = qtrans->s.zuser;
+	  az[i++] = "\n";
 	  (void) fsysdep_mail (OWNER, "UUCP temporary file saved", i, az);
 	}
       ulog (LOG_ERROR, "%s: %s", qinfo->zfile, zerr);
