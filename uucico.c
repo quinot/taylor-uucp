@@ -871,7 +871,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 {
   struct sstatus sstat;
   long inow;
-  boolean fbadtime, fnevertime;
+  boolean fbadtime, fnevertime, ffoundwork;
   const struct uuconf_system *qsys;
 
   if (! fsysdep_get_status (qorigsys, &sstat, (boolean *) NULL))
@@ -940,6 +940,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 
   fbadtime = TRUE;
   fnevertime = TRUE;
+  ffoundwork = FALSE;
 
   for (qsys = qorigsys; qsys != NULL; qsys = qsys->uuconf_qalternate)
     {
@@ -959,6 +960,8 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 			     &cretry))
 	continue;
 
+      fbadtime = FALSE;
+
       sDaemon.qsys = qsys;
 
       /* Queue up any work there is to do.  */
@@ -975,7 +978,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 	  continue;
 	}
 
-      fbadtime = FALSE;
+      ffoundwork = TRUE;
 
       fret = fconn_call (&sDaemon, qport, &sstat, cretry, &fcalled);
 
@@ -1000,9 +1003,16 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 	}
     }
 
-  if (fbadtime && ! fquiet)
+  /* We only get here if no call succeeded.  If fbadtime is TRUE it
+     was the wrong time for all the alternates.  Otherwise, if
+     ffoundwork is FALSE there was no work for any of the alternates.
+     Otherwise, we attempted a call and fconn_call logged an error
+     message.  */
+
+  if (fbadtime)
     {
-      ulog (LOG_NORMAL, "Wrong time to call");
+      if (! fquiet)
+	ulog (LOG_NORMAL, "Wrong time to call");
 
       /* Update the status, unless the system can never be called.  If
 	 the system can never be called, there is little point to
@@ -1016,6 +1026,11 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 	  sstat.cwait = 0;
 	  (void) fsysdep_set_status (qorigsys, &sstat);
 	}
+    }
+  else if (! ffoundwork)
+    {
+      if (! fquiet)
+	ulog (LOG_NORMAL, "No work");
     }
 
   return FALSE;
