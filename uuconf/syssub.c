@@ -201,7 +201,8 @@ _uuconf_isystem_default (qglobal, qset, qdefault, faddalternates)
 
   for (qalt = qset; qalt != NULL; qalt = qalt->uuconf_qalternate)
     {
-#define DEFAULT(x) if (qalt->x == &_uuconf_unset) qalt->x = qdefault->x
+#define DEFAULT(x) \
+  if (qalt->x == (char *) &_uuconf_unset) qalt->x = qdefault->x
       SYSTEM_STRINGS (DEFAULT);
 #undef DEFAULT
 #define DEFAULT(x) \
@@ -221,7 +222,7 @@ _uuconf_isystem_default (qglobal, qset, qdefault, faddalternates)
       /* We only copy over zport if both zport and qport are NULL,
 	 because otherwise a default zport would override a specific
 	 qport.  */
-      if (qalt->uuconf_zport == &_uuconf_unset
+      if (qalt->uuconf_zport == (char *) &_uuconf_unset
 	  && qalt->uuconf_qport == (struct uuconf_port *) &_uuconf_unset)
 	qalt->uuconf_zport = qdefault->uuconf_zport;
       if (qalt->uuconf_qport == (struct uuconf_port *) &_uuconf_unset)
@@ -429,7 +430,7 @@ _uuconf_isystem_basic_default (qglobal, q)
       if (q->uuconf_zpubdir == (const char *) &_uuconf_unset)
 	q->uuconf_zpubdir = qglobal->qprocess->zpubdir;
 
-#define SET(x) if (q->x == &_uuconf_unset) q->x = NULL
+#define SET(x) if (q->x == (char *) &_uuconf_unset) q->x = NULL
       SYSTEM_STRINGS(SET);
 #undef SET
 #define SET(x) if (q->x == (char **) &_uuconf_unset) q->x = NULL
@@ -444,7 +445,7 @@ _uuconf_isystem_basic_default (qglobal, q)
       SYSTEM_INTEGERS (SET);
 #undef SET
 
-      if (q->uuconf_zport == &_uuconf_unset)
+      if (q->uuconf_zport == (char *) &_uuconf_unset)
 	q->uuconf_zport = NULL;
       if (q->uuconf_qport == (struct uuconf_port *) &_uuconf_unset)
 	q->uuconf_qport = NULL;

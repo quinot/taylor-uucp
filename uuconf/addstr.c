@@ -40,7 +40,7 @@ const char _uuconf_addstr_rcsid[] = "$Id$";
    file which merely declarates a variable.  This functions happens to
    be pulled in by almost everything.  */
 
-char _uuconf_unset;
+char *_uuconf_unset;
 
 /* Add a string to a list of strings.  The list is maintained as an
    array of elements ending in NULL.  The total number of available

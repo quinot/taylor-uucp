@@ -319,14 +319,15 @@ uiset_call (qsys)
 {
   qsys->uuconf_fcall =
     (qsys->uuconf_qtimegrade != (struct uuconf_timespan *) &_uuconf_unset
-     || qsys->uuconf_zport != &_uuconf_unset
+     || qsys->uuconf_zport != (char *) &_uuconf_unset
      || qsys->uuconf_qport != (struct uuconf_port *) &_uuconf_unset
      || qsys->uuconf_ibaud >= 0
-     || qsys->uuconf_zphone != &_uuconf_unset
+     || qsys->uuconf_zphone != (char *) &_uuconf_unset
      || qsys->uuconf_schat.uuconf_pzchat != (char **) &_uuconf_unset
      || qsys->uuconf_schat.uuconf_pzprogram != (char **) &_uuconf_unset);
 
-  qsys->uuconf_fcalled = qsys->uuconf_zcalled_login != &_uuconf_unset;
+  qsys->uuconf_fcalled =
+    qsys->uuconf_zcalled_login != (char *) &_uuconf_unset;
 }
 
 /* Handle the "system" command.  Because we skip directly to the

@@ -450,7 +450,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 		  if (fmachine
 		      && (qsys->uuconf_zcalled_login == NULL
 			  || (qsys->uuconf_zcalled_login
-			      == &_uuconf_unset)))
+			      == (char *) &_uuconf_unset)))
 		    {
 		      qsys->uuconf_zcalled_login = *pz;
 		      iret = ihadd_logname_perm (qglobal, qsys, qperm);
