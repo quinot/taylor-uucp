@@ -345,6 +345,7 @@ flocal_send_request (qtrans, qdaemon)
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char *zsend;
   const char *znotify;
+  char absize[20];
   boolean fret;
 
   /* Make sure the file meets any remote size restrictions.  */
@@ -352,6 +353,33 @@ flocal_send_request (qtrans, qdaemon)
       && qdaemon->cmax_receive < qinfo->cbytes)
     return flocal_send_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			     "too large for receiver");
+
+  /* Construct the notify string to send.  */
+  znotify = qtrans->s.znotify;
+  if (znotify == NULL)
+    znotify = "";
+  if (*znotify == '\0'
+      && ((qdaemon->ifeatures & FEATURE_SIZES) != 0
+	  || (qtrans->s.bcmd == 'E'
+	      && (qdaemon->ifeatures & FEATURE_EXEC) != 0)))
+    znotify = "\"\"";
+
+  /* Construct the size string to send.  */
+  if ((qdaemon->ifeatures & FEATURE_SIZES) == 0
+      && (qtrans->s.bcmd != 'E'
+	  || (qdaemon->ifeatures & FEATURE_EXEC) == 0))
+    absize[0] = '\0';
+  else if ((qdaemon->ifeatures & FEATURE_V103) == 0)
+    sprintf (absize, "0x%lx", (unsigned long) qinfo->cbytes);
+  else
+    sprintf (absize, "%ld", qinfo->cbytes);
+
+  zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
+		   + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions)
+		   + strlen (qtrans->s.ztemp) + strlen (znotify)
+		   + strlen (absize)
+		   + (qtrans->s.zcmd != NULL ? strlen (qtrans->s.zcmd) : 0)
+		   + 50);
 
   /* If this an execution request and the other side supports
      execution requests, we send an E command.  Otherwise we send an S
@@ -365,18 +393,9 @@ flocal_send_request (qtrans, qdaemon)
 	 E zfrom zto zuser zoptions ztemp imode znotify size zcmd
 	 to the remote system.  We put a '-' in front of the (possibly
 	 empty) options and a '0' in front of the mode.  */
-      znotify = qtrans->s.znotify;
-      if (znotify == NULL || *znotify == '\0')
-	znotify = "\"\"";
-      zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-		       + strlen (qtrans->s.zuser)
-		       + strlen (qtrans->s.zoptions)
-		       + strlen (qtrans->s.ztemp)
-		       + strlen (znotify) + strlen (qtrans->s.zcmd)
-		       + 50);
-      sprintf (zsend, "E %s %s %s -%s %s 0%o %s %ld %s", qtrans->s.zfrom,
+      sprintf (zsend, "E %s %s %s -%s %s 0%o %s %s %s", qtrans->s.zfrom,
 	       qtrans->s.zto, qtrans->s.zuser, qtrans->s.zoptions,
-	       qtrans->s.ztemp, qtrans->s.imode, znotify, qinfo->cbytes,
+	       qtrans->s.ztemp, qtrans->s.imode, znotify, absize,
 	       qtrans->s.zcmd);
     }
   else
@@ -399,25 +418,10 @@ flocal_send_request (qtrans, qdaemon)
       else
 	zoptions = "c";
 
-      znotify = qtrans->s.znotify;
-      if (znotify == NULL)
-	znotify = "";
-      zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-		       + strlen (qtrans->s.zuser) + strlen (zoptions)
-		       + strlen (qtrans->s.ztemp) + strlen (znotify) + 50);
-      if ((qdaemon->ifeatures & FEATURE_SIZES) == 0)
-	sprintf (zsend, "S %s %s %s -%s %s 0%o %s", qtrans->s.zfrom,
-		 qtrans->s.zto, qtrans->s.zuser, zoptions,
-		 qtrans->s.ztemp, qtrans->s.imode, znotify);
-      else
-	{
-	  if (*znotify == '\0')
-	    znotify = "\"\"";
-	  sprintf (zsend, "S %s %s %s -%s %s 0%o %s %ld", qtrans->s.zfrom,
-		   qtrans->s.zto, qtrans->s.zuser, zoptions,
-		   qtrans->s.ztemp, qtrans->s.imode, znotify,
-		   qinfo->cbytes);
-	}
+      sprintf (zsend, "S %s %s %s -%s %s 0%o %s %s", qtrans->s.zfrom,
+	       qtrans->s.zto, qtrans->s.zuser, zoptions,
+	       qtrans->s.ztemp, qtrans->s.imode, znotify,
+	       absize);
     }
 
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,

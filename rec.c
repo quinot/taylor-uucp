@@ -335,6 +335,9 @@ flocal_rec_send_request (qtrans, qdaemon)
   if ((qdaemon->ifeatures & FEATURE_SIZES) == 0)
     sprintf (zsend, "R %s %s %s -%s", qtrans->s.zfrom, qtrans->s.zto,
 	     qtrans->s.zuser, qtrans->s.zoptions);
+  else if ((qdaemon->ifeatures & FEATURE_V103) == 0)
+    sprintf (zsend, "R %s %s %s -%s 0x%lx", qtrans->s.zfrom, qtrans->s.zto,
+	     qtrans->s.zuser, qtrans->s.zoptions, (unsigned long) cbytes);
   else
     sprintf (zsend, "R %s %s %s -%s %ld", qtrans->s.zfrom, qtrans->s.zto,
 	     qtrans->s.zuser, qtrans->s.zoptions, cbytes);

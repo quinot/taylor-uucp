@@ -39,6 +39,10 @@
 /* The E (execute) command.  */
 #define FEATURE_EXEC (04)
 
+/* Version 1.03: requires decimal size in S and R command.  Needless
+   to say, this should not be used by any new programs.  */
+#define FEATURE_V103 (010)
+
 /* This structure is used to hold information concerning the
    communication link established with the remote system.  */
 

@@ -1209,7 +1209,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   if (strncmp (zstr + 1, "OKN", sizeof "OKN" - 1) == 0)
     {
       if (zstr[sizeof "ROKN" - 1] == '\0')
-	qdaemon->ifeatures |= FEATURE_SIZES;
+	qdaemon->ifeatures |= FEATURE_SIZES | FEATURE_V103;
       else
 	qdaemon->ifeatures |= (int) strtol (zstr + sizeof "ROKN" - 1,
 					   (char **) NULL, 0);
@@ -1551,7 +1551,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   struct sdaemon sdaem;
   char *zloc;
   struct sstatus sstat;
-  boolean fgotseq, fgotn, fgotnval;
+  boolean fgotseq, fgotn;
   int i;
   char *zlog;
   char *zgrade;
@@ -1793,7 +1793,6 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   /* Check the arguments of the remote system, if any.  */
   fgotseq = FALSE;
   fgotn = FALSE;
-  fgotnval = FALSE;
   if (zspace != NULL)
     {
       char **paz;
@@ -1854,14 +1853,11 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		     for octal.  */
 		  fgotn = TRUE;
 		  if (optarg == NULL)
-		    sdaem.ifeatures |= FEATURE_SIZES;
+		    sdaem.ifeatures |= FEATURE_SIZES | FEATURE_V103;
 		  else
-		    {
-		      sdaem.ifeatures |= (int) strtol (optarg,
-						       (char **) NULL,
-						       0);
-		      fgotnval = TRUE;
-		    }
+		    sdaem.ifeatures |= (int) strtol (optarg,
+						     (char **) NULL,
+						     0);
 		  break;
 
 		case 'p':
@@ -1966,7 +1962,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	else
 	  zreply = "ROK";
       }
-    else if (! fgotnval)
+    else if ((sdaem.ifeatures & FEATURE_V103) != 0)
       zreply = "ROKN";
     else
       {
