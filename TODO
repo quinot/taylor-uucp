@@ -294,14 +294,9 @@ expect string by using a trailing ~.
 
 132.
 
-Franc,ois Pinard: cut the total number of 'g' protocl errors by some
+Franc,ois Pinard: cut the total number of 'g' protocol errors by some
 fraction every X bytes.  T. William Wells: only abort if you get a
 certain percentage of errors out of a certain number of packets.
-
-133.
-
-T. William Wells: put informative headers in 'g' protocol log messages
-rather than just plain data.
 
 134.
 
