@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/29  05:00:27  ian
+   Was not allocating enough space in zldate_and_time
+
    Revision 1.11  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -325,25 +328,25 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     }
   else
     {
-#if ! HAVE_BNU_LOGGING
+#if HAVE_TAYLOR_LOGGING
       fprintf (e, "%s ", abProgram);
       if (edebug != NULL)
 	fprintf (edebug, "%s ", abProgram);
-#else /* HAVE_BNU_LOGGING */
+#else /* ! HAVE_TAYLOR_LOGGING */
       fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
       if (edebug != NULL)
 	fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
-#endif /* HAVE_BNU_LOGGING */
+#endif /* HAVE_TAYLOR_LOGGING */
 
       fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
       if (edebug != NULL)
 	fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
 
-#if ! HAVE_BNU_LOGGING
+#if HAVE_TAYLOR_LOGGING
       fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
       if (edebug != NULL)
 	fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
-#endif /* ! HAVE_BNU_LOGGING */
+#endif /* HAVE_TAYLOR_LOGGING */
 
       zstr = zldate_and_time ();
       fprintf (e, "(%s", zstr);
@@ -353,9 +356,15 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (iLid != 0)
 	{
 #if ! HAVE_BNU_LOGGING
+#if HAVE_TAYLOR_LOGGING
 	  fprintf (e, " %d", iLid);
 	  if (edebug != NULL)
 	    fprintf (edebug, " %d", iLid);
+#else /* ! HAVE_TAYLOR_LOGGING */
+	  fprintf (e, "-%d", iLid);
+	  if (edebug != NULL)
+	    fprintf (edebug, "-%d", iLid);
+#endif /* ! HAVE_TAYLOR_LOGGING */
 #else /* HAVE_BNU_LOGGING */
 
 	  /* I assume that the second number here is meant to be some
