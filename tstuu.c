@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/14  21:07:15  ian
+   Create port file and add protocol command for second system
+
    Revision 1.4  1991/11/12  19:47:04  ian
    Add called-chat set of commands to run a chat script on an incoming call
 
@@ -153,6 +156,9 @@ main (argc, argv)
 	  zcmd2 = optarg;
 	  break;
 	default:
+	  fprintf (stderr,
+		   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+		   abVersion);
 	  fprintf (stderr,
 		   "Usage: tstuu [-x] [-t #] [-u] [-1 cmd] [-2 cmd]\n");
 	  exit (EXIT_FAILURE);

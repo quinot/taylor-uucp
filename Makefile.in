@@ -14,21 +14,21 @@ BINDIR = /usr/bin
 
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o config.o v2.o bnu.o file.o \
 	util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o parse.o \
-	copy.o sys1.o sys2.o sys3.o sys4.o getopt.o
+	copy.o sys1.o sys2.o sys3.o sys4.o version.o getopt.o
 XQTOBJS = uuxqt.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
-	copy.o sys1.o sys3.o sys5.o getopt.o
+	copy.o sys1.o sys3.o sys5.o version.o getopt.o
 UUXOBJS = uux.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
-	copy.o sys1.o sys3.o sys6.o getopt.o
+	copy.o sys1.o sys3.o sys6.o version.o getopt.o
 UUCPOBJS = uucp.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
-	copy.o sys1.o sys3.o sys6.o getopt.o
+	copy.o sys1.o sys3.o sys6.o version.o getopt.o
 UUCHKOBJS = uuchk.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
-	log.o sys1.o getopt.o
-TSTOBJS = tstuu.o getopt.o
+	log.o sys1.o version.o getopt.o
+TSTOBJS = tstuu.o version.o getopt.o
 
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
 	protf.o prott.o config.o v2.o bnu.o file.o util.o sysinf.o \
 	prtinf.o time.o log.o chat.o port.o tcp.o parse.o copy.o sys1.o \
-	sys2.o sys3.o sys4.o sys5.o sys6.o getopt.o
+	sys2.o sys3.o sys4.o sys5.o sys6.o version.o getopt.o
 
 all: uucico uuxqt uux uucp uuchk tstuu
 
@@ -100,4 +100,5 @@ sys3.o: uucp.h conf.h system.h sysdep.h
 sys4.o: uucp.h conf.h system.h sysdep.h
 sys5.o: uucp.h conf.h system.h sysdep.h
 sys6.o: uucp.h conf.h system.h sysdep.h
+version.o: uucp.h conf.h
 getopt.o: uucp.h conf.h getopt.h

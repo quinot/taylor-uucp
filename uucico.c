@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1991/11/16  00:33:28  ian
+   Remove ?: operator between string literal and variable
+
    Revision 1.19  1991/11/14  03:40:10  ian
    Try to figure out whether stdin is a TCP port
 
@@ -462,6 +465,9 @@ main (argc, argv)
 static void
 uusage ()
 {
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   abVersion);
   fprintf (stderr,
 	   "Usage: uucico [options] [port]\n");
   fprintf (stderr,

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/13  23:08:40  ian
+   Expand remote pathnames in uucp and uux; fix up uux special cases
+
    Revision 1.3  1991/09/19  02:30:37  ian
    From Chip Salzenberg: check whether signal is ignored differently
 
@@ -539,6 +542,9 @@ main (argc, argv)
 static void
 ucusage ()
 {
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   abVersion);
   fprintf (stderr,
 	   "Usage: uucp [options] file1 [file2 ...] dest\n");
   fprintf (stderr,

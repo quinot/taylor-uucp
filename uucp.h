@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/11/21  21:20:41  ian
+   Brian Campbell: offer str{n}icmp as an alternative to str{n}casecmp
+
    Revision 1.10  1991/11/12  19:47:04  ian
    Add called-chat set of commands to run a chat script on an incoming call
 
@@ -738,6 +741,9 @@ extern pointer xmemmove P((pointer, constpointer, int));
 #endif /* ! HAVE_MEMMOVE */
 
 /* Global variables.  */
+
+/* Version number string.  */
+extern const char abVersion[];
 
 /* Level of debugging.  */
 extern int iDebug;

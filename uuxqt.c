@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/07  20:52:33  ian
+   Chip Salzenberg: pass command as single argument to /bin/sh
+
    Revision 1.3  1991/09/19  16:15:58  ian
    Chip Salzenberg: configuration option for permitting execution via sh
 
@@ -240,6 +243,9 @@ main (argc, argv)
 static void
 uqusage ()
 {
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   abVersion);
   fprintf (stderr,
 	   "Usage: uuxqt [-c cmd] [-I file] [-s system] [-x debug]\n");
   fprintf (stderr,

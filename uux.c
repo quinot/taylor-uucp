@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/11/15  19:17:32  ian
+   Hannu Strang: copy stdin using fread/fwrite, not fgets/fputs
+
    Revision 1.7  1991/11/13  23:08:40  ian
    Expand remote pathnames in uucp and uux; fix up uux special cases
 
@@ -922,6 +925,9 @@ main (argc, argv)
 static void
 uxusage ()
 {
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   abVersion);
   fprintf (stderr,
 	   "Usage: uux [options] [-] command\n");
   fprintf (stderr,

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/13  20:38:00  ian
+   Added TCP port type for connections over TCP
+
    Revision 1.5  1991/11/12  19:47:04  ian
    Add called-chat set of commands to run a chat script on an incoming call
 
@@ -152,6 +155,9 @@ main (argc, argv)
 static void
 ukusage ()
 {
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   abVersion);
   fprintf (stderr,
 	   "Usage: uuchk [-I file] [-x debug]\n");
   fprintf (stderr,

@@ -44,3 +44,4 @@ uucp.h
 uux.c
 uuxqt.c
 v2.c
+version.c
