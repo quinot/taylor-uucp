@@ -224,24 +224,44 @@ typedef struct termios sterminal;
 
 /* Get definitions for the file permission bits.  */
 
-#ifndef S_IRUSR
-
+#ifndef S_IRWXU
 #define S_IRWXU 0700
+#endif
+#ifndef S_IRUSR
 #define S_IRUSR 0400
+#endif
+#ifndef S_IWUSR
 #define S_IWUSR 0200
+#endif
+#ifndef S_IXUSR
 #define S_IXUSR 0100
+#endif
 
+#ifndef S_IRWXG
 #define S_IRWXG 0070
+#endif
+#ifndef S_IRGRP
 #define S_IRGRP 0040
+#endif
+#ifndef S_IWGRP
 #define S_IWGRP 0020
+#endif
+#ifndef S_IXGRP
 #define S_IXGRP 0010
+#endif
 
+#ifndef S_IRWXO
 #define S_IRWXO 0007
+#endif
+#ifndef S_IROTH
 #define S_IROTH 0004
+#endif
+#ifndef S_IWOTH
 #define S_IWOTH 0002
+#endif
+#ifndef S_IXOTH
 #define S_IXOTH 0001
-
-#endif /* ! defined (S_IRUSR) */
+#endif
 
 #ifndef S_ISDIR
 #ifdef S_IFDIR
