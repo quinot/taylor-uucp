@@ -1,7 +1,7 @@
 /* xqtfil.c
    Routines to read execute files.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -78,6 +78,7 @@ static DIR *qSxqt_topdir;
 #if ! SUBDIRS
 static const char *zSdir;
 #else /* SUBDIRS */
+static boolean fSone_dir;
 static char *zSdir;
 static DIR *qSxqt_dir;
 static char *zSsystem;
@@ -89,9 +90,36 @@ static char *zSsystem;
 
 /*ARGSUSED*/
 boolean
-fsysdep_get_xqt_init ()
+fsysdep_get_xqt_init (zsystem)
+     const char *zsystem;
 {
-  usysdep_get_xqt_free ();
+  usysdep_get_xqt_free ((const char *) NULL);
+
+#if SUBDIRS
+  if (zsystem != NULL)
+    {
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
+      zSdir = zbufcpy (zsystem);
+#endif
+#if SPOOLDIR_ULTRIX
+      zSdir = zsappend3 ("sys", zsystem, "X.");
+#endif
+#if SPOOLDIR_TAYLOR
+      zSdir = zsysdep_in_dir (zsystem, "X.");
+#endif
+
+      qSxqt_dir = opendir ((char *) zSdir);
+      if (qSxqt_dir != NULL)
+	{
+	  qSxqt_topdir = qSxqt_dir;
+	  fSone_dir = TRUE;
+	  zSsystem = zbufcpy (zsystem);
+	  return TRUE;
+	}
+    }
+
+  fSone_dir = FALSE;
+#endif
 
   qSxqt_topdir = opendir ((char *) ZDIR);
   if (qSxqt_topdir == NULL)
@@ -111,8 +139,10 @@ fsysdep_get_xqt_init ()
    *pzsystem will be set to the system for which the execute file was
    created.  */
 
+/*ARGSUSED*/
 char *
-zsysdep_get_xqt (pzsystem, pferr)
+zsysdep_get_xqt (zsystem, pzsystem, pferr)
+     const char *zsystem;
      char **pzsystem;
      boolean *pferr;
 {
@@ -227,13 +257,15 @@ zsysdep_get_xqt (pzsystem, pferr)
       if (q == NULL)
 	{
 	  (void) closedir (qdir);
+
 #if SUBDIRS
 	  qSxqt_dir = NULL;
-	  continue;
-#else
+	  if (! fSone_dir)
+	    continue;
+#endif
+
 	  qSxqt_topdir = NULL;
 	  return NULL;
-#endif
 	}
     }
 }
@@ -243,7 +275,8 @@ zsysdep_get_xqt (pzsystem, pferr)
 
 /*ARGSUSED*/
 void
-usysdep_get_xqt_free ()
+usysdep_get_xqt_free (zsystem)
+     const char *zsystem;
 {
   if (qSxqt_topdir != NULL)
     {
@@ -260,5 +293,6 @@ usysdep_get_xqt_free ()
   zSdir = NULL;
   ubuffree (zSsystem);
   zSsystem = NULL;
+  fSone_dir = FALSE;
 #endif
 }
