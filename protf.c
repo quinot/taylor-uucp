@@ -141,11 +141,9 @@ static long cFrec_retries;
 
 /* Start the protocol.  */
 
-/*ARGSUSED*/
 boolean
-ffstart (qdaemon, fmaster)
+ffstart (qdaemon)
      struct sdaemon *qdaemon;
-     boolean fmaster;
 {
   cFsent_data = 0;
   cFsent_bytes = 0;

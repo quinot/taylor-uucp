@@ -73,11 +73,9 @@ static boolean ftprocess_data P((struct sdaemon *qdaemon, boolean *pfexit,
 
 /* Start the protocol.  */
 
-/*ARGSUSED*/
 boolean
-ftstart (qdaemon, fmaster)
+ftstart (qdaemon)
      struct sdaemon *qdaemon;
-     boolean fmaster;
 {
   if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
 		   STRIPSETTING_EIGHTBITS, XONXOFF_OFF))

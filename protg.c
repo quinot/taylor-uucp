@@ -342,9 +342,8 @@ static const char * const azGcontrol[] =
 
 /* Local functions.  */
 
-static boolean fgexchange_init P((struct sdaemon *qdaemon,
-				  boolean fmaster, int ictl, int ival,
-				 int *piset));
+static boolean fgexchange_init P((struct sdaemon *qdaemon, int ictl,
+				  int ival, int *piset));
 static boolean fgsend_control P((struct sdaemon *qdaemon, int ictl,
 				 int ival));
 static void ugadjust_ack P((int iseq));
@@ -369,9 +368,8 @@ static int igchecksum2 P((const char *zfirst, size_t cfirst,
    INITB packet contains the packet size.  */
 
 boolean
-fgstart (qdaemon, fmaster)
+fgstart (qdaemon)
      struct sdaemon *qdaemon;
-     boolean fmaster;
 {
   int iseg;
   int i;
@@ -426,8 +424,8 @@ fgstart (qdaemon, fmaster)
 	}
       else
 	{
-	  if (! fgexchange_init (qdaemon, fmaster, INITA,
-				 iGrequest_winsize, &iGremote_winsize))
+	  if (! fgexchange_init (qdaemon, INITA, iGrequest_winsize,
+				 &iGremote_winsize))
 	    continue;
 	}
       fgota = TRUE;
@@ -439,14 +437,13 @@ fgstart (qdaemon, fmaster)
 	}
       else
 	{
-	  if (! fgexchange_init (qdaemon, fmaster, INITB, iseg,
-				 &iGremote_segsize))
+	  if (! fgexchange_init (qdaemon, INITB, iseg, &iGremote_segsize))
 	    continue;
 	}
       fgotb = TRUE;
 
-      if (! fgexchange_init (qdaemon, fmaster, INITC,
-			     iGrequest_winsize, &iGremote_winsize))
+      if (! fgexchange_init (qdaemon, INITC, iGrequest_winsize,
+			     &iGremote_winsize))
 	continue;
 
       /* We have succesfully connected.  Determine the remote packet
@@ -522,9 +519,8 @@ fgstart (qdaemon, fmaster)
    time out and resend INITA.  */
 
 static boolean
-fgexchange_init (qdaemon, fmaster, ictl, ival, piset)
+fgexchange_init (qdaemon, ictl, ival, piset)
      struct sdaemon *qdaemon;
-     boolean fmaster;
      int ictl;
      int ival;
      int *piset;
@@ -533,21 +529,20 @@ fgexchange_init (qdaemon, fmaster, ictl, ival, piset)
 
   /* The three-way handshake should be independent of who initializes
      it, but it seems that some versions of uucico assume that the
-     master sends first and the slave responds.  This only matters if
-     we are the slave and the first packet is garbled.  If we send a
+     caller sends first and the callee responds.  This only matters if
+     we are the callee and the first packet is garbled.  If we send a
      packet, the other side will assume that we must have seen the
      packet they sent and will never time out and send it again.
-     Therefore, if we are the slave we don't send a packet the first
+     Therefore, if we are the callee we don't send a packet the first
      time through the loop.  This can still fail, but should usually
      work, and, after all, if the initialization packets are received
      correctly there will be no problem no matter what we do.  */
-
   for (i = 0; i < cGexchange_init_retries; i++)
     {
       long itime;
       int ctimeout;
 
-      if (fmaster || i > 0)
+      if (qdaemon->fcaller || i > 0)
 	{
 	  if (! fgsend_control (qdaemon, ictl, ival))
 	    return FALSE;
@@ -574,7 +569,7 @@ fgexchange_init (qdaemon, fmaster, ictl, ival, piset)
 
 		  /* If we didn't already send our initialization
 		     packet, send it now.  */
-		  if (! fmaster && i == 0)
+		  if (! qdaemon->fcaller && i == 0)
 		    {
 		      if (! fgsend_control (qdaemon, ictl, ival))
 			return FALSE;

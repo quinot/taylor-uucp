@@ -1302,7 +1302,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     }
 
   /* Turn on the selected protocol.  */
-  if (! (*qdaemon->qproto->pfstart) (qdaemon, TRUE))
+  if (! (*qdaemon->qproto->pfstart) (qdaemon))
     return FALSE;
 
   /* Now we have succesfully logged in as the master.  */
@@ -2022,7 +2022,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
   /* Turn on the selected protocol.  */
 
-  if (! (*sdaem.qproto->pfstart) (&sdaem, FALSE))
+  if (! (*sdaem.qproto->pfstart) (&sdaem))
     {
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = isysdep_time ((long *) NULL);

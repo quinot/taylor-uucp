@@ -43,10 +43,8 @@ struct sprotocol
   int cconns;
   /* Protocol parameter commands.  */
   struct uuconf_cmdtab *qcmds;
-  /* A routine to start the protocol; the argument is whether the caller
-     is the master or the slave.  Returns TRUE if the protocol has been
-     succesfully started, FALSE otherwise.  */
-  boolean (*pfstart) P((daemon_ptr qdaemon, boolean fmaster));
+  /* A routine to start the protocol.  */
+  boolean (*pfstart) P((daemon_ptr qdaemon));
   /* Shutdown the protocol.  */
   boolean (*pfshutdown) P((daemon_ptr qdaemon));
   /* Send a command to the other side.  */
@@ -115,7 +113,7 @@ extern int iPrecend;
 /* Prototypes for 'g' protocol functions.  */
 
 extern struct uuconf_cmdtab asGproto_params[];
-extern boolean fgstart P((daemon_ptr qdaemon, boolean fmaster));
+extern boolean fgstart P((daemon_ptr qdaemon));
 extern boolean fgshutdown P((daemon_ptr qdaemon));
 extern boolean fgsendcmd P((daemon_ptr qdaemon, const char *z));
 extern char *zggetspace P((daemon_ptr qdaemon, size_t *pcdata));
@@ -126,7 +124,7 @@ extern boolean fgwait P((daemon_ptr qdaemon));
 /* Prototypes for 'f' protocol functions.  */
 
 extern struct uuconf_cmdtab asFproto_params[];
-extern boolean ffstart P((daemon_ptr qdaemon, boolean fmaster));
+extern boolean ffstart P((daemon_ptr qdaemon));
 extern boolean ffshutdown P((daemon_ptr qdaemon));
 extern boolean ffsendcmd P((daemon_ptr qdaemon, const char *z));
 extern char *zfgetspace P((daemon_ptr qdaemon, size_t *pcdata));
@@ -140,7 +138,7 @@ extern boolean fffile P((daemon_ptr qdaemon, transfer_ptr qtrans,
 /* Prototypes for 't' protocol functions.  */
 
 extern struct uuconf_cmdtab asTproto_params[];
-extern boolean ftstart P((daemon_ptr qdaemon, boolean fmaster));
+extern boolean ftstart P((daemon_ptr qdaemon));
 extern boolean ftshutdown P((daemon_ptr qdaemon));
 extern boolean ftsendcmd P((daemon_ptr qdaemon, const char *z));
 extern char *ztgetspace P((daemon_ptr qdaemon, size_t *pcdata));
@@ -154,7 +152,7 @@ extern boolean ftfile P((daemon_ptr qdaemon, transfer_ptr qtrans,
 /* Prototypes for 'e' protocol functions.  */
 
 extern struct uuconf_cmdtab asEproto_params[];
-extern boolean festart P((daemon_ptr qdaemon, boolean fmaster));
+extern boolean festart P((daemon_ptr qdaemon));
 extern boolean feshutdown P((daemon_ptr qdaemon));
 extern boolean fesendcmd P((daemon_ptr qdaemon, const char *z));
 extern char *zegetspace P((daemon_ptr qdaemon, size_t *pcdata));
