@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.6  1991/11/13  20:38:00  ian
    Added TCP port type for connections over TCP
 
@@ -547,11 +550,46 @@ fkshow_port (qport, fin)
 	}
       else if (qport->u.smodem.zdialer != NULL)
 	{
+	  const char *zc;
 	  struct sdialer sdial;
 
-	  printf ("   Dialer %s\n", qport->u.smodem.zdialer);
-	  if (fread_dialer_info (qport->u.smodem.zdialer, &sdial))
-	    ukshow_dialer (&sdial);
+	  /* This might be a single dialer name, or it might be a
+	     sequence of dialer/token pairs.  */
+
+	  zc = qport->u.smodem.zdialer;
+	  if (zc[strcspn (zc, " \t")] == '\0')
+	    {
+	      printf ("   Dialer %s\n", qport->u.smodem.zdialer);
+	      if (fread_dialer_info (qport->u.smodem.zdialer, &sdial))
+		ukshow_dialer (&sdial);
+	    }
+	  else
+	    {
+	      char *z, *zdialer;
+
+	      printf ("   Dialer sequence %s\n", zc);
+
+	      z = (char *) alloca (strlen (zc) + 1);
+	      strcpy (z, zc);
+
+	      zdialer = strtok (z, " \t");
+	      while (zdialer != NULL)
+		{
+		  char *ztoken;
+	       
+		  if (fread_dialer_info (zdialer, &sdial))
+		    {
+		      printf ("   Dialer %s\n", zdialer);
+		      ukshow_dialer (&sdial);
+		    }
+
+		  ztoken = strtok ((char *) NULL, " \t");
+		  if (ztoken == NULL)
+		    zdialer = NULL;
+		  else
+		    zdialer = strtok ((char *) NULL, " \t");
+		}
+	    }
 	}
       break;
 #if HAVE_TCP
