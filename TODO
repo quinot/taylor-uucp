@@ -234,16 +234,6 @@ the useless final "HY".
 Franc,ois Pinard: Have the install target in the Makefile save the
 original UUCP programs, and add an uninstall target to restore them.
 
-40.
-
-Franc,ois Pinard:
-> I would like that, under some level of debugging, Taylor UUCP
-> announces:
-> 
-> 	pauses			(\p)
-> 	delays			(\d)
-> 	expected strings	(azstrings[0] in icexpect)
-
 41.
 
 Terry Gardner: on some systems O_NONBLOCK and O_NDELAY can not be used
@@ -267,10 +257,6 @@ in the modem's input buffer from the previous call, which clobbers the
 start of the next call.  We should flush the input buffer after
 opening it.  This can be done with TIOCFLUSH under BSD, TCFLSH under
 SYSV, or tcflush under POSIX.
-
-45.
-
-David Nugent: move the ERROR: on LOG_ERROR after the parens.
 
 46.
 
