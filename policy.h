@@ -20,40 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.10  1992/05/21  03:06:38  ian
-   Force LOCKDIR to always be defined
-
-   Revision 1.9  1992/04/14  17:34:03  ian
-   Zacharias Beckman: minor touchups for NeXT
-
-   Revision 1.8  1992/04/01  21:58:35  ian
-   Added CLOSE_LOGFILES configuration parameter
-
-   Revision 1.7  1992/03/30  15:29:58  ian
-   Added HAVE_SVR4_LOCKFILES
-
-   Revision 1.6  1992/03/27  05:31:09  ian
-   David J. MacKenzie: various cleanups
-
-   Revision 1.5  1992/03/16  01:23:08  ian
-   Make blocking writes optional
-
-   Revision 1.4  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.3  1992/03/11  22:34:25  ian
-   Chip Salzenberg: support Internet mail addresses in uuxqt replies
-
-   Revision 1.2  1992/03/02  04:53:07  ian
-   Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
-
-   Revision 1.1  1992/02/23  03:26:51  ian
-   Initial revision
-
-   */
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
 
 /* This header file contains macro definitions which must be set by
    each site before compilation.  The first few are system
@@ -190,18 +157,15 @@
    uugetty, the other programs and UUCP must agree on whether a device
    is locked.  This is typically done by creating a lock file in a
    specific directory; the lock files are generally named
-   LCK..something or LK.something.  The LOCKDIR macro specifies which
-   directory to put these lock files in.  On older systems this is
-   generally /usr/spool/uucp.  On some BNU systems the lock files are
-   in /etc/locks; on others they may be in /usr/spool/locks.  On the
-   NeXT they are in /usr/spool/uucp/LCK.  If no other programs use
-   devices, then it doesn't really matter what you set LOCKDIR to, but
-   you must set it to some existing directory.  */
-#define LOCKDIR "/usr/spool/uucp"
+   LCK..something or LK.something.  If the LOCKDIR macro is defined,
+   these lock files will be placed in the named directory; otherwise
+   they will be placed in the default spool directory.  On some BNU
+   systems the lock files are placed in /etc/locks.  On some they are
+   placed in /usr/spool/locks.  On the NeXT they are placed in
+   /usr/spool/uucp/LCK.  */
 /* #define LOCKDIR "/etc/locks" */
 /* #define LOCKDIR "/usr/spool/locks" */
 /* #define LOCKDIR "/usr/spool/uucp/LCK" */
-/* #define LOCKDIR SPOOLDIR */
 
 /* You must also specify the format of the lock files by setting
    exactly one of the following macros to 1.  Check an existing lock
