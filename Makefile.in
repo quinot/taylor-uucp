@@ -16,6 +16,9 @@ man1ext = .1
 man8dir = $(prefix)/man/man8
 man8ext = .8
 
+# Where to install the info files.
+infodir = $(prefix)/emacs/info
+
 # The directory to look in for new style configuration files (when
 # using HAVE_TAYLOR_CONFIG).
 newconfigdir = $(libdir)
@@ -69,7 +72,7 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
 
 all: uucico uuxqt uux uucp uuchk $(TSTUU)
 
-install: uucico uuxqt uux uucp uuchk
+install: uucico uuxqt uux uucp uuchk uucp.info
 	-mkdir $(libdir) $(bindir)
 	-ln $(libdir)/uucico $(libdir)/uucico.old
 	-ln $(libdir)/uuxqt $(libdir)/uuxqt.old
@@ -90,6 +93,10 @@ install: uucico uuxqt uux uucp uuchk
 	$(INSTALL_DATA) uuxqt.8 $(man8dir)/uuxqt$(man8ext)
 	$(INSTALL_DATA) uux.1 $(man1dir)/uux$(man1ext)
 	$(INSTALL_DATA) uucp.1 $(man1dir)/uucp$(man1ext)
+	-$(INSTALL_DATA) uucp.info $(infodir)/uucp.info
+	-$(INSTALL_DATA) uucp.info-1 $(infodir)/uucp.info-1
+	-$(INSTALL_DATA) uucp.info-2 $(infodir)/uucp.info-2
+	-$(INSTALL_DATA) uucp.info-3 $(infodir)/uucp.info-3
 
 uninstall:
 	cp $(libdir)/uucico.old $(libdir)/uucico
