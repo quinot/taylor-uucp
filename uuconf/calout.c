@@ -28,6 +28,8 @@
 #if USE_RCS_ID
 char _uuconf_calout_rcsid[] = "$Id$";
 #endif
+
+#include <errno.h>
 
 /* Find callout login name and password for a system.  */
 
@@ -51,7 +53,7 @@ uuconf_callout (pglobal, qsys, pzlog, pzpass)
   *pzpass = NULL;
 
   if (qsys->uuconf_zcall_login == NULL
-      && qsys->uuconf_zcall_pass == NULL)
+      && qsys->uuconf_zcall_password == NULL)
     return UUCONF_NOT_FOUND;
 
   if ((qsys->uuconf_zcall_login != NULL
