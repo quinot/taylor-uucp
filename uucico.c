@@ -2589,13 +2589,16 @@ zget_uucp_cmd (qconn, frequired)
   return NULL;
 }
 
-/* Read a sequence of characters up to a newline or carriage return, and
-   return the line without the line terminating character.  */
+/* Read a sequence of characters up to a newline or carriage return,
+   and return the line without the line terminating character.
+   Remember whether the last string we returned ended in \r; if it
+   did, ignore a leading \n to account for \r\n pairs.  */
 
 static char *
 zget_typed_line (qconn)
      struct sconnection *qconn;
 {
+  static boolean flastcr; 
   char *zalc;
   size_t calc;
   size_t cgot;
@@ -2634,11 +2637,15 @@ zget_typed_line (qconn)
 	    }
 #endif
 	  ubuffree (zalc);
+	  flastcr = FALSE;
 	  return NULL;
 	}
 
       if (b == -1)
-	continue;
+	{
+	  flastcr = FALSE;
+	  continue;
+	}
 
 #if DEBUG > 1
       if (FDEBUGGING (DEBUG_CHAT))
@@ -2657,6 +2664,15 @@ zget_typed_line (qconn)
 	}
 #endif
 
+      if (b == '\n' && cgot == 0 && flastcr)
+	{
+	  /* Ignore \n in \r\n pair.  */
+	  flastcr = FALSE;
+	  continue;
+	}
+
+      flastcr = FALSE;
+
       if (cgot >= calc)
 	{
 	  char *znew;
@@ -2669,8 +2685,13 @@ zget_typed_line (qconn)
 	  zalc = znew;
 	}
 
-      if (b == '\r' || b == '\n')
+      if (b == '\n')
 	b = '\0';
+      else if (b == '\r')
+	{
+	  flastcr = TRUE;
+	  b = '\0';
+	}
 
       zalc[cgot] = (char) b;
       ++cgot;
