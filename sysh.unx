@@ -454,7 +454,7 @@ extern int dup2 P((int oold, int onew));
 extern int ftw P((const char *zdir,
 		  int (*pfn) P((const char *zfile,
 				struct stat *qstat,
-				int iflag));
+				int iflag)),
 		  int cdescriptors));
 #endif
 
