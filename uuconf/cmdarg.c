@@ -28,6 +28,8 @@
 #if USE_RCS_ID
 const char _uuconf_cmdarg_rcsid[] = "$Id$";
 #endif
+
+#include <ctype.h>
 
 #undef strcmp
 #if HAVE_STRCASECMP
@@ -50,20 +52,34 @@ uuconf_cmd_args (pglobal, cargs, pzargs, qtab, pinfo, pfiunknown, iflags,
      pointer pblock;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
-  register int (*pficmp) P((const char *, const char *));
+  int bfirstu, bfirstl;
+  int (*pficmp) P((const char *, const char *));
   register const struct uuconf_cmdtab *q;
-  register int itype;
+  int itype;
   int callowed;
 
+  bfirstu = bfirstl = pzargs[0][0];
   if ((iflags & UUCONF_CMDTABFLAG_CASE) != 0)
     pficmp = strcmp;
   else
-    pficmp = strcasecmp;
+    {
+      if (islower (bfirstu))
+	bfirstu = toupper (bfirstu);
+      if (isupper (bfirstl))
+	bfirstl = tolower (bfirstl);
+      pficmp = strcasecmp;
+    }
 
   itype = 0;
 
   for (q = qtab; q->uuconf_zcmd != NULL; q++)
     {
+      int bfirst;
+
+      bfirst = q->uuconf_zcmd[0];
+      if (bfirst != bfirstu && bfirst != bfirstl)
+	continue;
+
       itype = UUCONF_TTYPE_CMDTABTYPE (q->uuconf_itype);
       if (itype != UUCONF_CMDTABTYPE_PREFIX)
 	{
