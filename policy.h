@@ -228,12 +228,9 @@
    device itself, and zzz is the minor device number of the port
    device.
 
-   Coherent use a completely different method of terminal locking,
-   which actually doesn't even use files at all.  For locks other than
-   for terminals, HDB type lock files are used.  For this to work, you
-   must extract the file lock.c from the archive /usr/src/misc.tar.Z,
-   move it to the unix subdir as coh_lock.c, and edit unix/Makefile.in
-   to add coh_lock.o to OBJS.  I'm sorry this is so inconvenient.  */
+   Coherent use a completely different method of terminal locking.
+   See unix/cohtty for details.  For locks other than for terminals,
+   HDB type lock files are used.  */
 #define HAVE_V2_LOCKFILES 0
 #define HAVE_HDB_LOCKFILES 1
 #define HAVE_SCO_LOCKFILES 0

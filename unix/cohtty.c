@@ -2,6 +2,15 @@
    Hemedinger <bob@dalek.mwc.com> of Mark Williams Corporation and
    lightly edited by Ian Lance Taylor.  */
 
+/* The bottom part of this file is lock.c.
+ * This is a hacked lock.c. A full lock.c can be found in the libmisc sources 
+ * under /usr/src/misc.tar.Z.
+ *
+ * These are for checking for the existence of locks:
+ * lockexist(resource)
+ * lockttyexist(ttyname)
+ */
+
 #include "uucp.h"
 
 #if HAVE_COHERENT_LOCKFILES
@@ -16,6 +25,7 @@
  */
 
 #include <ctype.h>
+#include <access.h>
 
 #include "uudefs.h"
 #include "sysdep.h"
@@ -129,5 +139,106 @@ char enable_device[16];			/* this will hold our device name
 	}
 	return FALSE;	/* no ttys entry found */
 }
+
+/* The following is COHERENT 4.0 specific. It is used to test for any
+ * existing lockfiles on a port which would have been created by init
+ * when a user logs into a port.
+ */
+
+#define LOCKSIG		9	/* Significant Chars of Lockable Resources.  */
+#define LOKFLEN		64	/* Max Length of UUCP Lock File Name.	     */
+
+#define	LOCKPRE	"LCK.."
+#define PIDLEN	6	/* Maximum length of string representing a pid.  */
+
+#ifndef LOCKDIR
+#define LOCKDIR SPOOLDIR
+#endif
+
+/* There is a special version of DEVMASK for the PE multiport driver
+ * because of the peculiar way it uses the minor device number.  For
+ * all other drivers, the lower 5 bits describe the physical port--
+ * the upper 3 bits give attributes for the port.
+ */
+
+#define PE_DRIVER 21	/* Major device number for the PE driver.  */
+#define PE_DEVMASK 0x3f	/* PE driver minor device mask.  */
+#define DEVMASK 0x1f	/* Minor device mask.  */
+
+/*
+ * Generates a resource name for locking, based on the major number
+ * and the lower 4 bits of the minor number of the tty device.
+ *
+ * Builds the name in buff as two "." separated decimal numbers.
+ * Returns NULL on failure, buff on success.
+ */
+static char *
+gen_res_name(path, buff)
+char *path;
+char *buff;
+{
+	struct stat sbuf;
+	int status;
+	
+	if (0 != (status = stat(path, &sbuf))) {
+		/* Can't stat the file.  */
+		return (NULL);
+	}
+
+	if (PE_DRIVER == major(sbuf.st_rdev)) {
+		sprintf(buff, "%d.%d", major(sbuf.st_rdev),
+				       PE_DEVMASK & minor(sbuf.st_rdev));
+	} else {
+		sprintf(buff, "%d.%d", major(sbuf.st_rdev),
+				       DEVMASK & minor(sbuf.st_rdev));
+	}
+
+	return(buff);
+} /* gen_res_name */
+
+/*
+ *  lockexist(resource)  char *resource;
+ *
+ *  Test for existance of a lock on the given resource.
+ *
+ *  Returns:  (1)  Resource is locked.
+ *	      (0)  Resource is not locked.
+ */
+
+static boolean
+lockexist(resource)
+const char	*resource;
+{
+	char lockfn[LOKFLEN];
+
+	if ( resource == NULL )
+		return(0);
+	sprintf(lockfn, "%s/%s%.*s", LOCKDIR, LOCKPRE, LOCKSIG, resource);
+
+	return (!access(lockfn, AEXISTS));
+} /* lockexist() */
+
+/*
+ *  lockttyexist(ttyname)  char *ttyname;
+ *
+ *  Test for existance of a lock on the given tty.
+ *
+ *  Returns:  (1)  Resource is locked.
+ *	      (0)  Resource is not locked.
+ */
+boolean
+lockttyexist(ttyn)
+const char *ttyn;
+{
+	char resource[LOKFLEN];
+	char filename[LOKFLEN];
+
+	sprintf(filename, "/dev/%s", ttyn);
+	if (NULL == gen_res_name(filename, resource)){
+		return(0);	/* Non-existent tty can not be locked :-) */
+	}
+
+	return(lockexist(resource));
+} /* lockttyexist() */
 
 #endif /* HAVE_COHERENT_LOCKFILES */
