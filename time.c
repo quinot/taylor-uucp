@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/03/09  05:08:16  ian
+   Added status for wrong time to call, not used if system can't be called
+
    Revision 1.10  1992/03/08  01:52:34  ian
    Removed extraneous semicolons
 
@@ -507,7 +510,7 @@ qtimegrade_parse (ztimegrade)
       else
 	cretry = 0;
 
-      qnext = qttime_parse (ztimegrade + 1, qret, *ztimegrade,
+      qnext = qttime_parse (ztimegrade + 1, qret, (long) *ztimegrade,
 			    itgradecmp, cretry);
       if (qnext != NULL)
 	qret = qnext;
