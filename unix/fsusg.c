@@ -19,6 +19,7 @@
    for use with Taylor UUCP.  */
 
 #include "uucp.h"
+#include "uudefs.h"
 #include "sysdep.h"
 #include "fsusg.h"
 
@@ -59,6 +60,12 @@
 #include <sys/statvfs.h>
 #endif
 
+#if STAT_DISK_SPACE		/* QNX.  */
+#include <sys/disk.h>
+#include <fcntl.h>
+#include <errno.h>
+#endif
+
 #define STAT_NONE 0
 
 #if ! STAT_STATVFS
@@ -68,8 +75,10 @@
 #if ! STAT_STATFS4
 #if ! STAT_DUSTAT
 #if ! STAT_USTAT
+#if ! STAT_DISK_SPACE
 #undef STAT_NONE
 #define STAT_NONE 1
+#endif
 #endif
 #endif
 #endif
@@ -168,23 +177,94 @@ get_fs_usage (path, disk, fsp)
   adjust_blocks ((b), fsd.f_frsize ? fsd.f_frsize : fsd.f_bsize, 512)
 #endif
 
-#if STAT_USTAT
-  {
-    struct stat sstat;
-    struct ustat s;
+#if STAT_DISK_SPACE		/* QNX.  */
+  int o;
+  int iret;
+  long cfree_blocks, ctotal_blocks;
+  char *zpath;
+  char *zslash;
+    
+  zpath = zbufcpy (path);
+  while ((o = open (zpath, O_RDONLY, 0)) == -1
+	 && errno == ENOENT)
+    {
+      /* The named file doesn't exist, so we can't open it.  Try the
+	 directory containing it. */
+      if ((strcmp ("/", zpath) == 0)
+	  || (strcmp (zpath, ".") == 0)
+	  || (strcmp (zpath, "") == 0)
+	  /* QNX peculiarity: "//2" means root on node 2 */
+	  || ((strncmp (zpath, "//", 2) == 0)
+	      && (strchr (zpath + 2, '/') == NULL)))
+	{
+	  /* We can't shorten this! */
+	  break;
+	}
 
-    if (stat (path, &sstat) < 0
-	|| ustat (sstat.st_dev, &s) < 0)
+      /* Shorten the pathname by one component and try again. */
+      zslash = strrchr (zpath, '/');
+      if (zslash == NULL)
+	{
+	  /* Try the current directory.  We can open directories. */
+	  zpath[0] = '.';
+	  zpath[1] = '\0';
+	}
+      else if (zslash == zpath)
+	{
+	  /* Try the root directory. */
+	  zpath[0] = '/';
+	  zpath[1] = '\0';
+	}
+      else
+	{
+	  /* Chop off last path component. */
+	  zslash[0] = '\0';
+	}
+    }
+  if (o == -1)
+    {
+      ulog (LOG_ERROR, "get_fs_usage: open (%s) failed: %s", zpath,
+	    strerror (errno));
+      ubuffree (zpath);
       return -1;
-    fsp->fsu_blocks = -1;
-    fsp->fsu_bfree = s.f_tfree;
-    fsp->fsu_bavail = s.f_tfree;
-    fsp->fsu_files = -1;
-    fsp->fsu_ffree = -1;
-  }
+    }
+  ubuffree (zpath);
+
+  iret = disk_space (o, &cfree_blocks, &ctotal_blocks);
+  (void) close (o);
+  if (iret == -1)
+    {
+      ulog (LOG_ERROR, "get_fs_usage: disk_space failed: %s",
+	    strerror (errno));
+      return -1;
+    }
+
+  fsp->fsu_blocks = ctotal_blocks;
+  fsp->fsu_bfree = cfree_blocks;
+  fsp->fsu_bavail = cfree_blocks;
+    
+  /* QNX has no limit on the number of inodes.  Most inodes are stored
+     directly in the directory entry. */
+  fsp->fsu_files = -1;
+  fsp->fsu_ffree = -1;
+#endif /* STAT_DISK_SPACE */
+
+#if STAT_USTAT
+  struct stat sstat;
+  struct ustat s;
+
+  if (stat (path, &sstat) < 0
+      || ustat (sstat.st_dev, &s) < 0)
+    return -1;
+  fsp->fsu_blocks = -1;
+  fsp->fsu_bfree = s.f_tfree;
+  fsp->fsu_bavail = s.f_tfree;
+  fsp->fsu_files = -1;
+  fsp->fsu_ffree = -1;
 #endif
 
 #if ! STAT_STATFS2_FS_DATA /* ! Ultrix */
+#if ! STAT_DISK_SPACE
 #if ! STAT_USTAT
 #if ! STAT_NONE
   fsp->fsu_blocks = convert_blocks (fsd.f_blocks);
@@ -192,6 +272,7 @@ get_fs_usage (path, disk, fsp)
   fsp->fsu_bavail = convert_blocks (fsd.f_bavail);
   fsp->fsu_files = fsd.f_files;
   fsp->fsu_ffree = fsd.f_ffree;
+#endif
 #endif
 #endif
 #endif
