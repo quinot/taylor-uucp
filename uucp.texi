@@ -2047,6 +2047,7 @@ Brian Campbell <brianc@@quantum.on.ca>
 cbmvax!snark.thyrsus.com!cowan (John Cowan)
 denny@@dakota.alisa.com (Bob Denny)
 peter@@ficc.ferranti.com (Peter da Silva)
+dje@ersys.edmonton.ab.ca (Doug Evans)
 fenner@@jazz.psu.edu (Bill Fenner)
 "David J. Fiander" <golem!david@@news.lsuc.on.ca>
 Lele Gaifax (piggy@@idea.sublink.org)
