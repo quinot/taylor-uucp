@@ -1,7 +1,7 @@
 /* serial.c
    The serial port communication routines for Unix.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -1817,8 +1817,9 @@ fsmodem_carrier (qconn, fcarrier)
 /* Tell the port to use hardware flow control.  There is no standard
    mechanism for controlling this.  This implementation supports
    CRTSCTS on SunOS, RTS/CTSFLOW on 386(ish) unix, CTSCD on the 3b1,
-   and TXADDCD/TXDELCD on AIX.  If you know how to do it on other
-   systems, please implement it and send me the patches.  */
+   CCTS_OFLOW/CRTS_IFLOW on BSDI, and TXADDCD/TXDELCD on AIX.  If you
+   know how to do it on other systems, please implement it and send me
+   the patches.  */
 
 static boolean
 fsserial_hardflow (qconn, fhardflow)
@@ -1841,7 +1842,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifndef CRTSFL
 #ifndef CRTSCTS
 #ifndef CTSCD
+#ifndef CCTS_OFLOW
 #define HAVE_HARDFLOW 0
+#endif
 #endif
 #endif
 #endif
@@ -1871,6 +1874,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CTSCD
       q->snew.c_cflag |= CTSCD;
 #endif /* defined (CTSCD) */
+#ifdef CCTS_OFLOW
+      q->snew.c_cflag |= CCTS_OFLOW | CRTS_IFLOW;
+#endif
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
 	{
@@ -1898,6 +1904,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CTSCD
       q->snew.c_cflag &=~ CTSCD;
 #endif /* defined (CTSCD) */
+#ifdef CCTS_OFLOW
+      q->snew.c_cflags &=~ (CCTS_OFLOW | CRTS_IFLOW);
+#endif
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
 	{
