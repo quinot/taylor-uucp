@@ -1000,6 +1000,13 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 
   fret = TRUE;
 
+  if (q->zlog != NULL)
+    {
+      ulog (LOG_NORMAL, "%s", q->zlog);
+      ubuffree (q->zlog);
+      q->zlog = NULL;
+    }
+
   if (cfirst == 0 || q->fcmd || ! q->frecfile || q != qTtiming_rec)
     {
       struct stransfer *qcharge;
@@ -1116,13 +1123,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
     }
   else
     {
-      if (q->zlog != NULL)
-	{
-	  ulog (LOG_NORMAL, "%s", q->zlog);
-	  ubuffree (q->zlog);
-	  q->zlog = NULL;
-	}
-
       if (ipos != -1 && ipos != q->ipos)
 	{
 	  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
