@@ -63,9 +63,9 @@ idebug_parse (z)
 
   iret = 0;
 
-  for (ztok = strtok (zcopy, ",");
+  for (ztok = strtok (zcopy, ", \t");
        ztok != NULL;
-       ztok = strtok ((char *) NULL, ","))
+       ztok = strtok ((char *) NULL, ", \t"))
     {
       if (strcasecmp (ztok, "all") == 0)
 	{
