@@ -331,6 +331,16 @@
    file size will be very helpful.  */
 #define DEBUG 2
 
+/* Set HAVE_ENCRYPTED_PASSWORDS to 1 if you want login passwords to be
+   encrypted before comparing them against the values in the file.
+   This only applies when uucico is run with the -l or -e switches and
+   is doing its own login prompting.  Note that the passwords used are
+   from the UUCP password file, not the system /etc/passwd file.  See
+   the documentation for further details.  If you set this, you are
+   responsible for encrypting the passwords in the UUCP password file.
+   The function crypt will be used to do comparisons.  */
+#define HAVE_ENCRYPTED_PASSWORDS 0
+
 /* Set the default grade to use for a uucp command if the -g option is
    not used.  The grades, from highest to lowest, are 0 to 9, A to Z,
    a to z.  */
