@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/01  19:58:01  ian
+   Don't use the not-very-portable fd_set typedef at all
+
    Revision 1.12  1991/12/01  19:41:00  ian
    Don't read V2 or BNU configuration files while testing
 
@@ -929,7 +932,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       (void) remove (zto);
       umake_file (zfrom, 11);
 
-      sprintf (ab, "%s -n test1!cat '<%s' '>%s'", zuux2, zfrom, zto);
+      sprintf (ab, "%s test1!cat '<%s' '>%s'", zuux2, zfrom, zto);
       xsystem (ab);
     }
 
