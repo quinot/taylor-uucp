@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1992/03/07  02:56:30  ian
+   Rewrote time routines
+
    Revision 1.8  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -585,7 +588,7 @@ btimegrade (ztimegrade, pcretry)
 
   utimespan_free (qspan);
 
-  if (! fmatch);
+  if (! fmatch)
     return '\0';
 
   if (pcretry != NULL)
@@ -620,7 +623,7 @@ cmax_size_now (ztimesize)
 
   utimespan_free (qspan);
 
-  if (! fmatch);
+  if (! fmatch)
     return -1;
 
   return ival;
