@@ -12,7 +12,6 @@ getopt.c
 memchr.c
 memcmp.c
 memcpy.c
-memmov.c
 spool.c
 status.c
 strcas.c

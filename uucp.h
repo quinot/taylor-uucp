@@ -185,7 +185,7 @@ extern char *strcpy (), *strncpy (), *strchr (), *strrchr (), *strtok ();
 extern char *strcat (), *strerror (), *strstr ();
 extern size_t strlen (), strspn (), strcspn ();
 #if ! HAVE_MEMORY_H
-extern pointer memcpy (), memmove (), memchr ();
+extern pointer memcpy (), memchr ();
 #endif /* ! HAVE_MEMORY_H */
 #endif /* ! HAVE_STRINGS_H */
 #endif /* ! HAVE_STRING_H */
@@ -356,15 +356,6 @@ extern pointer memchr P((constpointer p, int b, size_t c));
 extern void bzero P((pointer p, int c));
 #endif /* ! HAVE_MEMSET */
 #endif /* ! HAVE_BZERO */
-
-/* Move a memory block safely.  Go through xmemmove to allow for
-   systems which have the prototype (using size_t, which we don't want
-   to use since some systems won't have it) but not the function.  */
-#if HAVE_MEMMOVE
-#define xmemmove memmove
-#else /* ! HAVE_MEMMOVE */
-extern pointer xmemmove P((pointer, constpointer, int));
-#endif /* ! HAVE_MEMMOVE */
 
 /* Look up a character in a string.  */
 #if ! HAVE_STRCHR

@@ -285,7 +285,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
   int i;
   size_t cmax;
   char *zhave;
-  int chave;
+  size_t chave;
   long iendtime;
 #if DEBUG > 1
   int cchars;
@@ -338,7 +338,10 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
 	 string, so this can't lose a match.  */
       if (chave >= cmax)
 	{
-	  xmemmove (zhave, zhave + 1, cmax - 1);
+	  size_t imove;
+
+	  for (imove = 0; imove < cmax - 1; imove++)
+	    zhave[imove] = zhave[imove + 1];
 	  --chave;
 	}
 

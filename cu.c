@@ -1678,6 +1678,9 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 	  ++ceofhave;
 	  if (ceofhave == ceoflen)
 	    {
+	      size_t cmove;
+	      char *zmove;
+
 	      if (memcmp (zeof, zlook, ceoflen) == 0)
 		{
 		  ucuputs ("[file transfer complete]");
@@ -1685,7 +1688,13 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 		}
 
 	      (void) putc (*zlook, e);
-	      xmemmove (zlook, zlook + 1, ceoflen - 1);
+
+	      zmove = zlook;
+	      for (cmove = ceoflen - 1, zmove = zlook;
+		   cmove > 0;
+		   cmove--, zmove++)
+		zmove[0] = zmove[1];
+
 	      --ceofhave;
 	    }
 	}

@@ -348,7 +348,7 @@ static boolean fgexchange_init P((struct sdaemon *qdaemon, int ictl,
 				  int ival, int *piset));
 static boolean fgsend_control P((struct sdaemon *qdaemon, int ictl,
 				 int ival));
-static void ugadjust_ack P((int iseq));
+static char *zgadjust_ack P((int iseq));
 static boolean fgwait_for_packet P((struct sdaemon *qdaemon,
 				    boolean freturncontrol, int ctimeout,
 				    int cretries));
@@ -729,7 +729,15 @@ fgsendcmd (qdaemon, z, ilocal, iremote)
    The sequence numbers used in the 'g' protocol are only three bits
    long, so we allocate eight buffers and maintain a correspondence
    between buffer index and sequence number.  This always wastes some
-   buffer space, but it's easy to implement.  */
+   buffer space, but it's easy to implement.
+
+   We leave room at the front of the buffer for the frame header and
+   two additional bytes.  The two extra bytes are used for short
+   packets, which essentially use a longer header and shorter data.
+   We do this to avoid moving the data.  We zero out any unused bytes
+   before the frame, so we can locate the real header given a buffer
+   by finding the first non-zero byte (which will be one of the first
+   three bytes in the buffer).  */
 
 #define CSENDBUFFERS (CMAXWINDOW + 1)
 
@@ -748,10 +756,18 @@ fginit_sendbuffers (fallocate)
       xfree ((pointer) azGsendbuffers[i]);
       if (fallocate)
 	{
-	  azGsendbuffers[i] = (char *) malloc (CFRAMELEN + iGremote_packsize);
+	  azGsendbuffers[i] = (char *) malloc (CFRAMELEN + 2
+					       + iGremote_packsize);
 	  if (azGsendbuffers[i] == NULL)
 	    return FALSE;
-	  bzero (azGsendbuffers[i], CFRAMELEN + iGremote_packsize);
+
+	  /* This bzero might not seem necessary, since before we send
+	     out each packet we zero out any non-data bytes.  However,
+	     if we receive an SRJ at the start of the conversation, we
+	     will send out the packet before it has been set to
+	     anything, thus sending the contents of our heap.  We
+	     avoid this by using bzero.  */
+	  bzero (azGsendbuffers[i], CFRAMELEN + 2 + iGremote_packsize);
 	}
       else
 	azGsendbuffers[i] = NULL;
@@ -771,7 +787,7 @@ zggetspace (qdaemon, pclen)
      size_t *pclen;
 {
   *pclen = iGremote_packsize;
-  return azGsendbuffers[iGsendseq] + CFRAMELEN;
+  return azGsendbuffers[iGsendseq] + CFRAMELEN + 2;
 }
 
 /* Send out a data packet.  This computes the checksum, sets up the
@@ -795,17 +811,16 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 
   /* Set the initial length bytes.  See the description at the definition
      of SHORTDATA, above.  */
-
   itt = DATA;
   csize = iGremote_packsize;
   iseg = iGremote_segsize + 1;
 
 #if DEBUG > 0
-  if (cdata > iGremote_packsize)
+  if (cdata > csize)
     ulog (LOG_FATAL, "fgsend_packet: Packet size too large");
 #endif
 
-  if (cdata < iGremote_packsize)
+  if (cdata < csize)
     {
       /* If the remote packet size is larger than 64, the default, we
 	 can assume they can handle a smaller packet as well, which
@@ -826,23 +841,22 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 	{
 	  size_t cshort;
 
-	  /* We have to move the data within the packet,
-	     unfortunately.  It's tough to see any way around this
-	     without going to some sort of iovec structure.  It only
-	     happens once per file transfer.  It would also be nice if
-	     we computed the checksum as we move.  We zero out the
-	     unused bytes, since it makes people happy.  */
+	  /* We have to add bytes which indicate how short the packet
+	     is.  We do this by pushing the header backward, which we
+	     can do because we allocated two extra bytes for this
+	     purpose.  */
 	  itt = SHORTDATA;
 	  cshort = csize - cdata;
 	  if (cshort <= 127)
 	    {
-	      xmemmove (zdata + 1, zdata, cdata);
+	      --zdata;
 	      zdata[0] = (char) cshort;
+	      zdata[-1] = '\0';
 	      bzero (zdata + cdata + 1, cshort - 1);
 	    }
 	  else
 	    {
-	      xmemmove (zdata + 2, zdata, cdata);
+	      zdata -= 2;
 	      zdata[0] = (char) (0x80 | (cshort & 0x7f));
 	      zdata[1] = (char) (cshort >> 7);
 	      bzero (zdata + cdata + 2, cshort - 2);
@@ -851,6 +865,14 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
     }
 
   z = zdata - CFRAMELEN;
+
+  if (csize == cdata)
+    {
+      /* Zero out the preceding bytes, in case the last time this
+	 buffer was used those bytes were used.  */
+      zdata[-1] = '\0';
+      zdata[-2] = '\0';
+    }
 
   z[IFRAME_DLE] = DLE;
   z[IFRAME_K] = (char) iseg;
@@ -913,23 +935,29 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 }
 
 /* Recompute the control byte and checksum of a packet so that it
-   includes the correct packet acknowledgement.  This is called
-   when a packet is retransmitted to make sure the retransmission
-   does not confuse the other side.  */
+   includes the correct packet acknowledgement.  This is called when a
+   packet is retransmitted to make sure the retransmission does not
+   confuse the other side.  It returns a pointer to the start of the
+   packet, skipping the bytes that may be unused at the start of
+   azGsendbuffers[iseq].  */
 
-static void
-ugadjust_ack (iseq)
+static char *
+zgadjust_ack (iseq)
      int iseq;
 {
-  char *z;
+  register char *z;
   unsigned short icheck;
 
   z = azGsendbuffers[iseq];
+  if (*z == '\0')
+    ++z;
+  if (*z == '\0')
+    ++z;
 
   /* If the received packet number is the same, there is nothing
      to do.  */
   if (CONTROL_YYY (z[IFRAME_CONTROL]) == iGrecseq)
-    return;
+    return z;
 
   /* Get the old checksum.  */
   icheck = (unsigned short) (((z[IFRAME_CHECKHIGH] & 0xff) << 8)
@@ -949,6 +977,8 @@ ugadjust_ack (iseq)
   /* Update the XOR byte.  */
   z[IFRAME_XOR] = (char) (z[IFRAME_K] ^ z[IFRAME_CHECKLOW]
 			  ^ z[IFRAME_CHECKHIGH] ^ z[IFRAME_CONTROL]);
+
+  return z;
 }
 
 /* Send a control packet.  These are fairly simple to construct.  It
@@ -1094,6 +1124,7 @@ fgwait_for_packet (qdaemon, freturncontrol, ctimeout, cretries)
 	  if (INEXTSEQ (iGremote_ack) != iGsendseq)
 	    {
 	      int inext;
+	      char *zsend;
 
 	      inext = INEXTSEQ (iGremote_ack);
 
@@ -1101,11 +1132,10 @@ fgwait_for_packet (qdaemon, freturncontrol, ctimeout, cretries)
 			      "fgwait_for_packet: Resending packet %d",
 			      inext);
 
-	      ugadjust_ack (inext);
 	      ++cGresent_packets;
-	      if (! fsend_data (qdaemon->qconn, azGsendbuffers[inext],
-				CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
-				TRUE))
+	      zsend = zgadjust_ack (inext);
+	      if (! fsend_data (qdaemon->qconn, zsend,
+				CFRAMELEN + CPACKLEN (zsend), TRUE))
 		return FALSE;
 	      iGretransmit_seq = inext;
 	    }
@@ -1153,6 +1183,7 @@ fggot_ack (qdaemon, iack)
      int iack;
 {
   int inext;
+  char *zsend;
 
   iGremote_ack = iack;
 
@@ -1167,10 +1198,9 @@ fggot_ack (qdaemon, iack)
       DEBUG_MESSAGE1 (DEBUG_PROTO,
 		      "fggot_ack: Sending packet %d", inext);
 
-      ugadjust_ack (inext);
       ++cGresent_packets;
-      if (! fsend_data (qdaemon->qconn, azGsendbuffers[inext],
-			CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
+      zsend = zgadjust_ack (inext);
+      if (! fsend_data (qdaemon->qconn, zsend, CFRAMELEN + CPACKLEN (zsend),
 			TRUE))
 	return FALSE;
       inext = INEXTSEQ (inext);
@@ -1181,11 +1211,10 @@ fggot_ack (qdaemon, iack)
 	  DEBUG_MESSAGE1 (DEBUG_PROTO,
 			  "fggot_ack: Sending packet %d", inext);
 
-	  ugadjust_ack (inext);
 	  ++cGresent_packets;
-	  if (! fsend_data (qdaemon->qconn, azGsendbuffers[inext],
-			    CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
-			    TRUE))
+	  zsend = zgadjust_ack (inext);
+	  if (! fsend_data (qdaemon->qconn, zsend,
+			    CFRAMELEN + CPACKLEN (zsend), TRUE))
 	    return FALSE;
 	  iGretransmit_seq = inext;
 	}
@@ -1666,12 +1695,11 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			      "fgprocess_data: Remote reject: next %d resending %d",
 			      iGsendseq, iGretransmit_seq);
 
-	      ugadjust_ack (iGretransmit_seq);
 	      ++cGresent_packets;
 	      ++cGremote_rejects;
 	      if (! fgcheck_errors ())
 		return FALSE;
-	      zpack = azGsendbuffers[iGretransmit_seq];
+	      zpack = zgadjust_ack (iGretransmit_seq);
 	      if (! fsend_data (qdaemon->qconn, zpack,
 				CFRAMELEN + CPACKLEN (zpack),
 				TRUE))
@@ -1687,10 +1715,9 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  {
 	    char *zpack;
 
-	    ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
 	    ++cGresent_packets;
 	    ++cGremote_rejects;
-	    zpack = azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])];
+	    zpack = zgadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
 	    if (! fsend_data (qdaemon->qconn, zpack,
 			      CFRAMELEN + CPACKLEN (zpack),
 			      TRUE))
