@@ -25,6 +25,7 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
 #include "sysdep.h"
 
 #include <errno.h>
