@@ -86,7 +86,7 @@ MAKEINFO = makeinfo
 
 SHELL = /bin/sh
 
-VERSION = gamma1.04
+VERSION = 1.04
 
 MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
@@ -121,11 +121,11 @@ UULIBS = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 all: $(PROGRAMS) $(TSTUU) $(UUDIR)
 
 install: $(PROGRAMS) $(UUDIR)
-	-mkdir $(sbindir) $(bindir)
-	-ln $(sbindir)/uucico $(sbindir)/uucico.old
-	-ln $(sbindir)/uuxqt $(sbindir)/uuxqt.old
-	-ln $(sbindir)/uusched $(sbindir)/uusched.old
-	rm -f $(sbindir)/uucico $(sbindir)/uuxqt $(sbindir)/uusched
+	if test -d $(sbindir); then true; else mkdir $(sbindir); fi
+	if test -d $(bindir); then true; else mkdir $(bindir); fi
+	-if test -f $(sbindir)/uucico.old; then rm -f $(sbindir)/uucico; else mv $(sbindir)/uucico $(sbindir)/uucico.old; fi
+	-if test -f $(sbindir)/uuxqt.old; then rm -f $(sbindir)/uuxqt; else mv $(sbindir)/uuxqt $(sbindir)/uuxqt.old; fi
+	-if test -f $(sbindir)/uusched.old; then rm -f $(sbindir)/uusched; else mv $(sbindir)/uusched $(sbindir)/uusched.old; fi
 	$(INSTALL_PROGRAM) uucico $(sbindir)/uucico
 	$(INSTALL_PROGRAM) uuxqt $(sbindir)/uuxqt
 	$(INSTALL_PROGRAM) uuchk $(sbindir)/uuchk
@@ -134,26 +134,28 @@ install: $(PROGRAMS) $(UUDIR)
 	chown $(owner) $(sbindir)/uucico $(sbindir)/uuxqt
 	chmod 4555 $(sbindir)/uucico $(sbindir)/uuxqt
 	chown $(owner) $(sbindir)/uuchk $(sbindir)/uuconv
-	-if test "$(UUDIR)X" != "X"; then if test ! -d $(uudirdir); then mkdir $(uudirdir); fi; chown $(owner) $(uudirdir); chmod 100 $(uudirdir); $(INSTALL_PROGRAM) uudir $(uudirdir)/uudir; chown root $(uudirdir)/uudir; chmod 4555 $(uudirdir)/uudir; else true; fi
-	-ln $(bindir)/uux $(bindir)/uux.old
-	-ln $(bindir)/uucp $(bindir)/uucp.old
-	-ln $(bindir)/uustat $(bindir)/uustat.old
-	-ln $(bindir)/uuname $(bindir)/uuname.old
-	-ln $(bindir)/uulog $(bindir)/uulog.old
-	-ln $(bindir)/uuto $(bindir)/uuto.old
-	-ln $(bindir)/uupick $(bindir)/uupick.old
-	-ln $(bindir)/cu $(bindir)/cu.old
-	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
-	rm -f $(bindir)/uuname $(bindir)/uulog $(bindir)/uuto 
-	rm -f $(bindir)/uupick $(bindir)/cu
-	$(INSTALL_PROGRAM) uux $(bindir)/uux
-	$(INSTALL_PROGRAM) uucp $(bindir)/uucp
-	$(INSTALL_PROGRAM) uustat $(bindir)/uustat
-	$(INSTALL_PROGRAM) uuname $(bindir)/uuname
-	$(INSTALL_PROGRAM) uulog $(bindir)/uulog
-	$(INSTALL_PROGRAM) uuto $(bindir)/uuto
-	$(INSTALL_PROGRAM) uupick $(bindir)/uupick
-	$(INSTALL_PROGRAM) cu $(bindir)/cu
+	if test "$(UUDIR)X" != "X"; then \
+	  if test -d $(uudirdir); then \
+	    true \
+	  else \
+	    mkdir $(uudirdir); \
+	  fi; \
+	  chown $(owner) $(uudirdir); \
+	  chmod 100 $(uudirdir); \
+	  $(INSTALL_PROGRAM) uudir $(uudirdir)/uudir; \
+	  chown root $(uudirdir)/uudir; \
+	  chmod 4555 $(uudirdir)/uudir; \
+	else \
+	  true; \
+	fi
+	-for i in uux uucp uustat uuname uulog uuto uupick cu; do \
+	  if test -f $(bindir)/$$i.old; then \
+	    rm -f $(bindir)/$$i; \
+	  else \
+	    mv $(bindir)/$$i $(bindir)/$$i.old; \
+	  fi; \
+	  $(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
+	done
 	chown $(owner) $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
 	chown $(owner) $(bindir)/uuname $(bindir)/cu
 	chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
@@ -286,7 +288,7 @@ realclean: distclean
 
 dist:
 	-rm -rf uucp-$(VERSION)
-	-rm -f taylor-uucp-$(VERSION).tar taylor-uucp-$(VERSION).tar.Z
+	-rm -f uucp-$(VERSION).tar uucp-$(VERSION).tar.Z
 	mkdir uucp-$(VERSION)
 	ln `cat MANIFEST` uucp-$(VERSION)
 	rm -f uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
@@ -294,11 +296,13 @@ dist:
 	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
 	mkdir uucp-$(VERSION)/contrib
 	ln contrib/* uucp-$(VERSION)/contrib
+	mkdir uucp-$(VERSION)/sample
+	ln sample/* uucp-$(VERSION)/sample
 	(cd unix; $(MAKE) $(MDEFINES) dist)
 	(cd uuconf; $(MAKE) $(MDEFINES) dist)
 	(cd lib; $(MAKE) $(MDEFINES) dist)
-	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
-	compress taylor-uucp-$(VERSION).tar
+	tar -cvf uucp-$(VERSION).tar uucp-$(VERSION)
+	compress uucp-$(VERSION).tar
 
 info: uucp.info
 
