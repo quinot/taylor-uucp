@@ -1,7 +1,7 @@
 /* uucico.c
    This is the main UUCP communication program.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -877,6 +877,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 
   if (! fsysdep_get_status (qorigsys, &sstat, (boolean *) NULL))
     return FALSE;
+  ubuffree (sstat.zstring);
 
   /* Make sure it's been long enough since the last failed call, and
      that we haven't exceeded the maximum number of retries.  Even if
