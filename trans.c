@@ -42,6 +42,17 @@ const char trans_rcsid[] = "$Id$";
    pick up at most a certain number of files.  */
 #define COMMANDS_PER_SCAN (200)
 
+/* The structure we use when waiting for an acknowledgement of a
+   confirmed received file in fsent_receive_ack.  */
+
+struct sreceive_ack
+{
+  struct sreceive_ack *qnext;
+  char *zto;
+  char *ztemp;
+  boolean fmarked;
+};
+
 /* Local functions.  */
 
 static void utqueue P((struct stransfer **, struct stransfer *,
@@ -50,6 +61,7 @@ static void utdequeue P((struct stransfer *));
 static void utchanalc P((struct sdaemon *qdaemon, struct stransfer *qtrans));
 __inline__ static struct stransfer *qtchan P((int ichan));
 __inline__ static void utchanfree P((struct stransfer *qtrans));
+static void utfree_queue P((struct stransfer **pq));
 static boolean fttime P((struct sdaemon *qdaemon, long *pisecs,
 			 long *pimicros));
 static boolean fcheck_queue P((struct sdaemon *qdaemon));
@@ -57,6 +69,8 @@ static boolean ftadd_cmd P((struct sdaemon *qdaemon, const char *z,
 			    size_t cdata, int iremote, boolean flast));
 static boolean fremote_hangup_reply P((struct stransfer *qtrans,
 				       struct sdaemon *qdaemon));
+static void utfree_receive_ack P((struct sreceive_ack *q));
+static void utfree_acked P((void));
 static boolean flocal_poll_file P((struct stransfer *qtrans,
 				   struct sdaemon *qdaemon));
 
@@ -122,18 +136,8 @@ static long iTchecktime;
 /* The size of the command we have read so far in ftadd_cmd.  */
 static size_t cTcmdlen;
 
-/* The structure we use when waiting for an acknowledgement of a
-   confirmed received file in fsent_receive_ack, and a list of those
-   structures.  */
-
-struct sreceive_ack
-{
-  struct sreceive_ack *qnext;
-  char *zto;
-  char *ztemp;
-  boolean fmarked;
-};
-
+/* A list of structures used when waiting for an acknowledgement of a
+   confirmed received file in fsent_receive_ack.  */
 static struct sreceive_ack *qTreceive_ack;
 
 /* Queue up a transfer structure before *pq.  This puts it at the head
@@ -438,6 +442,16 @@ utransfree (q)
   utdequeue (q);
   utqueue (&qTavail, q, FALSE);
 }
+
+/* Free a queue of transfer structures.  */
+
+static void
+utfree_queue (pq)
+     struct stransfer **pq;
+{
+  while (*pq != NULL)
+    utransfree (*pq);
+}
 
 /* Get the time.  This is a wrapper around ixsysdep_process_time.  If
    enough time has elapsed since the last time we got the time, check
@@ -589,15 +603,16 @@ uclear_queue (qdaemon)
 
   usysdep_get_work_free (qdaemon->qsys);
 
-  qTlocal = NULL;
-  qTremote = NULL;
-  qTsend = NULL;
-  qTreceive = NULL;
+  utfree_queue (&qTlocal);
+  utfree_queue (&qTremote);
+  utfree_queue (&qTsend);
+  utfree_queue (&qTreceive);
   cTchans = 0;
   iTchan = 0;
   qTtiming_rec = NULL;
   cTcmdlen = 0;
-  qTreceive_ack = NULL;
+  if (qTreceive_ack != NULL)
+    utfree_acked ();
   for (i = 0; i < IMAX_CHAN + 1; i++)
     {
       aqTchan[i] = NULL;
@@ -1377,6 +1392,18 @@ usent_receive_ack (qdaemon, qtrans)
   qTreceive_ack = q;
 }
 
+/* Free an sreceive_ack structure.  */
+
+static void
+utfree_receive_ack (q)
+     struct sreceive_ack *q;
+{
+  ubuffree (q->zto);
+  ubuffree (q->ztemp);
+  q->qnext = qTfree_receive_ack;
+  qTfree_receive_ack = q;
+}
+
 /* This routine is called by the protocol code when either all
    outstanding data has been acknowledged or one complete window has
    passed.  It may be called directly by the protocol, or it may be
@@ -1399,13 +1426,9 @@ uwindow_acked (qdaemon, fallacked)
 	  struct sreceive_ack *q;
 
 	  q = *pq;
-	  (void) fsysdep_forget_reception (qdaemon->qsys, q->zto,
-					   q->ztemp);
-	  ubuffree (q->zto);
-	  ubuffree (q->ztemp);
+	  (void) fsysdep_forget_reception (qdaemon->qsys, q->zto, q->ztemp);
 	  *pq = q->qnext;
-	  q->qnext = qTfree_receive_ack;
-	  qTfree_receive_ack = q;
+	  utfree_receive_ack (q);
 	}
       else
 	{
@@ -1413,6 +1436,25 @@ uwindow_acked (qdaemon, fallacked)
 	  pq = &(*pq)->qnext;
 	}
     }
+}
+
+/* Free the qTreceive_ack list.  */
+
+static void
+utfree_acked ()
+{
+  struct sreceive_ack *q;
+
+  q = qTreceive_ack;
+  while (q != NULL)
+    {
+      struct sreceive_ack *qnext;
+
+      qnext = q->qnext;
+      utfree_receive_ack (q);
+      q = qnext;
+    }
+  qTreceive_ack = NULL;
 }
 
 /* This routine is called when an error occurred and we are crashing

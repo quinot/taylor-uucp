@@ -1,5 +1,13 @@
 2002-02-14  Ian Lance Taylor  <ian@airs.com>
 
+	* John Hughes: trans.c (struct sreceive_ack): Move definition
+	before local function prototypes.
+	(utfree_queue): New static function.
+	(uclear_queue): Use utfree_queue and utfree_acked.
+	(utfree_receive_ack): New static function.
+	(uwindow_acked): Use utfree_receive_ack.
+	(utfree_acked): New static function.
+
 	* lib/buffer.c: Add MALLOC_BUFFERS case to use malloc/free for
 	each buffer, to permit easy use of debugging malloc.
 
