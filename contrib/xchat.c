@@ -1140,10 +1140,6 @@ int do_script(begin)
 		}
 	      break;
 	      
-	    }
-	}
-    }
-}
 	      /* New opcode added by hag@eddie.mit.edu for expecting a 
 		 parameter supplied string */
 	     case SC_XPST:
@@ -1162,6 +1158,11 @@ int do_script(begin)
 		goto _chgstate;
 	      }
 	      break;
+	    }
+	}
+    }
+}
+
 /*
  * SIGNAL HANDLERS
  */

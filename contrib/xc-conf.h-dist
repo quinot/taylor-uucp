@@ -16,7 +16,7 @@
  * is in the ./contrib sub-directory under the main Taylor UUCP
  * directory. Therefore, Taylor's conf.h is in our parent directory.
  */
-#include "../conf.h"
+#include "../config.h"
 
 /*
  * The following definition establishes the default path to the

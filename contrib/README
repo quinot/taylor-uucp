@@ -15,7 +15,8 @@ xchat.c, xchat.man, README-XCHAT, xc-conf.h-dist, Makefile.xchat:
     It is a powerful program that can add a lot of flexibility to your
     chat scripts.
 
-Dial.Hayes, Hangup.Hayes, Login.LAT, Login.PortSel, Login.VMS:
+Dial.Hayes, Hangup.Hayes, Ringback.Hayes, Login.LAT, Login.PortSel,
+Login.VMS:
     Sample scripts for xchat.
 
 uucomp.shar

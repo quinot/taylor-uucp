@@ -8325,6 +8325,7 @@ Aleksey P. Rudnev @code{<alex@@kiae.su>}
 "Heiko W.Rupp" @code{<hwr@@pilhuhn.ka.sub.org>}
 @code{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
 @code{tbr@@tfic.bc.ca} (Tom Rushworth)
+Peter Rye @code{<prye@@picu-sgh.demon.co.uk>}
 @code{jsacco@@ssl.com} (Joseph E. Sacco)
 @code{rsalz@@bbn.com} (Rich Salz)
 Curt Sampson @code{<curt@@portal.ca>}

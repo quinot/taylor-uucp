@@ -1,5 +1,11 @@
 2002-02-26  Ian Lance Taylor  <ian@airs.com>
 
+	* Peter Rye: contrib/xchat.c: (do_script): Correct brace
+	placement.
+	* contrib/xc-conf.h-dist: Include "../config.h" rather than
+	"../conf.h".
+	* contrib/Ringback.Hayes: New file.
+
 	* uuconf.h (struct uuconf_tcp_port): Add uuconf_iversion field.
 	* unix/tcp.c (ftcp_set_hints): New static function.
 	(ftcp_open): Use ftcp_set_hints.  Check version when falling back
