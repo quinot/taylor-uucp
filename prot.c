@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/04/02  22:51:09  ian
+   Add gcc 2.0 format checking to ulog, and fixed discovered problems
+
    Revision 1.20  1992/03/30  04:49:10  ian
    Niels Baggesen: added debugging types abnormal and uucp-proto
 
@@ -355,12 +358,13 @@ fpsendfile_confirm ()
    fails.  */
 
 boolean
-freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
+freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
      boolean fmaster;
      openfile_t e;
      const struct scmd *qcmd;
      const char *zmail;
      const char *zfromsys;
+     boolean fspool;
      boolean fnew;
 {
   unsigned int imode;
@@ -473,7 +477,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
     }
 
   if (! fstore_recfile (e, qcmd->pseq, qcmd->zfrom, qcmd->zto, zfromsys,
-			qcmd->zuser, imode, zmail, qcmd->ztemp))
+			qcmd->zuser, imode, zmail, qcmd->ztemp, fspool))
     return FALSE;
 
   cPreceived_bytes = 0;

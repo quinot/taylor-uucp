@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.44  1992/04/22  23:29:24  ian
+   Changed arguments to usysdep_initialize
+
    Revision 1.43  1992/03/17  04:42:41  ian
    Correct bug in previous patch
 
@@ -1142,8 +1145,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	      *pfprocessed = FALSE;
 	      return;
 	    }
-	  if (! fsysdep_move_file (azQfiles[i], zname, 0, FALSE,
-				   (const char *) NULL))
+	  if (! fsysdep_move_file (azQfiles[i], zname, TRUE, FALSE,
+				   FALSE, (const char *) NULL))
 	    {
 	      /* If we get an error, try again later.  This may not be
 		 correct, depending on what kind of error we get.  */

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/03/13  22:59:25  ian
+   Have breceive_char go through freceive_data
+
    Revision 1.11  1992/03/07  15:00:28  ian
    prot.h is never included more than once
 
@@ -131,6 +134,7 @@ extern boolean fsend_file P((boolean fmaster, openfile_t e,
    qcmd -- command to execute
    zmail -- user to notify on destination system.
    zfromsys -- system the file is from
+   fspool -- whether this is a spool directory file
    fnew -- whether the system is running our code or not
 
    The field qcmd->znotify will not be meaningful.
@@ -145,7 +149,8 @@ extern boolean fsend_file P((boolean fmaster, openfile_t e,
    freceived_file.  */
 extern boolean freceive_file P((boolean fmaster, openfile_t e,
 				const struct scmd *qcmd, const char *zmail,
-				const char *zfromsys, boolean fnew));
+				const char *zfromsys, boolean fspool,
+				boolean fnew));
 
 /* Request a transfer.  This is only called by the master.
    qcmd -- command (only pseq, zfrom, zto, zuser, zoptions valid)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.70  1992/04/25  00:42:53  ian
+   Change standard type definitions for new autoconf
+
    Revision 1.69  1992/04/22  22:34:11  ian
    Added pfLstart and pfLend functions for ulog
 
@@ -966,7 +969,7 @@ extern boolean fstore_recfile P((openfile_t e, pointer pseq,
 				 const char *zfrom, const char *zto,
 				 const char *zfromsys, const char *zuser,
 				 unsigned int imode, const char *zmail,
-				 const char *ztemp));
+				 const char *ztemp, boolean fspool));
 
 /* Finish receiving a file.  The zwhy and fnever arguments are used
    if the file was not received correctly.  */

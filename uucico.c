@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.98  1992/05/05  20:02:24  ian
+   Chip Salzenberg: added -c option to not warn about calls at the wrong time
+
    Revision 1.97  1992/04/22  23:29:24  ian
    Changed arguments to usysdep_initialize
 
@@ -2554,6 +2557,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		     difficult we require a special option '9'.  This
 		     is used only by uux when a file must be requested
 		     from one system and then sent to another.  */
+		  fspool = TRUE;
 		  if (s.zto[0] != 'D'
 		      || strchr (s.zoptions, '9') == NULL)
 		    {
@@ -2584,6 +2588,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		}
 	      else
 		{
+		  fspool = FALSE;
 		  zuse = zsysdep_real_file_name (qsys, s.zto, s.zfrom);
 		  if (zuse == NULL)
 		    {
@@ -2675,7 +2680,8 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		 with information from the remote system.  */
 	      s.imode = 0666;
 
-	      if (! freceive_file (TRUE, e, &s, zmail, qsys->zname, fnew))
+	      if (! freceive_file (TRUE, e, &s, zmail, qsys->zname, fspool,
+				   fnew))
 		return FALSE;
 
 	      break;
@@ -2736,6 +2742,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
       if (! fmaster || qProto->ffullduplex)
 	{
 	  struct scmd s;
+	  boolean fspool;
 	  const char *zuse, *zmail;
 	  openfile_t e;
 	  char bhave_grade;
@@ -2754,9 +2761,9 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 	    {
 	    case 'S':
 	      /* The master wants to send a file to us.  */
-
 	      if (fspool_file (s.zto))
 		{
+		  fspool = TRUE;
 		  zuse = zsysdep_spool_file_name (qsys, s.zto);
 		  /* We don't accept remote command files.  */
 		  if (zuse == NULL || s.zto[0] == 'C')
@@ -2768,6 +2775,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		}
 	      else
 		{
+		  fspool = FALSE;
 		  zuse = zsysdep_real_file_name (qsys, s.zto, s.zfrom);
 		  if (zuse == NULL)
 		    {
@@ -2843,7 +2851,8 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 	      else
 		zmail = s.znotify;
 	      s.pseq = NULL;
-	      if (! freceive_file (FALSE, e, &s, zmail, qsys->zname, fnew))
+	      if (! freceive_file (FALSE, e, &s, zmail, qsys->zname,
+				   fspool, fnew))
 		return FALSE;
 
 	      break;
