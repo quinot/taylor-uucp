@@ -187,7 +187,7 @@ fspipe_close (qconn, puuconf, qdialer, fsuccess)
    appropriate.  It is always q->ord before any call to fsblock.  */
 
 /*ARGSUSED*/
-boolean
+static boolean
 fspipe_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
      struct sconnection *qconn;
      pointer puuconf;
