@@ -79,6 +79,8 @@ RANLIB = @RANLIB@
 LN_S = @LN_S@
 
 MAKEINFO = makeinfo
+TEXI2DVI = texi2dvi
+DVITPS = dvips
 
 #
 # Nothing else to configure
@@ -267,7 +269,7 @@ clean:
 	(cd uuconf; $(MAKE) $(MDEFINES) clean)
 	(cd lib; $(MAKE) $(MDEFINES) clean)
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
-	rm -f taylor-uucp-$(VERSION).tar.Z
+	rm -f uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
 
 distclean:
@@ -275,7 +277,7 @@ distclean:
 	(cd uuconf; $(MAKE) $(MDEFINES) distclean)
 	(cd lib; $(MAKE) $(MDEFINES) distclean)
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
-	rm -f taylor-uucp-$(VERSION).tar.Z
+	rm -f uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
 	rm -f Makefile conf.h config.status
 
@@ -294,6 +296,7 @@ dist:
 	rm -f uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
 	cp policy.h Makefile.in uucp-$(VERSION)
 	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
+	chmod 0644 uucp-$(VERSION)/uucp.texi
 	mkdir uucp-$(VERSION)/contrib
 	ln contrib/* uucp-$(VERSION)/contrib
 	mkdir uucp-$(VERSION)/sample
@@ -304,15 +307,41 @@ dist:
 	tar -cvf uucp-$(VERSION).tar uucp-$(VERSION)
 	compress uucp-$(VERSION).tar
 
+doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
+	-rm -rf uucp-doc-$(VERSION) uucp-doc-dist
+	-rm -f uucp-doc-$(VERSION).tar uucp-doc-$(VERSION).tar.Z
+	mkdir uucp-doc-$(VERSION)
+	ln README-DOC uucp-doc-$(VERSION)
+	ln $(srcdir)/uucp.texi uucp-doc-$(VERSION)
+	for i in uucp.info*; do ln $$i uucp-doc-$(VERSION); done
+	ln uucp.dvi uucp-doc-$(VERSION)
+	ln uucp.cp uucp.fn uucp.aux uucp-doc-$(VERSION)
+	ln texinfo.tex uucp-doc-$(VERSION)
+	mkdir uucp-doc-dist
+	mv uucp-doc-$(VERSION) uucp-doc-dist/uucp-$(VERSION)
+	cd uucp-doc-dist; tar -cvf ../uucp-doc-$(VERSION).tar uucp-$(VERSION)
+	compress uucp-doc-$(VERSION).tar
+	-rm -rf uucp-doc-dist
+
 info: uucp.info
 
 uucp.info: uucp.texi
-	$(MAKEINFO) uucp.texi
+	$(MAKEINFO) $<
 
 install-info: uucp.info
 	for i in uucp.info*; do \
 	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
 	done
+
+dvi: uucp.dvi
+
+uucp.dvi: uucp.texi
+	$(TEXI2DVI) $<
+
+ps: uucp.ps
+
+uucp.ps: uucp.dvi
+	$(DVITPS) -o uucp.ps $<
 
 # Having Makefile depend on conf.h.in insures that conf.h will get
 # rebuilt when conf.h.in changes.  We don't want conf.h to change
