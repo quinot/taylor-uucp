@@ -1820,9 +1820,9 @@ fsmodem_carrier (qconn, fcarrier)
 /* Tell the port to use hardware flow control.  There is no standard
    mechanism for controlling this.  This implementation supports
    CRTSCTS on SunOS, RTS/CTSFLOW on 386(ish) unix, CTSCD on the 3b1,
-   CCTS_OFLOW/CRTS_IFLOW on BSDI, and TXADDCD/TXDELCD on AIX.  If you
-   know how to do it on other systems, please implement it and send me
-   the patches.  */
+   CCTS_OFLOW/CRTS_IFLOW on BSDI, TXADDCD/TXDELCD on AIX, and IRTS on
+   NCR Tower.  If you know how to do it on other systems, please
+   implement it and send me the patches.  */
 
 static boolean
 fsserial_hardflow (qconn, fhardflow)
@@ -1846,7 +1846,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifndef CRTSCTS
 #ifndef CTSCD
 #ifndef CCTS_OFLOW
+#ifndef IRTS
 #define HAVE_HARDFLOW 0
+#endif
 #endif
 #endif
 #endif
@@ -1880,6 +1882,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CCTS_OFLOW
       q->snew.c_cflag |= CCTS_OFLOW | CRTS_IFLOW;
 #endif
+#ifdef IRTS
+      q->snew.c_iflag |= IRTS;
+#endif
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
 	{
@@ -1909,6 +1914,9 @@ fsserial_hardflow (qconn, fhardflow)
 #endif /* defined (CTSCD) */
 #ifdef CCTS_OFLOW
       q->snew.c_cflag &=~ (CCTS_OFLOW | CRTS_IFLOW);
+#endif
+#ifdef IRTS
+      q->snew.c_iflag &=~ IRTS;
 #endif
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
