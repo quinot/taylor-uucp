@@ -59,7 +59,8 @@ uuconf_runuuxqt (pglobal, pirunuuxqt)
       {
 	char *zend;
 
-	*pirunuuxqt = strtol (qglobal->qprocess->zrunuuxqt, &zend, 10);
+	*pirunuuxqt = strtol ((char *) qglobal->qprocess->zrunuuxqt,
+			      &zend, 10);
 	if (*zend != '\0' || *pirunuuxqt <= 0)
 	  *pirunuuxqt = UUCONF_RUNUUXQT_ONCE;
       }
