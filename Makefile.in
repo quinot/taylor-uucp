@@ -16,6 +16,14 @@ man1ext = .1
 man8dir = $(prefix)/man/man8
 man8ext = .8
 
+# The directory to look in for new style configuration files (when
+# using HAVE_TAYLOR_CONFIG).
+newconfigdir = $(libdir)
+
+# The directory to look in for BNU (when using HAVE_BNU_CONFIG) or
+# V2 (when using HAVE_V2_CONFIG) style configuration files.
+oldconfigdir = /usr/lib/uucp
+
 # Define programs and flags
 CC = gcc
 CFLAGS = -Wall -Wshadow -Wwrite-strings -g
@@ -38,6 +46,8 @@ TSTUU = tstuu
 SHELL = /bin/sh
 
 VERSION = 1.02
+
+CONFIG = -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
 
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
 	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
@@ -105,8 +115,24 @@ uuchk: $(UUCHKOBJS)
 tstuu: $(TSTOBJS)
 	$(CC) $(CFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
 
+uucico.o: uucico.c
+	$(CC) -c $(CFLAGS) $(CONFIG) uucico.c
+uuxqt.o: uuxqt.c
+	$(CC) -c $(CFLAGS) $(CONFIG) uuxqt.c
+uux.o: uux.c
+	$(CC) -c $(CFLAGS) $(CONFIG) uux.c
+uucp.o: uucp.c
+	$(CC) -c $(CFLAGS) $(CONFIG) uucp.c
+uuchk.o: uuchk.c
+	$(CC) -c $(CFLAGS) $(CONFIG) uuchk.c
+config.o: config.c
+	$(CC) -c $(CFLAGS) $(CONFIG) config.c
+v2.o: v2.c
+	$(CC) -c $(CFLAGS) $(CONFIG) v2.c
+bnu.o: bnu.c
+	$(CC) -c $(CFLAGS) $(CONFIG) bnu.c
 sys1.o: sys1.c
-	$(CC) -c $(CFLAGS) -DLIBDIR=\"$(libdir)\" sys1.c
+	$(CC) -c $(CFLAGS) $(CONFIG) sys1.c
 
 configure-unix:
 	ln sysh.unx sysdep.h
@@ -156,8 +182,8 @@ protf.o: uucp.h conf.h prot.h port.h sysdep.h system.h
 prott.o: uucp.h conf.h prot.h port.h sysdep.h system.h
 prote.o: uucp.h conf.h prot.h port.h sysdep.h system.h
 config.o: uucp.h conf.h system.h sysdep.h
-bnu.o: uucp.h conf.h port.h sysdep.h
 v2.o: uucp.h conf.h port.h sysdep.h
+bnu.o: uucp.h conf.h port.h sysdep.h
 file.o: uucp.h conf.h system.h
 util.o: uucp.h conf.h
 sysinf.o: uucp.h conf.h system.h port.h sysdep.h

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/01/14  04:18:47  ian
+   Chip Salzenberg: added HAVE_USLEEP configuration parameter
+
    Revision 1.25  1992/01/13  19:59:29  ian
    Define LIBDIR in Makefile rather than in sysh.unx
 
@@ -137,43 +140,6 @@
 #define HAVE_V2_LOCKFILES 0
 #define HAVE_BNU_LOCKFILES 1
 
-#if HAVE_TAYLOR_CONFIG
-
-/* The name of the default configuration file.  This may be overridden
-   by the -I command line argument.  */
-#define CONFIGFILE "/usr/lib/uucp/config"
-
-/* The name of the default system file.  This may be overridden by
-   the ``sysfile'' command in the configuration file.  */
-#define SYSFILE "/usr/lib/uucp/sys"
-
-/* The name of the default port file.  This may be overridden by the
-   `portfile' command in the configuration file.  */
-#define PORTFILE "/usr/lib/uucp/port"
-
-/* The name of the default dial file, which holds information about
-   dialers.  This may be overridden by the `dialfile' command in the
-   configuration file.  */
-#define DIALFILE "/usr/lib/uucp/dial"
-
-/* The name of the default call file, which may be used to store
-   login names and passwords used when calling other systems.  This
-   may be overridden by the `callfile' command in the configuration
-   file.  */
-#define CALLFILE "/usr/lib/uucp/call"
-
-/* The name of the default password file, which is used when other
-   systems call in and the daemon is providing login and Password
-   prompts.  This may be overridden by the `passwdfile' command
-   in the configuration file.  */
-#define PASSWDFILE "/usr/lib/uucp/passwd"
-
-/* The name of the default dialcodes file.  This may be overridden by
-   the `dialcodefile' command in the configuration file.  */
-#define DIALCODEFILE "/usr/lib/uucp/dialcode"
-
-#endif /* HAVE_TAYLOR_CONFIG */
-
 #if HAVE_TAYLOR_LOGGING
 
 /* The default log file when using HAVE_TAYLOR_LOGGING.  When using
@@ -233,7 +199,7 @@
    command in the configuration file.  */
 #define DEBUGFILE "/usr/spool/uucp/.Admin/audit.local"
 
-#endif /* HAVE_V2_LOGGING */
+#endif /* HAVE_BNU_LOGGING */
 
 /* The default command path, specifying which directories the commands
    to be executed must be located in.  */
@@ -289,9 +255,9 @@
 
 /* On HPUX 8.0, and possibly other systems, fcntl returns an error if
    you try to specify both O_NONBLOCK and O_NDELAY.  If you get an
-   invalid argument from fcntl, this may the problem.  If this macro
-   is non zero, it will be used as the argument to fcntl to force a
-   file descriptor to not block.  */
+   invalid argument from fcntl, this may be the problem.  If this
+   macro is non zero, it will be used as the argument to fcntl to
+   force a file descriptor to not block.  */
 #define USE_FOR_UNBLOCKED 0
 
 /* There are various possibilities for routines to sleep for less than
@@ -311,7 +277,7 @@
 #define HAVE_USLEEP 0
 
 /* Set HAVE_SIGSETJMP to 1 if you have the sigsetjmp and siglongjmp
-   calls, and they should be used to jump out of signal handler.  */
+   calls, and they should be used to jump out of a signal handler.  */
 #define HAVE_SIGSETJMP 1
 
 /* Set HAVE_EUID to 1 if it makes sense to call setuid (geteuid ()).
@@ -338,7 +304,7 @@
    SPOOLDIR_V2 -- Use a Version 2 (original UUCP) style spool directory
    SPOOLDIR_BSD42 -- Use a BSD 4.2 style spool directory
    SPOOLDIR_BSD43 -- Use a BSD 4.3 style spool directory
-   SPOOLDIR_BNU -- Use a BNU (HoneyDanBer) style spool directory
+   SPOOLDIR_BNU -- Use a BNU (HDB) style spool directory
    SPOOLDIR_ULTRIX -- Use an Ultrix style spool directory
    SPOOLDIR_TAYLOR -- Use a new style spool directory
 
@@ -380,7 +346,8 @@
    free space to be discovered.  This is only helpful when talking to
    another instance of Taylor UUCP, and in any case setting all the
    choices to 0 will do no real harm, it will just mean that the
-   package may fill up the disk.
+   package will not check whether the disk will be filled before
+   accepting a file.
 
    HAVE_ULTRIX_STATFS -- Use the statfs call as found on Ultrix systems
    HAVE_SCO_STATFS -- Use the statfs call as found on SCO Unix
@@ -523,6 +490,48 @@ typedef struct termios sterminal;
 
 /* The name of the execution directory within the spool directory.  */
 #define XQTDIR ".Xqtdir"
+
+#if HAVE_TAYLOR_CONFIG
+
+/* The names of the configuration files.  These are appended to
+   NEWCONFIGLIB which is defined in Makefile.  */
+#define CONFIGFILE "/config"
+#define SYSFILE "/sys"
+#define PORTFILE "/port"
+#define DIALFILE "/dial"
+#define CALLFILE "/call"
+#define PASSWDFILE "/passwd"
+#define DIALCODEFILE "/dialcode"
+
+#endif /* HAVE_TAYLOR_CONFIG */
+
+#if HAVE_V2_CONFIG
+
+/* The names of the various V2 configuration files.  These are
+   appended to OLDCONFIGLIB which is defined in Makefile.  */
+#define V2_SYSTEMS "/L.sys"
+#define V2_DEVICES "/L-devices"
+#define V2_USERFILE "/USERFILE"
+#define V2_CMDS "/L.cmds"
+#define V2_DIALCODES "/L-dialcodes"
+
+#endif /* HAVE_V2_CONFIG */
+
+#if HAVE_BNU_CONFIG
+
+/* The names of the BNU configuration files.  These are appended to
+   OLDCONFIGLIB which is defined in Makefile.  */
+#define BNU_SYSFILES "/Sysfiles"
+#define BNU_SYSTEMS "/Systems"
+#define BNU_PERMISSIONS "/Permissions"
+#define BNU_DIALERS "/Dialers"
+#define BNU_DEVICES "/Devices"
+#define BNU_PERMISSIONS "/Permissions"
+#define BNU_DIALCODES "/Dialcodes"
+
+#endif /* HAVE_BNU_CONFIG */
+
+/* Get some standard definitions.  */
 
 #include <sys/types.h>
 #include <sys/stat.h>

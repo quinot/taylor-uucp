@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/01/05  03:09:17  ian
+   Changed abProgram and abVersion to non const to avoid compiler bug
+
    Revision 1.16  1992/01/04  21:43:24  ian
    Chip Salzenberg: added ALLOW_FILENAME_ARGUMENTS to permit them
 
@@ -318,8 +321,8 @@ uqusage ()
 	   " -x debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s)\n",
-	   CONFIGFILE);
+	   " -I file: Set configuration file to use (default %s%s)\n",
+	   NEWCONFIGLIB, CONFIGFILE);
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1992/01/14  03:46:55  ian
+   Chip Salzenberg: handle invalid status values in status files
+
    Revision 1.30  1992/01/05  03:18:54  ian
    Avoid redefining SEEK_SET
 
@@ -956,13 +959,6 @@ extern char *zDialcodefile;
 /* TRUE if we should read V2 configuration files.  */
 extern boolean fV2;
 
-/* The names of the various V2 files.  */
-#define ZV2_SYSTEMS "L.sys"
-#define ZV2_DEVICES "L-devices"
-#define ZV2_USERFILE "USERFILE"
-#define ZV2_CMDS "L.cmds"
-#define ZV2_DIALCODES "L-dialcodes"
-
 /* Read the V2 L.sys file.  */
 extern void uv2_read_systems P((int *pc, struct ssysteminfo **ppas));
 
@@ -980,14 +976,6 @@ extern char *zBnu_dialers;
 
 /* The names of the BNU devices files to read.  */
 extern char *zBnu_devices;
-
-/* The default names of the various BNU files.  */
-#define ZBNU_SYSFILES "Sysfiles"
-#define ZBNU_SYSTEMS "Systems"
-#define ZBNU_DIALERS "Dialers"
-#define ZBNU_DEVICES "Devices"
-#define ZBNU_PERMISSIONS "Permissions"
-#define ZBNU_DIALCODES "Dialcodes"
 
 /* Routines to read BNU files.  */
 extern void ubnu_read_sysfiles P((void));

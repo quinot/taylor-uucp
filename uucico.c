@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.38  1992/01/14  04:38:43  ian
+   Chip Salzenberg: only declare sportinfo if it will be used
+
    Revision 1.37  1992/01/12  19:53:05  ian
    John Antypas: pass in sportinfo structure for fdo_call to use
 
@@ -603,8 +606,8 @@ uusage ()
 	   " -x,-X debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s)\n",
-	   CONFIGFILE);
+	   " -I file: Set configuration file to use (default %s%s)\n",
+	   NEWCONFIGLIB, CONFIGFILE);
 #endif /* HAVE_TAYLOR_CONFIG */
 
   exit (EXIT_FAILURE);
@@ -1257,13 +1260,30 @@ static boolean faccept_call (zlogin, qport)
 
 #if HAVE_TAYLOR_CONFIG
 
-      if (zport != NULL
-	  && (strcmp (zPortfile, PORTFILE) != 0
-	      || fsysdep_file_exists (zPortfile))
-	  && ffind_port (zport, (long) 0, (long) 0, &sportinfo,
-			 (boolean (*) P((struct sport *, boolean))) NULL,
-			 FALSE))
-	qport = &sportinfo;
+      if (zport != NULL)
+	{
+	  boolean fcheck;
+
+	  fcheck = FALSE;
+	  if (fsysdep_file_exists (zPortfile))
+	    fcheck = TRUE;
+	  else
+	    {
+	      char *zportfile;
+
+	      zportfile = (char *) alloca (sizeof NEWCONFIGLIB
+					   + sizeof PORTFILE);
+	      sprintf (zportfile, "%s%s", NEWCONFIGLIB, PORTFILE);
+	      if (strcmp (zportfile, zPortfile) != 0)
+		fcheck = TRUE;
+	    }
+
+	  if (fcheck
+	      && ffind_port (zport, (long) 0, (long) 0, &sportinfo,
+			     (boolean (*) P((struct sport *, boolean))) NULL,
+			     FALSE))
+	    qport = &sportinfo;
+	}
 
 #endif /* HAVE_TAYLOR_CONFIG */
 
