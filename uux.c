@@ -1108,9 +1108,9 @@ main (argc, argv)
     }
 
   /* If we haven't written anything to the execution file yet, and we
-     have a standard input file, then every other option can be
-     handled in an E command.  */
-  if (eXxqt_file == NULL && zinput_from != NULL)
+     have a standard input file, and we're not forwarding, then every
+     other option can be handled in an E command.  */
+  if (eXxqt_file == NULL && zinput_from != NULL && zforward == NULL)
     {
       struct scmd s;
       char aboptions[10];
