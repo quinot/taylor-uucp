@@ -1,5 +1,8 @@
 2002-02-08  Ian Lance Taylor  <ian@airs.com>
 
+	* Michael Ju. Tokarev: unix/serial.c (fsserial_open): Force port
+	into blocking mode, in case the chat program cares.
+
 	* unix/umode.c: New file.
 	* unix/access.c (fsysdep_daemon_access): Change error message if
 	stat returns EACCES.

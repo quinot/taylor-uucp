@@ -1039,6 +1039,9 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
     }
   q->iwr_flags = -1;
 
+  if (! fsblock (q, TRUE))
+    return FALSE;
+
   if (! fgetterminfo (q->o, &q->sorig))
     {
       q->fterminal = FALSE;
