@@ -28,6 +28,11 @@ fsysdep_make_dirs (zfile, fpublic)
     {
       if (*z == '/' && z != zcopy)
 	{
+	  /* Some versions of uuto will send a double slash.  Some
+             systems will fail to create a directory ending in a
+             slash.  */
+	  if (z[-1] == '/')
+	    continue;
 	  *z = '\0';
 	  if (mkdir (zcopy, imode) != 0
 	      && errno != EEXIST
