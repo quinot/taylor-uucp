@@ -655,6 +655,13 @@ fsysdep_move_uuxqt_files (cfiles, pzfrom, pzto, fto, iseq, pzinput)
 
       if (rename (zfrom, zto) < 0)
 	{
+#if HAVE_RENAME
+	  /* On some systems the system call rename seems to fail for
+	     arbitrary reasons.  To get around this, we always try to
+	     copy the file by hand if the rename failed.  */
+	  errno = EXDEV;
+#endif
+
 	  if (errno != EXDEV)
 	    {
 	      ulog (LOG_ERROR, "rename (%s, %s): %s", zfrom, zto,

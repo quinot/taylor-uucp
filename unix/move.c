@@ -115,6 +115,13 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
 	return TRUE;
     }
 
+#if HAVE_RENAME
+  /* On some systems the system call rename seems to fail for
+     arbitrary reasons.  To get around this, we always try to copy the
+     file by hand if the rename failed.  */
+  errno = EXDEV;
+#endif
+
   /* If we can't link across devices, we must copy the file by hand.  */
   if (errno != EXDEV)
     {
