@@ -265,8 +265,8 @@ conf.h Makefile: configure
 
 Makefile: Makefile.in
 
-configure:
-	if test -f configure.in && ( find . -newer configure -print | egrep -s '/configure.in$' ); then autoconf; fi
+configure: configure.in
+	autoconf
 
 # GNU standards want these targets
 
