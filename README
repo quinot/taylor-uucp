@@ -72,6 +72,10 @@ For a complete list, see ChangeLog.
 
     The 'e' protocol was added.
 
+    When using the 'g' protocol with a UUCP that accepts large
+    packets (implying that it accepts various packet sizes), send
+    small packets if there is only a small amount of data.
+
     The default protocol ordering was changed to 't', 'e', 'g', 'f'.
 
     The package can now generate BNU (HDB) and V2 style log files.
