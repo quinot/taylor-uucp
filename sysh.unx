@@ -381,7 +381,8 @@ struct ssysdep_conn
   sterminal sorig;
   /* Current terminal settings.  */
   sterminal snew;
-  /* Process ID of currently executing pipe command, or -1.  */
+  /* Process ID of currently executing pipe command, or parent process
+     of forked TCP or TLI server, or -1.  */
   pid_t ipid;
 #if HAVE_COHERENT_LOCKFILES
   /* On Coherent we need to hold on to the real port name which will
