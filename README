@@ -149,7 +149,10 @@ written to a file, normally /usr/spool/uucp/Debug although the default
 can be changed in sysdep.h and the configuration file can override the
 name with the ``debugfile'' command.  The debugging file will contain
 passwords and some file contents as they are transmitted over the
-line, so the debugging file is only readable by uucp.
+line, so the debugging file is only readable by uucp.  On most systems
+you can redirect the debugging output to the terminal by using
+``debugfile /dev/tty''; similar tricks can be done with ``logfile''
+and ``statfile''.
 
 You can use the -f switch to force uucico to call out even if the last
 call failed recently, or use -S when naming a system.  Otherwise the
