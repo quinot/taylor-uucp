@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.85  1992/03/17  18:42:21  ian
+   T. William Wells: set current time in status file when call completes
+
    Revision 1.84  1992/03/17  01:03:03  ian
    Miscellaneous cleanup
 
@@ -1045,7 +1048,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   if (! fsysdep_set_status (qsys, qstat))
     return FALSE;
 
-  ulog (LOG_NORMAL, "Login successful", qsys->zname);
+  ulog (LOG_NORMAL, "Login successful");
 
   *pfcalled = TRUE;
   istart_time = isysdep_time ((long *) NULL);
