@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.47  1992/03/07  02:56:30  ian
+   Rewrote time routines
+
    Revision 1.46  1992/03/04  01:40:51  ian
    Thomas Fischer: tweaked a bit for the NeXT
 
@@ -281,8 +284,6 @@ extern int memcmp ();
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #else /* ! HAVE_STDLIB_H */
-#define EXIT_SUCCESS (0)
-#define EXIT_FAILURE (1)
 extern pointer malloc (), realloc (), bsearch ();
 extern void free (), exit (), perror (), abort (), qsort ();
 extern long atol (), strtol ();
@@ -293,6 +294,15 @@ extern char *getenv ();
 /* NeXT uses <libc.h> to declare a bunch of functions.  */
 #if HAVE_LIBC_H
 #include <libc.h>
+#endif
+
+/* Make sure we have the EXIT_ macros (some versions of SunOS have
+   <stdlib.h> but left them out).  */
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS (0)
+#endif
+#ifndef EXIT_FAILURE
+#define EXIT_FAILURE (1)
 #endif
 
 /* If we need to declare errno, do so.  I don't want to always do
