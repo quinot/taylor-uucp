@@ -1,7 +1,7 @@
 /* uustat.c
    UUCP status program
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -2282,6 +2282,8 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname,
   if (flocal || fnostatus)
     {
       printf ("\n");
+      if (! flocal)
+	ubuffree (sstat.zstring);
       return TRUE;
     }
 
@@ -2290,7 +2292,13 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname,
   printf (" %02d-%02d %02d:%02d ", 
 	  stime.tm_mon + 1,stime.tm_mday, stime.tm_hour, stime.tm_min);
 
-  printf ("%s\n", azStatus[(int) sstat.ttype]);
+  if (sstat.zstring == NULL)
+    printf ("%s\n", azStatus[(int) sstat.ttype]);
+  else
+    {
+      printf ("%s\n", sstat.zstring);
+      ubuffree (sstat.zstring);
+    }
 
   return TRUE;
 }
@@ -2362,9 +2370,16 @@ fsmachines ()
       struct tm stime;
 
       usysdep_localtime (sstat.ilast, &stime);
-      printf ("%-14s %02d-%02d %02d:%02d %s", zsystem,
+      printf ("%-14s %02d-%02d %02d:%02d ", zsystem,
 	      stime.tm_mon + 1, stime.tm_mday, stime.tm_hour,
-	      stime.tm_min, azStatus[(int) sstat.ttype]);
+	      stime.tm_min);
+      if (sstat.zstring == NULL)
+	printf ("%s", azStatus[(int) sstat.ttype]);
+      else
+	{
+	  printf ("%s", sstat.zstring);
+	  ubuffree (sstat.zstring);
+	}
       ubuffree (zsystem);
       if (sstat.ttype != STATUS_TALKING
 	  && sstat.cwait > 0)
