@@ -77,8 +77,15 @@ $(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h ../config.h $(srcdir)/../policy.h
 addblk.o: alloc.h
 allblk.o: alloc.h
 alloc.o: alloc.h
+callin.o: Makefile ../Makefile
 freblk.o: alloc.h
 free.o: alloc.h
+hinit.o: Makefile ../Makefile
+hrmunk.o: Makefile ../Makefile
+maxuxq.o: Makefile ../Makefile
 mrgblk.o: alloc.h
+rdperm.o: Makefile ../Makefile
+tinit.o: Makefile ../Makefile
+vinit.o: Makefile ../Makefile
 
 .PHONY: all clean distclean mostlyclean maintainer-clean realclean dist
