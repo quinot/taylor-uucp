@@ -225,7 +225,7 @@ main (argc, argv)
       iret = uuconf_runuuxqt (puuconf, &iint);
       if (iret != UUCONF_SUCCESS)
 	ukuuconf_error (puuconf, iret);
-      if (iret > 0)
+      if (iint > 0)
 	printf ("Start uuxqt every %d jobs\n", iint);
       else
 	{
