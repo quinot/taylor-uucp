@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/02/24  04:58:47  ian
+   Only permit files to be received into directories that are world-writeable
+
    Revision 1.18  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -87,7 +90,6 @@ char uucp_rcsid[] = "$Id$";
 
 #include <ctype.h>
 #include <errno.h>
-#include <signal.h>
 
 #include "getopt.h"
 
@@ -106,11 +108,12 @@ const struct option *_getopt_long_options = asClongopts;
 /* Local functions.  */
 
 static void ucusage P((void));
-static SIGTYPE uccatch P((int isig));
 static void ucadd_cmd P((const struct ssysteminfo *qsys,
 			 const struct scmd *qcmd));
 static void ucspool_cmds P((int bgrade));
 static const char *zcone_system P((boolean *pfany));
+static void ucrecord_file P((const char *zfile));
+static void ucabort P((void));
 
 int
 main (argc, argv)
@@ -271,36 +274,24 @@ main (argc, argv)
     }
 
 #ifdef SIGINT
-  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGINT, uccatch);
+  usysdep_signal (SIGINT);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGHUP, uccatch);
+  usysdep_signal (SIGHUP);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGQUIT, uccatch);
+  usysdep_signal (SIGQUIT);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGTERM, uccatch);
+  usysdep_signal (SIGTERM);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGPIPE, uccatch);
-#endif
-#ifdef SIGABRT
-  (void) signal (SIGABRT, uccatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, uccatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, uccatch);
+  usysdep_signal (SIGPIPE);
 #endif
 
   usysdep_initialize (FALSE, fgetcwd);
+
+  ulog_fatal_fn (ucabort);
 
   zuser = zsysdep_login_name ();
   if (zuser == NULL)
@@ -393,7 +384,7 @@ main (argc, argv)
 
   /* Process each file.  */
 
-  for (i = optind; i < argc - 1; i++)
+  for (i = optind; i < argc - 1 && iSignal == 0; i++)
     {
       struct scmd s;
 
@@ -408,19 +399,13 @@ main (argc, argv)
 	     yet (if ever).  */
 	  zconst = zsysdep_add_cwd (argv[i], TRUE);
 	  if (zconst == NULL)
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    ucabort ();
 	  zfrom = xstrdup (zconst);
 
 	  /* Make sure the user has access to this file, since we are
 	     running setuid.  */
 	  if (! fsysdep_access (zfrom))
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    ucabort ();
 
 	  if (flocaldest)
 	    {
@@ -439,17 +424,11 @@ main (argc, argv)
 	      zconst = zsysdep_real_file_name (&sLocalsys, zdestfile,
 					       argv[i]);
 	      if (zconst == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		ucabort ();
 	      zto = xstrdup (zconst);
 
 	      if (! fcopy_file (zfrom, zto, FALSE, fmkdirs))
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		ucabort ();
 
 	      xfree ((pointer) zto);
 	    }
@@ -463,10 +442,7 @@ main (argc, argv)
 
 	      imode = isysdep_file_mode (zfrom);
 	      if (imode == 0)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		ucabort ();
 
 	      if (! fcopy)
 		{
@@ -474,10 +450,7 @@ main (argc, argv)
 		     file.  This is not a critical check, but it will
 		     help prevent user misconceptions.  */
 		  if (! fsysdep_daemon_access (zfrom))
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    ucabort ();
 		  strcpy (abtname, "D.0");
 		}
 	      else
@@ -488,17 +461,12 @@ main (argc, argv)
 						   abtname, (char *) NULL,
 						   (char *) NULL);
 		  if (zconst == NULL)
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    ucabort ();
 		  zdata = xstrdup (zconst);
 
+		  ucrecord_file (zdata);
 		  if (! fcopy_file (zfrom, zdata, FALSE, TRUE))
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    ucabort ();
 		  xfree ((pointer) zdata);
 		}
 
@@ -528,10 +496,7 @@ main (argc, argv)
 	    {
 	      zconst = zsysdep_add_cwd (zexclam + 1, FALSE);
 	      if (zconst == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		ucabort ();
 	      zconst = xstrdup (zconst);
 	    }
 	  else
@@ -554,10 +519,7 @@ main (argc, argv)
 	    }
 
 	  if (! fsysdep_make_spool_dir (qfromsys))
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    ucabort ();
 
 	  if (flocaldest)
 	    {
@@ -623,6 +585,10 @@ main (argc, argv)
 	    }
 	}
     }
+
+  /* See if we got an interrupt, presumably from the user.  */
+  if (iSignal != 0)
+    ucabort ();
 
   /* Now push out the actual commands, making log entries for them.  */
   ulog_to_file (TRUE);
@@ -690,26 +656,6 @@ ucusage ()
 	   NEWCONFIGLIB, CONFIGFILE);
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
-}
-
-/* Catch a signal.  We should cleanup here, but we don't yet.  */
-
-static SIGTYPE
-uccatch (isig)
-     int isig;
-{
-  if (fAborting)
-    {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
-  else
-    {
-      ulog (LOG_ERROR, "Got signal %d", isig);
-      ulog_close ();
-      (void) signal (isig, SIG_DFL);
-      raise (isig);
-    }
 }
 
 /* We keep a list of jobs for each system.  */
@@ -803,4 +749,33 @@ zcone_system (pfany)
     return qCjobs->qsys->zname;
   else
     return NULL;
+}
+
+/* Keep track of all files we have created so that we can delete them
+   if we get a signal.  The argument will be on the heap.  */
+
+static int ccfiles;
+static const char **pcaz;
+
+static void
+ucrecord_file (zfile)
+     const char *zfile;
+{
+  pcaz = (const char **) xrealloc ((pointer) pcaz,
+				   (ccfiles + 1) * sizeof (const char *));
+  pcaz[ccfiles] = zfile;
+  ++ccfiles;
+}
+
+/* Delete all the files we have recorded and exit.  */
+
+static void
+ucabort ()
+{
+  int i;
+
+  for (i = 0; i < ccfiles; i++)
+    (void) remove (pcaz[i]);
+  ulog_close ();
+  usysdep_exit (FALSE);
 }

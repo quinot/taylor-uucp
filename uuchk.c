@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/23  19:50:50  ian
+   Handle READ and WRITE in Permissions correctly
+
    Revision 1.21  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -94,8 +97,6 @@
 char uuchk_rcsid[] = "$Id$";
 #endif
 
-#include <signal.h>
-
 #include "getopt.h"
 
 #include "port.h"
@@ -111,7 +112,6 @@ char abProgram[] = "uuchk";
 /* Local functions.  */
 
 static void ukusage P((void));
-static SIGTYPE ukcatch P((int isig));
 static void ukshow P((const struct ssysteminfo *qsys));
 static boolean fkshow_port P((struct sport *qport, boolean fin));
 static void ukshow_dialer P((struct sdialer *qdial));
@@ -174,22 +174,6 @@ main (argc, argv)
   if (idebug != -1)
     iDebug = idebug;
 
-  /* The only signal we need to catch is SIGABRT, and we only need to
-     catch it so that we can behave sensibly on a LOG_FATAL error.
-     Actually, sometimes abort generates SIGILL or SIGIOT, so we must
-     catch those as well.  There are no cleanup actions to take, so we
-     can let other signals do whatever they like.  */
-
-#ifdef SIGABRT
-  (void) signal (SIGABRT, ukcatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, ukcatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, ukcatch);
-#endif
-
   usysdep_initialize (FALSE, FALSE);
 
   uread_all_system_info (&c, &pas);
@@ -227,26 +211,6 @@ ukusage ()
 	   NEWCONFIGLIB, CONFIGFILE);
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
-}
-
-/* Catch a signal (we only do this because a fatal error raises
-   SIGABRT).  */
-
-static SIGTYPE
-ukcatch (isig)
-     int isig;
-{
-  if (! fAborting)
-    ulog (LOG_ERROR, "Got signal %d", isig);
-
-  ulog_close ();
-
-  signal (isig, SIG_DFL);
-
-  if (fAborting)
-    usysdep_exit (FALSE);
-  else
-    raise (isig);
 }
 
 /* Dump out the information for a system.  */

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/24  04:58:47  ian
+   Only permit files to be received into directories that are world-writeable
+
    Revision 1.21  1992/02/20  04:18:59  ian
    Added uustat
 
@@ -93,10 +96,6 @@
 
 #define SYSTEM_H
 
-#ifdef __GNUC__
- #pragma once
-#endif
-
 /* Any function which returns an error should also report an error
    message.
 
@@ -131,6 +130,12 @@ extern void usysdep_exit P((boolean fsuccess));
    the usysdep_initialize function is called.  */
 extern boolean fsysdep_other_config P((const char *));
 
+/* Detach from the controlling terminal.  This probably only makes
+   sense on Unix.  It is called by uucico to try to get the modem port
+   as a controlling terminal.  It is also called by uucico before it
+   starts up uuxqt, so that uuxqt will be a complete daemon.  */
+extern void usysdep_detach P((void));
+
 /* Get the local node name if it is not specified in the configuration
    file.  This is called before the usysdep_initialize function is
    called.  It should return NULL on error.  The return value should
@@ -143,6 +148,26 @@ extern const char *zsysdep_local_name P((void));
    name.  It should return NULL on error.  The return value should
    point to a static buffer.  */
 extern const char *zsysdep_login_name P((void));
+
+/* Set a signal handler for a signal.  If the signal occurs, iSignal
+   should be set to the signal number and fSignal_logged should be set
+   to FALSE.  This routine might be able to just use signal, but 4.3
+   BSD requires more complex handling.  */
+extern void usysdep_signal P((int isig));
+
+/* Catch a signal.  This is called before a routine which must exit if
+   a signal occurs, and is expected to set do a setjmp.  It is
+   actually only called in one place in the system independent code,
+   before the call to read stdin in uux.  This is needed to handle 4.2
+   BSD restartable system calls, which require a longjmp.  On systems
+   which don't need to do setjmp/longjmp around system calls, this can
+   be redefined in <sysdep.h> to TRUE.  It should return TRUE if the
+   routine proceed, or FALSE if a signal occurred.  */
+extern boolean fsysdep_catch P((void));
+
+/* Stop catching a signal.  This is called when it is no longer
+   necessary for fsysdep_catch to handle signals.  */
+extern void usysdep_end_catch P((void));
 
 /* Link two files.  On Unix this should attempt the link.  If it
    succeeds it should return TRUE with *pfworked set to TRUE.  If the
@@ -651,4 +676,4 @@ extern void usysdep_all_status_free P((pointer phold));
    This is uustat -p.  The return value is passed to usysdep_exit.  */
 extern boolean fsysdep_lock_status P((void));
 
-#endif
+#endif /* ! defined (SYSTEM_H) */

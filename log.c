@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/19  19:36:07  ian
+   Rearranged time functions
+
    Revision 1.21  1992/02/18  04:33:38  ian
    Don't use headers when outputting to terminal
 
@@ -94,8 +97,6 @@
 char log_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
-#include <signal.h>
 #include <errno.h>
 
 #if ANSI_C
@@ -116,7 +117,7 @@ char log_rcsid[] = "$Id$";
 
 /* External functions.  */
 extern int fflush (), fclose ();
-#if HAVE_VPRINTF
+#if HAVE_VFPRINTF
 extern int vfprintf ();
 #endif
 
@@ -124,6 +125,9 @@ extern int vfprintf ();
 
 static const char *zldate_and_time P((void));
 
+/* The function to call when a LOG_FATAL error occurs.  */
+static void (*fLfatal) P((void));
+
 /* Whether to go to a file.  */
 static boolean fLfile;
 
@@ -156,8 +160,24 @@ static FILE *eLdebug;
 /* The open statistics file.  */
 static FILE *eLstats;
 
-/* Whether we are aborting because of LOG_FATAL.  */
-boolean fAborting;
+/* The signal number we received.  This is only set by usignal, which
+   installed as a signal handler by several programs but never
+   otherwise called.  */
+volatile sig_atomic_t iSignal;
+
+/* Whether we've logged the most recently received signal.  We don't
+   want to call ulog from the signal handler because fprintf might not
+   be reentrant.  */
+volatile sig_atomic_t fSignal_logged;
+
+/* Set the function to call on a LOG_FATAL error.  */
+
+void
+ulog_fatal_fn (pfn)
+     void (*pfn) P((void));
+{
+  fLfatal = pfn;
+}
 
 /* Decide whether to send log message to the file or not.  */
 
@@ -247,11 +267,11 @@ ulog_device (zdevice)
    but it clearly won't always work.  */
 
 #if ! ANSI_C
-#undef HAVE_VPRINTF
+#undef HAVE_VFPRINTF
 #endif
 
 /*VARARGS2*/
-#if HAVE_VPRINTF
+#if HAVE_VFPRINTF
 void
 ulog (enum tlog ttype, const char *zmsg, ...)
 #else
@@ -261,11 +281,28 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
      const char *zmsg;
 #endif
 {
-#if HAVE_VPRINTF
+#if HAVE_VFPRINTF
   va_list parg;
 #endif
   FILE *e, *edebug;
   const char *zhdr, *zstr;
+
+  /* Log any received signal.  We do it this way to avoid calling ulog
+     from the signal handler.  ulog_close might call ulog to get this
+     message out with zmsg == NULL.  */
+  if (iSignal != 0 && ! fSignal_logged)
+    {
+      fSignal_logged = TRUE;
+#ifdef SIGHUP
+      if (iSignal == SIGHUP)
+	ulog (LOG_ERROR, "Got hangup signal");
+      else
+#endif
+	ulog (LOG_ERROR, "Got signal %d", iSignal);
+
+      if (zmsg == NULL)
+	return;
+    }
 
   if (! fLfile)
     e = stderr;
@@ -280,6 +317,11 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	  eLdebug = esysdep_fopen (zDebugfile, FALSE, TRUE, TRUE);
 	}
       e = eLdebug;
+
+      /* If we can't open the debugging file, don't output any
+	 debugging messages.  */
+      if (e == NULL)
+	return;
     }
 #endif /* DEBUG > 0 */
   else
@@ -311,14 +353,26 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	  }
 #endif /* HAVE_BNU_LOGGING */
-	  if (eLlog == NULL)
-	    usysdep_exit (FALSE);
-	}
-      e = eLlog;
-    }
 
-  if (e == NULL)
-    e = stderr;
+	  if (eLlog == NULL)
+	    {
+	      /* We can't open the log file.  We don't even have a
+		 safe way to report this problem, since we may not be
+		 able to write to stderr (it may, for example, be
+		 attached to the incoming call).  */
+	      if (fLfatal != NULL)
+		(*fLfatal) ();
+	      usysdep_exit (FALSE);
+	    }
+	}
+
+      e = eLlog;
+
+      /* eLlog might be NULL here because we might try to open the log
+	 file recursively via esysdep_fopen.  */
+      if (e == NULL)
+	return;
+    }
 
   edebug = NULL;
 #if DEBUG > 0
@@ -414,7 +468,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	fprintf (edebug, "%s", zhdr);
     }
 
-#if HAVE_VPRINTF
+#if HAVE_VFPRINTF
   va_start (parg, zmsg);
   vfprintf (e, zmsg, parg);
   va_end (parg);
@@ -424,11 +478,11 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       vfprintf (edebug, zmsg, parg);
       va_end (parg);
     }
-#else /* ! HAVE_VPRINTF */
+#else /* ! HAVE_VFPRINTF */
   fprintf (e, zmsg, a, b, c, d, f, g, h, i, j);
   if (edebug != NULL)
     fprintf (edebug, zmsg, a, b, c, d, f, g, h, i, j);
-#endif /* ! HAVE_VPRINTF */
+#endif /* ! HAVE_VFPRINTF */
 
   fprintf (e, "\n");
   if (edebug != NULL)
@@ -440,8 +494,9 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 
   if (ttype == LOG_FATAL)
     {
-      fAborting = TRUE;
-      abort ();
+      if (fLfatal != NULL)
+	(*fLfatal) ();
+      usysdep_exit (FALSE);
     }
 }
 
@@ -451,12 +506,17 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 void
 ulog_close ()
 {
+  /* Make sure we logged any signal we received.  */
+  if (iSignal != 0 && ! fSignal_logged)
+    ulog (LOG_ERROR, (const char *) NULL);
+
   if (eLlog != NULL)
     {
       (void) fclose (eLlog);
       eLlog = NULL;
       fLlog_tried = FALSE;
     }
+
 #if DEBUG > 0
   if (eLdebug != NULL)
     {

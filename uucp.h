@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.41  1992/02/24  18:38:42  ian
+   John Theus: don't declare ulog with ellipsis if we don't have vprintf
+
    Revision 1.40  1992/02/24  04:58:47  ian
    Only permit files to be received into directories that are world-writeable
 
@@ -177,6 +180,10 @@
 
 #include <stdio.h>
 
+/* We need <signal.h> for sig_atomic_t.  */
+
+#include <signal.h>
+
 /* Get a definition for ANSI_C if we weren't given one.  */
 
 #ifndef ANSI_C
@@ -212,8 +219,9 @@ typedef const char *constpointer;
 /* This should work on most systems, but not necessarily all.  */
 #define BUCHAR(b) ((b) & 0xff)
 #endif /* ! HAVE_UNSIGNED_CHAR */
-/* Handle uses of const and void in Classic C.  */
+/* Handle uses of const, volatile and void in Classic C.  */
 #define const
+#define volatile
 #if ! HAVE_VOID
 #define void int
 #endif
@@ -850,11 +858,14 @@ extern boolean fcheck_validate P((const char *zlogname,
 extern int igradecmp P((int b1, int b2));
 
 /* Make a log entry.  */
-#if HAVE_VPRINTF
+#if ANSI_C && HAVE_VFPRINTF
 extern void ulog P((enum tlog ttype, const char *zfmt, ...));
 #else
 extern void ulog ();
 #endif
+
+/* Set the function to call if a fatal error occurs.  */
+extern void ulog_fatal_fn P((void (*pfn) P((void))));
 
 /* If ffile is TRUE, send log entries to the log file rather than to
    stderr.  */
@@ -922,11 +933,6 @@ extern void xfree P((pointer));
 #if ! HAVE_REMOVE
 /* Erase a file.  */
 extern int remove P((const char *zfile));
-#endif
-
-#if ! HAVE_RAISE
-/* Raise a signal.  */
-extern int raise P((int isig));
 #endif
 
 #if ! HAVE_STRDUP
@@ -1118,11 +1124,18 @@ extern struct ssysteminfo sUnknown;
 /* The ssysteminfo structure we use for the local system.  */
 extern struct ssysteminfo sLocalsys;
 
+/* This gets set to the signal which is causing us to abort.  It is
+   only set by an asynchronous signal.  At various appropriate points
+   it is checked for being non-zero.  */
+extern volatile sig_atomic_t iSignal;
+
+/* This gets set to FALSE when a signal occurs, and set to TRUE after
+   a report of the signal has been put in the log file.  This means
+   that only the most recent signal will be logged.  Too bad.  */
+extern volatile sig_atomic_t fSignal_logged;
+
 /* File being sent.  */
 extern openfile_t eSendfile;
 
 /* File being received.  */
 extern openfile_t eRecfile;
-
-/* TRUE if we are aborting because somebody used LOG_FATAL.  */
-extern boolean fAborting;

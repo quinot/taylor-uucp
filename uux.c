@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.24  1992/02/08  22:33:32  ian
    Only get the current working directory if it's going to be needed
 
@@ -103,10 +106,8 @@
 char uux_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
-#include <signal.h>
 
 #include "getopt.h"
 
@@ -150,13 +151,18 @@ static FILE *eXxqt_file;
 static struct scmd *pasXcmds;
 static int cXcmds;
 
+/* A file to close if we're forced to exit.  */
+
+static FILE *eXclose;
+
 /* Local functions.  */
 
 static void uxusage P((void));
-static SIGTYPE uxcatch P((int isig));
 static void uxadd_xqt_line P((int bchar, const char *z1, const char *z2));
 static void uxadd_send_file P((const char *zfrom, const char *zto,
 			       const char *zoptions, const char *ztemp));
+static void uxrecord_file P((const char *zfile));
+static void uxabort P((void));
 
 int
 main (argc, argv)
@@ -456,36 +462,24 @@ main (argc, argv)
     }
 
 #ifdef SIGINT
-  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGINT, uxcatch);
+  usysdep_signal (SIGINT);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGHUP, uxcatch);
+  usysdep_signal (SIGHUP);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGQUIT, uxcatch);
+  usysdep_signal (SIGQUIT);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGTERM, uxcatch);
+  usysdep_signal (SIGTERM);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGPIPE, uxcatch);
-#endif
-#ifdef SIGABRT
-  (void) signal (SIGABRT, uxcatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, uxcatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, uxcatch);
+  usysdep_signal (SIGPIPE);
 #endif
 
   usysdep_initialize (FALSE, fgetcwd);
+
+  ulog_fatal_fn (uxabort);
 
   zuser = zsysdep_login_name ();
   if (zuser == NULL)
@@ -528,10 +522,7 @@ main (argc, argv)
   /* Make sure we have a spool directory.  */
 
   if (! fsysdep_make_spool_dir (qxqtsys))
-    {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
+    uxabort ();
 
   /* Name and open the execute file.  If the execution is to occur on
      a remote system, we must create a data file and copy it over.  */
@@ -541,17 +532,13 @@ main (argc, argv)
     zxqtname = zsysdep_data_file_name (qxqtsys, 'X', abxqt_tname,
 				       (char *) NULL, abxqt_xname);
   if (zxqtname == NULL)
-    {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
+    uxabort ();
 
   eXxqt_file = esysdep_fopen (zxqtname, FALSE, FALSE, TRUE);
   if (eXxqt_file == NULL)
-    {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
+    uxabort ();
+
+  uxrecord_file (xstrdup (zxqtname));
 
   /* Specify the user.  */
   uxadd_xqt_line ('U', zuser, zLocalname);
@@ -642,10 +629,7 @@ main (argc, argv)
 	{
 	  zconst = zsysdep_add_cwd (zfile, flocal);
 	  if (zconst == NULL)
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }	
+	    uxabort ();
 	  zfile = xstrdup (zconst);
 	}
 
@@ -685,10 +669,7 @@ main (argc, argv)
 	     request.  First make sure the user has legitimate access,
 	     since we are running setuid.  */
 	  if (! fsysdep_access (zfile))
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    uxabort ();
 
 	  if (fcopy || flink)
 	    {
@@ -698,12 +679,10 @@ main (argc, argv)
 	      zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname,
 					      abdname, (char *) NULL);
 	      if (zdata == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
 
 	      zdup = xstrdup (zdata);
+	      uxrecord_file (zdup);
 
 	      fdid = FALSE;
 	      if (flink)
@@ -711,10 +690,7 @@ main (argc, argv)
 		  boolean fworked;
 
 		  if (! fsysdep_link (zfile, zdup, &fworked))
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    uxabort ();
 
 		  if (fworked)
 		    fdid = TRUE;
@@ -726,10 +702,7 @@ main (argc, argv)
 	      if (! fdid)
 		{
 		  if (! fcopy_file (zfile, zdup, FALSE, TRUE))
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    uxabort ();
 		}
 
 	      xfree ((pointer) zdup);
@@ -740,10 +713,7 @@ main (argc, argv)
 	    {
 	      /* Make sure the daemon can access the file.  */
 	      if (! fsysdep_daemon_access (zfile))
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
 
 	      zuse = zfile;
 
@@ -753,10 +723,7 @@ main (argc, argv)
 						  (char *) NULL, abdname,
 						  (char *) NULL);
 		  if (zdata == NULL)
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    uxabort ();
 		  strcpy (abtname, "D.0");
 		}
 	    }
@@ -785,10 +752,7 @@ main (argc, argv)
 
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
-		    {
-		      ulog_close ();
-		      usysdep_exit (FALSE);
-		    }
+		    uxabort ();
 		  uxadd_xqt_line ('F', abdname, zbase);
 		  pzargs[i] = xstrdup (zbase);
 		}
@@ -825,10 +789,7 @@ main (argc, argv)
 	  qfromsys = &sfromsys;
 
 	  if (! fsysdep_make_spool_dir (qfromsys))
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    uxabort ();
 
 	  /* We want the file to wind up in the spool directory of the
 	     local system (whether the execution is occurring
@@ -839,20 +800,14 @@ main (argc, argv)
 	  if (! fxqtlocal)
 	    {
 	      if (! fsysdep_make_spool_dir (&sLocalsys))
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
 	    }
 
 	  zconst = zsysdep_data_file_name (&sLocalsys, bgrade,
 					   abtname, (char *) NULL,
 					   (char *) NULL);
 	  if (zconst == NULL)
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    uxabort ();
 
 	  /* Request the file.  The special option '9' is a signal to
 	     uucico that it's OK to receive a file into the spool
@@ -870,10 +825,7 @@ main (argc, argv)
 	  s.cbytes = -1;
 
 	  if (! fsysdep_spool_commands (qfromsys, bgrade, 1, &s))
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
+	    uxabort ();
 
 	  if (fcall_any)
 	    zcall_system = NULL;
@@ -900,10 +852,7 @@ main (argc, argv)
 	      if (zsysdep_data_file_name (qxqtsys, bgrade,
 					  (char *) NULL, abdname,
 					  (char *) NULL) == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
 	      ztemp = abdname;
 
 	      /* The local spool directory was created above, if it
@@ -911,10 +860,7 @@ main (argc, argv)
 
 	      zxqt_file = zsysdep_xqt_file_name ();
 	      if (zxqt_file == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
 
 	      /* Queue up a uucp command to be executed locally once
 		 the file arrives.  We take advantage of the file
@@ -925,16 +871,17 @@ main (argc, argv)
 
 	      e = esysdep_fopen (zxqt_file, FALSE, FALSE, TRUE);
 	      if (e == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
+
+	      eXclose = e;
+	      uxrecord_file (xstrdup (zxqt_file));
 
 	      fprintf (e, "U %s %s\n", zuser, zLocalname);
 	      fprintf (e, "F %s foo\n", abtname);
 	      fprintf (e, "C uucp -CW foo %s!%s\n", qxqtsys->zname,
 		       abdname);
 
+	      eXclose = NULL;
 	      if (fclose (e) != 0)
 		ulog (LOG_FATAL, "fclose: %s", strerror (errno));
 	    }
@@ -953,10 +900,7 @@ main (argc, argv)
 
 	      zbase = zsysdep_base_name (zfile);
 	      if (zbase == NULL)
-		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
-		}
+		uxabort ();
 	      uxadd_xqt_line ('F', ztemp, zbase);
 	      pzargs[i] = xstrdup (zbase);
 	    }
@@ -978,23 +922,27 @@ main (argc, argv)
       zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname, abdname,
 				      (char *) NULL);
       if (zdata == NULL)
-	{
-	  ulog_close ();
-	  usysdep_exit (FALSE);
-	}
+	uxabort ();
 
       e = esysdep_fopen (zdata, FALSE, FALSE, TRUE);
       if (e == NULL)
-	{
-	  ulog_close ();
-	  usysdep_exit (FALSE);
-	}
+	uxabort ();
+
+      eXclose = e;
+      uxrecord_file (xstrdup (zdata));
 
       do
 	{
 	  int cwrite;
 
-	  cread = fread (ab, sizeof (char), sizeof ab, stdin);
+	  if (fsysdep_catch ())
+	    cread = fread (ab, sizeof (char), sizeof ab, stdin);
+
+	  usysdep_end_catch ();
+
+	  if (iSignal != 0)
+	    uxabort ();
+
 	  if (cread > 0)
 	    {
 	      cwrite = fwrite (ab, sizeof (char), cread, e);
@@ -1010,6 +958,7 @@ main (argc, argv)
 	}
       while (cread == sizeof ab);
 
+      eXclose = NULL;
       if (fclose (e) != 0)
 	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
 
@@ -1070,12 +1019,20 @@ main (argc, argv)
 
   if (fclose (eXxqt_file) != 0)
     ulog (LOG_FATAL, "fclose: %s", strerror (errno));
+  eXxqt_file = NULL;
 
   /* If the execution is to occur on another system, we must now
      arrange to copy the execute file to this system.  */
 
   if (! fxqtlocal)
     uxadd_send_file (abxqt_tname, abxqt_xname, "C", abxqt_tname);
+
+  /* If we got a signal, get out before spooling anything.  */
+
+  if (iSignal != 0)
+    uxabort ();
+
+  /* From here on in, it's too late.  We don't call uxabort.  */
 
   if (cXcmds > 0)
     {
@@ -1184,26 +1141,6 @@ uxusage ()
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
 }
-
-/* Catch a signal.  We should clean up here, but so far we don't.  */
-
-static SIGTYPE
-uxcatch (isig)
-     int isig;
-{
-  if (fAborting)
-    {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
-  else
-    {
-      ulog (LOG_ERROR, "Got signal %d", isig);
-      ulog_close ();
-      (void) signal (isig, SIG_DFL);
-      raise (isig);
-    }
-}
 
 /* Add a line to the execute file.  */
 
@@ -1247,4 +1184,37 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp)
   pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
 				       cXcmds * sizeof (struct scmd));
   pasXcmds[cXcmds - 1] = s;
+}
+
+/* Keep track of all files we have created so that we can delete them
+   if we get a signal.  The argument will be on the heap.  */
+
+static int cxfiles;
+static const char **pxaz;
+
+static void
+uxrecord_file (zfile)
+     const char *zfile;
+{
+  pxaz = (const char **) xrealloc ((pointer) pxaz,
+				   (cxfiles + 1) * sizeof (const char *));
+  pxaz[cxfiles] = zfile;
+  ++cxfiles;
+}
+
+/* Delete all the files we have recorded and exit.  */
+
+static void
+uxabort ()
+{
+  int i;
+
+  if (eXxqt_file != NULL)
+    (void) fclose (eXxqt_file);
+  if (eXclose != NULL)
+    (void) fclose (eXclose);
+  for (i = 0; i < cxfiles; i++)
+    (void) remove (pxaz[i]);
+  ulog_close ();
+  usysdep_exit (FALSE);
 }

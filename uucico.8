@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.3  1992/01/20  23:52:23  ian
+''' Change to version 1.02
+'''
 ''' Revision 1.2  1991/12/18  05:12:00  ian
 ''' Added -l option to uucico to prompt for login name once and then exit
 '''
@@ -144,6 +147,14 @@ is specifed), begin an endless loop as with
 Do not start the
 .I uuxqt
 (8) daemon when finished.
+.TP5
+.B \-D
+Do not detach from the controlling terminal.  Normally
+.I uucico
+detaches from the terminal before each call out to another system and
+before invoking
+.I uuxqt.
+This option prevents this.
 .TP5
 .B \-x number, \-X number
 Set debugging level.  Level 0 is no debugging output, level 9 is full

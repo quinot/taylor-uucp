@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.43  1992/02/24  20:07:43  ian
+   John Theus: some systems don't have <fcntl.h>
+
    Revision 1.42  1992/02/24  04:58:47  ian
    Only permit files to be received into directories that are world-writeable
 
@@ -158,7 +161,6 @@ char tstuu_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
-#include <signal.h>
 #include <ctype.h>
 #include <errno.h>
 
@@ -278,7 +280,7 @@ static void ucheck_file P((const char *zfile, const char *zerr,
 			   int cextra));
 static void ucheck_test P((int itest, boolean fcall_uucico));
 static void utransfer P((int ofrom, int oto, int otoslave, int *pc));
-static SIGTYPE uchild P((int isig));
+static SIGtype uchild P((int isig));
 static int cpshow P((char *z, int bchar));
 static void xsystem P((const char *zcmd));
 
@@ -491,7 +493,7 @@ main (argc, argv)
       else
 	{
 	  (void) execl ("uucico", "uucico", "-I", "/usr/tmp/tstuu/Config1",
-			"-q", "-S", zsys, (const char *) NULL);
+			"-q", "-S", zsys, "-pstdin", (const char *) NULL);
 	  fprintf (stderr, "execl failed\n");
 	  exit (EXIT_FAILURE);
 	}
@@ -607,7 +609,7 @@ main (argc, argv)
 
 /* When a child dies, kill them both.  */
 
-static SIGTYPE
+static SIGtype
 uchild (isig)
      int isig;
 {
@@ -855,6 +857,7 @@ uprepare_test (itest, fcall_uucico, zsys)
   fprintf (e, "spool /usr/tmp/tstuu/spool1\n");
   fprintf (e, "sysfile /usr/tmp/tstuu/System1\n");
   fprintf (e, "sysfile /usr/tmp/tstuu/System1.2\n");
+  fprintf (e, "portfile /usr/tmp/tstuu/Port1\n");
   (void) remove ("/usr/tmp/tstuu/Log1");
 #if ! HAVE_BNU_LOGGING
   fprintf (e, "logfile /usr/tmp/tstuu/Log1\n");
@@ -887,8 +890,7 @@ uprepare_test (itest, fcall_uucico, zsys)
 
   fprintf (e, "# First test system file\n");
   fprintf (e, "time any\n");
-  fprintf (e, "port type stdin\n");
-  fprintf (e, "port pty yes\n");
+  fprintf (e, "port stdin\n");
   fprintf (e, "# That was the defaults\n");
   fprintf (e, "system %s\n", zsys);
   if (! fcall_uucico)
@@ -924,6 +926,14 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
   if (zProtocols != NULL)
     fprintf (e, "protocol %s\n", zProtocols);
+
+  xfclose (e);
+
+  e = xfopen ("/usr/tmp/tstuu/Port1", "w");
+
+  fprintf (e, "port stdin\n");
+  fprintf (e, "type stdin\n");
+  fprintf (e, "pty true\n");
 
   xfclose (e);
 

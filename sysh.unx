@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.37  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.36  1992/02/20  04:18:59  ian
    Added uustat
 
@@ -137,8 +140,11 @@
 
 #define SYSH_UNX_H
 
-#ifdef __GNUC__
- #pragma once
+/* We're might redefine fsysdep_catch, so make sure we've gotten the
+   prototype already.  */
+
+#ifndef SYSTEM_H
+#include "system.h"
 #endif
 
 /* Make sure the defines do not conflict.  These are in this file
@@ -159,6 +165,33 @@
 /* On Unix, binary files are the same as text files.  */
 #define BINREAD "r"
 #define BINWRITE "w"
+
+/* If we have sigaction, we can force system calls to not be
+   restarted.  */
+#if HAVE_SIGACTION
+#undef HAVE_RESTARTABLE_SYSCALLS
+#define HAVE_RESTARTABLE_SYSCALLS 0
+#endif
+
+/* If we have sigvec and SV_INTERRUPT is defined, we can force system
+   calls to not be restarted (signal.h is included by uucp.h before
+   this point, so SV_INTERRUPT will be defined by now if it it ever
+   is).  */
+#if HAVE_SIGVEC
+#ifdef SV_INTERRUPT
+#undef HAVE_RESTARTABLE_SYSCALLS
+#define HAVE_RESTARTABLE_SYSCALLS 0
+#endif
+#endif
+
+/* If we don't have restartable system calls, we can ignore
+   fsysdep_catch and usysdep_end_catch.  */
+#if ! HAVE_RESTARTABLE_SYSCALLS
+#define fsysdep_catch() (TRUE)
+#define usysdep_end_catch()
+#endif
+
+/* Get definitions for the terminal driver.  */
 
 #if HAVE_BSD_TTY
 #include <sgtty.h>
@@ -414,10 +447,14 @@ extern boolean fsultrix_has_spool P((const char *zsystem));
 /* The working directory from which the program was run (this is set
    by usysdep_initialize).  */
 extern char *zScwd;
+
+/* The number of available file descriptors (set by
+   usysdep_initialize).  */
+extern int cSdescriptors;
 
 /*
   Local variables:
   mode:c
   End:
   */
-#endif
+#endif /* ! defined (SYSH_UNX_H) */

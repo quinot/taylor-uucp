@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/02/24  04:58:47  ian
+   Only permit files to be received into directories that are world-writeable
+
    Revision 1.27  1992/02/23  19:50:50  ian
    Handle READ and WRITE in Permissions correctly
 
@@ -112,10 +115,8 @@
 char uuxqt_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
-#include <signal.h>
 
 #include "getopt.h"
 
@@ -128,7 +129,7 @@ extern int fclose ();
 /* The program name.  */
 char abProgram[] = "uuxqt";
 
-/* Static variables used to unlock things if we get a signal.  */
+/* Static variables used to unlock things if we get a fatal error.  */
 
 static const char *zQunlock_cmd;
 static const char *zQunlock_file;
@@ -137,7 +138,7 @@ static boolean fQunlock_directory;
 /* Local functions.  */
 
 static void uqusage P((void));
-static SIGTYPE uqcatch P((int isig));
+static void uqabort P((void));
 static void uqdo_xqt_file P((const char *zfile,
 			     const struct ssysteminfo *qsys,
 			     const char *zcmd, boolean *pfprocessed));
@@ -213,37 +214,25 @@ main (argc, argv)
     iDebug = idebug;
 
 #ifdef SIGINT
-  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGINT, uqcatch);
+  usysdep_signal (SIGINT);
 #endif
 #ifdef SIGHUP
-  (void) signal (SIGHUP, SIG_IGN);
+  usysdep_signal (SIGHUP);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGQUIT, uqcatch);
+  usysdep_signal (SIGQUIT);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGTERM, uqcatch);
+  usysdep_signal (SIGTERM);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGPIPE, uqcatch);
-#endif
-#ifdef SIGABRT
-  (void) signal (SIGABRT, uqcatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, uqcatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, uqcatch);
+  usysdep_signal (SIGPIPE);
 #endif
 
   usysdep_initialize (TRUE, FALSE);
 
   ulog_to_file (TRUE);
+  ulog_fatal_fn (uqabort);
 
   /* Make sure we're the only uuxqt daemon running for this command.  */
   if (zcmd != NULL)
@@ -311,6 +300,10 @@ main (argc, argv)
 		continue;
 	    }
 
+	  /* If we've received a signal, get out of the loop.  */
+	  if (iSignal != 0)
+	    break;
+
 	  zcopy = xstrdup (z);
 
 	  ulog_system (qreadsys->zname);
@@ -325,7 +318,7 @@ main (argc, argv)
 
       usysdep_get_xqt_free ();
     }
-  while (fany);
+  while (fany && iSignal == 0);
 
   if (zcmd != NULL)
     {
@@ -334,6 +327,9 @@ main (argc, argv)
     }
 
   ulog_close ();
+
+  if (iSignal != 0)
+    ferr = TRUE;
 
   usysdep_exit (! ferr);
 
@@ -363,11 +359,10 @@ uqusage ()
   exit (EXIT_FAILURE);
 }
 
-/* Clean up and die after catching a signal.  */
+/* This is the abort function called when we get a fatal error.  */
 
-static SIGTYPE
-uqcatch (isig)
-     int isig;
+static void
+uqabort ()
 {
 #if ! HAVE_BNU_LOGGING
   /* When using BNU logging, it's a pain to have no system name.  */
@@ -375,9 +370,6 @@ uqcatch (isig)
 #endif
 
   ulog_user ((const char *) NULL);
-
-  if (! fAborting)
-    ulog (LOG_ERROR, "Got signal %d", isig);
 
   if (fQunlock_directory)
     (void) fsysdep_unlock_uuxqt_dir ();
@@ -390,12 +382,7 @@ uqcatch (isig)
 
   ulog_close ();
 
-  signal (isig, SIG_DFL);
-
-  if (fAborting)
-    usysdep_exit (FALSE);
-  else
-    raise (isig);
+  usysdep_exit (FALSE);
 }
 
 /* An execute file is a series of lines.  The first character of each

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.58  1992/02/24  22:38:45  ian
+   Don't treat an extra argument as a port
+
    Revision 1.57  1992/02/24  04:58:47  ian
    Only permit files to be received into directories that are world-writeable
 
@@ -203,7 +206,6 @@ char uucico_rcsid[] = "$Id$";
 #endif
 
 #include <ctype.h>
-#include <signal.h>
 
 #include "getopt.h"
 
@@ -244,7 +246,7 @@ static struct ssysteminfo sLocked_system;
 /* Local functions.  */
 
 static void uusage P((void));
-static SIGTYPE ucatch P((int));
+static void uabort P((void));
 static boolean fcall P((const struct ssysteminfo *qsys,
 			struct sport *qport,
 			boolean fforce, int bgrade));
@@ -295,6 +297,8 @@ main (argc, argv)
 {
   /* getopt return value  */
   int iopt;
+  /* Don't detach from controlling terminal.  */
+  boolean fnodetach = FALSE;
   /* Configuration file name  */
   const char *zconfig = NULL;
   /* System to call  */
@@ -326,10 +330,15 @@ main (argc, argv)
   int iholddebug;
 
   while ((iopt = getopt (argc, argv,
-			 "efI:lp:qr:s:S:x:X:w")) != EOF)
+			 "DefI:lp:qr:s:S:x:X:w")) != EOF)
     {
       switch (iopt)
 	{
+	case 'D':
+	  /* Don't detach from controlling terminal.  */
+	  fnodetach = TRUE;
+	  break;
+
 	case 'e':
 	  /* Do an endless loop of accepting calls.  */
 	  floop = TRUE;
@@ -408,6 +417,12 @@ main (argc, argv)
   if (optind != argc)
     uusage ();
 
+  if (fwait && zport == NULL)
+    {
+      fprintf (stderr, "%s: -w requires -e\n", abProgram);
+      uusage ();
+    }
+
   uread_config (zconfig);
 
   /* Now set debugging level from command line arguments (overriding
@@ -416,37 +431,28 @@ main (argc, argv)
     iDebug = idebug;
 
 #ifdef SIGINT
-  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGINT, ucatch);
+  usysdep_signal (SIGINT);
 #endif
 #ifdef SIGHUP
-  (void) signal (SIGHUP, SIG_IGN);
+  usysdep_signal (SIGHUP);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGQUIT, ucatch);
+  usysdep_signal (SIGQUIT);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGTERM, ucatch);
+  usysdep_signal (SIGTERM);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGPIPE, ucatch);
+  usysdep_signal (SIGPIPE);
 #endif
-#ifdef SIGABRT
-  (void) signal (SIGABRT, ucatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, ucatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, ucatch);
+#ifdef SIGALRM
+  usysdep_signal (SIGALRM);
 #endif
 
   usysdep_initialize (TRUE, FALSE);
 
   ulog_to_file (TRUE);
+  ulog_fatal_fn (uabort);
 
   /* If a port was named, get its information.  */
   if (zport == NULL)
@@ -472,6 +478,13 @@ main (argc, argv)
 	{
 	  if (! fread_system_info (zsystem, &sLocked_system))
 	    ulog (LOG_FATAL, "Unknown system %s", zsystem);
+
+	  /* Detach from the controlling terminal for the call.  This
+	     probably makes sense only on Unix.  We want the modem
+	     line to become the controlling terminal.  */
+	  if (! fnodetach &&
+	      (qport == NULL || qport->ttype != PORTTYPE_STDIN))
+	    usysdep_detach ();
 
 	  ulog_system (sLocked_system.zname);
 
@@ -507,11 +520,19 @@ main (argc, argv)
 	  fret = TRUE;
 	  fdidone = FALSE;
 	  uread_all_system_info (&csystems, &pas);
-	  for (i = 0; i < csystems; i++)
+	  for (i = 0; i < csystems && iSignal == 0; i++)
 	    {
 	      if (fsysdep_has_work (&pas[i], &bgrade))
 		{
 		  fdidone = TRUE;
+
+		  /* Detach from the controlling terminal.  On Unix
+		     this means that we will wind up forking a new
+		     process for each system we call.  */
+		  if (! fnodetach
+		      && (qport == NULL
+			  || qport->ttype != PORTTYPE_STDIN))
+		    usysdep_detach ();
 
 		  ulog_system (pas[i].zname);
 
@@ -530,6 +551,11 @@ main (argc, argv)
 		      fLocked_system = TRUE;
 		      if (! fcall (&pas[i], qport, fforce, bgrade))
 			fret = FALSE;
+#ifdef SIGHUP
+		      /* Now ignore any SIGHUP that we got.  */
+		      if (iSignal == SIGHUP)
+			iSignal = 0;
+#endif
 		      (void) fsysdep_unlock_system (&pas[i]);
 		      fLocked_system = FALSE;
 		    }
@@ -565,6 +591,11 @@ main (argc, argv)
 
       if (qport != NULL)
 	{
+	  /* Detach from the controlling terminal, so that the port we
+	     are about to use becomes our controlling terminal.  */
+	  if (! fnodetach && qport->ttype != PORTTYPE_STDIN)	      
+	    usysdep_detach ();
+
 	  floop = TRUE;
 	  if (! fport_lock (qport, TRUE))
 	    {
@@ -583,8 +614,13 @@ main (argc, argv)
 	{
 	  if (floop)
 	    {
-	      while (flogin_prompt (qport))
+	      while (iSignal == 0 && flogin_prompt (qport))
 		{
+#ifdef SIGHUP
+		  /* Now ignore any SIGHUP that we got.  */
+		  if (iSignal == SIGHUP)
+		    iSignal = 0;
+#endif
 		  if (fLocked_system)
 		    {
 		      (void) fsysdep_unlock_system (&sLocked_system);
@@ -626,8 +662,14 @@ main (argc, argv)
   ustats_close ();
 
   if (fuuxqt)
-    usysdep_exit (fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
-			       (const char *) NULL));
+    {
+      /* Detach from the controlling terminal before starting up uuxqt,
+	 so that it runs as a true daemon.  */
+      if (! fnodetach)
+	usysdep_detach ();
+      usysdep_exit (fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
+				 (const char *) NULL));
+    }
   else
     usysdep_exit (fret);
 
@@ -672,11 +714,10 @@ uusage ()
   exit (EXIT_FAILURE);
 }
 
-/* Catch a signal.  Clean up and die.  */
+/* This function is called when a LOG_FATAL error occurs.  */
 
-static SIGTYPE
-ucatch (isig)
-     int isig;
+static void
+uabort ()
 {
   ustats_failed ();
 
@@ -686,9 +727,6 @@ ucatch (isig)
 #endif
 
   ulog_user ((const char *) NULL);
-
-  if (! fAborting)
-    ulog (LOG_ERROR, "Got signal %d", isig);
 
   if (qPort != NULL)
     (void) fport_close (FALSE);
@@ -702,12 +740,7 @@ ucatch (isig)
   ulog_close ();
   ustats_close ();
 
-  (void) signal (isig, SIG_DFL);
-
-  if (fAborting)
-    usysdep_exit (FALSE);
-  else
-    raise (isig);
+  usysdep_exit (FALSE);
 }
 
 /* Call another system, trying all the possible sets of calling
@@ -1151,7 +1184,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
   /* Turn on the selected protocol.  */
 
-  if (! (*qProto->pfstart)(TRUE))
+  if (! (*qProto->pfstart) (TRUE))
     {
       (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
 			   cretry);
@@ -3037,6 +3070,7 @@ zget_uucp_cmd (frequired)
   static int calc;
   int cgot;
   long iendtime;
+  int ctimeout;
 
   iendtime = isysdep_time ((long *) NULL);
   if (frequired)
@@ -3045,12 +3079,11 @@ zget_uucp_cmd (frequired)
     iendtime += CSHORTTIMEOUT;
 
   cgot = -1;
-  while (TRUE)
+  while ((ctimeout = (int) (iendtime - isysdep_time ((long *) NULL))) > 0)
     {
       int b;
       
-      b = breceive_char ((int) (iendtime - isysdep_time ((long *) NULL)),
-			 frequired);
+      b = breceive_char (ctimeout, frequired);
       /* Now b == -1 on timeout, -2 on error.  */
       if (b < 0)
 	{
@@ -3087,6 +3120,10 @@ zget_uucp_cmd (frequired)
       if (b == '\0')
 	return zalc;
     }
+
+  if (frequired)
+    ulog (LOG_ERROR, "Timeout");
+  return NULL;
 }
 
 /* Read a sequence of characters up to a newline or carriage return, and
@@ -3106,7 +3143,7 @@ zget_typed_line ()
       
       b = breceive_char (CTIMEOUT, FALSE);
       /* Now b == -1 on timeout, -2 on error.  */
-      if (b == -2)
+      if (b == -2 || iSignal != 0)
 	return NULL;
       if (b == -1)
 	continue;

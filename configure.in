@@ -60,10 +60,15 @@ ILT_HEADER_COMMENT([/* If pid_t is not defined in <sys/types.h>, give it a defin
 M_PID_T
 ILT_HEADER_COMMENT([/* If uid_t is not defined in <sys/types.h>, give it a definition here.  */])dnl
 M_UID_T
-ILT_HEADER_COMMENT([/* If off_t is not defined in <sys/types.h>, give it a definition here.  */])dnl
+ILT_HEADER_COMMENT([/* If off_t is not defined in <sys/types.h>, give it a definition here.  */])
 M_LIBTHING_MISSING([off_t in sys/types.h],
 [#include <sys/types.h>], [off_t x;],
 M_DEFINE(off_t, long))dnl
+ILT_HEADER_COMMENT([/* If sig_atomic_t is not defined in <signal.h>, give it a definition
+   here.  */])
+M_LIBTHING_MISSING([sig_atomic_t in signal.h],
+[#include <signal.h>], [sig_atomic_t x;],
+M_DEFINE(sig_atomic_t, char))dnl
 dnl
 dnl The filesystem info code is from David MacKenzie's fileutils 3.1
 dnl package.
@@ -135,12 +140,13 @@ M_DEFINE([COMBINED_UNBLOCK],
    specified at once on a file descriptor.  */])
 dnl
 M_ALLOCA
-ILT_FUNC_CHECK(vprintf raise remove strdup strstr strcasecmp stricmp strerror)
-ILT_FUNC_CHECK(memset memcmp memchr memcpy memmove bcopy bcmp bzero)
+ILT_FUNC_CHECK(vfprintf remove strdup strstr strcasecmp stricmp)
+ILT_FUNC_CHECK(strerror memset memcmp memchr memcpy memmove bcopy bcmp bzero)
 undefine([index])
 ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch)
 ILT_FUNC_CHECK(gethostname uname setitimer napms nap usleep poll select)
 ILT_FUNC_CHECK(sigsetjmp setret getcwd getwd waitpid wait4 socket)
+ILT_FUNC_CHECK(getdtablesize sysconf setsid setpgrp sigaction sigvec)
 ILT_FUNC_CHECK(ftruncate ltrunc rename opendir dup2 gettimeofday ftime times)
 echo checking whether times can be declared as returning long
 echo "#include <sys/times.h>
@@ -151,6 +157,12 @@ M_DEFINE([TIMES_DECLARATION_OK],
 [/* Set TIMES_DECLARATION_OK to 1 if times can be safely declared as
    returning long.  */])
 rm -f conftest conftest.c
+dnl
+ILT_LIBTHING_CHECK([BSD setpgrp],
+[`if test -f $INCLUDEDIR/unistd.h; then echo '#include <unistd.h>'; fi`],
+[getpgrp (0); setpgrp (0, 0);], [HAVE_BSD_PGRP],
+[/* Set HAVE_BSD_PGRP to 1 if you can compile getpgrp with 1 argument
+   and setpgrp with 2 arguments rather than none.  */])
 dnl
 echo checking for mkdir
 echo "main() { exit (0); } t() { mkdir(); }" > conftest.c
@@ -187,5 +199,22 @@ M_DEFINE([HAVE_LONG_NAMES],
 [`if test -f 123456789012345 -a "${long}" = "1"; then echo 1; else echo 0; fi 2>/dev/null`],
 [/* Set HAVE_LONG_NAMES to 1 if the system supports long file names.  */])
 rm -f 123456789012345 123456789012346 2>/dev/null
+dnl
+echo checking for restartable system calls
+dnl Remember that exit (0) is true, so this exits with true when the wait
+dnl call returns something other than -1, i.e. the pid of the child,
+dnl which means that the wait was restarted after the signal.
+echo "#include <signal.h>
+ucatch (isig) { }
+main () { int i = fork ();
+ if (i == 0) { sleep (3); kill (getppid (), SIGINT); sleep (3); exit (0); }
+ signal (SIGINT, ucatch);
+ exit (wait (&i) == -1); }" > conftest.c
+eval $compile
+M_DEFINE([HAVE_RESTARTABLE_SYSCALLS],
+[`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set HAVE_RESTARTABLE_SYSCALLS to 1 if system calls are restarted after
+   interrupts (this is ignored if HAVE_SIGACTION is 1).  */])
+rm -f conftest conftest.c
 dnl
 M_OUTPUT(.)

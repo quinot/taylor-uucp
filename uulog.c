@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.1  1992/02/14  21:22:51  ian
    Initial revision
 
@@ -34,8 +37,6 @@
 char uulog_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
-#include <signal.h>
 #include <errno.h>
 
 #include "system.h"
@@ -53,7 +54,6 @@ char abProgram[] = "uulog";
 /* Local functions.  */
 
 static void ulusage P((void));
-static SIGTYPE ulcatch P((int isig));
 
 /* Long getopt options.  */
 
@@ -129,18 +129,6 @@ main (argc, argv)
 
   if (idebug != -1)
     iDebug = idebug;
-
-  /* Catch possible abort signals.  */
-
-#ifdef SIGABRT
-  (void) signal (SIGABRT, ulcatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, ulcatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, ulcatch);
-#endif
 
   usysdep_initialize (FALSE, FALSE);
 
@@ -267,24 +255,4 @@ ulusage ()
 	   NEWCONFIGLIB, CONFIGFILE);
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
-}
-
-/* Catch a signal (we only do this because a fatal error raises
-   SIGABRT).  */
-
-static SIGTYPE
-ulcatch (isig)
-     int isig;
-{
-  if (! fAborting)
-    ulog (LOG_ERROR, "Got signal %d", isig);
-
-  ulog_close ();
-
-  signal (isig, SIG_DFL);
-
-  if (fAborting)
-    usysdep_exit (FALSE);
-  else
-    raise (isig);
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1992/02/24  20:36:27  ian
+   Roberto Biancardi: skip spaces after strtok (NULL, "")
+
  * Revision 1.2  1992/02/23  03:26:51  ian
  * Overhaul to use automatic configure shell script
  *
@@ -37,8 +40,6 @@
 char uustat_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
-#include <signal.h>
 #include <errno.h>
 
 #if HAVE_TIME_H
@@ -72,7 +73,6 @@ char abProgram[] = "uustat";
 /* Local functions.  */
 
 static void ususage P((void));
-static SIGTYPE uscatch P((int isig));
 static boolean fsworkfiles P((boolean fall, const char *zsystem,
 			      const char *zuser, long iold,
 			      long iyoung));
@@ -247,18 +247,6 @@ main (argc, argv)
   if (idebug != -1)
     iDebug = idebug;
 
-  /* Catch possible abort signals.  */
-
-#ifdef SIGABRT
-  (void) signal (SIGABRT, uscatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, uscatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, uscatch);
-#endif
-
   usysdep_initialize (FALSE, FALSE);
 
   /* If no commands were specified, we list all commands for the given
@@ -355,26 +343,6 @@ ususage ()
 	   NEWCONFIGLIB, CONFIGFILE);
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
-}
-
-/* Catch a signal (we only do this because a fatal error raises
-   SIGABRT).  */
-
-static SIGTYPE
-uscatch (isig)
-     int isig;
-{
-  if (! fAborting)
-    ulog (LOG_ERROR, "Got signal %d", isig);
-
-  ulog_close ();
-
-  signal (isig, SIG_DFL);
-
-  if (fAborting)
-    usysdep_exit (FALSE);
-  else
-    raise (isig);
 }
 
 /* Handle various possible requests to look at work files.  */
