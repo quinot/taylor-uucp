@@ -10,6 +10,12 @@ LN = ln
 LIBDIR = /usr/lib/uucp
 BINDIR = /usr/bin
 
+# If you don't want to compile tstuu, which requires BSD style ptys
+# and the Taylor configuration files, comment out the following line.
+# The tstuu program is only used to test the package; it is described
+# further in README.
+TSTUU = tstuu
+
 # Nothing else to configure
 
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o config.o v2.o bnu.o file.o \
@@ -30,7 +36,7 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
 	prtinf.o time.o log.o chat.o port.o tcp.o parse.o copy.o sys1.o \
 	sys2.o sys3.o sys4.o sys5.o sys6.o version.o getopt.o
 
-all: uucico uuxqt uux uucp uuchk tstuu
+all: uucico uuxqt uux uucp uuchk $(TSTUU)
 
 install: uucico uuxqt uux uucp uuchk
 	cp uucico uuxqt uuchk $(LIBDIR)
