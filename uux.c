@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/04/22  23:29:24  ian
+   Changed arguments to usysdep_initialize
+
    Revision 1.33  1992/04/14  17:09:40  ian
    Jarmo Raiha: heuristic for whether to get current directory can fail
 
@@ -423,7 +426,7 @@ main (argc, argv)
     {
       while (*zarg != '\0')
 	{
-	  if (cargs >= calloc_args + 1)
+	  if (cargs + 1 >= calloc_args)
 	    {
 	      calloc_args += 10;
 	      pzargs = (char **) xrealloc ((pointer) pzargs,
