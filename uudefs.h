@@ -1,7 +1,7 @@
 /* uudefs.h
    Miscellaneous definitions for the UUCP package.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -93,6 +93,9 @@ struct sstatus
   long ilast;
   /* Number of seconds until a retry is permitted.  */
   int cwait;
+  /* String in status file.  Only used when reading status file, not
+     when writing.  May be NULL.  Should be freed with ubuffree.  */
+  char *zstring;
 };
 
 /* How long we have to wait for the next call, given the number of retries
