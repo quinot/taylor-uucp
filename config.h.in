@@ -203,6 +203,10 @@
 /* Set HAVE_ERRNO_DECLARATION to 1 if errno is declared in <errno.h>.  */
 #define HAVE_ERRNO_DECLARATION 0
 
+/* Set HAVE_TXADDCD to 1 if TXADDCD is defined in <sys/ioctl.h>, as it
+   is on AIX.  */
+#define HAVE_TXADDCD 0
+
 /* There are now a number of functions to check for.  For each of
    these, the macro HAVE_FUNC should be set to 1 if your system has
    FUNC.  For example, HAVE_VFPRINTF should be set to 1 if your system

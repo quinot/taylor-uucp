@@ -147,6 +147,10 @@ AC_COMPILE_CHECK([errno],
 [#include <errno.h>], [int i = errno; errno = 1;],
 AC_DEFINE([HAVE_ERRNO_DECLARATION]))
 dnl
+AC_COMPILE_CHECK([TXADDCD],
+[#include <sys/ioctl.h>], [int i = (int) TXADDCD;],
+AC_DEFINE([HAVE_TXADDCD]))
+dnl
 undefine([index])
 AC_HAVE_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
 AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strtoul strstr)
