@@ -286,10 +286,7 @@ extern boolean fparse_cmd P((char *zcmd, struct scmd *qcmd));
 
 #if ANSI_C && HAVE_VFPRINTF
 extern void ulog P((enum tlog ttype, const char *zfmt, ...))
-#if GNUC_VERSION > 1
-     __attribute__ ((format (printf, 2, 3)))
-#endif
-     ;
+    ATTRIBUTE_PRINTF_2;
 #else
 extern void ulog ();
 #endif
