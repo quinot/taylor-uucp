@@ -1020,9 +1020,12 @@ fgsend_control (qdaemon, ixxx, iyyy)
   int ictl;
   unsigned short icheck;
 
-  DEBUG_MESSAGE2 (DEBUG_PROTO,
-		  "fgsend_control: Sending control %s %d",
-		  azGcontrol[ixxx], iyyy);
+#if DEBUG > 1
+  if (FDEBUGGING (DEBUG_PROTO) ||
+      (FDEBUGGING (DEBUG_ABNORMAL) && ixxx == RJ))
+    ulog (LOG_DEBUG, "fgsend_control: Sending control %s %d",
+	  azGcontrol[ixxx], iyyy);
+#endif
 
   ab[IFRAME_DLE] = DLE;
   ab[IFRAME_K] = KCONTROL;
