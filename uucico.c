@@ -614,9 +614,6 @@ main (argc, argv)
 	  if (fdetach
 	      && qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN)
 	    usysdep_detach ();
-
-	  /* If a port was given, we loop forever.  */
-	  fendless = TRUE;
 	}
 
       if (fconn_lock (&sconn, TRUE))
@@ -741,7 +738,7 @@ uhelp ()
   printf (" -r state: 1 for master, 0 for slave (default)\n");
   printf (" --master: Act as master\n");
   printf (" --slave: Act as slave (default)\n");
-  printf (" -p,--port port: Specify port (implies -e)\n");
+  printf (" -p,--port port: Specify port\n");
   printf (" -l,--prompt: prompt for login name and password\n");
   printf (" -e,--loop: Endless loop of login prompts and daemon execution\n");
   printf (" -w,--wait: After calling out, wait for incoming calls\n");
