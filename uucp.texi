@@ -10,6 +10,12 @@
 @end iftex
 
 @ifinfo
+@format
+START-INFO-DIR-ENTRY
+* UUCP: (uucp).                 Transfer mail and news across phone lines.
+END-INFO-DIR-ENTRY
+@end format
+
 This file documents Taylor UUCP, version 1.06.
 
 Copyright @copyright{} 1992, 1993, 1994, 1995 Ian Lance Taylor
@@ -85,17 +91,17 @@ may be obtained via anonymous FTP from ftp.fdu.edu, in the directory
 pub/taylor-uucp.
 
 @menu
-* Copying::                     Taylor UUCP copying conditions
+* Copying::                     Taylor UUCP Copying Conditions
 * Introduction::                Introduction to Taylor UUCP
 * Invoking the UUCP Programs::  Invoking the UUCP Programs
-* Overall Installation::        Taylor UUCP installation
-* Configuration Files::         Taylor UUCP configuration files
-* Protocols::                   UUCP protocol internals
+* Overall Installation::        Taylor UUCP Installation
+* Configuration Files::         Taylor UUCP Configuration Files
+* Protocols::                   UUCP Protocol Descriptions
 * Hacking::                     Hacking Taylor UUCP
 * Acknowledgements::            Acknowledgements
 
-* Index (concepts)::            Concept index
-* Index (configuration file)::  Index to new configuration files
+* Index (concepts)::            Concept Index
+* Index (configuration file)::  Index to New Configuration Files
 
  --- The Detailed Node Listing ---
 
@@ -206,6 +212,40 @@ Calling Out
 * When to Call::                When to call
 * Placing the Call::            Placing the call
 * Logging In::                  Logging in
+
+UUCP Protocol Internals
+
+* UUCP Protocol Sources::       Sources for UUCP Protocol Information
+* UUCP Grades::                 UUCP Grades
+* UUCP Lock Files::             UUCP Lock Files
+* Execution File Format::       Execution File Format
+* UUCP Protocol::               UUCP Protocol
+* g Protocol::                  g protocol
+* f Protocol::                  f protocol
+* t Protocol::                  t protocol
+* e Protocol::                  e protocol
+* Big G Protocol::              G protocol
+* i Protocol::                  i protocol
+* j Protocol::                  j protocol
+* x Protocol::                  x protocol
+* y Protocol::                  y protocol
+* d Protocol::                  d protocol
+* h Protocol::                  h protocol
+* v Protocol::                  v protocol
+
+UUCP Protocol
+
+* The Initial Handshake::       
+* UUCP Protocol Commands::      
+* The Final Handshake::         
+
+UUCP Protocol Commands
+
+* The S Command::               
+* The R Command::               
+* The X Command::               
+* The E Command::               
+* The H Command::               
 
 Hacking Taylor UUCP
 
@@ -3245,6 +3285,27 @@ to any unknown systems that may call in, probably to set file transfer
 permissions and the like.  If the @code{unknown} command is not used,
 unknown systems are not permitted to call in.
 
+@item strip-login @var{boolean}
+@findex strip-login
+@cindex parity in login names
+
+If the argument is true, then, when @code{uucico} is doing its own login
+prompting with the @samp{-e}, @samp{-l}, or @samp{-w} switches, it will
+strip the parity bit when it reads the login name and password.
+Otherwise all eight bits will be used when checking the strings against
+the UUCP password file.  The default is true, since some other UUCP
+packages send parity bits with the login name and password, and few
+systems use eight bit characters in the password file.
+
+@item strip-proto @var{boolean}
+@findex strip-proto
+
+If the argument is true, then @code{uucico} will strip the parity bit
+from incoming UUCP protocol commands.  Otherwise all eight bits will be
+used.  This only applies to commands which are not encapsulated in a
+link layer protocol.  The default is true, which should always be
+correct unless your UUCP system names use eight bit characters.
+
 @item max-uuxqts @var{number}
 @findex max-uuxqts
 
@@ -3699,6 +3760,7 @@ The default time string is @samp{Never}.
 
 @item timegrade @var{character} @var{string} [@var{number}]
 @findex timegrade
+@cindex grades
 
 The @var{character} specifies a grade.  It must be a single letter or
 digit.  The @var{string} is a time string (@pxref{Time Strings}).  All
@@ -4052,17 +4114,20 @@ negotiation with the remote side.
 The @samp{t} and @samp{e} protocols are intended for use over TCP or
 some other communication path with end to end reliability, as they do no
 checking of the data at all.  They will only be considered on a TCP port
-which is both reliable and eight bit.
+which is both reliable and eight bit.  For technical details, see @ref{t
+Protocol}, and @ref{e Protocol}.
 
 The @samp{i} protocol is a bidirectional protocol.  It requires an
 eight-bit connection.  It will run over a half-duplex link, such as
 Telebit modems in PEP mode, but for efficient use of such a connection
 you must use the @code{half-duplex} command (@pxref{port File}).
+@xref{i Protocol}.
 
 The @samp{g} protocol is robust, but requires an eight-bit connection.
+@xref{g Protocol}.
 
 The @samp{G} protocol is the System V Release 4 version of the @samp{g}
-protocol.
+protocol.  @xref{Big G Protocol}.
 
 The @samp{a} protocol is a Zmodem like protocol, contributed by Doug
 Evans.  It requires an eight-bit connection, but unlike the @samp{g} or
@@ -4075,18 +4140,19 @@ be set by a parameter.  While it technically does not require an eight
 bit connection (it could be configured to avoid all characters with the
 high bit set) it would be very inefficient to use it over one.  It is
 useful over a eight-bit connection that will not transmit certain
-control characters.
+control characters.  @xref{j Protocol}.
 
 The @samp{f} protocol is intended for use with X.25 connections; it
 checksums each file as a whole, so any error causes the entire file to
 be retransmitted.  It requires a reliable connection, but only uses
 seven-bit transmissions.  It is a streaming protocol, so, while it can
 be used on a serial port, the port must be completely reliable and flow
-controlled; many aren't.
+controlled; many aren't.  @xref{f Protocol}.
 
 The @samp{v} protocol is the @samp{g} protocol as used by the DOS
 program UUPC/Extended.  It is provided only so that UUPC/Extended users
-can use it; there is no particular reason to select it.
+can use it; there is no particular reason to select it.  @xref{v
+Protocol}.
 
 The @samp{y} protocol is an efficient streaming protocol.  It does error
 checking, but when it detects an error it immediately aborts the
@@ -4094,7 +4160,7 @@ connection.  This requires a reliable, flow controlled, eight-bit
 connection.  In practice, it is only useful on a connection that is
 nearly always error-free.  Unlike the @samp{t} and @samp{e} protocols,
 the connection need not be entirely error-free, so the @samp{y} protocol
-can be used on a serial port.
+can be used on a serial port.  @xref{y Protocol}.
 
 The protocols will be considered in the order shown above.  This means
 that if neither the @code{seven-bit} nor the @code{reliable} command are
@@ -5142,14 +5208,2281 @@ used to detect when one system pretended to be another, but since the
 sequence numbers must be reset manually after a failed handshake this
 can sometimes be more trouble than it's worth.
 
-@node Protocols, Hacking, Configuration Files, Top
-@chapter UUCP protocol internals
+@c START-OF-FAQ
+@ignore
+This chapter is used to generate the comp.mail.uucp UUCP Internals FAQ,
+as well as being part of the Taylor UUCP manual.  Text that should
+appear only in the manual is bracketed by ifclear faq.  Text that should
+appear only in the FAQ is bracketed by ifset faq.
+@end ignore
 
-A detailed description of how the various UUCP protocols work is posted
-monthly to the newsgroups @samp{comp.mail.uucp}, @samp{news.answers} and
-@samp{comp.answers}.  There is no need to read this information in order
-to use Taylor UUCP.  It is intended for people who are interested in how
-the UUCP code works.
+@ifset faq
+@paragraphindent asis
+@format
+Subject: UUCP Internals Frequently Asked Questions
+Newsgroups: comp.mail.uucp,comp.answers,news.answers
+Followup-To: comp.mail.uucp
+Reply-To: ian@@airs.com (Ian Lance Taylor)
+Keywords: UUCP, protocol, FAQ
+Approved: news-answers-request@@MIT.Edu
+
+Archive-name: uucp-internals
+Version: $Revision$
+Last-modified: $Date$
+@end format
+@end ifset
+
+@node Protocols, Hacking, Configuration Files, Top
+@chapter UUCP Protocol Internals
+
+@ifclear faq
+This chapter describes how the various UUCP protocols work, and
+discusses some other internal UUCP issues.
+
+This chapter is quite technical.  You do not need to understand it, or
+even read it, in order to use Taylor UUCP.  It is intended for people
+who are interested in how the UUCP code works.
+
+The information in this chapter is posted monthly to the Usenet
+newsgroups @samp{comp.mail.uucp}, @samp{news.answers}, and
+@samp{comp.answers}.  The posting is available from any
+@samp{news.answers} archive site, such as @samp{rtfm.mit.edu}.  If you
+plan to use this information to write a UUCP program, please make sure
+you get the most recent version of the posting, in case there have been
+any corrections.
+@end ifclear
+
+@ifset faq
+Recent changes:
+@itemize @bullet
+@item Conversion to Texinfo format.
+@item Description of the @samp{E} command.
+@item Description of optional number following @samp{-N} and @samp{ROKN}
+in UUCP protocol startup.
+@item Detailed description of the 'y' protocol.
+@item Mention the name uuxqt uses for lock files.
+@end itemize
+
+This article was written by Ian Lance Taylor @samp{<ian@@airs.com>} and
+I may even update it periodically.  Please send me mail about
+suggestions or inaccuracies.
+
+This article describes how the various UUCP protocols work, and
+discusses some other internal UUCP issues.  It does not describe how to
+configure UUCP, nor how to solve UUCP connection problems, nor how to
+deal with UUCP mail.  I do not know of any FAQ postings on these topics.
+There are some documents on the net describing UUCP configuration, but I
+can not keep an up to date list here; try using archie.
+
+If you haven't read the @samp{news.announce.newusers} articles, read
+them.
+
+This article is in digest format.  Some newsreaders will be able to
+break it apart into separate articles.  Please don't ask me how to do
+this, though.
+
+This article covers the following topics.  If questions about one of
+these topics is posted to @samp{comp.mail.uucp}, please send mail to the
+poster referring her or him to this FAQ.  There is no reason to post a
+followup, as most of us know the answer already.
+@end ifset
+
+@menu
+* UUCP Protocol Sources::       Sources for UUCP Protocol Information
+* UUCP Grades::                 UUCP Grades
+* UUCP Lock Files::             UUCP Lock Files
+* Execution File Format::       Execution File Format
+* UUCP Protocol::               UUCP Protocol
+* g Protocol::                  g protocol
+* f Protocol::                  f protocol
+* t Protocol::                  t protocol
+* e Protocol::                  e protocol
+* Big G Protocol::              G protocol
+* i Protocol::                  i protocol
+* j Protocol::                  j protocol
+* x Protocol::                  x protocol
+* y Protocol::                  y protocol
+* d Protocol::                  d protocol
+* h Protocol::                  h protocol
+* v Protocol::                  v protocol
+@end menu
+
+@ifset faq
+@format
+UUCP Protocol Sources
+Alarm in Debugging Output
+UUCP Grades
+UUCP Lock Files
+Execution File Format
+UUCP Protocol
+UUCP @samp{g} Protocol
+UUCP @samp{f} Protocol
+UUCP @samp{t} Protocol
+UUCP @samp{e} Protocol
+UUCP @samp{G} Protocol
+UUCP @samp{i} Protocol
+UUCP @samp{j} Protocol
+UUCP @samp{x} Protocol
+UUCP @samp{y} Protocol
+UUCP @samp{d} Protocol
+UUCP @samp{h} Protocol
+UUCP @samp{v} Protocol
+Thanks
+
+----------------------------------------------------------------------
+
+From: UUCP Protocol Sources
+Subject: UUCP Protocol Sources
+
+@end format
+@end ifset
+
+@node UUCP Protocol Sources, UUCP Grades, Protocols, Protocols
+@section UUCP Protocol Sources
+
+@quotation
+``Unix-to-Unix Copy Program,'' said PDP-1.  ``You will never find a more
+wretched hive of bugs and flamers.  We must be cautious.''
+@flushright
+---DECWars
+@end flushright
+@end quotation
+
+I took a lot of the information from Jamie E. Hanrahan's paper in the
+Fall 1990 DECUS Symposium, and from @cite{Managing UUCP and Usenet} by Tim
+O'Reilly and Grace Todino (with contributions by several other
+people).  The latter includes most of the former, and is published by
+@example
+O'Reilly & Associates, Inc.
+103 Morris Street, Suite A
+Sebastopol, CA 95472
+@end example
+It is currently in its tenth edition.  The ISBN number is
+@samp{0-937175-93-5}.
+
+Some information is originally due to a Usenet article by Chuck Wegrzyn.
+The information on execution files comes partially from Peter Honeyman.
+The information on the @samp{g} protocol comes partially from a paper by
+G.L.@: Chesson of Bell Laboratories, partially from Jamie E. Hanrahan's
+paper, and partially from source code by John Gilmore.  The information
+on the @samp{f} protocol comes from the source code by Piet Berteema.
+The information on the @samp{t} protocol comes from the source code by
+Rick Adams.  The information on the @samp{e} protocol comes from a
+Usenet article by Matthias Urlichs.  The information on the @samp{d}
+protocol comes from Jonathan Clark, who also supplied information about
+QFT.  The UUPlus information comes straight from Christopher J. Ambler,
+of UUPlus Development; it applies to version 1.52 and up of the
+shareware version of UUPlus Utilities, called FSUUCP 1.52, but referred
+to in this article as UUPlus.
+
+Although there are few books about UUCP, there are many about networks
+and protocols in general.  I recommend two non-technical books which
+describe the sorts of things that are available on the network:
+@cite{The Whole Internet}, by Ed Krol, and @cite{Zen and the Art of the
+Internet}, by Brendan P. Kehoe.  Good technical discussions of
+networking issues can be found in @cite{Internetworking with TCP/IP}, by
+Douglas E. Comer and David L. Stevens and in @cite{Design and Validation
+of Computer Protocols} by Gerard J. Holzmann.
+
+@ifset faq
+@c Note that this section is only in the FAQ, since it does not fit in
+@c here in the manual.
+@format
+------------------------------
+
+From: Alarm in Debugging Output
+Subject: Alarm in Debugging Output
+
+Alarm in Debugging Output
+=========================
+@end format
+
+The debugging output of many versions of UUCP will include messages like
+@samp{alarm 1} or @samp{pkcget: alarm 1}.  Taylor UUCP does not use the
+word @samp{alarm}, but will instead log messages like @samp{Timed out
+waiting for packet}.
+
+These types of messages mean that the UUCP package has timed out while
+waiting for some sort of response from the remote system.  If it happens
+consistently when trying to transfer a particular file, then the most
+likely problem is that one of the modems will not transmit the XON or
+XOFF characters.  Several UUCP protocols require an eight bit clean
+connection, which means that the modems must treat XON or XOFF as normal
+data characters, not as flow control signals.  This should always be
+checked first.
+
+Other possible problems are that the modems have simply dropped their
+connection, or perhaps on one side or the other the serial buffer is
+overflowing and dropping characters.  Another possibility is that the
+UUCP packages disagree about some aspect of the UUCP protocol, which is
+uncommon but does happen occasionally.
+
+Using the information in the following sections, you should be able to
+figure out what type of data your UUCP was expecting to receive.  This
+may give some indication as to exactly what the problem is.  It is
+difficult to be more specific, since there are many possiblities.
+
+@format
+------------------------------
+
+From: UUCP Grades
+Subject: UUCP Grades
+@end format
+@end ifset
+
+@node UUCP Grades, UUCP Lock Files, UUCP Protocol Sources, Protocols
+@section UUCP Grades
+@cindex grades implementation
+
+Modern UUCP packages support a priority grade for each command.  The
+grades generally range from @kbd{A} (the highest) to @kbd{Z} followed by
+@kbd{a} to @kbd{z}.  Some UUCP packages (including Taylor UUCP) also
+support @kbd{0} to @kbd{9} before @kbd{A}.  Some UUCP packages may
+permit any ASCII character as a grade.
+
+On Unix, these grades are encoded in the name of the command file
+created by @code{uucp} or @code{uux}.  A command file name generally has
+the form @file{C.nnnngssss} where @samp{nnnn} is the remote system name
+for which the command is queued, @samp{g} is a single character grade,
+and @samp{ssss} is a four character sequence number.  For example, a
+command file created for the system @samp{airs} at grade @samp{Z} might
+be named @file{C.airsZ2551}.
+
+The remote system name will be truncated to seven characters, to
+ensure that the command file name will fit in the 14 character file
+name limit of the traditional Unix file system.  UUCP packages which
+have no other means of distinguishing which command files are intended
+for which systems thus require all systems they connect to to have
+names that are unique in the first seven characters.  Some UUCP
+packages use a variant of this format which truncates the system name
+to six characters.  HDB and Taylor UUCP use a different spool
+directory format, which allows up to fourteen characters to be used
+for each system name.
+
+The sequence number in the command file name may be a decimal integer,
+or it may be a hexadecimal integer, or it may contain any alphanumeric
+character.  Different UUCP packages are different.
+@ifclear faq
+Taylor UUCP uses any alphanumeric character.
+@end ifclear
+
+UUPlus Utilities (as FSUUCP, a shareware DOS based UUCP and news
+package) uses up to 8 characters for file names in the spool (this is a
+DOS file system limitation; actually, with the extension, 11 characters
+are available, but FSUUCP reserves that for future use).  FSUUCP
+defaults mail to grade @samp{D}, and news to grade @samp{N}, except that
+when the grade of incoming mail can be determined, that grade is
+preserved if the mail is forwarded to another system. The default grades
+may be changed by editing the @file{LIB/MAILRC} file for mail, or the
+@file{UUPLUS.CFG} file for news.
+
+UUPC/extended for DOS, OS/2 and Windows NT handles mail at grade
+@samp{C}, news at grade @samp{d}, and file transfers at grade @samp{n}.
+The UUPC/extended @code{UUCP} and @code{RMAIL} commands accept grades to
+override the default, the others do not.
+
+I do not know how command grades are handled in other non-Unix UUCP
+packages.
+
+Modern UUCP packages allow you to restrict file transfer by grade
+depending on the time of day.  Typically this is done with a line in
+the @file{Systems} (or @file{L.sys}) file like this:
+@example
+    airs Any/Z,Any2305-0855 ...
+@end example
+This allows grades @samp{Z} and above to be transferred at any time.
+Lower grades may only be transferred at night.  I believe that this
+grade restriction applies to local commands as well as to remote
+commands, but I am not sure.  It may only apply if the UUCP package
+places the call, not if it is called by the remote system.
+
+Taylor UUCP can use the @code{timegrade} and @code{call-timegrade}
+commands to achieve the same effect.
+@ifclear faq
+@xref{When to Call}.
+@end ifclear
+It supports the above format when reading @file{Systems} or
+@file{L.sys}.
+
+UUPC/extended provides the @code{symmetricgrades} option to announce the
+current grade in effect when calling the remote system.
+
+UUPlus allows specification of the highest grade accepted on a per-call
+basis with the @samp{-g} option in @code{UUCICO}.
+
+This sort of grade restriction is most useful if you know what grades
+are being used at the remote site.  The default grades used depend on
+the UUCP package.  Generally @code{uucp} and @code{uux} have different
+defaults.  A particular grade can be specified with the @samp{-g} option
+to @code{uucp} or @code{uux}.  For example, to request execution of
+@samp{rnews} on @samp{airs} with grade @samp{d}, you might use something
+like
+@example
+    uux -gd - airs!rnews < article
+@end example
+
+Uunet queues up mail at grade @samp{C}, but increases the grade based on
+the size.  News is queued at grade @samp{d}, and file transfers at grade
+@samp{n}.  The example above would allow mail (below some large size) to
+be received at any time, but would only permit news to be transferred at
+night.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP Lock Files
+Subject: UUCP Lock Files
+@end format
+@end ifset
+
+@node UUCP Lock Files, Execution File Format, UUCP Grades, Protocols
+@section UUCP Lock Files
+@cindex lock files
+
+This discussion applies only to Unix.  I have no idea how UUCP locks
+ports on other systems.
+
+UUCP creates files to lock serial ports and systems.  On most, if not
+all, systems, these same lock files are also used by @code{cu} to
+coordinate access to serial ports.  On some systems @code{getty} also
+uses these lock files, often under the name @code{uugetty}.
+
+The lock file normally contains the process ID of the locking process.
+This makes it easy to determine whether a lock is still valid.  The
+algorithm is to create a temporary file and then link it to the name
+that must be locked.  If the link fails because a file with that name
+already exists, the existing file is read to get the process ID.  If the
+process still exists, the lock attempt fails.  Otherwise the lock file
+is deleted and the locking algorithm is retried.
+
+Older UUCP packages put the lock files in the main UUCP spool directory,
+@file{/usr/spool/uucp}.  HDB UUCP generally puts the lock files in a
+directory of their own, usually @file{/usr/spool/locks} or
+@file{/etc/locks}.
+
+The original UUCP lock file format encodes the process ID as a four byte
+binary number.  The order of the bytes is host-dependent.  HDB UUCP
+stores the process ID as a ten byte ASCII decimal number, with a
+trailing newline.  For example, if process 1570 holds a lock file, it
+would contain the eleven characters space, space, space, space, space,
+space, one, five, seven, zero, newline.  Some versions of UUCP add a
+second line indicating which program created the lock (@code{uucp},
+@code{cu}, or @code{getty/uugetty}).  I have also seen a third type of
+UUCP lock file which does not contain the process ID at all.
+
+The name of the lock file is traditionally @file{LCK..} followed by the
+base name of the device.  For example, to lock @file{/dev/ttyd0} the
+file @file{LCK..ttyd0} would be created.  On SCO Unix, the lock file
+name is always forced to lower case even if the device name has upper
+case letters.
+
+System V Release 4 UUCP names the lock file using the major and minor
+device numbers rather than the device name.  The file is named
+@file{LK.@var{XXX}.@var{YYY}.@var{ZZZ}}, where @var{XXX}, @var{YYY} and
+@var{ZZZ} are all three digit decimal numbers.  @var{XXX} is the major
+device number of the device holding the directory holding the device
+file (e.g., @file{/dev}).  @var{YYY} is the major device number of the
+device file itself.  @var{ZZZ} is the minor device number of the device
+file itself.  If @code{s} holds the result of passing the device to the
+stat system call (e.g., @code{stat ("/dev/ttyd0", &s)}), the following
+line of C code will print out the corresponding lock file name:
+@example
+    printf ("LK.%03d.%03d.%03d", major (s.st_dev),
+            major (s.st_rdev), minor (s.st_rdev));
+@end example
+The advantage of this system is that even if there are several links to
+the same device, they will all use the same lock file name.
+
+When two or more instances of @code{uuxqt} are executing, some sort of
+locking is needed to ensure that a single execution job is only started
+once.  I don't know how most UUCP packages deal with this.  Taylor UUCP
+uses a lock file for each execution job.  The name of the lock file is
+the same as the name of the @file{X.*} file, except that the initial
+@samp{X} is changed to an @samp{L}.  The lock file holds the process ID
+as described above.
+
+@ifset faq
+@format
+------------------------------
+
+From: Execution File Format
+Subject: Execution File Format
+@end format
+@end ifset
+
+@node Execution File Format, UUCP Protocol, UUCP Lock Files, Protocols
+@section Execution File Format
+@cindex execution file format
+@cindex @file{X.*} file format
+
+UUCP @file{X.*} files control program execution.  They are created by
+@code{uux}.  They are transferred between computers just like any other
+file.  The @code{uuxqt} daemon reads them to figure out how to execute
+the job requested by @code{uux}.
+
+An @file{X.*} file is simply a text file.  The first character of each
+line is a command, and the remainder of the line supplies arguments.
+The following commands are defined:
+
+@table @samp
+@item C command
+This gives the command to execute, including the program and all
+arguments.  For example, @samp{rmail ian@@airs.com}.
+
+@item U user system
+This names the user who requested the command, and the system from which
+the request came.
+
+@item I standard-input
+This names the file from which standard input is taken.  If no standard
+input file is given, the standard input will probably be attached to
+@file{/dev/null}.  If the standard input file is not from the system on
+which the execution is to occur, it will also appear in an @samp{F}
+command.
+
+@item O standard-output [system]
+This names the standard output file.  The optional second argument names
+the system to which the file should be sent.  If there is no second
+argument, the file should be created on the executing system.
+
+@item F required-file [filename-to-use]
+The @samp{F} command can appear multiple times.  Each @samp{F} command
+names a file which must exist before the execution can proceed.  This
+will usually be a file which is transferred from the system on which
+@code{uux} was executed, but it can also be a file from the local system
+or some other system.  If the file is not from the local system, then
+the command will usually name a file in the spool directory.  If the
+optional second argument appears, then the file should be copied to the
+execution directory under that name.  This is necessary for any file
+other than the standard input file.  If the standard input file is not
+from the local system, it will appear in both an @samp{F} command and an
+@samp{I} command.
+
+@item R requestor-address
+This is the address to which mail about the job should be sent.  It is
+relative to the system named in the @samp{U} command.  If the @samp{R}
+command does not appear, then mail is sent to the user named in the
+@samp{U} command.
+
+@item Z
+This command takes no arguments.  It means that a mail message should be
+sent if the command failed.  This is the default behaviour for most
+modern UUCP packages, and for them the @samp{Z} command does not
+actually do anything.
+
+@item N
+This command takes no arguments.  It means that no mail message should
+be sent, even if the command failed.
+
+@item n
+This command takes no arguments.  It means that a mail message should be
+sent if the command succeeded.  Normally a message is sent only if the
+command failed.
+
+@item B
+This command takes no arguments.  It means that the standard input
+should be returned with any error message.  This can be useful in cases
+where the input would otherwise be lost.
+
+@item e
+This command takes no arguments.  It means that the command should be
+processed with @file{/bin/sh}.  For some packages this is the default
+anyhow.  Most packages will refuse to execute complex commands or
+commands containing wildcards, because of the security holes this opens.
+
+@item E
+This command takes no arguments.  It means that the command should be
+processed with the @code{execve} system call.  For some packages this is
+the default anyhow.
+
+@item M status-file
+This command means that instead of mailing a message, the message should
+be copied to the named file on the system named by the @samp{U} command.
+
+@item # comment
+This command is ignored, as is any other unrecognized command.  
+@end table
+
+Here is an example.  Given the following command executed on system
+test1
+@example
+    uux - test2!cat - test2!~ian/bar !qux '>~/gorp'
+@end example
+(this is only an example, as most UUCP systems will not permit the cat
+command to be executed) Taylor UUCP will produce something like the
+following @file{X.}  file:
+@example
+U ian test1
+F D.test1N003r qux
+O /usr/spool/uucppublic test1
+F D.test1N003s
+I D.test1N003s
+C cat - ~ian/bar qux
+@end example
+The standard input will be read into a file and then transferred to the
+file @file{D.test1N003s} on system @samp{test2}.  The file @file{qux}
+will be transferred to @file{D.test1N003r} on system @samp{test2}.  When
+the command is executed, the latter file will be copied to the execution
+directory under the name @samp{qux}.  Note that since the file
+@file{~ian/bar} is already on the execution system, no action need be
+taken for it.  The standard output will be collected in a file, then
+copied to the directory @file{/usr/spool/uucppublic} on the system
+@samp{test1}.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP Protocol
+Subject: UUCP Protocol
+@end format
+@end ifset
+
+@node UUCP Protocol, g Protocol, Execution File Format, Protocols
+@section UUCP Protocol
+@cindex UUCP protocol
+@cindex protocol, UUCP
+
+The UUCP protocol is a conversation between two UUCP packages.  A UUCP
+conversation consists of three parts: an initial handshake, a series of
+file transfer requests, and a final handshake.
+
+@menu
+* The Initial Handshake::       
+* UUCP Protocol Commands::      
+* The Final Handshake::         
+@end menu
+
+@node The Initial Handshake, UUCP Protocol Commands, UUCP Protocol, UUCP Protocol
+@subsection The Initial Handshake
+@cindex initial handshake
+
+Before the initial handshake, the caller will usually have logged in the
+called machine and somehow started the UUCP package there.  On Unix this
+is normally done by setting the shell of the login name used to
+@file{/usr/lib/uucp/uucico}.
+
+All messages in the initial handshake begin with a @kbd{^P} (a byte with
+the octal value @samp{\020}) and end with a null byte (@samp{\000}).  A
+few systems end these messages with a line feed character (@samp{\012})
+instead of a null byte; the examples below assume a null byte is being
+used.
+
+Some options below are supported by QFT, which stands for Queued File
+Transfer, and is (or was) an internal Bell Labs version of UUCP.  
+
+Taylor UUCP size negotiation was introduced by Taylor UUCP, and is
+also supported by DOS based UUPlus and Amiga based wUUCP and
+UUCP-1.17.
+
+The initial handshake goes as follows.  It is begun by the called
+machine.
+
+@table @asis
+@item called: @samp{\020Shere=hostname\000}
+The hostname is the UUCP name of the called machine.  Older UUCP
+packages do not output it, and simply send @samp{\020Shere\000}.
+
+@item caller: @samp{\020Shostname options\000}
+The hostname is the UUCP name of the calling machine.  The following
+options may appear (or there may be none):
+
+@table @samp
+@item -QSEQ
+Report sequence number for this conversation.  The sequence number is
+stored at both sites, and incremented after each call.  If there is a
+sequence number mismatch, something has gone wrong (somebody may have
+broken security by pretending to be one of the machines) and the call is
+denied.  If the sequence number changes on one of the machines, perhaps
+because of an attempted breakin or because a disk backup was restored,
+the sequence numbers on the two machines must be reconciled manually.
+
+@item -xLEVEL
+Requests the called system to set its debugging level to the specified
+value.  This is not supported by all systems.
+
+@item -pGRADE
+@itemx -vgrade=GRADE
+Requests the called system to only transfer files of the specified grade
+or higher.  This is not supported by all systems.  Some systems support
+@samp{-p}, some support @samp{-vgrade=}.  UUPlus allows either @samp{-p}
+or @samp{-v} to be specified on a per-system basis in the @file{SYSTEMS}
+file (@samp{gradechar} option).
+
+@item -R
+Indicates that the calling UUCP understands how to restart failed file
+transmissions.  Supported only by System V Release 4 UUCP, QFT, and
+Taylor UUCP.
+
+@item -ULIMIT
+Reports the ulimit value of the calling UUCP.  The limit is specified as
+a base 16 number in C notation (e.g., @samp{-U0x1000000}).  This number
+is the number of 512 byte blocks in the largest file which the calling
+UUCP can create.  The called UUCP may not transfer a file larger than
+this.  Supported only by System V Release 4 UUCP, QFT and UUPlus.
+UUPlus reports the lesser of the available disk space on the spool
+directory drive and the ulimit variable in @file{UUPLUS.CFG}.  Taylor
+UUCP understands this option, but does not generate it.
+
+@item -N[NUMBER]
+Indicates that the calling UUCP understands the Taylor UUCP size
+negotiation extension.  Not supported by traditional UUCP packages.
+Supported by UUPlus.  The optional number is a bitmask of features
+supported by the calling UUCP, and is described below.
+@end table
+
+@item called: @samp{\020ROK\000}
+There are actually several possible responses.
+@table @samp
+@item ROK
+The calling UUCP is acceptable, and the handshake proceeds to the
+protocol negotiation.  Some options may also appear; see below.
+@item ROKN[NUMBER]
+The calling UUCP is acceptable, it specified @samp{-N}, and the called
+UUCP also understands the Taylor UUCP size limiting extensions.  The
+optional number is a bitmask of features supported by the called UUCP,
+and is described below.
+@item RLCK
+The called UUCP already has a lock for the calling UUCP, which normally
+indicates the two machines are already communicating.
+@item RCB
+The called UUCP will call back.  This may be used to avoid impostors
+(but only one machine out of each pair should call back, or no
+conversation will ever begin).
+@item RBADSEQ
+The call sequence number is wrong (see the @samp{-Q} discussion above).
+@item RLOGIN
+The calling UUCP is using the wrong login name.
+@item RYou are unknown to me
+The calling UUCP is not known to the called UUCP, and the called UUCP
+does not permit connections from unknown systems.  Some versions of UUCP
+just drop the line rather than sending this message.
+@end table
+
+If the response is ROK, the following options are supported by
+System V Release 4 UUCP and QFT.
+@table @samp
+@item -R
+The called UUCP knows how to restart failed file transmissions.
+@item -ULIMIT
+Reports the ulimit value of the called UUCP.  The limit is specified as
+a base 16 number in C notation.  This number is the number of 512 byte
+blocks in the largest file which the called UUCP can create.  The
+calling UUCP may not send a file larger than this.  Also supported by
+UUPlus.  Taylor UUCP understands this option, but does not generate it.
+@item -xLEVEL
+I'm not sure just what this means.  It may request the
+calling UUCP to set its debugging level to the specified
+value.
+@end table
+
+If the response is not ROK (or ROKN) both sides hang up the phone,
+abandoning the call.
+
+@item called: @samp{\020Pprotocols\000}
+Note that the called UUCP outputs two strings in a row.  The protocols
+string is a list of UUCP protocols supported by the caller.  Each UUCP
+protocol has a single character name.  These protocols are discussed in
+more detail later in this document.  For example, the called UUCP might
+send @samp{\020Pgf\000}.
+
+@item caller: @samp{\020Uprotocol\000}
+The calling UUCP selects which protocol to use out of the protocols
+offered by the called UUCP.  If there are no mutually supported
+protocols, the calling UUCP sends @samp{\020UN\000} and both sides hang
+up the phone.  Otherwise the calling UUCP sends something like
+@samp{\020Ug\000}.
+@end table
+
+Most UUCP packages will consider each locally supported protocol in turn
+and select the first one supported by the called UUCP.  With some
+versions of HDB UUCP, this can be modified by giving a list of protocols
+after the device name in the @file{Devices} file or the @file{Systems}
+file.  For example, to select the @samp{e} protocol in @file{Systems},
+@example
+    airs Any ACU,e ...
+@end example
+or in Devices,
+@example
+    ACU,e ttyXX ...
+@end example
+Taylor UUCP provides the @code{protocol}
+command which may be used either
+for a system
+@ifclear faq
+(@pxref{Protocol Selection})
+@end ifclear
+or a
+@ifclear faq
+port (@pxref{port File}).
+@end ifclear
+@ifset faq
+port.
+@end ifset
+UUPlus allows specification of the protocol string on a per-system basis
+in the @file{SYSTEMS} file.
+
+The optional number following a @samp{-N} sent by the calling system, or
+an @samp{ROKN} sent by the called system, is a bitmask of features
+supported by the UUCP package.  The optional number was introduced in
+Taylor UUCP version 1.04.  The number is sent as an octal number with a
+leading zero.  The following bits are currently defined.  A missing
+number should be taken as 011.
+
+@table @samp
+@item 01
+UUCP supports size negotiation.
+
+@item 02
+UUCP supports file restart.
+
+@item 04
+UUCP supports the @samp{E} command.
+
+@item 010
+UUCP requires the file size in the @samp{S} and @samp{R} commands to be
+in base 10.  This bit is used by default if no number appears, but
+should not be explicitly sent.
+
+@item 020
+UUCP expects a dummy string between the notify field and the size field
+in an @samp{S} command.  This is true of SVR4 UUCP.  This bit should not
+be used.
+@end table
+
+After the protocol has been selected and the initial handshake has been
+completed, both sides turn on the selected protocol.  For some protocols
+(notably @samp{g}) a further handshake is done at this point.
+
+@node UUCP Protocol Commands, The Final Handshake, The Initial Handshake, UUCP Protocol
+@subsection UUCP Protocol Commands
+
+Each protocol supports a method for sending a command to the remote
+system.  This method is used to transmit a series of commands between
+the two UUCP packages.  At all times, one package is the master and the
+other is the slave.  Initially, the calling UUCP is the master.
+
+If a protocol error occurs during the exchange of commands, both sides
+move immediately to the final handshake.
+
+The master will send one of five commands: @samp{S}, @samp{R}, @samp{X},
+@samp{E}, or @samp{H}.
+
+Any file name referred to below is either an absolute file name
+beginning with @file{/}, a public directory file name beginning with
+@file{~/}, a file name relative to a user's home directory beginning
+with @file{~@var{USER}/}, or a spool directory file name.  File names in
+the spool directory are not absolute, but instead are converted to file
+names within the spool directory by UUCP.  They always begin with
+@file{C.} (for a command file created by @code{uucp} or @code{uux}),
+@file{D.} (for a data file created by @code{uucp}, @code{uux} or by an
+execution, or received from another system for an execution), or
+@file{X.} (for an execution file created by @code{uux} or received from
+another system).
+
+@menu
+* The S Command::               
+* The R Command::               
+* The X Command::               
+* The E Command::               
+* The H Command::               
+@end menu
+
+@node The S Command, The R Command, UUCP Protocol Commands, UUCP Protocol Commands
+@subsubsection The S Command
+@cindex S UUCP protocol command
+@cindex UUCP protocol S command
+
+@table @asis
+@item master: @samp{S @var{from} @var{to} @var{user} -@var{options} @var{temp} @var{mode} @var{notify} @var{size}}
+The @samp{S} and the @samp{-} are literal characters.  This is a request
+by the master to send a file to the slave.
+
+@table @var
+@item from
+The name of the file to send.  If the @samp{C} option does not appear in
+@var{options}, the master will actually open and send this file.
+Otherwise the file has been copied to the spool directory, where it is
+named @var{temp}.  The slave ignores this field unless @var{to} is a
+directory, in which case the basename of @var{from} will be used as the
+file name.  If @var{from} is a spool directory filename, it must be a
+data file created for or by an execution, and must begin with @file{D.}.
+
+@item to
+The name to give the file on the slave.  If this field names a directory
+the file is placed within that directory with the basename of
+@var{from}.  A name ending in @samp{/} is taken to be a directory even
+if one does not already exist with that name.  If @var{to} begins with
+@file{X.}, an execution file will be created on the slave.  Otherwise,
+if @var{to} begins with @file{D.} it names a data file to be used by
+some execution file.  Otherwise, @var{to} should not be in the spool
+directory.
+
+@item user
+The name of the user who requested the transfer.
+
+@item options
+A list of options to control the transfer.  The following
+options are defined (all options are single characters):
+@table @samp
+@item C
+The file has been copied to the spool directory
+(the master should use @var{temp} rather than @var{from}).
+@item c
+The file has not been copied to the spool directory (this is the
+default).
+@item d
+The slave should create directories as necessary (this is the default).
+@item f
+The slave should not create directories if necessary, but should fail
+the transfer instead.
+@item m
+The master should send mail to @var{user} when the transfer is complete.
+@item n
+The slave should send mail to @var{notify} when the transfer is
+complete.
+@end table
+
+@item temp
+If the @samp{C} option appears in @var{options}, this names the file to
+be sent.  Otherwise if @var{from} is in the spool directory, @var{temp}
+is the same as @var{from}.  Otherwise @var{temp} may be a dummy string,
+such as @file{D.0}.  After the transfer has been succesfully completed,
+the master will delete the file @var{temp}.
+
+@item mode
+This is an octal number giving the mode of the file on the master.  If
+the file is not in the spool directory, the slave will always create it
+with mode 0666, except that if (@var{mode} & 0111) is not zero (the file
+is executable), the slave will create the file with mode 0777.  If the
+file is in the spool directory, some UUCP packages will use the
+algorithm above and some will always create the file with mode 0600.
+This field is ignored by UUPlus, since it is meaningless on DOS; UUPlus
+uses 0666 for outgoing files.
+
+@item notify
+This field may not be present, and in any case is only meaningful if the
+@samp{n} option appears in @var{options}.  If the @samp{n} option
+appears, then when the transfer is successfully completed, the slave
+will send mail to @var{notify}, which must be a legal mailing address on
+the slave.  If a @var{size} field will appear but the @samp{n} option
+does not appear, @var{notify} will always be present, typically as the
+string @samp{dummy} or simply a pair of double quotes.
+
+@item size
+This field is only present when doing Taylor UUCP or SVR4 UUCP size
+negotiation, It is the size of the file in bytes.  Taylor UUCP version
+1.03 sends the size as a decimal integer, while versions 1.04 and up,
+and all other UUCP packages that support size negotiation, send the size
+in base 16 with a leading 0x.
+@end table
+
+The slave then responds with an @samp{S} command response.
+
+@table @samp
+@item SY @var{start}
+The slave is willing to accept the file, and file transfer begins.  The
+@var{start} field will only be present when using file restart.  It
+specifies the byte offset into the file at which to start sending.  If
+this is a new file, @var{start} will be 0x0.
+
+@item SN2
+The slave denies permission to transfer the file.  This can mean that
+the destination directory may not be accessed, or that no requests are
+permitted.  It implies that the file transfer will never succeed.
+
+@item SN4
+The slave is unable to create the necessary temporary file.  This
+implies that the file transfer might succeed later.
+
+@item SN6
+This is only used by Taylor UUCP size negotiation.  It means that the
+slave considers the file too large to transfer at the moment, but it may
+be possible to transfer it at some other time.
+
+@item SN7
+This is only used by Taylor UUCP size negotiation.  It means that the
+slave considers the file too large to ever transfer.
+
+@item SN8
+This is only used by Taylor UUCP.  It means that the file was already
+received in a previous conversation.  This can happen if the receive
+acknowledgement was lost after it was sent by the receiver but before it
+was received by the sender.
+
+@item SN9
+This is only used by Taylor UUCP (versions 1.05 and up) and UUPlus
+(versions 2.0 and up).  It means that the remote system was unable to
+open another channel (see the discussion of the @samp{i} protocol for
+more information about channels).  This implies that the file transfer
+might succeed later.
+
+@item SN10
+This is reportedly used by SVR4 UUCP to mean that the file size is too
+large.
+@end table
+
+If the slave responds with @samp{SY}, a file transfer begins.  When the
+file transfer is complete, the slave sends a @samp{C} command response.
+
+@table @samp
+@item CY
+The file transfer was successful.
+@item CYM
+The file transfer was successful, and the slave wishes to become the
+master; the master should send an @samp{H} command, described below.
+@item CN5
+The temporary file could not be moved into the final location.  This
+implies that the file transfer will never succeed.
+@end table
+@end table
+
+After the @samp{C} command response has been received (in the @samp{SY}
+case) or immediately (in an @samp{SN} case) the master will send another
+command.
+
+@node The R Command, The X Command, The S Command, UUCP Protocol Commands
+@subsubsection The R Command
+@cindex R UUCP protocol command
+@cindex UUCP protocol R command
+
+@table @asis
+@item master: @samp{R @var{from} @var{to} @var{user} -@var{options} @var{size}}
+The @samp{R} and the @samp{-} are literal characters.  This is a request
+by the master to receive a file from the slave.  I do not know how SVR4
+UUCP or QFT implement file transfer restart in this case.
+
+@table @var
+@item from
+This is the name of the file on the slave which the master wishes to
+receive.  It must not be in the spool directory, and it may not contain
+any wildcards.
+
+@item to
+This is the name of the file to create on the master.  I do not believe
+that it can be a directory.  It may only be in the spool directory if
+this file is being requested to support an execution either on the
+master or on some system other than the slave.
+
+@item user
+The name of the user who requested the transfer.
+
+@item options
+A list of options to control the transfer.  The following
+options are defined (all options are single characters):
+@table @samp
+@item d
+The master should create directories as necessary (this is the default).
+@item f
+The master should not create directories if necessary, but should fail
+the transfer instead.
+@item m
+The master should send mail to @var{user} when the transfer is complete.
+@end table
+
+@item size
+This only appears if Taylor UUCP size negotiation is being used.  It
+specifies the largest file which the master is prepared to accept (when
+using SVR4 UUCP or QFT, this was specified in the @samp{-U} option
+during the initial handshake).
+@end table
+
+The slave then responds with an @samp{R} command response.  UUPlus does
+not support @samp{R} requests, and always responds with @samp{RN2}.
+
+@table @samp
+@item RY @var{mode} [@var{size}]
+The slave is willing to send the file, and file transfer begins.  The
+@var{mode} argument is the octal mode of the file on the slave.  The
+master treats this just as the slave does the @var{mode} argument in the
+send command, q.v.  I am told that SVR4 UUCP sends a trailing @var{size}
+argument.  For some versions of BSD UUCP, the @var{mode} argument may
+have a trailing @samp{M} character (e.g., @samp{RY 0666M}).  This means
+that the slave wishes to become the master.
+
+@item RN2
+The slave is not willing to send the file, either because it is not
+permitted or because the file does not exist.  This implies that the
+file request will never succeed.
+
+@item RN6
+This is only used by Taylor UUCP size negotiation.  It means that the
+file is too large to send, either because of the size limit specifies by
+the master or because the slave considers it too large.  The file
+transfer might succeed later, or it might not (this may be cleared up in
+a later release of Taylor UUCP).
+
+@item RN9
+This is only used by Taylor UUCP (versions 1.05 and up) and FSUUCP
+(versions 1.5 and up).  It means that the remote system was unable to
+open another channel (see the discussion of the 'i' protocol for more
+information about channels).  This implies that the file transfer might
+succeed later.
+@end table
+
+If the slave responds with @samp{RY}, a file transfer begins.  When the
+file transfer is complete, the master sends a @samp{C} command.  The
+slave pretty much ignores this, although it may log it.
+
+@table @samp
+@item CY
+The file transfer was successful.
+@item CN5
+The temporary file could not be moved into the final location.
+@end table
+
+After the @samp{C} command response has been sent (in the @samp{RY}
+case) or immediately (in an @samp{RN} case) the master will send another
+command.
+@end table
+
+@node The X Command, The E Command, The R Command, UUCP Protocol Commands
+@subsubsection The X Command
+@cindex X UUCP protocol command
+@cindex UUCP protocol X command
+
+@table @asis
+@item master: @samp{X @var{from} @var{to} @var{user} -@var{options}}
+The @samp{X} and the @samp{-} are literal characters.  This is a request
+by the master to, in essence, execute uucp on the slave.  The slave
+should execute @samp{uucp @var{from} @var{to}}.
+
+@table @var
+@item from
+This is the name of the file or files on the slave which the master
+wishes to transfer.  Any wildcards are expanded on the slave.  If the
+master is requesting that the files be transferred to itself, the
+request would normally contain wildcard characters, since otherwise an
+@samp{R} command would suffice.  The master can also use this command to
+request that the slave transfer files to a third system.
+
+@item to
+This is the name of the file or directory to which the files should be
+transferred.  This will normally use a UUCP name.  For example, if the
+master wishes to receive the files itself, it would use
+@samp{master!path}.
+
+@item user
+The name of the user who requested the transfer.
+
+@item options
+A list of options to control the transfer.  It is not clear which, if
+any, options are supported by most UUCP packages.
+@end table
+
+The slave then responds with an @samp{X} command response.  FSUUCP does
+not support @samp{X} requests, and always responds with @samp{XN}.
+
+@table @samp
+@item XY
+The request was accepted, and the appropriate file transfer commands
+have been queued up for later processing.
+
+@item XN
+The request was denied.  No particular reason is given.
+@end table
+
+In either case, the master will then send another command.
+@end table
+
+@node The E Command, The H Command, The X Command, UUCP Protocol Commands
+@subsubsection The E Command
+@cindex E UUCP protocol command
+@cindex UUCP protocol E command
+
+@table @asis
+@item master: @samp{E @var{from} @var{to} @var{user} -@var{options} @var{temp} @var{mode} @var{notify} @var{size} @var{command}}
+The @samp{E} command is only supported by Taylor UUCP 1.04 and up.  It
+is used to make an execution request without requiring a separate
+@file{X.*} file.  
+@ifclear faq
+@xref{Execution File Format}.
+@end ifclear
+It is only used when the command to be executed requires a single input
+file which is passed to it as standard input.
+
+All the fields have the same meaning as they do for an @samp{S} command,
+except for @var{options} and @var{command}.
+
+@table @var
+@item options
+A list of options to control the transfer.  The following options are
+defined (all options are single characters):
+@table @samp
+@item C
+The file has been copied to the spool directory (the master should use
+@var{temp} rather than @var{from}).
+@item c
+The file has not been copied to the spool directory (this is the
+default).
+@item N
+No mail message should be sent, even if the command fails.  This is the
+equivalent of the @samp{N} command in an @file{X.*} file.
+@item Z
+A mail message should be sent if the command fails (this is generally
+the default in any case).  This is the equivalent of the @samp{Z}
+command in an @file{X.*} file.
+@item R
+Mail messages about the execution should be sent to the address in the
+@var{notify} field.  This is the equivalent of the @samp{R} command in
+an @file{X.*} file.
+@item e
+The execution should be done with @file{/bin/sh}.  This is the
+equivalent of the @samp{e} command in an @file{X.*} file.
+@end table
+
+@item command
+The command which should be executed.  This is the equivalent of the
+@samp{C} command in an @file{X.*} file.
+@end table
+
+The slave then responds with an @samp{E} command response.  These are
+the same as the @samp{S} command responses, but the initial character is
+@samp{E} rather than @samp{S}.
+
+If the slave responds with @samp{EY}, the file transfer begins.  When
+the file transfer is complete, the slave sends a @samp{C} command
+response, just as for the @samp{S} command.  After a successful file
+transfer, the slave is responsible for arranging for the command to be
+executed.  The transferred file is passed as standard input, as though
+it were named in the @samp{I} and @samp{F} commands of an @file{X.*}
+file.
+
+After the @samp{C} command response has been received (in the @samp{EY}
+case) or immediately (in an @samp{EN} case) the master will send another
+command.
+@end table
+
+@node The H Command,  , The E Command, UUCP Protocol Commands
+@subsubsection The H Command
+@cindex H UUCP protocol command
+@cindex UUCP protocol H command
+
+@table @asis
+@item master: @samp{H}
+This is used by the master to hang up the connection.  The slave will
+respond with an @samp{H} command response.
+
+@table @samp
+@item HY
+The slave agrees to hang up the connection.  In this case the master
+sends another @samp{HY} command.  In some UUCP packages the slave will
+then send a third @samp{HY} command.  At this point the protocol is shut
+down, and the final handshake is begun.
+@item HN
+The slave does not agree to hang up.  In this case the master and the
+slave exchange roles.  The next command will be sent by the former
+slave, which is the new master.  The roles may be reversed several times
+during a single connection.
+@end table
+@end table
+
+@node The Final Handshake,  , UUCP Protocol Commands, UUCP Protocol
+@subsection The Final Handshake
+@cindex final handshake
+
+After the protocol has been shut down, the final handshake is performed.
+This handshake has no real purpose, and some UUCP packages simply drop
+the connection rather than do it (in fact, some will drop the connection
+immediately after both sides agree to hangup, without even closing down
+the protocol).
+
+@table @asis
+@item caller: @samp{\020OOOOOO\000}
+
+@item called: @samp{\020OOOOOOO\000}
+@end table
+
+That is, the calling UUCP sends six @samp{O} characters and the called
+UUCP replies with seven @samp{O} characters.  Some UUCP packages always
+send six @samp{O} characters.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{g} Protocol
+Subject: UUCP @samp{g} Protocol
+@end format
+@end ifset
+
+@node g Protocol, f Protocol, UUCP Protocol, Protocols
+@section UUCP @samp{g} Protocol
+@cindex @samp{g} protocol
+@cindex protocol @samp{g}
+
+The @samp{g} protocol is a packet based flow controlled error correcting
+protocol that requires an eight bit clear connection.  It is the
+original UUCP protocol, and is supported by all UUCP implementations.
+Many implementations of it are only able to support small window and
+packet sizes, specifically a window size of 3 and a packet size of 64
+bytes, but the protocol itself can support up to a window size of 7 and
+a packet size of 4096 bytes.  Complaints about the inefficiency of the
+@samp{g} protocol generally refer to specific implementations, rather
+than to the correctly implemented protocol.
+
+The @samp{g} protocol was originally designed for general packet
+drivers, and thus contains some features that are not used by UUCP,
+including an alternate data channel and the ability to renegotiate
+packet and window sizes during the communication session.
+
+The @samp{g} protocol is spoofed by many Telebit modems.  When spoofing
+is in effect, each Telebit modem uses the @samp{g} protocol to
+communicate with the attached computer, but the data between the modems
+is sent using a Telebit proprietary error correcting protocol.  This
+allows for very high throughput over the Telebit connection, which,
+because it is half-duplex, would not normally be able to handle the
+@samp{g} protocol very well at all.  When a Telebit is spoofing the
+@samp{g} protocol, it forces the packet size to be 64 bytes and the
+window size to be 3.
+
+This discussion of the @samp{g} protocol explains how it works, but does
+not discuss useful error handling techniques.  Some discussion of this
+can be found in Jamie E. Hanrahan's paper, cited 
+@ifclear faq
+above (@pxref{UUCP Protocol Sources}).
+@end ifclear
+@ifset faq
+above.
+@end ifset
+
+All @samp{g} protocol communication is done with packets.  Each packet
+begins with a six byte header.  Control packets consist only of the
+header.  Data packets contain additional data.
+
+The header is as follows:
+
+@table @asis
+@item @samp{\020}
+Every packet begins with a @kbd{^P}.
+
+@item @var{k} (1 <= @var{k} <= 9)
+The @var{k} value is always 9 for a control packet.  For a data packet,
+the @var{k} value indicates how much data follows the six byte header.
+The amount of data is
+@ifinfo
+2 ** (@var{k} + 4), where ** indicates exponentiation.
+@end ifinfo
+@iftex
+@math{2^{@var{k} + 4}}.
+@end iftex
+Thus a @var{k} value of 1 means 32 data bytes and a
+@var{k} value of 8 means 4096 data bytes.  The @var{k} value for a data
+packet must be between 1 and 8 inclusive.
+
+@item checksum low byte
+@itemx checksum high byte
+The checksum value is described below.
+
+@item control byte
+The control byte indicates the type of packet, and is described below.
+
+@item xor byte
+This byte is the xor of @var{k}, the checksum low byte, the checksum
+high byte and the control byte (i.e., the second, third, fourth and
+fifth header bytes).  It is used to ensure that the header data is
+valid.
+@end table
+
+The control byte in the header is composed of three bit fields, referred
+to here as @var{tt} (two bits), @var{xxx} (three bits) and @var{yyy}
+(three bits).  The control is @var{tt}@var{xxx}@var{yyy}, or @code{(@var{tt}
+<< 6) + (@var{xxx} << 3) + @var{yyy}}.
+
+The @var{TT} field takes on the following values:
+
+@table @samp
+@item 0
+This is a control packet.  In this case the @var{k} byte in the
+header must be 9.  The @var{xxx} field indicates the type of control
+packet; these types are described below.
+
+@item 1
+This is an alternate data channel packet.  This is not used by UUCP.
+
+@item 2
+This is a data packet, and the entire contents of the attached data
+field (whose length is given by the @var{k} byte in the header) are
+valid.  The @var{xxx} and @var{yyy} fields are described below.
+
+@item 3
+This is a short data packet.  Let the length of the data field (as given
+by the @var{k} byte in the header) be @var{l}.  Let the first byte in
+the data field be @var{b1}.  If @var{b1} is less than 128 (if the most
+significant bit of @var{b1} is 0), then there are @code{@var{l} -
+@var{b1}} valid bytes of data in the data field, beginning with the
+second byte.  If @code{@var{b1} >= 128}, let @var{b2} be the second byte
+in the data field.  Then there are @code{@var{l} - ((@var{b1} & 0x7f) +
+(@var{b2} << 7))} valid bytes of data in the data field, beginning with
+the third byte.  In all cases @var{l} bytes of data are sent (and all
+data bytes participate in the checksum calculation) but some of the
+trailing bytes may be dropped by the receiver.  The @var{xxx} and
+@var{yyy} fields are described below.
+@end table
+
+In a data packet (short or not) the @var{xxx} field gives the sequence
+number of the packet.  Thus sequence numbers can range from 0 to 7,
+inclusive.  The @var{yyy} field gives the sequence number of the last
+correctly received packet.
+
+Each communication direction uses a window which indicates how many
+unacknowledged packets may be transmitted before waiting for an
+acknowledgement.  The window may range from 1 to 7, and may be different
+in each direction. For example, if the window is 3 and the last packet
+acknowledged was packet number 6, packet numbers 7, 0 and 1 may be sent
+but the sender must wait for an acknowledgement before sending packet
+number 2.  This acknowledgement could come as the @var{yyy} field of a
+data packet or as the @var{yyy} field of a @samp{RJ} or @samp{RR}
+control packet (described below).
+
+Each packet must be transmitted in order (the sender may not skip
+sequence numbers).  Each packet must be acknowledged, and each packet
+must be acknowledged in order.
+
+In a control packet, the @var{xxx} field takes on the following values:
+
+@table @asis
+@item 1 @samp{CLOSE}
+The connection should be closed immediately.  This is typically sent
+when one side has seen too many errors and wants to give up.  It is also
+sent when shutting down the protocol.  If an unexpected @samp{CLOSE}
+packet is received, a @samp{CLOSE} packet should be sent in reply and
+the @samp{g} protocol should halt, causing UUCP to enter the final
+handshake.
+
+@item 2 @samp{RJ} or @samp{NAK}
+The last packet was not received correctly.  The @var{yyy} field
+contains the sequence number of the last correctly received packet.
+
+@item 3 @samp{SRJ}
+Selective reject.  The @var{yyy} field contains the sequence number of a
+packet that was not received correctly, and should be retransmitted.
+This is not used by UUCP, and most implementations will not recognize
+it.
+
+@item 4 @samp{RR} or @samp{ACK}
+Packet acknowledgement.  The @var{yyy} field contains the sequence
+number of the last correctly received packet.
+
+@item 5 @samp{INITC}
+Third initialization packet.  The @var{yyy} field contains the maximum
+window size to use.
+
+@item 6 @samp{INITB}
+Second initialization packet.  The @var{yyy} field contains the
+packet size to use.  It requests a size of 
+@ifinfo
+2 ** (@var{yyy} + 5).
+@end ifinfo
+@iftex
+@math{2^{@var{yyy} + 5}}.
+@end iftex
+Note that this is not the same coding used for the @var{k} byte in the
+packet header (it is 1 less).  Most UUCP implementations that request a
+packet size larger than 64 bytes can handle any packet size up to that
+specified.
+
+@item 7 @samp{INITA}
+First initialization packet.  The @var{yyy} field contains the maximum
+window size to use.
+@end table
+
+To compute the checksum, call the control byte (the fifth byte in the
+header) @var{c}.
+
+The checksum of a control packet is simply @code{0xaaaa - @var{c}}.
+
+The checksum of a data packet is @code{0xaaaa - (@var{check} ^
+@var{c})}, where @code{^} denotes exclusive or, and @var{check} is the
+result of the following routine as run on the contents of the data field
+(every byte in the data field participates in the checksum, even for a
+short data packet).  Below is the routine used by an early version of
+Taylor UUCP; it is a slightly modified version of a routine which John
+Gilmore patched from G.L.@: Chesson's original paper.  The @code{z}
+argument points to the data and the @code{c} argument indicates how much
+data there is.
+
+@example
+int
+igchecksum (z, c)
+     register const char *z;
+     register int c;
+@{
+  register unsigned int ichk1, ichk2;
+
+  ichk1 = 0xffff;
+  ichk2 = 0;
+
+  do
+    @{
+      register unsigned int b;
+
+      /* Rotate ichk1 left.  */
+      if ((ichk1 & 0x8000) == 0)
+        ichk1 <<= 1;
+      else
+        @{
+          ichk1 <<= 1;
+          ++ichk1;
+        @}
+
+      /* Add the next character to ichk1.  */
+      b = *z++ & 0xff;
+      ichk1 += b;
+
+      /* Add ichk1 xor the character position in the buffer counting from
+         the back to ichk2.  */
+      ichk2 += ichk1 ^ c;
+
+      /* If the character was zero, or adding it to ichk1 caused an
+         overflow, xor ichk2 to ichk1.  */
+      if (b == 0 || (ichk1 & 0xffff) < b)
+        ichk1 ^= ichk2;
+    @}
+  while (--c > 0);
+
+  return ichk1 & 0xffff;
+@}
+@end example
+
+When the @samp{g} protocol is started, the calling UUCP sends an
+@samp{INITA} control packet with the window size it wishes the called
+UUCP to use.  The called UUCP responds with an @samp{INITA} packet with
+the window size it wishes the calling UUCP to use.  Pairs of
+@samp{INITB} and @samp{INITC} packets are then similarly exchanged.
+When these exchanges are completed, the protocol is considered to have
+been started.
+
+Note that the window and packet sizes are not a negotiation.  Each
+system announces the window and packet size which the other system
+should use.  It is possible that different window and packet sizes will
+be used in each direction.  The protocol works this way on the theory
+that each system knows how much data it can accept without getting
+overrun.  Therefore, each system tells the other how much data to send
+before waiting for an acknowledgement.
+
+When a UUCP package transmits a command, it sends one or more data
+packets.  All the data packets will normally be complete, although some
+UUCP packages may send the last one as a short packet.  The command
+string is sent with a trailing null byte, to let the receiving package
+know when the command is finished.  Some UUCP packages require the last
+byte of the last packet sent to be null, even if the command ends
+earlier in the packet.  Some packages may require all the trailing bytes
+in the last packet to be null, but I have not confirmed this.
+
+When a UUCP package sends a file, it will send a sequence of data
+packets.  The end of the file is signalled by a short data packet
+containing zero valid bytes (it will normally be preceeded by a short
+data packet containing the last few bytes in the file).
+
+Note that the sequence numbers cover the entire communication session,
+including both command and file data.
+
+When the protocol is shut down, each UUCP package sends a @samp{CLOSE}
+control packet.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{f} Protocol
+Subject: UUCP @samp{f} Protocol
+@end format
+@end ifset
+
+@node f Protocol, t Protocol, g Protocol, Protocols
+@section UUCP @samp{f} Protocol
+@cindex @samp{f} protocol
+@cindex protocol @samp{f}
+
+The @samp{f} protocol is a seven bit protocol which checksums an entire
+file at a time.  It only uses the characters between @samp{\040} and
+@samp{\176} (ASCII @kbd{space} and @kbd{~}) inclusive, as well as the
+carriage return character.  It can be very efficient for transferring
+text only data, but it is very inefficient at transferring eight bit
+data (such as compressed news).  It is not flow controlled, and the
+checksum is fairly insecure over large files, so using it over a serial
+connection requires handshaking (XON/XOFF can be used) and error
+correcting modems.  Some people think it should not be used even under
+those circumstances.
+
+I believe that the @samp{f} protocol originated in BSD versions of UUCP.
+It was originally intended for transmission over X.25 PAD links.
+
+The @samp{f} protocol has no startup or finish protocol.  However, both
+sides typically sleep for a couple of seconds before starting up,
+because they switch the terminal into XON/XOFF mode and want to allow
+the changes to settle before beginning transmission.
+
+When a UUCP package transmits a command, it simply sends a string
+terminated by a carriage return.
+
+When a UUCP package transmits a file, each byte @var{b} of the file is
+translated according to the following table:
+
+@example
+       0 <= @var{b} <=  037: 0172, @var{b} + 0100 (0100 to 0137)
+     040 <= @var{b} <= 0171:       @var{b}        ( 040 to 0171)
+    0172 <= @var{b} <= 0177: 0173, @var{b} - 0100 ( 072 to  077)
+    0200 <= @var{b} <= 0237: 0174, @var{b} - 0100 (0100 to 0137)
+    0240 <= @var{b} <= 0371: 0175, @var{b} - 0200 ( 040 to 0171)
+    0372 <= @var{b} <= 0377: 0176, @var{b} - 0300 ( 072 to  077)
+@end example
+
+That is, a byte between @samp{\040} and @samp{\171} inclusive is
+transmitted as is, and all other bytes are prefixed and modified as
+shown.
+
+When all the file data is sent, a seven byte sequence is sent: two bytes
+of @samp{\176} followed by four ASCII bytes of the checksum as printed
+in base 16 followed by a carriage return.  For example, if the checksum
+was 0x1234, this would be sent: @samp{\176\1761234\r}.
+
+The checksum is initialized to 0xffff.  For each byte that is sent it is
+modified as follows (where @var{b} is the byte before it has been
+transformed as described above):
+
+@example
+      /* Rotate the checksum left.  */
+      if ((ichk & 0x8000) == 0)
+        ichk <<= 1;
+      else
+        @{
+          ichk <<= 1;
+          ++ichk;
+        @}
+
+      /* Add the next byte into the checksum.  */
+      ichk += @var{b};
+@end example
+
+When the receiving UUCP sees the checksum, it compares it against its
+own calculated checksum and replies with a single character followed
+by a carriage return.
+
+@table @samp
+@item G
+The file was received correctly.
+
+@item R
+The checksum did not match, and the file should be resent from the
+beginning.
+
+@item Q
+The checksum did not match, but too many retries have occurred and the
+communication session should be abandoned.
+@end table
+
+The sending UUCP checks the returned character and acts accordingly.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{t} Protocol
+Subject: UUCP @samp{t} Protocol
+@end format
+@end ifset
+
+@node t Protocol, e Protocol, f Protocol, Protocols
+@section UUCP @samp{t} Protocol
+@cindex @samp{t} protocol
+@cindex protocol @samp{t}
+
+The @samp{t} protocol is intended for use on links which provide
+reliable end-to-end connections, such as TCP.  It does no error checking
+or flow control, and requires an eight bit clear channel.
+
+I believe the @samp{t} protocol originated in BSD versions of UUCP.
+
+When a UUCP package transmits a command, it first gets the length of the
+command string, @var{c}.  It then sends @code{((@var{c} / 512) + 1) *
+512} bytes (the smallest multiple of 512 which can hold @var{c} bytes
+plus a null byte) consisting of the command string itself followed by
+trailing null bytes.
+
+When a UUCP package sends a file, it sends it in blocks.  Each block
+contains at most 1024 bytes of data.  Each block consists of four bytes
+containing the amount of data in binary (most significant byte first,
+the same format as used by the Unix function @code{htonl}) followed by
+that amount of data.  The end of the file is signalled by a block
+containing zero bytes of data.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{e} Protocol
+Subject: UUCP @samp{e} Protocol
+@end format
+@end ifset
+
+@node e Protocol, Big G Protocol, t Protocol, Protocols
+@section UUCP @samp{e} Protocol
+@cindex @samp{e} protocol
+@cindex protocol @samp{e}
+
+The @samp{e} protocol is similar to the @samp{t} protocol.  It does no
+flow control or error checking and is intended for use over networks
+providing reliable end-to-end connections, such as TCP.
+
+The @samp{e} protocol originated in versions of HDB UUCP.
+
+When a UUCP package transmits a command, it simply sends the command
+as an ASCII string terminated by a null byte.
+
+When a UUCP package transmits a file, it sends the complete size of the
+file as an ASCII decimal number.  The ASCII string is padded out to 20
+bytes with null bytes (i.e. if the file is 1000 bytes long, it sends
+@samp{1000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0}).  It then sends the entire
+file.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{G} Protocol
+Subject: UUCP @samp{G} Protocol
+@end format
+@end ifset
+
+@node Big G Protocol, i Protocol, e Protocol, Protocols
+@section UUCP @samp{G} Protocol
+@cindex @samp{G} protocol
+@cindex protocol @samp{G}
+
+The @samp{G} protocol is used by SVR4 UUCP.  It is identical to the
+@samp{g} protocol, except that it is possible to modify the window and
+packet sizes.  The SVR4 implementation of the @samp{g} protocol
+reportedly is fixed at a packet size of 64 and a window size of 7.
+Supposedly SVR4 chose to implement a new protocol using a new letter to
+avoid any potential incompatibilities when using different packet or
+window sizes.
+
+Most implementations of the @samp{g} protocol that accept packets larger
+than 64 bytes will also accept packets smaller than whatever they
+requested in the @samp{INITB} packet.  The SVR4 @samp{G} implementation
+is an exception; it will only accept packets of precisely the size it
+requests in the INITB packet.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{i} Protocol
+Subject: UUCP @samp{i} Protocol
+@end format
+@end ifset
+
+@node i Protocol, j Protocol, Big G Protocol, Protocols
+@section UUCP @samp{i} Protocol
+@cindex @samp{i} protocol
+@cindex protocol @samp{i}
+
+The @samp{i} protocol was written by Ian Lance Taylor (who also wrote
+this
+@ifclear faq
+manual).
+@end ifclear
+@ifset faq
+FAQ).
+@end ifset
+It was first used by Taylor UUCP version 1.04.
+
+It is a sliding window packet protocol, like the @samp{g} protocol, but
+it supports bidirectional transfers (i.e., file transfers in both
+directions simultaneously).  It requires an eight bit clear connection.
+Several ideas for the protocol were taken from the paper @cite{A
+High-Throughput Message Transport System} by P.@: Lauder.  I don't know
+where the paper was published, but the author's e-mail address is
+@code{piers@@cs.su.oz.au}.  The @samp{i} protocol does not adopt his
+main idea, which is to dispense with windows entirely.  This is because
+some links still do require flow control and, more importantly, because
+using windows sets a limit to the amount of data which the protocol must
+be able to resend upon request.  To reduce the costs of window
+acknowledgements, the protocol uses a large window and only requires an
+ack at the halfway point.
+
+Each packet starts with a six byte header, optionally followed by data
+bytes with a four byte checksum.  There are currently five defined
+packet types (@samp{DATA}, @samp{SYNC}, @samp{ACK}, @samp{NAK},
+@samp{SPOS}, @samp{CLOSE}) which are described below.  Although any
+packet type may include data, any data provided with an @samp{ACK},
+@samp{NAK} or @samp{CLOSE} packet is ignored.
+
+Every @samp{DATA}, @samp{SPOS} and @samp{CLOSE} packet has a sequence
+number.  The sequence numbers are independent for each side.  The first
+packet sent by each side is always number 1.  Each packet is numbered
+one greater than the previous packet, modulo 32.
+
+Every packet has a local channel number and a remote channel number.
+For all packets at least one channel number is zero.  When a UUCP
+command is sent to the remote system, it is assigned a non-zero local
+channel number.  All packets associated with that UUCP command sent by
+the local system are given the selected local channel number.  All
+associated packets sent by the remote system are given the selected
+number as the remote channel number.  This permits each UUCP command
+to be uniquely identified by the channel number on the originating
+system, and therefore each UUCP package can associate all file data
+and UUCP command responses with the appropriate command.  This is a
+requirement for bidirectional UUCP transfers.
+
+The protocol maintains a single global file position, which starts at 0.
+For each incoming packet, any associated data is considered to occur at
+the current file position, and the file position is incremented by the
+amount of data contained.  The exception is a packet of type
+@samp{SPOS}, which is used to change the file position.  The reason for
+keeping track of the file position is described below.
+
+The header is as follows:
+
+@table @asis
+@item @samp{\007}
+Every packet begins with @kbd{^G}.
+
+@item @code{(@var{packet} << 3) + @var{locchan}}
+The five bit packet number combined with the three bit local channel
+number.  @samp{DATA}, @samp{SPOS} and @samp{CLOSE} packets use the
+packet sequence number for the @var{packet} field.  @samp{NAK} packet
+types use the @var{packet} field for the sequence number to be resent.
+@samp{ACK} and @samp{SYNC} do not use the @var{packet} field, and
+generally leave it set to 0.  Packets which are not associated with a
+UUCP command from the local system use a local channel number of 0.
+
+@item @code{(@var{ack} << 3) + @var{remchan}}
+The five bit packet acknowledgement combined with the three bit remote
+channel number.  The packet acknowledgement is the number of the last
+packet successfully received; it is used by all packet types.  Packets
+which are not sent in response to a UUCP command from the remote system
+use a remote channel number of 0.
+
+@item @code{(@var{type} << 5) + (@var{caller} << 4) + @var{len1}}
+The three bit packet type combined with the one bit packet direction
+combined with the upper four bits of the data length.  The packet
+direction bit is always 1 for packets sent by the calling UUCP, and 0
+for packets sent by the called UUCP.  This prevents confusion caused by
+echoed packets.
+
+@item @var{len2}
+The lower eight bits of the data length.  The twelve bits of data length
+permit packets ranging in size from 0 to 4095 bytes.
+
+@item @var{check}
+The exclusive or of the second through fifth bytes of the header.  This
+provides an additional check that the header is valid.
+@end table
+
+If the data length is non-zero, the packet is immediately followed by
+the specified number of data bytes.  The data bytes are followed by a
+four byte CRC 32 checksum, with the most significant byte first.  The
+CRC is calculated over the contents of the data field.
+
+The defined packet types are as follows:
+
+@table @asis
+@item 0 @samp{DATA}
+This is a plain data packet.
+
+@item 1 @samp{SYNC}
+@samp{SYNC} packets are exchanged when the protocol is initialized, and
+are described further below.  @samp{SYNC} packets do not carry sequence
+numbers (that is, the @var{packet} field is ignored).
+
+@item 2 @samp{ACK}
+This is an acknowledgement packet.  Since @samp{DATA} packets also carry
+packet acknowledgements, @samp{ACK} packets are only used when one side
+has no data to send.  @samp{ACK} packets do not carry sequence numbers.
+
+@item 3 @samp{NAK}
+This is a negative acknowledgement.  This is sent when a packet is
+received incorrectly, and means that the packet number appearing in the
+@var{packet} field must be resent.  @samp{NAK} packets do not carry
+sequence numbers (the @var{packet} field is already used).
+
+@item 4 @samp{SPOS}
+This packet changes the file position.  The packet contains four bytes
+of data holding the file position, most significant byte first.  The
+next packet received will be considered to be at the named file
+position.
+
+@item 5 @samp{CLOSE}
+When the protocol is shut down, each side sends a @samp{CLOSE} packet.
+This packet does have a sequence number, which could be used to ensure
+that all packets were correctly received (this is not needed by UUCP,
+however, which uses the higher level @samp{H} command with an @samp{HY}
+response).
+@end table
+
+When the protocol starts up, both systems send a @samp{SYNC} packet.
+The @samp{SYNC} packet includes at least three bytes of data.  The first
+two bytes are the maximum packet size the remote system should send,
+most significant byte first.  The third byte is the window size the
+remote system should use.  The remote system may send packets of any
+size up to the maximum.  If there is a fourth byte, it is the number of
+channels the remote system may use (this must be between 1 and 7,
+inclusive).  Additional data bytes may be defined in the future.
+
+The window size is the number of packets that may be sent before a
+packet is acknowledged.  There is no requirement that every packet be
+acknowledged; any acknowledgement is considered to acknowledge all
+packets through the number given.  In the current implementation, if one
+side has no data to send, it sends an @samp{ACK} when half the window is
+received.
+
+Note that the @samp{NAK} packet corresponds to the unused @samp{g}
+protocol @samp{SRJ} packet type, rather than to the @samp{RJ} packet
+type.  When a @samp{NAK} is received, only the named packet should be
+resent, not any subsequent packets.
+
+Note that if both sides have data to send, but a packet is lost, it is
+perfectly reasonable for one side to continue sending packets, all of
+which will acknowledge the last packet correctly received, while the
+system whose packet was lost will be unable to send a new packet because
+the send window will be full.  In this circumstance, neither side will
+time out and one side of the communication will be effectively shut down
+for a while.  Therefore, any system with outstanding unacknowledged
+packets should arrange to time out and resend a packet even if data is
+being received.
+
+Commands are sent as a sequence of data packets with a non-zero local
+channel number.  The last data packet for a command includes a trailing
+null byte (normally a command will fit in a single data packet).  Files
+are sent as a sequence of data packets ending with one of length zero.
+
+The channel numbers permit a more efficient implementation of the UUCP
+file send command.  Rather than send the command and then wait for the
+@samp{SY} response before sending the file, the file data is sent
+beginning immediately after the @samp{S} command is sent.  If an
+@samp{SN} response is received, the file send is aborted, and a final
+data packet of length zero is sent to indicate that the channel number
+may be reused.  If an @samp{SY} reponse with a file position indicator
+is received, the file send adjusts to the file position; this is why the
+protocol maintains a global file position.
+
+Note that the use of channel numbers means that each UUCP system may
+send commands and file data simultaneously.  Moreover, each UUCP system
+may send multiple files at the same time, using the channel number to
+disambiguate the data.  Sending a file before receiving an
+acknowledgement for the previous file helps to eliminate the round trip
+delays inherent in other UUCP protocols.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{j} Protocol
+Subject: UUCP @samp{j} Protocol
+@end format
+@end ifset
+
+@node j Protocol, x Protocol, i Protocol, Protocols
+@section UUCP @samp{j} Protocol
+@cindex @samp{j} protocol
+@cindex protocol @samp{j}
+
+The @samp{j} protocol is a variant of the @samp{i} protocol.  It was
+also written by Ian Lance Taylor, and first appeared in Taylor UUCP
+version 1.04.
+
+The @samp{j} protocol is a version of the @samp{i} protocol designed for
+communication links which intercept a few characters, such as XON or
+XOFF.  It is not efficient to use it on a link which intercepts many
+characters, such as a seven bit link.  The @samp{j} protocol performs no
+error correction or detection; that is presumed to be the responsibility
+of the @samp{i} protocol.
+
+When the @samp{j} protocol starts up, each system sends a printable
+ASCII string indicating which characters it wants to avoid using.  The
+string begins with the ASCII character @kbd{^} (octal 136) and ends with
+the ASCII character @kbd{~} (octal 176).  After sending this string,
+each system looks for the corresponding string from the remote system.
+The strings are composed of escape sequences: @samp{\ooo}, where
+@samp{o} is an octal digit.  For example, sending the string
+@samp{^\021\023~} means that the ASCII XON and XOFF characters should be
+avoided.  The union of the characters described in both strings (the
+string which is sent and the string which is received) is the set of
+characters which must be avoided in this conversation.  Avoiding a
+printable ASCII character (octal 040 to octal 176, inclusive) is not
+permitted.
+
+After the exchange of characters to avoid, the normal @samp{i} protocol
+start up is done, and the rest of the conversation uses the normal
+@samp{i} protocol.  However, each @samp{i} protocol packet is wrapped to
+become a @samp{j} protocol packet.
+
+Each @samp{j} protocol packet consists of a seven byte header, followed
+by data bytes, followed by index bytes, followed by a one byte trailer.
+The packet header looks like this:
+
+@table @asis
+@item @kbd{^}
+Every packet begins with the ASCII character @kbd{^}, octal 136.
+
+@item @var{high}
+@itemx @var{low}
+These two characters give the total number of bytes in the packet.  Both
+@var{high} and @var{low} are printable ASCII characters.  The length of
+the packet is @code{(@var{high} - 040) * 0100 + (@var{low} - 040)},
+where @code{040 <= @var{high} < 0177} and @code{040 <= @var{low} <
+0140}.  This permits a length of 6079 bytes, but there is a further
+restriction on packet size described below.
+
+@item @kbd{=}
+The ASCII character @kbd{=}, octal 075.
+
+@item @var{data-high}
+@itemx @var{data-low}
+These two characters give the total number of data bytes in the packet.
+The encoding is as described for @var{high} and @var{low}.  The number
+of data bytes is the size of the @samp{i} protocol packet wrapped inside
+this @samp{j} protocol packet.
+
+@item @kbd{@@}
+The ASCII character @kbd{@@}, octal 100.
+@end table
+
+The header is followed by the number of data bytes given in
+@var{data-high} and @var{data-low}.  These data bytes are the @samp{i}
+protocol packet which is being wrapped in the @samp{j} protocol packet.
+However, each character in the @samp{i} protocol packet which the
+@samp{j} protocol must avoid is transformed into a printable ASCII
+character (recall that avoiding a printable ASCII character is not
+permitted).  Two index bytes are used for each character which must be
+transformed.
+
+The index bytes immediately follow the data bytes.  The index bytes are
+created in pairs.  Each pair of index bytes encodes the location of a
+character in the @samp{i} protocol packet which was transformed to
+become a printable ASCII character.  Each pair of index bytes also
+encodes the precise transformation which was performed.
+
+When the sender finds a character which must be avoided, it will
+transform it using one or two operations.  If the character is 0200 or
+greater, it will subtract 0200.  If the resulting character is less than
+020, or is equal to 0177, it will xor by 020.  The result is a printable
+ASCII character.
+
+The zero based byte index of the character within the @samp{i} protocol
+packet is determined.  This index is turned into a two byte printable
+ASCII index, @var{index-high} and @var{index-low}, such that the index
+is @code{(@var{index-high} - 040) * 040 + (@var{index-low} - 040)}.
+@var{index-low} is restricted such that @code{040 <= @var{index-low} <
+0100}.  @var{index-high} is not permitted to be 0176, so @code{040 <=
+@var{index-high} < 0176}.  @var{index-low} is then modified to encode
+the transformation:
+
+@itemize @bullet
+@item If the character transformation only had to subtract 0200, then
+@var{index-low} is used as is.
+
+@item If the character transformation only had to xor by 020, then 040
+is added to @var{index-low}.
+
+@item If both operations had to be performed, then 0100 is added to
+@var{index-low}.  However, if the value of @var{index-low} were
+initially 077, then adding 0100 would result in 0177, which is not a
+printable ASCII character.  For that special case, @var{index-high} is
+set to 0176, and @var{index-low} is set to the original value of
+@var{index-high}.
+@end itemize
+
+The receiver decodes the index bytes as follows (this is the reverse of
+the operations performed by the sender, presented here for additional
+clarity):
+
+@itemize @bullet
+@item The first byte in the index is @var{index-high}, and the second is
+@var{index-low}.
+
+@item If @code{040 <= @var{index-high} < 0176}, the index refers to the
+data byte at position @code{(@var{index-high} - 040) * 040 +
+@var{index-low} % 040}.
+
+@item If @code{040 <= @var{index-low} < 0100}, then 0200 must be added
+to indexed byte.
+
+@item If @code{0100 <= @var{index-low} < 0140}, then 020 must be xor'ed
+to the indexed byte.
+
+@item If @code{0140 <= @var{index-low} < 0177}, then 0200 must be added
+to the indexed byte, and 020 must be xor'ed to the indexed byte.
+
+@item If @code{@var{index-high} == 0176}, the index refers to the data
+byte at position @code{(@var{index-low} - 040) * 040 + 037}.  0200 must
+be added to the indexed byte, and 020 must be xor'ed to the indexed
+byte.
+@end itemize
+
+This means the largest @samp{i} protocol packet which may be wrapped
+inside a @samp{j} protocol packet is @code{(0175 - 040) * 040 + (077 -
+040) == 3007} bytes.
+
+The final character in a @samp{j} protocol packet, following the index
+bytes, is the ASCII character @kbd{~} (octal 176).
+
+The motivation behind using an indexing scheme, rather than escape
+characters, is to avoid data movement.  The sender may simply add a
+header and a trailer to the @samp{i} protocol packet.  Once the receiver
+has loaded the @samp{j} protocol packet, it may scan the index bytes,
+transforming the data bytes, and then pass the data bytes directly on to
+the @samp{i} protocol routine.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{x} Protocol
+Subject: UUCP @samp{x} Protocol
+@end format
+@end ifset
+
+@node x Protocol, y Protocol, j Protocol, Protocols
+@section UUCP @samp{x} Protocol
+@cindex @samp{x} protocol
+@cindex protocol @samp{x}
+
+The @samp{x} protocol is used in Europe (and probably elsewhere) with
+machines that contain an builtin X.25 card and can send eight bit data
+transparently across X.25 circuits, without interference from the X.28
+or X.29 layers.  The protocol sends packets of 512 bytes, and relies on
+a write of zero bytes being read as zero bytes without stopping
+communication.  It first appeared in the original System V UUCP
+implementation.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{y} Protocol
+Subject: UUCP @samp{y} Protocol
+@end format
+@end ifset
+
+@node y Protocol, d Protocol, x Protocol, Protocols
+@section UUCP @samp{y} Protocol
+@cindex @samp{y} protocol
+@cindex protocol @samp{y}
+
+The @samp{y} protocol was developed by Jorge Cwik for use in FX UUCICO,
+a PC uucico program.  It is designed for communication lines which
+handle error correction and flow control.  It requires an eight bit
+clean connection.  It performs error detection, but not error
+correction: when an error is detected, the line is dropped.  It is a
+streaming protocol, like the @samp{f} protocol; there are no packet
+acknowledgements, so the protocol is efficient over a half-duplex
+communication line such as PEP.
+
+Every packet contains a six byte header:
+
+@table @asis
+@item sequence low byte
+@itemx sequence high byte
+A two byte sequence number, in little endian order.  The first sequence
+number is 0.  Since the first packet is always a sync packet (described
+below) the sequence number of the first data packet is always 1.  Each
+system counts sequence numbers independently.
+
+@item length low byte
+@itemx length high byte
+A two byte data length, in little endian order.  If the high bit of the
+sixteen bit field is clear, this is the number of data bytes which
+follow the six byte header.  If the high bit is set, there is no data,
+and the length field is a type of control packet.
+
+@item checksum low byte
+@itemx checksum high byte
+A two byte checksum, in little endian order.  The checksum is computed
+over the data bytes.  The checksum algorithm is described below.  If
+there are no data bytes, the checksum is sent as 0.
+@end table
+
+When the protocol starts up, each side must send a sync packet.  This is
+a packet with a normal six byte header followed by data.  The sequence
+number of the sync packet should be 0.  Currently at least four bytes of
+data must be sent with the sync packet.  Additional bytes should be
+ignored.  They are defined as follows:
+
+@table @asis
+@item version
+The version number of the protocol.  Currently this must be 1.  Larger
+numbers should be ignored; it is the responsibility of the newer version
+to accommodate the older one.
+
+@item packet size
+The maximum data length to use divided by 256.  This is sent as a single
+byte.  The maximum data length permitted is 32768, which would be sent
+as 128.  Customarily both systems will use the same maximum data length,
+the lower of the two requested.
+
+@item flags low byte
+@itemx flags high byte
+Two bytes of flags.  None are currently defined.  These bytes should be
+sent as 0, and ignored by the receiver.
+@end table
+
+A length field with the high bit set is a control packet.  The
+following control packet types are defined:
+
+@table @asis
+@item 0xfffe @samp{YPKT_ACK}
+Acknowledges correct receipt of a file.
+
+@item 0xfffd @samp{YPKT_ERR}
+Indicates an incorrect checksum.
+
+@item 0xfffc @samp{YPKT_BAD}
+Indicates a bad sequence number, an invalid length, or some other error.
+@end table
+
+If a control packet other than @samp{YPKT_ACK} is received, the
+connection is dropped.  If a checksum error is detected for a received
+packet, a @samp{YPKT_ERR} control packet is sent, and the connection is
+dropped.  If a packet is received out of sequence, a @samp{YPKT_BAD}
+control packet is sent, and the connection is dropped.
+
+The checksum is initialized to 0xffff.  For each data byte in a packet
+it is modified as follows (where @var{b} is the byte before it has been
+transformed as described above):
+
+@example
+      /* Rotate the checksum left.  */
+      if ((ichk & 0x8000) == 0)
+        ichk <<= 1;
+      else
+        @{
+          ichk <<= 1;
+          ++ichk;
+        @}
+
+      /* Add the next byte into the checksum.  */
+      ichk += @var{b};
+@end example
+
+This is the same algorithm as that used by the @samp{f} protocol.
+
+A command is sent as a sequence of data packets followed by a null byte.
+In the normal case, a command will fit into a single packet.  The packet
+should be exactly the length of the command plus a null byte.  If the
+command is too long, more packets are sent as required.
+
+A file is sent as a sequence of data packets, ending with a zero length
+packet.  The data packets may be of any length greater than zero and
+less than or equal to the maximum permitted packet size specified in the
+initial sync packet.
+
+After the zero length packet ending a file transfer has been received,
+the receiving system sends a @samp{YPKT_ACK} control packet.  The
+sending system waits for the @samp{YPKT_ACK} control packet before
+continuing; this wait should be done with a large timeout, since there
+may be a considerable amount of data buffered on the communication path.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{d} Protocol
+Subject: UUCP @samp{d} Protocol
+@end format
+@end ifset
+
+@node d Protocol, h Protocol, y Protocol, Protocols
+@section UUCP @samp{d} Protocol
+@cindex @samp{d} protocol
+@cindex protocol @samp{d}
+
+The @samp{d} protocol is apparently used for DataKit muxhost (not
+RS-232) connections.  No file size is sent.  When a file has been
+completely transferred, a write of zero bytes is done; this must be read
+as zero bytes on the other end.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{h} Protocol
+Subject: UUCP @samp{h} Protocol
+@end format
+@end ifset
+
+@node h Protocol, v Protocol, d Protocol, Protocols
+@section UUCP @samp{h} Protocol
+@cindex @samp{h} protocol
+@cindex protocol @samp{h}
+
+The @samp{h} protocol is apparently used in some places with HST modems.
+It does no error checking, and is not that different from the @samp{t}
+protocol.  I don't know the details.
+
+@ifset faq
+@format
+------------------------------
+
+From: UUCP @samp{v} Protocol
+Subject: UUCP @samp{v} Protocol
+@end format
+@end ifset
+
+@node v Protocol,  , h Protocol, Protocols
+@section UUCP @samp{v} Protocol
+@cindex @samp{v} protocol
+@cindex protocol @samp{v}
+
+The @samp{v} protocol is used by UUPC/extended, a PC UUCP program.  It
+is simply a version of the @samp{g} protocol which supports packets of
+any size, and also supports sending packets of different sizes during
+the same conversation.  There are many @samp{g} protocol implementations
+which support both, but there are also many which do not.  Using
+@samp{v} ensures that everything is supported.
+
+@ifset faq
+@format
+------------------------------
+
+From: Thanks
+Subject: Thanks
+@end format
+
+Besides the papers and information acknowledged at the top of this
+article, the following people have contributed help, advice,
+suggestions and information:
+@format
+    Earle Ake 513-429-6500 <ake@@Dayton.SAIC.COM>
+    chris@@uuplus.com (Christopher J. Ambler)
+    jhc@@iscp.bellcore.com (Jonathan Clark)
+    jorge@@laser.satlink.net (Jorge Cwik)
+    celit!billd@@UCSD.EDU (Bill Davidson)
+    "Drew Derbyshire" <ahd@@kew.com>
+    erik@@pdnfido.fidonet.org
+    Matthew Farwell <dylan@@ibmpcug.co.uk>
+    dgilbert@@gamiga.guelphnet.dweomer.org (David Gilbert)
+    kherron@@ms.uky.edu (Kenneth Herron)
+    Mike Ipatow <mip@@fido.itc.e-burg.su>
+    Romain Kang <romain@@pyramid.com>
+    "Jonathan I. Kamens" <jik@@GZA.COM>
+    "David J. MacKenzie" <djm@@eng.umd.edu>
+    jum@@helios.de (Jens-Uwe Mager)
+    peter@@xpoint.ruessel.sub.org (Peter Mandrella)
+    david nugent <david@@csource.oz.au>
+    Stephen.Page@@prg.oxford.ac.uk
+    joey@@tessi.UUCP (Joey Pruett)
+    James Revell <revell@@uunet.uu.net>
+    Larry Rosenman <ler@@lerami.lerctr.org>
+    Rich Salz <rsalz@@bbn.com>
+    evesg@@etlrips.etl.go.jp (Gjoen Stein)
+    kls@@ditka.Chicago.COM (Karl Swartz)
+    Dima Volodin <dvv@@hq.demos.su>
+    John.Woods@@proteon.com (John Woods)
+    jon@@console.ais.org (Jon Zeeff)
+    Eric Ziegast <ziegast@@uunet.uu.net>
+
+------------------------------
+
+End of UUCP Internals Frequently Asked Questions
+******************************
+@end format
+@end ifset
+@c END-OF-FAQ
 
 @node Hacking, Acknowledgements, Protocols, Top
 @chapter Hacking Taylor UUCP
@@ -5375,6 +7708,7 @@ Marc Boucher @code{<marc@@CAM.ORG>}
 @code{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
 Brian Campbell @code{<brianc@@quantum.on.ca>}
 Andrew A. Chernov @code{<ache@@astral.msk.su>}
+@code{jhc@@iscp.bellcore.com} (Jonathan Clark)
 @code{mafc!frank@@bach.helios.de} (Frank Conrad)
 Ed Carp @code{<erc@@apple.com>}
 @code{mpc@@mbs.linet.org} (Mark Clements)
@@ -5384,22 +7718,26 @@ Bob Cunningham @code{<bob@@soest.hawaii.edu>}
 @code{jorge@@laser.satlink.net} (Jorge Cwik)
 @code{kdburg@@incoahe.hanse.de} (Klaus Dahlenburg)
 Damon @code{<d@@exnet.co.uk>}
+@code{celit!billd@@UCSD.EDU} (Bill Davidson)
 @code{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @code{markd@@bushwire.apana.org.au} (Mark Delany)
 Allen Delaney @code{<allen@@brc.ubc.ca>}
 Gerriet M. Denkmann @code{gerriet@@hazel.north.de}
 @code{denny@@dakota.alisa.com} (Bob Denny)
+Drew Derbyshire @code{<ahd@@kew.com>}
 @code{ssd@@nevets.oau.org} (Steven S. Dick)
 @code{gert@@greenie.gold.sub.org} (Gert Doering)
 @code{gemini@@geminix.in-berlin.de} (Uwe Doering)
 Hans-Dieter Doll @code{<hd2@@Insel.DE>}
 @code{deane@@deane.teleride.on.ca} (Dean Edmonds)
 Mark W. Eichin @code{<eichin@@cygnus.com>}
+@code{erik@@pdnfido.fidonet.org}
 Andrew Evans @code{<andrew@@airs.com>}
 @code{dje@@cygnus.com} (Doug Evans)
 Marc Evans @code{<marc@@synergytics.com>}
 Dan Everhart @code{<dan@@dyndata.com>}
 @code{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
+Matthew Farwell @code{<dylan@@ibmpcug.co.uk>}
 @code{fenner@@jazz.psu.edu} (Bill Fenner)
 @code{jaf@@inference.com} (Jose A. Fernandez)
 "David J. Fiander" @code{<golem!david@@news.lsuc.on.ca>}
@@ -5412,6 +7750,7 @@ Lele Gaifax @code{<piggy@@idea.sublink.org>}
 @code{Peter.Galbavy@@micromuse.co.uk}
 @code{hunter@@phoenix.pub.uu.oz.au} (James Gardiner [hunter])
 Terry Gardner @code{<cphpcom!tjg01>}
+@code{dgilbert@@gamiga.guelphnet.dweomer.org} (David Gilbert)
 @code{ol@@infopro.spb.su} (Oleg Girko)
 @code{jimmy@@tokyo07.info.com} (Jim Gottlieb)
 Benoit Grange @code{<ben@@fizz.fdn.org>}
@@ -5429,8 +7768,10 @@ Petri Helenius @code{<pete@@fidata.fi>}
 @code{gabe@@edi.com} (B. Gabriel Helou)
 Bob Hemedinger @code{<bob@@dalek.mwc.com>}
 Andrew Herbert @code{<andrew@@werple.pub.uu.oz.au>}
+@code{kherron@@ms.uky.edu} (Kenneth Herron)
 Peter Honeyman @code{<honey@@citi.umich.edu>}
 @code{jhood@@smoke.marlboro.vt.us} (John Hood)
+Mike Ipatow @code{<mip@@fido.itc.e-burg.su>}
 Bill Irwin @code{<bill@@twg.bc.ca>}
 @code{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
 @code{ai@@easy.in-chemnitz.de} (Andreas Israel)
@@ -5443,6 +7784,7 @@ Kevin Johnson @code{<kjj@@pondscum.phx.mcd.mot.com>}
 @code{rj@@rainbow.in-berlin.de} (Robert Joop)
 Alan Judge @code{<aj@@dec4ie.IEunet.ie>}
 @code{chris@@cj_net.in-berlin.de} (Christof Junge)
+Romain Kang @code{<romain@@pyramid.com>}
 @code{tron@@Veritas.COM} (Ronald S. Karr)
 Brendan Kehoe @code{<brendan@@cs.widener.edu>}
 @code{warlock@@csuchico.edu} (John Kennedy)
@@ -5468,6 +7810,7 @@ Ted Lindgreen @code{<tlindgreen@@encore.nl>}
 Matthew Lyle @code{<matt@@mips.mitek.com>}
 @code{djm@@eng.umd.edu} (David J. MacKenzie)
 John R MacMillan @code{<chance!john@@sq.sq.com>}
+@code{jum@@helios.de} (Jens-Uwe Mager)
 Giles D Malet @code{<shrdlu!gdm@@provar.kwnet.on.ca>}
 @code{mem@@mv.MV.COM} (Mark E. Mallett)
 @code{pepe@@dit.upm.es} (Jose A. Manas)
@@ -5499,6 +7842,7 @@ Jim O'Connor @code{<jim@@bahamut.fsc.com>}
 @code{kevin%kosman.uucp@@nrc.com} (Kevin O'Gorman)
 Petri Ojala @code{<ojala@@funet.fi>}
 @code{oneill@@cs.ulowell.edu} (Brian 'Doc' O'Neill)
+@code{Stephen.Page@@prg.oxford.ac.uk}
 @code{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
 Tim Peiffer @code{peiffer@@cs.umn.edu}
 @code{don@@blkhole.resun.com} (Don Phillips)
@@ -5508,10 +7852,12 @@ John Plate @code{<plate@@infotek.dk>}
 @code{eldorado@@tharr.UUCP} (Mark Powell)
 Mark Powell @code{<mark@@inet-uk.co.uk>}
 @code{pozar@@kumr.lns.com} (Tim Pozar)
+@code{joey@@tessi.UUCP} (Joey Pruett)
 Paul Pryor @code{ptp@@fallschurch-acirs2.army.mil}
 @code{putsch@@uicc.com} (Jeff Putsch)
 @code{ar@@nvmr.robin.de} (Andreas Raab)
 Jarmo Raiha @code{<jarmo@@ksvltd.FI>}
+James Revell @code{<revell@@uunet.uu.net>}
 Scott Reynolds @code{<scott@@clmqt.marquette.Mi.US>}
 @code{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
 Kenji Rikitake @code{<kenji@@rcac.astem.or.jp>}
@@ -5538,12 +7884,14 @@ Christopher Sawtell @code{<chris@@gerty.equinox.gen.nz>}
 @code{schuler@@bds.sub.org} (Bernd Schuler)
 @code{uunet!gold.sub.org!root} (Christian Seyb)
 @code{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
+@code{shields@@tembel.org} (Michael Shields)
 @code{peter@@ficc.ferranti.com} (Peter da Silva)
 @code{vince@@victrola.sea.wa.us} (Vince Skahan)
 @code{frumious!pat} (Patrick Smith)
 @code{roscom!monty@@bu.edu} (Monty Solomon)
 @code{sommerfeld@@orchard.medford.ma.us} (Bill Sommerfeld)
 Julian Stacey @code{<stacey@@guug.de>}
+@code{evesg@@etlrips.etl.go.jp} (Gjoen Stein)
 Harlan Stenn @code{<harlan@@mumps.pfcs.com>}
 Ralf Stephan @code{<ralf@@ark.abg.sub.org>}
 @code{johannes@@titan.westfalen.de} (Johannes Stille)
@@ -5551,6 +7899,7 @@ Ralf Stephan @code{<ralf@@ark.abg.sub.org>}
 @code{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
 @code{sullivan@@Mathcom.com} (S. Sullivan)
 Shigeya Suzuki @code{<shigeya@@dink.foretune.co.jp>}
+@code{kls@@ditka.Chicago.COM} (Karl Swartz)
 @code{swiers@@plains.NoDak.edu}
 Oleg Tabarovsky @code{<olg@@olghome.pccentre.msk.su>}
 @code{ikeda@@honey.misystems.co.jp} (Takatoshi Ikeda)
@@ -5568,6 +7917,7 @@ Tomi Vainio @code{<tomppa@@fidata.fi>}
 @code{a3@@a3.xs4all.nl} (Adri Verhoef)
 Andrew Vignaux @code{<ajv@@ferrari.datamark.co.nz>}
 @code{vogel@@omega.ssw.de} (Andreas Vogel)
+Dima Volodin @code{<dvv@@hq.demos.su>}
 @code{jos@@bull.nl} (Jos Vos)
 @code{jv@@nl.net} (Johan Vromans)
 David Vrona @code{<dave@@sashimi.wwa.com>}
@@ -5579,6 +7929,7 @@ David Vrona @code{<dave@@sashimi.wwa.com>}
 @code{frnkmth!twwells.com!bill} (T. William Wells)
 Peter Wemm @code{<Peter_Wemm@@zeus.dialix.oz.au>}
 @code{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
+@code{John.Woods@@proteon.com} (John Woods)
 Michael Yu.Yaroslavtsev @code{<mike@@yaranga.ipmce.su>}
 Alexei K. Yushin @code{<root@@july.elis.crimea.ua>}
 @code{jon@@console.ais.org} (Jon Zeeff)
