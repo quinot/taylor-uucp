@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/08  22:11:45  ian
+   Brian Campbell: allow sigsetjmp as configuration option
+
    Revision 1.4  1991/11/07  19:32:28  ian
    Chip Salzenberg: allow LOCKDIR, and check that locking process exists
 
@@ -137,6 +140,13 @@
 #define HAVE_BSD_TTY 1
 /* #define HAVE_SYSV_TERMIO 1 */
 /* #define HAVE_POSIX_TERMIOS 1 */
+
+/* On QNX 4, and possibly other systems, including <sys/ioctl.h>
+   interferes with <termios.h>.  On such a system, comment out the
+   following macro to avoid include <sys/ioctl.h>.  On any normal
+   system, or any system which does not use HAVE_POSIX_TERMIOS, do not
+   change this line.  */
+#define HAVE_SYSIOCTL_H 1
 
 /* Define HAVE_SETITIMER if you have the setitimer routine.
    Alternatively, define HAVE_NAPMS if you have the napms routine
