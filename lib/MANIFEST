@@ -6,6 +6,7 @@ buffer.c
 bzero.c
 crc.c
 debug.c
+escape.c
 getlin.c
 getopt.c
 memchr.c

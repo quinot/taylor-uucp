@@ -290,7 +290,9 @@ ukshow (qsys, puuconf)
 		   && strcmp (qsys->uuconf_zport, "TCP") == 0)
 		  || (qsys->uuconf_qport != NULL
 		      && (qsys->uuconf_qport->uuconf_ttype
-			  == UUCONF_PORTTYPE_TCP)))
+			  == UUCONF_PORTTYPE_TCP
+			  || qsys->uuconf_qport->uuconf_ttype
+			  == UUCONF_PORTTYPE_TLI)))
 		printf (" Remote address %s\n", qsys->uuconf_zphone);
 	      else
 		printf (" Phone number %s\n", qsys->uuconf_zphone);
@@ -480,7 +482,9 @@ ikshow_port (qport, pinfo)
      pointer pinfo;
 {
   struct sinfo *qi = (struct sinfo *) pinfo;
+  char **pz;
   struct uuconf_modem_port *qmodem;
+  struct uuconf_tli_port *qtli;
 
   qi->fgot = TRUE;
 
@@ -544,8 +548,6 @@ ikshow_port (qport, pinfo)
 	    }
 	  else
 	    {
-	      char **pz;
-
 	      pz = qmodem->uuconf_pzdialer;
 	      while (*pz != NULL)
 		{
@@ -577,8 +579,32 @@ ikshow_port (qport, pinfo)
       printf ("   TCP service %s\n",
 	      qport->uuconf_u.uuconf_stcp.uuconf_zport);
       break;
+    case UUCONF_PORTTYPE_TLI:
+      qtli = &qport->uuconf_u.uuconf_stli;
+      printf ("   Port type TLI%s\n",
+	      qtli->uuconf_fstream ? "S" : "");
+      if (qtli->uuconf_zdevice != NULL)
+	printf ("   Device %s\n", qtli->uuconf_zdevice);
+      if (qtli->uuconf_pzpush != NULL)
+	{
+	  printf ("   Push");
+	  for (pz = qtli->uuconf_pzpush; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
+      if (qtli->uuconf_pzdialer != NULL
+	  && qtli->uuconf_pzdialer[0] != NULL)
+	{
+	  printf ("   Dialer sequence");
+	  for (pz = qtli->uuconf_pzdialer; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
+      if (qtli->uuconf_zservaddr != NULL)
+	printf ("   Server address %s\n", qtli->uuconf_zservaddr);
+      break;
     default:
-      printf ("   CAN'T HAPPEN\n");
+      fprintf (stderr, "   CAN'T HAPPEN\n");
       break;
     }
 
@@ -809,6 +835,5 @@ ukuuconf_error (puuconf, iret)
     fprintf (stderr, "uuchk: %s\n", ab);
   else
     fprintf (stderr, "uuchk:%s\n", ab);
-  if (UUCONF_ERROR_VALUE (iret) != UUCONF_FOPEN_FAILED)
-    exit (EXIT_FAILURE);
+  exit (EXIT_FAILURE);
 }

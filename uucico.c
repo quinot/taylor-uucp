@@ -1549,7 +1549,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	  else
 	    qdialer = qport->uuconf_u.uuconf_smodem.uuconf_qdialer;
 	}	  
-      else if (qport->uuconf_ttype == UUCONF_PORTTYPE_TCP)
+      else if (qport->uuconf_ttype == UUCONF_PORTTYPE_TCP
+	       || (qport->uuconf_ttype == UUCONF_PORTTYPE_TLI
+		   && (qport->uuconf_ireliable
+		       & UUCONF_RELIABLE_SPECIFIED) == 0))
 	ftcp_port = TRUE;
     }
 

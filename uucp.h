@@ -223,6 +223,10 @@ extern int errno;
    TCP code.  */
 #define HAVE_TCP HAVE_SOCKET
 
+/* If the system has the t_open call, guess that we can compile the
+   TLI code.  */
+#define HAVE_TLI HAVE_T_OPEN
+
 /* The boolean type holds boolean values.  */
 typedef int boolean;
 #undef TRUE
@@ -509,41 +513,6 @@ extern boolean funknown_system P((pointer puuconf, const char *zsystem,
 /* See whether a file belongs in the spool directory.  */
 extern boolean fspool_file P((const char *zfile));
 
-/* Store information about a file being sent.  */
-extern boolean fstore_sendfile P((openfile_t e, pointer pseq,
-				  const char *zfrom, const char *zto,
-				  const char *ztosys, const char *zuser,
-				  const char *zmail));
-
-/* Finish sending a file.  The zwhy and fnever arguments are used
-   if the file was not received correctly.  */
-extern boolean fsent_file P((boolean freceived, long cbytes,
-			     const char *zwhy, boolean fnever));
-
-/* Note an error sending a file.  The function fsent_file must still
-   be called after this is called.  */
-extern void usendfile_error P((void));
-
-/* Store information about a file being received.  */
-extern boolean fstore_recfile P((openfile_t e, pointer pseq,
-				 const char *zfrom, const char *zto,
-				 const char *zfromsys, const char *zuser,
-				 unsigned int imode, const char *zmail,
-				 const char *ztemp, boolean fspool));
-
-/* Finish receiving a file.  The zwhy and fnever arguments are used
-   if the file was not received correctly.  */
-extern boolean freceived_file P((boolean fsent, long cbytes,
-				 const char *zwhy, boolean fnever));
-
-/* Note an error receiving a file.  The function freceived_file must
-   still be called after this is called.  */
-extern void urecfile_error P((void));
-
-/* Prepare to receive a file again by discarding the previous
-   contents.  */
-extern boolean frecfile_rewind P((void));
-
 /* See if the current time matches a time span.  If not, return FALSE.
    Otherwise, return TRUE and set *pival and *pcretry to the values
    from the matching element of the span.  */
@@ -666,6 +635,10 @@ extern enum tcmdtabret tidebug_parse P((int argc, char **argv,
 /* Copy one file to another.  */
 extern boolean fcopy_file P((const char *zfrom, const char *zto,
 			     boolean fpublic, boolean fmkdirs));
+
+/* Translate escape sequences in a buffer, leaving the result in the
+   same buffer and returning the length.  */
+extern size_t cescape P((char *zbuf));
 
 /* Get a buffer to hold a string of a given size.  The buffer should
    be freed with ubuffree.  */

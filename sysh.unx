@@ -287,14 +287,15 @@ extern int closedir P((DIR *));
 
 #endif /* ! HAVE_FTW_H */
 
-/* This structure holds the information we keep for a serial port.  */
+/* This structure holds the system dependent information we keep for a
+   connection.  This is used by the TCP and TLI code.  */
 
-struct ssysdep_serial
+struct ssysdep_conn
 {
-  /* Device name.  */
-  const char *zdevice;
   /* File descriptor.  */
   int o;
+  /* Device name.  */
+  const char *zdevice;
   /* File status flags.  */
   int iflags;
   /* File status flags for descriptor 1 (-1 if not standard input).  */
@@ -303,6 +304,8 @@ struct ssysdep_serial
   int ohold;
   /* TRUE if this is a terminal and the remaining fields are valid.  */
   boolean fterminal;
+  /* TRUE if this is a TLI descriptor.  */
+  boolean ftli;
   /* Baud rate.  */
   long ibaud;
   /* Original terminal settings.  */
@@ -310,30 +313,21 @@ struct ssysdep_serial
   /* Current terminal settings.  */
   sterminal snew;
 };
-
-/* Information we keep for a TCP port.  The only thing we need to know
-   is the file descriptor number.  */
 
-struct ssysdep_tcp
-{
-  int o;
-};
+/* These functions do I/O and chat scripts to a port.  They are called
+   by the TCP and TLI routines.  */
 
-#if HAVE_TCP
-
-/* There are three TCP functions which are kept with the serial port
-   functions.  */
-
-extern boolean fsysdep_tcp_read P((struct sconnection *qconn,
-				   char *zbuf, size_t *pclen,
-				   size_t cmin, int ctimeout,
-				   boolean freport));
-extern boolean fsysdep_tcp_write P((struct sconnection *qconn,
-				    const char *zbuf, size_t clen));
-extern boolean fsysdep_tcp_chat P((struct sconnection *qconn,
-				   char **pzprog));
-
-#endif /* HAVE_TCP */
+extern boolean fsysdep_conn_read P((struct sconnection *qconn,
+				    char *zbuf, size_t *pclen,
+				    size_t cmin, int ctimeout,
+				    boolean freport));
+extern boolean fsysdep_conn_write P((struct sconnection *qconn,
+				     const char *zbuf, size_t clen));
+extern boolean fsysdep_conn_io P((struct sconnection *qconn,
+				  const char *zwrite, size_t *pcwrite,
+				  char *zread, size_t *pcread));
+extern boolean fsysdep_conn_chat P((struct sconnection *qconn,
+				    char **pzprog));
 
 /* Set a signal handler.  */
 extern void usset_signal P((int isig, RETSIGTYPE (*pfn) P((int)),

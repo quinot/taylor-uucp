@@ -49,7 +49,8 @@ static const char * const azPtype_names[] =
   "stdin",
   "modem",
   "direct",
-  "tcp"
+  "tcp",
+  "tli"
 };
 
 #define CPORT_TYPES (sizeof azPtype_names / sizeof azPtype_names[0])
@@ -145,11 +146,34 @@ static const struct cmdtab_offset asPtcp_cmds[] =
 
 #define CTCP_CMDS (sizeof asPtcp_cmds / sizeof asPtcp_cmds[0])
 
+/* The TLI port command table.  */
+static const struct cmdtab_offset asPtli_cmds[] =
+{
+  { "device", UUCONF_CMDTABTYPE_STRING,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_stli.uuconf_zdevice),
+      NULL },
+  { "stream", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_stli.uuconf_fstream),
+      NULL },
+  { "push", UUCONF_CMDTABTYPE_FULLSTRING,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_stli.uuconf_pzpush),
+      NULL },
+  { "dialer-sequence", UUCONF_CMDTABTYPE_FULLSTRING,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_stli.uuconf_pzdialer),
+      NULL },
+  { "server-address", UUCONF_CMDTABTYPE_STRING,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_stli.uuconf_zservaddr),
+      NULL },
+  { NULL, 0, 0, NULL }
+};
+
+#define CTLI_CMDS (sizeof asPtli_cmds / sizeof asPtli_cmds[0])
+
 #undef max
 #define max(i1, i2) ((i1) > (i2) ? (i1) : (i2))
 #define CCMDS \
   max (max (max (CPORT_CMDS, CSTDIN_CMDS), CMODEM_CMDS), \
-       max (CDIRECT_CMDS, CTCP_CMDS))
+       max (max (CDIRECT_CMDS, CTCP_CMDS), CTLI_CMDS))
 
 /* Handle a command passed to a port from a Taylor UUCP configuration
    file.  This can be called when reading either the port file or the
@@ -234,6 +258,18 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 				     | UUCONF_RELIABLE_EIGHT
 				     | UUCONF_RELIABLE_FULLDUPLEX);
 	  break;
+	case UUCONF_PORTTYPE_TLI:
+	  qport->uuconf_u.uuconf_stli.uuconf_zdevice = NULL;
+	  qport->uuconf_u.uuconf_stli.uuconf_fstream = FALSE;
+	  qport->uuconf_u.uuconf_stli.uuconf_pzpush = NULL;
+	  qport->uuconf_u.uuconf_stli.uuconf_pzdialer = NULL;
+	  qport->uuconf_u.uuconf_stli.uuconf_zservaddr = NULL;
+	  qport->uuconf_ireliable = (UUCONF_RELIABLE_SPECIFIED
+				     | UUCONF_RELIABLE_ENDTOEND
+				     | UUCONF_RELIABLE_RELIABLE
+				     | UUCONF_RELIABLE_EIGHT
+				     | UUCONF_RELIABLE_FULLDUPLEX);
+	  break;
 	}
 
       if (fgottype)
@@ -269,6 +305,10 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	case UUCONF_PORTTYPE_TCP:
 	  qcmds = asPtcp_cmds;
 	  ccmds = CTCP_CMDS;
+	  break;
+	case UUCONF_PORTTYPE_TLI:
+	  qcmds = asPtli_cmds;
+	  ccmds = CTLI_CMDS;
 	  break;
 	default:
 	  return UUCONF_SYNTAX_ERROR;

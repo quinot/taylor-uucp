@@ -59,6 +59,10 @@ fconn_init (qport, qconn)
     case UUCONF_PORTTYPE_TCP:
       return fsysdep_tcp_init (qconn);
 #endif
+#if HAVE_TLI
+    case UUCONF_PORTTYPE_TLI:
+      return fsysdep_tli_init (qconn);
+#endif
     default:
       ulog (LOG_ERROR, "Unknown port type");
       return FALSE;

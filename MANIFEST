@@ -30,6 +30,7 @@ sysh.unx
 system.h
 tcp.c
 time.c
+tli.c
 trans.c
 trans.h
 tstuu.c

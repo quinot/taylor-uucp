@@ -31,6 +31,8 @@
 #define HAVE_LIBC_H 0 /* <libc.h> */
 #define HAVE_SYSEXITS_H 0 /* <sysexits.h> */
 #define HAVE_POLL_H 0 /* <poll.h> */
+#define HAVE_TIUSER_H 0 /* <tiuser.h> */
+#define HAVE_XTI_H 0 /* <xti.h> */
 #define HAVE_STROPTS_H 0 /* <stropts.h> */
 #define HAVE_FTW_H 0 /* <ftw.h> */
 #define HAVE_SYS_SELECT_H 0 /* <sys/select.h> */
@@ -351,7 +353,7 @@
 
 /* The code will try to use each of the following functions in turn to
    determine the current time.  If none are available, it will use
-   time, which is assume to always exist.  */
+   time, which is assumed to always exist.  */
 #define HAVE_GETTIMEOFDAY 0
 #define HAVE_FTIME 0
 
@@ -379,6 +381,11 @@
 /* If the socket function is available, TCP support code will be
    compiled in.  */
 #define HAVE_SOCKET 0
+
+/* If the t_open function is available, TLI support code will be
+   compiled in.  This may require adding a library, such as -lnsl or
+   -lxti, to the Makefile variables LIBS.  */
+#define HAVE_T_OPEN 0
 
 /* That's the end of the list of the functions.  Now there are a few
    last miscellaneous items.  */

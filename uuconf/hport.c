@@ -212,6 +212,43 @@ uuconf_hdb_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 		   | UUCONF_RELIABLE_SPECIFIED);
 	      qport->uuconf_u.uuconf_stcp.uuconf_zport = pzsplit[1];
 	    }
+	  else if (ctoks >= 5
+		   && (strcmp (pzsplit[4], "TLI") == 0
+		       || strcmp (pzsplit[4], "TLIS") == 0))
+	    {
+	      size_t c;
+	      char **pzd;
+
+	      qport->uuconf_ttype = UUCONF_PORTTYPE_TLI;
+	      qport->uuconf_u.uuconf_stli.uuconf_zdevice = pzsplit[1];
+	      qport->uuconf_u.uuconf_stli.uuconf_fstream
+		= strcmp (pzsplit[4], "TLIS") == 0;
+	      qport->uuconf_u.uuconf_stli.uuconf_pzpush = NULL;
+	      pblock = uuconf_malloc_block ();
+	      if (pblock == NULL)
+		{
+		  qglobal->ierrno = errno;
+		  iret = UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+		  break;
+		}
+	      c = (ctoks - 4) * sizeof (char *);
+	      pzd = (char **) uuconf_malloc (pblock, c + sizeof (char *));
+	      if (pzd == NULL)
+		{
+		  qglobal->ierrno = errno;
+		  uuconf_free_block (pblock);
+		  iret = UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+		  break;
+		}
+	      memcpy ((pointer) pzd, (pointer) (pzsplit + 4), c);
+	      pzd[ctoks - 4] = NULL;
+	      qport->uuconf_u.uuconf_stli.uuconf_pzdialer = pzd;
+	      qport->uuconf_u.uuconf_stli.uuconf_zservaddr = NULL;
+	      qport->uuconf_ireliable
+		= (UUCONF_RELIABLE_ENDTOEND | UUCONF_RELIABLE_RELIABLE
+		   | UUCONF_RELIABLE_EIGHT | UUCONF_RELIABLE_FULLDUPLEX
+		   | UUCONF_RELIABLE_SPECIFIED);
+	    }
 	  else
 	    {
 	      qport->uuconf_ttype = UUCONF_PORTTYPE_MODEM;

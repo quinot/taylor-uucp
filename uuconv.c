@@ -841,7 +841,8 @@ uvwrite_taylor_system (e, q)
 
 	  if (q->uuconf_qport != NULL
 	      && q->uuconf_qport != (struct uuconf_port *) &_uuconf_unset
-	      && q->uuconf_qport->uuconf_ttype == UUCONF_PORTTYPE_TCP)
+	      && (q->uuconf_qport->uuconf_ttype == UUCONF_PORTTYPE_TCP
+		  || q->uuconf_qport->uuconf_ttype == UUCONF_PORTTYPE_TLI))
 	    zcmd = "address";
 	  else
 	    zcmd = "phone";
@@ -1622,6 +1623,9 @@ uvwrite_taylor_port (e, qport, zprefix)
     case UUCONF_PORTTYPE_TCP:
       ztype = "tcp";
       break;
+    case UUCONF_PORTTYPE_TLI:
+      ztype = "tli";
+      break;
     }
 
   fprintf (e, "%stype %s\n", zprefix, ztype);
@@ -1700,8 +1704,37 @@ uvwrite_taylor_port (e, qport, zprefix)
 	  fprintf (e, "%sdevice %s\n", zprefix, qd->uuconf_zdevice);
 	if (qd->uuconf_ibaud != 0)
 	  fprintf (e, "%sbaud %ld\n", zprefix, qd->uuconf_ibaud);
-	break;
       }
+      break;
+    case UUCONF_PORTTYPE_TCP:
+      if (qport->uuconf_u.uuconf_stcp.uuconf_zport != NULL)
+	fprintf (e, "%sservice %s\n", zprefix,
+		 qport->uuconf_u.uuconf_stcp.uuconf_zport);
+      break;
+    case UUCONF_PORTTYPE_TLI:
+      {
+	struct uuconf_tli_port *qt;
+
+	qt = &qport->uuconf_u.uuconf_stli;
+	if (qt->uuconf_zdevice != NULL)
+	  fprintf (e, "%sdevice %s\n", zprefix, qt->uuconf_zdevice);
+	sprintf (ab, "%sstream", zprefix);
+	uvwrite_boolean (e, qt->uuconf_fstream, ab);
+	if (qt->uuconf_pzpush != NULL)
+	  {
+	    sprintf (ab, "%spush", zprefix);
+	    uvwrite_string_array (e, qt->uuconf_pzpush, ab);
+	  }
+	if (qt->uuconf_pzdialer != NULL)
+	  {
+	    sprintf (ab, "%sdialer-sequence", zprefix);
+	    uvwrite_string_array (e, qt->uuconf_pzdialer, ab);
+	  }
+	if (qt->uuconf_zservaddr != NULL)
+	  fprintf (e, "%sserver-address %s\n", zprefix,
+		   qt->uuconf_zservaddr);
+      }
+      break;
     }
 }
 
@@ -1770,16 +1803,24 @@ ivwrite_hdb_port (qport, pinfo)
       fprintf (e, "Direct");
       if (qport->uuconf_zprotocols != NULL)
 	fprintf (e, ",%s", qport->uuconf_zprotocols);
-      fprintf (e, " %s - %ld",
-	       qport->uuconf_u.uuconf_sdirect.uuconf_zdevice,
-	       qport->uuconf_u.uuconf_sdirect.uuconf_ibaud);
+      fprintf (e, " ");
+      if (qport->uuconf_u.uuconf_sdirect.uuconf_zdevice != NULL)
+	fprintf (e, "%s", qport->uuconf_u.uuconf_sdirect.uuconf_zdevice);
+      else
+	fprintf (e, "%s", qport->uuconf_zname);
+      fprintf (e, " - %ld", qport->uuconf_u.uuconf_sdirect.uuconf_ibaud);
     }
   else if (qport->uuconf_ttype == UUCONF_PORTTYPE_MODEM)
     {
       fprintf (e, "%s", qport->uuconf_zname);
       if (qport->uuconf_zprotocols != NULL)
 	fprintf (e, ",%s", qport->uuconf_zprotocols);
-      fprintf (e, " %s ", qport->uuconf_u.uuconf_smodem.uuconf_zdevice);
+      fprintf (e, " ");
+      if (qport->uuconf_u.uuconf_smodem.uuconf_zdevice != NULL)
+	fprintf (e, "%s", qport->uuconf_u.uuconf_smodem.uuconf_zdevice);
+      else
+	fprintf (e, "%s", qport->uuconf_zname);
+      fprintf (e, " ");
       if (qport->uuconf_u.uuconf_smodem.uuconf_zdial_device != NULL)
 	fprintf (e, "%s", qport->uuconf_u.uuconf_smodem.uuconf_zdial_device);
       else
@@ -1805,7 +1846,39 @@ ivwrite_hdb_port (qport, pinfo)
     }
   else if (qport->uuconf_ttype == UUCONF_PORTTYPE_TCP)
     {
-      fprintf (e, "TCP %s - -", qport->uuconf_u.uuconf_stcp.uuconf_zport);
+      fprintf (e, "TCP");
+      if (qport->uuconf_zprotocols != NULL)
+	fprintf (e, ",%s", qport->uuconf_zprotocols);
+      fprintf (e, " ");
+      if (qport->uuconf_u.uuconf_stcp.uuconf_zport == NULL)
+	fprintf (e, "uucp");
+      else
+	fprintf (e, "%s", qport->uuconf_u.uuconf_stcp.uuconf_zport);
+      fprintf (e, " - -");
+    }
+  else if (qport->uuconf_ttype == UUCONF_PORTTYPE_TLI)
+    {
+      char **pz;
+
+      fprintf (e, "%s", qport->uuconf_zname);
+      if (qport->uuconf_zprotocols != NULL)
+	fprintf (e, ",%s", qport->uuconf_zprotocols);
+      fprintf (e, " ");
+      if (qport->uuconf_u.uuconf_stli.uuconf_zdevice != NULL)
+	fprintf (e, "%s", qport->uuconf_u.uuconf_smodem.uuconf_zdevice);
+      else
+	fprintf (e, "-");
+      fprintf (e, " - -");
+      pz = qport->uuconf_u.uuconf_stli.uuconf_pzdialer;
+      if (pz == NULL
+	  || *pz == NULL
+	  || (strcmp (*pz, "TLI") != 0
+	      && strcmp (*pz, "TLIS") != 0))
+	fprintf (e, " TLI%s \\D",
+		 qport->uuconf_u.uuconf_stli.uuconf_fstream ? "S" : "");
+      if (pz != NULL)
+	for (; *pz != NULL; pz++)
+	  fprintf (e, " %s", *pz);
     }
   else
     {

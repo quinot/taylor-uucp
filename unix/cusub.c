@@ -76,6 +76,7 @@ zsport_line (qport)
       zline = qport->uuconf_u.uuconf_sdirect.uuconf_zdevice;
       break;
     case UUCONF_PORTTYPE_TCP:
+    case UUCONF_PORTTYPE_TLI:
       return NULL;
     }
 
@@ -91,21 +92,24 @@ fsysdep_port_access (qport)
      struct uuconf_port *qport;
 {
   const char *zline;
+  char *zfree;
+  boolean fret;
 
   zline = zsport_line (qport);
   if (zline == NULL)
     return TRUE;
 
+  zfree = NULL;
   if (*zline != '/')
     {
-      char *zalc;
-
-      zalc = (char *) alloca (sizeof "/dev/" + strlen (zline));
-      sprintf (zalc, "/dev/%s", zline);
-      zline = zalc;
+      zfree = zbufalc (sizeof "/dev/" + strlen (zline));
+      sprintf (zfree, "/dev/%s", zline);
+      zline = zfree;
     }
 
-  return access (zline, R_OK | W_OK) == 0;
+  fret = access (zline, R_OK | W_OK) == 0;
+  ubuffree (zfree);
+  return fret;
 }
 
 /* Return whether the given port is named by the given line.  */
@@ -116,7 +120,8 @@ fsysdep_port_is_line (qport, zline)
      const char *zline;
 {
   const char *zpline;
-  char *zalc;
+  char *zfree1, *zfree2;
+  boolean fret;
 
   zpline = zsport_line (qport);
   if (zpline == NULL)
@@ -125,20 +130,25 @@ fsysdep_port_is_line (qport, zline)
   if (strcmp (zline, zpline) == 0)
     return TRUE;
 
+  zfree1 = NULL;
+  zfree2 = NULL;
   if (*zline != '/')
     {
-      zalc = (char *) alloca (sizeof "/dev/" + strlen (zline));
-      sprintf (zalc, "/dev/%s", zline);
-      zline = zalc;
+      zfree1 = zbufalc (sizeof "/dev/" + strlen (zline));
+      sprintf (zfree1, "/dev/%s", zline);
+      zline = zfree1;
     }
   if (*zpline != '/')
     {
-      zalc = (char *) alloca (sizeof "/dev/" + strlen (zpline));
-      sprintf (zalc, "/dev/%s", zpline);
-      zpline = zalc;
+      zfree2 = zbufalc (sizeof "/dev/" + strlen (zpline));
+      sprintf (zfree2, "/dev/%s", zpline);
+      zpline = zfree2;
     }
 
-  return strcmp (zline, zpline) == 0;
+  fret = strcmp (zline, zpline) == 0;
+  ubuffree (zfree1);
+  ubuffree (zfree2);
+  return fret;
 }
 
 /* The cu program wants the system dependent layer to handle the
@@ -546,10 +556,9 @@ uscu_child (qconn, opipe)
 	  break;
 	case UUCONF_PORTTYPE_MODEM:
 	case UUCONF_PORTTYPE_DIRECT:
-	  oport = ((struct ssysdep_serial *) qconn->psysdep)->o;
-	  break;
 	case UUCONF_PORTTYPE_TCP:
-	  oport = ((struct ssysdep_tcp *) qconn->psysdep)->o;
+	case UUCONF_PORTTYPE_TLI:
+	  oport = ((struct ssysdep_conn *) qconn->psysdep)->o;
 	  break;
 	}
     }
@@ -951,14 +960,14 @@ fsysdep_terminal_puts (zline)
 
   if (zline == NULL)
     {
-      zalc = (char *) alloca (2);
+      zalc = zbufalc (2);
       clen = 0;
     }
   else
     {
       clen = strlen (zline);
-      zalc = (char *) alloca (clen + 2);
-      strcpy (zalc, zline);
+      zalc = zbufalc (clen + 2);
+      memcpy (zalc, zline, clen);
     }
 
   if (fSterm)
@@ -976,12 +985,15 @@ fsysdep_terminal_puts (zline)
       c = write (1, zalc, clen);
       if (c <= 0)
 	{
+	  ubuffree (zalc);
 	  ulog (LOG_ERROR, "write: %s", strerror (errno));
 	  return FALSE;
 	}
       clen -= c;
       zalc += c;
     }
+
+  ubuffree (zalc);
 
   return TRUE;
 }
@@ -1085,10 +1097,9 @@ fsysdep_shell (qconn, zcmd, tcmd)
 	  break;
 	case UUCONF_PORTTYPE_MODEM:
 	case UUCONF_PORTTYPE_DIRECT:
-	  oread = owrite = ((struct ssysdep_serial *) qconn->psysdep)->o;
-	  break;
 	case UUCONF_PORTTYPE_TCP:
-	  oread = owrite = ((struct ssysdep_tcp *) qconn->psysdep)->o;
+	case UUCONF_PORTTYPE_TLI:
+	  oread = owrite = ((struct ssysdep_conn *) qconn->psysdep)->o;
 	  break;
 	}
     }

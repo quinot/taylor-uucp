@@ -43,6 +43,16 @@ const char serial_rcsid[] = "$Id$";
 #include <limits.h>
 #endif
 
+#if HAVE_TLI
+#if HAVE_TIUSER_H
+#include <tiuser.h>
+#else /* ! HAVE_TIUSER_H */
+#if HAVE_XTI_H
+#include <xti.h>
+#endif /* HAVE_XTI_H */
+#endif /* ! HAVE_TIUSER_H */
+#endif /* HAVE_TLI */
+
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #else
@@ -185,6 +195,12 @@ const char serial_rcsid[] = "$Id$";
 #define ICLEAR_LFLAG (ECHO | ECHOE | ECHOK | ECHONL | ICANON | IEXTEN \
 		      | ISIG | NOFLSH | TOSTOP)
 #endif
+
+#if HAVE_TLI
+extern int t_errno;
+extern char *t_errlist[];
+extern int t_nerr;
+#endif
 
 /* Local functions.  */
 
@@ -206,8 +222,8 @@ static boolean fsmodem_open P((struct sconnection *qconn, long ibaud,
 			       boolean fwait));
 static boolean fsdirect_open P((struct sconnection *qconn, long ibaud,
 				boolean fwait));
-static boolean fsblock P((struct ssysdep_serial *q, boolean fblock));
-static boolean fsserial_close P((struct ssysdep_serial *q));
+static boolean fsblock P((struct ssysdep_conn *q, boolean fblock));
+static boolean fsserial_close P((struct ssysdep_conn *q));
 static boolean fsstdin_close P((struct sconnection *qconn,
 				pointer puuconf,
 				struct uuconf_dialer *qdialer,
@@ -222,19 +238,11 @@ static boolean fsdirect_close P((struct sconnection *qconn,
 				 boolean fsuccess));
 static boolean fsserial_reset P((struct sconnection *qconn));
 static boolean fsstdin_reset P((struct sconnection *qconn));
-static boolean fsserial_read P((struct sconnection *qconn,
-				char *zbuf, size_t *pclen, size_t cmin,
-				int ctimeout, boolean freport));
 static boolean fsstdin_read P((struct sconnection *qconn,
 			       char *zbuf, size_t *pclen, size_t cmin,
 			       int ctimeout, boolean freport));
-static boolean fsserial_write P((struct sconnection *qconn,
-				 const char *zwrite, size_t cwrite));
 static boolean fsstdin_write P((struct sconnection *qconn,
 				const char *zwrite, size_t cwrite));
-static boolean fsserial_io P((struct sconnection *qconn,
-			      const char *zwrite, size_t *pcwrite,
-			      char *zread, size_t *pcread));
 static boolean fsserial_break P((struct sconnection *qconn));
 static boolean fsstdin_break P((struct sconnection *qconn));
 static boolean fsserial_set P((struct sconnection *qconn,
@@ -248,8 +256,6 @@ static boolean fsstdin_set P((struct sconnection *qconn,
 static boolean fsmodem_carrier P((struct sconnection *qconn,
 				  boolean fcarrier));
 static boolean fsrun_chat P((int oread, int owrite, char **pzprog));
-static boolean fsserial_chat P((struct sconnection *qconn,
-				char **pzprog));
 static boolean fsstdin_chat P((struct sconnection *qconn,
 			       char **pzprog));
 static long isserial_baud P((struct sconnection *qconn));
@@ -267,7 +273,7 @@ static const struct sconncmds sstdincmds =
   NULL, /* pfdial */
   fsstdin_read,
   fsstdin_write,
-  fsserial_io,
+  fsysdep_conn_io,
   fsstdin_break,
   fsstdin_set,
   NULL, /* pfcarrier */
@@ -286,13 +292,13 @@ static const struct sconncmds smodemcmds =
   fsmodem_close,
   fsserial_reset,
   fmodem_dial,
-  fsserial_read,
-  fsserial_write,
-  fsserial_io,
+  fsysdep_conn_read,
+  fsysdep_conn_write,
+  fsysdep_conn_io,
   fsserial_break,
   fsserial_set,
   fsmodem_carrier,
-  fsserial_chat,
+  fsysdep_conn_chat,
   isserial_baud
 };
 
@@ -307,22 +313,22 @@ static const struct sconncmds sdirectcmds =
   fsdirect_close,
   fsserial_reset,
   NULL, /* pfdial */
-  fsserial_read,
-  fsserial_write,
-  fsserial_io,
+  fsysdep_conn_read,
+  fsysdep_conn_write,
+  fsysdep_conn_io,
   fsserial_break,
   fsserial_set,
   NULL, /* pfcarrier */
-  fsserial_chat,
+  fsysdep_conn_chat,
   isserial_baud
 };
 
-/* This code handles SIGALRM.  See the discussion above fsserial_read.
-   Normally we ignore SIGALRM, but the handler will temporarily be set
-   to this function, which should set fSalarm and then either longjmp
-   or schedule another SIGALRM.  fSalarm is never referred to outside
-   of this file, but we don't make it static to try to fool compilers
-   which don't understand volatile.  */
+/* This code handles SIGALRM.  See the discussion above
+   fsysdep_conn_read.  Normally we ignore SIGALRM, but the handler
+   will temporarily be set to this function, which should set fSalarm
+   and then either longjmp or schedule another SIGALRM.  fSalarm is
+   never referred to outside of this file, but we don't make it static
+   to try to fool compilers which don't understand volatile.  */
 
 volatile sig_atomic_t fSalarm;
 
@@ -451,9 +457,9 @@ fsserial_init (qconn, qcmds, zdevice)
      const struct sconncmds *qcmds;
      const char *zdevice;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
 
-  q = (struct ssysdep_serial *) xmalloc (sizeof (struct ssysdep_serial));
+  q = (struct ssysdep_conn *) xmalloc (sizeof (struct ssysdep_conn));
   if (zdevice == NULL
       && qconn->qport != NULL
       && qconn->qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN)
@@ -469,6 +475,7 @@ fsserial_init (qconn, qcmds, zdevice)
     }
   q->zdevice = zdevice;
   q->o = -1;
+  q->ftli = FALSE;
   qconn->psysdep = (pointer) q;
   qconn->qcmds = qcmds;
   return TRUE;
@@ -509,9 +516,9 @@ static void
 usserial_free (qconn)
      struct sconnection *qconn;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   xfree ((pointer) qsysdep->zdevice);
   xfree ((pointer) qsysdep);
   qconn->psysdep = NULL;
@@ -528,24 +535,26 @@ fsserial_lockfile (flok, qconn)
      const struct sconnection *qconn;
 {
   const char *z;
+  char *zalc;
+  boolean fret;
 
   if (qconn->qport == NULL)
     z = NULL;
   else
     z = qconn->qport->uuconf_zlockname;
+  zalc = NULL;
   if (z == NULL)
     {
-      const struct ssysdep_serial *qsysdep;
-      char *zalc;
+      const struct ssysdep_conn *qsysdep;
 
-      qsysdep = (const struct ssysdep_serial *) qconn->psysdep;
+      qsysdep = (const struct ssysdep_conn *) qconn->psysdep;
 
 #if ! HAVE_SVR4_LOCKFILES
       {
 	const char *zbase;
 
 	zbase = strrchr (qsysdep->zdevice, '/') + 1;
-	zalc = (char *) alloca (strlen (zbase) + sizeof "LCK..");
+	zalc = zbufalc (strlen (zbase) + sizeof "LCK..");
 	sprintf (zalc, "LCK..%s", zbase);
 #if HAVE_SCO_LOCKFILES
 	strlwr (zalc + sizeof "LCK.." - 1);
@@ -560,7 +569,7 @@ fsserial_lockfile (flok, qconn)
 	    ulog (LOG_ERROR, "stat (%s): %s", z, strerror (errno));
 	    return FALSE;
 	  }
-	zalc = (char *) alloca (sizeof "LK.123.123.123");
+	zalc = zbufalc (sizeof "LK.123.123.123");
 	sprintf (zalc, "LK.%03d.%03d.%03d", major (s.st_dev),
 		 major (s.st_rdev), minor (s.st_rdev));
       }
@@ -570,9 +579,11 @@ fsserial_lockfile (flok, qconn)
     }
 
   if (flok)
-    return fsdo_lock (z, FALSE, (boolean *) NULL);
+    fret = fsdo_lock (z, FALSE, (boolean *) NULL);
   else
-    return fsdo_unlock (z, FALSE);
+    fret = fsdo_unlock (z, FALSE);
+  ubuffree (zalc);
+  return fret;
 }
 
 /* If we can mark a modem line in use, then when we lock a port we
@@ -590,10 +601,10 @@ fsserial_lock (qconn, fin)
 #if HAVE_TIOCSINUSE || HAVE_TIOCEXCL
   /* Open the line and try to mark it in use.  */
   {
-    struct ssysdep_serial *qsysdep;
+    struct ssysdep_conn *qsysdep;
     int iflag;
 
-    qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+    qsysdep = (struct ssysdep_conn *) qconn->psysdep;
 
     if (fin)
       iflag = 0;
@@ -657,13 +668,13 @@ fsserial_unlock (qconn)
      struct sconnection *qconn;
 {
   boolean fret;
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
   fret = TRUE;
 
   /* The file may have been opened by fsserial_lock, so close it here
      if necessary.  */
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   if (qsysdep->o >= 0)
     {
 #ifdef TIOCNOTTY
@@ -741,10 +752,10 @@ fsserial_open (qconn, ibaud, fwait)
      long ibaud;
      boolean fwait;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
   baud_code ib;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (q->zdevice != NULL)
     ulog_device (strrchr (q->zdevice, '/') + 1);
@@ -942,9 +953,9 @@ fsstdin_open (qconn, ibaud, fwait)
      long ibaud;
      boolean fwait;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
   q->o = 0;
   if (! fsserial_open (qconn, ibaud, fwait))
     return FALSE;
@@ -989,7 +1000,7 @@ fsdirect_open (qconn, ibaud, fwait)
 
 static boolean
 fsblock (qs, fblock)
-     struct ssysdep_serial *qs;
+     struct ssysdep_conn *qs;
      boolean fblock;
 {
   int iwant;
@@ -1033,7 +1044,7 @@ fsblock (qs, fblock)
 
 static boolean
 fsserial_close (q)
-     struct ssysdep_serial *q;
+     struct ssysdep_conn *q;
 {
   if (q->o >= 0)
     {
@@ -1091,13 +1102,13 @@ fsstdin_close (qconn, puuconf, qdialer, fsuccess)
      struct uuconf_dialer *qdialer;
      boolean fsuccess;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   (void) close (1);
   (void) close (2);
   qsysdep->o = 0;
-  return fsserial_close ((struct ssysdep_serial *) qconn->psysdep);
+  return fsserial_close (qsysdep);
 }
 
 /* Close a modem port.  */
@@ -1109,11 +1120,11 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
      struct uuconf_dialer *qdialer;
      boolean fsuccess;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
   boolean fret;
   struct uuconf_dialer sdialer;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
 
   fret = TRUE;
 
@@ -1210,7 +1221,7 @@ fsdirect_close (qconn, puuconf, qdialer, fsuccess)
      struct uuconf_dialer *qdialer;
      boolean fsuccess;
 {
-  return fsserial_close ((struct ssysdep_serial *) qconn->psysdep);
+  return fsserial_close ((struct ssysdep_conn *) qconn->psysdep);
 }
 
 /* Reset a serial port by hanging up.  */
@@ -1219,10 +1230,10 @@ static boolean
 fsserial_reset (qconn)
      struct sconnection *qconn;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
   sterminal sbaud;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (! q->fterminal)
     return TRUE;
@@ -1268,9 +1279,9 @@ static boolean
 fsstdin_reset (qconn)
      struct sconnection *qconn;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   qsysdep->o = 0;
   return fsserial_reset (qconn);
 }
@@ -1283,10 +1294,10 @@ fsysdep_modem_begin_dial (qconn, qdial)
      struct sconnection *qconn;
      struct uuconf_dialer *qdial;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
   const char *z;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
 
 #ifdef TIOCMODEM
   /* If we can tell the modem to obey modem control, do so.  */
@@ -1318,25 +1329,27 @@ fsysdep_modem_begin_dial (qconn, qdial)
   z = qconn->qport->uuconf_u.uuconf_smodem.uuconf_zdial_device;
   if (z != NULL)
     {
+      char *zfree;
       int o;
 
       qsysdep->ohold = qsysdep->o;
 
+      zfree = NULL;
       if (*z != '/')
 	{
-	  char *zcopy;
-
-	  zcopy = (char *) alloca (sizeof "/dev/" + strlen (z));
-	  sprintf (zcopy, "/dev/%s", z);
-	  z = zcopy;
+	  zfree = zbufalc (sizeof "/dev/" + strlen (z));
+	  sprintf (zfree, "/dev/%s", z);
+	  z = zfree;
 	}
 
       o = open ((char *) z, O_RDWR | O_NOCTTY);
       if (o < 0)
 	{
 	  ulog (LOG_ERROR, "open (%s): %s", z, strerror (errno));
+	  ubuffree (zfree);
 	  return FALSE;
 	}
+      ubuffree (zfree);
 
       if (fcntl (o, F_SETFD, fcntl (o, F_GETFD, 0) | FD_CLOEXEC) < 0)
 	{
@@ -1362,9 +1375,9 @@ fsmodem_carrier (qconn, fcarrier)
      struct sconnection *qconn;
      boolean fcarrier;
 {
-  register struct ssysdep_serial *q;
+  register struct ssysdep_conn *q;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (! q->fterminal)
     return TRUE;
@@ -1455,9 +1468,9 @@ fsysdep_modem_end_dial (qconn, qdial)
      struct sconnection *qconn;
      struct uuconf_dialer *qdial;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (qconn->qport->uuconf_u.uuconf_smodem.uuconf_zdial_device != NULL)
     {
@@ -1480,7 +1493,7 @@ fsysdep_modem_end_dial (qconn, qdial)
       if (FGOT_QUIT_SIGNAL ())
 	return FALSE;
 
-      /* This bit of code handles signals just like fsserial_read
+      /* This bit of code handles signals just like fsysdep_conn_read
 	 does.  See that function for a longer explanation.  */
 
       /* Use fsysdep_catch to handle a longjmp from the signal
@@ -1534,17 +1547,19 @@ fsysdep_modem_end_dial (qconn, qdial)
   return TRUE; 
 }
 
-/* Read data from a serial port, with a timeout.
+/* Read data from a connection, with a timeout.  This routine handles
+   all types of connections, including TLI.
 
    This function should return when we have read cmin characters or
    the timeout has occurred.  We have to work a bit to get Unix to do
-   this efficiently.  The simple implementation schedules a SIGALRM
-   signal and then calls read; if there is a single character
-   available, the call to read will return immediately, so there must
-   be a loop which terminates when the SIGALRM is delivered or the
-   correct number of characters has been read.  This can be very
-   inefficient with a fast CPU or a low baud rate (or both!), since
-   each call to read may return only one or two characters.
+   this efficiently on a terminal.  The simple implementation
+   schedules a SIGALRM signal and then calls read; if there is a
+   single character available, the call to read will return
+   immediately, so there must be a loop which terminates when the
+   SIGALRM is delivered or the correct number of characters has been
+   read.  This can be very inefficient with a fast CPU or a low baud
+   rate (or both!), since each call to read may return only one or two
+   characters.
 
    Under POSIX or System V, we can specify a minimum number of
    characters to read, so there is no serious trouble.
@@ -1567,14 +1582,14 @@ fsysdep_modem_end_dial (qconn, qdial)
    alarm).  To avoid getting a continual sequence of SIGALRM
    interrupts, we change the signal handler to ignore SIGALRM when
    we're about to exit the function.  This means that every time we
-   execute fsserial_read we make at least five system calls.  It's the
-   best I've been able to come up with, though.
+   execute fsysdep_conn_read we make at least five system calls.  It's
+   the best I've been able to come up with, though.
 
-   When fsserial_read finishes, there will be no SIGALRM scheduled and
-   SIGALRM will be ignored.  */
+   When fsysdep_conn_read finishes, there will be no SIGALRM scheduled
+   and SIGALRM will be ignored.  */
 
-static boolean
-fsserial_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
+boolean
+fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
      struct sconnection *qconn;
      char *zbuf;
      size_t *pclen;
@@ -1584,8 +1599,8 @@ fsserial_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 {
   CATCH_PROTECT size_t cwant;
   boolean fret;
-  register struct ssysdep_serial * const q
-    = (struct ssysdep_serial *) qconn->psysdep;
+  register struct ssysdep_conn * const q
+    = (struct ssysdep_conn *) qconn->psysdep;
 
   cwant = *pclen;
   *pclen = 0;
@@ -1679,8 +1694,30 @@ fsserial_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 
       /* Right here is the race condition which we avoid by having the
 	 SIGALRM handler schedule another SIGALRM.  */
+#if HAVE_TLI
+      if (q->ftli)
+	{
+	  int iflags;
 
-      cgot = read (q->o, zbuf, cwant);
+	  cgot = t_rcv (q->o, zbuf, cwant, &iflags);
+	  if (cgot < 0 && t_errno != TSYSERR)
+	    {
+	      usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
+	      alarm (0);
+	      usysdep_end_catch ();
+
+	      if (freport)
+		ulog (LOG_ERROR, "t_rcv: %s",
+		      (t_errno >= 0 && t_errno < t_nerr
+		       ? t_errlist[t_errno]
+		       : "unknown TLI error"));
+
+	      return FALSE;
+	    }
+	}
+      else
+#endif
+	cgot = read (q->o, zbuf, cwant);
 
       /* If the read returned an error, check for signals.  */
       if (cgot < 0)
@@ -1835,53 +1872,26 @@ fsstdin_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
      int ctimeout;
      boolean freport;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   qsysdep->o = 0;
-  return fsserial_read (qconn, zbuf, pclen, cmin, ctimeout, freport);
+  return fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport);
 }
-
-#if HAVE_TCP
-
-/* Read from a TCP port.  */
+
+/* Write data to a connection.  This routine handles all types of
+   connections, including TLI.  */
 
 boolean
-fsysdep_tcp_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
-     struct sconnection *qconn;
-     char *zbuf;
-     size_t *pclen;
-     size_t cmin;
-     int ctimeout;
-     boolean freport;
-{
-  struct ssysdep_tcp *qtcp;
-  struct ssysdep_serial s;
-  struct sconnection sconn;
-
-  qtcp = (struct ssysdep_tcp *) qconn->psysdep;
-
-  s.o = qtcp->o;
-  s.fterminal = FALSE;
-  s.iflags = 0;
-  sconn.psysdep = (pointer) &s;
-  return fsserial_read (qconn, zbuf, pclen, cmin, ctimeout, freport);
-}
-
-#endif /* HAVE_TCP */
-
-/* Write data to a serial port.  */
-
-static boolean
-fsserial_write (qconn, zwrite, cwrite)
+fsysdep_conn_write (qconn, zwrite, cwrite)
      struct sconnection *qconn;
      const char *zwrite;
      size_t cwrite;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
   int czero;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   /* We want blocking writes here.  */
   if (! fsblock (q, TRUE))
@@ -1898,10 +1908,31 @@ fsserial_write (qconn, zwrite, cwrite)
 	return FALSE;
 
       /* Loop until we don't get an interrupt.  */
-      while ((cdid = write (q->o, zwrite, cwrite)) < 0
-	     && errno == EINTR)
+      while (TRUE)
 	{
-	  /* Log the signal.  */
+#if HAVE_TLI
+	  if (q->ftli)
+	    {
+	      cdid = t_snd (q->o, zwrite, cwrite, 0);
+	      if (cdid < 0 && t_errno != TSYSERR)
+		{
+		  ulog (LOG_ERROR, "t_snd: %s",
+			(t_errno >= 0 && t_errno < t_nerr
+			 ? t_errlist[t_errno]
+			 : "unknown TLI error"));
+		  return FALSE;
+		}
+	    }
+	  else
+#endif
+	    cdid = write (q->o, zwrite, cwrite);
+
+	  if (cdid >= 0)
+	    break;
+	  if (errno != EINTR)
+	    break;
+
+	  /* We were interrupted by a signal.  Log it.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
 	  if (FGOT_QUIT_SIGNAL ())
 	    return FALSE;
@@ -1951,59 +1982,35 @@ fsstdin_write (qconn, zwrite, cwrite)
      const char *zwrite;
      size_t cwrite;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   qsysdep->o = 0;
   if (! fsblock (qsysdep, TRUE))
     return FALSE;
   qsysdep->o = 1;
-  return fsserial_write (qconn, zwrite, cwrite);
+  return fsysdep_conn_write (qconn, zwrite, cwrite);
 }
-
-#if HAVE_TCP
-
-/* Write to a TCP port.  */
-
-boolean
-fsysdep_tcp_write (qconn, zbuf, clen)
-     struct sconnection *qconn;
-     const char *zbuf;
-     size_t clen;
-{
-  struct ssysdep_tcp *qtcp;
-  struct ssysdep_serial s;
-  struct sconnection sconn;
-
-  qtcp = (struct ssysdep_tcp *) qconn->psysdep;
-
-  s.o = qtcp->o;
-  s.fterminal = FALSE;
-  s.iflags = 0;
-  sconn.psysdep = (pointer) &s;
-  return fsserial_write (qconn, zbuf, clen);
-}
-
-#endif /* HAVE_TCP */
 
-/* The fsserial_io routine is supposed to both read and write data
+/* The fsysdep_conn_io routine is supposed to both read and write data
    until it has either filled its read buffer or written out all the
    data it was given.  This lets us write out large packets without
-   losing incoming data.  */
+   losing incoming data.  It handles all types of connections,
+   including TLI.  */
 
-static boolean
-fsserial_io (qconn, zwrite, pcwrite, zread, pcread)
+boolean
+fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
      struct sconnection *qconn;
      const char *zwrite;
      size_t *pcwrite;
      char *zread;
      size_t *pcread;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
   size_t cwrite, cread;
   int czero;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   cwrite = *pcwrite;
   *pcwrite = 0;
@@ -2057,10 +2064,38 @@ fsserial_io (qconn, zwrite, pcwrite, zread, pcread)
 
       /* Loop until we get something (error or data) other than an
 	 acceptable EINTR.  */
-      while ((cgot = read (q->o, zread, cread)) < 0
-	     && errno == EINTR)
+      while (TRUE)
 	{
-	  /* Log the signal.  */
+#if HAVE_TLI
+	  if (q->ftli)
+	    {
+	      int iflags;
+
+	      cgot = t_rcv (q->o, zread, cread, &iflags);
+	      if (cgot < 0)
+		{
+		  if (t_errno == TNODATA)
+		    errno = EAGAIN;
+		  else if (t_errno != TSYSERR)
+		    {
+		      ulog (LOG_ERROR, "t_rcv: %s",
+			    (t_errno >= 0 && t_errno < t_nerr
+			     ? t_errlist[t_errno]
+			     : "unknown TLI error"));
+		      return FALSE;
+		    }
+		}
+	    }
+	  else
+#endif
+	    cgot = read (q->o, zread, cread);
+
+	  if (cgot >= 0)
+	    break;
+	  if (errno != EINTR)
+	    break;
+
+	  /* We got interrupted by a signal.  Log it.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
 	  if (FGOT_QUIT_SIGNAL ())
 	    return FALSE;
@@ -2089,7 +2124,7 @@ fsserial_io (qconn, zwrite, pcwrite, zread, pcread)
       cdo = cwrite;
 
 #if ! HAVE_UNBLOCKED_WRITES
-      if (cdo > SINGLE_WRITE)
+      if (q->fterminal && cdo > SINGLE_WRITE)
 	cdo = SINGLE_WRITE;
 #endif
 
@@ -2097,10 +2132,36 @@ fsserial_io (qconn, zwrite, pcwrite, zread, pcread)
 	q->o = 1;
 
       /* Loop until we get something besides EINTR.  */
-      while ((cdid = write (q->o, zwrite, cdo)) < 0
-	     && errno == EINTR)
+      while (TRUE)
 	{
-	  /* Log the signal.  */
+#if HAVE_TLI
+	  if (q->ftli)
+	    {
+	      cdid = t_snd (q->o, zwrite, cdo, 0);
+	      if (cdid < 0)
+		{
+		  if (t_errno == TFLOW)
+		    errno = EAGAIN;
+		  else if (t_errno != TSYSERR)
+		    {
+		      ulog (LOG_ERROR, "t_snd: %s",
+			    (t_errno >= 0 && t_errno < t_nerr
+			     ? t_errlist[t_errno]
+			     : "unknown TLI error"));
+		      return FALSE;
+		    }
+		}
+	    }
+	  else
+#endif
+	    cdid = write (q->o, zwrite, cdo);
+
+	  if (cdid >= 0)
+	    break;
+	  if (errno != EINTR)
+	    break;
+
+	  /* We got interrupted by a signal.  Log it.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
 	  if (FGOT_QUIT_SIGNAL ())
 	    return FALSE;
@@ -2144,16 +2205,37 @@ fsserial_io (qconn, zwrite, pcwrite, zread, pcread)
 	    cdo = SINGLE_WRITE;
 
 	  DEBUG_MESSAGE1 (DEBUG_PORT,
-			  "fsserial_io: Blocking write of %d", cdo);
+			  "fsysdep_conn_io: Blocking write of %d", cdo);
 
 	  if (q->istdout_flags >= 0)
 	    q->o = 1;
 
 	  /* Loop until we get something besides EINTR.  */
-	  while ((cdid = write (q->o, zwrite, cdo)) < 0
-		 && errno == EINTR)
+	  while (TRUE)
 	    {
-	      /* Log the signal.  */
+#if HAVE_TLI
+	      if (q->ftli)
+		{
+		  cdid = t_snd (q->o, zwrite, cdo, 0);
+		  if (cdid < 0 && t_errno != TSYSERR)
+		    {
+		      ulog (LOG_ERROR, "t_snd: %s",
+			    (t_errno >= 0 && t_errno < t_nerr
+			     ? t_errlist[t_errno]
+			     : "unknown TLI error"));
+		      return FALSE;
+		    }
+		}
+	      else
+#endif
+		cdid = write (q->o, zwrite, cdo);
+
+	      if (cdid >= 0)
+		break;
+	      if (errno != EINTR)
+		break;
+
+	      /* We got interrupted by a signal.  Log it.  */
 	      ulog (LOG_ERROR, (const char *) NULL);
 	      if (FGOT_QUIT_SIGNAL ())
 		return FALSE;
@@ -2197,9 +2279,9 @@ static boolean
 fsserial_break (qconn)
      struct sconnection *qconn;
 {
-  struct ssysdep_serial *q;
+  struct ssysdep_conn *q;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
 #if HAVE_BSD_TTY
   (void) ioctl (q->o, TIOCSBRK, 0);
@@ -2222,9 +2304,9 @@ static boolean
 fsstdin_break (qconn)
      struct sconnection *qconn;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   qsysdep->o = 1;
   return fsserial_break (qconn);
 }
@@ -2239,12 +2321,12 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
      enum tstripsetting tstrip;
      enum txonxoffsetting txonxoff;
 {
-  register struct ssysdep_serial *q;
+  register struct ssysdep_conn *q;
   boolean fchanged, fdo;
   int iset = 0;
   int iclear = 0;
 
-  q = (struct ssysdep_serial *) qconn->psysdep;
+  q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (! q->fterminal)
     return TRUE;
@@ -2485,9 +2567,9 @@ fsstdin_set (qconn, tparity, tstrip, txonxoff)
      enum tstripsetting tstrip;
      enum txonxoffsetting txonxoff;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   qsysdep->o = 0;
   return fsserial_set (qconn, tparity, tstrip, txonxoff);
 }
@@ -2563,35 +2645,18 @@ fsstdin_chat (qconn, pzprog)
   return fsrun_chat (0, 1, pzprog);
 }
 
-/* Run a chat program on a modem port.  */
-
-static boolean
-fsserial_chat (qconn, pzprog)
-     struct sconnection *qconn;
-     char **pzprog;
-{
-  struct ssysdep_serial *qsysdep;
-
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
-  return fsrun_chat (qsysdep->o, qsysdep->o, pzprog);
-}
-
-#if HAVE_TCP
-
-/* Run a chat program on a TCP port.  */
+/* Run a chat program on any general type of connection.  */
 
 boolean
-fsysdep_tcp_chat (qconn, pzprog)
+fsysdep_conn_chat (qconn, pzprog)
      struct sconnection *qconn;
      char **pzprog;
 {
-  struct ssysdep_tcp *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_tcp *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   return fsrun_chat (qsysdep->o, qsysdep->o, pzprog);
 }
-
-#endif /* HAVE_TCP */
 
 /* Return baud rate of a serial port.  */
 
@@ -2599,8 +2664,8 @@ static long
 isserial_baud (qconn)
      struct sconnection *qconn;
 {
-  struct ssysdep_serial *qsysdep;
+  struct ssysdep_conn *qsysdep;
 
-  qsysdep = (struct ssysdep_serial *) qconn->psysdep;
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   return qsysdep->ibaud;
 }
