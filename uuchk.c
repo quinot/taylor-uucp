@@ -629,6 +629,9 @@ ikshow_port (qport, pinfo)
   if (qport->uuconf_zprotocols != NULL)
     printf ("   Will use protocols %s\n", qport->uuconf_zprotocols);
 
+  if (qport->uuconf_zlockname != NULL)
+    printf ("   Will use lockname %s\n", qport->uuconf_zlockname);
+
   if (qport->uuconf_qproto_params != NULL)
     ukshow_proto_params (qport->uuconf_qproto_params, 3);
 
