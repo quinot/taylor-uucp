@@ -18,7 +18,7 @@ VPATH = @srcdir@
 
 MORECFLAGS=-I$(srcdir)/.. -DOWNER=\"$(owner)\"
 
-OBJS = epopen.o isfork.o iswait.o spawn.o @UNIXOBJS@
+OBJS = epopen.o isfork.o iswait.o spawn.o srmdir.o @UNIXOBJS@
 
 all: libunix.a
 
@@ -56,4 +56,5 @@ remove.o: $(HDRS)
 rename.o: $(HDRS) $(srcdir)/../sysdep.h
 rmdir.o: $(HDRS) $(srcdir)/../sysdep.h
 spawn.o: $(HDRS) $(srcdir)/../sysdep.h
+srmdir.o: $(HDRS) $(srcdir)/../sysdep.h $(srcdir)/../system.h
 strerr.o: $(HDRS)

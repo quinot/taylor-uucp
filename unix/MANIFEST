@@ -11,4 +11,5 @@ remove.c
 rename.c
 rmdir.c
 spawn.c
+srmdir.c
 strerr.c
