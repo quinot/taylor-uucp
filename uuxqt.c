@@ -917,7 +917,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
 	  azcmds[0] = "uucp";
 	  azcmds[1] = NULL;
-	  zabsolute = zsysdep_find_command ("uucp", (char **) &azcmds,
+	  zabsolute = zsysdep_find_command ("uucp", (char **) azcmds,
 					    qsys->uuconf_pzpath, &ferr);
 	}
       if (zabsolute == NULL)
