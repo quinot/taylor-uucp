@@ -379,14 +379,14 @@ file are needed, and an entry was needed in the port file.
 
 Detach from controlling terminal before execing uucico.
 
-109.
-
-Niels Baggesen: when using HAVE_BNU_LOGGING, don't set the system name
-to NULL in ucatch because it makes it difficult to find the log entry.
-
 110.
 
 Michael Nolan: allow full pathname to be specified in execution
 request (don't just match against basename in zsysdep_find_command).
 
 111.
+
+Michael Nolan: have uuxqt detach from the terminal so that the modem
+port is more likely to be dropped.
+
+112.
