@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1991/12/17  04:55:01  ian
+   David Nugent: ignore SIGHUP in uucico and uuxqt
+
    Revision 1.23  1991/12/15  03:42:33  ian
    Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
 
@@ -109,6 +112,9 @@ char uucico_rcsid[] = "$Id$";
 #include "port.h"
 #include "prot.h"
 #include "system.h"
+
+/* The program name.  */
+const char abProgram[] = "uucico";
 
 /* Define the known protocols.
    bname, ffullduplex, qcmds, pfstart, pfshutdown, pfsendcmd, pzgetspace,
@@ -328,7 +334,7 @@ main (argc, argv)
 
   usysdep_initialize (TRUE);
 
-  ulog_program ("uucico");
+  ulog_to_file (TRUE);
 
   /* If a port was named, get its information.  */
   if (zport == NULL)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1991/12/17  07:09:58  ian
+   Record statistics in fractions of a second
+
    Revision 1.18  1991/12/15  04:17:11  ian
    Added chat-seven-bit command to control parity bit stripping
 
@@ -682,8 +685,9 @@ extern int igradecmp P((int b1, int b2));
 /* Make log entry.  */
 extern void ulog P((enum tlog ttype, const char *zfmt, ...));
 
-/* Set the program reported by the logging functions.  */
-extern void ulog_program P((const char *zprogram));
+/* If ffile is TRUE, send log entries to the log file rather than to
+   stderr.  */
+extern void ulog_to_file P((boolean ffile));
 
 /* Set the ID number used by the logging functions.  */
 extern void ulog_id P((int iid));
@@ -799,6 +803,10 @@ extern long strtol P((const char *, char **, int));
 #endif
 
 /* Global variables.  */
+
+/* The name of the program being run.  This is statically initialized,
+   although it should perhaps be set from argv[0].  */
+extern const char abProgram[];
 
 /* Version number string.  */
 extern const char abVersion[];

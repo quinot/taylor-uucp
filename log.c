@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/18  03:14:52  ian
+   Use a fixed number of fields in log messages
+
    Revision 1.6  1991/12/17  07:09:58  ian
    Record statistics in fractions of a second
 
@@ -74,8 +77,8 @@ char log_rcsid[] = "$Id$";
 
 static const char *zldate_and_time P((void));
 
-/* The program name.  */
-static const char *zLprogram;
+/* Whether to go to a file.  */
+static boolean fLfile;
 
 /* ID number.  */
 static int iLid;
@@ -109,15 +112,13 @@ static FILE *eLstats;
 /* Whether we are aborting because of LOG_FATAL.  */
 boolean fAborting;
 
-/* Set the program we are making log entries for.  The argument should
-   be a string constant.  Any error messages reported before
-   ulog_program is called are sent to stderr.  */
+/* Decide whether to send log message to the file or not.  */
 
 void
-ulog_program (z)
-     const char *z;
+ulog_to_file (ffile)
+     boolean ffile;
 {
-  zLprogram = z;
+  fLfile = ffile;
 }
 
 /* Set the ID number.  This will be called by the usysdep_initialize
@@ -219,7 +220,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   FILE *e, *edebug;
   const char *zhdr, *zstr;
 
-  if (zLprogram == NULL)
+  if (! fLfile)
     e = stderr;
 #if DEBUG > 0
   else if (ttype == LOG_DEBUG)
@@ -256,9 +257,9 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	      zsys = zLsystem;
 
 	    zfile = (char *) alloca (strlen (zLogfile)
-				     + strlen (zLprogram)
+				     + strlen (abProgram)
 				     + strlen (zsys));
-	    sprintf (zfile, zLogfile, zLprogram, zsys);
+	    sprintf (zfile, zLogfile, abProgram, zsys);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	  }
 #endif /* HAVE_BNU_LOGGING */
@@ -298,56 +299,63 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       break;
     }
 
-#if ! HAVE_BNU_LOGGING
-  if (zLprogram != NULL)
+  if (! fLfile)
     {
-      fprintf (e, "%s ", zLprogram);
+      fprintf (e, "%s: ", abProgram);
       if (edebug != NULL)
-	fprintf (edebug, "%s ", zLprogram);
+	fprintf (edebug, "%s: ", abProgram);
     }
+  else
+    {
+#if ! HAVE_BNU_LOGGING
+      fprintf (e, "%s ", abProgram);
+      if (edebug != NULL)
+	fprintf (edebug, "%s ", abProgram);
 #else /* HAVE_BNU_LOGGING */
-  fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
-  if (edebug != NULL)
-    fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
+      fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
+      if (edebug != NULL)
+	fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
 #endif /* HAVE_BNU_LOGGING */
 
-  fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
-  if (edebug != NULL)
-    fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
+      fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
+      if (edebug != NULL)
+	fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
 
 #if ! HAVE_BNU_LOGGING
-  fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
-  if (edebug != NULL)
-    fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
+      fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
+      if (edebug != NULL)
+	fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
 #endif /* ! HAVE_BNU_LOGGING */
 
-  zstr = zldate_and_time ();
-  fprintf (e, "(%s", zstr);
-  if (edebug != NULL)
-    fprintf (edebug, "(%s", zstr); 
+      zstr = zldate_and_time ();
+      fprintf (e, "(%s", zstr);
+      if (edebug != NULL)
+	fprintf (edebug, "(%s", zstr); 
 
-  if (iLid != 0)
-    {
+      if (iLid != 0)
+	{
 #if ! HAVE_BNU_LOGGING
-      fprintf (e, " %d", iLid);
-      if (edebug != NULL)
-	fprintf (edebug, " %d", iLid);
+	  fprintf (e, " %d", iLid);
+	  if (edebug != NULL)
+	    fprintf (edebug, " %d", iLid);
 #else /* HAVE_BNU_LOGGING */
-      /* I assume that the second number here is meant to be some sort
-	 of file sequence number, and that it should correspond to the
-	 sequence number in the statistics file.  I don't have any
-	 really convenient way to do this, so I won't unless somebody
-	 thinks it's very important.  */
-      fprintf (e, ",%d,%d", iLid, 0);
+
+	  /* I assume that the second number here is meant to be some
+	     sort of file sequence number, and that it should
+	     correspond to the sequence number in the statistics file.
+	     I don't have any really convenient way to do this, so I
+	     won't unless somebody thinks it's very important.  */
+	  fprintf (e, ",%d,%d", iLid, 0);
+	  if (edebug != NULL)
+	    fprintf (edebug, ",%d,%d", iLid, 0);
+#endif				/* HAVE_BNU_LOGGING */
+	}
+
+      fprintf (e, ") ");
       if (edebug != NULL)
-	fprintf (edebug, ",%d,%d", iLid, 0);
-#endif /* HAVE_BNU_LOGGING */
+	fprintf (edebug, ") ");
     }
 
-  fprintf (e, ") ");
-  if (edebug != NULL)
-    fprintf (edebug, ") ");
-  
   fprintf (e, "%s", zhdr);
   if (edebug != NULL)
     fprintf (edebug, "%s", zhdr);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/14  16:09:07  ian
+   Added -l option to uux to link files into the spool directory
+
    Revision 1.11  1991/12/11  03:59:19  ian
    Create directories when necessary; don't just assume they exist
 
@@ -91,6 +94,9 @@ char uux_rcsid[] = "$Id$";
    operators.  */
 #define ZSHELLNONREDIRSEPS ";&*()|"
 
+/* The program name.  */
+const char abProgram[] = "uux";
+
 /* Long getopt options.  */
 
 static const struct option asXlongopts[] = { { NULL, 0, NULL, 0 } };
@@ -976,10 +982,9 @@ main (argc, argv)
     }
 
   /* If all that worked, make a log file entry.  All log file reports
-     up to this point went to stderr, because ulog_program was never
-     called.  */
+     up to this point went to stderr.  */
 
-  ulog_program ("uux");
+  ulog_to_file (TRUE);
   ulog_system (qxqtsys->zname);
   ulog_user (zuser);
 

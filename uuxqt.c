@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/17  04:55:01  ian
+   David Nugent: ignore SIGHUP in uucico and uuxqt
+
    Revision 1.8  1991/12/09  18:49:06  ian
    Richard Todd: the requestor address is relative to the requesting system
 
@@ -65,6 +68,9 @@ char uuxqt_rcsid[] = "$Id$";
 
 #include "system.h"
 #include "sysdep.h"
+
+/* The program name.  */
+const char abProgram[] = "uuxqt";
 
 /* Static variables used to unlock things if we get a signal.  */
 
@@ -175,7 +181,7 @@ main (argc, argv)
 
   usysdep_initialize (FALSE);
 
-  ulog_program ("uuxqt");
+  ulog_to_file (TRUE);
 
   /* Make sure we're the only uuxqt daemon running for this command.  */
   if (zcmd != NULL)

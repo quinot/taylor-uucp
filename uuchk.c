@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/17  23:14:08  ian
+   T. William Wells: allow dialer complete and abort to be chat scripts
+
    Revision 1.10  1991/12/15  04:17:11  ian
    Added chat-seven-bit command to control parity bit stripping
 
@@ -69,6 +72,9 @@ char uuchk_rcsid[] = "$Id$";
 #include "port.h"
 #include "system.h"
 #include "sysdep.h"
+
+/* Program name.  */
+const char abProgram[] = "uuchk";
 
 /* Local functions.  */
 

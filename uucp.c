@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/11  03:59:19  ian
+   Create directories when necessary; don't just assume they exist
+
    Revision 1.5  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -35,9 +38,9 @@
    Revision 1.2  1991/09/11  02:33:14  ian
    Added ffork argument to fsysdep_run
 
- * Revision 1.1  1991/09/10  19:40:31  ian
- * Initial revision
- *
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+  
    */
 
 #include "uucp.h"
@@ -56,6 +59,9 @@ char uucp_rcsid[] = "$Id$";
 #include "system.h"
 #include "sysdep.h"
 
+/* The program name.  */
+const char abProgram[] = "uucp";
+
 /* Long getopt options.  */
 
 static const struct option asClongopts[] = { { NULL, 0, NULL, 0 } };
@@ -526,7 +532,7 @@ main (argc, argv)
     }
 
   /* Now push out the actual commands, making log entries for them.  */
-  ulog_program ("uucp");
+  ulog_to_file (TRUE);
   ulog_user (zuser);
 
   ucspool_cmds (bgrade);
