@@ -163,6 +163,8 @@ install: $(PROGRAMS) $(UUDIR)
 	chown $(owner) $(bindir)/uuname $(bindir)/cu
 	chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
 	chmod 4555 $(bindir)/uuname $(bindir)/cu
+	if test -d $(man1dir); then true; else mkdir $(man1dir); fi
+	if test -d $(man8dir); then true; else mkdir $(man8dir); fi
 	$(INSTALL_DATA) $(srcdir)/uucico.8 $(man8dir)/uucico$(man8ext)
 	$(INSTALL_DATA) $(srcdir)/uuxqt.8 $(man8dir)/uuxqt$(man8ext)
 	$(INSTALL_DATA) $(srcdir)/uux.1 $(man1dir)/uux$(man1ext)
