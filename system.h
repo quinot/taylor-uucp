@@ -334,7 +334,7 @@ extern boolean fsysdep_did_work P((pointer pseq));
 extern const char *zsysdep_save_temp_file P((pointer pseq));
 
 /* Save a file in a location used to hold corrupt files.  This is
-   called if a bad execution file is found by uucqt.  This should
+   called if a bad execution file is found by uuxqt.  This should
    return the new name of the file (allocated by zbufalc), or NULL if
    the move failed (in which the original file should remain).  */
 extern char *zsysdep_save_corrupt_file P((const char *zfile));
