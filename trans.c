@@ -137,7 +137,7 @@ struct sreceive_ack
 static struct sreceive_ack *qTreceive_ack;
 
 /* Queue up a transfer structure before *pq.  This puts it at the head
-   or the fail of the list headed by *pq.  */
+   or the tail of the list headed by *pq.  */
 
 static void
 utqueue (pq, q, fhead)
@@ -1379,12 +1379,18 @@ ufailed (qdaemon)
 {
   register struct stransfer *q;
 
+  /* Update the transfer times, but avoid looking in the queue.  */
+  iTchecktime = ixsysdep_process_time ((long *) NULL);
+  (void) ftcharge (qdaemon, (struct stransfer *) NULL, TRUE, TRUE);
+  (void) ftcharge (qdaemon, (struct stransfer *) NULL, FALSE, TRUE);
+
   if (qTsend != NULL)
     {
       q = qTsend;
       do
 	{
-	  if (q->fsendfile || q->frecfile)
+	  if ((q->fsendfile || q->frecfile)
+	      && q->cbytes > 0)
 	    ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
 		    q->fsendfile, q->cbytes, q->isecs, q->imicros,
 		    FALSE);
@@ -1400,7 +1406,8 @@ ufailed (qdaemon)
       q = qTreceive;
       do
 	{
-	  if (q->fsendfile || q->frecfile)
+	  if ((q->fsendfile || q->frecfile)
+	      && q->cbytes > 0)
 	    ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
 		    q->fsendfile, q->cbytes, q->isecs, q->imicros,
 		    FALSE);
