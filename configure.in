@@ -44,7 +44,7 @@ AC_LN_S
 dnl
 AC_HAVE_HEADERS(stddef.h stdarg.h string.h strings.h unistd.h stdlib.h)
 AC_HAVE_HEADERS(limits.h time.h sys/wait.h sys/ioctl.h memory.h)
-AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
+AC_HAVE_HEADERS(fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
 AC_HAVE_HEADERS(sysexits.h poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h)
 AC_HAVE_HEADERS(glob.h sys/param.h sys/types.tcp.h)
 dnl
@@ -54,6 +54,13 @@ AC_COMPILE_CHECK([dirent.h],
 [#include <dirent.h>],
 [struct dirent s;],
 [AC_DEFINE(HAVE_DIRENT_H)])
+dnl
+# Under Next 3.2 <utime.h> apparently does not define struct utimbuf
+# by default.
+AC_COMPILE_CHECK([utime.h],
+[#include <utime.h>],
+[struct utimbuf s;],
+[AC_DEFINE(HAVE_UTIME_H)])
 dnl
 AC_COMPILE_CHECK([sys/select.h],
 [#include <sys/select.h>
