@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.84  1992/03/17  01:03:03  ian
+   Miscellaneous cleanup
+
    Revision 1.83  1992/03/16  05:16:03  ian
    Recognize SVR4 -U flag
 
@@ -1309,6 +1312,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
   {
     boolean fret;
+    long iend_time;
 
     fret = fuucp (TRUE, qsys, '\0', fnew, (long) -1);
     ulog_user ((const char *) NULL);
@@ -1345,8 +1349,10 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 #endif
       }
 
+    iend_time = isysdep_time ((long *) NULL);
+
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
-	  isysdep_time ((long *) NULL) - istart_time);
+	  iend_time - istart_time);
 
     if (! fret)
       {
@@ -1356,6 +1362,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
     else
       {
 	qstat->ttype = STATUS_COMPLETE;
+	qstat->ilast = iend_time;
 	(void) fsysdep_set_status (qsys, qstat);
 	return TRUE;
       }
@@ -1993,6 +2000,7 @@ faccept_call (zlogin, qport, pqsys)
 	       (const char *) NULL, FALSE, zport, iport_baud ()))
     {
       sstat.ttype = STATUS_FAILED;
+      sstat.ilast = isysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
       return FALSE;
     }
@@ -2020,6 +2028,7 @@ faccept_call (zlogin, qport, pqsys)
   if (! (*qProto->pfstart)(FALSE))
     {
       sstat.ttype = STATUS_FAILED;
+      sstat.ilast = isysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
       return FALSE;
     }
@@ -2047,6 +2056,7 @@ faccept_call (zlogin, qport, pqsys)
 
   {
     boolean fret;
+    long iend_time;
 
     fret = fuucp (FALSE, qsys, bgrade, fnew, cmax_receive);
     ulog_user ((const char *) NULL);
@@ -2079,12 +2089,15 @@ faccept_call (zlogin, qport, pqsys)
 #endif
       }
 
+    iend_time = isysdep_time ((long *) NULL);
+
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
-	  isysdep_time ((long *) NULL) - istart_time);
+	  iend_time - istart_time);
     if (fret)
       sstat.ttype = STATUS_COMPLETE;
     else
       sstat.ttype = STATUS_FAILED;
+    sstat.ilast = iend_time;
     (void) fsysdep_set_status (qsys, &sstat);
     return fret;
   }
