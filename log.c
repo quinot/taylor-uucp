@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/03/28  19:40:26  ian
+   Close log and statistics file at each master/slave role switch
+
    Revision 1.27  1992/03/15  04:51:17  ian
    Keep an array of signals we've received rather than a single variable
 
@@ -567,10 +570,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       usysdep_exit (FALSE);
     }
 
-#if 0
-  /* If you want to close and reopen the log file after every write,
-     change that 0 to a 1.  Perhaps I will make this an official
-     configuration option someday.  */
+#if CLOSE_LOGFILES
   ulog_close ();
 #endif
 }
@@ -676,6 +676,10 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 #endif /* HAVE_BNU_LOGGING */
 
   (void) fflush (eLstats);
+
+#if CLOSE_LOGFILES
+  ustats_close ();
+#endif
 }
 
 /* Close the statistics file.  */

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1992/03/30  15:29:58  ian
+   Added HAVE_SVR4_LOCKFILES
+
    Revision 1.6  1992/03/27  05:31:09  ian
    David J. MacKenzie: various cleanups
 
@@ -319,6 +322,14 @@
 #define HAVE_TAYLOR_LOGGING 1
 #define HAVE_V2_LOGGING 0
 #define HAVE_BNU_LOGGING 0
+
+/* If you would like the log, debugging and statistics files to be
+   closed after each message, set CLOSE_LOGFILES to 1.  This will
+   permit the log files to be easily moved.  If a log file does not
+   exist when a new message is written out, it will be created.
+   Setting CLOSE_LOGFILES to 1 will obviously require slightly more
+   processing time.  */
+#define CLOSE_LOGFILES 0
 
 /* The name of the default spool directory.  If HAVE_TAYLOR_CONFIG is
    set to 1, this may be overridden by the ``spool'' command in the
