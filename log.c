@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.7  1991/12/18  03:14:52  ian
    Use a fixed number of fields in log messages
 
@@ -417,7 +420,8 @@ ulog_close ()
    failed file transfers in here, but we currently do not.  */
 
 void
-ustats (zuser, zsystem, fsent, cbytes, csecs, cmicros)
+ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
+     boolean fsucceeded;
      const char *zuser;
      const char *zsystem;
      boolean fsent;
@@ -448,19 +452,19 @@ ustats (zuser, zsystem, fsent, cbytes, csecs, cmicros)
 
 #if HAVE_TAYLOR_LOGGING
   fprintf (eLstats,
-	   "%s %s (%s) %s %ld bytes in %ld.%03ld seconds (%ld bytes/sec)\n",
+	   "%s %s (%s) %s%s %ld bytes in %ld.%03ld seconds (%ld bytes/sec)\n",
 	   zuser, zsystem, zldate_and_time (),
+	   fsucceeded ? "" : "failed after ",
 	   fsent ? "sent" : "received",
 	   cbytes, csecs, cmicros / 1000, cbps);
 #endif /* HAVE_TAYLOR_LOGGING */
 #if HAVE_V2_LOGGING
-  /* Apparently V2 normally also logs failed transfers, with "failed
-     after" replacing "data".  */
   fprintf (eLstats,
-	   "%s %s (%s) (%ld) %s data %ld bytes %ld seconds\n",
+	   "%s %s (%s) (%ld) %s %s %ld bytes %ld seconds\n",
 	   zuser, zsystem, zldate_and_time (),
 	   (long) time ((time_t *) NULL),
 	   fsent ? "sent" : "received",
+	   fsucceeded ? "data" : "failed after",
 	   cbytes, csecs + cmicros / 500000);
 #endif /* HAVE_V2_LOGGING */
 #if HAVE_BNU_LOGGING
@@ -473,7 +477,8 @@ ustats (zuser, zsystem, fsent, cbytes, csecs, cmicros)
        number should probably correspond to the sequence number in the
        log file, but that is currently always 0; using this fake
        sequence number will still at least reveal which transfers are
-       from different calls.  */
+       from different calls.  I don't know how to report a failed data
+       transfer with this format.  */
     ++iseq;
     fprintf (eLstats,
 	     "%s!%s M (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld %s\n",

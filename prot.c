@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/13  04:33:38  ian
+   Franc,ois Pinard: don't bother to warn if the final HY doesn't come in
+
    Revision 1.5  1991/11/15  21:00:59  ian
    Efficiency hacks for 'f' and 't' protocols
 
@@ -85,11 +88,13 @@ int iPrecend;
    giving a warning for systems that hang up in a hurry.  */
 boolean fPerror_ok;
 
-/* Amount of data sent for current file.  */
-static long cPsent_bytes;
+/* Amount of data sent for current send file; -1 means there is no
+   current send file.  */
+static long cPsent_bytes = -1;
 
-/* Amount of data received for current file.  */
-static long cPreceived_bytes;
+/* Amount of data received for current receive file; -1 means there is
+   no current receive file.  */
+static long cPreceived_bytes = -1;
 
 /* Whether an error has been reported for current file being received.  */
 static boolean fPreceived_error;
@@ -249,16 +254,20 @@ static boolean
 fpsendfile_confirm ()
 {
   const char *zrec;
+  long cbytes;
 
   zrec = zgetcmd ();
   if (zrec == NULL)
     return FALSE;
 
+  cbytes = cPsent_bytes;
+  cPsent_bytes = -1;
+
   if (zrec[0] != 'C'
       || (zrec[1] != 'Y' && zrec[1] != 'N'))
     {
       ulog (LOG_ERROR, "Bad confirmation for sent file");
-      (void) fsent_file (FALSE, cPsent_bytes);
+      (void) fsent_file (FALSE, cbytes);
     }
   else if (zrec[1] == 'N')
     {
@@ -266,10 +275,10 @@ fpsendfile_confirm ()
 	ulog (LOG_ERROR, "File could not be stored in final location");
       else
 	ulog (LOG_ERROR, "File send failed for unknown reason");
-      (void) fsent_file (FALSE, cPsent_bytes);
+      (void) fsent_file (FALSE, cbytes);
     }
   else
-    (void) fsent_file (TRUE, cPsent_bytes);
+    (void) fsent_file (TRUE, cbytes);
 
   return TRUE;
 }
@@ -406,7 +415,12 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 static boolean
 fprecfile_confirm ()
 {
-  if (freceived_file (TRUE, cPreceived_bytes))
+  long cbytes;
+
+  cbytes = cPreceived_bytes;
+  cPreceived_bytes = -1;
+
+  if (freceived_file (TRUE, cbytes))
     return (qProto->pfsendcmd) ("CY");
   else
     return (qProto->pfsendcmd) ("CN5");
@@ -1097,5 +1111,31 @@ breceive_char (ctimeout, freport)
 	return BUCHAR (b);
       else
 	return -1;
+    }
+}
+
+/* This routine is called when an error occurred and we are crashing
+   out of the connection.  It is only used to report statistics on
+   failed transfers to the statistics file.  Note that the number of
+   bytes we report as having been sent has little or nothing to do
+   with the number of bytes the remote site actually received.  */
+
+void
+ustats_failed ()
+{
+  long cbytes;
+
+  if (cPsent_bytes != -1)
+    {
+      cbytes = cPsent_bytes;
+      cPsent_bytes = -1;
+      (void) fsent_file (FALSE, cbytes);
+    }
+
+  if (cPreceived_bytes != -1)
+    {
+      cbytes = cPreceived_bytes;
+      cPreceived_bytes = -1;
+      (void) freceived_file (FALSE, cbytes);
     }
 }

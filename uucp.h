@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.19  1991/12/17  07:09:58  ian
    Record statistics in fractions of a second
 
@@ -705,9 +708,13 @@ extern void ulog_device P((const char *zdevice));
 extern void ulog_close P((void));
 
 /* Make an entry in the statistics file.  */
-extern void ustats P((const char *zuser, const char *zsystem,
-		      boolean fsent, long cbytes, long csecs,
-		      long cmicros));
+extern void ustats P((boolean fsucceeded, const char *zuser,
+		      const char *zsystem, boolean fsent,
+		      long cbytes, long csecs, long cmicros));
+
+/* We have lost the connection; record any in progress file transfers
+   in the statistics file.  */
+extern void ustats_failed P((void));
 
 /* Close the statistics file.  */
 extern void ustats_close P((void));

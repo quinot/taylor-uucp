@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1991/12/21  22:17:20  ian
+   Change protocol ordering to 't', 'g', 'f'
+
    Revision 1.29  1991/12/21  22:07:47  ian
    John Theus: don't warn if port file does not exist
 
@@ -575,6 +578,8 @@ static sigret_t
 ucatch (isig)
      int isig;
 {
+  ustats_failed ();
+
   ulog_system ((const char *) NULL);
   ulog_user ((const char *) NULL);
 
@@ -583,8 +588,6 @@ ucatch (isig)
 
   if (qPort != NULL)
     (void) fport_close (FALSE);
-
-  (void) freceived_file (FALSE, (long) -1);
 
   if (fLocked_system)
     {
@@ -1044,7 +1047,10 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
     /* If we jumped out due to an error, shutdown the protocol.  */
     if (! fret)
-      (void) (*qProto->pfshutdown) ();
+      {
+	(void) (*qProto->pfshutdown) ();
+	ustats_failed ();
+      }
 
     /* Now send the hangup message.  As the caller, we send six O's
        and expect to receive seven O's.  We send the six O's twice
@@ -1650,11 +1656,14 @@ static boolean faccept_call (zlogin, qport)
 
     fret = fuucp (FALSE, qsys, bgrade, fnew);
     ulog_user ((const char *) NULL);
+    usysdep_get_work_free (qsys);
 
     /* If we bombed out due to an error, shut down the protocol.  */
     if (! fret)
-      (void) (*qProto->pfshutdown) ();
-    usysdep_get_work_free (qsys);
+      {
+	(void) (*qProto->pfshutdown) ();
+	ustats_failed ();
+      }
 
     /* Hangup.  As the answerer, we send seven O's and expect to see
        six.  */
