@@ -24,6 +24,7 @@ cmdarg.c
 cmdfil.c
 cmdlin.c
 debfil.c
+deblev.c
 diacod.c
 dial.c
 diasub.c
@@ -54,10 +55,12 @@ int.c
 lineno.c
 locnm.c
 logfil.c
+maxuxq.c
 memcpy.c
 mrgblk.c
 paramc.c
 port.c
+pubdir.c
 prtsub.c
 rdlocs.c
 rdperm.c
@@ -65,6 +68,7 @@ reliab.c
 sinfo.c
 snams.c
 split.c
+spool.c
 stafil.c
 strcas.c
 strdup.c

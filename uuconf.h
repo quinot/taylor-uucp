@@ -744,6 +744,17 @@ extern int uuconf_localname (void *uuconf_pglobal,
 			     const char *uuconf_zlogin,
 			     char **pzname);
 
+/* Get the name of the UUCP spool directory.  This will set *pzspool
+   to a constant string, which should not be freed.  */
+extern int uuconf_spooldir (void *uuconf_pglobal,
+			    const char **uuconf_pzspool);
+
+/* Get the name of the default UUCP public directory.  This will set
+   *pzpub to a constant string, which should not be freed.  Note that
+   particular systems may use a different public directory.  */
+extern int uuconf_pubdir (void *uuconf_pglobal,
+			  const char **uuconf_pzpub);
+
 /* Get the name of the UUCP log file.  This will set *pzlog to a
    constant string, which should not be freed.  */
 extern int uuconf_logfile (void *uuconf_pglobal,
@@ -758,6 +769,18 @@ extern int uuconf_statsfile (void *uuconf_pglobal,
    a constant string, which should not be freed.  */
 extern int uuconf_debugfile (void *uuconf_pglobal,
 			     const char **uuconf_pzdebug);
+
+/* Get the default debugging level to use.  This basically gets the
+   argument of the ``debug'' command from the Taylor UUCP config file.
+   It will set *pzdebug to a constant string, which should not be
+   freed.  */
+extern int uuconf_debuglevel (void *uuconf_pglobal,
+			      const char **uuconf_pzdebug);
+
+/* Get the maximum number of simultaneous uuxqt executions.  This will
+   set *pcmaxuuxqt to the number.  Zero indicates no maximum.  */
+extern int uuconf_maxuuxqts (void *uuconf_pglobal,
+			     int *uuconf_pcmaxuuxqt);
 
 /* Check a login name and password.  This checks the Taylor UUCP
    password file (not /etc/passwd).  It will work even if
@@ -814,9 +837,13 @@ extern int uuconf_dialer_names ();
 extern int uuconf_dialer_info ();
 extern int uuconf_dialer_free ();
 extern int uuconf_localname ();
+extern int uuconf_spooldir ();
+extern int uuconf_pubdir ();
 extern int uuconf_logfile ();
 extern int uuconf_statsfile ();
 extern int uuconf_debugfile ();
+extern int uuconf_debuglevel ();
+extern int uuconf_maxuuxqts ();
 extern int uuconf_callin ();
 extern int uuconf_callout ();
 extern int uuconf_validate ();
