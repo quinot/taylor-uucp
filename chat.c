@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/04/03  05:37:11  ian
+   Minor cleanups for gcc 2.1
+
    Revision 1.25  1992/03/28  21:47:55  ian
    David J. MacKenzie: allow backslash to quote newline in config files
 
@@ -718,8 +721,11 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 
       if (zlook > z)
 	{
-	  fquote = fcsend_debug (fquote, zlook - z, z);
-	  if (! (*pfwrite) (z, zlook - z))
+	  int c;
+
+	  c = zlook - z;
+	  fquote = fcsend_debug (fquote, c, z);
+	  if (! (*pfwrite) (z, c))
 	    {
 	      ucsend_debug_end (fquote, TRUE);
 	      return FALSE;
