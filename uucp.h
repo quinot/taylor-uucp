@@ -235,8 +235,19 @@ typedef FILE *openfile_t;
 
 #else /* ! USE_STDIO */
 
+#if ! USE_TYPES_H
+#undef USE_TYPES_H
+#define USE_TYPES_H 1
+#include <sys/types.h>
+#endif
+
 #if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef OFF_T
+typedef OFF_T off_t;
+#undef OFF_T
 #endif
 
 typedef int openfile_t;
@@ -247,16 +258,16 @@ typedef int openfile_t;
 #define cfilewrite(e, z, c) write ((e), (z), (c))
 #define ffileioerror(e, c) ((c) < 0)
 #ifdef SEEK_SET
-#define ffileseek(e, i) (lseek ((e), (long) i, SEEK_SET) >= 0)
-#define ffilerewind(e) (lseek ((e), (long) 0, SEEK_SET) >= 0)
+#define ffileseek(e, i) (lseek ((e), (off_t) i, SEEK_SET) >= 0)
+#define ffilerewind(e) (lseek ((e), (off_t) 0, SEEK_SET) >= 0)
 #else
-#define ffileseek(e, i) (lseek ((e), (long) i, 0) >= 0)
-#define ffilerewind(e) (lseek ((e), (long) 0, 0) >= 0)
+#define ffileseek(e, i) (lseek ((e), (off_t) i, 0) >= 0)
+#define ffilerewind(e) (lseek ((e), (off_t) 0, 0) >= 0)
 #endif
 #ifdef SEEK_END
-#define ffileseekend(e) (lseek ((e), (long) 0, SEEK_END) >= 0)
+#define ffileseekend(e) (lseek ((e), (off_t) 0, SEEK_END) >= 0)
 #else
-#define ffileseekend(e) (lseek ((e), (long) 0, 2) >= 0)
+#define ffileseekend(e) (lseek ((e), (off_t) 0, 2) >= 0)
 #endif
 #define ffileclose(e) (close (e) >= 0)
 
