@@ -4706,6 +4706,7 @@ John Theus @file{<john@@theus.rain.com>}
 Len Tower @file{<tower-prep@@ai.mit.edu>}
 Mark Towfiq @file{<justice!towfiq@@Eingedi.Newton.MA.US>}
 @file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
+Tomi Vainio @file{<tomppa@@fidata.fi>}
 @file{vogel@@omega.ssw.de} (Andreas Vogel)
 @file{jv@@mh.nl} (Johan Vromans)
 @file{steve@@nshore.org} (Stephen J. Walick)
