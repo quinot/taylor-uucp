@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/13  04:27:33  ian
+   Franc,ois Pinard: add some chat script debugging messages
+
    Revision 1.5  1991/12/07  17:58:38  ian
    Handle a chat script with nothing but a send string
 
@@ -65,6 +68,11 @@ static boolean fcphone P((const struct sdialer *qdial, const char *zphone,
 			  boolean ftranslate));
 static boolean fctranslate P((const char *zphone, const char **pzprefix,
 			      const char **pzsuffix));
+static boolean fcprogram P((const char *zprogram,
+			    const struct ssysteminfo *qsys,
+			    const struct sdialer *qdial,
+			    const char *zphone, const char *zport,
+			    long ibaud));
 
 /* Run a chat script with the other system.  The chat script is a
    series of expect send pairs.  We wait for the expect string to show
@@ -72,21 +80,35 @@ static boolean fctranslate P((const char *zphone, const char **pzprefix,
    holds the expect and send strings separated by a single space.  */
 
 boolean
-fchat (zchat, zchat_fail, ctimeout, qsys, qdial, zphone, ftranslate)
-     const char *zchat;
-     const char *zchat_fail;
-     int ctimeout;
+fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
+     const struct schat_info *qchat;
      const struct ssysteminfo *qsys;
      const struct sdialer *qdial;
      const char *zphone;
      boolean ftranslate;
+     const char *zport;
+     long ibaud;
 {
+  const char *zchat;
   int cstrings;
   char **azstrings;
   int *aclens;
   char *zbuf;
 
-  if (zchat_fail == NULL)
+  /* First run the program, if any.  */
+  if (qchat->zprogram != NULL)
+    {
+      if (! fcprogram (qchat->zprogram, qsys, qdial, zphone, zport, ibaud))
+	return FALSE;
+    }
+
+  /* If there's no chat script, we're done.  */
+  if (qchat->zchat == NULL)
+    return TRUE;
+
+  zchat = qchat->zchat;
+
+  if (qchat->zfail == NULL)
     {
       cstrings = 1;
       azstrings = (char **) alloca (sizeof (char *));
@@ -101,15 +123,15 @@ fchat (zchat, zchat_fail, ctimeout, qsys, qdial, zphone, ftranslate)
 	 we want 1 more than the number of spaces in the chat_fail
 	 string (the fencepost problem).  */
       cstrings = 2;
-      for (zlook = zchat_fail; *zlook != '\0'; zlook++)
+      for (zlook = qchat->zfail; *zlook != '\0'; zlook++)
 	if (*zlook == ' ')
 	  ++cstrings;
 
       azstrings = (char **) alloca (cstrings * sizeof (char *));
       aclens = (int *) alloca (cstrings * sizeof (int));
 
-      zcopy = (char *) alloca (strlen (zchat_fail) + 1);
-      strcpy (zcopy, zchat_fail);
+      zcopy = (char *) alloca (strlen (qchat->zfail) + 1);
+      strcpy (zcopy, qchat->zfail);
 
       /* Get the strings into the array, and handle all the escape
 	 characters.  */
@@ -152,7 +174,8 @@ fchat (zchat, zchat_fail, ctimeout, qsys, qdial, zphone, ftranslate)
 	  if (znext != NULL)
 	    *znext = '\0';
 	  aclens[0] = ccescape (azstrings[0]);
-	  while ((istr = icexpect (cstrings, azstrings, aclens, ctimeout))
+	  while ((istr = icexpect (cstrings, azstrings, aclens,
+				   qchat->ctimeout))
 		 != 0)
 	    {
 	      char *zsub;
@@ -164,14 +187,16 @@ fchat (zchat, zchat_fail, ctimeout, qsys, qdial, zphone, ftranslate)
 	      /* If we found a failure string, log it and get out.  */
 	      if (istr > 0)
 		{
+		  const char *zfail;
 		  int clen;
 		  char *zcopy;
 
+		  zfail = qchat->zfail;
 		  for (--istr; istr > 0; --istr)
-		    zchat_fail = strchr (zchat_fail, ' ') + 1;
-		  clen = strcspn (zchat_fail, " ");
+		    zfail = strchr (zfail, ' ') + 1;
+		  clen = strcspn (zfail, " ");
 		  zcopy = (char *) alloca (clen + 1);
-		  strncpy (zcopy, zchat_fail, clen);
+		  strncpy (zcopy, zfail, clen);
 		  zcopy[clen] = '\0';
 		  ulog (LOG_ERROR, "Chat script failed: Got \"%s\"",
 			zcopy);
@@ -851,8 +876,8 @@ fcecho_send (zwrite, cwrite)
 /* Run a chat program.  Expand any escape sequences and call a system
    dependent program to run it.  */
 
-boolean
-fchat_program (zprogram, qsys, qdial, zphone, zport, ibaud)
+static boolean
+fcprogram (zprogram, qsys, qdial, zphone, zport, ibaud)
      const char *zprogram;
      const struct ssysteminfo *qsys;
      const struct sdialer *qdial;

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1991/12/11  19:35:48  ian
+   Mark Powell: put in my own version of strtol
+
    Revision 1.15  1991/12/11  03:59:19  ian
    Create directories when necessary; don't just assume they exist
 
@@ -206,7 +209,11 @@ typedef long time_t;
 
 /* The types of entries allowed in a command table (struct scmdtab).
    If CMDTABTYPE_FN is used, it should be or'ed with the number of
-   arguments permitted, or 0 if there is no single number.  */
+   arguments permitted, or 0 if there is no single number.
+   CMDTABTYPE_PREFIX means that the string in the scmdtab table is a
+   prefix; any command which matches the prefix should be used to call
+   a function.  The number of arguments should be or'ed in as with
+   CMDTABTYPE_FN.  */
 
 #define CMDTABTYPE_BOOLEAN (0x12)
 #define CMDTABTYPE_INT (0x22)
@@ -214,6 +221,10 @@ typedef long time_t;
 #define CMDTABTYPE_STRING (0x40)
 #define CMDTABTYPE_FULLSTRING (0x50)
 #define CMDTABTYPE_FN (0x60)
+#define CMDTABTYPE_PREFIX (0x70)
+
+#define TTYPE_CMDTABTYPE(i) ((i) & 0x70)
+#define CARGS_CMDTABTYPE(i) ((i) & 0x0f)
 
 /* These flags are or'red together to form an argument to
    uprocesscmds.  */
@@ -245,6 +256,29 @@ struct scmdtab
   enum tcmdtabret (*ptfn) P((int argc, char **argv, pointer par,
 			     const char *zerr));
 };
+
+/* This structure holds the information we need for a chat script.  */
+
+struct schat_info
+{
+  /* The script itself, if any.  */
+  char *zchat;
+  /* The program to run, if any.  */
+  char *zprogram;
+  /* The timeout for the chat script.  */
+  int ctimeout;
+  /* The list of failure strings.  */
+  char *zfail;
+};
+
+/* This macro is used to initialize the entries of an schat_info
+   structure to the correct default values.  */
+
+#define INIT_CHAT(q) \
+  ((q)->zchat = NULL, \
+   (q)->zprogram = NULL, \
+   (q)->ctimeout = 60, \
+   (q)->zfail = NULL)
 
 /* This structure holds a set of special commands executed for
    particular protocols.  */
@@ -298,14 +332,8 @@ struct ssysteminfo
   struct sport *qport;
   /* Phone number.  */
   char *zphone;
-  /* Chat program.  */
-  const char *zchat_program;
-  /* Chat script.  */
-  char *zchat;
-  /* Timeout to use for the chat script.  */
-  int cchat_timeout;
-  /* Failure strings for the chat script.  */
-  char *zchat_fail;
+  /* Chat script information.  */
+  struct schat_info schat;
   /* Login name to use when calling the remote system.  */
   const char *zcall_login;
   /* Password to use when calling the remote system.  */
@@ -322,14 +350,8 @@ struct ssysteminfo
   int cproto_params;
   /* Protocol parameters array.  */
   struct sproto_param *qproto_params;
-  /* Chat program to run when called.  */
-  const char *zcalled_chat_program;
-  /* Chat script to run when called.  */
-  char *zcalled_chat;
-  /* Timeout to use for the chat script to run when called.  */
-  int ccalled_chat_timeout;
-  /* Failure strings for the chat script to run when called.  */
-  char *zcalled_chat_fail;
+  /* Chat to run when called.  */
+  struct schat_info scalled_chat;
   /* Whether the other system may request things when we call them.  */
   boolean fcall_request;
   /* Whether the other system may request things when they call us.  */
@@ -615,6 +637,12 @@ extern boolean fcallout_login P((const struct ssysteminfo *qsys,
 
 /* Add a string to the end of another.  */
 extern void uadd_string P((char **pz, const char *z, int bsep));
+
+/* Process a chat command.  These are handled using CMDTABTYPE_PREFIX.
+   This function switches off on argv[0].  */
+extern enum tcmdtabret tprocess_chat_cmd P((int argc, char **argv,
+					    pointer pvar,
+					    const char *zerr));
 
 /* Add a protocol parameter entry.  */
 extern enum tcmdtabret tadd_proto_param P((int *pc,

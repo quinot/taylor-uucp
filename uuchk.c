@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/01  14:45:53  ian
+   Bob Izenberg: report dialer/token pairs correctly
+
    Revision 1.7  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -68,6 +71,8 @@ static sigret_t ukcatch P((int isig));
 static void ukshow P((const struct ssysteminfo *qsys));
 static boolean fkshow_port P((struct sport *qport, boolean fin));
 static void ukshow_dialer P((struct sdialer *qdial));
+static void ukshow_chat P((const struct schat_info *qchat,
+			   const char *zhdr));
 static void ukshow_size P((const char *z, boolean fcall, boolean flocal));
 static void ukshow_proto_params P((int c, struct sproto_param *pas,
 				   int cindent));
@@ -224,8 +229,8 @@ ukshow (qsys)
 	       || qsys->qport != qlast->qport
 	       || qsys->ibaud != qlast->ibaud
 	       || qsys->zphone != qlast->zphone
-	       || qsys->zchat_program != qlast->zchat_program
-	       || qsys->zchat != qlast->zchat);
+	       || qsys->schat.zprogram != qlast->schat.zprogram
+	       || qsys->schat.zchat != qlast->schat.zchat);
 
       if (fcall && strcasecmp (qsys->ztime, "zNever") == 0)
 	fcall = FALSE;
@@ -331,16 +336,7 @@ ukshow (qsys)
 		printf (" Phone number %s\n", qsys->zphone);
 	    }
 
-	  if (qsys->zchat_program != NULL)
-	    printf (" Chat program %s\n", qsys->zchat_program);
-
-	  if (qsys->zchat != NULL)
-	    {
-	      printf (" Chat script %s\n", qsys->zchat);
-	      printf (" Chat script timeout %d\n", qsys->cchat_timeout);
-	      if (qsys->zchat_fail != NULL)
-		printf (" Chat failure strings %s\n", qsys->zchat_fail);
-	    }
+	  ukshow_chat (&qsys->schat, " Chat");
 
 	  if (qsys->zcall_login != NULL)
 	    {
@@ -441,21 +437,7 @@ ukshow (qsys)
 	printf (" Sequence numbers are used\n");
 
       if (fcalled)
-	{
-	  if (qsys->zcalled_chat_program != NULL)
-	    printf (" When called, chat program %s\n",
-		    qsys->zcalled_chat_program);
-
-	  if (qsys->zcalled_chat != NULL)
-	    {
-	      printf (" When called, chat script %s\n", qsys->zcalled_chat);
-	      printf (" When called, chat script timeout %d\n",
-		      qsys->ccalled_chat_timeout);
-	      if (qsys->zcalled_chat_fail != NULL)
-		printf (" When called, chat failure strings %s\n",
-			qsys->zcalled_chat_fail);
-	    }
-	}
+	ukshow_chat (&qsys->scalled_chat, " When called, chat");
 
       if (fcall)
 	{
@@ -616,15 +598,7 @@ static void
 ukshow_dialer (q)
      struct sdialer *q;
 {
-  if (q->zchat_program != NULL)
-    printf ("    Chat program %s\n", q->zchat_program);
-  if (q->zchat != NULL)
-    {
-      printf ("    Chat script %s\n", q->zchat);
-      printf ("    Chat script timeout %d\n", q->cchat_timeout);
-      if (q->zchat_fail != NULL)
-	printf ("    Chat failure strings %s\n", q->zchat_fail);
-    }
+  ukshow_chat (&q->schat, "    Chat");
   if (q->zdialtone != NULL)
     printf ("    Wait for dialtone %s\n", q->zdialtone);
   if (q->zpause != NULL)
@@ -645,6 +619,25 @@ ukshow_dialer (q)
     printf ("    When aborting %s\n", q->zabort);
   if (q->cproto_params != 0)
     ukshow_proto_params (q->cproto_params, q->qproto_params, 4);
+}
+
+/* Show a chat script.  */
+
+static void
+ukshow_chat (qchat, zhdr)
+     const struct schat_info *qchat;
+     const char *zhdr;
+{
+  if (qchat->zprogram != NULL)
+    printf ("%s program %s\n", zhdr, qchat->zprogram);
+
+  if (qchat->zchat != NULL)
+    {
+      printf ("%s script %s\n", zhdr, qchat->zchat);
+      printf ("%s script timeout %d\n", zhdr, qchat->ctimeout);
+      if (qchat->zfail != NULL)
+	printf ("%s failure strings %s\n", zhdr, qchat->zfail);
+    }
 }
 
 /* Show a size/time restriction.  */

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1991/12/11  03:59:19  ian
+   Create directories when necessary; don't just assume they exist
+
    Revision 1.21  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -615,8 +618,8 @@ static boolean fcall (qsys, qport, fforce, bgrade)
 	     && qsys->qport == qnext->qport
 	     && qsys->ibaud == qnext->ibaud
 	     && qsys->zphone == qnext->zphone
-	     && qsys->zchat_program == qnext->zchat_program
-	     && qsys->zchat == qnext->zchat);
+	     && qsys->schat.zprogram == qnext->schat.zprogram
+	     && qsys->schat.zchat == qnext->schat.zchat);
 
       qsys = qnext;
     }
@@ -697,27 +700,11 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       return FALSE;
     }
 
-  if (qsys->zchat_program != NULL)
+  if (! fchat (&qsys->schat, qsys, (const struct sdialer *) NULL,
+	       (const char *) NULL, FALSE, qPort->zname, iport_baud ()))
     {
-      if (! fchat_program (qsys->zchat_program, qsys,
-			   (const struct sdialer *) NULL,
-			   (const char *) NULL, qPort->zname,
-			   iport_baud ()))
-	{
-	  (void) fcall_failed (qsys, STATUS_LOGIN_FAILED, qstat, cretry);
-	  return FALSE;
-	}
-    }
-
-  if (qsys->zchat != NULL)
-    {
-      if (! fchat (qsys->zchat, qsys->zchat_fail, qsys->cchat_timeout,
-		   qsys, (const struct sdialer *) NULL,
-		   (const char *) NULL, FALSE))
-	{
-	  (void) fcall_failed (qsys, STATUS_LOGIN_FAILED, qstat, cretry);
-	  return FALSE;
-	}
+      (void) fcall_failed (qsys, STATUS_LOGIN_FAILED, qstat, cretry);
+      return FALSE;
     }
 
   qstat->ttype = STATUS_TALKING;
@@ -1133,6 +1120,7 @@ static boolean faccept_call (zlogin, qport)
   int iport_reliable, idial_reliable;
   struct sport sportinfo;
   boolean ftcp_port;
+  const char *zport;
   char *zsend, *zspace;
   const char *zstr;
   struct ssysteminfo ssys;
@@ -1152,6 +1140,7 @@ static boolean faccept_call (zlogin, qport)
 
   if (qport != NULL)
     {
+      zport = qport->zname;
       cport_proto_params = qport->cproto_params;
       qport_proto_params = qport->qproto_params;
       iport_reliable = qport->ireliable;
@@ -1159,14 +1148,13 @@ static boolean faccept_call (zlogin, qport)
     }
   else
     {
-      const char *zport;
-
       zport = zsysdep_port_name (&ftcp_port);
       if (zport == NULL
 	  || ! ffind_port (zport, (long) 0, (long) 0, &sportinfo,
 			   (boolean (*) P((struct sport *, boolean))) NULL,
 			   FALSE))
 	{
+	  zport = "unknown";
 	  cport_proto_params = 0;
 	  qport_proto_params = NULL;
 	  iport_reliable = 0;
@@ -1573,32 +1561,11 @@ static boolean faccept_call (zlogin, qport)
     qProto = &asProtocols[i];
   }
 
-  /* If there is a chat program or script to run when a call is
-     received, do so.  */
+  /* Run the chat script for when a call is received.  */
 
-  if (qsys->zcalled_chat_program != NULL)
-    {
-      const char *zport;
-
-      if (qport == NULL)
-	zport = "unknown";
-      else
-	zport = qport->zname;
-      if (! fchat_program (qsys->zcalled_chat_program, qsys,
-			   (const struct sdialer *) NULL,
-			   (const char *) NULL, zport,
-			   iport_baud ()))
-	return FALSE;
-    }
-
-  if (qsys->zcalled_chat != NULL)
-    {
-      if (! fchat (qsys->zcalled_chat, qsys->zcalled_chat_fail,
-		   qsys->ccalled_chat_timeout, qsys,
-		   (const struct sdialer *) NULL, (const char *) NULL,
-		   FALSE))
-	return FALSE;
-    }
+  if (! fchat (&qsys->scalled_chat, qsys, (const struct sdialer *) NULL,
+	       (const char *) NULL, FALSE, zport, iport_baud ()))
+    return FALSE;
 
   /* Run any protocol parameter commands.  There should be a way to
      read the dialer information if there is any to permit modem
