@@ -312,3 +312,19 @@ Michael Richardson: allowing remote system to turn on debugging can
 lead to a denial of service attack.
 
 119.
+
+Support CTSFLOW.
+
+120.
+
+Jarmo Raiha: new chat-fail commands: one to not update the status file
+and require a retry wait, and one to permit the string to occur a few
+times before reporting an error.
+
+121.
+
+Jarmo Raiha: uucp and uux fail to copy a file that is not world
+readable, because they are running under the wrong euid.  They should
+switch back and forth as necessary.
+
+122.
