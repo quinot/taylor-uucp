@@ -765,7 +765,9 @@ uccopy (zfile, zdest)
 					(fCremote
 					 ? (const char *) NULL
 					 : zCuser)))
-		ulog (LOG_FATAL, "Not permitted to send %s", zfile);
+		ulog (LOG_FATAL,
+		      "Daemon not permitted to send %s (suggest --copy)",
+		      zfile);
 	    }
 	  else
 	    {
