@@ -1209,8 +1209,13 @@ utransfer (ofrom, oto, otoslave, pc)
       cwrote = write (oto, zwrite, cdo);
       if (cwrote < 0)
 	{
-	  perror ("write");
-	  uchild (SIGCHLD);
+	  if (errno == EAGAIN || errno == EWOULDBLOCK)
+	    cwrote = 0;
+	  else
+	    {
+	      perror ("write");
+	      uchild (SIGCHLD);
+	    }
 	}
       cread -= cwrote;
       zwrite += cwrote;
@@ -1342,46 +1347,3 @@ fwritable (o)
 #endif /* HAVE_POLL */
 #endif /* ! HAVE_SELECT */
 }
-
-/* We don't want to link in util.c, since that would bring in the log
-   file stuff.  Instead, we have local copies of functions that may be
-   needed by getopt.c.  This should be done in a cleaner way.  */
-
-#if ! HAVE_MEMCPY && ! HAVE_BCOPY
-
-/* Copy one block of memory to another.  */
-
-pointer
-memcpy (ptoarg, pfromarg, c)
-     pointer ptoarg;
-     constpointer pfromarg;
-     int c;
-{
-  char *pto = (char *) ptoarg;
-  const char *pfrom = (const char *) pfromarg;
-
-  while (c-- != 0)
-    *pto++ = *pfrom++;
-  return ptoarg;
-}
-
-#endif /* ! HAVE_MEMCPY && ! HAVE_BCOPY */
-
-#if ! HAVE_STRCHR && ! HAVE_INDEX
-
-/* Look for a character in a string.  This is supposed to work for a
-   null byte, although we never actually call it with one.  */
-
-char *
-strchr (z, b)
-     const char *z;
-     int b;
-{
-  b = (char) b;
-  while (*z != b)
-    if (*z++ == '\0')
-      return NULL;
-  return (char *) z;
-}
-
-#endif /* ! HAVE_STRCHR && ! HAVE_INDEX */
