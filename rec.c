@@ -682,23 +682,16 @@ fremote_send_reply (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
-  const char *zsend;
   char ab[50];
 
-  if (qtrans->s.bcmd == 'E')
-    zsend = "EY";
+  ab[0] = qtrans->s.bcmd;
+  ab[1] = 'Y';
+  if (qtrans->ipos <= 0)
+    ab[2] = '\0';
   else
-    {
-      if (qtrans->ipos <= 0)
-	zsend = "SY";
-      else
-	{
-	  sprintf (ab, "SY 0x%lx", (unsigned long) qtrans->ipos);
-	  zsend = ab;
-	}
-    }
+    sprintf (ab + 2, " 0x%lx", (unsigned long) qtrans->ipos);
 
-  if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
+  if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, ab, qtrans->ilocal,
 				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
