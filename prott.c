@@ -106,10 +106,13 @@ ftshutdown (qdaemon)
    null byte.  The number of bytes we send must be a multiple of
    TPACKSIZE.  */
 
+/*ARGSUSED*/
 boolean
-ftsendcmd (qdaemon, z)
+ftsendcmd (qdaemon, z, ilocal, iremote)
      struct sdaemon *qdaemon;
      const char *z;
+     int ilocal;
+     int iremote;
 {
   size_t clen, csend;
   char *zalc;
@@ -149,10 +152,12 @@ ztgetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-ftsenddata (qdaemon, zdata, cdata, ipos)
+ftsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     int ilocal;
+     int iremote;
      long ipos;
 {
   /* Here we do htonl by hand, since it doesn't exist everywhere.  We
@@ -252,7 +257,7 @@ ftprocess_data (qdaemon, pfexit, pcneed)
 
       if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 		       (size_t) cfirst, abPrecbuf, (size_t) (clen - cfirst),
-		       1, -1, (long) -1, pfexit))
+		       -1, -1, (long) -1, pfexit))
 	return FALSE;
 
       iPrecstart = (iPrecstart + clen) % CRECBUFLEN;

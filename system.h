@@ -352,14 +352,11 @@ extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
    make sure that the file is readable by zuser (if zuser is NULL the
    file must be readable by anybody).  This is to eliminate a window
    between fsysdep_in_directory and esysdep_open_send.  If an error
-   occurs, it should return EFILECLOSED and, if pfgone is not NULL, it
-   should *pfgone to TRUE if the file no longer exists or FALSE if
-   there was some other error.  */
+   occurs, it should return EFILECLOSED.  */
 extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
 				       const char *zname,
 				       boolean fcheck,
-				       const char *zuser,
-				       boolean *pfgone));
+				       const char *zuser));
 
 /* Return a temporary file name to receive into.  This file will be
    opened by esysdep_open_receive.  It may ignore qsys (the system the

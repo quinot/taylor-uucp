@@ -22,6 +22,7 @@ prot.h
 prote.c
 protf.c
 protg.c
+proti.c
 prott.c
 rec.c
 send.c

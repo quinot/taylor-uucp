@@ -37,13 +37,14 @@ const char trans_rcsid[] = "$Id$";
 
 /* Local functions.  */
 
-static void utqueue P((struct stransfer **, struct stransfer *));
+static void utqueue P((struct stransfer **, struct stransfer *,
+		       boolean fhead));
 static void utdequeue P((struct stransfer *));
-static void utconnalc P((struct sdaemon *qdaemon, struct stransfer *qtrans));
-__inline__ static struct stransfer *qtconn P((int iconn));
-__inline__ void utconnfree P((struct stransfer *qtrans));
+static void utchanalc P((struct sdaemon *qdaemon, struct stransfer *qtrans));
+__inline__ static struct stransfer *qtchan P((int ichan));
+__inline__ void utchanfree P((struct stransfer *qtrans));
 static boolean ftadd_cmd P((struct sdaemon *qdaemon, const char *z,
-			    size_t cdata, boolean flast));
+			    size_t cdata, int iremote, boolean flast));
 static boolean fremote_hangup_reply P((struct stransfer *qtrans,
 				       struct sdaemon *qdaemon));
 
@@ -58,41 +59,36 @@ static struct stransfer *qTlocal;
    soon as possible.  */
 static struct stransfer *qTremote;
 
-/* This number is incremented each time a structure is added to
-   qTremote.  This change is detected in ftransfer_loop, where it
-   determines whether to break out of the inner loop.  */
-static int iTremote;
-
 /* Queue of transfer structures that have been started and want to
    send information.  */
 static struct stransfer *qTsend;
-
-/* Number of entries on qTsend.  */
-static int cTsend;
 
 /* Queue of transfer structures that have been started and are waiting
    to receive information.  */
 static struct stransfer *qTreceive;
 
-/* Number of entries on qTreceive.  */
-static int cTreceive;
-
 /* Queue of free transfer structures.  */
 static struct stransfer *qTavail;
 
-/* Process time seconds.  */
-long iTsecs;
+/* Array of transfer structures indexed by local channel number.  This
+   is maintained for local jobs.  */
+static struct stransfer *aqTchan[IMAX_CHAN + 1];
 
-/* Process time microseconds.  */
-long iTmicros;
+/* Number of local channel numbers currently allocated.  */
+static int cTchans;
+
+/* Array of transfer structures indexed by remote channel number.
+   This is maintained for remote jobs.  */
+static struct stransfer *aqTremote[IMAX_CHAN + 1];
 
-/* Queue up a transfer structure before *pq.  This puts it at the end
-   of the list headed by *pq.  */
+/* Queue up a transfer structure before *pq.  This puts it at the head
+   or the fail of the list headed by *pq.  */
 
 static void
-utqueue (pq, q)
+utqueue (pq, q, fhead)
      struct stransfer **pq;
      struct stransfer *q;
+     boolean fhead;
 {
   if (*pq == NULL)
     {
@@ -105,6 +101,8 @@ utqueue (pq, q)
       q->qprev = (*pq)->qprev;
       q->qprev->qnext = q;
       q->qnext->qprev = q;
+      if (fhead)
+	*pq = q;
     }
   q->pqqueue = pq;
 }
@@ -117,10 +115,6 @@ utdequeue (q)
 {
   if (q->pqqueue != NULL)
     {
-      if (q->pqqueue == &qTsend)
-	--cTsend;
-      if (q->pqqueue == &qTreceive)
-	--cTreceive;
       if (*(q->pqqueue) == q)
 	{
 	  if (q->qnext == q)
@@ -145,18 +139,25 @@ uqueue_local (qtrans)
      struct stransfer *qtrans;
 {
   utdequeue (qtrans);
-  utqueue (&qTlocal, qtrans);
+  utqueue (&qTlocal, qtrans, FALSE);
 }
 
-/* Queue up a transfer structure requested by the remote system.  */
+/* Queue up a transfer structure requested by the remote system.  The
+   stransfer structure should have the iremote field set.  We need to
+   record it, so that any subsequent data associated with this
+   channel can be routed to the right place.  */
 
 void
 uqueue_remote (qtrans)
      struct stransfer *qtrans;
 {
+  DEBUG_MESSAGE2 (DEBUG_UUCP_PROTO,
+		  "uqueue_remote: Queuing %c (channel %d)",
+		  qtrans->s.bcmd, qtrans->iremote);
+  if (qtrans->iremote > 0)
+    aqTremote[qtrans->iremote] = qtrans;
   utdequeue (qtrans);
-  utqueue (&qTremote, qtrans);
-  ++iTremote;
+  utqueue (&qTremote, qtrans, FALSE);
 }
 
 /* Queue up a transfer with something to send.  */
@@ -170,8 +171,7 @@ uqueue_send (qtrans)
     ulog (LOG_FATAL, "uqueue_send: Bad call");
 #endif
   utdequeue (qtrans);
-  utqueue (&qTsend, qtrans);
-  ++cTsend;
+  utqueue (&qTsend, qtrans, FALSE);
 }
 
 /* Queue up a transfer with something to receive.  */
@@ -185,60 +185,53 @@ uqueue_receive (qtrans)
     ulog (LOG_FATAL, "uqueue_receive: Bad call");
 #endif
   utdequeue (qtrans);
-  utqueue (&qTreceive, qtrans);
-  ++cTreceive;
+  utqueue (&qTreceive, qtrans, FALSE);
 }
 
-/* Get a new local connection number.  */
-
-static struct stransfer *aqTconn[IMAX_CONN + 1];
+/* Get a new local channel number.  */
 
 static void
-utconnalc (qdaemon, qtrans)
+utchanalc (qdaemon, qtrans)
      struct sdaemon *qdaemon;
      struct stransfer *qtrans;
 {
-  static int iconn;
-
-  if (qdaemon->fhalfduplex)
-    {
-      qtrans->ilocal = 1;
-      return;
-    }
+  static int ichan;
 
   do
     {
-      ++iconn;
-      if (iconn > qdaemon->qproto->cconns)
-	iconn = 1;
+      ++ichan;
+      if (ichan > qdaemon->qproto->cchans)
+	ichan = 1;
     }
-  while (aqTconn[iconn] != NULL);
+  while (aqTchan[ichan] != NULL);
 
-  qtrans->ilocal = iconn;
-  aqTconn[iconn] = qtrans;
+  qtrans->ilocal = ichan;
+  aqTchan[ichan] = qtrans;
+  ++cTchans;
 }
 
-/* Return the transfer for a connection number.  */
+/* Return the transfer for a channel number.  */
 
 __inline__
 static struct stransfer *
-qtconn (ic)
+qtchan (ic)
      int ic;
 {
-  return aqTconn[ic];
+  return aqTchan[ic];
 }
 
-/* Clear the connection number for a transfer.  */
+/* Clear the channel number for a transfer.  */
 
 __inline__
 static void
-utconnfree (qt)
+utchanfree (qt)
      struct stransfer *qt;
 {
-  if (qt->ilocal != -1)
+  if (qt->ilocal != 0)
     {
-      aqTconn[qt->ilocal] = NULL;
-      qt->ilocal = -1;
+      aqTchan[qt->ilocal] = NULL;
+      qt->ilocal = 0;
+      --cTchans;
     }
 }
 
@@ -254,7 +247,10 @@ qtransalc (qcmd)
   if (q != NULL)
     utdequeue (q);
   else
-    q = (struct stransfer *) xmalloc (sizeof (struct stransfer));
+    {
+      q = (struct stransfer *) xmalloc (sizeof (struct stransfer));
+      q->calcs = 1;
+    }
   q->qnext = NULL;
   q->qprev = NULL;
   q->pqqueue = NULL;
@@ -268,8 +264,8 @@ qtransalc (qcmd)
   q->fcmd = FALSE;
   q->zcmd = NULL;
   q->ccmd = 0;
-  q->ilocal = -1;
-  q->iremote = -1;
+  q->ilocal = 0;
+  q->iremote = 0;
   if (qcmd != NULL)
     {
       q->s = *qcmd;
@@ -311,7 +307,12 @@ utransfree (q)
   ubuffree ((char *) q->s.ztemp);
   ubuffree ((char *) q->s.znotify);
   
-  utconnfree (q);    
+  utchanfree (q);    
+  if (q->iremote > 0)
+    {
+      aqTremote[q->iremote] = NULL;
+      q->iremote = 0;
+    }
 
 #if DEBUG > 0
   q->zcmd = NULL;
@@ -325,8 +326,10 @@ utransfree (q)
   q->precfn = NULL;
 #endif
 
+  ++q->calcs;
+
   utdequeue (q);
-  utqueue (&qTavail, q);
+  utqueue (&qTavail, q, FALSE);
 }
 
 /* Gather local commands and queue them up for later processing.  Also
@@ -431,8 +434,6 @@ floop (qdaemon)
 {
   boolean fret;
 
-  iTsecs = isysdep_process_time (&iTmicros);
-
   fret = TRUE;
 
   while (! qdaemon->fhangup)
@@ -466,7 +467,7 @@ floop (qdaemon)
 	  if (qTlocal == NULL)
 	    {
 	      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "floop: No work for master");
-	      if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, "H"))
+	      if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, "H", 0, 0))
 		{
 		  fret = FALSE;
 		  break;
@@ -475,18 +476,30 @@ floop (qdaemon)
 	    }
 	}
 
-      while (cTsend + cTreceive < qdaemon->qproto->cconns)
+      /* Immediately queue up any remote jobs.  We don't need local
+	 channel numbers for them, since we can disambiguate based on
+	 the remote channel number.  */
+      while (qTremote != NULL)
 	{
-	  /* We have room for an additional connection.  */
-	  if (qTremote != NULL)
-	    q = qTremote;
-	  else if (qTlocal != NULL)
-	    q = qTlocal;
-	  else
-	    break;
+	  q = qTremote;
+	  utdequeue (q);
+	  utqueue (&qTsend, q, TRUE);
+	}
 
-	  uqueue_send (q);
-	  utconnalc (qdaemon, q);
+      /* If we are the master, or if we are running fullduplex on a
+	 protocol which supports multiple channels, try to queue up
+	 additional local jobs.  */
+      if (qdaemon->fmaster ||
+	  ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) != 0
+	   && qdaemon->qproto->cchans > 1))
+	{
+	  while (qTlocal != NULL && cTchans < qdaemon->qproto->cchans)
+	    {
+	      /* We have room for an additional channel.  */
+	      q = qTlocal;
+	      uqueue_send (q);
+	      utchanalc (qdaemon, q);
+	    }
 	}
 
       q = qTsend;
@@ -503,7 +516,11 @@ floop (qdaemon)
 	}
       else
 	{
-	  long inextsecs, inextmicros;
+	  long isecs, imicros;
+	  int calcs;
+
+	  isecs = isysdep_process_time (&imicros);
+	  calcs = q->calcs;
 
 	  ulog_user (q->s.zuser);
 
@@ -517,14 +534,18 @@ floop (qdaemon)
 	    }
 	  else
 	    {
-	      int iremote;
+	      if (q->zlog != NULL)
+		{
+		  ulog (LOG_NORMAL, q->zlog);
+		  ubuffree (q->zlog);
+		  q->zlog = NULL;
+		}
 
 	      /* We can read the file in a tight loop until qTremote
 		 changes or until we have transferred the entire file.
 		 We can disregard any changes to qTlocal since we
 		 already have something to send anyhow.  */
-	      iremote = iTremote;
-	      do
+	      while (qTremote == NULL)
 		{
 		  char *zdata;
 		  size_t cdata;
@@ -557,7 +578,8 @@ floop (qdaemon)
 		  q->cbytes += cdata;
 
 		  if (! (*qdaemon->qproto->pfsenddata) (qdaemon, zdata,
-							cdata, ipos))
+							cdata, q->ilocal,
+							q->iremote, ipos))
 		    {
 		      fret = FALSE;
 		      break;
@@ -576,20 +598,23 @@ floop (qdaemon)
 		      break;
 		    }
 		}
-	      while (iremote == iTremote);
 
 	      if (! fret)
 		break;
 	    }
 
-	  inextsecs = isysdep_process_time (&inextmicros);
-	  if (q == qTsend)
+	  /* If this is the same transfer, increment the time.  This
+	     is only safe because utransfree never actually frees a
+	     transfer structure, it just puts it on the available
+	     list.  */
+	  if (q->calcs == calcs)
 	    {
-	      q->isecs += inextsecs - iTsecs;
-	      q->imicros += inextmicros - iTmicros;
+	      long iendsecs, iendmicros;
+
+	      iendsecs = isysdep_process_time (&iendmicros);
+	      q->isecs += iendsecs - isecs;
+	      q->imicros += iendmicros - imicros;
 	    }
-	  iTsecs = inextsecs;
-	  iTmicros = inextmicros;
 	}
     }
 
@@ -606,9 +631,11 @@ floop (qdaemon)
 }
 
 /* This is called by the protocol routines when they have received
-   some data.  If pfexit is not NULL, it should be set to TRUE if the
-   protocol receive loop should exit back to the main floop routine,
-   above.  */
+   some data.  If pfexit is not NULL, *pfexit should be set to TRUE if
+   the protocol receive loop should exit back to the main floop
+   routine, above.  It is only important to set *pfexit to TRUE if the
+   main loop called the pfwait entry point, so we need never set it to
+   TRUE if we just receive data for a file.  */
 
 boolean 
 fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
@@ -623,26 +650,30 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
      long ipos;
      boolean *pfexit;
 {
+  static long isecs, imicros;
+  long inextsecs, inextmicros;
   struct stransfer *q;
   int cwrote;
+  int calcs;
   boolean fret;
-  long inextsecs, inextmicros;
+
+  if (isecs == 0)
+    isecs = isysdep_process_time (&imicros);
 
   if (pfexit != NULL)
     *pfexit = FALSE;
 
-  if (ilocal == -1)
-    {
-      /* The protocol doesn't know where to route this data.  If
-	 there's anything waiting for data, then it gets it.  	
-	 Otherwise treat it as a new command.  */
-      if (qTreceive != NULL)
-	ilocal = qTreceive->ilocal;
-      else
-	ilocal = 0;
-    }
-
-  if (ilocal == 0)
+  /* Now we have to decide which transfer structure gets the data.  If
+     ilocal is -1, it means that the protocol does not know where to
+     route the data.  In that case we route it to the first transfer
+     that is waiting for data, or, if none, as a new command.  If
+     ilocal is 0, we either select based on the remote channel number
+     or we have a new command.  */
+  if (ilocal == -1 && qTreceive != NULL)
+    q = qTreceive;
+  else if (ilocal == 0 && iremote > 0 && aqTremote[iremote] != NULL)
+    q = aqTremote[iremote];
+  else if (ilocal <= 0)
     {
       const char *znull;
 
@@ -656,65 +687,50 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
       znull = (const char *) memchr (zfirst, '\0', cfirst);
       if (znull != NULL)
 	fret = ftadd_cmd (qdaemon, zfirst, (size_t) (znull - zfirst),
-			  TRUE);
+			  iremote, TRUE);
       else
 	{
-	  fret = ftadd_cmd (qdaemon, zfirst, cfirst, FALSE);
+	  fret = ftadd_cmd (qdaemon, zfirst, cfirst, iremote, FALSE);
 	  if (fret && csecond > 0)
 	    {
 	      znull = (const char *) memchr (zsecond, '\0', csecond);
 	      if (znull != NULL)
 		fret = ftadd_cmd (qdaemon, zsecond,
-				  (size_t) (znull - zsecond), TRUE);
+				  (size_t) (znull - zsecond), iremote, TRUE);
 	      else
-		fret = ftadd_cmd (qdaemon, zsecond, csecond, FALSE);
+		fret = ftadd_cmd (qdaemon, zsecond, csecond, iremote, FALSE);
 	    }
 	}
 
       if (pfexit != NULL)
-	*pfexit = (qdaemon->fhangup
-		   || qdaemon->fmaster
-		   || qTsend != NULL
-		   || qTremote != NULL);
+	*pfexit = qdaemon->fhangup || qTremote != NULL;
 
       /* The time spent to gather a new command does not get charged
 	 to any one command.  */
-      iTsecs = isysdep_process_time (&iTmicros);
+      isecs = isysdep_process_time (&imicros);
 
       return fret;
     }
-
-  /* Get the transfer structure this data is intended for.  If there
-     is no such transfer structure, we discard the data.  This will
-     happen if we reject a file transfer request after some of the
-     file has already been transferred.  */
-  q = qtconn (ilocal);
-  if (q == NULL || q->precfn == NULL)
+  else
     {
-      DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fgot_data: Discarding %lu bytes",
-		      (unsigned long) (cfirst + csecond));
-      /* We don't charge this time to anybody.  */
-      iTsecs = isysdep_process_time (&iTmicros);
-      if (pfexit != NULL)
-	*pfexit = (qdaemon->fhangup
-		   || qdaemon->fmaster
-		   || qTsend != NULL
-		   || qTremote != NULL);
-      return TRUE;
+      /* Get the transfer structure this data is intended for.  */
+
+      q = qtchan (ilocal);
     }
 
-  ulog_user (q->s.zuser);
-
 #if DEBUG > 0
-  if (iremote != q->iremote
-      && q->iremote == -1)
+  if (q == NULL || q->precfn == NULL)
     {
-      ulog (LOG_ERROR, "fgot_data: %d != %d", iremote, q->iremote);
+      ulog (LOG_ERROR, "Protocol error: %lu bytes remote %d local %d",
+	    (unsigned long) (cfirst + csecond),
+	    iremote, ilocal);
       return FALSE;
     }
 #endif
 
-  q->iremote = iremote;
+  ulog_user (q->s.zuser);
+
+  calcs = q->calcs;
 
   fret = TRUE;
 
@@ -764,6 +780,11 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	  fret = (*q->precfn) (q, qdaemon, zcmd, ccmd + 1);
 	  ubuffree (zcmd);
 	}
+
+      if (pfexit != NULL)
+	*pfexit = (qdaemon->fhangup
+		   || qdaemon->fmaster
+		   || qTsend != NULL);
     }
   else if (! q->frecfile || cfirst == 0)
     {
@@ -775,70 +796,88 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	return fgot_data (qdaemon, zsecond, csecond,
 			  (const char *) NULL, (size_t) 0,
 			  ilocal, iremote, ipos + cfirst, pfexit);
+      if (pfexit != NULL)
+	*pfexit = (qdaemon->fhangup
+		   || qdaemon->fmaster
+		   || qTsend != NULL);
     }
   else
     {
-      while (cfirst > 0)
+      if (q->zlog != NULL)
 	{
-	  if (ipos != -1 && ipos != q->ipos)
+	  ulog (LOG_NORMAL, q->zlog);
+	  ubuffree (q->zlog);
+	  q->zlog = NULL;
+	}
+
+      if (ipos != -1 && ipos != q->ipos)
+	{
+	  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
+			  "fgot_data: Seeking to %ld", ipos);
+	  if (! ffileseek (q->e, ipos))
 	    {
-	      if (! ffileseek (q->e, ipos))
+	      ulog (LOG_ERROR, "seek: %s", strerror (errno));
+	      fret = FALSE;
+	    }
+	  q->ipos = ipos;
+	}
+
+      if (fret)
+	{
+	  while (cfirst > 0)
+	    {
+	      cwrote = cfilewrite (q->e, (char *) zfirst, cfirst);
+	      if (cwrote == cfirst)
 		{
-		  ulog (LOG_ERROR, "seek: %s", strerror (errno));
+		  q->cbytes += cfirst;
+		  q->ipos += cfirst;
+		}
+	      else
+		{
+		  const char *zerr;
+
+		  if (cwrote < 0)
+		    zerr = strerror (errno);
+		  else
+		    zerr = "could not write all data";
+		  ulog (LOG_ERROR, "write: %s", zerr);
+
+		  /* Any write error is almost certainly a temporary
+		     condition, or else UUCP would not be functioning
+		     at all.  If we continue to accept the file, we
+		     will wind up rejecting it at the end (what else
+		     could we do?)  and the remote system will throw
+		     away the request.  We're better off just dropping
+		     the connection, which is what happens when we
+		     return FALSE, and trying again later.  */
 		  fret = FALSE;
 		  break;
 		}
-	      q->ipos = ipos;
+
+	      zfirst = zsecond;
+	      cfirst = csecond;
+	      csecond = 0;
 	    }
-
-	  cwrote = cfilewrite (q->e, (char *) zfirst, cfirst);
-	  if (cwrote == cfirst)
-	    {
-	      q->cbytes += cfirst;
-	      q->ipos += cfirst;
-	    }
-	  else
-	    {
-	      const char *zerr;
-
-	      if (cwrote < 0)
-		zerr = strerror (errno);
-	      else
-		zerr = "could not write all data";
-	      ulog (LOG_ERROR, "write: %s", zerr);
-
-	      /* Any write error is almost certainly a temporary
-		 condition, or else UUCP would not be functioning at
-		 all.  If we continue to accept the file, we will wind
-		 up rejecting it at the end (what else could we do?)
-		 and the remote system will throw away the request.
-		 We're better off just dropping the connection, which
-		 is what happens when we return FALSE, and trying
-		 again later.  */
-	      fret = FALSE;
-	      break;
-	    }
-
-	  zfirst = zsecond;
-	  cfirst = csecond;
-	  csecond = 0;
 	}
-    }
 
-  if (pfexit != NULL)
-    *pfexit = (qdaemon->fmaster
-	       || qdaemon->fhangup
-	       || qTsend != NULL
-	       || qTremote != NULL);
+      if (pfexit != NULL)
+	*pfexit = qdaemon->fhangup;
+    }
 
   inextsecs = isysdep_process_time (&inextmicros);
-  if (q == qtconn (ilocal))
+
+  /* If this is the same transfer structure, add in the current time.
+     spent.  We can only get away with this because we know that the
+     structure is not actually freed up (it's put on the qTavail
+     list).  */
+  if (q->calcs == calcs)
     {
-      q->isecs += inextsecs - iTsecs;
-      q->imicros += inextmicros - iTmicros;
+      q->isecs += inextsecs - isecs;
+      q->imicros += inextmicros - imicros;
     }
-  iTsecs = inextsecs;
-  iTmicros = inextmicros;
+
+  isecs = inextsecs;
+  imicros = inextmicros;
 
   return fret;
 }
@@ -847,10 +886,11 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
    start up a new transfer.  */
 
 static boolean
-ftadd_cmd (qdaemon, z, clen, flast)
+ftadd_cmd (qdaemon, z, clen, iremote, flast)
      struct sdaemon *qdaemon;
      const char *z;
      size_t clen;
+     int iremote;
      boolean flast;
 {
   static char *zbuf;
@@ -878,6 +918,9 @@ ftadd_cmd (qdaemon, z, clen, flast)
   /* Don't save this string for next time.  */
   chave = 0;
 
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
+		  "ftadd_cmd: Got command \"%s\"", zbuf);
+
   if (! fparse_cmd (zbuf, &s))
     {
       ulog (LOG_ERROR, "Received garbled command \"%s\"", zbuf);
@@ -892,11 +935,11 @@ ftadd_cmd (qdaemon, z, clen, flast)
   switch (s.bcmd)
     {
     case 'S':
-      return fremote_send_file_init (qdaemon, &s);
+      return fremote_send_file_init (qdaemon, &s, iremote);
     case 'R':
-      return fremote_rec_file_init (qdaemon, &s);
+      return fremote_rec_file_init (qdaemon, &s, iremote);
     case 'X':
-      return fremote_xcmd_init (qdaemon, &s);
+      return fremote_xcmd_init (qdaemon, &s, iremote);
     case 'H':
       /* This is a remote request for a hangup.  We close the log
 	 files so that they may be moved at this point.  */
@@ -907,6 +950,7 @@ ftadd_cmd (qdaemon, z, clen, flast)
 
 	q = qtransalc ((struct scmd *) NULL);
 	q->psendfn = fremote_hangup_reply;
+	q->iremote = iremote;
 	uqueue_remote (q);
       }
       return TRUE;
@@ -927,7 +971,7 @@ ftadd_cmd (qdaemon, z, clen, flast)
 	 might jump the gun and hang up.  The fLog_sighup variable
 	 will get set TRUE again when the port is closed.  */
       fLog_sighup = FALSE;
-      (void) (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY");
+      (void) (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, iremote);
       qdaemon->fhangup = TRUE;
       return TRUE;
     }
@@ -951,14 +995,14 @@ fremote_hangup_reply (qtrans, qdaemon)
   if (qTlocal == NULL)
     {
       DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fremote_hangup_reply: No work");
-      fret = ((*qdaemon->qproto->pfsendcmd) (qdaemon, "HY")
-	      && (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY"));
+      fret = ((*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, 0)
+	      && (*qdaemon->qproto->pfsendcmd) (qdaemon, "HY", 0, 0));
       qdaemon->fhangup = TRUE;
     }
   else
     {
       DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fremote_hangup_reply: Found work");
-      fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "HN");
+      fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "HN", 0, 0);
       qdaemon->fmaster = TRUE;
     }
 

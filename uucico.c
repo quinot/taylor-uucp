@@ -56,6 +56,9 @@ static const struct sprotocol asProtocols[] =
   { 'e', TCP_PROTO, 1,
       asEproto_params, festart, feshutdown, fesendcmd, zegetspace,
       fesenddata, fewait, fefile },
+  { 'i', UUCONF_RELIABLE_EIGHT, 7,
+      asIproto_params, fistart, fishutdown, fisendcmd, zigetspace,
+      fisenddata, fiwait, NULL },
   { 'g', UUCONF_RELIABLE_EIGHT, 1,
       asGproto_params, fgstart, fgshutdown, fgsendcmd, zggetspace,
       fgsenddata, fgwait, NULL },
@@ -744,7 +747,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
   sdaem.fhangup = FALSE;
   sdaem.fmaster = TRUE;
   sdaem.fcaller = TRUE;
-  sdaem.fhalfduplex = FALSE;
+  sdaem.ireliable = 0;
   sdaem.bgrade = '\0';
 
   fbadtime = TRUE;
@@ -1198,6 +1201,27 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
       return FALSE;
     }
 
+  /* Determine the reliability characteristics of the connection by
+     combining information for the port and the dialer.  If we have no
+     information, default to a reliable eight-bit full-duplex
+     connection.  */
+  if (qconn->qport != NULL
+      && (qconn->qport->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
+    qdaemon->ireliable = qconn->qport->uuconf_ireliable;
+  if (qdialer != NULL
+      && (qdialer->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
+    {
+      if (qdaemon->ireliable != 0)
+	qdaemon->ireliable &= qdialer->uuconf_ireliable;
+      else
+	qdaemon->ireliable = qdialer->uuconf_ireliable;
+    }
+  if (qdaemon->ireliable == 0)
+    qdaemon->ireliable = (UUCONF_RELIABLE_RELIABLE
+			  | UUCONF_RELIABLE_EIGHT
+			  | UUCONF_RELIABLE_FULLDUPLEX
+			  | UUCONF_RELIABLE_SPECIFIED);
+
   /* Now decide which protocol to use.  The system and the port may
      have their own list of protocols.  */
   {
@@ -1229,37 +1253,15 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
       }
     else
       {
-	int ir;
-
 	/* If neither the system nor the port specified a list of
 	   protocols, we want only protocols that match the known
-	   reliability of the dialer and the port.  If we have no
-	   reliability information, we default to a reliable eight bit
-	   connection.  */
-	ir = 0;
-	if (qconn->qport != NULL
-	    && (qconn->qport->uuconf_ireliable
-		& UUCONF_RELIABLE_SPECIFIED) != 0)
-	  ir = qconn->qport->uuconf_ireliable;
-	if (qdialer != NULL
-	    && (qdialer->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
-	  {
-	    if (ir != 0)
-	      ir &= qdialer->uuconf_ireliable;
-	    else
-	      ir = qdialer->uuconf_ireliable;
-	  }
-	if (ir == 0)
-	  ir = (UUCONF_RELIABLE_RELIABLE
-		| UUCONF_RELIABLE_EIGHT
-		| UUCONF_RELIABLE_SPECIFIED);
-
+	   reliability of the dialer and the port.  */
 	for (i = 0; i < CPROTOCOLS; i++)
 	  {
 	    int ipr;
 
 	    ipr = asProtocols[i].ireliable;
-	    if ((ipr & ir) != ipr)
+	    if ((ipr & qdaemon->ireliable) != ipr)
 	      continue;
 	    if (strchr (zstr + 1, asProtocols[i].bname) != NULL)
 	      break;
@@ -1317,29 +1319,12 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     fret = floop (qdaemon);
 
     /* Now send the hangup message.  As the caller, we send six O's
-       and expect to receive seven O's.  We send the six O's twice
-       to help the other side.  We don't worry about errors here.  */
-    if (fsend_uucp_cmd (qconn, "OOOOOO")
-	&& fsend_uucp_cmd (qconn, "OOOOOO"))
-      {
-	/* We don't even look for the hangup string from the other
-	   side unless we're in debugging mode.  */
-#if DEBUG > 1
-	if (fret && FDEBUGGING (DEBUG_HANDSHAKE))
-	  {
-	    zstr = zget_uucp_cmd (qconn, FALSE);
-	    if (zstr != NULL)
-	      {
-		/* The Ultrix UUCP only sends six O's, although I
-		   think it should send seven.  Because of this, we
-		   only check for six.  */
-		if (strstr (zstr, "OOOOOO") == NULL)
-		  ulog (LOG_DEBUG, "No hangup from remote");
-		ubuffree (zstr);
-	      }
-	  }
-#endif
-      }
+       and expect to receive seven O's.  We send the six O's twice to
+       help the other side.  We don't worry about errors here, and, in
+       fact, we don't even look for the message from the remote
+       system.  */
+    if (fsend_uucp_cmd (qconn, "OOOOOO"))
+      (void) fsend_uucp_cmd (qconn, "OOOOOO");
 
     iend_time = isysdep_time ((long *) NULL);
 
@@ -1486,6 +1471,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   char *zloc;
   struct sstatus sstat;
   boolean frestart;
+  int i;
 
   if (pzsystem != NULL)
     *pzsystem = NULL;
@@ -1570,7 +1556,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sdaem.fhangup = FALSE;
   sdaem.fmaster = FALSE;
   sdaem.fcaller = FALSE;
-  sdaem.fhalfduplex = FALSE;
+  sdaem.ireliable = 0;
   sdaem.bgrade = UUCONF_GRADE_LOW;
 
   /* Get the local name to use.  If uuconf_login_localname returns a
@@ -1866,127 +1852,124 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
-  {
-    int i;
-   
-    if (qsys->uuconf_zprotocols != NULL ||
-	(qport != NULL && qport->uuconf_zprotocols != NULL))
-      {
-	const char *zprotos;
+  /* Determine the reliability of the connection based on the
+     reliability of the port and the dialer.  If we have no
+     information, default to a reliable eight-bit full-duplex
+     connection.  */
+  if (ftcp_port)
+    sdaem.ireliable = (UUCONF_RELIABLE_SPECIFIED
+		       | UUCONF_RELIABLE_ENDTOEND
+		       | UUCONF_RELIABLE_RELIABLE
+		       | UUCONF_RELIABLE_EIGHT
+		       | UUCONF_RELIABLE_FULLDUPLEX);
+  else
+    {
+      if (qport != NULL
+	  && (qport->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
+	sdaem.ireliable = qport->uuconf_ireliable;
+      if (qdialer != NULL
+	  && (qdialer->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
+	{
+	  if (sdaem.ireliable != 0)
+	    sdaem.ireliable &= qdialer->uuconf_ireliable;
+	  else
+	    sdaem.ireliable = qdialer->uuconf_ireliable;
+	}
+      if (sdaem.ireliable == 0)
+	sdaem.ireliable = (UUCONF_RELIABLE_RELIABLE
+			   | UUCONF_RELIABLE_EIGHT
+			   | UUCONF_RELIABLE_FULLDUPLEX
+			   | UUCONF_RELIABLE_SPECIFIED);
+    }
 
-	if (qsys->uuconf_zprotocols != NULL)
-	  zprotos = qsys->uuconf_zprotocols;
-	else
-	  zprotos = qport->uuconf_zprotocols;
-	zsend = zbufalc (strlen (zprotos) + 2);
-	sprintf (zsend, "P%s", zprotos);
-      }
-    else
-      {
-	char *zset;
-	int ir;
+  if (qsys->uuconf_zprotocols != NULL ||
+      (qport != NULL && qport->uuconf_zprotocols != NULL))
+    {
+      const char *zprotos;
 
-	zsend = zbufalc (CPROTOCOLS + 2);
-	zset = zsend;
-	*zset++ = 'P';
+      if (qsys->uuconf_zprotocols != NULL)
+	zprotos = qsys->uuconf_zprotocols;
+      else
+	zprotos = qport->uuconf_zprotocols;
+      zsend = zbufalc (strlen (zprotos) + 2);
+      sprintf (zsend, "P%s", zprotos);
+    }
+  else
+    {
+      char *zset;
 
-	/* If the system did not specify a list of protocols, we want
-	   only protocols that match the known reliability of the
-	   dialer and the port.  If we have no information, we default
-	   to a reliable eight bit connection.  */
-	if (ftcp_port)
-	  ir = (UUCONF_RELIABLE_SPECIFIED
-		| UUCONF_RELIABLE_ENDTOEND
-		| UUCONF_RELIABLE_RELIABLE
-		| UUCONF_RELIABLE_EIGHT);
-	else
-	  {
-	    ir = 0;
-	    if (qport != NULL
-		&& (qport->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
-	      ir = qport->uuconf_ireliable;
-	    if (qdialer != NULL
-		&& (qdialer->uuconf_ireliable
-		    & UUCONF_RELIABLE_SPECIFIED) != 0)
-	      {
-		if (ir != 0)
-		  ir &= qdialer->uuconf_ireliable;
-		else
-		  ir = qdialer->uuconf_ireliable;
-	      }
-	    if (ir == 0)
-	      ir = (UUCONF_RELIABLE_RELIABLE
-		    | UUCONF_RELIABLE_EIGHT
-		    | UUCONF_RELIABLE_SPECIFIED);
-	  }
+      zsend = zbufalc (CPROTOCOLS + 2);
+      zset = zsend;
+      *zset++ = 'P';
 
-	for (i = 0; i < CPROTOCOLS; i++)
-	  {
-	    int ipr;
+      /* If the system did not specify a list of protocols, we want
+	 only protocols that match the known reliability of the dialer
+	 and the port.  */
+      for (i = 0; i < CPROTOCOLS; i++)
+	{
+	  int ipr;
 
-	    ipr = asProtocols[i].ireliable;
-	    if ((ipr & ir) != ipr)
-	      continue;
-	    *zset++ = asProtocols[i].bname;
-	  }
-	*zset = '\0';
-      }
+	  ipr = asProtocols[i].ireliable;
+	  if ((ipr & sdaem.ireliable) != ipr)
+	    continue;
+	  *zset++ = asProtocols[i].bname;
+	}
+      *zset = '\0';
+    }
 
-    fret = fsend_uucp_cmd (qconn, zsend);
-    ubuffree (zsend);
-    if (! fret)
-      {
-	sstat.ttype = STATUS_FAILED;
-	(void) fsysdep_set_status (qsys, &sstat);
-	return FALSE;
-      }
+  fret = fsend_uucp_cmd (qconn, zsend);
+  ubuffree (zsend);
+  if (! fret)
+    {
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      return FALSE;
+    }
     
-    /* The master will now send back the selected protocol.  */
-    zstr = zget_uucp_cmd (qconn, TRUE);
-    if (zstr == NULL)
-      {
-	sstat.ttype = STATUS_FAILED;
-	(void) fsysdep_set_status (qsys, &sstat);
-	return FALSE;
-      }
+  /* The master will now send back the selected protocol.  */
+  zstr = zget_uucp_cmd (qconn, TRUE);
+  if (zstr == NULL)
+    {
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      return FALSE;
+    }
 
-    if (zstr[0] != 'U' || zstr[2] != '\0')
-      {
-	ulog (LOG_ERROR, "Bad protocol response string");
-	sstat.ttype = STATUS_FAILED;
-	(void) fsysdep_set_status (qsys, &sstat);
-	ubuffree (zstr);
-	return FALSE;
-      }
+  if (zstr[0] != 'U' || zstr[2] != '\0')
+    {
+      ulog (LOG_ERROR, "Bad protocol response string");
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      ubuffree (zstr);
+      return FALSE;
+    }
 
-    if (zstr[1] == 'N')
-      {
-	ulog (LOG_ERROR, "No supported protocol");
-	sstat.ttype = STATUS_FAILED;
-	(void) fsysdep_set_status (qsys, &sstat);
-	ubuffree (zstr);
-	return FALSE;
-      }
+  if (zstr[1] == 'N')
+    {
+      ulog (LOG_ERROR, "No supported protocol");
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      ubuffree (zstr);
+      return FALSE;
+    }
 
-    for (i = 0; i < CPROTOCOLS; i++)
-      if (asProtocols[i].bname == zstr[1])
-	break;
+  for (i = 0; i < CPROTOCOLS; i++)
+    if (asProtocols[i].bname == zstr[1])
+      break;
 
-    ubuffree (zstr);
+  ubuffree (zstr);
 
-    if (i >= CPROTOCOLS)
-      {
-	ulog (LOG_ERROR, "No supported protocol");
-	sstat.ttype = STATUS_FAILED;
-	(void) fsysdep_set_status (qsys, &sstat);
-	return FALSE;
-      }
+  if (i >= CPROTOCOLS)
+    {
+      ulog (LOG_ERROR, "No supported protocol");
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      return FALSE;
+    }
 
-    sdaem.qproto = &asProtocols[i];
-  }
+  sdaem.qproto = &asProtocols[i];
 
   /* Run the chat script for when a call is received.  */
-
   if (! fchat (qconn, puuconf, &qsys->uuconf_scalled_chat, qsys,
 	       (const struct uuconf_dialer *) NULL, (const char *) NULL,
 	       FALSE, zport, iconn_baud (qconn)))
@@ -2020,9 +2003,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   if (qdialer == &sdialer)
     (void) uuconf_dialer_free (puuconf, &sdialer);
 
-  /* Turn on the selected protocol.  */
-
-  if (! (*sdaem.qproto->pfstart) (&sdaem))
+  /* Get any jobs queued for the system, and turn on the selected
+     protocol.  */
+  if (! fqueue (&sdaem, (boolean *) NULL)
+      || ! (*sdaem.qproto->pfstart) (&sdaem))
     {
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = isysdep_time ((long *) NULL);
@@ -2057,25 +2041,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     fret = floop (&sdaem);
 
     /* Hangup.  As the answerer, we send seven O's and expect to see
-       six.  */
-    if (fsend_uucp_cmd (qconn, "OOOOOOO")
-	&& fsend_uucp_cmd (qconn, "OOOOOOO"))
-      {
-	/* We don't even look for the hangup string from the other
-	   side unless we're in debugging mode.  */
-#if DEBUG > 1
-	if (fret && FDEBUGGING (DEBUG_HANDSHAKE))
-	  {
-	    zstr = zget_uucp_cmd (qconn, FALSE);
-	    if (zstr != NULL)
-	      {
-		if (strstr (zstr, "OOOOOO") == NULL)
-		  ulog (LOG_DEBUG, "No hangup from remote");
-		ubuffree (zstr);
-	      }
-	  }
-#endif
-      }
+       six.  We don't even bother to look for the characters from the
+       remote system.  */
+    if (fsend_uucp_cmd (qconn, "OOOOOOO"))
+      (void) fsend_uucp_cmd (qconn, "OOOOOOO");
 
     iend_time = isysdep_time ((long *) NULL);
 

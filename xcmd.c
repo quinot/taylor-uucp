@@ -44,8 +44,6 @@ static boolean flocal_xcmd_await_reply P((struct stransfer *qtrans,
 					  const char *zdata, size_t cdata));
 static boolean fremote_xcmd_reply P((struct stransfer *qtrans,
 				     struct sdaemon *qdaemon));
-static boolean fremote_xcmd_reply_fail P((struct stransfer *qtrans,
-					  struct sdaemon *qdaemon));
 
 /* Handle a local work request.  We just set up the request for
    transmission.  */
@@ -88,7 +86,8 @@ flocal_xcmd_request (qtrans, qdaemon)
   sprintf (zsend, "X %s %s %s -%s", qtrans->s.zfrom, qtrans->s.zto,
 	   qtrans->s.zuser, qtrans->s.zoptions);
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend);
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
+					qtrans->iremote);
   ubuffree (zsend);
   if (! fret)
     {
@@ -144,9 +143,10 @@ flocal_xcmd_await_reply (qtrans, qdaemon, zdata, cdata)
    later processing.  */
 
 boolean
-fremote_xcmd_init (qdaemon, qcmd)
+fremote_xcmd_init (qdaemon, qcmd, iremote)
      struct sdaemon *qdaemon;
      struct scmd *qcmd;
+     int iremote;
 {
   const struct uuconf_system *qsys;
   const char *zexclam;
@@ -207,8 +207,10 @@ fremote_xcmd_init (qdaemon, qcmd)
 	      ulog (LOG_ERROR, "%s: System not found", zcopy);
 	      ubuffree (zcopy);
 	      qtrans = qtransalc (qcmd);
-	      qtrans->psendfn = fremote_xcmd_reply_fail;
-	      uqueue_send (qtrans);
+	      qtrans->psendfn = fremote_xcmd_reply;
+	      qtrans->pinfo = (pointer) "XN";
+	      qtrans->iremote = iremote;
+	      uqueue_remote (qtrans);
 	      return TRUE;
 	    }
 	}
@@ -241,7 +243,9 @@ fremote_xcmd_init (qdaemon, qcmd)
      actually fork here and let the child spool up the requests.  */
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = fremote_xcmd_reply;
-  uqueue_send (qtrans);
+  qtrans->pinfo = (pointer) "XY";
+  qtrans->iremote = iremote;
+  uqueue_remote (qtrans);
 
   /* Now we have to process each source file.  The source
      specification may or may use wildcards.  */
@@ -369,21 +373,7 @@ fremote_xcmd_init (qdaemon, qcmd)
   return fret;
 }
 
-/* A remote work request failed.  */
-
-static boolean
-fremote_xcmd_reply_fail (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-{
-  boolean fret;
-
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "XN");
-  utransfree (qtrans);
-  return fret;
-}
-
-/* A remote work request succeeded.  */
+/* Reply to a remote work request.  */
 
 static boolean
 fremote_xcmd_reply (qtrans, qdaemon)
@@ -392,7 +382,10 @@ fremote_xcmd_reply (qtrans, qdaemon)
 {
   boolean fret;
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "XY");
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon,
+					(const char *) qtrans->pinfo,
+					qtrans->ilocal,
+					qtrans->iremote);
   utransfree (qtrans);
   return fret;
 }

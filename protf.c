@@ -187,10 +187,13 @@ ffshutdown (qdaemon)
 /* Send a command string.  We just send the string followed by a carriage
    return.  */
 
+/*ARGSUSED*/
 boolean
-ffsendcmd (qdaemon, z)
+ffsendcmd (qdaemon, z, ilocal, iremote)
      struct sdaemon *qdaemon;
      const char *z;
+     int ilocal;
+     int iremote;
 {
   size_t clen;
   char *zalc;
@@ -223,10 +226,12 @@ zfgetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-ffsenddata (qdaemon, zdata, cdata, ipos)
+ffsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     int ilocal;
+     int iremote;
      long ipos;
 {
   char ab[CFBUFSIZE * 2];
@@ -412,7 +417,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 		      if (! fgot_data (qdaemon, zstart,
 				       (size_t) (zto - zstart),
 				       (const char *) NULL, (size_t) 0,
-				       1, -1, (long) -1, pfexit))
+				       -1, -1, (long) -1, pfexit))
 			return FALSE;
 		    }
 
@@ -432,7 +437,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 		    *pcneed = 0;
 		  return fgot_data (qdaemon, (const char *) NULL,
 				    (size_t) 0, (const char *) NULL,
-				    (size_t) 0, 1, -1, (long) -1, pfexit);
+				    (size_t) 0, -1, -1, (long) -1, pfexit);
 		}
 
 	      /* Here we have encountered a special character that
@@ -491,7 +496,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	  cFrec_data += zto - zstart;
 	  if (! fgot_data (qdaemon, zstart, (size_t) (zto - zstart),
 			   (const char *) NULL, (size_t) 0,
-			   1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, pfexit))
 	    return FALSE;
 	}
 
@@ -811,7 +816,7 @@ ffsend_ack (qtrans, qdaemon)
 
   ab[0] = qinfo->bsend;
   ab[1] = '\0';
-  if (! ffsendcmd (qdaemon, ab))
+  if (! ffsendcmd (qdaemon, ab, 0, 0))
     return FALSE;
 
   qtrans->psendfn = qinfo->psendfn;

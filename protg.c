@@ -658,10 +658,13 @@ fgshutdown (qdaemon)
 /* Send a command string.  We send packets containing the string until
    the entire string has been sent.  Each packet is full.  */
 
+/*ARGSUSED*/
 boolean
-fgsendcmd (qdaemon, z)
+fgsendcmd (qdaemon, z, ilocal, iremote)
      struct sdaemon *qdaemon;
      const char *z;
+     int ilocal;
+     int iremote;
 {
   size_t clen;
   boolean fagain;
@@ -698,7 +701,7 @@ fgsendcmd (qdaemon, z)
 	  bzero (zpacket + clen, csize - clen);
 	  fagain = FALSE;
 
-	  if (! fgsenddata (qdaemon, zpacket, csize, (long) 0))
+	  if (! fgsenddata (qdaemon, zpacket, csize, 0, 0, (long) 0))
 	    return FALSE;
 	}
       else
@@ -709,7 +712,7 @@ fgsendcmd (qdaemon, z)
 	  fagain = TRUE;
 
 	  if (! fgsenddata (qdaemon, zpacket, (size_t) iGremote_packsize,
-			    (long) 0))
+			    0, 0, (long) 0))
 	    return FALSE;
 	}
     }
@@ -775,10 +778,12 @@ zggetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-fgsenddata (qdaemon, zdata, cdata, ipos)
+fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     int ilocal;
+     int iremote;
      long ipos;
 {
   char *z;
@@ -1219,13 +1224,13 @@ fgcheck_errors ()
    control packets are handled here.  When a data packet is received,
    fgprocess_data calls fgot_data with the data; if that sets its
    pfexit argument to TRUE fgprocess_data will set *pfexit to TRUE and
-   return TRUE.  Otherwise if the freturncontrol argument is TRUE
-   fgprocess_data will set *pfexit to FALSE and return TRUE.
-   Otherwise fgprocess_data will continue trying to process data.  If
-   some error occurs, fgprocess_data will return FALSE.  If there is
-   not enough data to form a complete packet, then *pfexit will be set
-   to FALSE, *pcneed will be set to the number of bytes needed to form
-   a complete packet (unless pcneed is NULL) and fgprocess_data will
+   return TRUE.  Also, if the freturncontrol argument is TRUE
+   fgprocess_data will set *pfexit to TRUE and return TRUE.  Otherwise
+   fgprocess_data will continue trying to process data.  If some error
+   occurs, fgprocess_data will return FALSE.  If there is not enough
+   data to form a complete packet, then *pfexit will be set to FALSE,
+   *pcneed will be set to the number of bytes needed to form a
+   complete packet (unless pcneed is NULL) and fgprocess_data will
    return TRUE.  If this function found a data packet, and pffound is
    not NULL, it will set *pffound to TRUE; this can be used to tell
    valid data from an endless stream of garbage and control packets.
@@ -1598,11 +1603,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		cfirst = 0;
 #endif
 	    }
-
-	  /* If *pfexit gets set by the first batch of data, and there
-	     is still more data, it must be the case that we are
-	     accumulating a command and encountered a null byte, so we
-	     can ignore the second batch of data.  */
 
 	  if (! fgot_data (qdaemon, zfirst, (size_t) cfirst,
 			   zsecond, (size_t) csecond,

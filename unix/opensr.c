@@ -83,20 +83,16 @@
    the size.  */
 
 openfile_t
-esysdep_open_send (qsys, zfile, fcheck, zuser, pfgone)
+esysdep_open_send (qsys, zfile, fcheck, zuser)
      const struct uuconf_system *qsys;
      const char *zfile;
      boolean fcheck;
      const char *zuser;
-     boolean *pfgone;
 {
   struct stat s;
   openfile_t e;
   int o;
   
-  if (pfgone != NULL)
-    *pfgone = FALSE;
-
   if (fsysdep_directory (zfile))
     {
       ulog (LOG_ERROR, "%s: is a directory", zfile);
@@ -108,8 +104,6 @@ esysdep_open_send (qsys, zfile, fcheck, zuser, pfgone)
   if (e == NULL)
     {
       ulog (LOG_ERROR, "fopen (%s): %s", zfile, strerror (errno));
-      if (pfgone != NULL && errno == ENOENT)
-	*pfgone = TRUE;
       return NULL;
     }
   o = fileno (e);
@@ -118,8 +112,6 @@ esysdep_open_send (qsys, zfile, fcheck, zuser, pfgone)
   if (e == -1)
     {
       ulog (LOG_ERROR, "open (%s): %s", zfile, strerror (errno));
-      if (pfgone != NULL && errno == ENOENT)
-	*pfgone = TRUE;
       return -1;
     }
   o = e;

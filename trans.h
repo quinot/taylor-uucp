@@ -23,8 +23,8 @@
    c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
-/* The maximum possible number of connections.  */
-#define IMAX_CONN (256)
+/* The maximum possible number of channels.  */
+#define IMAX_CHAN (16)
 
 /* This structure is used to hold information concerning the
    communication link established with the remote system.  */
@@ -57,8 +57,8 @@ struct sdaemon
   boolean fmaster;
   /* TRUE if the local system placed the call.  */
   boolean fcaller;
-  /* TRUE if the connection is half-duplex.  */
-  boolean fhalfduplex;
+  /* UUCONF_RELIABLE_* flags for the connection.  */
+  int ireliable;
   /* If fcaller is FALSE, the lowest grade which may be transferred
      during this call.  */
   char bgrade;
@@ -104,11 +104,15 @@ struct stransfer
   int iremote;
   /* The command.  */
   struct scmd s;
+  /* A message to log when work starts.  */
+  char *zlog;
   /* The process time; imicros can be negative.  */
   long isecs;
   long imicros;
   /* Number of bytes sent or received.  */
   long cbytes;
+  /* Number of times this particular structure has been used.  */
+  int calcs;
 };
 
 /* The main loop which talks to the remote system, passing transfer
@@ -142,32 +146,35 @@ extern void uqueue_receive P((struct stransfer *qtrans));
 extern boolean flocal_send_file_init P((struct sdaemon *qdaemon,
 					struct scmd *qcmd));
 extern boolean fremote_send_file_init P((struct sdaemon *qdaemon,
-					 struct scmd *qcmd));
+					 struct scmd *qcmd,
+					 int iremote));
 
 /* Prepare to receive a file by local or remote request.  */
 extern boolean flocal_rec_file_init P((struct sdaemon *qdaemon,
 				       struct scmd *qcmd));
 extern boolean fremote_rec_file_init P((struct sdaemon *qdaemon,
-					struct scmd *qcmd));
+					struct scmd *qcmd,
+					int iremote));
 
 /* Prepare to request work by local or remote request.  */
 extern boolean flocal_xcmd_init P((struct sdaemon *qdaemon,
 				   struct scmd *qcmd));
 extern boolean fremote_xcmd_init P((struct sdaemon *qdaemon,
-				    struct scmd *qcmd));
+				    struct scmd *qcmd,
+				    int iremote));
 
 /* Handle data received by a protocol.  This is called by the protocol
    specific routines as data comes in.  The data is passed as two
-   buffers because that is convenient for packet based protocols.  The
-   ilocal argument is the local connection number, and the iremote
-   argument is the remote connection number.  Either may be -1, if the
-   protocol does not have connections.  The ipos argument is the
-   position in the file, if the protocol knows it; for most protocols,
-   this will be -1.  This will set *pfexit to TRUE if there is
-   something for the main loop to do.  A file is complete is when a
-   zero length buffer is passed (cfirst == 0).  A command is complete
-   when data containing a null byte is passed.  This will return FALSE
-   on error.  */
+   buffers because that is convenient for packet based protocols, but
+   normally csecond will be 0.  The ilocal argument is the local
+   channel number, and the iremote argument is the remote channel
+   number.  Either may be -1, if the protocol does not have channels.
+   The ipos argument is the position in the file, if the protocol
+   knows it; for most protocols, this will be -1.  This will set
+   *pfexit to TRUE if there is something for the main loop to do.  A
+   file is complete is when a zero length buffer is passed (cfirst ==
+   0).  A command is complete when data containing a null byte is
+   passed.  This will return FALSE on error.  */
 extern boolean fgot_data P((struct sdaemon *qdaemon,
 			    const char *zfirst, size_t cfirst,
 			    const char *zsecond, size_t csecond,

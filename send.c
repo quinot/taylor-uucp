@@ -49,6 +49,8 @@ struct ssendinfo
   boolean flocal;
   /* TRUE if this is a spool directory file.  */
   boolean fspool;
+  /* TRUE if the file has been completely sent.  */
+  boolean fsent;
 };
 
 /* Local functions.  */
@@ -62,9 +64,11 @@ static boolean flocal_send_request P((struct stransfer *qtrans,
 static boolean flocal_send_await_reply P((struct stransfer *qtrans,
 					  struct sdaemon *qdaemon,
 					  const char *zdata, size_t cdata));
+static boolean flocal_send_cancelled P((struct stransfer *qtrans,
+					struct sdaemon *qdaemon));
 static boolean flocal_send_open_file P((struct stransfer *qtrans,
 					struct sdaemon *qdaemon));
-static boolean fremote_rec_fail P((enum tfailure twhy));
+static boolean fremote_rec_fail P((enum tfailure twhy, int iremote));
 static boolean fremote_rec_fail_send P((struct stransfer *qtrans,
 					struct sdaemon *qdaemon));
 static boolean fremote_rec_reply P((struct stransfer *qtrans,
@@ -75,9 +79,59 @@ static boolean fsend_await_confirm P((struct stransfer *qtrans,
 				      struct sdaemon *qdaemon,
 				      const char *zdata, size_t cdata));
 
-/* Set up a local request to send a file.  This should return FALSE
-   only if there is some sort of fatal error.  This may be called
-   before we have even tried to call the remote system.  */
+/* Set up a local request to send a file.  This may be called before
+   we have even tried to call the remote system.
+
+   If we are using a traditional protocol, which doesn't support
+   channel numbers and doesn't permit the file to be sent until an
+   acknowledgement has been received, the sequence of function calls
+   looks like this:
+
+   flocal_send_file_init --> uqueue_local
+   flocal_send_request (sends S request) --> uqueue_receive
+   flocal_send_await_reply (waits for SY) --> uqueue_send
+   flocal_send_open_file (opens file, calls pffile) --> uqueue_send
+   send file
+   fsend_file_end (calls pffile) --> uqueue_receive
+   fsend_await_confirm (waits for CY)
+
+   If flocal_send_await_reply gets an SN, it deletes the request.  If
+   the SY reply contains a file position at which to start sending,
+   flocal_send_await_reply sets qinfo->ipos.
+
+   This gets more complex if the protocol supports channels.  In that
+   case, we want to start sending the file data immediately, to avoid
+   the round trip delay between flocal_send_request and
+   flocal_send_await_reply.  To do this, flocal_send_request calls
+   uqueue_send rather than uqueue_receive.  The main execution
+   sequence looks like this:
+
+   flocal_send_file_init --> uqueue_local
+   flocal_send_request (sends S request) --> uqueue_send
+   flocal_send_open_file (opens file, calls pffile) --> uqueue_send
+   send file
+   fsend_file_end (calls pffile) --> uqueue_receive
+   sometime: flocal_send_await_reply (waits for SY)
+   fsend_await_confirm (waits for CY)
+
+   In this case flocal_send_await_reply must be run before
+   fsend_await_confirm; it may be run anytime after
+   flocal_send_request.
+
+   If flocal_send_await_reply is called before the entire file has
+   been sent: if it gets an SN, it calls flocal_send_cancelled to send
+   an empty data block to inform the remote system that the file
+   transfer has stopped.  If it gets a file position request, it must
+   adjust the file position accordingly.
+
+   If flocal_send_await_reply is called after the entire file has been
+   sent: if it gets an SN, it can simply delete the request.  It can
+   ignore any file position request.
+
+   If the request is not deleted, flocal_send_await_reply must arrange
+   for the next string to be passed to fsend_await_confirm.
+   Presumably fsend_await_confirm will only be called after the entire
+   file has been sent.  */
 
 boolean
 flocal_send_file_init (qdaemon, qcmd)
@@ -183,6 +237,7 @@ flocal_send_file_init (qdaemon, qcmd)
   qinfo->cbytes = cbytes;
   qinfo->flocal = TRUE;
   qinfo->fspool = fspool;
+  qinfo->fsent = FALSE;
 
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = flocal_send_request;
@@ -222,8 +277,9 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
 }
 
 /* This is called when we are ready to send the request to the remote
-   system.  We form the request and send it over, and then start
-   waiting for the response.  */
+   system.  We form the request and send it over.  If the protocol
+   does not support multiple channels, we start waiting for the
+   response; otherwise we can start sending the file immediately.  */
 
 static boolean
 flocal_send_request (qtrans, qdaemon)
@@ -231,7 +287,6 @@ flocal_send_request (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-  size_t clen;
   char *zsend;
   boolean fret;
 
@@ -244,15 +299,13 @@ flocal_send_request (qtrans, qdaemon)
   /* Send the string
      S zfrom zto zuser zoptions ztemp imode znotify
      to the remote system.  We put a '-' in front of the (possibly
-     empty) options and a '0' in front of the mode.  The remote
-     system will ignore ztemp, but it is supposed to be sent anyhow.
-     If fnew is TRUE, we also send the size; in this case if ztemp
-     is empty we must send it as "".  */
-  clen = (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
-	  + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions)
-	  + strlen (qtrans->s.ztemp) + strlen (qtrans->s.znotify)
-	  + 50);
-  zsend = zbufalc (clen);
+     empty) options and a '0' in front of the mode.  If fnew is TRUE,
+     we also send the size; in this case if znotify is empty we must
+     send it as "".  */
+  zsend = zbufalc (strlen (qtrans->s.zfrom) + strlen (qtrans->s.zto)
+		   + strlen (qtrans->s.zuser) + strlen (qtrans->s.zoptions)
+		   + strlen (qtrans->s.ztemp) + strlen (qtrans->s.znotify)
+		   + 50);
   if (! qdaemon->fnew)
     sprintf (zsend, "S %s %s %s -%s %s 0%o %s", qtrans->s.zfrom,
 	     qtrans->s.zto, qtrans->s.zuser, qtrans->s.zoptions,
@@ -270,7 +323,8 @@ flocal_send_request (qtrans, qdaemon)
 	       qtrans->s.ztemp, qtrans->s.imode, znotify, qinfo->cbytes);
     }
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend);
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
+					qtrans->iremote);
   ubuffree (zsend);
   if (! fret)
     {
@@ -281,18 +335,18 @@ flocal_send_request (qtrans, qdaemon)
       return FALSE;
     }
 
+  /* If we are using a protocol which can make multiple channels, then
+     we can open and send the file whenever we are ready.  This is
+     because we will be able to distinguish the response by the
+     channel it is directed to.  This assumes that every protocol
+     which supports multiple channels also supports sending the file
+     position in mid-stream, since otherwise we would not be able to
+     restart files.  */
   qtrans->fcmd = TRUE;
   qtrans->psendfn = flocal_send_open_file;
   qtrans->precfn = flocal_send_await_reply;
 
-  /* If we are using a protocol which can make multiple connections,
-     then we can open and send the file whenever we are ready.  This
-     is because we will be able to distinguish the response by the
-     connection is directed to.  This assumes that every protocol
-     which supports multiple connections also supports sending the
-     file position, since otherwise we would not be able to restart
-     files.  */
-  if (qdaemon->qproto->cconns > 1)
+  if (qdaemon->qproto->cchans > 1)
     uqueue_send (qtrans);
   else
     uqueue_receive (qtrans);
@@ -300,7 +354,10 @@ flocal_send_request (qtrans, qdaemon)
   return TRUE;
 }
 
-/* This is called when a reply is received for the send request.  */
+/* This is called when a reply is received for the send request.  As
+   described at length above, if the protocol supports multiple
+   channels we may be in the middle of sending the file, or we may
+   even finished sending the file.  */
 
 static boolean
 flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
@@ -310,8 +367,6 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
      size_t cdata;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-
-  qtrans->precfn = NULL;
 
   if (zdata[0] != 'S'
       || (zdata[1] != 'Y' && zdata[1] != 'N'))
@@ -351,19 +406,40 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
       else
 	zerr = "unknown reason";
 
-      if (fnever)
-	return flocal_send_fail (qtrans, &qtrans->s, qdaemon->qsys, zerr);
+      if (! fnever)
+	ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
+      else
+	{
+	  if (! flocal_send_fail ((struct stransfer *) NULL, &qtrans->s,
+				  qdaemon->qsys, zerr))
+	    return FALSE;
+	}
 
-      ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
-      ubuffree (qinfo->zmail);
-      ubuffree (qinfo->zfile);
-      xfree (qtrans->pinfo);
-      utransfree (qtrans);
+      /* If the protocol does not support multiple channels, we can
+	 simply remove the transaction.  Otherwise we must make sure
+	 the remote side knows that we have finished sending the file
+	 data.  If we have already sent the entire file, there will be
+	 no confusion.  */
+      if (qdaemon->qproto->cchans > 1 && ! qinfo->fsent)
+	{
+	  qtrans->psendfn = flocal_send_cancelled;
+	  qtrans->precfn = NULL;
+	  uqueue_send (qtrans);
+	}
+      else
+	{
+	  ubuffree (qinfo->zmail);
+	  ubuffree (qinfo->zfile);
+	  xfree (qtrans->pinfo);
+	  utransfree (qtrans);
+	}
+
       return TRUE;
-    }  
+    }
 
   /* A number following the SY is the file position to start sending
-     from.  */
+     from.  If we are already sending the file, we must set the
+     position accordingly.  */
   if (zdata[2] != '\0')
     {
       long cskip;
@@ -371,7 +447,9 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
       cskip = strtol (zdata + 2, (char **) NULL, 0);
       if (cskip > 0)
 	{
-	  if (ffileisopen (qtrans->e))
+	  if (qtrans->fsendfile
+	      && ! qinfo->fsent
+	      && qtrans->ipos < cskip)
 	    {
 	      if (! ffileseek (qtrans->e, cskip))
 		{
@@ -387,9 +465,17 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	}
     }
 
-  /* Now queue up to send.  We set psendfn at the end of
-     flocal_send_request above.  */
-  uqueue_send (qtrans);
+  /* Now queue up to send the file or to wait for the confirmation.
+     We already set psendfn at the end of flocal_send_request.  If the
+     protocol supports multiple channels, we have already called
+     uqueue_send; calling it again would move the request in the
+     queue, which can make the log file a bit confusing.  */
+  qtrans->precfn = fsend_await_confirm;
+  if (qinfo->fsent)
+    uqueue_receive (qtrans);
+  else if (qdaemon->qproto->cchans <= 1)
+    uqueue_send (qtrans);
+
   return TRUE;
 }
 
@@ -402,7 +488,6 @@ flocal_send_open_file (qtrans, qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   const char *zuser;
-  boolean fgone;
 
   /* If there is an ! in the user name, this is a remote request
      queued up by fremote_xcmd_init.  */
@@ -411,21 +496,15 @@ flocal_send_open_file (qtrans, qdaemon)
     zuser = NULL;
 
   qtrans->e = esysdep_open_send (qdaemon->qsys, qinfo->zfile,
-				 ! qinfo->fspool, zuser, &fgone);
+				 ! qinfo->fspool, zuser);
   if (! ffileisopen (qtrans->e))
     {
-      /* If the file does not exist, fgone will be set to TRUE.  In
-	 this case we might have sent the file the last time we talked
-	 to the remote system, because we might have been interrupted
-	 in the middle of a command file.  To avoid confusion, we
-	 don't send a mail message in this case.  */
-      if (! fgone)
-	(void) fmail_transfer (FALSE, qtrans->s.zuser,
-			       (const char *) NULL,
-			       "cannot open file",
-			       qtrans->s.zfrom, (const char *) NULL,
-			       qtrans->s.zto, qdaemon->qsys->uuconf_zname,
-			       zsysdep_save_temp_file (qtrans->s.pseq));
+      (void) fmail_transfer (FALSE, qtrans->s.zuser,
+			     (const char *) NULL,
+			     "cannot open file",
+			     qtrans->s.zfrom, (const char *) NULL,
+			     qtrans->s.zto, qdaemon->qsys->uuconf_zname,
+			     zsysdep_save_temp_file (qtrans->s.pseq));
       (void) fsysdep_did_work (qtrans->s.pseq);
       ubuffree (qinfo->zmail);
       ubuffree (qinfo->zfile);
@@ -438,7 +517,9 @@ flocal_send_open_file (qtrans, qdaemon)
       return FALSE;
     }
 
-  /* Adjust if we're not meant to start at the beginning.  */
+  /* If flocal_send_await_reply has received an SY request with a file
+     position, it will have set qtrans->ipos to the position at which
+     to start.  */
   if (qtrans->ipos > 0)
     {
       if (! ffileseek (qtrans->e, qtrans->ipos))
@@ -452,7 +533,8 @@ flocal_send_open_file (qtrans, qdaemon)
 	}
     }
 
-  ulog (LOG_NORMAL, "Sending %s", qtrans->s.zfrom);
+  qtrans->zlog = zbufalc (sizeof "Sending " + strlen (qtrans->s.zfrom));
+  sprintf (qtrans->zlog, "Sending %s", qtrans->s.zfrom);
 
   if (qdaemon->qproto->pffile != NULL)
     {
@@ -480,13 +562,46 @@ flocal_send_open_file (qtrans, qdaemon)
   return TRUE;
 }
 
+/* Cancel a file send by sending an empty buffer.  This is only called
+   for a protocol which supports multiple channels.  It is needed
+   so that both systems agree as to when a channel is no longer
+   needed.  */
+
+static boolean
+flocal_send_cancelled (qtrans, qdaemon)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+{
+  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
+  boolean fret;
+  
+  fret = (*qdaemon->qproto->pfsenddata) (qdaemon, (char *) NULL,
+					 (size_t) 0, qtrans->ilocal,
+					 qtrans->iremote, qtrans->ipos);
+
+  ubuffree (qinfo->zmail);
+  ubuffree (qinfo->zfile);
+  xfree (qtrans->pinfo);
+  utransfree (qtrans);
+
+  return fret;
+}
+
 /* A remote request to receive a file (meaning that we have to send a
-   file).  */
+   file).  The sequence of functions calls is as follows:
+
+   fremote_rec_file_init (open file) --> uqueue_remote
+   fremote_rec_reply (send RY, call pffile) --> uqueue_send
+   send file
+   fsend_file_end (calls pffile) --> uqueue_receive
+   fsend_await_confirm (waits for CY)
+   */
 
 boolean
-fremote_rec_file_init (qdaemon, qcmd)
+fremote_rec_file_init (qdaemon, qcmd, iremote)
      struct sdaemon *qdaemon;
      struct scmd *qcmd;
+     int iremote;
 {
   const struct uuconf_system *qsys;
   char *zfile;
@@ -502,18 +617,18 @@ fremote_rec_file_init (qdaemon, qcmd)
     {
       ulog (LOG_ERROR, "%s: remote system not permitted to request files",
 	    qcmd->zfrom);
-      return fremote_rec_fail (FAILURE_PERM);
+      return fremote_rec_fail (FAILURE_PERM, iremote);
     }
 
   if (fspool_file (qcmd->zfrom))
     {
       ulog (LOG_ERROR, "%s: not permitted to send", qcmd->zfrom);
-      return fremote_rec_fail (FAILURE_PERM);
+      return fremote_rec_fail (FAILURE_PERM, iremote);
     }
 
   zfile = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir);
   if (zfile == NULL)
-    return fremote_rec_fail (FAILURE_PERM);
+    return fremote_rec_fail (FAILURE_PERM, iremote);
 
   if (! fin_directory_list (zfile, qsys->uuconf_pzremote_send,
 			    qsys->uuconf_zpubdir, TRUE, TRUE,
@@ -521,7 +636,7 @@ fremote_rec_file_init (qdaemon, qcmd)
     {
       ulog (LOG_ERROR, "%s: not permitted to send", zfile);
       ubuffree (zfile);
-      return fremote_rec_fail (FAILURE_PERM);
+      return fremote_rec_fail (FAILURE_PERM, iremote);
     }
 
   /* If the file is larger than the amount of space the other side
@@ -536,17 +651,16 @@ fremote_rec_file_init (qdaemon, qcmd)
     {
       ulog (LOG_ERROR, "%s: too large to send", zfile);
       ubuffree (zfile);
-      return fremote_rec_fail (FAILURE_SIZE);
+      return fremote_rec_fail (FAILURE_SIZE, iremote);
     }
 
   imode = isysdep_file_mode (zfile);
 
-  e = esysdep_open_send (qsys, zfile, TRUE, (const char *) NULL,
-			 (boolean *) NULL);
+  e = esysdep_open_send (qsys, zfile, TRUE, (const char *) NULL);
   if (! ffileisopen (e))
     {
       ubuffree (zfile);
-      return fremote_rec_fail (FAILURE_OPEN);
+      return fremote_rec_fail (FAILURE_OPEN, iremote);
     }
 
   qinfo = (struct ssendinfo *) xmalloc (sizeof (struct ssendinfo));
@@ -555,9 +669,11 @@ fremote_rec_file_init (qdaemon, qcmd)
   qinfo->cbytes = cbytes;
   qinfo->flocal = FALSE;
   qinfo->fspool = FALSE;
+  qinfo->fsent = FALSE;
 
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = fremote_rec_reply;
+  qtrans->iremote = iremote;
   qtrans->pinfo = (pointer) qinfo;
   qtrans->e = e;
   qtrans->s.imode = imode;
@@ -579,7 +695,8 @@ fremote_rec_reply (qtrans, qdaemon)
   char absend[20];
 
   sprintf (absend, "RY 0%o", qtrans->s.imode);
-  if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, absend))
+  if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, absend, qtrans->ilocal,
+				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
       ubuffree (qinfo->zmail);
@@ -589,7 +706,8 @@ fremote_rec_reply (qtrans, qdaemon)
       return FALSE;
     }
 
-  ulog (LOG_NORMAL, "Sending %s", qtrans->s.zfrom);
+  qtrans->zlog = zbufalc (sizeof "Sending " + strlen (qtrans->s.zfrom));
+  sprintf (qtrans->zlog, "Sending %s", qtrans->s.zfrom);
 
   if (qdaemon->qproto->pffile != NULL)
     {
@@ -611,6 +729,7 @@ fremote_rec_reply (qtrans, qdaemon)
 
   qtrans->fsendfile = TRUE;
   qtrans->psendfn = fsend_file_end;
+  qtrans->precfn = fsend_await_confirm;
 
   uqueue_send (qtrans);
 
@@ -621,8 +740,9 @@ fremote_rec_reply (qtrans, qdaemon)
    a failure reply which will be sent when possible.  */
 
 static boolean
-fremote_rec_fail (twhy)
+fremote_rec_fail (twhy, iremote)
      enum tfailure twhy;
+     int iremote;
 {
   enum tfailure *ptinfo;
   struct stransfer *qtrans;
@@ -632,6 +752,7 @@ fremote_rec_fail (twhy)
 
   qtrans = qtransalc ((struct scmd *) NULL);
   qtrans->psendfn = fremote_rec_fail_send;
+  qtrans->iremote = iremote;
   qtrans->pinfo = (pointer) ptinfo;
 
   uqueue_remote (qtrans);
@@ -665,14 +786,18 @@ fremote_rec_fail_send (qtrans, qdaemon)
       break;
     }
   
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, z);
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, z, qtrans->ilocal,
+					qtrans->iremote);
   xfree (qtrans->pinfo);
   utransfree (qtrans);
   return fret;
 }
-
+
 /* This is called when the main loop has finished sending a file.  It
-   prepares to wait for a response from the remote system.  */
+   prepares to wait for a response from the remote system.  Note that
+   if this is a local request and the protocol supports multiple
+   channels, we may not even have received a confirmation of the send
+   request.  */
 
 static boolean
 fsend_file_end (qtrans, qdaemon)
@@ -680,15 +805,6 @@ fsend_file_end (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-
-  /* It is possible that we haven't even had the send request
-     confirmed yet, if this is a short file and the protocol supports
-     multiple connections.  If so, we just wait for it.  */
-  if (qtrans->precfn != NULL)
-    {
-      uqueue_receive (qtrans);
-      return TRUE;
-    }
 
   if (qdaemon->qproto->pffile != NULL)
     {
@@ -708,9 +824,10 @@ fsend_file_end (qtrans, qdaemon)
 	return TRUE;
     }
 
-  qtrans->fcmd = TRUE;
-  qtrans->precfn = fsend_await_confirm;
+  qinfo->fsent = TRUE;
 
+  /* qtrans->precfn should have been set by a previous function.  */
+  qtrans->fcmd = TRUE;
   uqueue_receive (qtrans);
 
   return TRUE;
@@ -729,8 +846,6 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   boolean fnever;
   const char *zerr;
-
-  qtrans->precfn = NULL;
 
   (void) ffileclose (qtrans->e);
 

@@ -106,10 +106,13 @@ feshutdown (qdaemon)
 /* Send a command string.  We send everything up to and including the
    null byte.   */
 
+/*ARGSUSED*/
 boolean
-fesendcmd (qdaemon, z)
+fesendcmd (qdaemon, z, ilocal, iremote)
      struct sdaemon *qdaemon;
      const char *z;
+     int ilocal;
+     int iremote;
 {
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fesendcmd: Sending command \"%s\"", z);
 
@@ -135,10 +138,12 @@ zegetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-fesenddata (qdaemon, zdata, cdata, ipos)
+fesenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     int ilocal;
+     int iremote;
      long ipos;
 {
 #if DEBUG > 0
@@ -265,7 +270,7 @@ feprocess_data (qdaemon, pfexit, pcneed)
 
       if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 		       (size_t) cfirst, abPrecbuf, (size_t) (clen - cfirst),
-		       1, -1, (long) -1, pfexit))
+		       -1, -1, (long) -1, pfexit))
 	return FALSE;
 
       iPrecstart = (iPrecstart + clen) % CRECBUFLEN;
@@ -275,7 +280,7 @@ feprocess_data (qdaemon, pfexit, pcneed)
 	{
 	  if (! fgot_data (qdaemon, abPrecbuf, (size_t) 0,
 			   (const char *) NULL, (size_t) 0,
-			   1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, pfexit))
 	    return FALSE;
 	  if (*pfexit)
 	    return TRUE;
