@@ -4,7 +4,7 @@ dnl Copyright (c) 1992 Ian Lance Taylor
 dnl
 AC_INIT(policy.h)
 AC_PREFIX(gcc)
-AC_HEADER_FILE(conf.h)
+AC_CONFIG_HEADER(conf.h)
 AC_PROG_GCC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
@@ -31,80 +31,82 @@ AC_HAVE_HEADERS(stddef.h string.h strings.h unistd.h stdlib.h limits.h)
 AC_HAVE_HEADERS(time.h sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
 AC_HAVE_HEADERS(poll.h stropts.h ftw.h sys/select.h)
+AC_HAVE_HEADERS(sys/statvfs.h sys/fstyp.h sys/statfs.h mntent.h)
+AC_HAVE_HEADERS(sys/mount.h sys/fs_types.h)
 dnl
 AC_MAJOR_HEADER
 dnl
 AC_RETSIGTYPE
 dnl
-AC_LIBTHING_CHECK([time.h and sys/time.h being included together],
+AC_COMPILE_CHECK([time.h and sys/time.h being included together],
 [#include <sys/time.h>
 #include <time.h>],
 [int i;],
 AC_DEFINE([HAVE_SYS_TIME_AND_TIME_H]),
 :)
 dnl
-AC_LIBTHING_CHECK([termios.h and sys/ioctl.h being included together],
+AC_COMPILE_CHECK([termios.h and sys/ioctl.h being included together],
 [#include <termios.h>
 #include <sys/ioctl.h>],
 [int i;],
 AC_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H]),
 :)
 dnl
-AC_LIBTHING_CHECK([CBREAK],
+AC_COMPILE_CHECK([CBREAK],
 [#include <sgtty.h>], [int i = CBREAK;],
 AC_DEFINE([HAVE_CBREAK]),
 :)
 dnl
-AC_LIBTHING_CHECK([pid_t in sys/types.h],
+AC_COMPILE_CHECK([pid_t in sys/types.h],
 [#include <sys/types.h>], [pid_t x;],
 :,
 AC_DEFINE(PID_T, int))
 dnl
-AC_LIBTHING_CHECK([uid_t in sys/types.h],
+AC_COMPILE_CHECK([uid_t in sys/types.h],
 [#include <sys/types.h>], [uid_t x;],
 :,
 AC_DEFINE(UID_T, int))
 dnl
-AC_LIBTHING_CHECK([gid_t in sys/types.h],
+AC_COMPILE_CHECK([gid_t in sys/types.h],
 [#include <sys/types.h>], [gid_t x;],
 :,
 AC_DEFINE(GID_T, int))
 dnl
-AC_LIBTHING_CHECK([off_t in sys/types.h],
+AC_COMPILE_CHECK([off_t in sys/types.h],
 [#include <sys/types.h>], [off_t x;],
 :,
 AC_DEFINE(OFF_T, long))
 dnl
 dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
-AC_LIBTHING_CHECK([sig_atomic_t in signal.h],
+AC_COMPILE_CHECK([sig_atomic_t in signal.h],
 [#include <signal.h>], [sig_atomic_t x;],
 AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H]),
 :)
 dnl
-AC_LIBTHING_CHECK([sig_atomic_t in sys/types.h],
+AC_COMPILE_CHECK([sig_atomic_t in sys/types.h],
 [#include <sys/types.h>], [sig_atomic_t x;],
 AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H]),
 :)
 dnl
 case $DEFS in
 *HAVE_STDDEF_H*)
-  AC_LIBTHING_CHECK([size_t in stddef.h],
+  AC_COMPILE_CHECK([size_t in stddef.h],
   [#include <stddef.h>], [size_t x;],
   AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H]),
   :) ;;
 esac
 dnl
-AC_LIBTHING_CHECK([size_t in sys/types.h],
+AC_COMPILE_CHECK([size_t in sys/types.h],
 [#include <sys/types.h>], [size_t x;],
 AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H]),
 :)
 dnl
-AC_LIBTHING_CHECK([time_t in time.h],
+AC_COMPILE_CHECK([time_t in time.h],
 [#include <time.h>], [time_t i;],
 AC_DEFINE([HAVE_TIME_T_IN_TIME_H]),
 :)
 dnl
-AC_LIBTHING_CHECK([time_t in sys/types.h],
+AC_COMPILE_CHECK([time_t in sys/types.h],
 [#include <sys/types.h>], [time_t i;],
 AC_DEFINE([HAVE_TIME_T_IN_TYPES_H]),
 :)
@@ -112,31 +114,29 @@ dnl
 dnl The filesystem info code is from David MacKenzie's fileutils 3.1
 dnl package.
 echo checking how to get filesystem info
-if test -f $INCLUDEDIR/sys/statvfs.h -a -f $INCLUDEDIR/sys/fstyp.h; then
-  AC_DEFINE(FS_STATVFS)
-elif test -f $INCLUDEDIR/sys/statfs.h -a -f $INCLUDEDIR/sys/fstyp.h; then
-  AC_DEFINE(FS_USG_STATFS)
-elif test -f $INCLUDEDIR/mntent.h; then
-  AC_DEFINE(FS_MNTENT)
-elif test -f $INCLUDEDIR/sys/mount.h -a -f $INCLUDEDIR/sys/fs_types.h; then
-  AC_DEFINE(FS_GETMNT)
-elif grep MOUNT_UFS $INCLUDEDIR/sys/mount.h >/dev/null 2>&1; then
-  AC_DEFINE(FS_STATFS)
-else
-  AC_LIBTHING_CHECK([ustat], , [ustat();], AC_DEFINE(FS_USTAT), :)
-fi
+case $DEFS in
+*HAVE_SYS_STATVFS_H*HAVE_SYS_FSTYP_H*) AC_DEFINE(FS_STATVFS) ;;
+*HAVE_SYS_FSTYP_H*HAVE_SYS_STATVFS_H*) AC_DEFINE(FS_STATVFS) ;;
+*HAVE_SYS_STATFS_H*HAVE_SYS_FSTYP_H*) AC_DEFINE(FS_USG_STATFS) ;;
+*HAVE_SYS_FSTYP_H*HAVE_SYS_STATFS_H*) AC_DEFINE(FS_USG_STATFS) ;;
+*HAVE_MNTENT_H*) AC_DEFINE(FS_MNTENT) ;;
+*HAVE_SYS_MOUNT_H*HAVE_SYS_FS_TYPES_H*) AC_DEFINE(FS_GETMNT) ;;
+*HAVE_SYS_FS_TYPES_H*HAVE_SYS_MOUNT_H*) AC_DEFINE(FS_GETMNT) ;;
+*) AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h, AC_DEFINE(FS_STATFS),
+   AC_FUNC_CHECK(ustat, [AC_DEFINE(FS_USTAT)], :)) ;;
+esac
 dnl
-AC_LIBTHING_CHECK([void],
+AC_COMPILE_CHECK([void],
 [], [extern void foo (); (void) exit (0);],
 AC_DEFINE([HAVE_VOID]),
 :)
 dnl
-AC_LIBTHING_CHECK([unsigned char],
+AC_COMPILE_CHECK([unsigned char],
 [], [unsigned char i = (unsigned char) -1;],
 AC_DEFINE([HAVE_UNSIGNED_CHAR]),
 :)
 dnl
-AC_LIBTHING_CHECK([errno],
+AC_COMPILE_CHECK([errno],
 [#include <errno.h>], [int i = errno; errno = 1;],
 AC_DEFINE([HAVE_ERRNO_DECLARATION]),
 :)
@@ -276,12 +276,12 @@ esac
 dnl
 case $DEFS in
 *HAVE_SIGVEC*)
-  AC_LIBTHING_CHECK([sv_flags],
+  AC_COMPILE_CHECK([sv_flags],
   [#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
   AC_DEFINE([HAVE_SIGVEC_SV_FLAGS]), :) ;;
 esac
 dnl
-AC_LIBTHING_CHECK([times declared as long],
+AC_COMPILE_CHECK([times declared as long],
 [#include <sys/types.h>
 #ifdef HAVE_LIBC_H
 #include <libc.h>
@@ -294,7 +294,7 @@ extern long times ();],
 AC_DEFINE([TIMES_DECLARATION_OK]),
 :)
 dnl
-AC_LIBTHING_CHECK([BSD setpgrp],
+AC_COMPILE_CHECK([BSD setpgrp],
 [#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif],
@@ -302,7 +302,7 @@ AC_LIBTHING_CHECK([BSD setpgrp],
 AC_DEFINE([HAVE_BSD_PGRP]),
 :)
 dnl
-AC_LIBTHING_CHECK([union wait],
+AC_COMPILE_CHECK([union wait],
 [#include <sys/wait.h>
 #ifndef WIFEXITED
 #define WIFEXITED(u) ((u).w_termsig == 0)
