@@ -39,7 +39,7 @@ libuucp.a: $(OBJS)
 	-$(RANLIB) libuucp.a
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
 
 dist:
 	mkdir ../uucp-$(VERSION)/lib

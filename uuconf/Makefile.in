@@ -46,7 +46,7 @@ libuuconf.a: $(OBJS)
 	-$(RANLIB) libuuconf.a
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
 
 syshdr.h: syshdr.unx
 	rm -f syshdr.h

@@ -50,7 +50,7 @@ libunix.a: $(OBJS)
 	-$(RANLIB) libunix.a
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
 
 dist:
 	mkdir ../uucp-$(VERSION)/unix

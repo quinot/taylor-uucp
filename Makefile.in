@@ -259,10 +259,10 @@ uudir: uudir.o $(UULIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o uudir uudir.o $(UULIBS) $(LIBS)
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
 
 uuconv.o: uuconv.c
-	$(CC) -c $(CFLAGS) $(MORECFLAGS) -I$(srcdir)/uuconf -Iuuconf $(srcdir)/uuconv.c
+	$(CC) -c $(MORECFLAGS) -I$(srcdir)/uuconf -Iuuconf $(CFLAGS) $(srcdir)/uuconv.c
 
 sysdep.h: sysh.unx
 	rm -f sysdep.h
