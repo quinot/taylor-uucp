@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/12/06  21:10:27  ian
+   Franc,ois Pinard: ccescape should never return a negative number
+
    Revision 1.3  1991/11/11  23:47:24  ian
    Added chat-program to run a program to do a chat script
 
@@ -123,7 +126,7 @@ fchat (zchat, zchat_fail, ctimeout, qsys, qdial, zphone, ftranslate)
       ++cstrings;
     }
 
-  zbuf = (char *) alloca (strlen (zchat));
+  zbuf = (char *) alloca (strlen (zchat) + 1);
 
   while (*zchat != '\0')
     {
