@@ -24,6 +24,7 @@ cmdarg.c
 cmdfil.c
 cmdlin.c
 debfil.c
+diacod.c
 dial.c
 diasub.c
 dnams.c

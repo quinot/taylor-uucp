@@ -788,6 +788,13 @@ extern int uuconf_validate (void *uuconf_pglobal,
 			    const struct uuconf_system *uuconf_qsys,
 			    const char *uuconf_zlogin);
 
+/* Translate a dial code.  This sets *pznum to an malloced string.
+   This will look up the entire zdial string in the dialcode file, so
+   for normal use the alphabetic prefix should be separated.  */
+extern int uuconf_dialcode (void *uuconf_pglobal,
+			    const char *uuconf_zdial,
+			    char **uuconf_pznum);
+
 /* Compare two grades, returning < 0 if b1 should be executed before
    b2, == 0 if they are the same, or > 0 if b1 should be executed
    after b2.  This can not fail, and does not return a standard uuconf
