@@ -87,11 +87,13 @@ reached at @file{<ian@@airs.com>}, or, equivalently,
 @file{<uunet!airs!ian>}, or @cite{c/o Infinity Development, P.O. Box
 520, Waltham MA, 02254}.
 
-There is a mailing list for discussion of the package.  To join the
-list, send a message to @file{<taylor-uucp-request@@gnu.ai.mit.edu>}.
-Make sure you include the address you want to receive messages at; do
-not rely on the @code{From:} header.  To send a message to the list,
-send it to @file{<taylor-uucp@@gnu.ai.mit.edu>}.
+There is a mailing list for discussion of the package.  To join (or get
+off) the list, send mail to
+@file{<taylor-uucp-request@@gnu.ai.mit.edu>}.  Mail to this address is
+answered by a person, not a program.  When joining the list, make sure
+you include the address at which you want to receive mail in the body of
+your message.  To send a message to the list, send it to
+@file{<taylor-uucp@@gnu.ai.mit.edu>}.
 
 @menu
 * Copying::                     Taylor UUCP copying conditions
@@ -417,17 +419,17 @@ These are the installation instructions for the Taylor UUCP package.
 You will have to decide what types of configuration files you want to
 use.  This package supports a new sort of configuration file;
 @xref{Configuration Files}.  It also supports V2 configuration files
-(@file{L.sys}, @file{L-devices}, etc.) and BNU configuration files
+(@file{L.sys}, @file{L-devices}, etc.) and HDB configuration files
 (@file{Systems}, @file{Devices}, etc.).  No documentation is provided
-for V2 or BNU configuration files.  All types of configuration files can
+for V2 or HDB configuration files.  All types of configuration files can
 be used at once, if you are so inclined.  Currently using just V2
 configuration files is not really possible, because there is no way to
 specify a dialer (there are no built in dialers, and the program does
 not know how to read @file{acucap} or @file{modemcap}); however, V2
 configuration files can be used with a new style dialer file
-(@pxref{dial File}), or with a BNU @file{Dialers} file.
+(@pxref{dial File}), or with a HDB @file{Dialers} file.
 
-Use of BNU configuration files has two known bugs.  A blank line in the
+Use of HDB configuration files has two known bugs.  A blank line in the
 middle of an entry in the @file{Permissions} file will not be ignored as
 it should be.  Dialer programs are not recognized directly.  If you must
 use a dialer program, rather than an entry in @file{Devices}, you must
@@ -518,31 +520,15 @@ You should verify that @code{configure} worked correctly by checking
 the files @file{conf.h} and @file{Makefile}.  
 
 @item
-This package uses the @code{alloca} function.  The @code{configure}
-script will try to figure out how to make it work on your system.  If
-@code{alloca} cannot be found, a simplistic substitute from
-@file{alloca.c} will be used.  If you provide your own @file{alloca.o}
-file, it will be used instead; you might, for example, use the one from
-the GNU emacs distribution.  If none of this makes any sense to you,
-don't worry; everything will probably work fine.
-
-@item
 Edit @file{policy.h} for your local system.  The comments should explain
 the various choices.  The default values are intended to be reasonable,
 so you may not have to make any changes.
 
 @item
-Type @samp{make} to compile everything.  You may get warnings about
-implicit function declarations; ignore these (if you think they can be
-eliminated, and you really know what you are talking about, you may tell
-me about them).  You may also get warnings about @file{getopt.c} (this
-is from the GNU library and I do not want to change it) and about a
-variable not protected from @code{setjmp} in @file{sys2.c} (the data
-flow ensures that this can never be a problem).  The @file{tstuu.c} file
-is not particularly portable; if you can't figure out how to compile it
-you can safely ignore it, as it is only used for testing.  If you have
-any other problems there is probably a bug in the @code{configure}
-script.
+Type @samp{make} to compile everything.  The @file{tstuu.c} file is not
+particularly portable; if you can't figure out how to compile it you can
+safely ignore it, as it is only used for testing.  If you have any other
+problems there is probably a bug in the @code{configure} script.
 
 @item
 Please report any problems you have.  That is the only way they will get
@@ -561,7 +547,7 @@ yourself that it will work.
 
 You can use the @code{uuchk} program to test your configuration files.
 It will read them and print out a verbose description.  This is
-particularly important if you are using V2 or BNU configuration files,
+particularly important if you are using V2 or HDB configuration files,
 because there may be bugs in how they are read.  This program should not
 be made suid, because it will display passwords if it can read them.
 
@@ -578,12 +564,20 @@ winds up dying.  It will create a directory @file{/usr/tmp/tstuu} and
 fill it with configuration files, and create spool directories
 @file{/usr/tmp/tstuu/spool1} and @file{/usr/tmp/tstuu/spool2}.
 
+For the beta release of 1.04, the @samp{tstuu} program does not appear
+work with the @code{i} protocol on SCO Unix, and probably other systems.
+It appears to get stuck trying to write to a full pseudo-terminal input
+buffer, while both child @code{uucico} daemons are waiting on write for
+@samp{tstuu} to empty their buffers.  This should be fixed for the final
+1.04 release.  @samp{tstuu} does work with the @code{g} protocol,
+selectable by using @samp{tstuu -c g}.
+
 The program will finish with an execute file named
 @file{X.@var{something}} and a data file named @file{D.@var{something}}
 in the directory @file{/usr/tmp/tstuu/spool1} (or, more likely, in
 subdirectories, depending on the choice of @code{SPOOLDIR} in
 @file{sysdep.h}).  The log files @file{/usr/tmp/tstuu/Log1} and
-@file{/usr/tmp/tstuu/Log2} (if you have selected @code{HAVE_BNU_LOGGING}
+@file{/usr/tmp/tstuu/Log2} (if you have selected @code{HAVE_HDB_LOGGING}
 the first log file will be @file{/usr/tmp/tstuu/Log1/uucico/test2} and
 the second will be @file{/usr/tmp/tstuu/Log2/uucico/test1}) should look
 fairly normal.  You can test @code{uuxqt} by typing @samp{./uuxqt -I
@@ -657,7 +651,7 @@ them.
 @node Installation, Usage, Testing, Overall Installation
 @section Installing Taylor UUCP
 
-You can install by suing to @code{root} and typing @samp{make install}.
+You can install by becoming @code{root} and typing @samp{make install}.
 Or you can look at what make install does and do it by hand.  It tries
 to preserve your old programs, if any.  You can retrieve them by typing
 @samp{make uninstall}.
@@ -684,7 +678,7 @@ if using @code{SPOOLDIR_TAYLOR},
 @example
 touch /usr/spool/uucp/foo/C./C.A0000
 @end example
-If using @code{SPOOLDIR_BNU}, use
+If using @code{SPOOLDIR_HDB}, use
 @example
 touch /usr/spool/uucp/foo/C.fooA0000
 @end example
@@ -737,7 +731,7 @@ TCP, using port number @samp{uucp} (as found in @file{/etc/services};
 this may be specified as a number), using remote host @file{foo.domain},
 with some chat script.
 
-If you are using BNU configuration files, add a line like this to
+If you are using HDB configuration files, add a line like this to
 Systems:
 
 @example
@@ -764,11 +758,11 @@ default port number because @code{uucico} will not be running as
 
 Basically, you must define a port, either using the port file
 (@pxref{port File}) if you are using the new configuration method or
-with an entry in Devices if you are using BNU; there is no way to define
-a port using V2.  If you are using BNU the port must be named
+with an entry in Devices if you are using HDB; there is no way to define
+a port using V2.  If you are using HDB the port must be named
 @samp{TCP}; a line as shown above will suffice.  You can then start
 @code{uucico} as @samp{uucico -p TCP} (after the @samp{-p}, name the
-port; in BNU it must be @samp{TCP}).  This will wait for incoming
+port; in HDB it must be @samp{TCP}).  This will wait for incoming
 connections, and fork off a child for each one.  Each connection will be
 prompted with @samp{login:} and @samp{Password:}; the results will be
 checked against the UUCP (not the system) password file
@@ -815,7 +809,7 @@ revoke their setuid privileges.
 
 All the configuration files follow a simple line-oriented
 @samp{@var{keyword} @var{value}} format.  Empty lines are ignored, as
-are leading spaces; unlike BNU, lines with leading spaces are read.  The
+are leading spaces; unlike HDB, lines with leading spaces are read.  The
 first word on each line is a keyword.  The rest of the line is
 interpreted according to the keyword.  Most keywords are followed by
 numbers, boolean values or simple strings with no embedded spaces.
@@ -1287,7 +1281,7 @@ a backspace character
 @item \n
 a newline or line feed character
 @item \N
-a null character (for BNU compatibility)
+a null character (for HDB compatibility)
 @item \r
 a carriage return character
 @item \s
@@ -1325,7 +1319,7 @@ disable echo checking
 @item \E
 enable echo checking (wait for echo before continuing)
 @item \K
-same as @kbd{BREAK} (for BNU compatibility)
+same as @kbd{BREAK} (for HDB compatibility)
 @item \p
 pause sending for a fraction of a second
 @end table
@@ -1413,7 +1407,7 @@ attached to the port in use.  Anything the program writes to standard
 error will be written to the UUCP log file.  No other file descriptors
 will be open.  If the program does not exit with a status of 0, it will
 be assumed to have failed; this means that the dialing programs used by
-some versions of BNU may not be used directly, although of course a
+some versions of HDB may not be used directly, although of course a
 shell script could be used as an interface.
 
 The program will be run as the @code{uucp} user, and the environment
@@ -1518,7 +1512,7 @@ the same time.  Having several @code{uuxqt} processes running at once
 can significantly slow down a system, but since @code{uuxqt} is
 automatically started by @code{uucico}, it can happen quite easily.  The
 default for @code{max-uuxqts} is 0, which means that there is no limit.
-If BNU configuration files are being read and the code was compiled
+If HDB configuration files are being read and the code was compiled
 without @code{HAVE_TAYLOR_CONFIG}, then if the file @file{Maxuuxqts} in
 the configuration directory contains a readable number it will be used as
 the value for @code{max-uuxqts}.
@@ -1530,10 +1524,10 @@ If the code was compiled to be able to read V2 configuration files, a
 false argument to this command will prevent them from being read.
 This can be useful while testing.  The default is true.
 
-@item bnu-files @var{boolean}
-@findex bnu-files
+@item hdb-files @var{boolean}
+@findex hdb-files
 
-If the code was compiled to be able to read BNU configuration files, a
+If the code was compiled to be able to read HDB configuration files, a
 false argument to this command will prevent them from being read.
 This can be useful while testing.  The default is true.
 
@@ -1648,7 +1642,7 @@ files will be read in turn until the login name is found.
 @cindex log file
 
 Name the log file.  The default is from @file{policy.h}.  Logging
-information is written to this file.  If @code{HAVE_BNU_LOGGING} is
+information is written to this file.  If @code{HAVE_HDB_LOGGING} is
 defined in @file{conf.h}, then by default a separate log file is used
 for each system.  Using this command to name a log file will cause all
 the systems to use it.
@@ -2031,8 +2025,8 @@ or by using the @code{baud} command to select ports from the port file.
 @findex address
 
 Give a phone number to call (when using a modem port) or a remote host
-to contact (when using a TCP port).  The commands @code{phone} and
-@code{address} are equivalent, but are intended to be more mnemonic
+to contact (when using a TCP or TLI port).  The commands @code{phone}
+and @code{address} are equivalent, but are intended to be more mnemonic
 depending on the type of port in use.
 
 When used with a modem port, an @kbd{=} character in the phone number
@@ -2047,7 +2041,12 @@ When used with a TCP port, the string names the host to contact.  It may
 be a domain name or a numeric Internet address.  If no address is
 specified, the system name is used.
 
-When used with a port that neither is a modem nor TCP, this command is
+When used with a TLI port, the string is treated as though it were an
+expect string in a chat script, allowing the use of escape characters
+(@pxref{Chat Scripts}).  The @code{dialer-sequence} command in the port
+file may override this address (@pxref{port File}).
+
+When used with a port that not a modem or TCP or TLI, this command is
 ignored.
 
 @end table
@@ -2736,6 +2735,8 @@ For a connection through standard input and standard output, as when
 For a direct connection to another system.
 @item tcp
 For a connection using TCP.
+@item tli
+For a connection using TLI.
 @end table
 
 @item protocol @var{string}
@@ -2774,12 +2775,13 @@ If the argument is @samp{true}, it means that the port only supports
 half-duplex connections.  This only affects bidirectional protocols, and
 causes them to not do bidirectional transfers.
 
-@item device @var{string} [ modem and direct only ]
+@item device @var{string} [ modem, direct and tli only ]
 @findex device
 
 Names the device associated with this port.  If the device is not named,
 the port name is taken as the device.  Device names are system
-dependent, but a Unix example would be @file{/dev/ttyd0}.
+dependent.  On Unix, a modem or direct connection might be something
+like @file{/dev/ttyd0}; a TLI port might be @file{/dev/inet/tcp}.
 
 @item baud @var{number} [ modem and direct only ]
 @findex baud in port file
@@ -2838,7 +2840,7 @@ situations without needing to go to a separate file.  There is no
 default.  Some sort of dialer information must be specified to call out
 on a modem.
 
-@item dialer-sequence @var{strings} [ modem only ]
+@item dialer-sequence @var{strings} [ modem or tli only ]
 @findex dialer-sequence
 
 Name a sequence of dialers and tokens (phone numbers) to use.  The first
@@ -2856,6 +2858,23 @@ to handle this correctly will require a more systematic notion of chat
 scripts.  Moreover, only the @code{complete} and @code{abort} chat
 scripts from the first dialer specified are used, and only the protocol
 parameters from the first dialer are used.
+
+This command basically lets you specify a sequence of chat scripts to
+use.  For example, the first dialer might get you to a local network and
+the second dialer might describe how to select a machine from the local
+network.  This lets you break your dialing sequence into simple modules,
+and may make it easier to share dialer entries between machines.
+
+When this command is used with a TLI port, then if the first dialer is
+@samp{TLI} or @samp{TLIS} the first token is used as the address to
+connect to.  If the first dialer is something else, or if there is no
+token, the address given by the @code{address} command is used
+(@pxref{Placing the Call}).  Escape sequences in the address are
+expanded as they are for chat script expect strings (@pxref{Chat
+Scripts}).  The different between @samp{TLI} and @samp{TLIS} is that the
+latter implies the command @samp{stream true}.  These contortions are
+all for HDB compatibility.  Any subsequent dialers are treated as they
+are for a modem.
 
 @item lockname @var{string} [ modem and direct only ]
 @findex lockname
@@ -2877,6 +2896,23 @@ be looked up in @file{/etc/services}.  If this is not specified, the
 string @samp{uucp} is looked up in @file{/etc/services}.  If it is not
 found, port number 540 (the standard UUCP-over-TCP port number) will be
 used.
+
+@item push @var{strings} [ tli only ]
+@findex push
+
+Give a list of modules to push on to the TLI stream.
+
+@item stream @var{boolean} [ tli only ]
+@findex stream
+
+If this is true, and the @code{push} command was not used, the
+@samp{tirdwr} module is pushed on to the TLI stream.
+
+@item server-address @var{string} [ tli only ]
+
+Give the address to use when running as a TLI server.  Escape sequences
+in the address are expanded as they are for chat script expect strings
+(@pxref{Chat Scripts}).
 
 @end table
 
@@ -3230,7 +3266,7 @@ means of distinguishing which command files are intended for which
 systems thus require all @emph{systems they connect to} to have names
 that are unique in the first seven characters.  Some UUCP packages use a
 variant of this format which truncates the system name to six
-characters.  BNU uses a different spool directory format, which allows
+characters.  HDB uses a different spool directory format, which allows
 up to fourteen characters to be used for each system name.  The Taylor
 UUCP spool directory format is configurable.  The new Taylor spool
 directory format permits system names to be as long as file names; the
@@ -3304,11 +3340,11 @@ process still exists, the lock attempt fails.  Otherwise the lock file
 is deleted and the locking algorithm is retried.
 
 Older UUCP packages put the lock files in the main UUCP spool
-directory, /usr/spool/uucp.  BNU UUCP generally puts the lock files in
+directory, /usr/spool/uucp.  HDB UUCP generally puts the lock files in
 a directory of their own, usually /usr/spool/locks or /etc/locks.
 
 The original UUCP lock file format encoded the process ID as a four byte
-binary number.  The order of the bytes was host-dependent.  BNU UUCP
+binary number.  The order of the bytes was host-dependent.  HDB UUCP
 stores the process ID as a ten byte ASCII decimal number, with a
 trailing newline.  For example, if process 1570 holds a lock file, it
 would contain the eleven characters space, space, space, space, space,
@@ -3489,7 +3525,7 @@ calling UUCP sends something like @samp{\020Ug\000}.
 
 Most UUCP packages will consider each locally supported protocol in turn
 and select the first one supported by the called UUCP.  With some
-versions of BNU UUCP, this can be modified by giving a list of protocols
+versions of HDB UUCP, this can be modified by giving a list of protocols
 after the device name in the Devices file or the @file{Systems} file.
 Taylor UUCP provides the @code{protocol} command which may be used
 either for a system (@pxref{Protocol Selection}) or a port (@pxref{port
@@ -4285,7 +4321,7 @@ containing zero bytes of data.
 The @samp{e} protocol is similar to the @samp{t} protocol.  It does no
 flow control or error checking and is intended for use over TCP.
 
-The @samp{e} protocol originated in versions of BNU UUCP.
+The @samp{e} protocol originated in versions of HDB UUCP.
 
 The Taylor UUCP code for the @samp{e} protocol is in @file{prote.c}.
 
