@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/09/19  03:06:04  ian
+   Chip Salzenberg: put BNU temporary files in system's directory
+
    Revision 1.2  1991/09/11  02:33:14  ian
    Added ffork argument to fsysdep_run
 
@@ -209,18 +212,19 @@ extern const char *zsysdep_spool_file_name P((const struct ssysteminfo *,
    directories for a file.  It should return FALSE on error.  */
 extern boolean fsysdep_make_dirs P((const char *zfile));
 
-/* Create a stdio file, setting appropriate protection.  If the flog
-   argument is TRUE, the file is treated as a log file: it is opened
-   in append mode and made publically accessible.  If the flog
-   argument is FALSE, the file is treated as a private data file: any
+/* Create a stdio file, setting appropriate protection.  If the
+   fpublic argument is TRUE, the file is made publically accessible;
+   otherwise it is treated as a private data file.  If the fappend
+   argument is TRUE, the file is opened in append mode; otherwise any
    previously existing file of the same name is removed, and the file
    is kept private to the UUCP system.  On a system in which file
    protections are unimportant, this may be implemented as
-   
-   fopen (zfile, flog ? "a" : "w");
+
+   fopen (zfile, fappend ? "a" : "w");
 
    */
-extern FILE *esysdep_fopen P((const char *zfile, boolean flog));
+extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
+			      boolean fappend));
 
 /* Open a file to send to another system; the qsys argument is the
    system the file is being sent to.  This should set *pimode to the

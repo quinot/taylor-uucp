@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -167,7 +170,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (eLdebug == NULL && ! ftried)
 	{
 	  ftried = TRUE;
-	  eLdebug = esysdep_fopen (zDebugfile, FALSE);
+	  eLdebug = esysdep_fopen (zDebugfile, FALSE, TRUE);
 	}
       e = eLdebug;
     }
@@ -179,7 +182,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (eLlog == NULL && ! ftried)
 	{
 	  ftried = TRUE;
-	  eLlog = esysdep_fopen (zLogfile, TRUE);
+	  eLlog = esysdep_fopen (zLogfile, TRUE, TRUE);
 	  if (eLlog == NULL)
 	    usysdep_exit (FALSE);
 	}

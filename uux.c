@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/09/19  02:30:37  ian
+   From Chip Salzenberg: check whether signal is ignored differently
+
    Revision 1.2  1991/09/11  02:33:14  ian
    Added ffork argument to fsysdep_run
 
@@ -364,7 +367,7 @@ main (argc, argv)
       usysdep_exit (FALSE);
     }
 
-  eXxqt_file = esysdep_fopen (zxqtname, FALSE);
+  eXxqt_file = esysdep_fopen (zxqtname, FALSE, FALSE);
   if (eXxqt_file == NULL)
     {
       ulog_close ();
@@ -677,7 +680,7 @@ main (argc, argv)
 	      /* This doesn't work correctly, since it never removes
 		 the file from the local spool directory.  */
 
-	      e = esysdep_fopen (zxqt_file, FALSE);
+	      e = esysdep_fopen (zxqt_file, FALSE, FALSE);
 	      if (e == NULL)
 		{
 		  ulog_close ();
@@ -732,7 +735,7 @@ main (argc, argv)
 	  usysdep_exit (FALSE);
 	}
 
-      e = esysdep_fopen (zdata, FALSE);
+      e = esysdep_fopen (zdata, FALSE, FALSE);
       if (e == NULL)
 	{
 	  ulog_close ();

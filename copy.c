@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:39:38  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -38,7 +41,7 @@ char copy_rcsid[] = "$Id$";
 #include "system.h"
 #include "sysdep.h"
 
-/* Copy one file to another.  The new file is created private to UUCP.  */
+/* Copy one file to another.  */
 
 #if USE_STDIO
 
@@ -59,7 +62,7 @@ fcopy_file (zfrom, zto, fpublic)
       ulog (LOG_ERROR, "fopen (%s): %s", zfrom, strerror (errno));
       return FALSE;
     }
-  eto = esysdep_fopen (zto, fpublic);
+  eto = esysdep_fopen (zto, fpublic, FALSE);
   if (eto == NULL)
     {
       (void) fclose (efrom);
