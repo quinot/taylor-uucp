@@ -121,8 +121,6 @@ struct sconncmds
 			pointer puuconf,
 			struct uuconf_dialer *qdialer,
 			boolean fsuccess));
-  /* Reset the connection so that another call may be accepted.  */
-  boolean (*pfreset) P((struct sconnection *qconn));
   /* Dial a number on a connection.  This set *qdialer to the dialer
      used, if any, and sets *ptdialerfound appropriately.  The qsys
      and zphone arguments are for the chat script.  This field may be
@@ -198,9 +196,6 @@ extern boolean fconn_close P((struct sconnection *qconn,
 			      pointer puuconf,
 			      struct uuconf_dialer *qdialer,
 			      boolean fsuccess));
-
-/* Reset a connection such that another call may be accepted.  */
-extern boolean fconn_reset P((struct sconnection *q));
 
 /* Dial out on a connection.  The qsys and zphone arguments are for
    the chat scripts; zphone is the phone number to dial.  If qdialer

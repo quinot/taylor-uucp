@@ -246,8 +246,6 @@ static boolean fsdirect_close P((struct sconnection *qconn,
 				 pointer puuconf,
 				 struct uuconf_dialer *qdialer,
 				 boolean fsuccess));
-static boolean fsserial_reset P((struct sconnection *qconn));
-static boolean fsstdin_reset P((struct sconnection *qconn));
 static boolean fsserial_break P((struct sconnection *qconn));
 static boolean fsstdin_break P((struct sconnection *qconn));
 static boolean fsserial_set P((struct sconnection *qconn,
@@ -274,7 +272,6 @@ static const struct sconncmds sstdincmds =
   NULL, /* pfunlock */
   fsstdin_open,
   fsstdin_close,
-  fsstdin_reset,
   NULL, /* pfdial */
   fsdouble_read,
   fsdouble_write,
@@ -295,7 +292,6 @@ static const struct sconncmds smodemcmds =
   fsserial_unlock,
   fsmodem_open,
   fsmodem_close,
-  fsserial_reset,
   fmodem_dial,
   fsysdep_conn_read,
   fsysdep_conn_write,
@@ -316,7 +312,6 @@ static const struct sconncmds sdirectcmds =
   fsserial_unlock,
   fsdirect_open,
   fsdirect_close,
-  fsserial_reset,
   NULL, /* pfdial */
   fsysdep_conn_read,
   fsysdep_conn_write,
@@ -1487,68 +1482,6 @@ fsdirect_close (qconn, puuconf, qdialer, fsuccess)
   return fsserial_close ((struct ssysdep_conn *) qconn->psysdep);
 }
 
-/* Reset a serial port by hanging up.  */
-
-static boolean
-fsserial_reset (qconn)
-     struct sconnection *qconn;
-{
-  struct ssysdep_conn *q;
-  sterminal sbaud;
-
-  q = (struct ssysdep_conn *) qconn->psysdep;
-
-  if (! q->fterminal)
-    return TRUE;
-
-  sbaud = q->snew;
-
-#if HAVE_BSD_TTY
-  sbaud.stty.sg_ispeed = B0;
-  sbaud.stty.sg_ospeed = B0;
-#endif
-#if HAVE_SYSV_TERMIO
-  sbaud.c_cflag = (sbaud.c_cflag &~ CBAUD) | B0;
-#endif
-#if HAVE_POSIX_TERMIOS
-  if (cfsetospeed (&sbaud, B0) < 0)
-    {
-      ulog (LOG_ERROR, "Can't set baud rate: %s", strerror (errno));
-      return FALSE;
-    }
-#endif
-
-  if (! fsetterminfodrain (q->o, &sbaud))
-    {
-      ulog (LOG_ERROR, "Can't hangup terminal: %s", strerror (errno));
-      return FALSE;
-    }
-
-  /* Give the terminal a chance to settle.  */
-  sleep (2);
-
-  if (! fsetterminfo (q->o, &q->snew))
-    {
-      ulog (LOG_ERROR, "Can't reopen terminal: %s", strerror (errno));
-      return FALSE;
-    }
-  
-  return TRUE;
-}
-
-/* Reset a standard input port.  */
-
-static boolean
-fsstdin_reset (qconn)
-     struct sconnection *qconn;
-{
-  struct ssysdep_conn *qsysdep;
-
-  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  qsysdep->o = qsysdep->ord;
-  return fsserial_reset (qconn);
-}
-
 /* Begin dialing out on a modem port.  This opens the dialer device if
    there is one.  */
 
@@ -1581,7 +1514,27 @@ fsysdep_modem_begin_dial (qconn, qdial)
       sleep (2);
       (void) ioctl (qsysdep->o, TIOCSDTR, 0);
 #else /* ! defined (TIOCCDTR) */
-      (void) fconn_reset (qconn);
+      if (qsysdep->fterminal)
+	{
+	  sterminal sbaud;
+
+	  sbaud = qsysdep->snew;
+
+#if HAVE_BSD_TTY
+	  sbaud.stty.sg_ispeed = B0;
+	  sbaud.stty.sg_ospeed = B0;
+#endif
+#if HAVE_SYSV_TERMIO
+	  sbaud.c_cflag = (sbaud.c_cflag &~ CBAUD) | B0;
+#endif
+#if HAVE_POSIX_TERMIOS
+	  (void) cfsetospeed (&sbaud, B0);
+#endif
+
+	  (void) fsetterminfodrain (qsysdep->o, &sbaud);
+	  sleep (2);
+	  (void) fsetterminfo (q->o, &q->snew);
+	}
 #endif /* ! defined (TIOCCDTR) */
 
       if (qdial->uuconf_fdtr_toggle_wait)

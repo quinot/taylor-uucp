@@ -55,7 +55,6 @@ static boolean fspipe_close P((struct sconnection *qconn,
 			       pointer puuconf,
 			       struct uuconf_dialer *qdialer,
 			       boolean fsuccess));
-static boolean fspipe_reset P((struct sconnection *qconn));
 static boolean fspipe_dial P((struct sconnection *qconn, pointer puuconf,
 			      const struct uuconf_system *qsys,
 			      const char *zphone,
@@ -71,7 +70,6 @@ static const struct sconncmds spipecmds =
   NULL, /* pfunlock */
   fspipe_open,
   fspipe_close,
-  fspipe_reset,
   fspipe_dial,
   fsdouble_read,
   fsdouble_write,
@@ -132,21 +130,13 @@ fspipe_open (qconn, ibaud, fwait)
 
 /* Close a pipe port.  */
 
+/*ARGSUSED*/
 static boolean
 fspipe_close (qconn, puuconf, qdialer, fsuccess)
      struct sconnection *qconn;
      pointer puuconf;
      struct uuconf_dialer *qdialer;
      boolean fsuccess;
-{
-  return fspipe_reset(qconn);
-}
-
-/* Reset (shutdown) a pipe port.  */
-
-static boolean
-fspipe_reset (qconn)
-     struct sconnection *qconn;
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -157,21 +147,21 @@ fspipe_reset (qconn)
   /* Close our sides of the pipe.  */
   if (qsysdep->ord >= 0 && close (qsysdep->ord) < 0)
     {
-      ulog (LOG_ERROR, "fspipe_reset: close read fd: %s", strerror (errno));
+      ulog (LOG_ERROR, "fspipe_close: close read fd: %s", strerror (errno));
       fret = FALSE;
     }
-  if ((qsysdep->owr != qsysdep->ord)
+  if (qsysdep->owr != qsysdep->ord
       && qsysdep->owr >= 0
       && close (qsysdep->owr) < 0)
     {
-      ulog (LOG_ERROR, "fspipe_reset: close write fd: %s", strerror (errno));
+      ulog (LOG_ERROR, "fspipe_close: close write fd: %s", strerror (errno));
       fret = FALSE;
     }
   qsysdep->ord = -1;
   qsysdep->owr = -1;
 
   /* Kill dangling child process.  */
-  if(qsysdep->ipid >= 0)
+  if (qsysdep->ipid >= 0)
     {
       if (kill (qsysdep->ipid, SIGHUP) == 0)
         usysdep_sleep (2);
@@ -181,7 +171,7 @@ fspipe_reset (qconn)
 #endif
       if (kill (qsysdep->ipid, SIGKILL) < 0 && errno == EPERM)
 	{
-	  ulog (LOG_ERROR, "fspipe_reset: Cannot kill child pid %lu: %s",
+	  ulog (LOG_ERROR, "fspipe_close: Cannot kill child pid %lu: %s",
 		(unsigned long) qsysdep->ipid, strerror (errno));
 	  fret = FALSE;
 	}
@@ -191,7 +181,6 @@ fspipe_reset (qconn)
   qsysdep->ipid = -1;
   return fret;
 }
-
 
 /* Dial out on a pipe port, so to speak: launch connection program
    under us.  The code alternates q->o between q->ord and q->owr as
@@ -247,7 +236,7 @@ fspipe_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
   if (q->iflags < 0 || q->iwr_flags < 0)
     {
       ulog (LOG_ERROR, "fspipe_dial: fcntl: %s", strerror (errno));
-      (void) fspipe_reset (qconn);
+      (void) fspipe_close (qconn, puuconf, qdialer, FALSE);
       return FALSE;
     }
 
@@ -261,7 +250,7 @@ fspipe_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
    possible for the kernel to sleep when closing a pipe; it is only
    possible when closing a device.  Therefore, I have removed the
    code, but am preserving it in case I am wrong.  To reenable it, the
-   two calls to close in fspipe_reset should be changed to call
+   two calls to close in fspipe_close should be changed to call
    fspipe_alarmclose.  */
 
 static RETSIGTYPE

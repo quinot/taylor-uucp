@@ -643,9 +643,11 @@ main (argc, argv)
 	      while (! FGOT_SIGNAL ()
 		     && flogin_prompt (puuconf, &sconn))
 		{
-		  /* Now ignore any SIGHUP that we got.  */
-		  afSignal[INDEXSIG_SIGHUP] = FALSE;
-		  if (! fconn_reset (&sconn))
+		  /* Close and reopen the port in between calls.  */
+		  if (! fconn_close (&sconn, puuconf,
+				     (struct uuconf_dialer *) NULL,
+				     TRUE)
+		      || ! fconn_open (&sconn, (long) 0, (long) 0, TRUE))
 		    break;
 		}
 	      fret = FALSE;

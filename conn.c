@@ -210,17 +210,6 @@ fconn_close (qconn, puuconf, qdialer, fsuccess)
 
   return fret;
 }
-
-/* Reset the connection.  */
-
-boolean
-fconn_reset (qconn)
-     struct sconnection *qconn;
-{
-  DEBUG_MESSAGE0 (DEBUG_PORT, "fconn_reset: Resetting connection");
-
-  return (*qconn->qcmds->pfreset) (qconn);
-}
 
 /* Dial out on the connection.  */
 
