@@ -563,19 +563,25 @@ extern char *zsysdep_xqt_file_name P((void));
 /* Beginning getting execute files.  To get a list of execute files,
    first fsysdep_get_xqt_init is called, then zsysdep_get_xqt is
    called several times until it returns NULL, then finally
-   usysdep_get_xqt_free is called.  */
-extern boolean fsysdep_get_xqt_init P((void));
+   usysdep_get_xqt_free is called.  If the zsystem argument is not
+   NULL, it is the name of a system for which execution files are
+   desired.  */
+extern boolean fsysdep_get_xqt_init P((const char *zsystem));
 
 /* Get the next execute file.  This should return NULL when finished
-   (with *pferr set to FALSE).  On an error this should return NULL
-   with *pferr set to TRUE.  This should set *pzsystem to the name of
-   the system for which the execute file was created.  Both the return
-   value and *pzsystem should be freed using ubuffree.  */
-extern char *zsysdep_get_xqt P((char **pzsystem,
+   (with *pferr set to FALSE).  The zsystem argument should be the
+   same string as that passed to fsysdep_get_xqt_init.  On an error
+   this should return NULL with *pferr set to TRUE.  This should set
+   *pzsystem to the name of the system for which the execute file was
+   created; this is not guaranteed to match the zsystem argument--that
+   must be double checked by the caller.  Both the return value and
+   *pzsystem should be freed using ubuffree.  */
+extern char *zsysdep_get_xqt P((const char *zsystem, char **pzsystem,
 				boolean *pferr));
 
-/* Clean up after getting execute files.  */
-extern void usysdep_get_xqt_free P((void));
+/* Clean up after getting execute files.  The zsystem argument should
+   be the same string as that passed to fsysdep_get_xqt_init.  */
+extern void usysdep_get_xqt_free P((const char *zsystem));
 
 /* Get the absolute pathname of a command to execute.  This is given
    the legal list of commands (which may be the special case "ALL")
