@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.9  1992/01/18  22:48:53  ian
    Reworked sending of mail and general handling of failed transfers
 
@@ -51,14 +54,6 @@
    Initial revision
 
    */
-
-#ifndef PROT_H
-
-#define PROT_H
-
-#ifdef __GNUC__
- #pragma once
-#endif
 
 /* The sprotocol structure holds information and functions for a specific
    protocol (e.g. the 'g' protocol).  */
@@ -298,5 +293,3 @@ extern boolean feprocess P((boolean *pfexit));
 extern boolean fewait P((void));
 extern boolean fefile P((boolean fstart, boolean fsend, boolean *pfredo,
 			 long cbytes));
-
-#endif
