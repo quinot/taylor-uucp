@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/31  21:17:32  ian
+   Franc,ois Pinard: forgot to initialize cGdelayed_packets
+
    Revision 1.12  1991/12/30  04:07:13  ian
    Don't send RR packets when a failure occurs
 
@@ -282,6 +285,10 @@ static long cGbad_checksum;
 
 /* Number of packets received out of order.  */
 static long cGbad_order;
+
+/* Number of packets rejected by receiver (number of RJ packets
+   received).  */
+static long cGremote_rejects;
 
 /* Local functions.  */
 
@@ -331,6 +338,7 @@ fgstart (fmaster)
   cGbad_hdr = 0;
   cGbad_checksum = 0;
   cGbad_order = 0;
+  cGremote_rejects = 0;
   
   /* We must determine the segment size based on the packet size
      which may have been modified by a protocol parameter command.
@@ -519,10 +527,13 @@ fgshutdown ()
 	"Protocol 'g' packets: sent %ld, resent %ld, received %ld",
 	cGsent_packets, cGresent_packets - cGdelayed_packets,
 	cGrec_packets);
-  if (cGbad_hdr != 0 || cGbad_checksum != 0 || cGbad_order != 0)
+  if (cGbad_hdr != 0
+      || cGbad_checksum != 0
+      || cGbad_order != 0
+      || cGremote_rejects != 0)
     ulog (LOG_NORMAL,
-	  "Protocol 'g' receive errors: header %ld, checksum %ld, order %ld",
-	  cGbad_hdr, cGbad_checksum, cGbad_order);
+	  "Errors: header %ld, checksum %ld, order %ld, remote rejects %ld",
+	  cGbad_hdr, cGbad_checksum, cGbad_order, cGremote_rejects);
 
   return TRUE;
 }
@@ -1033,10 +1044,7 @@ fggot_ack (iack)
 static boolean
 fgcheck_errors ()
 {
-  if ((cGbad_hdr
-       + cGbad_checksum
-       + cGbad_order
-       + cGresent_packets - cGdelayed_packets)
+  if ((cGbad_hdr + cGbad_checksum + cGbad_order + cGremote_rejects)
       > cGmax_errors)
     {
       ulog (LOG_ERROR, "Too many 'g' protocol errors");
@@ -1453,6 +1461,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      ugadjust_ack (iGretransmit_seq);
 	      ++cGresent_packets;
+	      ++cGremote_rejects;
 	      if (! fgcheck_errors ())
 		return FALSE;
 	      if (! fsend_data (azGsendbuffers[iGretransmit_seq],
@@ -1466,6 +1475,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	     by UUCP, but it's easy to support.  */
 	  ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
 	  ++cGresent_packets;
+	  ++cGremote_rejects;
 	  if (! fsend_data (azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])],
 			    CFRAMELEN + iGremote_packsize,
 			    TRUE))
