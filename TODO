@@ -256,3 +256,12 @@ Les Mikesell: allow a separate program to be specified to handle the
 communications with a particular system.
 
 87.
+
+Get the grade in a file name independent way in uqdo_xqt_file.
+
+88.
+
+Bob Denny: warn if can't open C. or X. file because of permission
+problem.
+
+89.
