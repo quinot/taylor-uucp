@@ -127,6 +127,33 @@ extern int iPrecstart;
 /* Index of end of data (first byte not included in data) in abPrecbuf.  */
 extern int iPrecend;
 
+/* There are a couple of variables and functions that are shared by
+   the 'i' and 'j' protocols (the 'j' protocol is just a wrapper
+   around the 'i' protocol).  These belong in a separate header file,
+   protij.h, but I don't want to create one for just a couple of
+   things.  */
+
+/* An escape sequence of characters for the 'j' protocol to avoid
+   (protocol parameter ``avoid'').  */
+extern const char *zJavoid_parameter;
+
+/* Timeout to use when sending the 'i' protocol SYNC packet (protocol
+   parameter ``sync-timeout'').  */
+extern int cIsync_timeout;
+
+/* Shared startup routine for the 'i' and 'j' protocols.  */
+extern boolean fijstart P((struct sdaemon *qdaemon, char **pzlog,
+			   int imaxpacksize,
+			   boolean (*pfsend) P((struct sconnection *qconn,
+						const char *zsend,
+						size_t csend,
+						boolean fdoread)),
+			   boolean (*pfreceive) P((struct sconnection *qconn,
+						   size_t cneed,
+						   size_t *pcrec,
+						   int ctimeout,
+						   boolean freport))));
+
 /* Prototypes for 'g' protocol functions.  */
 
 extern struct uuconf_cmdtab asGproto_params[];
@@ -196,6 +223,12 @@ extern char *zigetspace P((struct sdaemon *qdaemon, size_t *pcdata));
 extern boolean fisenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
 extern boolean fiwait P((struct sdaemon *qdaemon));
+
+/* Prototypes for 'j' protocol functions.  The 'j' protocol mostly
+   uses the 'i' protocol functions, but it has a couple of functions
+   of its own.  */
+extern boolean fjstart P((struct sdaemon *qdaemon, char **pzlog));
+extern boolean fjshutdown P((struct sdaemon *qdaemon));
 
 /* Prototypes for 'a' protocol functions (these use 'z' as the second
    character because 'a' is a modified Zmodem protocol).  */

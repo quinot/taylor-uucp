@@ -2255,6 +2255,14 @@ Evans.  It requires an eight-bit connection, but unlike the @samp{g} or
 @samp{i} protocol it will work if certain control characters may not be
 transmitted.
 
+The @samp{j} protocol is a variant of the @samp{i} protocol which can
+avoid certain control characters.  The set of characters it avoids can
+be set by a parameter.  While it technically does not require an eight
+bit connection (it could be configured to avoid all characters with the
+high bit set) it would be very inefficient to use it over one.  It is
+useful over a eight-bit connection that will not transmit certain
+control characters.
+
 The @samp{f} protocol is intended for use with X.25 connections; it
 checksums each file as a whole, so any error causes the entire file to
 be retransmitted.  It requires a reliable connection, but only uses
@@ -2414,6 +2422,24 @@ be used over a connection which does not transmit certain control
 characters, such as @code{XON} or @code{XOFF}.  The connection must
 still transmit eight bit characters other than control characters.  The
 default is false.
+@end table
+
+The @samp{j} protocol can be used over an eight bit connection that will
+not transmit certain control characters.  It accepts the same protocol
+parameters that the @samp{i} protocol accepts, as well as one more:
+
+@table @code
+@item avoid
+A list of characters to avoid.  This is a string which is interpreted as
+an escape sequence (@pxref{Chat Scripts}).  The protocol does not have a
+way to avoid printable ASCII characters (byte values from 32 to 126,
+inclusive); only ASCII control characters and eight-bit characters may
+be avoided.  The default value is @samp{\021\023}; these are the
+characters @code{XON} and @code{XOFF} which many connections use for
+flow control.  If the package is configured to use @code{HAVE_BSD_TTY},
+then on some versions of Unix you may have to avoid @samp{\377} as well,
+due to the way some implementations of the BSD terminal driver handle
+signals.
 @end table
 
 The @samp{f} protocol is intended for use with error-correcting modems

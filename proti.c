@@ -193,6 +193,12 @@ const char proti_rcsid[] = "$Id$";
    succesfully, we decrement the error level by one (protocol
    parameter ``error-decay'').  */
 #define CERROR_DECAY (10)
+
+/* The default list of characters to avoid: XON and XOFF.  This string
+   is processed as an escape sequence.  This is 'j' protocol parameter
+   ``avoid''; it is defined in this file because the 'i' and 'j'
+   protocols share protocol parameters.  */
+#define ZAVOID "\\021\\023"
 
 /* Local variables.  */
 
@@ -223,7 +229,7 @@ static int iIforced_remote_winsize = 0;
 
 /* Timeout to use when sending the SYNC packet (protocol
    parameter ``sync-timeout'').  */
-static int cIsync_timeout = CSYNC_TIMEOUT;
+int cIsync_timeout = CSYNC_TIMEOUT;
 
 /* Number of times to retry sending the SYNC packet (protocol
    parameter ``sync-retries'').  */
@@ -244,6 +250,23 @@ static int cIerrors = CERRORS;
 /* Each time we receive this many packets succesfully, we decrement
    the error level by one (protocol parameter ``error-decay'').  */
 static int cIerror_decay = CERROR_DECAY;
+
+/* The set of characters to avoid (protocol parameter ``avoid'').
+   This is actually part of the 'j' protocol; it is defined in this
+   file because the 'i' and 'j' protocols use the same protocol
+   parameters.  */
+const char *zJavoid_parameter = ZAVOID;
+
+/* Routine to use when sending data.  This is a hook for the 'j'
+   protocol.  */
+static boolean (*pfIsend) P((struct sconnection *qconn, const char *zsend,
+			     size_t csend, boolean fdoread));
+
+/* Routine to use to use when reading data.  This is a hook for the
+   'j' protocol.  */
+static boolean (*pfIreceive) P((struct sconnection *qconn, size_t cneed,
+				size_t *pcrec, int ctimeout,
+				boolean freport));
 
 /* Next sequence number to send.  */
 static int iIsendseq;
@@ -321,6 +344,10 @@ struct uuconf_cmdtab asIproto_params[] =
   { "retries", UUCONF_CMDTABTYPE_INT, (pointer) &cIretries, NULL },
   { "errors", UUCONF_CMDTABTYPE_INT, (pointer) &cIerrors, NULL },
   { "error-decay", UUCONF_CMDTABTYPE_INT, (pointer) &cIerror_decay, NULL },
+  /* The ``avoid'' protocol parameter is part of the 'j' protocol, but
+     it is convenient for the 'i' and 'j' protocols to share the same
+     protocol parameter table.  */
+  { "avoid", UUCONF_CMDTABTYPE_STRING, (pointer) &zJavoid_parameter, NULL },
   { NULL, 0, NULL, NULL }
 };
 
@@ -342,17 +369,34 @@ static boolean fiprocess_packet P((struct sdaemon *qdaemon,
 				   const char *zsecond, int csecond,
 				   boolean *pfexit));
 
-/* Start the protocol.  We keep transmitting a SYNC packet containing
-   the window and packet size we would like to receive until we
-   receive a SYNC packet from the remote system.  The first two bytes
-   of the data contents of a SYNC packet are the maximum packet size
-   we want to receive (high byte, low byte), and the next byte is the
-   maximum window size we want to use.  */
+/* The 'i' protocol start routine.  The work is done in a routine
+   which is also called by the 'j' protocol start routine.  */
 
 boolean
 fistart (qdaemon, pzlog)
      struct sdaemon *qdaemon;
      char **pzlog;
+{
+  return fijstart (qdaemon, pzlog, IMAXPACKSIZE, fsend_data, freceive_data);
+}
+
+/* Start the protocol.  This routine is called by both the 'i' and 'j'
+   protocol start routines.  We keep transmitting a SYNC packet
+   containing the window and packet size we would like to receive
+   until we receive a SYNC packet from the remote system.  The first
+   two bytes of the data contents of a SYNC packet are the maximum
+   packet size we want to receive (high byte, low byte), and the next
+   byte is the maximum window size we want to use.  */
+
+boolean
+fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
+     struct sdaemon *qdaemon;
+     char **pzlog;
+     int imaxpacksize;
+     boolean (*pfsend) P((struct sconnection *qconn, const char *zsend,
+			  size_t csend, boolean fdoread));
+     boolean (*pfreceive) P((struct sconnection *qconn, size_t cneed,
+			     size_t *pcrec, int ctimeout, boolean freport));
 {
   char ab[CHDRLEN + 3 + CCKSUMLEN];
   unsigned long icksum;
@@ -361,8 +405,11 @@ fistart (qdaemon, pzlog)
 
   *pzlog = NULL;
 
+  pfIsend = pfsend;
+  pfIreceive = pfreceive;
+
   if (iIforced_remote_packsize <= 0
-      || iIforced_remote_packsize >= IMAXPACKSIZE)
+      || iIforced_remote_packsize >= imaxpacksize)
     iIforced_remote_packsize = 0;
   else
     iIremote_packsize = iIforced_remote_packsize;
@@ -412,7 +459,7 @@ fistart (qdaemon, pzlog)
 		      "fistart: Sending SYNC packsize %d winsize %d",
 		      iIrequest_packsize, iIrequest_winsize);
 
-      if (! fsend_data (qdaemon->qconn, ab, CHDRLEN + 3 + CCKSUMLEN,
+      if (! (*pfIsend) (qdaemon->qconn, ab, CHDRLEN + 3 + CCKSUMLEN,
 			TRUE))
 	return FALSE;
 
@@ -437,6 +484,8 @@ fistart (qdaemon, pzlog)
     }
 
   /* We got a SYNC packet; set up packet buffers to use.  */
+  if (iIremote_packsize > imaxpacksize)
+    iIremote_packsize = imaxpacksize;
   do
     {
       int iseq;
@@ -462,8 +511,9 @@ fistart (qdaemon, pzlog)
 	{
 	  *pzlog = zbufalc (sizeof "protocol 'i' packet size %d window %d"
 			    + 50);
-	  sprintf (*pzlog, "protocol 'i' packet size %d window %d",
-		   (int) iIremote_packsize, (int) iIremote_winsize);
+	  sprintf (*pzlog, "protocol '%c' packet size %d window %d",
+		   qdaemon->qproto->bname, iIremote_packsize,
+		   iIremote_winsize);
 	  iIalc_packsize = iIremote_packsize;
 
 	  return TRUE;
@@ -473,7 +523,9 @@ fistart (qdaemon, pzlog)
     }
   while (iIremote_packsize > 200);
 
-  ulog (LOG_ERROR, "Protocol startup failed; insufficient memory for packets");
+  ulog (LOG_ERROR,
+	"'%c' protocol startup failed; insufficient memory for packets",
+	qdaemon->qproto->bname);
 
   return FALSE;
 }
@@ -504,12 +556,13 @@ fishutdown (qdaemon)
 
   DEBUG_MESSAGE0 (DEBUG_PROTO, "fishutdown: Sending CLOSE");
 
-  if (! fsend_data (qdaemon->qconn, z, CHDRLEN, FALSE))
+  if (! (*pfIsend) (qdaemon->qconn, z, CHDRLEN, FALSE))
     return FALSE;
 
   ulog (LOG_NORMAL,
-	"Protocol 'i' packets: sent %ld, resent %ld, received %ld",
-	cIsent_packets, cIresent_packets, cIreceived_packets);
+	"Protocol '%c' packets: sent %ld, resent %ld, received %ld",
+	qdaemon->qproto->bname, cIsent_packets, cIresent_packets,
+	cIreceived_packets);
   if (cIbad_hdr != 0
       || cIbad_cksum != 0
       || cIbad_order != 0
@@ -529,6 +582,7 @@ fishutdown (qdaemon)
   cIretries = CRETRIES;
   cIerrors = CERRORS;
   cIerror_decay = CERROR_DECAY;
+  zJavoid_parameter = ZAVOID;
 
   return TRUE;
 }
@@ -595,7 +649,7 @@ finak (qdaemon, iseq)
   DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 		  "finak: Sending NAK %d", iseq);
 
-  return fsend_data (qdaemon->qconn, abnak, CHDRLEN, TRUE);
+  return (*pfIsend) (qdaemon->qconn, abnak, CHDRLEN, TRUE);
 }
 
 /* Resend the latest packet the remote has not acknowledged.  */
@@ -634,7 +688,7 @@ firesend (qdaemon)
   clen = CHDRCON_GETBYTES (zhdr[IHDR_CONTENTS1],
 			   zhdr[IHDR_CONTENTS2]);
 
-  return fsend_data (qdaemon->qconn, zhdr,
+  return (*pfIsend) (qdaemon->qconn, zhdr,
 		     CHDRLEN + clen + (clen > 0 ? CCKSUMLEN : 0),
 		     TRUE);
 }
@@ -758,7 +812,7 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
       DEBUG_MESSAGE1 (DEBUG_PROTO, "fisenddata: Sending SPOS %ld",
 		      ipos);
 
-      if (! fsend_data (qdaemon->qconn, zspos,
+      if (! (*pfIsend) (qdaemon->qconn, zspos,
 			CHDRLEN + CCKSUMLEN + CCKSUMLEN, TRUE))
 	return FALSE;
 
@@ -801,7 +855,7 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
   iIsendseq = INEXTSEQ (iIsendseq);
   ++cIsent_packets;
 
-  fret = fsend_data (qdaemon->qconn, zhdr,
+  fret = (*pfIsend) (qdaemon->qconn, zhdr,
 		     cdata + CHDRLEN + (cdata > 0 ? CCKSUMLEN : 0),
 		     TRUE);
 
@@ -866,7 +920,7 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
       DEBUG_MESSAGE1 (DEBUG_PROTO, "fiwait_for_packet: Need %d bytes",
 		      (int) cneed);
 
-      if (! freceive_data (qdaemon->qconn, cneed, &crec, ctimeout, TRUE))
+      if (! (*pfIreceive) (qdaemon->qconn, cneed, &crec, ctimeout, TRUE))
 	return FALSE;
 
       if (crec != 0)
@@ -957,11 +1011,12 @@ ficheck_errors (qdaemon)
 			  "ficheck_errors: Sending SYNC packsize %d winsize %d",
 			  iIrequest_packsize, iIrequest_winsize);
 
-	  return fsend_data (qdaemon->qconn, absync,
+	  return (*pfIsend) (qdaemon->qconn, absync,
 			     CHDRLEN + 3 + CCKSUMLEN, TRUE);
 	}
 
-      ulog (LOG_ERROR, "Too many 'i' protocol errors");
+      ulog (LOG_ERROR, "Too many '%c' protocol errors",
+	    qdaemon->qproto->bname);
       return FALSE;
     }
 
@@ -1307,7 +1362,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_data: Sending ACK %d",
 			  iIrecseq);
 
-	  if (! fsend_data (qdaemon->qconn, aback, CHDRLEN, TRUE))
+	  if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
 	    return FALSE;
 	}
     }
@@ -1450,7 +1505,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	clen = CHDRCON_GETBYTES (zsend[IHDR_CONTENTS1],
 				 zsend[IHDR_CONTENTS2]);
 
-	return fsend_data (qdaemon->qconn, zsend,
+	return (*pfIsend) (qdaemon->qconn, zsend,
 			   CHDRLEN + clen + (clen > 0 ? CCKSUMLEN : 0),
 			   TRUE);
       }

@@ -894,6 +894,7 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
 	{
 	  fprintf (e, "protocol-parameter g window 7\n");
 	  fprintf (e, "protocol-parameter g packet-size 4096\n");
+	  fprintf (e, "protocol-parameter j avoid \\377\n");
 	}
       if (zProtocols != NULL)
 	fprintf (e, "protocol %s\n", zProtocols);
