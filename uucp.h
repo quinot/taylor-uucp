@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/10  19:24:22  ian
+   Added pffile protocol entry point for file level control
+
    Revision 1.5  1991/11/07  20:32:04  ian
    Chip Salzenberg: allow ANSI_C to be defined in conf.h
 
@@ -144,7 +147,7 @@ typedef FILE *openfile_t;
 #define cfileread(e, z, c) fread ((z), 1, (c), (e))
 #define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
-#define ffilerewind(e) (rewind (e), ferror (e))
+#define ffilerewind(e) (fseek (e, (long) 0, SEEK_SET) == 0)
 #define ffileclose(e) (fclose (e) == 0)
 #else
 typedef int openfile_t;
