@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.38  1992/03/15  01:54:46  ian
+   All execs are now done in isspawn, all waits are done in iswait
+
    Revision 1.37  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -332,7 +335,7 @@ main (argc, argv)
 	    }
 
 	  /* If we've received a signal, get out of the loop.  */
-	  if (iSignal != 0)
+	  if (FGOT_SIGNAL ())
 	    break;
 
 	  zcopy = xstrdup (z);
@@ -349,14 +352,14 @@ main (argc, argv)
 
       usysdep_get_xqt_free ();
     }
-  while (fany && iSignal == 0);
+  while (fany && ! FGOT_SIGNAL ());
 
   (void) fsysdep_unlock_uuxqt (iQunlock_seq, zcmd);
   iQunlock_seq = -1;
 
   ulog_close ();
 
-  if (iSignal != 0)
+  if (FGOT_SIGNAL ())
     ferr = TRUE;
 
   usysdep_exit (! ferr);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.80  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.79  1992/03/11  19:53:55  ian
    Improved chat script debugging
 
@@ -584,7 +587,7 @@ main (argc, argv)
 	  fret = TRUE;
 	  fdidone = FALSE;
 	  uread_all_system_info (&csystems, &pas);
-	  for (i = 0; i < csystems && iSignal == 0; i++)
+	  for (i = 0; i < csystems && ! FGOT_SIGNAL (); i++)
 	    {
 	      if (fsysdep_has_work (&pas[i], &bgrade))
 		{
@@ -616,11 +619,10 @@ main (argc, argv)
 		      fLocked_system = TRUE;
 		      if (! fcall (&pas[i], qport, fforce, bgrade))
 			fret = FALSE;
-#ifdef SIGHUP
+
 		      /* Now ignore any SIGHUP that we got.  */
-		      if (iSignal == SIGHUP)
-			iSignal = 0;
-#endif
+		      afSignal[INDEXSIG_SIGHUP] = FALSE;
+
 		      (void) fsysdep_unlock_system (&pas[i]);
 		      fLocked_system = FALSE;
 		    }
@@ -682,13 +684,11 @@ main (argc, argv)
 	{
 	  if (floop)
 	    {
-	      while (iSignal == 0 && flogin_prompt (qport))
+	      while (! FGOT_SIGNAL () && flogin_prompt (qport))
 		{
-#ifdef SIGHUP
 		  /* Now ignore any SIGHUP that we got.  */
-		  if (iSignal == SIGHUP)
-		    iSignal = 0;
-#endif
+		  afSignal[INDEXSIG_SIGHUP] = FALSE;
+
 		  if (fLocked_system)
 		    {
 		      (void) fsysdep_unlock_system (&sLocked_system);
@@ -733,13 +733,11 @@ main (argc, argv)
   ulog_close ();
   ustats_close ();
 
-#ifdef SIGTERM
   /* If we got a SIGTERM, perhaps because the system is going down,
      don't run uuxqt.  We go ahead and run it for any other signal,
      since I think they indicate more temporary conditions.  */
-  if (iSignal == SIGTERM)
+  if (afSignal[INDEXSIG_SIGTERM])
     fuuxqt = FALSE;
-#endif
 
   if (fuuxqt)
     {
@@ -3294,7 +3292,7 @@ zget_typed_line ()
 
       /* Now b == -1 on timeout, -2 on error.  */
 
-      if (b == -2 || iSignal != 0)
+      if (b == -2 || FGOT_SIGNAL ())
 	{
 #if DEBUG > 1
 	  if (FDEBUGGING (DEBUG_CHAT))

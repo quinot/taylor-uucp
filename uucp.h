@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.56  1992/03/12  21:58:32  ian
+   Added padding byte to scmd
+
    Revision 1.55  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -1281,15 +1284,52 @@ extern struct ssysteminfo sLocalsys;
    time.  */
 extern int cMaxuuxqts;
 
-/* This gets set to the signal which is causing us to abort.  It is
-   only set by an asynchronous signal.  At various appropriate points
-   it is checked for being non-zero.  */
-extern volatile sig_atomic_t iSignal;
+/* When a signal occurs, the signal handlers sets the appropriate
+   element of the arrays afSignal and afLog_signal to TRUE.  The
+   afSignal array is used to check whether a signal occurred.  The
+   afLog_signal array tells ulog to log the signal; ulog will clear
+   the element after logging it, which means that if a signal comes in
+   at just the right moment it will not be logged.  It will always be
+   recorded in afSignal, though.  At the moment we handle 5 signals:
+   SIGHUP, SIGINT, SIGQUIT, SIGTERM and SIGPIPE (the Unix code also
+   handles SIGALRM).  If we want to handle more, the afSignal array
+   must be extended; I see little point to handling any of the other
+   ANSI C or POSIX signals, as they are either unlikely to occur
+   (SIGABRT, SIGUSR1) or nearly impossible to handle cleanly (SIGILL,
+   SIGSEGV).  */
+#define INDEXSIG_SIGHUP (0)
+#define INDEXSIG_SIGINT (1)
+#define INDEXSIG_SIGQUIT (2)
+#define INDEXSIG_SIGTERM (3)
+#define INDEXSIG_SIGPIPE (4)
+#define INDEXSIG_COUNT (5)
 
-/* This gets set to FALSE when a signal occurs, and set to TRUE after
-   a report of the signal has been put in the log file.  This means
-   that only the most recent signal will be logged.  Too bad.  */
-extern volatile sig_atomic_t fSignal_logged;
+extern volatile sig_atomic_t afSignal[INDEXSIG_COUNT];
+extern volatile sig_atomic_t afLog_signal[INDEXSIG_COUNT];
+
+/* The names of the signals to use in error messages, as an
+   initializer for an array.  */
+#define INDEXSIG_NAMES \
+  { "hangup", "interrupt", "quit", "termination", "SIGPIPE" }
+
+/* Check to see whether we've received a signal.  It would be nice if
+   we could use a single variable for this, but we sometimes want to
+   clear our knowledge of a signal and that would cause race
+   conditions (clearing a single element of the array is not a race
+   assuming that we don't care about a particular signal, even if it
+   occurs after we've examined the array).  */
+#define FGOT_SIGNAL() \
+  (afSignal[INDEXSIG_SIGHUP] || afSignal[INDEXSIG_SIGINT] \
+   || afSignal[INDEXSIG_SIGQUIT] || afSignal[INDEXSIG_SIGTERM] \
+   || afSignal[INDEXSIG_SIGPIPE])
+
+/* If we get a SIGINT in uucico, we continue the current communication
+   session but don't start any new ones.  This macros checks for any
+   signal other than SIGINT, which means we should get out
+   immediately.  */
+#define FGOT_QUIT_SIGNAL() \
+  (afSignal[INDEXSIG_SIGHUP] || afSignal[INDEXSIG_SIGQUIT] \
+   || afSignal[INDEXSIG_SIGTERM] || afSignal[INDEXSIG_SIGPIPE])
 
 /* File being sent.  */
 extern openfile_t eSendfile;

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/03/11  22:06:37  ian
+   Marty Shannon: added max-uuxqts command
+
    Revision 1.29  1992/03/11  17:04:53  ian
    Jon Zeeff: retry execution later if temporary failure
 
@@ -170,11 +173,11 @@ extern const char *zsysdep_local_name P((void));
    a static buffer.  */
 extern const char *zsysdep_login_name P((void));
 
-/* Set a signal handler for a signal.  If the signal occurs, iSignal
-   should be set to the signal number and fSignal_logged should be set
-   to FALSE.  This routine might be able to just use signal, but 4.3
-   BSD requires more complex handling.  This is called before
-   usysdep_initialize.  */
+/* Set a signal handler for a signal.  If the signal occurs, the
+   appropriate element of afSignal should be set to the signal number
+   (see the declaration of afSignal in uucp.h).  This routine might be
+   able to just use signal, but 4.3 BSD requires more complex
+   handling.  This is called before usysdep_initialize.  */
 extern void usysdep_signal P((int isig));
 
 /* Catch a signal.  This is actually defined as a macro in the system

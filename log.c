@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.25  1992/03/08  16:42:41  ian
    Ted Lindgreen: report port and login name in log file
 
@@ -172,15 +175,20 @@ static boolean fLdebug_tried;
 /* The open statistics file.  */
 static FILE *eLstats;
 
-/* The signal number we received.  This is only set by usignal, which
-   installed as a signal handler by several programs but never
-   otherwise called.  */
-volatile sig_atomic_t iSignal;
+/* The array of signals.  The elements are only set to TRUE by the
+   default signal handler.  They are only set to FALSE if we don't
+   care whether we got the signal or not.  */
+volatile sig_atomic_t afSignal[INDEXSIG_COUNT];
 
-/* Whether we've logged the most recently received signal.  We don't
-   want to call ulog from the signal handler because fprintf might not
-   be reentrant.  */
-volatile sig_atomic_t fSignal_logged;
+/* The array of signals to log.  The elements are only set to TRUE by
+   the default signal handler.  They are set to FALSE when the signal
+   is logged in ulog.  This means that if a signal comes in at just
+   the right time we won't log it (or, rather, we'll log it once
+   instead of twice), but that is not a catatrophe.  */
+volatile sig_atomic_t afLog_signal[INDEXSIG_COUNT];
+
+/* Signal names to use when logging signals.  */
+static const char * const azSignal_names[INDEXSIG_COUNT] = INDEXSIG_NAMES;
 
 /* Set the function to call on a LOG_FATAL error.  */
 
@@ -303,19 +311,28 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   /* Log any received signal.  We do it this way to avoid calling ulog
      from the signal handler.  ulog_close might call ulog to get this
      message out with zmsg == NULL.  */
-  if (iSignal != 0 && ! fSignal_logged)
-    {
-      fSignal_logged = TRUE;
-#ifdef SIGHUP
-      if (iSignal == SIGHUP)
-	ulog (LOG_ERROR, "Got hangup signal");
-      else
-#endif
-	ulog (LOG_ERROR, "Got signal %d", iSignal);
+  {
+    static boolean fdoing_sigs;
 
-      if (zmsg == NULL)
-	return;
-    }
+    if (! fdoing_sigs)
+      {
+	int isig;
+
+	fdoing_sigs = TRUE;
+	for (isig = 0; isig < INDEXSIG_COUNT; isig++)
+	  {
+	    if (afLog_signal[isig])
+	      {
+		afLog_signal[isig] = FALSE;
+		ulog (LOG_ERROR, "Got %s signal", azSignal_names[isig]);
+	      }
+	  }
+	fdoing_sigs = FALSE;
+      }
+  }
+
+  if (zmsg == NULL)
+    return;
 
   if (! fLfile)
     e = stderr;
@@ -540,9 +557,17 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 void
 ulog_close ()
 {
+  int i;
+
   /* Make sure we logged any signal we received.  */
-  if (iSignal != 0 && ! fSignal_logged)
-    ulog (LOG_ERROR, (const char *) NULL);
+  for (i = 0; i < INDEXSIG_COUNT; i++)
+    {
+      if (afLog_signal[i])
+	{
+	  ulog (LOG_ERROR, (const char *) NULL);
+	  break;
+	}
+    }
 
   if (eLlog != NULL)
     {

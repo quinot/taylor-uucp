@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/03/12  21:55:09  ian
+   Use fake local name when generating an execution request
+
    Revision 1.23  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -401,7 +404,7 @@ main (argc, argv)
 
   /* Process each file.  */
 
-  for (i = optind; i < argc - 1 && iSignal == 0; i++)
+  for (i = optind; i < argc - 1 && ! FGOT_SIGNAL (); i++)
     {
       struct scmd s;
 
@@ -600,7 +603,7 @@ main (argc, argv)
     }
 
   /* See if we got an interrupt, presumably from the user.  */
-  if (iSignal != 0)
+  if (FGOT_SIGNAL ())
     ucabort ();
 
   /* Now push out the actual commands, making log entries for them.  */

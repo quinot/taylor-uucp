@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.49  1992/03/15  01:54:46  ian
+   All execs are now done in isspawn, all waits are done in iswait
+
    Revision 1.48  1992/03/12  21:52:21  ian
    Corrected readdir prototype
 
@@ -437,6 +440,8 @@ struct ssysdep_serial_port
   int oholdread;
   /* Hold the real write descriptor when using a dialer device.  */
   int oholdwrite;
+  /* TRUE if we shouldn't worry if we've received any signals.  */
+  boolean fsigsok;
   /* TRUE if this is a terminal and the remaining fields are valid.  */
   boolean fterminal;
   /* Baud rate.  */
@@ -485,9 +490,9 @@ struct ssysdep_direct_port
 extern void usset_signal P((int isig, SIGtype (*pfn) P((int)),
 			    boolean fforce, boolean *pfignored));
 
-/* Default signal handler.  This sets iSignal to the signal number and
-   sets fSignal_logged to FALSE.  If system calls are automatically
-   restarted, it may do a longjmp to an fsysdep_catch.  */
+/* Default signal handler.  This sets the appropriate element of the
+   afSignal array.  If system calls are automatically restarted, it
+   may do a longjmp to an fsysdep_catch.  */
 extern SIGtype ussignal P((int isig));
 
 /* Try to fork, repeating several times.  */
