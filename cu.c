@@ -1194,7 +1194,6 @@ fcuset_var (puuconf, zline)
 {
   char *zvar, *zval;
   char *azargs[2];
-  char azbool[2];
   int iuuconf;
 
   zvar = strtok (zline, "= \t");
@@ -1210,14 +1209,12 @@ fcuset_var (puuconf, zline)
     {
       azargs[0] = zvar;
       if (azargs[0][0] != '!')
-	azbool[0] = 't';
+	azargs[1] = zbufcpy ("t");
       else
 	{
 	  ++azargs[0];
-	  azbool[0] = 'f';
+	  azargs[1] = zbufcpy ("f");
 	}
-      azbool[1] = '\0';
-      azargs[1] = azbool;
     }
   else
     {
@@ -1229,7 +1226,7 @@ fcuset_var (puuconf, zline)
 			     (pointer) NULL, icuunrecogvar, 0,
 			     (pointer) NULL);
 
-  if (zval != NULL && (iuuconf & UUCONF_CMDTABRET_KEEP) == 0)
+  if ((iuuconf & UUCONF_CMDTABRET_KEEP) == 0)
     ubuffree (azargs[1]);
 
   if ((iuuconf &~ UUCONF_CMDTABRET_KEEP) != UUCONF_SUCCESS)
