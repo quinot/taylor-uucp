@@ -234,7 +234,11 @@ ftw (dir, func, descriptors)
   if (flag == FTW_D)
     {
       if (ret == 0)
-	ret = ftw_dir (dirs, 0, descriptors, buf, len, func);
+	{
+	  if (len == 1 && *buf == '/')
+	    len = 0;
+	  ret = ftw_dir (dirs, 0, descriptors, buf, len, func);
+	}
       if (dirs[0] != NULL)
 	{
 	  int save;
