@@ -136,7 +136,7 @@
    particular, an argument of this type is passed as the size argument
    to the malloc and realloc functions.  If size_t is not defined in
    either <stddef.h> or <sys/types.h>, you may want to give it a
-   definition here.  If you don't, the code will use int.  */
+   definition here.  If you don't, the code will use unsigned.  */
 #undef SIZE_T
 
 /* Set HAVE_TIME_T_IN_TIME_H to 1 if the type time_t is defined in

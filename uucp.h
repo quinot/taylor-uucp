@@ -84,7 +84,7 @@ typedef SIG_ATOMIC_T sig_atomic_t;
    certainly the correct type to use.  */
 #if ! HAVE_SIZE_T_IN_STDDEF_H && ! HAVE_SIZE_T_IN_TYPES_H
 #ifndef SIZE_T
-#define SIZE_T int
+#define SIZE_T unsigned
 #endif /* ! defined (SIZE_T) */
 typedef SIZE_T size_t;
 #endif /* ! HAVE_SIZE_T_IN_STDDEF_H && ! HAVE_SIZE_T_IN_TYPES_H */
