@@ -105,6 +105,9 @@ uuchk: $(UUCHKOBJS)
 tstuu: $(TSTOBJS)
 	$(CC) $(CFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
 
+sys1.o: sys1.c
+	$(CC) -c $(CFLAGS) -DLIBDIR=\"$(libdir)\" sys1.c
+
 configure-unix:
 	ln sysh.unx sysdep.h
 	ln sys1.unx sys1.c

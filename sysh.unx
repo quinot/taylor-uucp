@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/01/13  05:55:59  ian
+   Touched up a few comments
+
    Revision 1.23  1992/01/13  05:53:04  ian
    Mike Park: added HAVE_WAITPID and HAVE_WAIT4 configuration parameters
 
@@ -101,10 +104,6 @@
 #ifdef __GNUC__
  #pragma once
 #endif
-
-/* The name of the directory where uucico and uuxqt will be put.  This
-   should probably be the same as the LIBDIR variable in Makefile.  */
-#define LIBDIR "/usr/lib/uucp"
 
 /* The name of the default spool directory.  This may be overridden by
    the ``spool'' command in the configuration file.  */
