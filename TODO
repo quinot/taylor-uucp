@@ -232,3 +232,7 @@ should be.
 Lele Gaifax: put the complete year in the log file.
 
 59.
+
+John Theus: use getwd as an option for getcwd.
+
+60.
