@@ -534,10 +534,11 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
 
       if (iseq >= IMAXSEQ)
 	{
-	  *pzlog = zbufalc (sizeof "protocol '' remote packet/window / local /"
-			+ 64);
+	  *pzlog =
+	    zbufalc (sizeof "protocol '' sending packet/window / receiving /"
+		     + 64);
 	  sprintf (*pzlog,
-		   "protocol '%c' remote packet/window %d/%d local %d/%d",
+		   "protocol '%c' sending packet/window %d/%d receiving %d/%d",
 		   qdaemon->qproto->bname, (int) iIremote_packsize,
 		   (int) iIremote_winsize, (int) iIrequest_packsize,
 		   (int) iIrequest_winsize);
