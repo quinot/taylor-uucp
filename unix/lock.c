@@ -34,6 +34,7 @@ const char lock_rcsid[] = "$Id$";
 #include "system.h"
 
 #include <errno.h>
+#include <ctype.h>
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -273,6 +274,25 @@ fsdo_lock (zlock, fspooldir, pferr)
 	  zerr = "read";
 	  break;
 	}
+
+#if DEBUG > 0
+#if HAVE_V2_LOCKFILES
+      {
+	char ab[10];
+
+	if (read (o, ab, sizeof ab) > 4
+	    && isdigit (BUCHAR (ab[0])))
+	  ulog (LOG_ERROR,
+		"Lock file %s may be HDB format; check LOCKFILES in policy.h",
+		zpath);
+      }
+#else
+      if (cgot == 4)
+	ulog (LOG_ERROR,
+	      "Lock file %s may be V2 format; check LOCKFILES in policy.h",
+	      zpath);
+#endif
+#endif /* DEBUG > 0 */
 
 #if HAVE_QNX_LOCKFILES
       ab[cgot] = '\0';
