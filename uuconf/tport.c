@@ -1,7 +1,7 @@
 /* tport.c
    Find a port in the Taylor UUCP configuration files.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -290,6 +290,10 @@ ipunknown (pglobal, argc, argv, pvar, pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_port *qport = (struct uuconf_port *) pinfo;
+  int iret;
 
-  return _uuconf_iport_cmd (qglobal, argc, argv, qport);
+  iret = _uuconf_iport_cmd (qglobal, argc, argv, qport);
+  if (UUCONF_ERROR_VALUE (iret) != UUCONF_SUCCESS)
+    iret |= UUCONF_CMDTABRET_EXIT;
+  return iret;
 }
