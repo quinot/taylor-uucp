@@ -342,7 +342,7 @@ main (argc, argv)
 
 	case 'y':
 	  /* List jobs younger than given number of hours.  */
-	  iyounghours = (int) (optarg, (char **) NULL, 10);
+	  iyounghours = (int) strtol (optarg, (char **) NULL, 10);
 	  break;
 
 	case 0:
