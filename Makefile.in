@@ -998,9 +998,9 @@ uusched: uusched.in Makefile
 uuto: uuto.in Makefile
 	-rm -f $@ uuto.t
 	if [ "x$(POUNDBANG)" = "xno" ]; then \
-	  sed -e 's,#!/bin/sh,:,' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto.t; \
+	  sed -e 's,#!/bin/sh,:,' -e 's,@BINDIR@,$(bindir),' -e 's,@VERS@,$(VERSION),' < $(srcdir)/uuto.in > uuto.t; \
 	else \
-	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto.t; \
+	  sed -e 's,@BINDIR@,$(bindir),' -e 's,@VERS@,$(VERSION),' < $(srcdir)/uuto.in > uuto.t; \
 	fi
 	chmod 0555 uuto.t
 	mv -f uuto.t $@

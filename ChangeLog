@@ -1,5 +1,9 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* uuto.in: Add support for --version and --help options.
+	* Makefile.am (uuto): Substitute version number for @VERS@.
+	* Makefile.in: Rebuild.
+
 	* Marcus Shang: unix/xqtsub.c (fsysdep_execute): If the output
 	file is in the spool directory, create subdirectories if
 	necessary.
