@@ -665,6 +665,10 @@ uusage ()
   fprintf (stderr,
 	   " -q: Don't start uuxqt when done\n");
   fprintf (stderr,
+	   " -c: Don't warn if call is attempted at a bad time\n");
+  fprintf (stderr,
+	   " -D: Don't detach from controlling terminal\n");
+  fprintf (stderr,
 	   " -x,-X debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
