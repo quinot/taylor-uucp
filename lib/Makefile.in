@@ -15,7 +15,7 @@ RANLIB = @RANLIB@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS=-I$(srcdir)/..
+MORECFLAGS = -I$(srcdir)/.. -I..
 
 OBJS = buffer.o crc.o debug.o escape.o getopt.o getop1.o spool.o \
 	status.o xfree.o xmall.o xreall.o \
@@ -29,7 +29,7 @@ distclean: clean
 	rm -f Makefile
 
 mostlyclean: clean
-realclean: clean
+realclean: distclean
 
 libuucp.a: $(OBJS)
 	rm -f libuucp.a
@@ -48,7 +48,7 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h
+$(OBJS): $(srcdir)/../uucp.h ../conf.h $(srcdir)/../policy.h
 
 buffer.o: $(srcdir)/../uudefs.h
 crc.o: $(srcdir)/../prot.h

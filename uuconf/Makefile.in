@@ -22,7 +22,7 @@ LN_S = @LN_S@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS = -I$(srcdir) -I$(srcdir)/.. -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
+MORECFLAGS = -I$(srcdir) -I. -I$(srcdir)/.. -I.. -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
 
 OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o callin.o \
 	calout.o chatc.o cmdarg.o cmdfil.o cmdlin.o debfil.o deblev.o \
@@ -52,23 +52,20 @@ syshdr.h: syshdr.unx
 	$(LN_S) $(srcdir)/syshdr.unx syshdr.h
 
 clean:
-	rm -f $(OBJS) libuuconf.a
+	rm -f $(OBJS) libuuconf.a syshdr.h
 
 distclean: clean
-	rm -f conf.h config.status
+	rm -f Makefile
 
-# My build targets; not expected to work elsewhere.
-
-dist:
-	mkdir ../uucp-$(VERSION)/uuconf
-	ln `cat MANIFEST` ../uucp-$(VERSION)/uuconf
+mostlyclean: clean
+realclean: distclean
 
 Makefile: Makefile.in
-	(cd $(srcdir)/..; sh config.status)
+	(cd ..; sh config.status)
 
 # Header file dependencies
 
-$(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+$(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h ../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
 
 addblk.o: alloc.h
 allblk.o: alloc.h

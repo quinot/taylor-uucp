@@ -241,11 +241,11 @@ uudir: uudir.o $(UULIBS)
 	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
 
 uuconv.o: uuconv.c
-	$(CC) -c $(CFLAGS) $(MORECFLAGS) -I$(srcdir)/uuconf uuconv.c
+	$(CC) -c $(CFLAGS) $(MORECFLAGS) -I$(srcdir)/uuconf -Iuuconf $(srcdir)/uuconv.c
 
 sysdep.h: sysh.unx
 	rm -f sysdep.h
-	$(LN_S) sysh.unx sysdep.h
+	$(LN_S) $(srcdir)/sysh.unx sysdep.h || cp $(srcdir)/sysh.unx sysdep.h
 
 uuconf/libuuconf.a: FORCE
 	(cd uuconf; $(MAKE) $(MDEFINES) libuuconf.a)
@@ -259,12 +259,28 @@ lib/libuucp.a: FORCE
 FORCE:
 
 clean:
-	rm -f $(ALLOBJS) $(PROGRAMS) tstuu
-	rm -f uucp-$(VERSION).tar.Z
+	(cd unix; $(MAKE) $(MDEFINES) clean)
+	(cd uuconf; $(MAKE) $(MDEFINES) clean)
+	(cd lib; $(MAKE) $(MDEFINES) clean)
+	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
+	rm -f taylor-uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
 
+distclean:
+	(cd unix; $(MAKE) $(MDEFINES) distclean)
+	(cd uuconf; $(MAKE) $(MDEFINES) distclean)
+	(cd lib; $(MAKE) $(MDEFINES) distclean)
+	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
+	rm -f taylor-uucp-$(VERSION).tar.Z
+	rm -rf uucp-$(VERSION)
+	rm -f Makefile conf.h conf.h.stamp config.status
+
+mostlyclean: clean
+
+realclean: distclean
+
 # The distribution targets are mostly for my own use; they are not
-# expected to work on other systems.
+# expected to work on all other systems.
 
 dist:
 	-rm -rf uucp-$(VERSION)
@@ -306,13 +322,6 @@ config.status: configure
 
 configure: configure.in
 	autoconf
-
-# GNU standards want these targets
-
-mostlyclean: clean
-
-realclean: clean
-	rm conf.h
 
 TAGS:
 	etags *.h *.c

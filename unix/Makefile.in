@@ -19,7 +19,7 @@ UUDIRFLAGS =
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS=-I$(srcdir)/.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
+MORECFLAGS = -I$(srcdir)/.. -I.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
 OBJS = access.o addbas.o app3.o app4.o basnam.o cwd.o chmod.o cusub.o \
 	detach.o efopen.o epopen.o exists.o filnam.o indir.o init.o \
@@ -39,7 +39,7 @@ distclean: clean
 	rm -f Makefile
 
 mostlyclean: clean
-realclean: clean
+realclean: distclean
 
 libunix.a: $(OBJS)
 	rm -f libunix.a
@@ -58,7 +58,7 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../sysdep.h
+$(OBJS): $(srcdir)/../uucp.h ../conf.h $(srcdir)/../policy.h ../sysdep.h
 
 access.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 addbas.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
