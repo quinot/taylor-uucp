@@ -736,3 +736,7 @@ than the timeout time.  Of course people can always change the
 parameters, but it would be nice if this were dealt with somehow.
 
 236.
+
+Andrew A. Chernov: Perhaps uuxqt should log when it terminates.
+
+237.
