@@ -550,7 +550,7 @@ fvstart (qdaemon, pzlog)
      char **pzlog;
 {
   if (iGrequest_packsize == IPACKSIZE)
-    iGrequest_packsize = 512;
+    iGrequest_packsize = 1024;
   return fgstart (qdaemon, pzlog);
 }  
 
