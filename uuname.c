@@ -35,16 +35,22 @@ const char uuname_rcsid[] = "$Id$";
 #include "uuconf.h"
 #include "system.h"
 
-/* The program name.  */
-char abProgram[] = "uuname";
-
 /* Local functions.  */
 
 static void unusage P((void));
-static void unuuconf_error P((pointer puuconf, int iuuconf));
+static void unhelp P((void));
 
 /* Long getopt options.  */
-static const struct option asNlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asNlongopts[] =
+{
+  { "aliases", no_argument, NULL, 'a' },
+  { "local", no_argument, NULL, 'l' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -61,7 +67,9 @@ main (argc, argv)
   pointer puuconf;
   int iuuconf;
 
-  while ((iopt = getopt_long (argc, argv, "alI:x:", asNlongopts,
+  zProgram = argv[0];
+
+  while ((iopt = getopt_long (argc, argv, "alI:vx:", asNlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -89,13 +97,28 @@ main (argc, argv)
 #endif
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  unhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  unusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -104,7 +127,7 @@ main (argc, argv)
 
   iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
   if (iuuconf != UUCONF_SUCCESS)
-    unuuconf_error (puuconf, iuuconf);
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
 #if DEBUG > 1
   {
@@ -132,7 +155,7 @@ main (argc, argv)
 	    usysdep_exit (FALSE);
 	}
       else if (iuuconf != UUCONF_SUCCESS)
-	unuuconf_error (puuconf, iuuconf);
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
       printf ("%s\n", zlocalname);
     }
   else
@@ -141,7 +164,7 @@ main (argc, argv)
 
       iuuconf = uuconf_system_names (puuconf, &pznames, falias);
       if (iuuconf != UUCONF_SUCCESS)
-	unuuconf_error (puuconf, iuuconf);
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
       for (pz = pznames; *pz != NULL; pz++)
 	printf ("%s\n", *pz);
@@ -162,31 +185,30 @@ unusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uuname [-a] [-l] [-I file]\n");
-  fprintf (stderr,
-	   " -a: display aliases\n");
-  fprintf (stderr,
-	   " -l: print local name\n");
-#if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
-#endif /* HAVE_TAYLOR_CONFIG */
+	   "Usage: %s [-a] [-l] [-I file]\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
   exit (EXIT_FAILURE);
 }
 
-/* Display a uuconf error and exit.  */
+/* Print a help message.  */
 
-static void
-unuuconf_error (puuconf, iret)
-     pointer puuconf;
-     int iret;
+static void unhelp ()
 {
-  char ab[512];
-
-  (void) uuconf_error_string (puuconf, iret, ab, sizeof ab);
-  if ((iret & UUCONF_ERROR_FILENAME) == 0)
-    fprintf (stderr, "uuname: %s\n", ab);
-  else
-    fprintf (stderr, "uuname:%s\n", ab);
-  exit (EXIT_FAILURE);
+  fprintf (stderr,
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	   VERSION);
+  fprintf (stderr,
+	   "Usage: %s [-a] [-l] [-I file]\n", zProgram);
+  fprintf (stderr,
+	   " -a,--aliases: display aliases\n");
+  fprintf (stderr,
+	   " -l,--local: print local name\n");
+#if HAVE_TAYLOR_CONFIG
+  fprintf (stderr,
+	   " -I,--config file: Set configuration file to use\n");
+#endif /* HAVE_TAYLOR_CONFIG */
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help and exit\n");
 }
