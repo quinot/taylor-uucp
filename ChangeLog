@@ -1,3 +1,197 @@
+Tue Jan 21 14:37:10 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* Released version 1.02.
+
+	* system.h, uucico.c (main), uux.c (main), uucp.c (main,
+	zcone_system), sys1.unx (fsysdep_run): Chip Salzenberg: have uucp
+	and uux start up uucico -s system rather than uucico -r1.
+
+Mon Jan 20 11:45:38 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* sys1.unx (fsysdep_make_dirs): don't try to create a directory
+	with no name.
+
+	* version.c: change version number to 1.02.
+
+	* uucico.8, uuxqt.8, uucp.1, uux.1: change version number to 1.02.
+
+	* MANIFEST: removed texinfo.tex; it's twice the size of any other
+	file, so I think it's just to large to distribute.
+
+	* uucico.c (fcall, fdo_call): Marty Shannon: update the time in
+	the .Status file if it's the wrong time to call, and upon
+	receiving a call.
+
+Sun Jan 19 13:29:23 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* protg.c (fgsendcmd, fgsenddata): Dave Platt: if the remote UUCP
+	accepts packets larger than 64 bytes, assume it can handle
+	differing packet sizes, so if we have a small amount of data to
+	send, use a small packet.  Besides the two routines mentioned,
+	also made minor changes to other routines to get the packet length
+	out of the packet data rather than always assuming the same packet
+	size.
+
+	* conf.h, uucp.h: Matthew Lyle: some systems don't declare errno
+	in <errno.h>, so I added HAVE_ERRNO_DECLARATION.
+
+	* conf.h, uucp.h, util.c (bsearch): added HAVE_BSEARCH
+	configuration parameter.
+
+Sat Jan 18 17:45:28 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* tstuu.c (utransfer): Mike Park: don't sleep when the input
+	buffer is full; it's too slow.
+
+	* Makefile: when making a distribution,change the mode of separate
+	copies of the configuration files Makefile, conf.h and sysh.unx.
+
+	* uucico.c (faccept_call): Marty Shannon: update .Status file on
+	incoming calls.
+
+	* uucp.h, prot.h, uucico.c (fuucp), prot.c (fsend_file,
+	fpsendfile_confirm, freceive_file, fprecfile_confirm, fxcmd,
+	ustats_failed), file.c (fsent_file, usendfile_error,
+	freceived_file, urecfile_error, frecfile_rewind, fmail_transfer):
+	reworked calls to fsydep_did_work and sending of mail messages to
+	be more sensible.  Now sends mail to requestor if request fails
+	permanently and does not remove file if request fails only
+	temporarily.
+
+Thu Jan 16 11:33:08 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* protg.c (fgsendcmd, fgsenddata): zero out unused bytes in short
+	packets.
+
+	* prot.c (zgetcmd), protf.c (ffsendcmd), prott.c (ftsendcmd),
+	prote.c (fesendcmd): Niels Baggesen: added some debugging
+	messages.
+
+	* protg.c (fgsendcmd): corrected misspelling in debugging message.
+
+	* log.c (ustats): Niels Baggesen: add FAILED to end of xferstats
+	line if appropriate.
+
+	* uuxqt.c (uqdo_xqt_file): Niels Baggesen: was checking strcmp
+	return value incorrectly, so messages to other systems were not
+	being sent.
+
+	* sys2.unx, tstuu.c: Mike Park: ioctl is sometimes declared
+	varadic, so we can't declare it.
+
+Wed Jan 15 02:03:43 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* sys1.unx: put \n at end of fsysdep_run error message.
+
+	* sysh.unx, sys1.unx, sys2.unx, tstuu.c: Mike Park: on some
+	systems <sys/time.h> includes <time.h> but <time.h> can only be
+	included once; added HAVE_SYS_TIME_AND_TIME_H to sysh.unx.
+
+	* tstuu.c: Mike Park: removed prototype for times since some
+	systems don't have clock_t.
+
+	* conf.h, sys2.unx, util.c: Mike Park: some systems don't have
+	<limits.h>.  Every macro used from it already had a check to make
+	sure it was defined anyhow.
+
+	* tstuu.c (uprepare_test): Mike Park: sh on NeXT interprets a
+	leading ~, so we have to quote the argument to system(3).
+	Incredible.
+
+	* conf.h, uucp.h: Mike Park: if HAVE_ALLOCA is 0 when compiling
+	with gcc, don't define alloca as a macro.  This will let the NeXT
+	define it in some header file.
+
+	* sysh.unx, sys2.unx, sys5.unx, tstuu.c: Mike Park: handle
+	HAVE_UNION_WAIT completely.  Assume that system(3) returns an int
+	which should be put into the w_status field.  Define macros for
+	union wait if they are not already defined.  Move all this stuff
+	into sysh.unx rather than duplicating it in three different files.
+
+	* conf.h, uucp.h, sysh.unx, config.c, bnu.c, v2.c, uucico.c,
+	uuxqt.c, uux.c, uucp.c, uuchk.c, Makefile: set directory to look
+	for configuration files in in Makefile rather than in sysh.unx.
+	This forced a number of changes, as now all new style
+	configuration files are looked up using NEWCONFIGLIB.  Old style
+	configuration files are looked up using OLDCONFIGLIB.
+
+Mon Jan 13 00:35:43 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* sys3.unx: David Nugent: don't declare chmod, since it may be
+	prototyped to take an argument that is smaller than an int.
+
+	* uucico.c (faccept_call): Chip Salzenberg: only declare sportinfo
+	if it will be used (if HAVE_TAYLOR_CONFIG is true).
+
+	* sys3.unx (isysdep_get_sequence): Chip Salzenberg: avoid use
+	before set warning from gcc.
+
+	* protf.c (ffprocess_data): Chip Salzenberg: avoid use before set
+	warning from gcc.
+
+	* sysh.unx, sys2.unx (fsserial_read, usysdep_pause): Chip
+	Salzenberg: added HAVE_USLEEP configuration parameter for the AIX
+	usleep routine.
+
+	* uuchk.c, prtinf.c, config.c: Chip Salzenberg: strcmp is a macro
+	on AIX, so avoid declaring it and undef it in config.c where we
+	want to declare it because we want to take its address.
+
+	* uucp.h, sys3.unx (fsysdep_get_status, fsysdep_set_status): Chip
+	Salzenberg: handle out of range status codes in status files.
+
+	* Makefile, sysh.unx: defined LIBDIR in the Makefile, rather than
+	forcing the user to define it in two different places.
+
+	* sys.unx, tstuu.c: Chip Salzenberg: can't declare execl, since it
+	is varadic.
+
+	* sys1.unx, sys2.unx, sys3.unx, sys5.unx, tstuu.c: David Nugent:
+	can't declare open or fcntl, since they may use ... in header file
+	prototype; added declaration for popen; added casts of first mkdir
+	argument to char *.
+
+	* sysh.unx, tstuu.c (uchild): Mike Park: added HAVE_WAITPID and
+	HAVE_WAIT4 configuration parameters to allow the use of wait4 as
+	found on the NeXT.
+
+	* tstuu.c (uprepare_test): Mike Park: use IPUBLIC_DIRECTORY_MODE
+	rather than S_IRWXU | S_IRWXG | S_IRWXO.
+
+	* sysinf.c (tisystem): Mike Park: ulog was being passed the wrong
+	number of arguments.
+
+Sun Jan 12 14:32:47 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* Eliminated CONFIG, INSTALL and THANKS.  They are now included in
+	uucp.texi.  Changed README and MANIFEST accordingly.  Added
+	uucp.info* and texinfo.tex to MANIFEST.
+
+	* Makefile, uucp.texi: renamed taylor.texi to uucp.texi.
+
+	* uucico.c (fcall, fdo_call): John Antypas: pass in sportinfo
+	structure for fdo_call to use for an unknown port.
+
+	* log.c (ulog): allocate enough bytes to name file if
+	HAVE_BNU_LOGGING is in use but zLogfile has no %s.
+
+Sat Jan 11 12:11:56 1992  Ian Lance Taylor  (ian at comton.airs.com)
+
+	* Makefile: changed to correspond to GNU standards, according to
+	standards.text of 24 Nov 91.
+
+	* Makefile: Franc,ois Pinard: use $(INSTALL_PROGRAM) and
+	$(INSTALL) rather than cp to install the programs.
+
+	* time.c (ftime_now), sys1.unx (usysdep_localtime): John Antypas:
+	use memcpy to get the result of localtime rather than relying on
+	structure assignment.
+
+	* sysh.unx, prtinf.c: Hannu Strang: changed definition of
+	SYSDEP_STDIN_CMDS to pass structure instead of address of
+	structure to avoid bug in AIX compiler which causes it to fail to
+	recognize an address constant containing the -> operator.
+
 Tue Jan  7 10:22:43 1992  Ian Lance Taylor  (ian at comton.airs.com)
 
 	* Released beta 1.02.
@@ -46,7 +240,7 @@ Fri Jan  3 00:44:59 1992  Ian Lance Taylor  (ian at comton.airs.com)
 	(fsysdep_xqt_check_file): David J. Fiander: make sure that if an
 	argument looks like a filename we are permitted to access it.
 
-	* sys3.unx (fsdo_lock): remove temporary file is link fails in
+	* sys3.unx (fsdo_lock): remove temporary file if link fails in
 	fsdo_lock.
 
 Thu Jan  2 00:01:53 1992  Ian Lance Taylor  (ian at comton.airs.com)
