@@ -250,7 +250,8 @@ main (argc, argv)
 
       /* We need a system to find a HDB log file.  */
       if (zsystem == NULL)
-	ulusage ();
+	ulog (LOG_FATAL,
+	      "system name (-s argument) required for HDB format log files");
 
       if (fuuxqt)
 	zprogram = "uuxqt";
@@ -263,6 +264,9 @@ main (argc, argv)
 		      + 1);
       sprintf (zalc, zlogfile, zprogram, zsystem);
       zfile = zalc;
+
+      if (! fsysdep_file_exists (zfile))
+	ulog (LOG_FATAL, "no log file available for system %s", zsystem);
 
       if (strcmp (zsystem, "ANY") == 0)
 	zsystem = NULL;
