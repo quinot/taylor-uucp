@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/03/17  01:03:03  ian
+   Miscellaneous cleanup
+
    Revision 1.21  1992/03/16  21:21:59  ian
    Scott Ballantyne: go ahead and send an illegal send script character
 
@@ -1312,12 +1315,16 @@ fcprogram (zprogram, qsys, qdial, zphone, zport, ibaud)
 	  }
 	  break;
 	case 'Y':
-	  if (zport == NULL)
+	  if (zLdevice == NULL && zport == NULL)
 	    {
 	      ulog (LOG_ERROR, "chat-program: Illegal use of \\Y");
 	      return FALSE;
 	    }
-	  zadd = zport;
+	  /* zLdevice will generally make more sense than zport, but
+	     it might not be set yet.  */
+	  zadd = zLdevice;
+	  if (zadd == NULL)
+	    zadd = zport;
 	  break;
 	case 'Z':
 	  if (qsys == NULL)
