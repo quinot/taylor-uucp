@@ -43,15 +43,21 @@ static void upmovedir P((const char *zfull, const char *zrelative,
 			 pointer pinfo));
 static void upmove P((const char *zfrom, const char *zto));
 
-/* The program name.  */
-char abProgram[] = "uupick";
-
 /* Long getopt options.  */
-static const struct option asPlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asPlongopts[] =
+{
+  { "system", required_argument, NULL, 's' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 /* Local functions.  */
 
 static void upusage P((void));
+static void uphelp P((void));
 
 int
 main (argc, argv)
@@ -72,7 +78,9 @@ main (argc, argv)
   char ab[1000];
   boolean fquit;
 
-  while ((iopt = getopt_long (argc, argv, "I:s:x:", asPlongopts,
+  zProgram = "uupick";
+
+  while ((iopt = getopt_long (argc, argv, "I:s:vx:", asPlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -95,13 +103,28 @@ main (argc, argv)
 #endif
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  uphelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  upusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -279,25 +302,37 @@ main (argc, argv)
   return 0;
 }
 
-/* Print usage message.  */
+/* Print usage message and die.  */
 
 static void
 upusage ()
 {
   fprintf (stderr,
+	   "Usage: %s [-s system] [-I config] [-x debug]\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
+  exit (EXIT_FAILURE);
+}
+
+/* Print help message.  */
+
+static void
+uphelp ()
+{
+  fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uupick [-s system] [-I config] [-x debug]\n");
+	   " -s,--system system: Only consider files from named system\n");
   fprintf (stderr,
-	   " -s system: Only consider files from named system\n");
-  fprintf (stderr,
-	   " -x debug: Set debugging level\n");
+	   " -x,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
+	   " -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  exit (EXIT_FAILURE);
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help and exit\n");
 }
 
 /* This routine is called by usysdep_walk_tree when moving the
