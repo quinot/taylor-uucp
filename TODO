@@ -279,3 +279,7 @@ If a file cannot be sent for some reason, save it off somewhere so
 that it can be retrieved and examined later.
 
 92.
+
+Include Bob Denny's log file rotation shell script?
+
+93.
