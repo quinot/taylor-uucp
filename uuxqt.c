@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/19  02:30:37  ian
+   From Chip Salzenberg: check whether signal is ignored differently
+
    Revision 1.1  1991/09/10  19:40:31  ian
    Initial revision
 
@@ -335,14 +338,16 @@ static boolean fQsuccess_ack;
 /* This is set by the B flag, meaning that command input should be
    mailed to the requestor if an error occurred.  */
 static boolean fQsend_input;
-/* This is set by the e flag, meaning that sh should be used to
-   execute the command.  */
-static boolean fQuse_sh;
 /* This is set by the E flag, meaning that exec should be used to
    execute the command.  */
 static boolean fQuse_exec;
 /* The status should be copied to this file on the requesting host.  */
 static const char *zQstatus_file;
+#if ALLOW_SH_EXECUTION
+/* This is set by the e flag, meaning that sh should be used to
+   execute the command.  */
+static boolean fQuse_sh;
+#endif /* ALLOW_SH_EXECUTION */
 
 static enum tcmdtabret tqcmd P((int argc, char **argv, pointer pvar,
 				const char *zerr));
@@ -367,7 +372,9 @@ static struct scmdtab asQcmds[] =
   { "N", CMDTABTYPE_FN | 1, (pointer) &fQno_ack, tqset },
   { "n", CMDTABTYPE_FN | 1, (pointer) &fQsuccess_ack, tqset },
   { "B", CMDTABTYPE_FN | 1, (pointer) &fQsend_input, tqset },
+#if ALLOW_SH_EXECUTION
   { "e", CMDTABTYPE_FN | 1, (pointer) &fQuse_sh, tqset },
+#endif
   { "E", CMDTABTYPE_FN | 1, (pointer) &fQuse_exec, tqset },
   { "M", CMDTABTYPE_STRING, (pointer) &zQstatus_file, NULL },
   { NULL, 0, NULL, NULL }
@@ -534,6 +541,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
   const char *zerror;
   struct ssysteminfo soutsys;
   const struct ssysteminfo *qoutsys;
+  boolean fshell;
 
   bgrade = zfile[strlen (zfile) - 5];
 
@@ -575,9 +583,11 @@ uqdo_xqt_file (zfile, qsys, zcmd)
   fQno_ack = FALSE;
   fQsuccess_ack = FALSE;
   fQsend_input = FALSE;
-  fQuse_sh = FALSE;
   fQuse_exec = FALSE;
   zQstatus_file = NULL;
+#if ALLOW_SH_EXECUTION
+  fQuse_sh = FALSE;
+#endif
 
   uprocesscmds (e, (struct smulti_file *) NULL, asQcmds, zfile, 0);
 
@@ -915,9 +925,15 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 	}
     }
 
+#if ALLOW_SH_EXECUTION
+  fshell = fQuse_sh;
+#else
+  fshell = FALSE;
+#endif
+
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
-			 zabsolute, azQargs, zQinput, zoutput, fQuse_sh,
+			 zabsolute, azQargs, zQinput, zoutput, fshell,
 			 &zerror))
     {
       ulog (LOG_NORMAL, "Execution failed (%s)", zfile);

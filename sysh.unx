@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/19  03:06:04  ian
+   Chip Salzenberg: put BNU temporary files in system's directory
+
    Revision 1.1  1991/09/10  19:45:50  ian
    Initial revision
 
@@ -193,6 +196,12 @@
 /* The default amount of free space to require for systems that do
    not specify an amount.  */
 #define DEFAULT_FREE_SPACE (50000)
+
+/* It is possible for an execute job to request to be executed using
+   /bin/sh(1), rather than execve(2).  This is such a security risk,
+   it is being disabled by default; to allow such jobs, uncomment the
+   following macro.  */
+/* #define ALLOW_SH_EXECUTION 1 */
 
 /*
 
