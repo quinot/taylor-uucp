@@ -400,7 +400,7 @@ main (argc, argv)
 	}
     }
 
-  iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  iuuconf = uuconf_init (&puuconf, "cu", zconfig);
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
   pCuuuconf = puuconf;
