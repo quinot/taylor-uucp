@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.61  1992/03/17  01:33:47  ian
+   Move definition of const before use for non ANSI C
+
    Revision 1.60  1992/03/17  01:28:18  ian
    Undefine remove in uucp.h if ! HAVE_REMOVE
 
@@ -816,16 +819,25 @@ extern int iDebug;
    because no macro can take a variable number of arguments and I
    don't want to use double parentheses.  */
 #define DEBUG_MESSAGE0(i, z) \
-  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z)), 1)))
+  do { if (FDEBUGGING (i)) ulog (LOG_DEBUG, (z)); } while (0)
 #define DEBUG_MESSAGE1(i, z, a1) \
-  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z), (a1)), 1)))
+  do { if (FDEBUGGING (i)) ulog (LOG_DEBUG, (z), (a1)); } while (0)
 #define DEBUG_MESSAGE2(i, z, a1, a2) \
-  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z), (a1), (a2)), 1)))
+  do { if (FDEBUGGING (i)) ulog (LOG_DEBUG, (z), (a1), (a2)); } while (0)
 #define DEBUG_MESSAGE3(i, z, a1, a2, a3) \
-  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z), (a1), (a2), (a3)), 1)))
+  do \
+    { \
+      if (FDEBUGGING (i)) \
+	ulog (LOG_DEBUG, (z), (a1), (a2), (a3)); \
+    } \
+  while (0)
 #define DEBUG_MESSAGE4(i, z, a1, a2, a3, a4) \
-  ((void) (FDEBUGGING (i) \
-	   && (ulog (LOG_DEBUG, (z), (a1), (a2), (a3), (a4)), 1)))
+  do \
+    { \
+      if (FDEBUGGING (i)) \
+	ulog (LOG_DEBUG, (z), (a1), (a2), (a3), (a4)); \
+    } \
+  while (0)
 
 #else /* DEBUG <= 1 */
 
