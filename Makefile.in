@@ -255,6 +255,8 @@ dist: uucp.info conf.h-dist
 	rm -f uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
 	cp policy.h Makefile.in uucp-$(VERSION)
 	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
+	mkdir uucp-$(VERSION)/contrib
+	ln contrib/* uucp-$(VERSION)/contrib
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
 	compress taylor-uucp-$(VERSION).tar
 
