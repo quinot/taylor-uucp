@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/01/15  07:06:29  ian
+   Set configuration directory in Makefile rather than sysdep.h
+
    Revision 1.26  1992/01/14  04:18:47  ian
    Chip Salzenberg: added HAVE_USLEEP configuration parameter
 
@@ -553,6 +556,45 @@ typedef struct termios sterminal;
 #define IDIRECTORY_MODE (0755)
 #define IPUBLIC_DIRECTORY_MODE (0777)
 #endif /* ! defined (S_IXUSR) */
+
+/* The wait status stuff is complex enough that we do it in here.  I
+   could create a new header file but it's too much trouble.  */
+
+#if HAVE_SYSWAIT_H
+#include <sys/wait.h>
+#endif
+
+/* We use a typedef wait_status_t for wait(2) to put results into.  We
+   use SYSTEM_STATUS(i) as an lvalue to catch the return value of
+   system(3).  We define the POSIX examination functions we need if
+   they are not already defined (if they aren't defined, I assume that
+   we have a standard wait status).  */
+
+#if HAVE_UNION_WAIT
+typedef union wait wait_status_t;
+#define SYSTEM_STATUS(u) ((u).w_status)
+#ifndef WIFEXITED
+#define WIFEXITED(u) ((u).w_termsig == 0)
+#endif
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(u) ((u).w_retcode)
+#endif
+#ifndef WTERMSIG
+#define WTERMSIG(u) ((u).w_termsig)
+#endif
+#else /* ! HAVE_UNION_WAIT */
+typedef int wait_status_t;
+#define SYSTEM_STATUS(i) (i)
+#ifndef WIFEXITED
+#define WIFEXITED(i) (((i) & 0xff) == 0)
+#endif
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(i) (((i) >> 8) & 0xff)
+#endif
+#ifndef WTERMSIG
+#define WTERMSIG(i) ((i) & 0x7f)
+#endif
+#endif /* ! HAVE_UNION_WAIT */
 
 /* Information we need for a UNIX serial port.  */
 
