@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/01/13  19:59:29  ian
+   Define LIBDIR in Makefile rather than in sysh.unx
+
    Revision 1.24  1992/01/13  05:55:59  ian
    Touched up a few comments
 
@@ -291,17 +294,21 @@
    file descriptor to not block.  */
 #define USE_FOR_UNBLOCKED 0
 
-/* Set HAVE_SETITIMER to 1 if you have the setitimer routine.
-   Alternatively, set HAVE_NAPMS to 1 if you have the napms routine
-   which takes a number of milliseconds to sleep.  Alternatively
-   again, set HAVE_NAP to 1 if you have the nap routine which takes a
-   longword which is the number of milliseconds to sleep.  If you are
-   using HAVE_BSD_TTY, these will be used to improve CPU performance
-   when reading from a serial line.  They are also used to sleep half
-   a second in a chat script.  */
+/* There are various possibilities for routines to sleep for less than
+   a second.  If you are using HAVE_BSD_TTY, these will be used to
+   improve CPU performance when reading from a serial line.  They are
+   also used to sleep half a second in a chat script.  Set either zero
+   or one of these to 1.
+
+   HAVE_SETITIMER -- Use the BSD setitimer routine
+   HAVE_NAPMS -- Use napms which takes a number of milliseconds to sleep
+   HAVE_NAP -- Use nap which takes a number of milliseconds to sleep
+   HAVE_USLEEP -- Use usleep which takes a number of microseconds to sleep
+   */
 #define HAVE_SETITIMER 1
 #define HAVE_NAPMS 0
 #define HAVE_NAP 0
+#define HAVE_USLEEP 0
 
 /* Set HAVE_SIGSETJMP to 1 if you have the sigsetjmp and siglongjmp
    calls, and they should be used to jump out of signal handler.  */
