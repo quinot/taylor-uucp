@@ -264,10 +264,6 @@ Get the grade in a file name independent way in uqdo_xqt_file.
 Bob Denny: warn if can't open C. or X. file because of permission
 problem.
 
-89.
-
-Michael Nolan: some systems don't have dup2.
-
 90.
 
 Rupert Mohr: it is possible that cmax_size_ever fails if there are
@@ -384,10 +380,6 @@ port is more likely to be dropped.
 Franc,ois Pinard: allow defaults to appear at the top of the dial file
 (and presumably of the port file as well).
 
-113.
-
-Chip Salzenberg: handle a truncated Shere.
-
 114.
 
 Michael Nolan: check permissions for transfer in uucp and uux rather
@@ -403,3 +395,8 @@ to only display jobs submitted by the user running uustat, except for
 root and uucp.
 
 116.
+
+T. William Wells: if uuxqt gets a signal, wait for the child to
+complete before dieing?
+
+117.
