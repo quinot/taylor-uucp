@@ -917,42 +917,76 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     {
       char *zfrom, *zto;
       boolean fmany;
+      boolean finoptions;
       char **azargs;
       const char *zuser;
 
       zfrom = NULL;
       zto = NULL;
       fmany = FALSE;
+      finoptions = TRUE;
 
       /* Skip all the options, and get the from and to specs.  We
-	 don't permit multiple arguments.  */
+	 don't permit multiple arguments.  We have to do mini-getopt
+	 processing here.  */
       for (i = 1; azQargs[i] != NULL; i++)
 	{
-	  if (azQargs[i][0] == '-')
+	  if (azQargs[i][0] == '-' && finoptions)
 	    {
-	      char *zopts;
-
-	      for (zopts = azQargs[i] + 1; *zopts != '\0'; zopts++)
+	      if (azQargs[i][1] == '-')
 		{
-		  /* The -g, -n, and -s options take an argument.  */
-		  if (*zopts == 'g' || *zopts == 'n' || *zopts == 's')
+		  if (azQargs[i][2] == '\0')
+		    finoptions = FALSE;
+		  /* The --grade, --notify, and --status options take
+                     an argument.  */
+		  else if (strncmp (azQargs[i] + 2, "g", 1) == 0
+		      || strncmp (azQargs[i] + 2, "not", 3) == 0
+		      || strncmp (azQargs[i] + 2, "s", 1) == 0)
 		    {
-		      if (zopts[1] == '\0')
+		      if (strchr (azQargs[i] + 2, '=') == NULL)
 			++i;
-		      break;
 		    }
-		  /* The -I, -u and -x options are not permitted.  */
-		  if (*zopts == 'I' || *zopts == 'u' || *zopts == 'x')
+		  /* The --config, --user, and --debug options are not
+                     permitted.  */
+		  else if (strncmp (azQargs[i] + 2, "con", 3) == 0
+			   || strncmp (azQargs[i] + 2, "us", 2) == 0
+			   || strncmp (azQargs[i] + 2, "de", 2) == 0)
 		    {
-		      *zopts = 'r';
-		      if (zopts[1] != '\0')
-			zopts[1] = '\0';
-		      else
+		      azQargs[i][1] = 'r';
+		      azQargs[i][2] = '\0';
+		      if (strchr (azQargs[i] + 3, '=') == NULL)
 			{
 			  ++i;
 			  azQargs[i] = zbufcpy ("-r");
 			}
-		      break;
+		    }
+		}
+	      else
+		{
+		  char *zopts;
+
+		  for (zopts = azQargs[i] + 1; *zopts != '\0'; zopts++)
+		    {
+		      /* The -g, -n, and -s options take an argument.  */
+		      if (*zopts == 'g' || *zopts == 'n' || *zopts == 's')
+			{
+			  if (zopts[1] == '\0')
+			    ++i;
+			  break;
+			}
+		      /* The -I, -u and -x options are not permitted.  */
+		      if (*zopts == 'I' || *zopts == 'u' || *zopts == 'x')
+			{
+			  *zopts = 'r';
+			  if (zopts[1] != '\0')
+			    zopts[1] = '\0';
+			  else
+			    {
+			      ++i;
+			      azQargs[i] = zbufcpy ("-r");
+			    }
+			  break;
+			}
 		    }
 		}
 	    }

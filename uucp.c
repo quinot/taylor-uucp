@@ -52,7 +52,9 @@ static const char *zcone_system P((boolean *pfany));
 static void ucrecord_file P((const char *zfile));
 static void ucabort P((void));
 
-/* Long getopt options.  */
+/* Long getopt options.  Note that any changes here must be reflected
+   in the code in uuxqt.c which checks the options used for the uucp
+   command.  */
 static const struct option asClongopts[] =
 {
   { "copy", no_argument, NULL, 'C' },

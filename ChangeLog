@@ -1,5 +1,10 @@
 2002-02-06  Ian Lance Taylor  <ian@airs.com>
 
+	* uuxqt.c (uqdo_xqt_file): Check for long versions of prohibited
+	options.
+	* uucp.c (asClongopts): Add comment indicating that changes here
+	must be reflected in uuxqt.c.
+
 	* MANIFEST, */MANIFEST: Remove.  These files are not used by
 	automake.
 
