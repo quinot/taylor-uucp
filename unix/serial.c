@@ -2457,7 +2457,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	    cdo = SINGLE_WRITE;
 
 	  DEBUG_MESSAGE1 (DEBUG_PORT,
-			  "fsysdep_conn_io: Blocking write of %lud",
+			  "fsysdep_conn_io: Blocking write of %lu",
 			  (unsigned long) cdo);
 
 	  if (q->istdout_flags >= 0)
