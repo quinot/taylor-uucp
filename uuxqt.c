@@ -411,7 +411,7 @@ static char **azQfiles;
 /* Names required files should be renamed to (NULL if original is OK).  */
 static char **azQfiles_to;
 /* Requestor address (this is where mail should be sent).  */
-static const char *zQrequestor;
+static char *zQrequestor;
 /* User name.  */
 static const char *zQuser;
 /* System name.  */
@@ -442,6 +442,8 @@ static int iqout P((pointer puuconf, int argc, char **argv, pointer pvar,
 		    pointer pinfo));
 static int iqfile P((pointer puuconf, int argc, char **argv, pointer pvar,
 		     pointer pinfo));
+static int iqrequestor P((pointer puuconf, int argc, char **argv,
+			  pointer pvar, pointer pinfo));
 static int iquser P((pointer puuconf, int argc, char **argv, pointer pvar,
 		     pointer pinfo));
 static int iqset P((pointer puuconf, int argc, char **argv, pointer pvar,
@@ -453,11 +455,13 @@ static const struct uuconf_cmdtab asQcmds[] =
   { "I", UUCONF_CMDTABTYPE_STRING, (pointer) &zQinput, NULL },
   { "O", UUCONF_CMDTABTYPE_FN | 0, NULL, iqout },
   { "F", UUCONF_CMDTABTYPE_FN | 0, NULL, iqfile },
-  { "R", UUCONF_CMDTABTYPE_STRING, (pointer) &zQrequestor, NULL },
+  { "R", UUCONF_CMDTABTYPE_FN, NULL, iqrequestor },
   { "U", UUCONF_CMDTABTYPE_FN | 3, NULL, iquser },
   { "N", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQno_ack, iqset },
   { "n", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQsuccess_ack, iqset },
-  { "B", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQsend_input, iqset },
+  /* Some systems create execution files in which B takes an argument;
+     I don't know what it means, so I just ignore it.  */
+  { "B", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQsend_input, iqset },
 #if ALLOW_SH_EXECUTION
   { "e", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQuse_sh, iqset },
 #endif
@@ -566,6 +570,42 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
     azQfiles_to[cQfiles - 1] = zbufcpy (argv[2]);
   else
     azQfiles_to[cQfiles - 1] = NULL;
+
+  return UUCONF_CMDTABRET_CONTINUE;
+}
+
+/* Handle the R command, which may have one or two arguments.  */
+
+/*ARGSUSED*/
+static int
+iqrequestor (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  const char *zbase = (const char *) pinfo;
+
+  if (argc != 2 && argc != 3)
+    {
+      ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
+	    zbase, argv[0]);
+      return UUCONF_CMDTABRET_CONTINUE;
+    }
+
+  /* We normally have a single argument, which is the ``requestor''
+     address, to which we should send any success or error messages.
+     Apparently the DOS program UUPC sends two arguments, which are
+     the username and the host.  */
+  if (argc == 2)
+    zQrequestor = zbufcpy (argv[1]);
+  else
+    {
+      zQrequestor = zbufalc (strlen (argv[1]) + strlen (argv[2])
+			     + sizeof "!");
+      sprintf (zQrequestor, "%s!%s", argv[2], argv[1]);
+    }
 
   return UUCONF_CMDTABRET_CONTINUE;
 }
@@ -1416,6 +1456,7 @@ uqcleanup (zfile, iflags)
 
   ubuffree (zQoutfile);
   ubuffree (zQoutsys);
+  ubuffree (zQrequestor);
 
   if (azQargs != NULL)
     {
