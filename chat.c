@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/12/07  17:58:38  ian
+   Handle a chat script with nothing but a send string
+
    Revision 1.4  1991/12/06  21:10:27  ian
    Franc,ois Pinard: ccescape should never return a negative number
 
@@ -306,6 +309,8 @@ ccescape (z)
       ++zfrom;
     }
 
+  *zto = '\0';
+
   return zto - z;
 }
 
@@ -339,6 +344,11 @@ icexpect (cstrings, azstrings, aclens, ctimeout)
   chave = 0;
 
   iendtime = isysdep_time () + ctimeout;
+
+#if DEBUG > 6
+  if (iDebug > 6)
+    ulog (LOG_DEBUG, "icexpect: Looking for \"%s\"", azstrings[0]);
+#endif
 
   while (TRUE)
     {
@@ -473,6 +483,10 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	      fnocr = TRUE;
 	      break;
 	    case 'd':
+#if DEBUG > 5
+	      if (iDebug > 5)
+		ulog (LOG_DEBUG, "fchat_send: Sleeping for one second");
+#endif
 	      usysdep_sleep (1);
 	      break;
 	    case 'e':
@@ -494,6 +508,10 @@ fchat_send (z, qsys, qdial, zphone, ftranslate)
 	      bsend = '\0';
 	      break;
 	    case 'p':
+#if DEBUG > 5
+	      if (iDebug > 5)
+		ulog (LOG_DEBUG, "fchat_send: Pausing for half second");
+#endif
 	      usysdep_pause ();
 	      break;
 	    case 'r':
