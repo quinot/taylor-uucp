@@ -27,6 +27,7 @@
 #define HAVE_SYS_IOCTL_H 0 /* <sys/ioctl.h> */
 #define HAVE_DIRENT_H 0 /* <dirent.h> */
 #define HAVE_MEMORY_H 0 /* <memory.h> */
+#define HAVE_TERMIOS_H 0 /* <termios.h> */
 #define HAVE_SYS_PARAM_H 0 /* <sys/param.h> */
 #define HAVE_UTIME_H 0 /* <utime.h> */
 #define HAVE_FCNTL_H 0 /* <fcntl.h> */
