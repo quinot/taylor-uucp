@@ -153,6 +153,7 @@ main (argc, argv)
   struct uuconf_system slocalsys;
   boolean fneedshell;
   char *zfullcmd;
+  char aboptions[10];
   boolean fexit;
 
   /* We need to be able to read a single - as an option, which getopt
@@ -1114,7 +1115,6 @@ main (argc, argv)
   if (eXxqt_file == NULL && zinput_from != NULL && zforward == NULL)
     {
       struct scmd s;
-      char aboptions[10];
       char *zoptions;
 
       /* Set up an E command.  */
