@@ -311,8 +311,6 @@ struct ssysdep_serial
   sterminal snew;
 };
 
-#if HAVE_TCP
-
 /* Information we keep for a TCP port.  The only thing we need to know
    is the file descriptor number.  */
 
@@ -321,8 +319,10 @@ struct ssysdep_tcp
   int o;
 };
 
-/* There are a couple of TCP functions which are kept with the serial
-   port functions.  */
+#if HAVE_TCP
+
+/* There are three TCP functions which are kept with the serial port
+   functions.  */
 
 extern boolean fsysdep_tcp_read P((struct sconnection *qconn,
 				   char *zbuf, size_t *pclen,
