@@ -589,7 +589,8 @@ fsserial_lockfile (flok, qconn)
 
 	if (stat (qsysdep->zdevice, &s) != 0)
 	  {
-	    ulog (LOG_ERROR, "stat (%s): %s", z, strerror (errno));
+	    ulog (LOG_ERROR, "stat (%s): %s", qsysdep->zdevice,
+		  strerror (errno));
 	    return FALSE;
 	  }
 	zalc = zbufalc (sizeof "LK.123.123.123");
@@ -2629,18 +2630,18 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
     case PARITYSETTING_DEFAULT:
       break;
     case PARITYSETTING_NONE:
-      iset = 0;
-      iclear = PARENB | PARODD;
+      iset = CS8;
+      iclear = PARENB | PARODD | (CSIZE &~ CS8);
       fdo = TRUE;
       break;
     case PARITYSETTING_EVEN:
-      iset = PARENB;
-      iclear = PARODD;
+      iset = PARENB | CS7;
+      iclear = PARODD | (CSIZE &~ CS7);
       fdo = TRUE;
       break;
     case PARITYSETTING_ODD:
-      iset = PARENB | PARODD;
-      iclear = 0;
+      iset = PARENB | PARODD | CS7;
+      iclear = CSIZE &~ CS7;
       fdo = TRUE;
       break;
     case PARITYSETTING_MARK:
