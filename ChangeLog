@@ -1,4 +1,9 @@
-2002-03-05  Ian Lance Taylor  <ian@zembu.com>
+2002-03-05  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/Makefile.am (libunix_a_SOURCES): Add fsusg.h.
+	* uuconf/Makefile.am (libuuconf_a_SOURCES): Add alloc.h, syshdr.h,
+	and uucnfi.h.
+	* unix/Makefile.in, uuconf/Makefile.in: Rebuild.
 
 	* uucico.c (fcall): If a port was specified on the command line,
 	and the current alternate does not use that port, but a later

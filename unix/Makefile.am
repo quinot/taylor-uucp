@@ -11,7 +11,8 @@ libunix_a_SOURCES = access.c addbas.c app3.c app4.c basnam.c bytfre.c \
 	serial.c signal.c sindir.c size.c sleep.c spawn.c splcmd.c \
 	splnam.c spool.c srmdir.c statsb.c status.c sync.c tcp.c \
 	time.c tli.c tmpfil.c trunc.c uacces.c ufopen.c uid.c ultspl.c \
-	umode.c unknwn.c uuto.c walk.c wldcrd.c work.c xqtfil.c xqtsub.c
+	umode.c unknwn.c uuto.c walk.c wldcrd.c work.c xqtfil.c xqtsub.c \
+	fsusg.h
 libunix_a_LIBADD = $(UNIXOBJS)
 EXTRA_libunix_a_SOURCES = getcwd.c mkdir.c rmdir.c dirent.c dup2.c ftw.c \
 	remove.c rename.c strerr.c
