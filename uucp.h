@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1991/12/11  03:59:19  ian
+   Create directories when necessary; don't just assume they exist
+
    Revision 1.14  1991/12/10  19:45:05  ian
    Added ulog_device to record device name for log file
 
@@ -751,6 +754,11 @@ extern char *strerror P((int ierr));
 #else /* ! HAVE_MEMMOVE */
 extern pointer xmemmove P((pointer, constpointer, int));
 #endif /* ! HAVE_MEMMOVE */
+
+/* Turn a string into a long integer.  */
+#if ! HAVE_STRTOL
+extern long strtol P((const char *, char **, int));
+#endif
 
 /* Global variables.  */
 
