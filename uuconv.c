@@ -947,8 +947,11 @@ uvwrite_taylor_system (e, q)
 	  && q->uuconf_cfree_space >= 0)
 	fprintf (e, "free-space %ld\n", q->uuconf_cfree_space);
 
-      if (CHANGED (uuconf_pzforwardto))
-	uvwrite_string_array (e, q->uuconf_pzforwardto, "forwardto");
+      if (CHANGED (uuconf_pzforward_from))
+	uvwrite_string_array (e, q->uuconf_pzforward_from, "forward-from");
+
+      if (CHANGED (uuconf_pzforward_to))
+	uvwrite_string_array (e, q->uuconf_pzforward_to, "forward-to");
 
       if (CHANGED (uuconf_zpubdir))
 	uvwrite_string (e, q->uuconf_zpubdir, "pubdir");

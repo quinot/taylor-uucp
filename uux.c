@@ -75,7 +75,11 @@ static FILE *eXclose;
 static void uxusage P((void));
 static void uxadd_xqt_line P((int bchar, const char *z1, const char *z2));
 static void uxadd_send_file P((const char *zfrom, const char *zto,
-			       const char *zoptions, const char *ztemp));
+			       const char *zoptions, const char *ztemp,
+			       const char *zforward,
+			       const struct uuconf_system *qxqtsys,
+			       const char *zxqtloc,
+			       int bgrade));
 static void uxcopy_stdin P((FILE *e));
 static void uxrecord_file P((const char *zfile));
 static void uxabort P((void));
@@ -135,6 +139,7 @@ main (argc, argv)
   const char *zuser;
   struct uuconf_system sxqtsys;
   boolean fxqtlocal;
+  char *zforward;
   char **pzargs;
   int calloc_args;
   int cargs;
@@ -146,6 +151,8 @@ main (argc, argv)
   boolean finputcopied;
   char *zcall_system;
   boolean fcall_any;
+  boolean flocalsys;
+  struct uuconf_system slocalsys;
   boolean fneedshell;
   char *zfullcmd;
   boolean fexit;
@@ -434,21 +441,31 @@ main (argc, argv)
     {
       zsys = zlocalname;
       fxqtlocal = TRUE;
+      zforward = NULL;
     }
   else
     {
       *zexclam = '\0';
       zsys = zcmd;
       zcmd = zexclam + 1;
+      fxqtlocal = FALSE;
 
-      if (*zsys == '\0' || strcmp (zsys, zlocalname) == 0)
-	{
-	  zsys = zlocalname;
-	  fxqtlocal = TRUE;
-	}
+      /* See if we must forward this command through other systems
+	 (e.g. uux a!b!cmd).  */
+      zexclam = strrchr (zcmd, '!');
+      if (zexclam == NULL)
+	zforward = NULL;
       else
-	fxqtlocal = FALSE;
+	{
+	  clen = zexclam - zcmd;
+	  zforward = zbufalc (clen);
+	  memcpy (zforward, zcmd, clen);
+	  zforward[clen] = '\0';
+	  zcmd = zexclam + 1;
+	}
     }
+
+  flocalsys = FALSE;
 
   iuuconf = uuconf_system_info (puuconf, zsys, &sxqtsys);
   if (iuuconf != UUCONF_SUCCESS)
@@ -461,6 +478,8 @@ main (argc, argv)
 	  iuuconf = uuconf_system_local (puuconf, &sxqtsys);
 	  if (iuuconf != UUCONF_SUCCESS)
 	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+	  slocalsys = sxqtsys;
+	  flocalsys = TRUE;
 	}
       else
 	{
@@ -475,10 +494,10 @@ main (argc, argv)
     zxqtloc = zlocalname;
 
   /* We can send this as an E command if the execution is on a
-     different system and the only file used is the standard input and
-     comes from this system.  This is true of the common cases of
-     rmail and rnews.  We get an execute file name here in case we
-     need it.  */
+     different, directly connected, system and the only file used is
+     the standard input and comes from this system.  This is true of
+     the common cases of rmail and rnews.  We get an execute file name
+     here in case we need it.  */
   if (fxqtlocal)
     zXxqt_name = zsysdep_xqt_file_name ();
   else
@@ -503,6 +522,7 @@ main (argc, argv)
     {
       const char *zsystem;
       char *zfile;
+      char *zforw;
       boolean finput, foutput;
       boolean flocal, fonxqt;
 
@@ -549,25 +569,44 @@ main (argc, argv)
 	  zsystem = zlocalname;
 	  zfile = pzargs[i];
 	  flocal = TRUE;
+	  zforw = NULL;
 	}
       else
 	{
 	  *zexclam = '\0';
 	  zsystem = pzargs[i];
 	  if (*zsystem != '\0')
-	    flocal = strcmp (zsystem, zlocalname) == 0;
+	    flocal = FALSE;
 	  else
 	    {
 	      zsystem = zlocalname;
 	      flocal = TRUE;
 	    }
 	  zfile = zexclam + 1;
+	  zexclam = strrchr (zfile, '!');
+	  if (zexclam == NULL)
+	    zforw = NULL;
+	  else
+	    {
+	      if (flocal)
+		ulog (LOG_FATAL, "!%s: Can't figure out where to get file",
+		      zfile);
+	      *zexclam = '\0';
+	      zforw = zfile;
+	      zfile = zexclam + 1;
+	    }
 	}
 
       /* Check if the file is already on the execution system.  */
       if (flocal)
 	fonxqt = fxqtlocal;
       else if (fxqtlocal)
+	fonxqt = FALSE;
+      else if (zforward == NULL ? zforw != NULL : zforw == NULL)
+	fonxqt = FALSE;
+      else if (zforward != NULL
+	       && zforw != NULL
+	       && strcmp (zforward, zforw) != 0)
 	fonxqt = FALSE;
       else if (strcmp (zsystem, sxqtsys.uuconf_zname) == 0)
 	fonxqt = TRUE;
@@ -607,6 +646,52 @@ main (argc, argv)
 					FALSE, (const char *) NULL))
 		ulog (LOG_FATAL, "Not permitted to create %s", zfile);
 	    }
+
+	  /* There are various cases of output redirection.
+
+	     uux cmd >out: The command is executed on the local
+		 system, and the output file is placed on the local
+		 system (fonxqt is TRUE).
+
+	     uux cmd >a!out: The command is executed on the local
+		 system, and the output file is sent to a.
+
+	     uux a!cmd >out: The command is executed on a, and the
+		 output file is returned to the local system (flocal
+		 is TRUE).
+
+	     uux a!cmd >a!out: The command is executed on a, and the
+		 output file is left on a (fonxqt is TRUE).
+
+	     uux a!cmd >b!out: The command is executed on a, and the
+		 output file is sent to b; traditionally, I believe
+		 that b is relative to a, rather than to the local
+		 system.  However, this essentially contradicts the
+		 previous two cases, in which the output file is
+		 relative to the local system.
+
+	     Now, the cases that we don't handle.
+
+	     uux cmd >a!b!out: The command is executed on the local
+		 system, and the output file is sent to b via a.  This
+		 requires the local uuxqt to support forwarding of the
+		 output file.
+
+	     uux a!b!cmd >out: The command is executed on b, which is
+		 reached via a.  Probably the output file is intended
+		 for the local system, in which case the uuxqt on b
+		 must support forwarding of the output file.
+
+	     uux a!b!cmd >c!out: Is c relative to b or to the local
+		 system?  If it's relative to b this is easy to
+		 handle.  Otherwise, we must arrange for the file to
+		 be sent back to the local system and for the local
+		 system to send it on to c.
+
+	     There are many variations of the last case.  It's not at
+	     all clear to me how they should be handled.  */
+	  if (zforward != NULL || zforw != NULL)
+	    ulog (LOG_FATAL, "May not forward standard output");
 
 	  if (fonxqt)
 	    uxadd_xqt_line ('O', zfile, (const char *) NULL);
@@ -725,7 +810,8 @@ main (argc, argv)
 
 		  uxadd_send_file (zuse, abdname,
 				   finputcopied ? "C" : "c",
-				   abtname);
+				   abtname, zforward, &sxqtsys,
+				   zxqtloc, bgrade);
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
 		    uxabort ();
@@ -773,23 +859,53 @@ main (argc, argv)
 	    {
 	      char *zdata;
 
-	      if (! fxqtlocal)
-		ulog (LOG_FATAL, "uux forwarding does not yet work");
+	      if (zforw != NULL)
+		{
+		  /* This is ``uux cmd a!b!file''.  To make this work,
+		     we would have to be able to set up a request to a
+		     to fetch file from b and send it to us.  But it
+		     turns out that that will not work, because when a
+		     sends us the file we will put it in a's spool
+		     directory, not the local system spool directory.
+		     So we won't have any way to find it.  This is not
+		     a conceptual problem, and it could doubtless be
+		     solved.  Please feel free to solve it and send me
+		     the solution.  */
+		  ulog (LOG_FATAL, "File forwarding not supported");
+		}
 
-	      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
+	      /* We must request the file from the remote system to
+		 this one.  */
+	      if (! flocalsys)
+		{
+		  iuuconf = uuconf_system_info (puuconf, zlocalname,
+						&slocalsys);
+		  if (iuuconf != UUCONF_SUCCESS)
+		    {
+		      if (iuuconf != UUCONF_NOT_FOUND)
+			ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+		      iuuconf = uuconf_system_local (puuconf, &slocalsys);
+		      if (iuuconf != UUCONF_SUCCESS)
+			ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+		    }
+		  flocalsys = TRUE;
+		}
+
+	      zdata = zsysdep_data_file_name (&slocalsys, zxqtloc, bgrade,
 					      abtname, (char *) NULL,
 					      (char *) NULL);
 	      if (zdata == NULL)
 		uxabort ();
 	      ubuffree (zdata);
 
-	      /* Request the file.  The special option '9' is a signal to
-		 uucico that it's OK to receive a file into the spool
-		 directory; normally such requests are rejected.  */
+	      /* Request the file.  The special option '9' is a signal
+		 to uucico that it's OK to receive a file into the
+		 spool directory; normally such requests are rejected.
+		 This privilege is easy to abuse.  */
 	      s.bcmd = 'R';
 	      s.pseq = NULL;
 	      s.zfrom = zfile;
-	      s.zto = abtname;
+	      s.zto = zbufcpy (abtname);
 	      s.zuser = zuser;
 	      s.zoptions = "9";
 	      s.ztemp = "";
@@ -818,22 +934,80 @@ main (argc, argv)
 		  zcall_system = zbufcpy (sfromsys.uuconf_zname);
 		}
 
-	      /* Tell the command execution to wait until the file has
-		 been received, and tell it the real file name.  */
-	      if (finput)
+	      if (fxqtlocal)
 		{
-		  uxadd_xqt_line ('F', abtname, (char *) NULL);
-		  uxadd_xqt_line ('I', abtname, (char *) NULL);
+		  /* Tell the command execution to wait until the file
+		     has been received, and tell it the real file
+		     name.  */
+		  if (finput)
+		    {
+		      uxadd_xqt_line ('F', abtname, (char *) NULL);
+		      uxadd_xqt_line ('I', abtname, (char *) NULL);
+		    }
+		  else
+		    {
+		      char *zbase;
+
+		      zbase = zsysdep_base_name (zfile);
+		      if (zbase == NULL)
+			uxabort ();
+		      uxadd_xqt_line ('F', abtname, zbase);
+		      pzargs[i] = zbase;
+		    }
 		}
 	      else
 		{
+		  char abxtname[CFILE_NAME_LEN];
 		  char *zbase;
+		  char *zxqt;
+		  FILE *e;
+
+		  /* Now we must arrange to forward the file on to the
+		     execution system.  We need to get a name to give
+		     the file on the execution system (abxtname).  */
+		  zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc,
+						  'X', abxtname,
+						  (char *) NULL,
+						  (char *) NULL);
+		  if (zdata == NULL)
+		    uxabort ();
+		  ubuffree (zdata);
 
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
 		    uxabort ();
-		  uxadd_xqt_line ('F', abtname, zbase);
-		  pzargs[i] = zbase;
+
+		  zxqt = zsysdep_xqt_file_name ();
+		  if (zxqt == NULL)
+		    uxabort ();
+		  e = esysdep_fopen (zxqt, FALSE, FALSE, TRUE);
+		  if (e == NULL)
+		    uxabort ();
+		  uxrecord_file (zxqt);
+
+		  fprintf (e, "U %s %s\n", zsysdep_login_name (),
+			   zlocalname);
+		  fprintf (e, "F %s %s\n", abtname, zbase);
+		  fprintf (e, "C uucp -C -W -d -g %c %s %s!", bgrade,
+			   zbase, sxqtsys.uuconf_zname);
+		  if (zforward != NULL)
+		    fprintf (e, "%s!", zforward);
+		  fprintf (e, "%s\n", abxtname);
+
+		  if (fclose (e) != 0)
+		    ulog (LOG_FATAL, "fclose: %s", strerror (errno));
+
+		  if (finput)
+		    {
+		      uxadd_xqt_line ('F', abxtname, (char *) NULL);
+		      uxadd_xqt_line ('I', abxtname, (char *) NULL);
+		      ubuffree (zbase);
+		    }
+		  else
+		    {
+		      uxadd_xqt_line ('F', abxtname, zbase);
+		      pzargs[i] = zbase;
+		    }
 		}
 	    }
 
@@ -967,7 +1141,8 @@ main (argc, argv)
 	  uxadd_xqt_line ('I', zinput_to, (char *) NULL);
 	  uxadd_send_file (zinput_from, zinput_to,
 			   finputcopied ? "C" : "c",
-			   zinput_temp);
+			   zinput_temp, zforward, &sxqtsys, zxqtloc,
+			   bgrade);
 	}
       if (fno_ack)
 	uxadd_xqt_line ('N', (const char *) NULL, (const char *) NULL);
@@ -984,7 +1159,8 @@ main (argc, argv)
       /* If the execution is to occur on another system, we must now
 	 arrange to copy the execute file to this system.  */
       if (! fxqtlocal)
-	uxadd_send_file (abxqt_tname, abxqt_xname, "C", abxqt_tname);
+	uxadd_send_file (abxqt_tname, abxqt_xname, "C", abxqt_tname,
+			 zforward, &sxqtsys, zxqtloc, bgrade);
     }
 
   /* If we got a signal, get out before spooling anything.  */
@@ -1117,13 +1293,76 @@ uxadd_xqt_line (bchar, z1, z2)
 /* Add a file to be sent to the execute system.  */
 
 static void
-uxadd_send_file (zfrom, zto, zoptions, ztemp)
+uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
+		 bgrade)
      const char *zfrom;
      const char *zto;
      const char *zoptions;
      const char *ztemp;
+     const char *zforward;
+     const struct uuconf_system *qxqtsys;
+     const char *zxqtloc;
+     int bgrade;
 {
   struct scmd s;
+
+  if (zforward != NULL)
+    {
+      char *zbase;
+      char *zxqt;
+      char abtname[CFILE_NAME_LEN];
+      char abdname[CFILE_NAME_LEN];
+      char abxname[CFILE_NAME_LEN];
+      FILE *e;
+
+      /* We want to forward this file through the first execution
+	 system to other systems.  We set up a remote execution of
+	 uucp to forward the file.  */
+      zbase = zsysdep_base_name (zfrom);
+      if (zbase == NULL)
+	uxabort ();
+
+      zxqt = zsysdep_data_file_name (qxqtsys, zxqtloc, 'X', abtname,
+				     abdname, abxname);
+      if (zxqt == NULL)
+	uxabort ();
+      e = esysdep_fopen (zxqt, FALSE, FALSE, TRUE);
+      if (e == NULL)
+	uxabort ();
+      uxrecord_file (zxqt);
+
+      fprintf (e, "U %s %s\n", zsysdep_login_name (), zxqtloc);
+      fprintf (e, "F %s %s\n", abdname, zbase);
+      fprintf (e, "C uucp -C -W -d -g %c %s %s!%s\n",
+	       bgrade, zbase, zforward, zto);
+
+      ubuffree (zbase);
+
+      if (fclose (e) != 0)
+	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
+
+      /* Send the execution file.  */
+      s.bcmd = 'S';
+      s.pseq = NULL;
+      s.zfrom = zbufcpy (abtname);
+      s.zto = zbufcpy (abxname);
+      s.zuser = zsysdep_login_name ();
+      s.zoptions = "C";
+      s.ztemp = s.zfrom;
+      s.imode = 0666;
+      s.znotify = NULL;
+      s.cbytes = -1;
+      s.zcmd = NULL;
+
+      ++cXcmds;
+      pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
+					   cXcmds * sizeof (struct scmd));
+      pasXcmds[cXcmds - 1] = s;
+
+      /* Send the data file to abdname where the execution file will
+	 expect it.  */
+      zto = abdname;
+    }
 
   s.bcmd = 'S';
   s.pseq = NULL;
@@ -1144,7 +1383,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp)
 }
 
 /* Copy stdin to a file.  This is a separate function because it may
-   call setjump.  */
+   call setjmp.  */
 
 static void
 uxcopy_stdin (e)
@@ -1190,17 +1429,17 @@ uxcopy_stdin (e)
 /* Keep track of all files we have created so that we can delete them
    if we get a signal.  The argument will be on the heap.  */
 
-static int cxfiles;
-static const char **pxaz;
+static int cXfiles;
+static const char **pXaz;
 
 static void
 uxrecord_file (zfile)
      const char *zfile;
 {
-  pxaz = (const char **) xrealloc ((pointer) pxaz,
-				   (cxfiles + 1) * sizeof (const char *));
-  pxaz[cxfiles] = zfile;
-  ++cxfiles;
+  pXaz = (const char **) xrealloc ((pointer) pXaz,
+				   (cXfiles + 1) * sizeof (const char *));
+  pXaz[cXfiles] = zfile;
+  ++cXfiles;
 }
 
 /* Delete all the files we have recorded and exit.  */
@@ -1214,8 +1453,8 @@ uxabort ()
     (void) fclose (eXxqt_file);
   if (eXclose != NULL)
     (void) fclose (eXclose);
-  for (i = 0; i < cxfiles; i++)
-    (void) remove (pxaz[i]);
+  for (i = 0; i < cXfiles; i++)
+    (void) remove (pXaz[i]);
   ulog_close ();
   usysdep_exit (FALSE);
 }

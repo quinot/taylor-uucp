@@ -161,17 +161,56 @@ flocal_rec_file_init (qdaemon, qcmd)
 
   if (fspool)
     {
-      /* Normal users are not allowed to receive files in the spool
-	 directory, and to make it particularly difficult we require a
-	 special option '9'.  This is used only by uux when a file
-	 must be requested from one system and then used for a local
-	 execution.  */
+      pointer puuconf;
+      int iuuconf;
+      const char *zlocalname;
+      struct uuconf_system slocalsys;
+
+      /* Normal users are not allowed to request files to be received
+	 into the spool directory.  To support uux forwarding, we use
+	 the special option '9'.  This permits a file to be received
+	 into the spool directory for the local system only without
+	 the usual checking.  This is only done for local requests, of
+	 course.  */
       if (qcmd->zto[0] != 'D'
 	  || strchr (qcmd->zoptions, '9') == NULL)
 	return flocal_rec_fail ((struct stransfer *) NULL, qcmd, qsys,
 				"not permitted to receive");
 
-      zfile = zsysdep_spool_file_name (qsys, qcmd->zto);
+      puuconf = qdaemon->puuconf;
+      iuuconf = uuconf_localname (puuconf, &zlocalname);
+      if (iuuconf == UUCONF_NOT_FOUND)
+	{
+	  zlocalname = zsysdep_localname ();
+	  if (zlocalname == NULL)
+	    return FALSE;
+	}
+      else if (iuuconf != UUCONF_SUCCESS)
+	{
+	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+	  return FALSE;
+	}
+
+      iuuconf = uuconf_system_info (puuconf, zlocalname, &slocalsys);
+      if (iuuconf == UUCONF_NOT_FOUND)
+	{
+	  iuuconf = uuconf_system_local (puuconf, &slocalsys);
+	  if (iuuconf != UUCONF_SUCCESS)
+	    {
+	      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+	      return FALSE;
+	    }
+	}
+      else if (iuuconf != UUCONF_SUCCESS)
+	{
+	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+	  return FALSE;
+	}
+
+      zfile = zsysdep_spool_file_name (&slocalsys, qcmd->zto);
+
+      (void) uuconf_system_free (puuconf, &slocalsys);
+
       if (zfile == NULL)
 	return FALSE;
     }

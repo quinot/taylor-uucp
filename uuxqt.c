@@ -42,19 +42,17 @@ const char uuxqt_rcsid[] = "$Id$";
 char abProgram[] = "uuxqt";
 
 /* Static variables used to unlock things if we get a fatal error.  */
-
 static int iQlock_seq = -1;
 static const char *zQunlock_cmd;
 static const char *zQunlock_file;
 static boolean fQunlock_directory;
 int cQmaxuuxqts;
 
-/* Static variable to free in uqcleanup.  */
-
+/* Static variables to free in uqcleanup.  */
 static char *zQoutput;
+static char *zQmail;
 
 /* Local functions.  */
-
 static void uqusage P((void));
 static void uqabort P((void));
 static void uqdo_xqt_file P((pointer puuconf, const char *zfile,
@@ -63,6 +61,8 @@ static void uqdo_xqt_file P((pointer puuconf, const char *zfile,
 			     const char *zlocalname,
 			     const char *zcmd, boolean *pfprocessed));
 static void uqcleanup P((const char *zfile, int iflags));
+static boolean fqforward P((const char *zfile, char **pzallowed,
+			    const char *zlog, const char *zmail));
 
 /* Long getopt options.  */
 
@@ -211,11 +211,6 @@ main (argc, argv)
 	  boolean fprocessed;
 	  char *zbase;
 
-#if ! HAVE_ALLOCA
-	  /* Clear out any accumulated alloca buffers.  */
-	  (void) alloca (0);
-#endif
-
 	  /* It would be more efficient to pass zdosys down to the
 	     routines which retrieve execute files.  */
 	  if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
@@ -251,7 +246,6 @@ main (argc, argv)
 			  ubuffree (zgetsys);
 			  continue;
 			}
-		      ssys.uuconf_zname = (char *) zlocalname;
 		    }
 		  else
 		    {
@@ -600,12 +594,13 @@ iqset (puuconf, argc, argv, pvar, pinfo)
    to each return point, we keep a set of flags indicating what
    has to be cleaned up.  The actual clean up is done by the
    function uqcleanup.  */
-
 #define REMOVE_FILE (01)
 #define REMOVE_NEEDED (02)
 #define FREE_QINPUT (04)
 #define FREE_QARGS0 (010)
-#define FREE_OUTPUT (020)
+#define FREE_QARGS1 (020)
+#define FREE_OUTPUT (040)
+#define FREE_MAIL (0100)
 
 /* Process an execute file.  The zfile argument is the name of the
    execute file.  The zbase argument is the base name of zfile.  The
@@ -639,6 +634,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
   struct uuconf_system soutsys;
   const struct uuconf_system *qoutsys;
   boolean fshell;
+  size_t clen;
   char *zfullcmd;
   boolean ftemp;
 
@@ -784,48 +780,185 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     {
       char *zset;
 
-      zset = (char *) alloca (strlen (zQsystem) + strlen (zmail) + 2);
-
+      zset = zbufalc (strlen (zQsystem) + strlen (zmail) + 2);
       sprintf (zset, "%s!%s", zQsystem, zmail);
       zmail = zset;
+      zQmail = zset;
+      iclean |= FREE_MAIL;
     }
 
-  /* Get the pathname to execute.  */
-  zabsolute = zsysdep_find_command (azQargs[0], qsys->uuconf_pzcmds,
-				    qsys->uuconf_pzpath,
-				    &ferr);
-  if (zabsolute == NULL)
+  /* The command "uucp" is handled specially.  We make sure that the
+     appropriate forwarding is permitted, and we add a -u argument to
+     specify the user.  */
+  if (strcmp (azQargs[0], "uucp") == 0)
     {
-      if (ferr)
+      char *zfrom, *zto;
+      boolean fmany;
+      char **azargs;
+      const char *zuser, *zsystem;
+
+      zfrom = NULL;
+      zto = NULL;
+      fmany = FALSE;
+
+      /* Skip all the options, and get the from and to specs.  We
+	 don't permit multiple arguments.  */
+      for (i = 1; azQargs[i] != NULL; i++)
 	{
-	  /* If we get an error, try again later.  */
+	  if (azQargs[i][0] == '-')
+	    {
+	      char *zopts;
+
+	      for (zopts = azQargs[i] + 1; *zopts != '\0'; zopts++)
+		{
+		  /* The -g, -n, and -s options take an argument.  */
+		  if (*zopts == 'g' || *zopts == 'n' || *zopts == 's')
+		    {
+		      if (zopts[1] == '\0')
+			++i;
+		      break;
+		    }
+		  /* The -I, -u and -x options are not permitted.  */
+		  if (*zopts == 'I' || *zopts == 'u' || *zopts == 'x')
+		    {
+		      *zopts = 'r';
+		      if (zopts[1] != '\0')
+			zopts[1] = '\0';
+		      else
+			{
+			  ++i;
+			  azQargs[i] = (char *) "-r";
+			}
+		      break;
+		    }
+		}
+	    }
+	  else if (zfrom == NULL)
+	    zfrom = azQargs[i];
+	  else if (zto == NULL)
+	    zto = azQargs[i];
+	  else
+	    {
+	      fmany = TRUE;
+	      break;
+	    }
+	}
+
+      /* Add the -u argument.  This is required to let uucp do the
+	 correct permissions checking on the file transfer.  */
+      for (i = 0; azQargs[i] != NULL; i++)
+	;
+      azargs = (char **) xmalloc ((i + 2) * sizeof (char *));
+      azargs[0] = azQargs[0];
+      zuser = zQuser;
+      if (zuser == NULL)
+	zuser = "uucp";
+      zsystem = zQsystem;
+      if (zsystem == NULL)
+	zsystem = qsys->uuconf_zname;
+      azargs[1] = zbufalc (strlen (zsystem) + strlen (zuser)
+			   + sizeof "-u!");
+      sprintf (azargs[1], "-u%s!%s", zsystem, zuser);
+      memcpy (azargs + 2, azQargs + 1, i * sizeof (char *));
+      xfree ((pointer) azQargs);
+      azQargs = azargs;
+      iclean |= FREE_QARGS1;
+
+      /* Find the uucp binary.  */
+      zabsolute = zsysdep_find_command ("uucp", qsys->uuconf_pzcmds,
+					qsys->uuconf_pzpath, &ferr);
+      if (zabsolute == NULL && ! ferr)
+	{
+	  const char *azcmds[2];
+
+	  /* If "uucp" is not a permitted command, then the forwarding
+	     entries must be set.  */
+	  if (! fqforward (zfrom, qsys->uuconf_pzforward_from, "from", zmail)
+	      || ! fqforward (zto, qsys->uuconf_pzforward_to, "to", zmail))
+	    {
+	      uqcleanup (zfile, iclean);
+	      return;
+	    }
+
+	  /* If "uucp" is not a permitted command, then only uucp
+	     requests with a single source are permitted, since that
+	     is all that will be generated by uucp or uux.  */
+	  if (fmany)
+	    {
+	      ulog (LOG_ERROR, "Bad uucp request %s", zQcmd);
+
+	      if (zmail != NULL && ! fQno_ack)
+		{
+		  const char *az[20];
+
+		  i = 0;
+		  az[i++] = "Your execution request failed because it was an";
+		  az[i++] = " unsupported uucp request.\n";
+		  az[i++] = "Execution requested was:\n\t";
+		  az[i++] = zQcmd;
+		  az[i++] = "\n";
+
+		  (void) fsysdep_mail (zmail, "Execution failed", i, az);
+		}
+
+	      uqcleanup (zfile, iclean);
+	      return;
+	    }
+
+	  azcmds[0] = "uucp";
+	  azcmds[1] = NULL;
+	  zabsolute = zsysdep_find_command ("uucp", (char **) &azcmds,
+					    qsys->uuconf_pzpath, &ferr);
+	}
+      if (zabsolute == NULL)
+	{
+	  if (! ferr)
+	    ulog (LOG_ERROR, "Can't find uucp executable");
+
 	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
 	  *pfprocessed = FALSE;
 	  return;
 	}
-
-      /* Not permitted.  Send mail to requestor.  */
-      ulog (LOG_ERROR, "Not permitted to execute %s",
-	    azQargs[0]);
-
-      if (zmail != NULL && ! fQno_ack)
+    }
+  else
+    {
+      /* Get the pathname to execute.  */
+      zabsolute = zsysdep_find_command (azQargs[0], qsys->uuconf_pzcmds,
+					qsys->uuconf_pzpath,
+					&ferr);
+      if (zabsolute == NULL)
 	{
-	  const char *az[20];
+	  if (ferr)
+	    {
+	      /* If we get an error, try again later.  */
+	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	      *pfprocessed = FALSE;
+	      return;
+	    }
 
-	  i = 0;
-	  az[i++] = "Your execution request failed because you are not";
-	  az[i++] = " permitted to execute\n\t";
-	  az[i++] = azQargs[0];
-	  az[i++] = "\non this system.\n";
-	  az[i++] = "Execution requested was:\n\t";
-	  az[i++] = zQcmd;
-	  az[i++] = "\n";
+	  /* Not permitted.  Send mail to requestor.  */
+	  ulog (LOG_ERROR, "Not permitted to execute %s",
+		azQargs[0]);
 
-	  (void) fsysdep_mail (zmail, "Execution failed", i, az);
+	  if (zmail != NULL && ! fQno_ack)
+	    {
+	      const char *az[20];
+
+	      i = 0;
+	      az[i++] = "Your execution request failed because you are not";
+	      az[i++] = " permitted to execute\n\t";
+	      az[i++] = azQargs[0];
+	      az[i++] = "\non this system.\n";
+	      az[i++] = "Execution requested was:\n\t";
+	      az[i++] = zQcmd;
+	      az[i++] = "\n";
+
+	      (void) fsysdep_mail (zmail, "Execution failed", i, az);
+	    }
+
+	  uqcleanup (zfile, iclean);
+	  return;
 	}
-
-      uqcleanup (zfile, iclean);
-      return;
     }
 
   azQargs[0] = zabsolute;
@@ -1050,21 +1183,26 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 #endif
 
   /* Get a shell command which uses the full path of the command to
-     execute.  */
-  zfullcmd = (char *) alloca (strlen (zQcmd) + strlen (azQargs[0]) + 2);
-  *zfullcmd = '\0';
-  for (i = 0; azQargs[i] != NULL; i++)
+     execute.  Add in azQargs[0] and azQargs[1] because they may have
+     changed.  */
+  clen = strlen (zQcmd) + strlen (azQargs[0]) + 2;
+  if (azQargs[1] != NULL)
+    clen += strlen (azQargs[1]);
+  zfullcmd = zbufalc (clen);
+  strcpy (zfullcmd, azQargs[0]);
+  for (i = 1; azQargs[i] != NULL; i++)
     {
-      strcat (zfullcmd, azQargs[i]);
       strcat (zfullcmd, " ");
+      strcat (zfullcmd, azQargs[i]);
     }
-  zfullcmd[strlen (zfullcmd) - 1] = '\0';
 
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
 			 (const char **) azQargs, zfullcmd, zQinput,
 			 zoutput, fshell, iQlock_seq, &zerror, &ftemp))
     {
+      ubuffree (zfullcmd);
+
       if (ftemp)
 	{
 	  ulog (LOG_NORMAL, "Will retry later (%s)", zbase);
@@ -1147,6 +1285,8 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     }
   else
     {
+      ubuffree (zfullcmd);
+
       if (zmail != NULL && fQsuccess_ack)
 	{
 	  const char *az[20];
@@ -1237,9 +1377,13 @@ uqcleanup (zfile, iflags)
 
   if ((iflags & FREE_QARGS0) != 0)
     ubuffree (azQargs[0]);
+  if ((iflags & FREE_QARGS1) != 0)
+    ubuffree (azQargs[1]);
 
   if ((iflags & FREE_OUTPUT) != 0)
     ubuffree (zQoutput);
+  if ((iflags & FREE_MAIL) != 0)
+    ubuffree (zQmail);
 
   if (fQunlock_directory)
     {
@@ -1267,4 +1411,76 @@ uqcleanup (zfile, iflags)
 
   xfree ((pointer) azQfiles_to);
   azQfiles_to = NULL;
+}
+
+/* Check whether forwarding is permitted.  */
+
+static boolean
+fqforward (zfile, pzallowed, zlog, zmail)
+     const char *zfile;
+     char **pzallowed;
+     const char *zlog;
+     const char *zmail;
+{
+  const char *zexclam;
+
+  zexclam = strchr (zfile, '!');
+  if (zexclam != NULL)
+    {
+      size_t clen;
+      char *zsys;
+      boolean fret;
+
+      clen = zexclam - zfile;
+      zsys = zbufalc (clen + 1);
+      memcpy (zsys, zfile, clen);
+      zsys[clen] = '\0';
+
+      fret = FALSE;
+      if (pzallowed != NULL)
+	{
+	  char **pz;
+
+	  for (pz = pzallowed; *pz != NULL; pz++)
+	    {
+	      if (strcmp (*pz, "ANY") == 0
+		  || strcmp (*pz, zsys) == 0)
+		{
+		  fret = TRUE;
+		  break;
+		}
+	    }
+	}
+
+      if (! fret)
+	{
+	  ulog (LOG_ERROR, "Not permitted to forward %s %s (%s)",
+		zlog, zsys, zQcmd);
+
+	  if (zmail != NULL && ! fQno_ack)
+	    {
+	      int i;
+	      const char *az[20];
+
+	      i = 0;
+	      az[i++] = "Your execution request failed because you are";
+	      az[i++] = " not permitted to forward files\n";
+	      az[i++] = zlog;
+	      az[i++] = " the system\n\t";
+	      az[i++] = zsys;
+	      az[i++] = "\n";
+	      az[i++] = "Execution requested was:\n\t";
+	      az[i++] = zQcmd;
+	      az[i++] = "\n";
+
+	      (void) fsysdep_mail (zmail, "Execution failed", i, az);
+	    }
+	}
+
+      ubuffree (zsys);
+
+      return fret;
+    }
+
+  return TRUE;
 }

@@ -58,6 +58,7 @@ CMDTABFN (iicalled_login);
 CMDTABFN (iiproto_param);
 CMDTABFN (iirequest);
 CMDTABFN (iitransfer);
+CMDTABFN (iiforward);
 CMDTABFN (iiunknown);
 
 #undef CMDTABFN
@@ -159,8 +160,11 @@ static const struct cmdtab_offset asIcmds[] =
       offsetof (struct uuconf_system, uuconf_pzcmds), NULL },
   { "free-space", UUCONF_CMDTABTYPE_LONG,
       offsetof (struct uuconf_system, uuconf_cfree_space), NULL },
-  { "forwardto", UUCONF_CMDTABTYPE_FULLSTRING,
-      offsetof (struct uuconf_system, uuconf_pzforwardto), NULL },
+  { "forward-from", UUCONF_CMDTABTYPE_FULLSTRING,
+      offsetof (struct uuconf_system, uuconf_pzforward_from), NULL },
+  { "forward-to", UUCONF_CMDTABTYPE_FULLSTRING,
+      offsetof (struct uuconf_system, uuconf_pzforward_to), NULL },
+  { "forward", UUCONF_CMDTABTYPE_FN | 0, (size_t) -1, iiforward },
   { "pubdir", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_system, uuconf_zpubdir), NULL },
   { "myname", UUCONF_CMDTABTYPE_STRING,
@@ -790,6 +794,44 @@ iitransfer (pglobal, argc, argv, pvar, pinfo)
     qinfo->qsys->uuconf_fcalled_transfer = qinfo->qsys->uuconf_fcall_transfer;
 
   return iret;
+}
+
+/* Handle the "forward" command.  This is equivalent to specifying
+   both "forward-from" and "forward-to".  */
+
+/*ARGSUSED*/
+static int
+iiforward (pglobal, argc, argv, pvar, pinfo)
+     pointer pglobal;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+  struct sinfo *qinfo = (struct sinfo *) pinfo;
+  struct uuconf_system *qsys;
+  int i;
+  int iret;
+
+  qsys = qinfo->qsys;
+  qsys->uuconf_pzforward_from = NULL;
+  qsys->uuconf_pzforward_to = NULL;
+  for (i = 1; i < argc; i++)
+    {
+      iret = _uuconf_iadd_string (qglobal, argv[i], FALSE, FALSE,
+				  &qsys->uuconf_pzforward_to,
+				  qsys->uuconf_palloc);
+      if (iret != UUCONF_SUCCESS)
+	return iret | UUCONF_CMDTABRET_KEEP | UUCONF_CMDTABRET_EXIT;
+      iret = _uuconf_iadd_string (qglobal, argv[i], FALSE, FALSE,
+				  &qsys->uuconf_pzforward_from,
+				  qsys->uuconf_palloc);
+      if (iret != UUCONF_SUCCESS)
+	return iret | UUCONF_CMDTABRET_KEEP | UUCONF_CMDTABRET_EXIT;
+    }
+
+  return UUCONF_CMDTABRET_KEEP;
 }
 
 /* Handle an unknown command.  This should probably be done more

@@ -308,10 +308,14 @@ struct uuconf_system
   /* Amount of free space to leave when accepting a file from this
      system, in bytes.  */
   long uuconf_cfree_space;
-  /* NULL terminated list of systems that this system may forward to,
-     separated by spaces.  May be NULL if there are no systems to
-     which files may be forwarded.  */
-  char **uuconf_pzforwardto;
+  /* NULL terminated list of systems that this system may forward
+     from.  May be NULL if there are no systems from which files may
+     be forwarded.  The list may include "ANY".  */
+  char **uuconf_pzforward_from;
+  /* NULL terminated list of systems that this system may forward to.
+     May be NULL if there are no systems to which files may be
+     forwarded.  The list may include "ANY".  */
+  char **uuconf_pzforward_to;
   /* The public directory to use for this sytem.  */
   const char *uuconf_zpubdir;
   /* The local name to use for this remote system.  May be NULL if the

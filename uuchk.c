@@ -465,6 +465,22 @@ ukshow (qsys, puuconf)
       if (qsys->uuconf_zpubdir != NULL)
 	printf (" Public directory is %s\n", qsys->uuconf_zpubdir);
 
+      if (qsys->uuconf_pzforward_from != NULL)
+	{
+	  printf (" May forward from");
+	  for (pz = qsys->uuconf_pzforward_from; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
+	  
+      if (qsys->uuconf_pzforward_to != NULL)
+	{
+	  printf (" May forward to");
+	  for (pz = qsys->uuconf_pzforward_to; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
+	  
       if (qsys->uuconf_zprotocols != NULL)
 	printf (" Will use protocols %s\n", qsys->uuconf_zprotocols);
       else

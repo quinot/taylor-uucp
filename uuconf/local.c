@@ -39,6 +39,7 @@ uuconf_system_local (pglobal, qsys)
      struct uuconf_system *qsys;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
+  int iret;
 
   _uuconf_uclear_system (qsys);
   qsys->uuconf_palloc = uuconf_malloc_block ();
@@ -49,6 +50,21 @@ uuconf_system_local (pglobal, qsys)
     }
 
   qsys->uuconf_zname = (char *) qglobal->qprocess->zlocalname;
+
+  /* By default, we permit the local system to forward to and from any
+     system.  */
+  iret = _uuconf_iadd_string (qglobal, (char *) "ANY", FALSE, FALSE,
+			      &qsys->uuconf_pzforward_from,
+			      qsys->uuconf_palloc);
+  if (iret == UUCONF_SUCCESS)
+    iret = _uuconf_iadd_string (qglobal, (char *) "ANY", FALSE, FALSE,
+				&qsys->uuconf_pzforward_to,
+				qsys->uuconf_palloc);
+  if (iret != UUCONF_SUCCESS)
+    {
+      uuconf_free_block (qsys->uuconf_palloc);
+      return iret;
+    }
 
   return _uuconf_isystem_basic_default (qglobal, qsys);
 }

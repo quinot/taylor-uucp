@@ -62,7 +62,8 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
       OP (uuconf_pzremote_receive); \
       OP (uuconf_pzpath); \
       OP (uuconf_pzcmds); \
-      OP (uuconf_pzforwardto); \
+      OP (uuconf_pzforward_from); \
+      OP (uuconf_pzforward_to); \
       OP (uuconf_schat.uuconf_pzchat); \
       OP (uuconf_schat.uuconf_pzprogram); \
       OP (uuconf_schat.uuconf_pzfail); \
