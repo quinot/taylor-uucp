@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/17  07:09:58  ian
+   Record statistics in fractions of a second
+
    Revision 1.11  1991/12/14  16:09:07  ian
    Added -l option to uux to link files into the spool directory
 
@@ -169,6 +172,19 @@ extern long isysdep_time P((void));
    since some epoch.  If microseconds can not be determined, *pimicros
    can just be set to zero.  */
 extern void usysdep_full_time P((long *pisecs, long *pimicros));
+
+/* Get the current time in a struct tm, and also get microseconds.  I
+   assume that this structure is defined in <time.h>.  This is
+   basically just localtime, except that it also returns the current
+   number of microseconds.  It is a system dependent function because
+   there is no way in ANSI way to get microseconds, and there's no
+   reason to expect that I can pass the seconds returned from
+   usysdep_full_time to localtime.  The typedef is a hack to avoid the
+   problem of mentioning a structure for the first time in a prototype
+   while remaining compatible with standard C.  The type tm_ptr is
+   never again referred to.  */
+typedef struct tm *tm_ptr;
+extern void usysdep_localtime P((tm_ptr q, long *pimicros));
 
 /* Sleep for a number of seconds.  */
 extern void usysdep_sleep P((int cseconds));

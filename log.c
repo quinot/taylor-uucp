@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/21  23:10:43  ian
+   Terry Gardner: record failed file transfers in statistics file
+
    Revision 1.8  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -510,8 +513,8 @@ ustats_close ()
 static const char *
 zldate_and_time ()
 {
-  time_t itime;
-  struct tm *q;
+  struct tm s;
+  long imicros;
 #if HAVE_TAYLOR_LOGGING
   static char ab[sizeof "Dec 31 12:00"];
 #endif
@@ -522,21 +525,20 @@ zldate_and_time ()
   static char ab[sizeof "12/31-12:00:00"];
 #endif
 
-  (void) time (&itime);
-  q = localtime (&itime);
+  usysdep_localtime (&s, &imicros);
 
 #if HAVE_TAYLOR_LOGGING
-  sprintf (ab, "%.3s %d %02d:%02d",
-	   "JanFebMarAprMayJunJulAugSepOctNovDec" + q->tm_mon * 3,
-	   q->tm_mday, q->tm_hour, q->tm_min);
+  sprintf (ab, "%04d-%02d-%02d %02d:%02d:%02d.%02d",
+	   s.tm_year + 1900, s.tm_mon + 1, s.tm_mday, s.tm_hour,
+	   s.tm_min, s.tm_sec, (int) (imicros / 10000));
 #endif
 #if HAVE_V2_LOGGING
-  sprintf (ab, "%d/%d-%02d:%02d", q->tm_mon + 1, q->tm_mday,
-	   q->tm_hour, q->tm_min);
+  sprintf (ab, "%d/%d-%02d:%02d", s.tm_mon + 1, s.tm_mday,
+	   s.tm_hour, s.tm_min);
 #endif
 #if HAVE_BNU_LOGGING
-  sprintf (ab, "%d/%d-%02d:%02d:%02d", q->tm_mon + 1, q->tm_mday,
-	   q->tm_hour, q->tm_min, q->tm_sec);
+  sprintf (ab, "%d/%d-%02d:%02d:%02d", s.tm_mon + 1, s.tm_mday,
+	   s.tm_hour, s.tm_min, s.tm_sec);
 #endif
 
   return ab;
