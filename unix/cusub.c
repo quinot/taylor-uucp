@@ -330,7 +330,7 @@ fsysdep_cu (qconn, pbcmd, zlocalname)
       if (c <= 0)
 	break;
 
-      if (fstart && b == *zCuvar_escape)
+      if (fstart && b == *zCuvar_escape && b != '\0')
 	{
 	  c = cscu_escape (pbcmd, zlocalname);
 	  if (c <= 0)
