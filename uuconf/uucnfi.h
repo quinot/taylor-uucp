@@ -1,7 +1,7 @@
 /* uucnfi.h
    Internal header file for the uuconf package.
 
-   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -78,6 +78,10 @@ struct sprocess
   const char *zdebugfile;
   /* The default debugging level.  */
   const char *zdebug;
+  /* Whether login information should be stripped.  */
+  boolean fstrip_login;
+  /* Whether protocol information should be stripped.  */
+  boolean fstrip_proto;
   /* The maximum number of simultaneously executing uuxqts.  */
   int cmaxuuxqts;
   /* How often to spawn a uuxqt process.  */
