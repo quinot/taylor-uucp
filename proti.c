@@ -1188,10 +1188,10 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	 iIremote_ack is the last sequence number acknowledged by the
 	 remote system.  */
       iack = IHDRWIN_GETSEQ (ab[IHDR_REMOTE]);
-      if (iIrequest_winsize > 0
+      if (iIremote_winsize > 0
 	  && iack != iIsendseq
-	  && CSEQDIFF (iack, iIremote_ack) <= iIrequest_winsize
-	  && CSEQDIFF (iIsendseq, iack) <= iIrequest_winsize)
+	  && CSEQDIFF (iack, iIremote_ack) <= iIremote_winsize
+	  && CSEQDIFF (iIsendseq, iack) <= iIremote_winsize)
 	{
 	  /* Call uwindow_acked each time packet 0 is acked.  */
 	  if (iack < iIremote_ack)
@@ -1285,14 +1285,14 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	    }
 	}
 
-      /* If we have received half the window size or more since the
+      /* If we have received half of our window size or more since the
 	 last ACK, send one now.  Note that this is unlikely if we are
 	 currently sending data, since each packet sent will ACK the
 	 most recently received packet.  Sending an ACK for half the
 	 window at a time should significantly cut the acknowledgement
 	 traffic when only one side is sending.  */
-      if (iIremote_winsize > 0
-	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= iIremote_winsize / 2)
+      if (iIrequest_winsize > 0
+	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= iIrequest_winsize / 2)
 	{
 	  char aback[CHDRLEN];
 
@@ -1418,10 +1418,10 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 
 	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
 
-	if (iIrequest_winsize > 0
+	if (iIremote_winsize > 0
 	    && (iseq == iIsendseq
-		|| CSEQDIFF (iseq, iIremote_ack) > iIrequest_winsize
-		|| CSEQDIFF (iIsendseq, iseq) > iIrequest_winsize))
+		|| CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
+		|| CSEQDIFF (iIsendseq, iseq) > iIremote_winsize))
 	  {
 	    DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			    "fiprocess_packet: Ignoring out of order NAK %d",
