@@ -26,13 +26,13 @@
 #include "uucnfi.h"
 
 #if USE_RCS_ID
-char _uuconf_spool_rcsid[] = "$Id$";
+char _uuconf_pubdir_rcsid[] = "$Id$";
 #endif
 
 /* Get the name of the UUCP public directory.  */
 
 int
-uuconf_spooldir (pglobal, pzpub)
+uuconf_pubdir (pglobal, pzpub)
      pointer pglobal;
      const char **pzpub;
 {
