@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/12/29  04:22:41  ian
+   The mailing address was not getting initialized
+
    Revision 1.13  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -112,7 +115,6 @@ int
 main (argc, argv)
      int argc;
      char **argv;
-
 {
   int iopt;
   /* The type of command to execute (NULL for any type).  */
@@ -806,7 +808,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  az[i++] = "Your execution request failed because you are not";
 	  az[i++] = " permitted to execute\n\t";
 	  az[i++] = azQargs[0];
-	  az[i++] = "\non this system\n";
+	  az[i++] = "\non this system.\n";
 	  az[i++] = "Execution requested was:\n\t";
 	  az[i++] = zQcmd;
 	  az[i++] = "\n";
@@ -825,6 +827,36 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     strcpy (zcopy, zabsolute);
     zabsolute = zcopy;
   }
+
+  /* Check all the arguments to make sure they don't try to specify
+     files they are not permitted to access.  */
+
+  for (i = 0; azQargs[i] != NULL; i++)
+    {
+      if (! fsysdep_xqt_check_file (qsys, azQargs[i]))
+	{
+	  if (zmail != NULL && ! fQno_ack)
+	    {
+	      const char *az[20];
+	      const char *zfailed;
+
+	      zfailed = azQargs[i];
+	      i = 0;
+	      az[i++] = "Your execution request failed because you are not";
+	      az[i++] = " permitted to refer to file\n\t";
+	      az[i++] = zfailed;
+	      az[i++] = "\non this system.\n";
+	      az[i++] = "Execution requested was:\n\t";
+	      az[i++] = zQcmd;
+	      az[i++] = "\n";
+
+	      (void) fsysdep_mail (zmail, "Execution failed", i, az);
+	    }
+
+	  uqcleanup (zfile, iclean);
+	  return;
+	}
+    }
 
   ulog (LOG_NORMAL, "Executing %s (%s)", zfile, zQcmd);
 
@@ -952,7 +984,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	      az[i++] = "Your execution request failed because you are";
 	      az[i++] = " not permitted to write to\n\t";
 	      az[i++] = zQoutfile;
-	      az[i++] = "\non this system\n";
+	      az[i++] = "\non this system.\n";
 	      az[i++] = "Execution requested was:\n\t";
 	      az[i++] = zQcmd;
 	      az[i++] = "\n";
