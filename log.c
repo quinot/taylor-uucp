@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/01/16  18:07:18  ian
+   Niels Baggesen: add FAILED to end of xferstats line if appropriate
+
    Revision 1.14  1992/01/12  19:32:29  ian
    Handle HAVE_BNU_LOGGING with no %s in zLogfile
 
@@ -508,8 +511,10 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
        number should probably correspond to the sequence number in the
        log file, but that is currently always 0; using this fake
        sequence number will still at least reveal which transfers are
-       from different calls.  I don't know how to report a failed data
-       transfer with this format.  */
+       from different calls.  We don't report a failed data transfer
+       with this format.  */
+    if (! fsucceeded)
+      return;
     ++iseq;
     fprintf (eLstats,
 	     "%s!%s M (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld %s\n",
@@ -517,7 +522,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 	     zLdevice == NULL ? "unknown" : zLdevice,
 	     fsent ? "->" : "<-",
 	     cbytes, csecs, cmicros / 1000, cbps,
-	     fsucceeded ? "bytes/sec" : "bytes/sec FAILED");
+	     "bytes/sec");
   }
 #endif /* HAVE_BNU_LOGGING */
 
