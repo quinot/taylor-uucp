@@ -488,7 +488,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	  {
 	    if (c < 040 || c >= 0177)
 	      fprintf (stderr, "%s: unrecognized option, character code 0%o\n",
-		       argv[0], (unsigned int) c);
+		       argv[0], BUCHAR (c));
 	    else
 	      fprintf (stderr, "%s: unrecognized option `-%c'\n", argv[0], c);
 	  }
