@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/03/28  21:47:55  ian
+   David J. MacKenzie: allow backslash to quote newline in config files
+
    Revision 1.24  1992/03/28  21:28:00  ian
    David J. MacKenzie: handle empty subexpect strings correctly
 
@@ -653,7 +656,7 @@ ucsend_debug_end (fquote, ferr)
   if (ferr)
     ulog (LOG_DEBUG_CONTINUE, " (error)");
 
-  ulog (LOG_DEBUG_END, "");
+  ulog (LOG_DEBUG_END, "%s", "");
 
   iDebug = iColddebug;
 }
