@@ -42,24 +42,4 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-HDRS = $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
-
-bsrch.o: $(HDRS)
-bzero.o: $(HDRS)
-getlin.o: $(HDRS)
-memchr.o: $(HDRS)
-memcmp.o: $(HDRS)
-memcpy.o: $(HDRS)
-memmov.o: $(HDRS)
-strcas.o: $(HDRS)
-strchr.o: $(HDRS)
-strdup.o: $(HDRS)
-strlwr.o: $(HDRS)
-strncs.o: $(HDRS)
-strrch.o: $(HDRS)
-strstr.o: $(HDRS)
-strtol.o: $(HDRS)
-xfree.o: $(HDRS)
-xmall.o: $(HDRS)
-xreall.o: $(HDRS)
-xstrdp.o: $(HDRS)
+$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h

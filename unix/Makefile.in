@@ -43,18 +43,16 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-HDRS = $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
 
-dirent.o: $(HDRS) $(srcdir)/../sysdep.h
-dup2.o: $(HDRS) $(srcdir)/../sysdep.h
-epopen.o: $(HDRS) $(srcdir)/../sysdep.h
-ftw.o: $(HDRS) $(srcdir)/../sysdep.h
-isfork.o: $(HDRS) $(srcdir)/../sysdep.h
-iswait.o: $(HDRS) $(srcdir)/../sysdep.h
-mkdir.o: $(HDRS) $(srcdir)/../sysdep.h
-remove.o: $(HDRS)
-rename.o: $(HDRS) $(srcdir)/../sysdep.h
-rmdir.o: $(HDRS) $(srcdir)/../sysdep.h
-spawn.o: $(HDRS) $(srcdir)/../sysdep.h
-srmdir.o: $(HDRS) $(srcdir)/../sysdep.h $(srcdir)/../system.h
-strerr.o: $(HDRS)
+dirent.o: $(srcdir)/../sysdep.h
+dup2.o: $(srcdir)/../sysdep.h
+epopen.o: $(srcdir)/../sysdep.h
+ftw.o: $(srcdir)/../sysdep.h
+isfork.o: $(srcdir)/../sysdep.h
+iswait.o: $(srcdir)/../sysdep.h
+mkdir.o: $(srcdir)/../sysdep.h
+rename.o: $(srcdir)/../sysdep.h
+rmdir.o: $(srcdir)/../sysdep.h
+spawn.o: $(srcdir)/../sysdep.h
+srmdir.o: $(srcdir)/../sysdep.h $(srcdir)/../system.h

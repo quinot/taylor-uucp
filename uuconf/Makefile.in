@@ -69,89 +69,14 @@ Makefile: Makefile.in
 
 # Header file dependencies
 
-HDRS = uucnfi.h syshdr.h $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
 
 uuconv.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h getopt.h
 
-addblk.o: $(HDRS) alloc.h
-addstr.o: $(HDRS)
-allblk.o: $(HDRS) alloc.h
-alloc.o: $(HDRS) alloc.h
-base.o: $(HDRS)
-bool.o: $(HDRS)
-callin.o: $(HDRS)
-calout.o: $(HDRS)
-chatc.o: $(HDRS)
-cmdarg.o: $(HDRS)
-cmdfil.o: $(HDRS)
-cmdlin.o: $(HDRS)
-debfil.o: $(HDRS)
-deblev.o: $(HDRS)
-diacod.o: $(HDRS)
-dial.o: $(HDRS)
-diasub.o: $(HDRS)
-dnams.o: $(HDRS)
-errno.o: $(HDRS)
-errstr.o: $(HDRS)
-filnam.o: $(HDRS)
-freblk.o: $(HDRS) alloc.h
-fredia.o: $(HDRS)
-free.o: $(HDRS) alloc.h
-freprt.o: $(HDRS)
-fresys.o: $(HDRS)
-grdcmp.o: $(HDRS)
-hdial.o: $(HDRS)
-hdnams.o: $(HDRS)
-hinit.o: $(HDRS)
-hlocnm.o: $(HDRS)
-hport.o: $(HDRS)
-hsinfo.o: $(HDRS)
-hsnams.o: $(HDRS)
-hsys.o: $(HDRS)
-hunk.o: $(HDRS)
-iniglb.o: $(HDRS)
-init.o: $(HDRS)
-int.o: $(HDRS)
-lckdir.o: $(HDRS)
-lineno.o: $(HDRS)
-local.o: $(HDRS)
-locnm.o: $(HDRS)
-logfil.o: $(HDRS)
-maxuxq.o: $(HDRS)
-mrgblk.o: $(HDRS) alloc.h
-paramc.o: $(HDRS)
-port.o: $(HDRS)
-prtsub.o: $(HDRS)
-pubdir.o: $(HDRS)
-rdlocs.o: $(HDRS)
-rdperm.o: $(HDRS)
-reliab.o: $(HDRS)
-sinfo.o: $(HDRS)
-snams.o: $(HDRS)
-split.o: $(HDRS)
-spool.o: $(HDRS)
-stafil.o: $(HDRS)
-syssub.o: $(HDRS)
-tcalou.o: $(HDRS)
-tdial.o: $(HDRS)
-tdialc.o: $(HDRS)
-tdnams.o: $(HDRS)
-tgcmp.o: $(HDRS)
-thread.o: $(HDRS)
-time.o: $(HDRS)
-tinit.o: $(HDRS)
-tlocnm.o: $(HDRS)
-tport.o: $(HDRS)
-tportc.o: $(HDRS)
-tsinfo.o: $(HDRS)
-tsnams.o: $(HDRS)
-tsys.o: $(HDRS)
-tval.o: $(HDRS)
-ugtlin.o: $(HDRS)
-unk.o: $(HDRS)
-val.o: $(HDRS)
-vinit.o: $(HDRS)
-vport.o: $(HDRS)
-vsinfo.o: $(HDRS)
-vsnams.o: $(HDRS)
-vsys.o: $(HDRS)
+$(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+
+addblk.o: alloc.h
+allblk.o: alloc.h
+alloc.o: alloc.h
+freblk.o: alloc.h
+free.o: alloc.h
+mrgblk.o: alloc.h
