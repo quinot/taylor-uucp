@@ -31,6 +31,8 @@ const char util_rcsid[] = "$Id$";
 
 #include <ctype.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 
 /* Get information for an unknown system.  This will leave the name

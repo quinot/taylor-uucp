@@ -31,6 +31,8 @@ const char conn_rcsid[] = "$Id$";
 
 #include <ctype.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 
 static boolean fcdo_dial P((struct sconnection *qconn, pointer puuconf,

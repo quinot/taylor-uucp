@@ -29,13 +29,15 @@
 const char cusub_rcsid[] = "$Id$";
 #endif
 
+#include <errno.h>
+
+#include "uudefs.h"
+#include "uuconf.h"
 #include "sysdep.h"
 #include "system.h"
 #include "cu.h"
 #include "conn.h"
 #include "prot.h"
-
-#include <errno.h>
 
 /* Local variables.  */
 
@@ -840,7 +842,7 @@ zsysdep_terminal_line (zprompt)
 {
   CATCH_PROTECT size_t cbuf = 0;
   CATCH_PROTECT char *zbuf = NULL;
-  CATCH_PROTECT int cgot = 0;
+  CATCH_PROTECT size_t cgot = 0;
 
   if (zprompt != NULL && *zprompt != '\0')
     (void) write (1, zprompt, strlen (zprompt));
@@ -956,7 +958,7 @@ fsysdep_terminal_puts (zline)
      const char *zline;
 {
   char *zalc;
-  int clen;
+  size_t clen;
 
   if (zline == NULL)
     {

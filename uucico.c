@@ -33,6 +33,8 @@ const char uucico_rcsid[] = "$Id$";
 
 #include "getopt.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "prot.h"
 #include "trans.h"
@@ -396,7 +398,7 @@ main (argc, argv)
 	  for (pz = pznames; *pz != NULL; pz++)
 	    c++;
 
-	  srand ((int) isysdep_time ((long *) NULL));
+	  srand ((unsigned int) isysdep_time ((long *) NULL));
 	  for (i = c - 1; i > 0; i--)
 	    {
 	      int iuse;

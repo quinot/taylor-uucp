@@ -24,6 +24,9 @@
    */
 
 #include "uucp.h"
+
+#include "uuconf.h"
+#include "system.h"
 #include "sysdep.h"
 
 #define ZDIGS \

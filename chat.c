@@ -32,6 +32,8 @@ const char chat_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "prot.h"
 #include "system.h"
@@ -1246,7 +1248,7 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		  zadd = zprefix;
 		else
 		  {
-		    int cprefix;
+		    size_t cprefix;
 
 		    cprefix = strlen (zprefix);
 		    if (clen + cprefix + 1 > calc)

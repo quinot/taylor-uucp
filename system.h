@@ -28,6 +28,17 @@
 
 #define SYSTEM_H
 
+#if ANSI_C
+/* These structures are used in prototypes but are not defined in this
+   header file.  */
+struct tm;
+struct uuconf_system;
+struct uuconf_port;
+struct sconnection;
+struct sstatus;
+struct scmd;
+#endif
+
 /* Any function which returns an error should also report an error
    message, unless otherwise indicated.
 
@@ -36,7 +47,7 @@
    freed using ubuffree, unless otherwise indicated.  */
 
 /* The maximum length of a remote system name.  */
-extern int cSysdep_max_name_len;
+extern size_t cSysdep_max_name_len;
 
 /* Initialize.  If something goes wrong, this routine should just
    exit.  The flag argument is 0, or a combination of any of the
@@ -114,15 +125,23 @@ extern void usysdep_signal P((int isig));
    TRUE, usysdep_start_catch should be used to start catching the
    signal; this basically tells the signal handler that it's OK to do
    the longjmp, if fsysdep_catch did not already do so.  */
+#ifndef fsysdep_catch
 extern boolean fsysdep_catch P((void));
+#endif
 
 /* Start catching a signal.  This is called after fsysdep_catch to
-   tell the signal handler to go ahead and do the longjmp.  */
+   tell the signal handler to go ahead and do the longjmp.  This may
+   be implemented as a macro in sysdep.h.  */
+#ifndef usysdep_start_catch
 extern void usysdep_start_catch P((void));
+#endif
 
 /* Stop catching a signal.  This is called when it is no longer
-   necessary for fsysdep_catch to handle signals.  */
+   necessary for fsysdep_catch to handle signals.  This may be
+   implemented as a macro in sysdep.h.  */
+#ifndef usysdep_end_catch
 extern void usysdep_end_catch P((void));
+#endif
 
 /* Link two files.  On Unix this should attempt the link.  If it
    succeeds it should return TRUE with *pfworked set to TRUE.  If the
@@ -221,12 +240,8 @@ extern long isysdep_process_time P((long *pimicros));
 /* Parse the value returned by isysdep_time into a struct tm.  I
    assume that this structure is defined in <time.h>.  This is
    basically just localtime, except that the ANSI function takes a
-   time_t which may not be what is returned by isysdep_time.  The
-   typedef is a hack to avoid the problem of mentioning a structure
-   for the first time in a prototype while remaining compatible with
-   standard C.  The type tm_ptr is never again referred to.  */
-typedef struct tm *tm_ptr;
-extern void usysdep_localtime P((long itime, tm_ptr q));
+   time_t which may not be what is returned by isysdep_time.  */
+extern void usysdep_localtime P((long itime, struct tm *q));
 
 /* Sleep for a number of seconds.  */
 extern void usysdep_sleep P((int cseconds));
@@ -728,7 +743,7 @@ extern boolean fsysdep_lock_status P((void));
    used by cu to control whether the user can open a port directly,
    rather than merely being able to dial out on it.  Opening a port
    directly allows the modem to be reprogrammed.  */
-extern boolean fsysdep_port_access P((struct uuconf_port *));
+extern boolean fsysdep_port_access P((struct uuconf_port *qport));
 
 /* Return whether the given port could be named by the given line.  On
    Unix, the line argument would be something like "ttyd0", and this

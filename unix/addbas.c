@@ -2,6 +2,8 @@
    If we have a directory, add in a base name.  */
 
 #include "uucp.h"
+
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 

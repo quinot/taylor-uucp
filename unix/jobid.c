@@ -24,6 +24,9 @@
    */
 
 #include "uucp.h"
+
+#include "uuconf.h"
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 

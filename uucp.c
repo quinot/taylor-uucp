@@ -34,6 +34,8 @@ const char uucp_rcsid[] = "$Id$";
 
 #include "getopt.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 
 /* Local functions.  */

@@ -23,11 +23,19 @@
    c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
-/* We use these typedefs for pointers to structures that may not be
-   defined yet.  This avoids problems of defining a structure in an
-   ANSI C prototype.  */
-typedef struct sdaemon *daemon_ptr;
-typedef struct stransfer *transfer_ptr;
+/* We need the definition of uuconf_cmdtab to declare the protocol
+   parameter arrays.  */
+#ifndef UUCONF_H
+#include "uuconf.h"
+#endif
+
+#if ANSI_C
+/* These structures are used in prototypes but are not defined in this
+   header file.  */
+struct sdaemon;
+struct sconnection;
+struct stransfer;
+#endif
 
 /* The sprotocol structure holds information and functions for a specific
    protocol (e.g. the 'g' protocol).  */
@@ -44,30 +52,30 @@ struct sprotocol
   /* Protocol parameter commands.  */
   struct uuconf_cmdtab *qcmds;
   /* A routine to start the protocol.  */
-  boolean (*pfstart) P((daemon_ptr qdaemon));
+  boolean (*pfstart) P((struct sdaemon *qdaemon));
   /* Shutdown the protocol.  */
-  boolean (*pfshutdown) P((daemon_ptr qdaemon));
+  boolean (*pfshutdown) P((struct sdaemon *qdaemon));
   /* Send a command to the other side.  */
-  boolean (*pfsendcmd) P((daemon_ptr qdaemon, const char *z,
+  boolean (*pfsendcmd) P((struct sdaemon *qdaemon, const char *z,
 			  int ilocal, int iremote));
   /* Get buffer to space to fill with data.  This should set *pcdata
      to the amount of data desired.  */
-  char *(*pzgetspace) P((daemon_ptr qdaemon, size_t *pcdata));
+  char *(*pzgetspace) P((struct sdaemon *qdaemon, size_t *pcdata));
   /* Send data to the other side.  The argument z must be a return
      value of pzgetspace.  The ipos argument is the file position, and
      is ignored by most protocols.  */
-  boolean (*pfsenddata) P((daemon_ptr qdaemon, char *z, size_t c,
+  boolean (*pfsenddata) P((struct sdaemon *qdaemon, char *z, size_t c,
 			   int ilocal, int iremote, long ipos));
   /* Wait for data to come in and call fgot_data with it until
      fgot_data sets *pfexit.  */
-  boolean (*pfwait) P((daemon_ptr qdaemon));
+  boolean (*pfwait) P((struct sdaemon *qdaemon));
   /* Handle any file level actions that need to be taken.  If a file
      transfer is starting rather than ending, fstart is TRUE.  If the
      file is being sent rather than received, fsend is TRUE.  If
      fstart and fsend are both TRUE, cbytes holds the size of the
      file.  If *pfhandled is set to TRUE, then the protocol routine
      has taken care of queueing up qtrans for the next action.  */
-  boolean (*pffile) P((daemon_ptr qdaemon, transfer_ptr qtrans,
+  boolean (*pffile) P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 		       boolean fstart, boolean fsend, long cbytes,
 		       boolean *pfhandled));
 };
@@ -120,68 +128,68 @@ extern int iPrecend;
 /* Prototypes for 'g' protocol functions.  */
 
 extern struct uuconf_cmdtab asGproto_params[];
-extern boolean fgstart P((daemon_ptr qdaemon));
-extern boolean fgshutdown P((daemon_ptr qdaemon));
-extern boolean fgsendcmd P((daemon_ptr qdaemon, const char *z,
+extern boolean fgstart P((struct sdaemon *qdaemon));
+extern boolean fgshutdown P((struct sdaemon *qdaemon));
+extern boolean fgsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
-extern char *zggetspace P((daemon_ptr qdaemon, size_t *pcdata));
-extern boolean fgsenddata P((daemon_ptr qdaemon, char *z, size_t c,
+extern char *zggetspace P((struct sdaemon *qdaemon, size_t *pcdata));
+extern boolean fgsenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
-extern boolean fgwait P((daemon_ptr qdaemon));
+extern boolean fgwait P((struct sdaemon *qdaemon));
 
 /* Prototypes for 'f' protocol functions.  */
 
 extern struct uuconf_cmdtab asFproto_params[];
-extern boolean ffstart P((daemon_ptr qdaemon));
-extern boolean ffshutdown P((daemon_ptr qdaemon));
-extern boolean ffsendcmd P((daemon_ptr qdaemon, const char *z,
+extern boolean ffstart P((struct sdaemon *qdaemon));
+extern boolean ffshutdown P((struct sdaemon *qdaemon));
+extern boolean ffsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
-extern char *zfgetspace P((daemon_ptr qdaemon, size_t *pcdata));
-extern boolean ffsenddata P((daemon_ptr qdaemon, char *z, size_t c,
+extern char *zfgetspace P((struct sdaemon *qdaemon, size_t *pcdata));
+extern boolean ffsenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
-extern boolean ffwait P((daemon_ptr qdaemon));
-extern boolean fffile P((daemon_ptr qdaemon, transfer_ptr qtrans,
+extern boolean ffwait P((struct sdaemon *qdaemon));
+extern boolean fffile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 			 boolean fstart, boolean fsend, long cbytes,
 			 boolean *pfhandled));
 
 /* Prototypes for 't' protocol functions.  */
 
 extern struct uuconf_cmdtab asTproto_params[];
-extern boolean ftstart P((daemon_ptr qdaemon));
-extern boolean ftshutdown P((daemon_ptr qdaemon));
-extern boolean ftsendcmd P((daemon_ptr qdaemon, const char *z,
+extern boolean ftstart P((struct sdaemon *qdaemon));
+extern boolean ftshutdown P((struct sdaemon *qdaemon));
+extern boolean ftsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
-extern char *ztgetspace P((daemon_ptr qdaemon, size_t *pcdata));
-extern boolean ftsenddata P((daemon_ptr qdaemon, char *z, size_t c,
+extern char *ztgetspace P((struct sdaemon *qdaemon, size_t *pcdata));
+extern boolean ftsenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
-extern boolean ftwait P((daemon_ptr qdaemon));
-extern boolean ftfile P((daemon_ptr qdaemon, transfer_ptr qtrans,
+extern boolean ftwait P((struct sdaemon *qdaemon));
+extern boolean ftfile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 			 boolean fstart, boolean fsend, long cbytes,
 			 boolean *pfhandled));
 
 /* Prototypes for 'e' protocol functions.  */
 
 extern struct uuconf_cmdtab asEproto_params[];
-extern boolean festart P((daemon_ptr qdaemon));
-extern boolean feshutdown P((daemon_ptr qdaemon));
-extern boolean fesendcmd P((daemon_ptr qdaemon, const char *z,
+extern boolean festart P((struct sdaemon *qdaemon));
+extern boolean feshutdown P((struct sdaemon *qdaemon));
+extern boolean fesendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
-extern char *zegetspace P((daemon_ptr qdaemon, size_t *pcdata));
-extern boolean fesenddata P((daemon_ptr qdaemon, char *z, size_t c,
+extern char *zegetspace P((struct sdaemon *qdaemon, size_t *pcdata));
+extern boolean fesenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
-extern boolean fewait P((daemon_ptr qdaemon));
-extern boolean fefile P((daemon_ptr qdaemon, transfer_ptr qtrans,
+extern boolean fewait P((struct sdaemon *qdaemon));
+extern boolean fefile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 			 boolean fstart, boolean fsend, long cbytes,
 			 boolean *pfhandled));
 
 /* Prototypes for 'i' protocol functions.  */
 
 extern struct uuconf_cmdtab asIproto_params[];
-extern boolean fistart P((daemon_ptr qdaemon));
-extern boolean fishutdown P((daemon_ptr qdaemon));
-extern boolean fisendcmd P((daemon_ptr qdaemon, const char *z,
+extern boolean fistart P((struct sdaemon *qdaemon));
+extern boolean fishutdown P((struct sdaemon *qdaemon));
+extern boolean fisendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
-extern char *zigetspace P((daemon_ptr qdaemon, size_t *pcdata));
-extern boolean fisenddata P((daemon_ptr qdaemon, char *z, size_t c,
+extern char *zigetspace P((struct sdaemon *qdaemon, size_t *pcdata));
+extern boolean fisenddata P((struct sdaemon *qdaemon, char *z, size_t c,
 			     int ilocal, int iremote, long ipos));
-extern boolean fiwait P((daemon_ptr qdaemon));
+extern boolean fiwait P((struct sdaemon *qdaemon));

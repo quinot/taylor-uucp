@@ -24,8 +24,6 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
 
@@ -78,6 +76,11 @@
 #if FS_USTAT
 #include <ustat.h>
 #endif
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Open a file to send to another system, and return the mode and
    the size.  */

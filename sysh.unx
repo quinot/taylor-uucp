@@ -27,11 +27,11 @@
 
 #define SYSH_UNX_H
 
-/* We're might redefine fsysdep_catch, so make sure we've gotten the
-   prototype already.  */
-
-#ifndef SYSTEM_H
-#include "system.h"
+#if ANSI_C
+/* These structures are used in prototypes but are not defined in this
+   header file.  */
+struct uuconf_system;
+struct sconnection;
 #endif
 
 /* Make sure the defines do not conflict.  These are in this file
@@ -316,7 +316,6 @@ struct ssysdep_conn
 
 /* These functions do I/O and chat scripts to a port.  They are called
    by the TCP and TLI routines.  */
-
 extern boolean fsysdep_conn_read P((struct sconnection *qconn,
 				    char *zbuf, size_t *pclen,
 				    size_t cmin, int ctimeout,

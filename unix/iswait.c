@@ -24,13 +24,15 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
 
 #include <errno.h>
 
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
+
+#include "uudefs.h"
+#include "sysdep.h"
 
 /* We use a typedef wait_status for wait (waitpid, wait4) to put
    results into.  We define the POSIX examination functions we need if

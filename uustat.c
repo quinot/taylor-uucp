@@ -36,8 +36,11 @@ const char uustat_rcsid[] = "$Id$";
 #include <time.h>
 #endif
 
-#include "system.h"
 #include "getopt.h"
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
 
 /* The uustat program permits various listings and manipulations of
    files in the spool directory.  This implementation supports the

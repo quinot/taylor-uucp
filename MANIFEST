@@ -44,6 +44,7 @@ uucp.1
 uucp.c
 uucp.h
 uucp.texi
+uudefs.h
 uudir.c
 uulog.c
 uuname.c

@@ -128,6 +128,20 @@ struct stransfer
   int calcs;
 };
 
+/* Reasons that a file transfer might fail.  */
+
+enum tfailure
+{
+  /* No failure.  */
+  FAILURE_NONE,
+  /* No permission for operation.  */
+  FAILURE_PERM,
+  /* Can't open necessary file.  */
+  FAILURE_OPEN,
+  /* Not enough space to receive file.  */
+  FAILURE_SIZE
+};
+
 /* The main loop which talks to the remote system, passing transfer
    requests and file back and forth.  */
 extern boolean floop P((struct sdaemon *qdaemon));

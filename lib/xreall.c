@@ -5,6 +5,8 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+
 pointer
 xrealloc (p, c)
      pointer p;

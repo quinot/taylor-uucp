@@ -32,6 +32,8 @@ const char protg_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "trans.h"
 #include "system.h"
@@ -244,7 +246,7 @@ static int iGforced_remote_winsize = IREMOTE_WINDOW;
 static int iGremote_segsize;
 
 /* Remote packet size (set based on iGremote_segsize).  */
-static int iGremote_packsize;
+static size_t iGremote_packsize;
 
 /* Forced remote packet size (protocol parameter
    ``remote-packet-size'').  */
@@ -479,7 +481,7 @@ fgstart (qdaemon)
 
       DEBUG_MESSAGE2 (DEBUG_PROTO,
 		      "fgstart: Protocol started; packsize %d, winsize %d",
-		      iGremote_packsize, iGremote_winsize);
+		      (int) iGremote_packsize, iGremote_winsize);
 
       return TRUE;
     }
@@ -711,7 +713,7 @@ fgsendcmd (qdaemon, z, ilocal, iremote)
 	  clen -= iGremote_packsize;
 	  fagain = TRUE;
 
-	  if (! fgsenddata (qdaemon, zpacket, (size_t) iGremote_packsize,
+	  if (! fgsenddata (qdaemon, zpacket, iGremote_packsize,
 			    0, 0, (long) 0))
 	    return FALSE;
 	}
@@ -1268,7 +1270,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (cfirst < 0)
 	    cfirst = CRECBUFLEN - iPrecstart;
 
-	  zdle = memchr (abPrecbuf + iPrecstart, DLE, cfirst);
+	  zdle = memchr (abPrecbuf + iPrecstart, DLE, (size_t) cfirst);
 
 	  if (zdle == NULL)
 	    {

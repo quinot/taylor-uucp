@@ -2,7 +2,10 @@
    Stick a directory and file name together.  */
 
 #include "uucp.h"
+
+#include "uudefs.h"
 #include "sysdep.h"
+#include "system.h"
 
 char *
 zsysdep_in_dir (zdir, zfile)

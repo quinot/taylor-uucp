@@ -29,8 +29,11 @@
 const char uuname_rcsid[] = "$Id$";
 #endif
 
-#include "system.h"
 #include "getopt.h"
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
 
 /* The program name.  */
 char abProgram[] = "uuname";

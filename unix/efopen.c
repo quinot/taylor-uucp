@@ -2,8 +2,6 @@
    Open a stdio file with appropriate permissions.  */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
 
@@ -34,6 +32,10 @@
 #ifndef FD_CLOEXEC
 #define FD_CLOEXEC 1
 #endif
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 FILE *
 esysdep_fopen (zfile, fpublic, fappend, fmkdirs)

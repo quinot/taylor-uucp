@@ -24,10 +24,13 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Get the current conversation sequence number for a remote system,
    and increment it for next time.  The conversation sequence number

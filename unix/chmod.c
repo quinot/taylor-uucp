@@ -2,10 +2,12 @@
    Change the mode of a file.  */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Change the mode of a file.  */
 

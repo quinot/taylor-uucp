@@ -2,6 +2,8 @@
    Get the full name of a file in the spool directory.  */
 
 #include "uucp.h"
+
+#include "uuconf.h"
 #include "sysdep.h"
 #include "system.h"
 

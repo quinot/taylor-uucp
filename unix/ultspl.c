@@ -2,6 +2,8 @@
    See whether there is an Ultrix spool directory for a system.  */
 
 #include "uucp.h"
+
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 

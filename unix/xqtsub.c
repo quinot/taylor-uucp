@@ -32,9 +32,6 @@ const char xqtsub_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
-#include "system.h"
-#include "sysdep.h"
-
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #else
@@ -75,6 +72,11 @@ const char xqtsub_rcsid[] = "$Id$";
 #ifndef EX_TEMPFAIL
 #define EX_TEMPFAIL 75
 #endif
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "sysdep.h"
 
 /* Get the full pathname of the command to execute, given the list of
    permitted commands and the allowed path.  */

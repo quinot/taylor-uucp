@@ -29,9 +29,6 @@
 const char work_rcsid[] = "$Id$";
 #endif
 
-#include "system.h"
-#include "sysdep.h"
-
 #include <ctype.h>
 #include <errno.h>
 
@@ -43,6 +40,11 @@ const char work_rcsid[] = "$Id$";
 #define dirent direct
 #endif /* ! HAVE_DIRENT_H */
 #endif /* HAVE_OPENDIR */
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "sysdep.h"
 
 /* Local functions.  */
 
@@ -83,8 +85,8 @@ struct ssfile
 /* Static variables for the work scan.  */
 
 static char **azSwork_files;
-static int cSwork_files;
-static int iSwork_file;
+static size_t cSwork_files;
+static size_t iSwork_file;
 static struct ssfile *qSwork_file;
 
 /* Given a system name, return a directory to search for work.  */
@@ -233,8 +235,8 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
   char *zdir;
   DIR *qdir;
   struct dirent *qentry;
-  int chad;
-  int callocated;
+  size_t chad;
+  size_t callocated;
 
   zdir = zswork_directory (qsys->uuconf_zname);
   if (zdir == NULL)
@@ -573,7 +575,7 @@ usysdep_get_work_free (qsys)
 {
   if (azSwork_files != NULL)
     {
-      int i;
+      size_t i;
 
       for (i = 0; i < cSwork_files; i++)
 	ubuffree ((pointer) azSwork_files[i]);
@@ -610,7 +612,7 @@ zsysdep_save_temp_file (pseq)
 {
   struct ssline *qline = (struct ssline *) pseq;
   char *zto, *zslash;
-  int cwant;
+  size_t cwant;
   static char *zbuf;
   static int cbuf;
 

@@ -34,6 +34,8 @@ const char uux_rcsid[] = "$Id$";
 
 #include "getopt.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 #include "sysdep.h"
 
@@ -1148,12 +1150,12 @@ static void
 uxcopy_stdin (e)
      FILE *e;
 {
-  CATCH_PROTECT int cread;
+  CATCH_PROTECT size_t cread;
   char ab[1024];
 
   do
     {
-      int cwrite;
+      size_t cwrite;
 
       if (fsysdep_catch ())
 	{
@@ -1178,13 +1180,8 @@ uxcopy_stdin (e)
 	{
 	  cwrite = fwrite (ab, sizeof (char), cread, e);
 	  if (cwrite != cread)
-	    {
-	      if (cwrite == EOF)
-		ulog (LOG_FATAL, "fwrite: %s", strerror (errno));
-	      else
-		ulog (LOG_FATAL, "fwrite: Wrote %d when attempted %d",
-		      cwrite, cread);
-	    }
+	    ulog (LOG_FATAL, "fwrite: Wrote %d when attempted %d",
+		  (int) cwrite, (int) cread);
 	}
     }
   while (cread == sizeof ab);

@@ -29,6 +29,8 @@
 const char prott_rcsid[] = "$Id$";
 #endif
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "trans.h"
 #include "system.h"

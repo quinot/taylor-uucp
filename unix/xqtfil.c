@@ -29,9 +29,6 @@
 const char xqtfil_rcsid[] = "$Id$";
 #endif
 
-#include "sysdep.h"
-#include "system.h"
-
 #include <errno.h>
 
 #if HAVE_OPENDIR
@@ -42,6 +39,10 @@ const char xqtfil_rcsid[] = "$Id$";
 #define dirent direct
 #endif /* ! HAVE_DIRENT_H */
 #endif /* HAVE_OPENDIR */
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Under the V2 or BSD42 spool directory scheme, all execute files are
    in the main spool directory.  Under the BSD43 scheme, they are all

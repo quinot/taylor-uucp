@@ -29,9 +29,6 @@
 const char picksb_rcsid[] = "$Id$";
 #endif
 
-#include "system.h"
-#include "sysdep.h"
-
 #include <errno.h>
 #include <pwd.h>
 
@@ -43,6 +40,10 @@ const char picksb_rcsid[] = "$Id$";
 #define dirent direct
 #endif /* ! HAVE_DIRENT_H */
 #endif /* HAVE_OPENDIR */
+
+#include "uudefs.h"
+#include "system.h"
+#include "sysdep.h"
 
 #ifndef getpwuid
 extern struct passwd *getpwuid ();

@@ -76,9 +76,9 @@ _uuconf_getline (qglobal, pzline, pcline, e)
 
 	      if (*pcline > 0)
 		znew = (char *) realloc ((pointer) *pzline,
-					 ctot + cchars + 1);
+					 (size_t) (ctot + cchars + 1));
 	      else
-		znew = (char *) malloc (ctot + cchars + 1);
+		znew = (char *) malloc ((size_t) (ctot + cchars + 1));
 	      if (znew == NULL)
 		{
 		  free ((pointer) zline);
@@ -88,7 +88,8 @@ _uuconf_getline (qglobal, pzline, pcline, e)
 	      *pcline = ctot + cchars + 1;
 	    }
 
-	  memcpy ((pointer) ((*pzline) + ctot), (pointer) zline, cchars + 1);
+	  memcpy ((pointer) ((*pzline) + ctot), (pointer) zline,
+		  (size_t) (cchars + 1));
 	  ctot += cchars;
 	}
 

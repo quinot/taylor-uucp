@@ -2,6 +2,8 @@
    Stick three directories and a file name together.  */
 
 #include "uucp.h"
+
+#include "uudefs.h"
 #include "sysdep.h"
 
 char *

@@ -29,10 +29,6 @@
 const char serial_rcsid[] = "$Id$";
 #endif
 
-#include "system.h"
-#include "sysdep.h"
-#include "conn.h"
-
 #include <errno.h>
 
 #if HAVE_SYS_PARAM_H
@@ -171,6 +167,18 @@ const char serial_rcsid[] = "$Id$";
 #endif
 #endif
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "sysdep.h"
+#include "conn.h"
+
+#if HAVE_TLI
+extern int t_errno;
+extern char *t_errlist[];
+extern int t_nerr;
+#endif
+
 /* Determine bits to clear for the various terminal control fields for
    HAVE_SYSV_TERMIO and HAVE_POSIX_TERMIOS.  */
 #if HAVE_SYSV_TERMIO
@@ -194,12 +202,6 @@ const char serial_rcsid[] = "$Id$";
 #define ISET_CFLAG (CS8 | CREAD | HUPCL)
 #define ICLEAR_LFLAG (ECHO | ECHOE | ECHOK | ECHONL | ICANON | IEXTEN \
 		      | ISIG | NOFLSH | TOSTOP)
-#endif
-
-#if HAVE_TLI
-extern int t_errno;
-extern char *t_errlist[];
-extern int t_nerr;
 #endif
 
 /* Local functions.  */

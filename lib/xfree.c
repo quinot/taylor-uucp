@@ -4,6 +4,8 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+
 void
 xfree (p)
      pointer p;

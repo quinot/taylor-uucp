@@ -2,6 +2,8 @@
    Routines dealing with the current working directory.  */
 
 #include "uucp.h"
+
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 

@@ -24,11 +24,14 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
 #include <ctype.h>
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Given a set of commands to execute for a remote system, create a
    command file holding them.  This creates a single command file

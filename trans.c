@@ -31,6 +31,8 @@ const char trans_rcsid[] = "$Id$";
 
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "prot.h"
 #include "system.h"
 #include "trans.h"
@@ -42,7 +44,7 @@ static void utqueue P((struct stransfer **, struct stransfer *,
 static void utdequeue P((struct stransfer *));
 static void utchanalc P((struct sdaemon *qdaemon, struct stransfer *qtrans));
 __inline__ static struct stransfer *qtchan P((int ichan));
-__inline__ void utchanfree P((struct stransfer *qtrans));
+__inline__ static void utchanfree P((struct stransfer *qtrans));
 static boolean ftadd_cmd P((struct sdaemon *qdaemon, const char *z,
 			    size_t cdata, int iremote, boolean flast));
 static boolean fremote_hangup_reply P((struct stransfer *qtrans,
@@ -804,7 +806,8 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
       if (fret && csecond > 0)
 	return fgot_data (qdaemon, zsecond, csecond,
 			  (const char *) NULL, (size_t) 0,
-			  ilocal, iremote, ipos + cfirst, pfexit);
+			  ilocal, iremote, ipos + (long) cfirst,
+			  pfexit);
       if (pfexit != NULL
 	  && (qdaemon->fhangup
 	      || qdaemon->fmaster

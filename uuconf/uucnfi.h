@@ -26,8 +26,11 @@
 /* This is the internal header file for the uuconf package.  It should
    not be included by anything other than the uuconf code itself.  */
 
-/* Get all the general definitions, including uuconf.h.   */
+/* Get all the general definitions.  */
 #include "uucp.h"
+
+/* Get the uuconf header file itself.  */
+#include "uuconf.h"
 
 /* We need the system dependent header file.  */
 #include "syshdr.h"

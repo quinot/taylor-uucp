@@ -2,10 +2,12 @@
    Create any directories needed for a file name.  */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 boolean
 fsysdep_make_dirs (zfile, fpublic)

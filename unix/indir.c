@@ -24,10 +24,12 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* See whether a file is in a directory, and optionally check access.  */
 

@@ -25,6 +25,8 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+
 /* We keep a linked list of buffers.  */
 
 struct sbuf

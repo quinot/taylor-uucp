@@ -2,8 +2,6 @@
    Truncate a file to zero length.  */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
 
@@ -22,6 +20,10 @@
 #ifndef SEEK_SET
 #define SEEK_SET 0
 #endif
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* External functions.  */
 #ifndef lseek

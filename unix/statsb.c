@@ -29,9 +29,6 @@
 const char statsb_rcsid[] = "$Id$";
 #endif
 
-#include "sysdep.h"
-#include "system.h"
-
 #include <errno.h>
 
 #if HAVE_FCNTL_H
@@ -68,6 +65,11 @@ const char statsb_rcsid[] = "$Id$";
 #if HAVE_UTIME_H
 #include <utime.h>
 #endif
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Local functions.  */
 

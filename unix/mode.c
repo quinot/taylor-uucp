@@ -2,10 +2,12 @@
    Get the Unix file mode of a file.  */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 unsigned int
 isysdep_file_mode (zfile)

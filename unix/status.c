@@ -24,10 +24,13 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Get the status of a system.  This assumes that we are in the spool
    directory.  */

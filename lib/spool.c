@@ -5,6 +5,8 @@
 
 #include <ctype.h>
 
+#include "uudefs.h"
+
 /* See whether a file is a spool file.  Spool file names are specially
    crafted to hand around to other UUCP packages.  They always begin
    with 'C', 'D' or 'X', and the second character is always a period.

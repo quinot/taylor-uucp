@@ -27,8 +27,25 @@
 
 #define CONN_H
 
-/* The connection structure itself is defined in uucp.h, so that
-   prototypes may refer to it.  */
+#if ANSI_C
+/* These structures are used in prototypes but are not defined in this
+   header file.  */
+struct uuconf_system;
+struct uuconf_dialer;
+struct uuconf_chat;
+#endif
+
+/* This structure represents a connection.  */
+
+struct sconnection
+{
+  /* Pointer to command table for this type of connection.  */
+  const struct sconncmds *qcmds;
+  /* Pointer to system dependent information.  */
+  pointer psysdep;
+  /* Pointer to system independent information.  */
+  struct uuconf_port *qport;
+};
 
 /* Whether fconn_dial got a dialer.  */
 

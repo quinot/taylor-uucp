@@ -31,6 +31,8 @@ const char xcmd_rcsid[] = "$Id$";
 
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 #include "prot.h"
 #include "trans.h"
@@ -169,7 +171,8 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
   zexclam = strchr (qcmd->zto, '!');
   if (zexclam == NULL
       || zexclam == qcmd->zto
-      || strncmp (qdaemon->zlocalname, qcmd->zto, zexclam - qcmd->zto) == 0)
+      || strncmp (qdaemon->zlocalname, qcmd->zto,
+		  (size_t) (zexclam - qcmd->zto)) == 0)
     {
       const char *zconst;
 

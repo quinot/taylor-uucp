@@ -30,6 +30,8 @@ const char uuchk_rcsid[] = "$Id$";
 #endif
 
 #include "getopt.h"
+
+#include "uuconf.h"
 
 /* Local functions.  */
 

@@ -32,8 +32,11 @@ const char uulog_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
-#include "system.h"
 #include "getopt.h"
+
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
 
 /* This is a pretty bad implementation of uulog, which I don't think
    is a very useful program anyhow.  It only takes a single -s and/or

@@ -1168,7 +1168,6 @@ extern int uuconf_hdb_localname ();
    This function will return the number of characters needed for the
    complete message, including the null byte.  If this is less than
    the cbytes argument, the buffer holds a truncated string.  */
-
 extern int uuconf_error_string (void *uuconf_pglobal, int ierror,
 				char *zbuf, UUCONF_SIZE_T cbuf);
 
@@ -1178,7 +1177,7 @@ extern int uuconf_error_string (void *uuconf_pglobal, int ierror,
    system functions, notably some stdio routines, may not set errno,
    in which case the value will be meaningless.  This function does
    not return a uuconf error code, and it cannot fail.  */
-extern int uuconf_errno (void *uuconf_pglobal);
+extern int uuconf_error_errno (void *uuconf_pglobal);
 
 /* If UUCONF_ERROR_FILENAME is set in a return value, this function
    may be used to retrieve the file name.  This function does not
@@ -1186,19 +1185,19 @@ extern int uuconf_errno (void *uuconf_pglobal);
    returns a pointer to is not guaranteed to remain allocated across
    the next call to a uuconf function (other than one of the three
    error retrieving functions).  */
-extern const char *uuconf_filename (void *uuconf_pglobal);
+extern const char *uuconf_error_filename (void *uuconf_pglobal);
 
 /* If UUCONF_ERROR_LINENO is set in a return value, this function may
    be used to retrieve the line number.  This function does not return
    a uuconf error code, and it cannot fail.  */
-extern int uuconf_lineno (void *uuconf_pglobal);
+extern int uuconf_error_lineno (void *uuconf_pglobal);
 
 #else /* ! UUCONF_ANSI_C */
 
 extern int uuconf_error_string ();
-extern int uuconf_errno ();
-extern UUCONF_CONST char *uuconf_filename ();
-extern int uuconf_lineno ();
+extern int uuconf_error_errno ();
+extern UUCONF_CONST char *uuconf_error_filename ();
+extern int uuconf_error_lineno ();
 
 #endif /* ! UUCONF_ANSI_C */
 

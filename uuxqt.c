@@ -34,6 +34,8 @@ const char uuxqt_rcsid[] = "$Id$";
 
 #include "getopt.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 
 /* The program name.  */
@@ -468,7 +470,7 @@ iqcmd (puuconf, argc, argv, pvar, pinfo)
      pointer pinfo;
 {
   int i;
-  int clen;
+  size_t clen;
 
   if (argc <= 1)
     return UUCONF_CMDTABRET_CONTINUE;

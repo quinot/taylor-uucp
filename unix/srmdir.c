@@ -24,14 +24,16 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
 
 #if HAVE_FTW_H
 #include <ftw.h>
 #endif
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 static int isremove_dir P((const char *, struct stat *, int));
 

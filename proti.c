@@ -32,6 +32,8 @@ const char proti_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "trans.h"
 #include "system.h"
@@ -324,7 +326,7 @@ struct uuconf_cmdtab asIproto_params[] =
 static boolean finak P((struct sdaemon *qdaemon, int iseq));
 static boolean fiwait_for_packet P((struct sdaemon *qdaemon,
 				    int ctimeout, int cretries,
-				    boolean *ftimedout));
+				    boolean fone, boolean *ftimedout));
 static boolean ficheck_errors P((void));
 static boolean fiprocess_data P((struct sdaemon *qdaemon,
 				 boolean *pfexit, boolean *pffound,
@@ -405,7 +407,8 @@ fistart (qdaemon)
 			TRUE))
 	return FALSE;
 
-      if (fiwait_for_packet (qdaemon, cIsync_timeout, 0, &ftimedout))
+      if (fiwait_for_packet (qdaemon, cIsync_timeout, 0, FALSE,
+			     &ftimedout))
 	{
 	  if (csyncs != cIsyncs)
 	    break;
@@ -657,7 +660,7 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 	{
 	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fisenddata: Waiting for ACK");
 	  if (! fiwait_for_packet (qdaemon, cItimeout, cIretries,
-				   (boolean *) NULL))
+				   TRUE, (boolean *) NULL))
 	    return FALSE;
 	}
     }
@@ -698,7 +701,7 @@ fiwait (qdaemon)
      struct sdaemon *qdaemon;
 {
   return fiwait_for_packet (qdaemon, cItimeout, cIretries,
-			    (boolean *) NULL);
+			    FALSE, (boolean *) NULL);
 }
 
 /* Send a NAK.  */
@@ -720,7 +723,7 @@ finak (qdaemon, iseq)
 
   afInaked[iseq] = TRUE;
 
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "fiwait_for_packet: Sending NAK %d", iseq);
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "finak: Sending NAK %d", iseq);
 
   return fsend_data (qdaemon->qconn, abnak, CHDRLEN, TRUE);
 }
@@ -729,7 +732,7 @@ finak (qdaemon, iseq)
    window is full.  */
 
 static boolean
-fiwait_for_packet (qdaemon, ctimeout, cretries, pftimedout)
+fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
      struct sdaemon *qdaemon;
      int ctimeout;
      int cretries;
@@ -753,7 +756,7 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, pftimedout)
       if (! fiprocess_data (qdaemon, &fexit, &ffound, &cneed))
 	return FALSE;
 
-      if (fexit)
+      if (fexit || (fone && ffound))
 	return TRUE;
 
       if (cneed == 0)
@@ -899,7 +902,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  if (cintro < 0)
 	    cintro = CRECBUFLEN - iPrecstart;
 
-	  zintro = memchr (abPrecbuf + iPrecstart, IINTRO, cintro);
+	  zintro = memchr (abPrecbuf + iPrecstart, IINTRO, (size_t) cintro);
 
 	  if (zintro == NULL)
 	    {
@@ -1022,9 +1025,9 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	       i++, iget = (iget + 1) % CRECBUFLEN)
 	    abcksum[i] = abPrecbuf[iget];
 
-	  ickdata = icrc (zfirst, cfirst, ICRCINIT);
+	  ickdata = icrc (zfirst, (size_t) cfirst, ICRCINIT);
 	  if (csecond > 0)
-	    ickdata = icrc (zsecond, csecond, ickdata);
+	    ickdata = icrc (zsecond, (size_t) csecond, ickdata);
 
 	  if (ICKSUM_GET (abcksum) != ickdata)
 	    {
@@ -1061,9 +1064,9 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
       /* Get the ack from the packet, if appropriate.  */
       iack = IHDRWIN_GETSEQ (ab[IHDR_REMOTE]);
       if (iIrequest_winsize > 0
-	  && iseq != iIsendseq
-	  && CSEQDIFF (iseq, iIremote_ack) <= iIrequest_winsize
-	  && CSEQDIFF (iIsendseq, iseq) <= iIrequest_winsize)
+	  && iack != iIsendseq
+	  && CSEQDIFF (iack, iIremote_ack) <= iIrequest_winsize
+	  && CSEQDIFF (iIsendseq, iack) <= iIrequest_winsize)
 	iIremote_ack = iack;
 
       /* If we haven't handled all previous packets, we must save off this
@@ -1087,14 +1090,15 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 			      "fiprocess_data: Saving unexpected packet %d",
 			      iseq);
 
-	      azIrecbuffers[iseq] = zbufalc (CHDRLEN + csize);
+	      azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN + csize));
 	      memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
 	      if (csize > 0)
 		{
-		  memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst, cfirst);
+		  memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
+			  (size_t) cfirst);
 		  if (csecond > 0)
 		    memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
-			    zsecond, csecond);
+			    zsecond, (size_t) csecond);
 		}
 
 	      /* Send NAK's for each packet between the last one we
@@ -1326,8 +1330,8 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	  zpos = zfirst;
 	else
 	  {
-	    memcpy (abpos, zfirst, cfirst);
-	    memcpy (abpos + cfirst, zsecond, CCKSUMLEN - cfirst);
+	    memcpy (abpos, zfirst, (size_t) cfirst);
+	    memcpy (abpos + cfirst, zsecond, (size_t) (CCKSUMLEN - cfirst));
 	    zpos = abpos;
 	  }
 	iIrecpos = (long) ICKSUM_GET (zpos);

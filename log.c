@@ -39,6 +39,8 @@ const char log_rcsid[] = "$Id$";
 #include <time.h>
 #endif
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 
 /* Local functions.  */
@@ -508,7 +510,7 @@ ulog_uuconf (ttype, puuconf, iuuconf)
   char ab[512];
 
   (void) uuconf_error_string (puuconf, iuuconf, ab, sizeof ab);
-  ulog (ttype, ab);
+  ulog (ttype, "%s", ab);
 }
 
 /* Close the log file.  There's nothing useful we can do with errors,

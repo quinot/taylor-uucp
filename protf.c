@@ -32,6 +32,8 @@ const char protf_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "trans.h"
 #include "system.h"

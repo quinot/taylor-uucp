@@ -2,10 +2,12 @@
    Check access to files by the user and by the daemon.  */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* See if the user has access to a file, to prevent the setuid uucp
    and uux programs handing out unauthorized access.  */

@@ -31,6 +31,8 @@ const char send_rcsid[] = "$Id$";
 
 #include <errno.h>
 
+#include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 #include "prot.h"
 #include "trans.h"

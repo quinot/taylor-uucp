@@ -24,8 +24,6 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
 
@@ -36,6 +34,10 @@
 #include <sys/file.h>
 #endif
 #endif
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Move (rename) a file from one name to another.  This routine will
    optionally create necessary directories, and fpublic indicates

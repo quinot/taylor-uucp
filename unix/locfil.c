@@ -24,10 +24,12 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <pwd.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 #ifndef getpwnam
 extern struct passwd *getpwnam ();

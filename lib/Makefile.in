@@ -48,7 +48,15 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h
 
+buffer.o: $(srcdir)/../uudefs.h
 crc.o: $(srcdir)/../prot.h
+debug.o: $(srcdir)/../uudefs.h
+escape.o: $(srcdir)/../uudefs.h
 getopt.o: $(srcdir)/../getopt.h
+spool.o: $(srcdir)/../uudefs.h
+status.o: $(srcdir)/../uudefs.h
+xfree.o: $(srcdir)/../uudefs.h
+xmall.o: $(srcdir)/../uudefs.h
+xreall.o: $(srcdir)/../uudefs.h

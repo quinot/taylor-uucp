@@ -24,10 +24,12 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Start up a new program and end the current one.  We always go
    through isspawn, and never exec directly.  We don't have to worry

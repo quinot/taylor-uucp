@@ -26,6 +26,8 @@
 #include "uucp.h"
 
 #include <ctype.h>
+
+#include "uudefs.h"
 
 /* The debugging level.  */
 int iDebug;

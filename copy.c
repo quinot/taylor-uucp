@@ -32,6 +32,7 @@ const char copy_rcsid[] = "$Id$";
 #include <stdio.h>
 #include <errno.h>
 
+#include "uudefs.h"
 #include "system.h"
 #include "sysdep.h"
 
@@ -66,7 +67,7 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
 
   while ((c = fread (ab, sizeof (char), sizeof ab, efrom)) != 0)
     {
-      if (fwrite (ab, sizeof (char), c, eto) != c)
+      if (fwrite (ab, sizeof (char), (size_t) c, eto) != c)
 	{
 	  ulog (LOG_ERROR, "fwrite: %s", strerror (errno));
 	  (void) fclose (efrom);
@@ -153,7 +154,7 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
 
   while ((c = read (ofrom, ab, sizeof ab)) > 0)
     {
-      if (write (oto, ab, c) != c)
+      if (write (oto, ab, (size_t) c) != c)
 	{
 	  ulog (LOG_ERROR, "write: %s", strerror (errno));
 	  (void) close (ofrom);

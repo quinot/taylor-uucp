@@ -24,11 +24,13 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
-#include "system.h"
 
 #include <ctype.h>
 #include <errno.h>
+
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
 
 /* Local variables to hold the expanded wildcard string.  */
 

@@ -24,7 +24,6 @@
    */
 
 #include "uucp.h"
-#include "sysdep.h"
 
 #include <errno.h>
 
@@ -45,6 +44,9 @@
 #ifndef FD_CLOEXEC
 #define FD_CLOEXEC 1
 #endif
+
+#include "uudefs.h"
+#include "sysdep.h"
 
 #ifndef environ
 extern char **environ;
@@ -115,7 +117,7 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
      modify the data segment and we could not safely use vfork.  */
   if (fshell)
     {
-      int clen;
+      size_t clen;
 
       clen = 0;
       for (i = 0; pazargs[i] != NULL; i++)

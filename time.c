@@ -35,6 +35,9 @@ const char time_rcsid[] = "$Id$";
 #include <time.h>
 #endif
 
+#include "uudefs.h"
+#include "uuconf.h"
+
 /* External functions.  */
 #ifndef time
 extern time_t time ();

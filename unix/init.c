@@ -24,8 +24,6 @@
    */
 
 #include "uucp.h"
-#include "system.h"
-#include "sysdep.h"
 
 #include <errno.h>
 #include <pwd.h>
@@ -79,6 +77,11 @@
 #endif /* ! defined (MAXPATHLEN) */
 #endif /* HAVE_GETWD */
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "sysdep.h"
+
 /* External functions.  */
 #ifndef getlogin
 extern char *getlogin ();
@@ -127,16 +130,16 @@ char *zScwd;
    directory we use.  */
 
 #if SPOOLDIR_V2 | SPOOLDIR_BSD42 | SPOOLDIR_BSD43 | SPOOLDIR_ULTRIX
-int cSysdep_max_name_len = 7;
+size_t cSysdep_max_name_len = 7;
 #endif /* SPOOLDIR_V2 | SPOOLDIR_BSD42 | SPOOLDIR_BSD43 | SPOOLDIR_ULTRIX */
 #if SPOOLDIR_HDB
-int cSysdep_max_name_len = 14;
+size_t cSysdep_max_name_len = 14;
 #endif /* SPOOLDIR_HDB */
 #if SPOOLDIR_TAYLOR
 #if HAVE_LONG_FILE_NAMES
-int cSysdep_max_name_len = 255;
+size_t cSysdep_max_name_len = 255;
 #else /* ! HAVE_LONG_FILE_NAMES */
-int cSysdep_max_name_len = 14;
+size_t cSysdep_max_name_len = 14;
 #endif /* ! HAVE_LONG_FILE_NAMES */
 #endif /* SPOOLDIR_TAYLOR */
 

@@ -304,36 +304,39 @@ TAGS:
 
 # Header file dependencies.  These are maintained by hand.
 
-$(ALLOBJS): uucp.h conf.h policy.h uuconf.h
+$(ALLOBJS): uucp.h conf.h policy.h
 
-uucico.o: system.h prot.h conn.h trans.h getopt.h
-uuxqt.o: system.h getopt.h
-uux.o: system.h getopt.h sysdep.h
-uucp.o: system.h getopt.h
-uustat.o: system.h getopt.h
-uuname.o: system.h getopt.h
-uulog.o: system.h getopt.h
-uupick.o: system.h getopt.h
-cu.o: cu.h sysdep.h conn.h prot.h system.h getopt.h
-uuchk.o: getopt.h
-uuconv.o: getopt.h
+uucico.o: uudefs.h uuconf.h system.h prot.h conn.h trans.h getopt.h
+uuxqt.o: uudefs.h uuconf.h system.h getopt.h
+uux.o: uudefs.h uuconf.h system.h getopt.h sysdep.h
+uucp.o: uudefs.h uuconf.h system.h getopt.h
+uustat.o: uudefs.h uuconf.h system.h getopt.h
+uuname.o: uudefs.h uuconf.h system.h getopt.h
+uulog.o: uudefs.h uuconf.h system.h getopt.h
+uupick.o: uudefs.h uuconf.h system.h getopt.h
+cu.o: cu.h uudefs.h uuconf.h sysdep.h conn.h prot.h system.h getopt.h
+uuchk.o: uuconf.h getopt.h
+uuconv.o: $(srcdir)/uuconf/uucnfi.h uuconf.h getopt.h
 uudir.o: sysdep.h
 tstuu.o: sysdep.h getopt.h
-trans.o: system.h prot.h trans.h
-send.o: system.h prot.h trans.h
-rec.o: system.h prot.h trans.h
-xcmd.o: system.h prot.h trans.h
-prot.o: system.h prot.h conn.h
-protg.o: system.h prot.h conn.h trans.h
-protf.o: prot.h conn.h system.h trans.h
-prott.o: prot.h conn.h system.h trans.h
-prote.o: prot.h conn.h system.h trans.h
-proti.o: prot.h conn.h system.h trans.h
-log.o: system.h
-chat.o: system.h conn.h
-conn.o: conn.h
-tcp.o: conn.h sysdep.h system.h
-tli.o: conn.h sysdep.h system.h
-copy.o: system.h sysdep.h
+trans.o: uudefs.h uuconf.h system.h prot.h trans.h
+send.o: uudefs.h uuconf.h system.h prot.h trans.h
+rec.o: uudefs.h uuconf.h system.h prot.h trans.h
+xcmd.o: uudefs.h uuconf.h system.h prot.h trans.h
+prot.o: uudefs.h system.h prot.h conn.h
+protg.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+protf.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+prott.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+prote.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+proti.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+log.o: uudefs.h uuconf.h system.h
+chat.o: uudefs.h uuconf.h system.h prot.h conn.h
+conn.o: uudefs.h uuconf.h conn.h
+tcp.o: uudefs.h uuconf.h conn.h sysdep.h system.h
+tli.o: uudefs.h uuconf.h conn.h sysdep.h system.h
+time.o: uudefs.h uuconf.h
+parse.o: uudefs.h
+util.o: uudefs.h uuconf.h system.h
+copy.o: uudefs.h system.h sysdep.h
 
 .NOEXPORT:

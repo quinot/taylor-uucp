@@ -34,6 +34,8 @@ const char cu_rcsid[] = "$Id$";
 #include <errno.h>
 
 #include "cu.h"
+#include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "prot.h"
 #include "system.h"
@@ -1519,9 +1521,9 @@ icutake (puuconf, argc, argv, pvar, pinfo)
   char *zalc;
   FILE *e;
   char bcr;
-  int ceoflen;
+  size_t ceoflen;
   char *zlook = NULL;
-  int ceofhave;
+  size_t ceofhave;
   boolean ferr;
 
   if (argc > 1)
@@ -1807,7 +1809,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 	continue;
 
       /* Send the data over the port.  */
-      if (! fsend_data (qconn, zsendbuf, zput - zsendbuf, TRUE))
+      if (! fsend_data (qconn, zsendbuf, (size_t) (zput - zsendbuf), TRUE))
 	ucuabort ();
 
       /* We do echo checking if requested, unless we are in binary

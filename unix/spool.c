@@ -29,6 +29,7 @@
 const char spool_rcsid[] = "$Id$";
 #endif
 
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 

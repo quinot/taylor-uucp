@@ -3,6 +3,8 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+
 pointer
 xmalloc (c)
      size_t c;

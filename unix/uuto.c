@@ -2,6 +2,8 @@
    Translate a destination for uuto.  */
 
 #include "uucp.h"
+
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 
@@ -22,7 +24,7 @@ zsysdep_uuto (zdest, zlocalname)
 			  + sizeof "!~/receive///"
 			  + strlen (zexclam)
 			  + strlen (zlocalname));
-  memcpy (zto, zdest, zexclam - zdest);
+  memcpy (zto, zdest, (size_t) (zexclam - zdest));
   sprintf (zto + (zexclam - zdest), "!~/receive/%s/%s/",
 	   zexclam + 1, zlocalname);
   return zto;
