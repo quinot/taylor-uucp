@@ -943,6 +943,31 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
       if (! qsys->uuconf_fcall || qsys->uuconf_qtimegrade == NULL)
 	continue;
 
+      /* If a port was specified, and this alternate does not use the
+	 specified port, but a later alternate does use the specified
+	 port, skip this alternate.  This permits specifying a port as
+	 a way to select a particular alternate.  There probably ought
+	 to be a way to select a specific alternate, but there isn't.  */
+      if (qport != NULL
+	  && (qsys->uuconf_qport != NULL
+	      || (qsys->uuconf_zport != NULL
+		  && strcmp (qport->uuconf_zname, qsys->uuconf_zport) != 0)))
+	{
+	  const struct uuconf_system *ql;
+
+	  for (ql = qsys->uuconf_qalternate;
+	       ql != NULL;
+	       ql = ql->uuconf_qalternate)
+	    {
+	      if (ql->uuconf_qport == NULL
+		  && ql->uuconf_zport != NULL
+		  && strcmp (ql->uuconf_zport, qport->uuconf_zname) == 0)
+		break;
+	    }
+	  if (ql != NULL)
+	    continue;
+	}
+
       fnevertime = FALSE;
 
       /* Make sure this is a legal time to call.  */

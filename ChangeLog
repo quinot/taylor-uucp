@@ -1,5 +1,9 @@
 2002-03-05  Ian Lance Taylor  <ian@zembu.com>
 
+	* uucico.c (fcall): If a port was specified on the command line,
+	and the current alternate does not use that port, but a later
+	alternate does, then skip to the later alternate.
+
 	* uucp.texi: Use new Texinfo commands @command, @option, @email,
 	and @url.
 
