@@ -470,8 +470,13 @@ ulhelp ()
 {
   printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
-  printf ("Usage: %s [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n",
+#if HAVE_HDB_LOGGING
+  printf ("Usage: %s [-n #] [-sf system] [-u user] [-xDS] [-I file] [-X debug]\n",
 	   zProgram);
+#else
+  printf ("Usage: %s [-n #] [-sf system] [-u user] [-DSF] [-I file] [-X debug]\n",
+	   zProgram);
+#endif
   printf (" -n,--lines: show given number of lines from end of log\n");
   printf (" -s,--system: print entries for named system\n");
   printf (" -f system,--follow=system: follow entries for named system\n");
@@ -483,7 +488,7 @@ ulhelp ()
 #endif
   printf (" -S,--statslog: show statistics file\n");
   printf (" -D,--debuglog: show debugging file\n");
-  printf (" -X,--debug debug: Set debugging level (0 for none, 9 is max)\n");
+  printf (" -X,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
