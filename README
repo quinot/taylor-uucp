@@ -1,12 +1,13 @@
-This is the README file for beta release 1 of the Taylor UUCP package.
-
-This package is covered by the Gnu Public License.  See the file
-COPYING for details.
+This is the README file for release 1.0 of the Taylor UUCP package.
 
 It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
 or, equivalently, uunet!airs!ian, or c/o AIRS P.O. Box 520, Waltham
-MA, 02254.  I will be on vacation and generally unreachable from the
-last week of September until late October, 1991.
+MA, 02254.
+
+This package is covered by the Gnu Public License.  See the file
+COPYING for details.  If you would like to do something with this
+package that you feel is reasonable but you feel is prohibited by the
+license, contact me to see if we can work it out.
 
 CONFIGURATION
 
@@ -72,8 +73,7 @@ for testing, and is not nearly as portable as the rest of the code.
 
 TESTING
 
-This is a beta release.  We have been using it at AIRS to talk to
-uunet for three weeks with no trouble since the first three days.
+This code has been pretty solid for my use for a few months now.
 However, it will doubtless fail in some situations.  Do not rely on
 this code until you have proven to yourself that it will work.
 
@@ -161,6 +161,36 @@ You can install by suing to root and typing make install.  Or you can
 look at what make install does and do it by hand.  It's pretty
 simplistic.
 
+USE
+
+This package does not come with any fancy shell scripts or scheduling
+programs.  Maybe someday.  If you have another package, you may well
+be able to use the scheduling mechanisms it provides.
+
+Otherwise, the program can be used by making crontab entries.
+Whenever you want to call all systems with outstanding work, use
+	uucico -r1
+Whenever you want to call a specific system foo, use
+	uucico -s foo
+If you want to make sure that a system foo gets retried if the
+original call fails, create an empty work file for it.  For example,
+if using SPOOLDIR_TAYLOR
+	touch /usr/spool/uucp/foo/C./C.A0000
+Under SPOOLDIR_BNU, use
+	touch /usr/spool/uucp/foo/C.fooA0000
+
+I use the following crontab entries locally:
+
+45 * * * * /bin/echo /usr/lib/uucp/uucico -r1 | /bin/su uucpa
+40 4,10,15 * * * touch /usr/spool/uucp/uunet/C./C.A0000
+
+Every hour, at 45 minutes past, this will check if there is any work
+to be done.  Also, at 4:40am, 10:40am and 3:40pm this will create an
+empty work file for uunet, forcing the next check to call uunet.
+
+You will also want to periodically trim the log files,
+/usr/spool/uucp/Log and /usr/spool/uucp/Stats.
+
 TCP
 
 If your system has a Berkeley style socket library, you can compile
@@ -173,7 +203,7 @@ and, if necessary, ``port service xxx'' where xxx is the port number
 to use (the default is to look up "uucp" in /etc/services and if not
 found to use port 540).  You can specify the address of the remote
 host with ``address a.b.c''.  If you don't specify an address, the
-system name will be used.
+remote system name will be used.
 
 If you are using V2 configuration files, add a line like this to
 L.sys:
@@ -211,9 +241,9 @@ define a port using V2).  If you are using BNU the port must be named
 as "uucico -p TCP" (after the -p, name the port; in BNU it must be
 "TCP").  This will wait for incoming connections, and fork off a child
 for each one.  Each connection will be prompted with "login: " and
-"Password:", and the results will be checked against the call in login
-file (see CONFIG for details).  Of course, you can get a similar
-effect by using the BSD uucpd program.
+"Password:", and the results will be checked against the UUCP (not the
+system) password file (see CONFIG for details).  Of course, you can
+get a similar effect by using the BSD uucpd program.
 
 COMMENTS
 
@@ -231,5 +261,3 @@ command succeeds.  If this is true, there should probably be a compile
 time switch to select which behaviour to follow.
 
 The -b and -s options to uux are not implemented by uuxqt.  
-
-More protocols need to be written.
