@@ -1896,6 +1896,9 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 	  break;
 	}
 
+      if (b == '\r' && ! fCuvar_binary)
+	continue;
+
       if (ceoflen == 0)
 	{
 	  if (cfilewrite (e, &b, 1) != 1)
