@@ -305,8 +305,8 @@ a mode of 0444.
 
 135.
 
-Gerben: document how to make UUCP secure, to the extent that it is
-possible at all.
+Gerben Wierda: document how to make UUCP secure, to the extent that it
+is possible at all.
 
 136.
 
@@ -322,3 +322,30 @@ name in the configuration file.  Think about what is needed to use the
 same configuration files on multiple systems.
 
 138.
+
+T. William Wells: BNU apparently uses a file named A.whatever to hold
+the line number reached in current C. file processing.  This is a
+hack, and won't work right with size control anyhow, but
+fsysdep_did_work could, for example, clobber the first byte in the
+line to a # or something to mark that it had been finished.  Still a
+hack, but a better one.
+
+139.
+
+Patrick Smith: incorporate patches to generate full debugging traces
+with less debugging file overhead.  The debugging file repeats too
+much information at great length right now--not good.
+
+140.
+
+Mark Pizzolato: put in the newer, better, 'g' protocol checksum
+calculation routine.
+
+141.
+
+Franc,ois Pinard: batch up pauses and delays in chat scripts and do
+them all at once in a single system call.  This is particularly useful
+for pauses on systems which don't support subsecond sleeps.  For
+everything else it's a fairly minor optimization.
+
+142.
