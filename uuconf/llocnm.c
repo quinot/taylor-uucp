@@ -1,7 +1,7 @@
 /* llocnm.c
    Get the local name to use, given a login name.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -49,9 +49,12 @@ uuconf_login_localname (pglobal, zlogin, pzname)
 #endif
 
 #if HAVE_HDB_CONFIG
-  iret = uuconf_hdb_login_localname (pglobal, zlogin, pzname);
-  if (iret != UUCONF_NOT_FOUND)
-    return iret;
+  if (qglobal->qprocess->fhdb)
+    {
+      iret = uuconf_hdb_login_localname (pglobal, zlogin, pzname);
+      if (iret != UUCONF_NOT_FOUND)
+	return iret;
+    }
 #endif
 
   if (qglobal->qprocess->zlocalname != NULL)
