@@ -868,7 +868,7 @@ fsserial_open (qconn, ibaud, fwait)
   q->snew.c_cflag &=~ ICLEAR_CFLAG;
   q->snew.c_cflag |= (ib | ISET_CFLAG);
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
-  cSmin = 6;
+  cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
   q->snew.c_cc[VTIME] = 0;
 
@@ -889,7 +889,7 @@ fsserial_open (qconn, ibaud, fwait)
   q->snew.c_cflag &=~ ICLEAR_CFLAG;
   q->snew.c_cflag |= ISET_CFLAG;
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
-  cSmin = 6;
+  cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
   q->snew.c_cc[VTIME] = 0;
 
