@@ -2078,6 +2078,7 @@ Yanek Martinson <yanek@@mthvax.cs.miami.edu>
 les@@chinet.chi.il.us (Leslie Mikesell)
 mmitchel@@digi.lonestar.org (Mitch Mitchell)
 lyndon@@cs.athabascau.ca (Lyndon Nerenberg)
+nolan@@helios.unl.edu (Michael Nolan)
 david nugent <david@@csource.oz.au>
 abekas!dragoman!mikep@@decwrl.dec.com (Mike Park)
 dplatt@@ntg.com (Dave Platt)
