@@ -333,3 +333,7 @@ should probably drop the connection if we run out of disk space.
 There may also be uses for a non permanent file send failure message.
 
 127.
+
+Gerben: have uuchk explicitly comment when no port or dialer matches.
+
+128.
