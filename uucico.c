@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.40  1992/01/18  22:48:53  ian
+   Reworked sending of mail and general handling of failed transfers
+
    Revision 1.39  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -1230,6 +1233,7 @@ static boolean faccept_call (zlogin, qport)
   boolean fnew;
   char bgrade;
   const char *zuse_local;
+  struct sstatus sstat;
 #if HAVE_TAYLOR_CONFIG
   struct sport sportinfo;
 #endif
@@ -1497,6 +1501,20 @@ static boolean faccept_call (zlogin, qport)
   sLocked_system = *qsys;
   fLocked_system = TRUE;
 
+  /* Set the system status.  We don't really care if we can't get the
+     earlier status.  We also don't want to kill the conversation just
+     because we can't output the .Status file, so we ignore any
+     errors.  */
+  if (! fsysdep_get_status (qsys, &sstat))
+    {
+      sstat.cretries = 0;
+      sstat.ilast = 0;
+      sstat.cwait = 0;
+    }
+
+  sstat.ttype = STATUS_TALKING;
+  (void) fsysdep_set_status (qsys, &sstat);
+
   /* Check the arguments of the remote system.  We accept -x# to set
      out debugging level and -Q# for a sequence number.  We may insist
      on a sequence number.  The -p and -vgrade= arguments are taken to
@@ -1513,6 +1531,8 @@ static boolean faccept_call (zlogin, qport)
 	{
 	  (void) fsend_uucp_cmd ("RBADSEQ");
 	  ulog (LOG_ERROR, "No sequence number (call rejected)");
+	  sstat.ttype = STATUS_FAILED;
+	  (void) fsysdep_set_status (qsys, &sstat);
 	  return FALSE;
 	}
     }
@@ -1550,6 +1570,8 @@ static boolean faccept_call (zlogin, qport)
 		      {
 			(void) fsend_uucp_cmd ("RBADSEQ");
 			ulog (LOG_ERROR, "Out of sequence call rejected");
+			sstat.ttype = STATUS_FAILED;
+			(void) fsysdep_set_status (qsys, &sstat);
 			return FALSE;
 		      }
 		  }
@@ -1608,7 +1630,11 @@ static boolean faccept_call (zlogin, qport)
      switch, send ROKN to confirm it.  */
 
   if (! fsend_uucp_cmd (fnew ? "ROKN" : "ROK"))
-    return FALSE;
+    {
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      return FALSE;
+    }
 
   {
     int i;
@@ -1659,22 +1685,34 @@ static boolean faccept_call (zlogin, qport)
       }
 
     if (! fsend_uucp_cmd (zsend))
-      return FALSE;
+      {
+	sstat.ttype = STATUS_FAILED;
+	(void) fsysdep_set_status (qsys, &sstat);
+	return FALSE;
+      }
     
     /* The master will now send back the selected protocol.  */
     zstr = zget_uucp_cmd (TRUE);
     if (zstr == NULL)
-      return FALSE;
+      {
+	sstat.ttype = STATUS_FAILED;
+	(void) fsysdep_set_status (qsys, &sstat);
+	return FALSE;
+      }
 
     if (zstr[0] != 'U' || zstr[2] != '\0')
       {
 	ulog (LOG_ERROR, "Bad protocol response string");
+	sstat.ttype = STATUS_FAILED;
+	(void) fsysdep_set_status (qsys, &sstat);
 	return FALSE;
       }
 
     if (zstr[1] == 'N')
       {
 	ulog (LOG_ERROR, "No supported protocol");
+	sstat.ttype = STATUS_FAILED;
+	(void) fsysdep_set_status (qsys, &sstat);
 	return FALSE;
       }
 
@@ -1685,6 +1723,8 @@ static boolean faccept_call (zlogin, qport)
     if (i >= CPROTOCOLS)
       {
 	ulog (LOG_ERROR, "No supported protocol");
+	sstat.ttype = STATUS_FAILED;
+	(void) fsysdep_set_status (qsys, &sstat);
 	return FALSE;
       }
 
@@ -1695,7 +1735,11 @@ static boolean faccept_call (zlogin, qport)
 
   if (! fchat (&qsys->scalled_chat, qsys, (const struct sdialer *) NULL,
 	       (const char *) NULL, FALSE, zport, iport_baud ()))
-    return FALSE;
+    {
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      return FALSE;
+    }
 
   /* Run any protocol parameter commands.  There should be a way to
      read the dialer information if there is any to permit modem
@@ -1718,7 +1762,11 @@ static boolean faccept_call (zlogin, qport)
   /* Turn on the selected protocol.  */
 
   if (! (*qProto->pfstart)(FALSE))
-    return FALSE;
+    {
+      sstat.ttype = STATUS_FAILED;
+      (void) fsysdep_set_status (qsys, &sstat);
+      return FALSE;
+    }
 
   ulog (LOG_NORMAL, "Handshake successful");
 
@@ -1756,6 +1804,11 @@ static boolean faccept_call (zlogin, qport)
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
 	  isysdep_time () - istart_time);
+    if (fret)
+      sstat.ttype = STATUS_COMPLETE;
+    else
+      sstat.ttype = STATUS_FAILED;
+    (void) fsysdep_set_status (qsys, &sstat);
     return fret;
   }
 }
