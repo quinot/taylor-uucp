@@ -346,6 +346,12 @@ static long cGbad_order;
    received).  */
 static long cGremote_rejects;
 
+/* Number of duplicate RR packets treated as RJ packets.  Some UUCP
+   packages appear to never send RJ packets, but only RR packets.  If
+   no RJ has been seen, fgprocess_data treats a duplicate RR as an RJ
+   and increments this variable.  */
+static long cGremote_duprrs;
+
 /* The error level.  This is the total number of errors as adjusted by
    cGerror_decay.  */
 static long cGerror_level;
@@ -419,6 +425,7 @@ fgstart (qdaemon, pzlog)
   cGbad_checksum = 0;
   cGbad_order = 0;
   cGremote_rejects = 0;
+  cGremote_duprrs = 0;
   cGerror_level = 0;
   cGexpect_bad_order = 0;
 
@@ -673,10 +680,12 @@ fgshutdown (qdaemon)
   if (cGbad_hdr != 0
       || cGbad_checksum != 0
       || cGbad_order != 0
-      || cGremote_rejects != 0)
+      || cGremote_rejects != 0
+      || cGremote_duprrs != 0)
     ulog (LOG_NORMAL,
 	  "Errors: header %ld, checksum %ld, order %ld, remote rejects %ld",
-	  cGbad_hdr, cGbad_checksum, cGbad_order, cGremote_rejects);
+	  cGbad_hdr, cGbad_checksum, cGbad_order,
+	  cGremote_duprrs + cGremote_rejects);
 
   /* Reset all the parameters to their default values, so that the
      protocol parameters used for this connection do not affect the
@@ -1572,9 +1581,11 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       /* Annoyingly, some UUCP packages appear to send an RR packet
 	 rather than an RJ packet when they want a packet to be
-	 resent.  If we get a duplicate RR, we treat it as an RJ.  */
+	 resent.  If we get a duplicate RR and we've never seen an RJ,
+	 we treat the RR as an RJ.  */
       fduprr = FALSE;
-      if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL
+      if (cGremote_rejects == 0
+	  && CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL
 	  && CONTROL_XXX (ab[IFRAME_CONTROL]) == RR
 	  && iGremote_ack == CONTROL_YYY (ab[IFRAME_CONTROL])
 	  && INEXTSEQ (iGremote_ack) != iGsendseq
@@ -1778,7 +1789,10 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			      iGsendseq, iGretransmit_seq);
 
 	      ++cGresent_packets;
-	      ++cGremote_rejects;
+	      if (fduprr)
+		++cGremote_duprrs;
+	      else
+		++cGremote_rejects;
 	      ++cGerror_level;
 	      if (! fgcheck_errors (qdaemon))
 		return FALSE;
