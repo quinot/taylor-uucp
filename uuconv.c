@@ -938,7 +938,7 @@ uvwrite_taylor_system (e, q)
 			      "remote-receive");
 
       if (CHANGED (uuconf_pzpath))
-	uvwrite_string_array (e, q->uuconf_pzpath, "path");
+	uvwrite_string_array (e, q->uuconf_pzpath, "command-path");
 
       if (CHANGED (uuconf_pzcmds))
 	uvwrite_string_array (e, q->uuconf_pzcmds, "commands");
