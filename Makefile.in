@@ -114,9 +114,27 @@ configure-unix:
 	ln sys5.unx sys5.c
 	ln sys6.unx sys6.c
 
+# The CONFIG file can be constructed automatically from taylor.texi
+CONFIG: taylor.texi
+	echo '1,/^CONFIG file starts here$$/d' >CONFIG.sed
+	echo '/^CONFIG file ends here$$/,$$d' >>CONFIG.sed
+	echo '/^@menu/,/@end menu/d' >>CONFIG.sed
+	echo 's/^@ignore.*$$//g' >>CONFIG.sed
+	echo 's/^@node.*$$//g' >>CONFIG.sed
+	echo 's/^@section.*$$//g' >>CONFIG.sed
+	echo 's/^@[cf]index.*$$//g' >>CONFIG.sed
+	echo 's/^@table.*$$//g' >>CONFIG.sed
+	echo 's/^@item[ x]*//g' >>CONFIG.sed
+	echo 's/^@example.*$$//g' >>CONFIG.sed
+	echo 's/^@end.*$$//g' >>CONFIG.sed
+	echo 's/@[a-z]*{\([^}]*\)}/\1/g' >>CONFIG.sed
+	sed -f CONFIG.sed <taylor.texi | uniq >CONFIG
+	rm CONFIG.sed
+
 clean:
 	rm -f $(ALLOBJS) uucico uuxqt uux uucp uuchk tstuu
 	rm -f uucp-$(VERSION).tar.Z
+	rm -rf uucp-$(VERSION)
 
 dist:
 	-rm -rf uucp-$(VERSION)
