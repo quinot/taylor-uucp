@@ -52,7 +52,7 @@ ixsysdep_get_sequence (qsys)
      is no need to use a separate lock for the conversation sequence
      file.  */
 #if SPOOLDIR_HDB || SPOOLDIR_SVR4
-  zname = zsysdep_in_dir ("SQFILE", qsys->uuconf_zname);
+  zname = zsysdep_in_dir (".SQFILE", qsys->uuconf_zname);
 #else
   zname = zsysdep_in_dir (".Sequence", qsys->uuconf_zname);
 #endif
