@@ -327,7 +327,7 @@ esysdep_open_receive (qsys, zto, ztemp, zreceive, pcrestart)
 	    }
 	  else
 	    {
-	      DEBUG_MESSAGE2 (DEBUG_SPOOLDIR,
+	      DEBUG_MESSAGE1 (DEBUG_SPOOLDIR,
 			      "esysdep_open_receive: Reusing %s",
 			      zreceive);
 	      *pcrestart = (long) s.st_size;
