@@ -1,7 +1,7 @@
 /* proti.c
    The 'i' protocol.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -239,6 +239,11 @@ static int cIsync_retries = CSYNC_RETRIES;
    ``timeout'').  */
 static int cItimeout = CTIMEOUT;
 
+/* Timeout to use when waiting for an acknowledgement to open up space
+   in the window.  This is computed based on the window size and the
+   connection speed.  */
+static int cIwindow_timeout = CTIMEOUT;
+
 /* Number of times to retry sending a packet before giving up
    (protocol parameter ``retries'').  */
 static int cIretries = CRETRIES;
@@ -406,6 +411,7 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
   unsigned long icksum;
   int ctries;
   int csyncs;
+  long ibaud;
 
   *pzlog = NULL;
 
@@ -508,6 +514,42 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
 	}
     }
 
+  /* Calculate the window timeout.  */
+  ibaud = iconn_baud (qdaemon->qconn);
+  if (ibaud == 0)
+    cIwindow_timeout = cItimeout;
+  else
+    {
+      /* We expect to receive an ACK about halfway through each
+	 window.  In principle, an entire window might be sitting in a
+	 modem buffer while we are waiting for an ACK.  Therefore, the
+	 minimum time we should wait for an ACK is
+	   (1/2 window size) * (seconds / byte) + (roundtrip time) ==
+	   (1/2 window size) * (1 / (baud / 10)) + (roundtrip time) ==
+	   (1/2 window size) * (10 / baud) + (roundtrip time) ==
+	   (5 * (window size)) / baud + (roundtrip time)
+
+	 The window size is iIremote_packsize * iIremote_winsize.  For
+	 typical settings of packsize == 1024, winsize == 16, baud ==
+	 9600, this equation works out to
+	   (5 * 1024 * 16) / 9600 == 8 seconds
+	 We then take cItimeout as the round trip time, which gives us
+	 some flexibility.  We get more flexibility because it is
+	 quite likely that by the time we have finished sending out
+	 the last packet in a window, the first one has already been
+	 received by the remote system.  */
+      cIwindow_timeout = ((5 * iIremote_packsize * iIremote_winsize) / ibaud
+			  + cItimeout);
+    }
+
+  /* If we are the callee, bump both timeouts by one, to make it less
+     likely that both systems will timeout simultaneously.  */
+  if (! qdaemon->fcaller)
+    {
+      ++cItimeout;
+      ++cIwindow_timeout;
+    }
+
   /* We got a SYNC packet; set up packet buffers to use.  */
   if (iIremote_packsize > imaxpacksize)
     iIremote_packsize = imaxpacksize;
@@ -607,6 +649,7 @@ fishutdown (qdaemon)
   cIsync_timeout = CSYNC_TIMEOUT;
   cIsync_retries = CSYNC_RETRIES;
   cItimeout = CTIMEOUT;
+  cIwindow_timeout = CTIMEOUT;
   cIretries = CRETRIES;
   cIerrors = CERRORS;
   cIerror_decay = CERROR_DECAY;
@@ -741,7 +784,7 @@ fiwindow_wait (qdaemon)
 	 sends the entire packet.  Hopefully that will trigger an ACK
 	 or a NAK and get us going again.  */
       DEBUG_MESSAGE0 (DEBUG_PROTO, "fiwindow_wait: Waiting for ACK");
-      if (! fiwait_for_packet (qdaemon, cItimeout, cIretries,
+      if (! fiwait_for_packet (qdaemon, cIwindow_timeout, cIretries,
 			       TRUE, (boolean *) NULL))
 	return FALSE;
     }
