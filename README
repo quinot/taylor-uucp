@@ -1,8 +1,8 @@
 This is the README file for version 1.05 of the Taylor UUCP package.
 
 It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
-or, equivalently, uunet!cygint!airs!ian, or c/o Cygnus Support, 4th
-Floor, Building 200, 1 Kendall Square, Cambridge MA, 02139, USA.
+or, equivalently, uunet!cygint!airs!ian, or c/o Cygnus Support,
+Building 200, 1 Kendall Square, Cambridge MA, 02139, USA.
 
 There is a mailing list for discussion of the package.  To join (or
 get off) the list, send mail to taylor-uucp-request@gnu.ai.mit.edu.
@@ -10,6 +10,10 @@ Mail to this address is answered by a person, not a program.  When
 joining the list, make sure you include the address at which you want
 to receive mail in the body of your message.  To send a message to the
 list, send it to taylor-uucp@gnu.ai.mit.edu.
+
+Jeff Ross has volunteered to maintain patches for UUCP releases.  They
+may be obtained via anonymous FTP from ftp.fdu.edu, in the directory
+pub/taylor-uucp.
 
 This package is covered by the Gnu Public License.  See the file
 COPYING for details.  If you would like to do something with this
