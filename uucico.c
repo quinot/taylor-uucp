@@ -1,7 +1,7 @@
 /* uucico.c
    This is the main UUCP communication program.
 
-   Copyright (C) 1991, 1992, 1993, 1994, 1995, 2002 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995, 2002, 2003 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -390,7 +390,7 @@ main (argc, argv)
 	case 'v':
 	  /* Print version and exit.  */
 	  printf ("uucico (Taylor UUCP) %s\n", VERSION);
-	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002, 2003 Ian Lance Taylor\n");
 	  printf ("This program is free software; you may redistribute it under the terms of\n");
 	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
