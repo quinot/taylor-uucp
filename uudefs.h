@@ -375,9 +375,8 @@ extern void xfree P((pointer));
 
 /* Global variables.  */
 
-/* The name of the program being run.  This is statically initialized,
-   although it should perhaps be set from argv[0].  */
-extern char abProgram[];
+/* The name of the program being run.  Set from argv[0].  */
+extern const char *zProgram;
 
 /* When a signal occurs, the signal handlers sets the appropriate
    element of the arrays afSignal and afLog_signal to TRUE.  The

@@ -47,6 +47,9 @@ const char log_rcsid[] = "$Id$";
 
 static const char *zldate_and_time P((void));
 
+/* Program name.  Set by main function.  */
+const char *zProgram;
+
 /* Log file name.  */
 static const char *zLogfile;
 
@@ -317,10 +320,10 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	      zsys = zLsystem;
 
 	    zfile = zbufalc (strlen (zLogfile)
-			     + strlen (abProgram)
+			     + strlen (zProgram)
 			     + strlen (zsys)
 			     + 1);
-	    sprintf (zfile, zLogfile, abProgram, zsys);
+	    sprintf (zfile, zLogfile, zProgram, zsys);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	    ubuffree (zfile);
 	  }
@@ -396,16 +399,16 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     {
       if (! fLfile)
 	{
-	  fprintf (e, "%s: ", abProgram);
+	  fprintf (e, "%s: ", zProgram);
 	  if (edebug != NULL)
-	    fprintf (edebug, "%s: ", abProgram);
+	    fprintf (edebug, "%s: ", zProgram);
 	}
       else
 	{
 #if HAVE_TAYLOR_LOGGING
-	  fprintf (e, "%s ", abProgram);
+	  fprintf (e, "%s ", zProgram);
 	  if (edebug != NULL)
-	    fprintf (edebug, "%s ", abProgram);
+	    fprintf (edebug, "%s ", zProgram);
 #else /* ! HAVE_TAYLOR_LOGGING */
 	  fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
 	  if (edebug != NULL)
