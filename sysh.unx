@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.58  1992/05/19  22:29:10  ian
+   Renamed fsdirectory_exists to fsysdep_directory
+
    Revision 1.57  1992/04/28  21:08:32  ian
    Preserve file status flags
 
@@ -442,6 +445,15 @@ typedef struct termios sterminal;
 #define S_ISDIR(i) (((i) & 0170000) == 040000)
 #endif /* ! defined (S_IFDIR) */
 #endif /* ! defined (S_ISDIR) */
+
+/* We need the access macros.  For this to work correctly, <unistd.h>
+   must be included before this header file.  */
+#ifndef R_OK
+#define R_OK 4
+#define W_OK 2
+#define X_OK 1
+#define F_OK 0
+#endif /* ! defined (R_OK) */
 
 /* We create files with these modes (should this be configurable?).  */
 #define IPRIVATE_FILE_MODE (S_IRUSR | S_IWUSR)
