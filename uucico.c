@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/09/19  02:22:44  ian
+   Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
+
    Revision 1.3  1991/09/12  05:04:26  ian
    Changed sense of \0 return from btime_low_grade on calltimegrade
 
@@ -240,24 +243,24 @@ main (argc, argv)
     iDebug = idebug;
 
 #ifdef SIGINT
-  if (signal (SIGINT, ucatch) == SIG_IGN)
-    (void) signal (SIGINT, SIG_IGN);
+  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGINT, ucatch);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, ucatch) == SIG_IGN)
-    (void) signal (SIGHUP, SIG_IGN);
+  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGHUP, ucatch);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, ucatch) == SIG_IGN)
-    (void) signal (SIGQUIT, SIG_IGN);
+  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGQUIT, ucatch);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, ucatch) == SIG_IGN)
-    (void) signal (SIGTERM, SIG_IGN);
+  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGTERM, ucatch);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, ucatch) == SIG_IGN)
-    (void) signal (SIGPIPE, SIG_IGN);
+  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGPIPE, ucatch);
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, ucatch);

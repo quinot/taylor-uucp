@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -127,24 +130,24 @@ main (argc, argv)
     iDebug = idebug;
 
 #ifdef SIGINT
-  if (signal (SIGINT, uqcatch) == SIG_IGN)
-    (void) signal (SIGINT, SIG_IGN);
+  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGINT, uqcatch);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, uqcatch) == SIG_IGN)
-    (void) signal (SIGHUP, SIG_IGN);
+  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGHUP, uqcatch);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, uqcatch) == SIG_IGN)
-    (void) signal (SIGQUIT, SIG_IGN);
+  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGQUIT, uqcatch);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, uqcatch) == SIG_IGN)
-    (void) signal (SIGTERM, SIG_IGN);
+  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGTERM, uqcatch);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, uqcatch) == SIG_IGN)
-    (void) signal (SIGPIPE, SIG_IGN);
+  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGPIPE, uqcatch);
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, uqcatch);

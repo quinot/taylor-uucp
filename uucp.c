@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/11  02:33:14  ian
+   Added ffork argument to fsysdep_run
+
  * Revision 1.1  1991/09/10  19:40:31  ian
  * Initial revision
  *
@@ -185,24 +188,24 @@ main (argc, argv)
     iDebug = idebug;
 
 #ifdef SIGINT
-  if (signal (SIGINT, uccatch) == SIG_IGN)
-    (void) signal (SIGINT, SIG_IGN);
+  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGINT, uccatch);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, uccatch) == SIG_IGN)
-    (void) signal (SIGHUP, SIG_IGN);
+  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGHUP, uccatch);
 #endif
 #ifdef SIGQUIT
-  if (signal (SIGQUIT, uccatch) == SIG_IGN)
-    (void) signal (SIGQUIT, SIG_IGN);
+  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGQUIT, uccatch);
 #endif
 #ifdef SIGTERM
-  if (signal (SIGTERM, uccatch) == SIG_IGN)
-    (void) signal (SIGTERM, SIG_IGN);
+  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGTERM, uccatch);
 #endif
 #ifdef SIGPIPE
-  if (signal (SIGPIPE, uccatch) == SIG_IGN)
-    (void) signal (SIGPIPE, SIG_IGN);
+  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGPIPE, uccatch);
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, uccatch);
