@@ -165,7 +165,7 @@ fparse_cmd (zcmd, qcmd)
   z = strtok ((char *) NULL, " \t\n");
   if (z == NULL)
     return FALSE;
-  qcmd->imode = (int) strtol (z, &zend, 8);
+  qcmd->imode = (int) strtol (z, &zend, 0);
   if (*zend != '\0')
     return FALSE;
 
