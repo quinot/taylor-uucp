@@ -4372,6 +4372,7 @@ In alphabetical order:
 "Earle F. Ake - SAIC" @file{<ake@@Dayton.SAIC.COM>}
 @file{mra@@searchtech.com} (Michael Almond)
 @file{cambler@@zeus.calpoly.edu} (Christopher J. Ambler)
+Brian W. Antoine @file{<briana@@tau-ceti.isc-br.com>}
 @file{jantypas@@soft21.s21.com} (John Antypas)
 @file{nba@@sysware.DK} (Niels Baggesen)
 @file{uunet!hotmomma!sdb} (Scott Ballantyne)
