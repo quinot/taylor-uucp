@@ -1124,6 +1124,7 @@ main (argc, argv)
 	*zoptions++ = 'R';
       if (fneedshell)
 	*zoptions++ = 'e';
+      *zoptions = '\0';
       s.ztemp = zinput_temp;
       s.imode = 0666;
       if (zrequestor == NULL)
