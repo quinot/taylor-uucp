@@ -686,6 +686,4 @@ else
 fi
 dnl
 AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile,
-[if [ x$CONFIG_HEADERS = xconfig.h ]; then
-   echo > stamp-h
- fi])
+[case x$CONFIG_HEADERS in xconfig.h) echo > stamp-h ;; esac])
