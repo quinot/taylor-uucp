@@ -39,20 +39,20 @@ dnl
 AC_HAVE_HEADERS(stddef.h string.h strings.h unistd.h stdlib.h limits.h)
 AC_HAVE_HEADERS(time.h sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
-AC_HAVE_HEADERS(poll.h tiuser.h xti.h stropts.h ftw.h glob.h sys/select.h)
+AC_HAVE_HEADERS(poll.h tiuser.h xti.h stropts.h ftw.h glob.h)
 AC_HAVE_HEADERS(sys/types.tcp.h)
 AC_HAVE_HEADERS(sys/statvfs.h sys/fstyp.h sys/statfs.h mntent.h)
 AC_HAVE_HEADERS(sys/mount.h sys/fs_types.h)
 dnl
+AC_COMPILE_CHECK([sys/select.h],
+[#include <sys/select.h>
+#include <sys/time.h>],
+[int i;],
+[AC_DEFINE(sys/select.h)])
+dnl
 AC_MAJOR_HEADER
 dnl
-AC_COMPILE_CHECK([return type of signal handlers],
-[#include <signal.h>
-#undef signal
-extern void (*signal ()) ();],
-[int i;],
-[AC_DEFINE(RETSIGTYPE, void)],
-[AC_DEFINE(RETSIGTYPE, int)])
+AC_RETSIGTYPE
 dnl
 AC_COMPILE_CHECK([time.h and sys/time.h being included together],
 [#include <sys/time.h>
