@@ -679,6 +679,8 @@ main (argc, argv)
 	  if (! fconn_carrier (&sconn, FALSE))
 	    ulog (LOG_FATAL, "Can't turn off carrier");
 	}
+
+      break;
     }
 
   qCudialer = qdialer;
