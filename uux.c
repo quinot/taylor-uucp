@@ -150,7 +150,6 @@ main (argc, argv)
   boolean finputcopied;
   char *zcall_system;
   boolean fcall_any;
-  boolean flocalsys;
   struct uuconf_system slocalsys;
   boolean fneedshell;
   char *zfullcmd;
@@ -425,6 +424,7 @@ main (argc, argv)
 
   zuser = zsysdep_login_name ();
 
+  /* Get the local system name.  */
   iuuconf = uuconf_localname (puuconf, &zlocalname);
   if (iuuconf == UUCONF_NOT_FOUND)
     {
@@ -435,8 +435,41 @@ main (argc, argv)
   else if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
-  /* Figure out which system the command is to be executed on.  */
+  /* Get the local system information.  */
+  iuuconf = uuconf_system_info (puuconf, zlocalname, &slocalsys);
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      if (iuuconf != UUCONF_NOT_FOUND)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+      iuuconf = uuconf_system_local (puuconf, &slocalsys);
+      if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    }
+
+  /* Figure out which system the command is to be executed on.  Some
+     mailers apparently pass local!rmail, so we must explicitly check
+     for that.  */
   zexclam = strchr (zcmd, '!');
+  while (zexclam != NULL)
+    {
+      *zexclam = '\0';
+      if (strcmp (zcmd, zlocalname) == 0)
+	;
+      else if (slocalsys.uuconf_pzalias == NULL)
+	break;
+      else
+	{
+	  char **pzal;
+
+	  for (pzal = slocalsys.uuconf_pzalias; *pzal != NULL; pzal++)
+	    if (strcmp (zcmd, *pzal) == 0)
+	      break;
+	  if (*pzal == NULL)
+	    break;
+	}
+      zcmd = zexclam + 1;
+      zexclam = strchr (zcmd, '!');
+    }
   if (zexclam == NULL)
     {
       zsys = zlocalname;
@@ -445,7 +478,6 @@ main (argc, argv)
     }
   else
     {
-      *zexclam = '\0';
       zsys = zcmd;
       zcmd = zexclam + 1;
       fxqtlocal = FALSE;
@@ -465,24 +497,15 @@ main (argc, argv)
 	}
     }
 
-  flocalsys = FALSE;
-
-  iuuconf = uuconf_system_info (puuconf, zsys, &sxqtsys);
-  if (iuuconf != UUCONF_SUCCESS)
+  if (fxqtlocal)
+    sxqtsys = slocalsys;
+  else
     {
-      if (iuuconf != UUCONF_NOT_FOUND)
-	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-
-      if (fxqtlocal)
+      iuuconf = uuconf_system_info (puuconf, zsys, &sxqtsys);
+      if (iuuconf != UUCONF_SUCCESS)
 	{
-	  iuuconf = uuconf_system_local (puuconf, &sxqtsys);
-	  if (iuuconf != UUCONF_SUCCESS)
+	  if (iuuconf != UUCONF_NOT_FOUND)
 	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-	  slocalsys = sxqtsys;
-	  flocalsys = TRUE;
-	}
-      else
-	{
 	  if (! funknown_system (puuconf, zsys, &sxqtsys))
 	    ulog (LOG_FATAL, "%s: System not found", zsys);
 	}
@@ -883,21 +906,6 @@ main (argc, argv)
 
 	      /* We must request the file from the remote system to
 		 this one.  */
-	      if (! flocalsys)
-		{
-		  iuuconf = uuconf_system_info (puuconf, zlocalname,
-						&slocalsys);
-		  if (iuuconf != UUCONF_SUCCESS)
-		    {
-		      if (iuuconf != UUCONF_NOT_FOUND)
-			ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-		      iuuconf = uuconf_system_local (puuconf, &slocalsys);
-		      if (iuuconf != UUCONF_SUCCESS)
-			ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-		    }
-		  flocalsys = TRUE;
-		}
-
 	      zdata = zsysdep_data_file_name (&slocalsys, zxqtloc, bgrade,
 					      FALSE, abtname, (char *) NULL,
 					      (char *) NULL);
