@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1991/12/17  04:55:01  ian
+   David Nugent: ignore SIGHUP in uucico and uuxqt
+
    Revision 1.15  1991/12/11  04:21:37  ian
    Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
 
@@ -735,6 +738,8 @@ uprepare_test (itest, fcall_uucico, zsys)
 
       eprog = xfopen ("/usr/tmp/tstuu/Chat1", "w");
 
+      /* Wait for the other side to open the port and flush input.  */
+      fprintf (eprog, "sleep 1\n");
       fprintf (eprog,
 	       "echo password $1 speed $2 '(ignore this error)' 1>&2\n");
       fprintf (eprog, "echo test1\n");
