@@ -74,6 +74,11 @@ _uuconf_iinit_global (pqglobal)
   qprocess->zlocalname = NULL;
   qprocess->zspooldir = SPOOLDIR;
   qprocess->zpubdir = PUBDIR;
+#ifdef LOCKDIR
+  qprocess->zlockdir = LOCKDIR;
+#else
+  qprocess->zlockdir = SPOOLDIR;
+#endif
   qprocess->zlogfile = LOGFILE;
   qprocess->zstatsfile = STATFILE;
   qprocess->zdebugfile = DEBUGFILE;

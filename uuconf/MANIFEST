@@ -44,6 +44,7 @@ hunk.c
 iniglb.c
 init.c
 int.c
+lckdir.c
 lineno.c
 locnm.c
 logfil.c

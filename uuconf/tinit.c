@@ -54,6 +54,8 @@ static const struct cmdtab_offset asCmds[] =
       offsetof (struct sprocess, zspooldir), NULL },
   { "pubdir", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct sprocess, zpubdir), NULL },
+  { "lockdir", UUCONF_CMDTABTYPE_STRING,
+      offsetof (struct sprocess, zlockdir), NULL },
   { "logfile", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct sprocess, zlogfile), NULL },
   { "statfile", UUCONF_CMDTABTYPE_STRING,

@@ -754,6 +754,11 @@ extern int uuconf_spooldir (void *uuconf_pglobal,
 extern int uuconf_pubdir (void *uuconf_pglobal,
 			  const char **uuconf_pzpub);
 
+/* Get the name of the UUCP lock directory.  This will set *pzlock to
+   a constant string, which should not be freed.  */
+extern int uuconf_lockdir (void *uuconf_pglobal,
+			   const char **uuconf_pzlock);
+
 /* Get the name of the UUCP log file.  This will set *pzlog to a
    constant string, which should not be freed.  */
 extern int uuconf_logfile (void *uuconf_pglobal,
@@ -837,6 +842,7 @@ extern int uuconf_dialer_info ();
 extern int uuconf_dialer_free ();
 extern int uuconf_localname ();
 extern int uuconf_spooldir ();
+extern int uuconf_lockdir ();
 extern int uuconf_pubdir ();
 extern int uuconf_logfile ();
 extern int uuconf_statsfile ();

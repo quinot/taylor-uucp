@@ -65,6 +65,8 @@ struct sprocess
   const char *zspooldir;
   /* The default public directory.  */
   const char *zpubdir;
+  /* The lock directory.  */
+  const char *zlockdir;
   /* The log file.  */
   const char *zlogfile;
   /* The statistics file.  */
