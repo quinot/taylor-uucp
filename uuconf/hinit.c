@@ -1,7 +1,7 @@
 /* hinit.c
    Initialize for reading HDB configuration files.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -125,7 +125,7 @@ uuconf_hdb_init (ppglobal, zprogram)
 	  --cchars;
 	  if (zline[cchars] == '\n')
 	    zline[cchars] = '\0';
-	  if (isspace (BUCHAR (zline[0])) || zline[0] == '#')
+	  if (zline[0] == '#')
 	    continue;
 
 	  ctypes = _uuconf_istrsplit (zline, '\0', &pzargs, &cargs);
