@@ -172,6 +172,7 @@ extern pointer memcpy (), memchr ();
 #else /* ! HAVE_STDLIB_H */
 extern pointer malloc (), realloc (), bsearch ();
 extern long strtol ();
+extern unsigned long strtoul ();
 extern char *getenv ();
 #endif /* ! HAVE_STDLIB_H */
 
@@ -370,6 +371,11 @@ extern char *strrchr P((const char *z, int b));
 /* Turn a string into a long integer.  */
 #if ! HAVE_STRTOL
 extern long strtol P((const char *, char **, int));
+#endif
+
+/* Turn a string into a long unsigned integer.  */
+#if ! HAVE_STRTOUL
+extern unsigned long strtoul P((const char *, char **, int));
 #endif
 
 /* Lookup a key in a sorted array.  */
