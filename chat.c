@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/03/16  00:47:15  ian
+   Turn off DEBUG_PORT for chat script debugging
+
    Revision 1.19  1992/03/12  19:56:10  ian
    Debugging based on types rather than number
 
@@ -931,11 +934,14 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 		}
 	      break;
 	    default:
-	      ucsend_debug_end (fquote, TRUE);
+	      /* This error message will screw up any debugging
+		 information, but it's easily avoidable.  */
 	      ulog (LOG_ERROR,
 		    "Unrecognized escape sequence \\%c in send string",
 		    *z);
-	      return FALSE;
+	      fsend = TRUE;
+	      bsend = *z;
+	      break;
 	    }
 	  ++z;
 	  break;
