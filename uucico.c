@@ -2249,6 +2249,8 @@ fsend_uucp_cmd (qconn, z)
   char *zalc;
   boolean fret;
 
+  DEBUG_MESSAGE1 (DEBUG_HANDSHAKE, "fsend_uucp_cmd: Sending \"%s\"", z);
+
   cwrite = strlen (z) + 2;
 
   zalc = zbufalc (cwrite);
