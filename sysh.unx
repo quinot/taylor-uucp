@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.41  1992/03/02  04:53:07  ian
+   Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
+
    Revision 1.40  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -475,6 +478,15 @@ struct ssysdep_direct_port
 
 #define SYSDEP_DIRECT_INIT(q) ((q)->s.oread = -1)
 
+/* Set a signal handler.  */
+extern void usset_signal P((int isig, SIGtype (*pfn) P((int)),
+			    boolean fforce, boolean *pfignored));
+
+/* Default signal handler.  This sets iSignal to the signal number and
+   sets fSignal_logged to FALSE.  If system calls are automatically
+   restarted, it may do a longjmp to an fsysdep_catch.  */
+extern SIGtype ussignal P((int isig));
+
 /* Lock a string.  */
 extern boolean fsdo_lock P((const char *, boolean fspooldir));
 

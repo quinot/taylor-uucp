@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.62  1992/03/03  06:06:48  ian
+   T. William Wells: don't complain about missing configuration files
+
    Revision 1.61  1992/02/29  04:07:08  ian
    Added -j option to uucp and uux
 
@@ -453,9 +456,6 @@ main (argc, argv)
 #endif
 #ifdef SIGPIPE
   usysdep_signal (SIGPIPE);
-#endif
-#ifdef SIGALRM
-  usysdep_signal (SIGALRM);
 #endif
 
   usysdep_initialize (TRUE, FALSE);
