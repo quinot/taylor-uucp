@@ -780,6 +780,10 @@ uabort ()
   usysdep_exit (FALSE);
 }
 
+/* The number of seconds in one week.  We must cast to long for this
+   to be calculated correctly on a machine with 16 bit ints.  */
+#define SECS_PER_DAY ((long) 24 * (long) 60 * (long) 60)
+
 /* Call another system, trying all the possible sets of calling
    instructions.  The qsys argument is the system to call.  The qport
    argument is the port to use, and may be NULL.  If the fifwork
@@ -817,7 +821,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
     {
       if (qorigsys->uuconf_cmax_retries > 0
 	  && sstat.cretries >= qorigsys->uuconf_cmax_retries
-	  && sstat.ilast + 24 * 60 * 60 < inow)
+	  && sstat.ilast + SECS_PER_DAY < inow)
 	{
 	  ulog (LOG_ERROR, "Too many retries");
 	  return FALSE;

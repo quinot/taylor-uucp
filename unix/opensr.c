@@ -150,6 +150,10 @@ zsysdep_receive_temp (qsys, zto, ztemp, frestart)
     return zstemp_file (qsys);
 }  
 
+/* The number of seconds in one week.  We must cast to long for this
+   to be calculated correctly on a machine with 16 bit ints.  */
+#define SECS_PER_WEEK ((long) 7 * (long) 24 * (long) 60 * (long) 60)
+
 /* Open a temporary file to receive into.  This should, perhaps, check
    that we have write permission on the receiving directory, but it
    doesn't.  */
@@ -189,7 +193,7 @@ esysdep_open_receive (qsys, zto, ztemp, zreceive, pcrestart)
 	     restarted, and they know about this issue, they can touch
 	     it to bring it up to date.  */
 	  if (fstat (o, &s) < 0
-	      || s.st_mtime + 7 * 24 * 60 * 60 < time ((time_t *) NULL))
+	      || s.st_mtime + SECS_PER_WEEK < time ((time_t *) NULL))
 	    {
 	      (void) close (o);
 	      o = -1;
