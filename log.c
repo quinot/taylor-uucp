@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/04/22  22:34:11  ian
+   Added pfLstart and pfLend functions for ulog
+
    Revision 1.29  1992/04/01  21:58:35  ian
    Added CLOSE_LOGFILES configuration parameter
 
@@ -202,6 +205,9 @@ volatile sig_atomic_t afSignal[INDEXSIG_COUNT];
    instead of twice), but that is not a catatrophe.  */
 volatile sig_atomic_t afLog_signal[INDEXSIG_COUNT];
 
+/* Flag that indicates SIGHUP is worth logging.  */
+boolean fLog_sighup = TRUE;
+
 /* Signal names to use when logging signals.  */
 static const char * const azSignal_names[INDEXSIG_COUNT] = INDEXSIG_NAMES;
 
@@ -347,7 +353,8 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    if (afLog_signal[isig])
 	      {
 		afLog_signal[isig] = FALSE;
-		ulog (LOG_ERROR, "Got %s signal", azSignal_names[isig]);
+		if (isig != INDEXSIG_SIGHUP || fLog_sighup)
+		  ulog (LOG_ERROR, "Got %s signal", azSignal_names[isig]);
 	      }
 	  }
 	fdoing_sigs = FALSE;

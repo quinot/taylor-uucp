@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/05/20  22:40:46  ian
+   Changed arguments to fsysdep_move_file, added fsysdep_change_mode
+
    Revision 1.21  1992/04/02  22:51:09  ian
    Add gcc 2.0 format checking to ulog, and fixed discovered problems
 
@@ -685,8 +688,9 @@ fgetcmd (fmaster, qcmd)
 	    ulog (LOG_ERROR, "Got hangup reply as master");
 #endif
 	  /* Don't check errors rigorously here, since the other side
-	     might jump the gun and hang up.  */
-
+	     might jump the gun and hang up.  The fLog_sighup variable
+	     will get set TRUE again when the port is closed.  */
+	  fLog_sighup = FALSE;
 	  if (! (qProto->pfsendcmd) ("HY"))
 	    return TRUE;
 	  fPerror_ok = TRUE;

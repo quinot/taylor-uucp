@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.72  1992/05/21  02:37:42  ian
+   Put in an extern for alloca
+
    Revision 1.71  1992/05/20  22:40:46  ian
    Changed arguments to fsysdep_move_file, added fsysdep_change_mode
 
@@ -1374,7 +1377,7 @@ extern int cMaxuuxqts;
    must be extended; I see little point to handling any of the other
    ANSI C or POSIX signals, as they are either unlikely to occur
    (SIGABRT, SIGUSR1) or nearly impossible to handle cleanly (SIGILL,
-   SIGSEGV).  */
+   SIGSEGV).  SIGHUP is only logged if fLog_sighup is TRUE.  */
 #define INDEXSIG_SIGHUP (0)
 #define INDEXSIG_SIGINT (1)
 #define INDEXSIG_SIGQUIT (2)
@@ -1384,6 +1387,7 @@ extern int cMaxuuxqts;
 
 extern volatile sig_atomic_t afSignal[INDEXSIG_COUNT];
 extern volatile sig_atomic_t afLog_signal[INDEXSIG_COUNT];
+extern boolean fLog_sighup;
 
 /* The names of the signals to use in error messages, as an
    initializer for an array.  */
