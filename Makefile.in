@@ -279,13 +279,13 @@ sysdep.h: sysh.unx
 	rm -f sysdep.h
 	$(LN_S) $(srcdir)/sysh.unx sysdep.h || cp $(srcdir)/sysh.unx sysdep.h
 
-uuconf/libuuconf.a: FORCE
+uuconf/libuuconf.a: FORCE config.h
 	(cd uuconf; $(MAKE) $(MDEFINES) libuuconf.a)
 
-unix/libunix.a: FORCE sysdep.h
+unix/libunix.a: FORCE config.h sysdep.h
 	(cd unix; $(MAKE) $(MDEFINES) libunix.a)
 
-lib/libuucp.a: FORCE
+lib/libuucp.a: FORCE config.h
 	(cd lib; $(MAKE) $(MDEFINES) libuucp.a)
 
 FORCE:
