@@ -354,3 +354,9 @@ Bob Denny: fmail_transfer calls refer to strings after they've been
 freed up.
 
 103.
+
+Rudnev Aleksey: add 'g' protocol parameters to force the local window
+and packet size to use, overriding the (presumably stupid) request by
+the other system.
+
+104.
