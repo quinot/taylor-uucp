@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.41  1992/03/17  01:07:15  ian
+   Miscellaneous cleanup
+
    Revision 1.40  1992/03/16  19:44:45  ian
    Cast result of alloca
 
@@ -903,12 +906,14 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     zabsolute = zcopy;
   }
 
+  azQargs[0] = zabsolute;
+
 #if ! ALLOW_FILENAME_ARGUMENTS
 
   /* Check all the arguments to make sure they don't try to specify
      files they are not permitted to access.  */
 
-  for (i = 0; azQargs[i] != NULL; i++)
+  for (i = 1; azQargs[i] != NULL; i++)
     {
       if (! fsysdep_xqt_check_file (qsys, azQargs[i]))
 	{
@@ -1159,10 +1164,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 
   /* Get a shell command which uses the full path of the command to
      execute.  */
-  zfullcmd = (char *) alloca (strlen (zQcmd) + strlen (zabsolute) + 2);
-  strcpy (zfullcmd, zabsolute);
-  strcat (zfullcmd, " ");
-  for (i = 1; azQargs[i] != NULL; i++)
+  zfullcmd = (char *) alloca (strlen (zQcmd) + strlen (azQargs[0]) + 2);
+  for (i = 0; azQargs[i] != NULL; i++)
     {
       strcat (zfullcmd, azQargs[i]);
       strcat (zfullcmd, " ");
@@ -1171,8 +1174,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
-			 zabsolute, azQargs, zfullcmd, zQinput, zoutput,
-			 fshell, &zerror, &ftemp))
+			 azQargs, zfullcmd, zQinput, zoutput, fshell,
+			 &zerror, &ftemp))
     {
       if (ftemp)
 	{

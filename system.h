@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.30  1992/03/11  22:06:37  ian
    Marty Shannon: added max-uuxqts command
 
@@ -586,8 +589,7 @@ extern boolean fsysdep_xqt_check_file P((const struct ssysteminfo *qsys,
 
    qsys -- system for which execute file was created
    zuser -- user who requested execution
-   zcmd -- command to execute (from zsysdep_find_command)
-   pazargs -- list of arguments to command
+   pazargs -- list of arguments to command (element 0 is command)
    zfullcmd -- command and arguments stuck together in one string
    zinput -- file name for standard input (may be NULL)
    zoutput -- file name for standard output (may be NULL)
@@ -601,7 +603,6 @@ extern boolean fsysdep_xqt_check_file P((const struct ssysteminfo *qsys,
    appropriately.  */
 extern boolean fsysdep_execute P((const struct ssysteminfo *qsys,
 				  const char *zuser,
-				  const char *zcmd,
 				  const char **pazargs,
 				  const char *zfullcmd,
 				  const char *zinput,
