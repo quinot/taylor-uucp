@@ -1,5 +1,8 @@
 2002-02-08  Ian Lance Taylor  <ian@airs.com>
 
+	* log.c (ulog): Add code to HDB_LOGGING case to protect the
+	administrator against foolishness.
+
 	* Tom Ivar Helbekkmo: uux.c (main): Correct off-by-one error in
 	memory allocation.
 

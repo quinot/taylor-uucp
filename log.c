@@ -326,35 +326,65 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	  zprint = zLogfile;
 #else /* HAVE_HDB_LOGGING */
 	  {
-	    const char *zsys;
-	    char *zbase;
-	    char *zlower;
+	    const char *zcheck;
+	    int cfmt;
 	    char *zfile;
 
-	    /* We want to write to .Log/program/system, e.g.  	
-	       .Log/uucico/uunet.  The system name may not be set.  */
-	    if (zLsystem == NULL)
-	      zsys = "ANY";
+	    /* Only run sprintf if there are no more than two
+               unadorned %s.  If we see any other formatting
+               character, just use zLogfile as is.  This is to protect
+               the UUCP administrator against foolishness.  Note that
+               this has been reported as a security vulnerability, but
+               it is not.  */
+	    cfmt = 0;
+	    for (zcheck = zLogfile; *zcheck != '\0'; ++zcheck)
+	      {
+		if (*zcheck == '%')
+		  {
+		    if (zcheck[1] == 's')
+		      ++cfmt;
+		    else
+		      {
+			cfmt = 3;
+			break;
+		      }
+		  }
+	      }
+
+	    if (cfmt > 2)
+	      zfile = zbufcpy (zLogfile);
 	    else
-	      zsys = zLsystem;
+	      {
+		const char *zsys;
+		char *zbase;
+		char *zlower;
 
-	    zbase = zsysdep_base_name (zProgram);
-	    if (zbase == NULL)
-	      zbase = zbufcpy (zProgram);
+		/* We want to write to .Log/program/system, e.g.
+		   .Log/uucico/uunet.  The system name may not be set.  */
+		if (zLsystem == NULL)
+		  zsys = "ANY";
+		else
+		  zsys = zLsystem;
 
-	    /* On some systems the native uusched will invoke uucico
-	       with an upper case argv[0].  We work around that by
-	       forcing the filename to lower case here.  */
-	    for (zlower = zbase; *zlower != '\0'; zlower++)
-	      if (isupper (*zlower))
-		*zlower = tolower (*zlower);
+		zbase = zsysdep_base_name (zProgram);
+		if (zbase == NULL)
+		  zbase = zbufcpy (zProgram);
 
-	    zfile = zbufalc (strlen (zLogfile)
-			     + strlen (zbase)
-			     + strlen (zsys)
-			     + 1);
-	    sprintf (zfile, zLogfile, zbase, zsys);
-	    ubuffree (zbase);
+		/* On some systems the native uusched will invoke
+		   uucico with an upper case argv[0].  We work around
+		   that by forcing the filename to lower case here.  */
+		for (zlower = zbase; *zlower != '\0'; zlower++)
+		  if (isupper (*zlower))
+		    *zlower = tolower (*zlower);
+
+		zfile = zbufalc (strlen (zLogfile)
+				 + strlen (zbase)
+				 + strlen (zsys)
+				 + 1);
+		sprintf (zfile, zLogfile, zbase, zsys);
+		ubuffree (zbase);
+	      }
+
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	    if (eLlog != NULL)
 	      ubuffree (zfile);
