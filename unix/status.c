@@ -1,7 +1,7 @@
 /* status.c
    Routines to get and set the status for a system.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -31,6 +31,7 @@
 #include "system.h"
 
 #include <errno.h>
+#include <ctype.h>
 
 #if SPOOLDIR_HDB || SPOOLDIR_SVR4
 
@@ -104,6 +105,7 @@ fsysdep_get_status (qsys, qret, pfnone)
       qret->cretries = 0;
       qret->ilast = 0;
       qret->cwait = 0;
+      qret->zstring = NULL;
       if (pfnone != NULL)
 	*pfnone = TRUE;
       ubuffree (zname);
@@ -156,6 +158,29 @@ fsysdep_get_status (qsys, qret, pfnone)
   qret->cwait = (int) strtol (znext, &zend, 10);
   if (zend == znext)
     fbad = TRUE;
+
+  if (! fbad)
+    {
+      znext = zend;
+      while (isspace (BUCHAR (*znext)))
+	++znext;
+      if (*znext == '\0')
+	qret->zstring = NULL;
+      else
+	{
+	  qret->zstring = zbufcpy (znext);
+	  zend = qret->zstring + strlen (qret->zstring);
+	  while (zend != qret->zstring && *zend != ' ')
+	    --zend;
+	  if (zend != qret->zstring)
+	    *zend = '\0';
+	  else
+	    {
+	      ubuffree (qret->zstring);
+	      qret->zstring = NULL;
+	    }
+	}
+    }
 
   xfree ((pointer) zline);
 
