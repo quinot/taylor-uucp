@@ -160,7 +160,8 @@ extern long times ();
 /* Local functions.  */
 
 static void umake_file P((const char *zfile, int cextra));
-static void uprepare_test P((int itest, boolean fcall_uucico,
+static void uprepare_test P((boolean fmake, int itest,
+			     boolean fcall_uucico,
 			     const char *zsys));
 static void ucheck_file P((const char *zfile, const char *zerr,
 			   int cextra));
@@ -192,6 +193,7 @@ main (argc, argv)
   const char *zcmd1, *zcmd2;
   const char *zpty;
   const char *zsys;
+  boolean fmake = TRUE;
   char abpty1[sizeof "/dev/ptyp0"];
   char abpty2[sizeof "/dev/ptyp0"];
   char *zptyname;
@@ -201,12 +203,15 @@ main (argc, argv)
   zcmd2 = NULL;
   zsys = "test2";
 
-  while ((iopt = getopt (argc, argv, "c:p:s:t:ux:1:2:")) != EOF)
+  while ((iopt = getopt (argc, argv, "c:np:s:t:ux:1:2:")) != EOF)
     {
       switch (iopt)
 	{
 	case 'c':
 	  zProtocols = optarg;
+	  break;
+	case 'n':
+	  fmake = FALSE;
 	  break;
 	case 'p':
 	  iPercent = (int) strtol (optarg, (char **) NULL, 10);
@@ -235,7 +240,7 @@ main (argc, argv)
 		   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 		   VERSION);
 	  fprintf (stderr,
-		   "Usage: tstuu [-x] [-t #] [-u] [-1 cmd] [-2 cmd]\n");
+		   "Usage: tstuu [-xn] [-t #] [-u] [-1 cmd] [-2 cmd]\n");
 	  exit (EXIT_FAILURE);
 	}
     }
@@ -243,7 +248,7 @@ main (argc, argv)
   if (fCall_uucico && zcmd2 == NULL)
     zcmd2 = ZUUCICO_CMD;
 
-  uprepare_test (iTest, fCall_uucico, zsys);
+  uprepare_test (fmake, iTest, fCall_uucico, zsys);
 
   (void) remove ("/usr/tmp/tstuu/spool1/core");
   (void) remove ("/usr/tmp/tstuu/spool2/core");
@@ -664,7 +669,8 @@ ucheck_file (z, zerr, c)
 /* Prepare all the configuration files for testing.  */
 
 static void
-uprepare_test (itest, fcall_uucico, zsys)
+uprepare_test (fmake, itest, fcall_uucico, zsys)
+     boolean fmake;
      int itest;
      boolean fcall_uucico;
      const char *zsys;
@@ -678,7 +684,6 @@ uprepare_test (itest, fcall_uucico, zsys)
 
 /* We must make /usr/tmp/tstuu world writeable or we won't be able to
    receive files into it.  */
-
   (void) umask (0);
 
 #ifndef S_IWOTH
@@ -707,123 +712,26 @@ uprepare_test (itest, fcall_uucico, zsys)
       exit (EXIT_FAILURE);
     }
 
-  e = xfopen ("/usr/tmp/tstuu/Config1", "w");
+  if (fmake)
+    {
+      e = xfopen ("/usr/tmp/tstuu/Config1", "w");
 
-  fprintf (e, "# First test configuration file\n");
-  fprintf (e, "nodename test1\n");
-  fprintf (e, "spool /usr/tmp/tstuu/spool1\n");
-  fprintf (e, "lockdir /usr/tmp/tstuu/spool1\n");
-  fprintf (e, "sysfile /usr/tmp/tstuu/System1\n");
-  fprintf (e, "sysfile /usr/tmp/tstuu/System1.2\n");
-  fprintf (e, "portfile /usr/tmp/tstuu/Port1\n");
-  (void) remove ("/usr/tmp/tstuu/Log1");
+      fprintf (e, "# First test configuration file\n");
+      fprintf (e, "nodename test1\n");
+      fprintf (e, "spool /usr/tmp/tstuu/spool1\n");
+      fprintf (e, "lockdir /usr/tmp/tstuu/spool1\n");
+      fprintf (e, "sysfile /usr/tmp/tstuu/System1\n");
+      fprintf (e, "sysfile /usr/tmp/tstuu/System1.2\n");
+      fprintf (e, "portfile /usr/tmp/tstuu/Port1\n");
+      (void) remove ("/usr/tmp/tstuu/Log1");
 #if ! HAVE_HDB_LOGGING
-  fprintf (e, "logfile /usr/tmp/tstuu/Log1\n");
+      fprintf (e, "logfile /usr/tmp/tstuu/Log1\n");
 #else
-  fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log1/%s/%s");
+      fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log1/%s/%s");
 #endif
-  fprintf (e, "statfile /usr/tmp/tstuu/Stats1\n");
-  fprintf (e, "debugfile /usr/tmp/tstuu/Debug1\n");
-  fprintf (e, "callfile /usr/tmp/tstuu/Call1\n");
-  fprintf (e, "pubdir /usr/tmp/tstuu\n");
-#if HAVE_V2_CONFIG
-  fprintf (e, "v2-files no\n");
-#endif
-#if HAVE_HDB_CONFIG
-  fprintf (e, "hdb-files no\n");
-#endif
-  if (zDebug != NULL)
-    fprintf (e, "debug %s\n", zDebug);
-
-  xfclose (e);
-
-  e = xfopen ("/usr/tmp/tstuu/System1", "w");
-
-  fprintf (e, "# This file is ignored, to test multiple system files\n");
-  fprintf (e, "time never\n");
-
-  xfclose (e);
-
-  e = xfopen ("/usr/tmp/tstuu/System1.2", "w");
-
-  fprintf (e, "# First test system file\n");
-  fprintf (e, "time any\n");
-  fprintf (e, "port stdin\n");
-  fprintf (e, "# That was the defaults\n");
-  fprintf (e, "system %s\n", zsys);
-  if (! fcall_uucico)
-    {
-      FILE *eprog;
-
-      eprog = xfopen ("/usr/tmp/tstuu/Chat1", "w");
-
-      /* Wait for the other side to open the port and flush input.  */
-      fprintf (eprog, "sleep 2\n");
-      fprintf (eprog,
-	       "echo password $1 speed $2 1>&2\n");
-      fprintf (eprog, "echo test1\n");
-      fprintf (eprog, "exit 0\n");
-
-      xfclose (eprog);
-
-      (void) chmod ("/usr/tmp/tstuu/Chat1", S_IRWXU);
-
-      fprintf (e, "chat-program /usr/tmp/tstuu/Chat1 \\P \\S\n");
-
-      fprintf (e, "chat word: \\P\n");
-      fprintf (e, "chat-fail login;\n");
-      fprintf (e, "call-login *\n");
-      fprintf (e, "call-password *\n");
-    }
-  else
-    fprintf (e, "chat \"\"\n");
-  fprintf (e, "call-transfer yes\n");
-  fprintf (e, "commands cat\n");
-  if (! fcall_uucico && iPercent == 0)
-    {
-      fprintf (e, "protocol-parameter g window 7\n");
-      fprintf (e, "protocol-parameter g packet-size 4096\n");
-    }
-  if (zProtocols != NULL)
-    fprintf (e, "protocol %s\n", zProtocols);
-
-  xfclose (e);
-
-  e = xfopen ("/usr/tmp/tstuu/Port1", "w");
-
-  fprintf (e, "port stdin\n");
-  fprintf (e, "type stdin\n");
-  fprintf (e, "pty true\n");
-
-  xfclose (e);
-
-  e = xfopen ("/usr/tmp/tstuu/Call1", "w");
-
-  fprintf (e, "Call out password file\n");
-  fprintf (e, "%s test1 pass1\n", zsys);
-
-  xfclose (e);
-
-  if (! fcall_uucico)
-    {
-      FILE *eprog;
-
-      e = xfopen ("/usr/tmp/tstuu/Config2", "w");
-
-      fprintf (e, "# Second test configuration file\n");
-      fprintf (e, "nodename test2\n");
-      fprintf (e, "spool /usr/tmp/tstuu/spool2\n");
-      fprintf (e, "lockdir /usr/tmp/tstuu/spool2\n");
-      fprintf (e, "sysfile /usr/tmp/tstuu/System2\n");
-      (void) remove ("/usr/tmp/tstuu/Log2");
-#if ! HAVE_HDB_LOGGING
-      fprintf (e, "logfile /usr/tmp/tstuu/Log2\n");
-#else
-      fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log2/%s/%s");
-#endif
-      fprintf (e, "statfile /usr/tmp/tstuu/Stats2\n");
-      fprintf (e, "debugfile /usr/tmp/tstuu/Debug2\n");
-      fprintf (e, "passwdfile /usr/tmp/tstuu/Pass2\n");
+      fprintf (e, "statfile /usr/tmp/tstuu/Stats1\n");
+      fprintf (e, "debugfile /usr/tmp/tstuu/Debug1\n");
+      fprintf (e, "callfile /usr/tmp/tstuu/Call1\n");
       fprintf (e, "pubdir /usr/tmp/tstuu\n");
 #if HAVE_V2_CONFIG
       fprintf (e, "v2-files no\n");
@@ -836,35 +744,135 @@ uprepare_test (itest, fcall_uucico, zsys)
 
       xfclose (e);
 
-      e = xfopen ("/usr/tmp/tstuu/System2", "w");
+      e = xfopen ("/usr/tmp/tstuu/System1", "w");
 
-      fprintf (e, "# Second test system file\n");
-      fprintf (e, "system test1\n");
-      fprintf (e, "called-login test1\n");
-      fprintf (e, "request true\n");
+      fprintf (e, "# This file is ignored, to test multiple system files\n");
+      fprintf (e, "time never\n");
+
+      xfclose (e);
+
+      e = xfopen ("/usr/tmp/tstuu/System1.2", "w");
+
+      fprintf (e, "# First test system file\n");
+      fprintf (e, "time any\n");
+      fprintf (e, "port stdin\n");
+      fprintf (e, "# That was the defaults\n");
+      fprintf (e, "system %s\n", zsys);
+      if (! fcall_uucico)
+	{
+	  FILE *eprog;
+
+	  eprog = xfopen ("/usr/tmp/tstuu/Chat1", "w");
+
+	  /* Wait for the other side to open the port and flush input.  */
+	  fprintf (eprog, "sleep 2\n");
+	  fprintf (eprog,
+		   "echo password $1 speed $2 1>&2\n");
+	  fprintf (eprog, "echo test1\n");
+	  fprintf (eprog, "exit 0\n");
+
+	  xfclose (eprog);
+
+	  (void) chmod ("/usr/tmp/tstuu/Chat1", S_IRWXU);
+
+	  fprintf (e, "chat-program /usr/tmp/tstuu/Chat1 \\P \\S\n");
+
+	  fprintf (e, "chat word: \\P\n");
+	  fprintf (e, "chat-fail login;\n");
+	  fprintf (e, "call-login *\n");
+	  fprintf (e, "call-password *\n");
+	}
+      else
+	fprintf (e, "chat \"\"\n");
+      fprintf (e, "call-transfer yes\n");
       fprintf (e, "commands cat\n");
+      if (! fcall_uucico && iPercent == 0)
+	{
+	  fprintf (e, "protocol-parameter g window 7\n");
+	  fprintf (e, "protocol-parameter g packet-size 4096\n");
+	}
       if (zProtocols != NULL)
 	fprintf (e, "protocol %s\n", zProtocols);
 
-      eprog = xfopen ("/usr/tmp/tstuu/Chat2", "w");
+      xfclose (e);
 
-      fprintf (eprog,
-	       "echo port $1 1>&2\n");
-      fprintf (eprog, "exit 0\n");
+      e = xfopen ("/usr/tmp/tstuu/Port1", "w");
 
-      xfclose (eprog);
-
-      fprintf (e, "called-chat-program /bin/sh /usr/tmp/tstuu/Chat2 \\Y\n");
-      fprintf (e, "time any\n");
+      fprintf (e, "port stdin\n");
+      fprintf (e, "type stdin\n");
+      fprintf (e, "pty true\n");
 
       xfclose (e);
 
-      e = xfopen ("/usr/tmp/tstuu/Pass2", "w");
+      e = xfopen ("/usr/tmp/tstuu/Call1", "w");
 
-      fprintf (e, "# Call in password file\n");
-      fprintf (e, "test1 pass1\n");
+      fprintf (e, "Call out password file\n");
+      fprintf (e, "%s test1 pass1\n", zsys);
 
       xfclose (e);
+
+      if (! fcall_uucico)
+	{
+	  FILE *eprog;
+
+	  e = xfopen ("/usr/tmp/tstuu/Config2", "w");
+
+	  fprintf (e, "# Second test configuration file\n");
+	  fprintf (e, "nodename test2\n");
+	  fprintf (e, "spool /usr/tmp/tstuu/spool2\n");
+	  fprintf (e, "lockdir /usr/tmp/tstuu/spool2\n");
+	  fprintf (e, "sysfile /usr/tmp/tstuu/System2\n");
+	  (void) remove ("/usr/tmp/tstuu/Log2");
+#if ! HAVE_HDB_LOGGING
+	  fprintf (e, "logfile /usr/tmp/tstuu/Log2\n");
+#else
+	  fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log2/%s/%s");
+#endif
+	  fprintf (e, "statfile /usr/tmp/tstuu/Stats2\n");
+	  fprintf (e, "debugfile /usr/tmp/tstuu/Debug2\n");
+	  fprintf (e, "passwdfile /usr/tmp/tstuu/Pass2\n");
+	  fprintf (e, "pubdir /usr/tmp/tstuu\n");
+#if HAVE_V2_CONFIG
+	  fprintf (e, "v2-files no\n");
+#endif
+#if HAVE_HDB_CONFIG
+	  fprintf (e, "hdb-files no\n");
+#endif
+	  if (zDebug != NULL)
+	    fprintf (e, "debug %s\n", zDebug);
+
+	  xfclose (e);
+
+	  e = xfopen ("/usr/tmp/tstuu/System2", "w");
+
+	  fprintf (e, "# Second test system file\n");
+	  fprintf (e, "system test1\n");
+	  fprintf (e, "called-login test1\n");
+	  fprintf (e, "request true\n");
+	  fprintf (e, "commands cat\n");
+	  if (zProtocols != NULL)
+	    fprintf (e, "protocol %s\n", zProtocols);
+
+	  eprog = xfopen ("/usr/tmp/tstuu/Chat2", "w");
+
+	  fprintf (eprog,
+		   "echo port $1 1>&2\n");
+	  fprintf (eprog, "exit 0\n");
+
+	  xfclose (eprog);
+
+	  fprintf (e, "called-chat-program /bin/sh /usr/tmp/tstuu/Chat2 \\Y\n");
+	  fprintf (e, "time any\n");
+
+	  xfclose (e);
+
+	  e = xfopen ("/usr/tmp/tstuu/Pass2", "w");
+
+	  fprintf (e, "# Call in password file\n");
+	  fprintf (e, "test1 pass1\n");
+
+	  xfclose (e);
+	}
     }
 
   zuucp1 = "./uucp -I /usr/tmp/tstuu/Config1 -r";
