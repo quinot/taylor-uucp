@@ -20,172 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.54  1992/04/25  00:33:47  ian
-   Make include of <sys/times.h> optional
-
-   Revision 1.53  1992/04/14  17:34:03  ian
-   Zacharias Beckman: minor touchups for NeXT
-
-   Revision 1.52  1992/04/02  23:02:40  ian
-   Conditionally declare times
-
-   Revision 1.51  1992/03/28  04:29:19  ian
-   Roberto Biancardi: define SIGCHLD as SIGCLD if necessary
-
-   Revision 1.50  1992/03/16  22:22:35  ian
-   Adjusted external declarations
-
-   Revision 1.49  1992/03/15  01:54:46  ian
-   All execs are now done in isspawn, all waits are done in iswait
-
-   Revision 1.48  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.47  1992/03/08  17:02:24  ian
-   Ted Lindgreen: don't include <sys/ioctl.h> if it's not there
-
-   Revision 1.46  1992/03/04  15:38:19  ian
-   Roberto Biancardi: use poll if we haven't got select
-
-   Revision 1.45  1992/03/04  01:40:51  ian
-   Thomas Fischer: tweaked a bit for the NeXT
-
-   Revision 1.44  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.43  1992/02/24  20:07:43  ian
-   John Theus: some systems don't have <fcntl.h>
-
-   Revision 1.42  1992/02/24  04:58:47  ian
-   Only permit files to be received into directories that are world-writeable
-
-   Revision 1.41  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.40  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.39  1992/01/29  04:27:11  ian
-   Jay Vassos-Libove: removed some conflicting declarations
-
-   Revision 1.38  1992/01/19  02:53:05  ian
-   Mike Park: don't sleep when buffer is full; it's too slow
-
-   Revision 1.37  1992/01/16  16:32:44  ian
-   Mike Park: ioctl is sometimes declared varadic, so we can't declare it
-
-   Revision 1.36  1992/01/15  21:06:11  ian
-   Mike Park: some systems can't include <sys/time.h> and <time.h> together
-
-   Revision 1.35  1992/01/15  20:48:41  ian
-   Mike Park: removed prototype for times
-
-   Revision 1.34  1992/01/15  20:02:05  ian
-   Mike Park: sh on NeXT interprets leading ~ (incredible, isn't it)
-
-   Revision 1.33  1992/01/15  19:40:35  ian
-   Mike Park: handle HAVE_UNION_WAIT correctly and completely
-
-   Revision 1.32  1992/01/13  19:38:16  ian
-   Chip Salzenberg: can't declare execl, since it is varadic
-
-   Revision 1.31  1992/01/13  06:11:39  ian
-   David Nugent: can't declare open or fcntl
-
-   Revision 1.30  1992/01/13  05:53:04  ian
-   Mike Park: added HAVE_WAITPID and HAVE_WAIT4 configuration parameters
-
-   Revision 1.29  1992/01/13  05:37:20  ian
-   Mike Park: use IPUBLIC_DIRECTORY_MODE rather than S_ macros
-
-   Revision 1.28  1991/12/29  04:04:18  ian
-   Added a bunch of extern definitions
-
-   Revision 1.27  1991/12/29  00:55:23  ian
-   Monty Solomon: added HAVE_UNION_WAIT
-
-   Revision 1.26  1991/12/28  06:35:05  ian
-   Use TIMES_TICK rather than CLK_TCK
-
-   Revision 1.25  1991/12/28  06:10:50  ian
-   Added HAVE_STRCHR and HAVE_INDEX to conf.h
-
-   Revision 1.24  1991/12/28  04:05:13  ian
-   Create spool directories
-
-   Revision 1.23  1991/12/28  03:49:23  ian
-   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
-
-   Revision 1.22  1991/12/22  22:14:19  ian
-   Monty Solomon: added HAVE_UNISTD_H configuration parameter
-
-   Revision 1.21  1991/12/21  22:07:47  ian
-   John Theus: don't warn if port file does not exist
-
-   Revision 1.20  1991/12/19  04:25:57  ian
-   Terry Gardner: configuration parameter to not use both NONBLOCK and NDELAY
-
-   Revision 1.19  1991/12/19  03:55:40  ian
-   Give the uucico processes a chance to die on their own
-
-   Revision 1.18  1991/12/18  05:12:00  ian
-   Added -l option to uucico to prompt for login name once and then exit
-
-   Revision 1.17  1991/12/17  22:21:19  ian
-   Sleep before printing login to wait until input has been flushed
-
-   Revision 1.16  1991/12/17  04:55:01  ian
-   David Nugent: ignore SIGHUP in uucico and uuxqt
-
-   Revision 1.15  1991/12/11  04:21:37  ian
-   Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
-
-   Revision 1.14  1991/12/07  02:57:28  ian
-   Allow failure message to be sent from uux test
-
-   Revision 1.13  1991/12/01  19:58:01  ian
-   Don't use the not-very-portable fd_set typedef at all
-
-   Revision 1.12  1991/12/01  19:41:00  ian
-   Don't read V2 or BNU configuration files while testing
-
-   Revision 1.11  1991/12/01  03:29:30  ian
-   Bob Izenberg: get definitions for EAGAIN and EWOULDBLOCK
-
-   Revision 1.10  1991/12/01  02:23:12  ian
-   Niels Baggesen: don't multiply include <unistd.h>
-
-   Revision 1.9  1991/12/01  02:12:02  ian
-   David Nugent: some systems don't define O_NDELAY
-
-   Revision 1.8  1991/11/26  02:13:48  ian
-   Bob Denny: Add definitions for FD_SET, FD_ZERO and FD_ISSET
-
-   Revision 1.7  1991/11/26  01:45:42  ian
-   Marty Shannon: configuration option to not include <sys/wait.h>
-
-   Revision 1.6  1991/11/21  22:17:06  ian
-   Add version string, print version when printing usage
-
-   Revision 1.5  1991/11/14  21:07:15  ian
-   Create port file and add protocol command for second system
-
-   Revision 1.4  1991/11/12  19:47:04  ian
-   Add called-chat set of commands to run a chat script on an incoming call
-
-   Revision 1.3  1991/11/11  23:47:24  ian
-   Added chat-program to run a program to do a chat script
-
-   Revision 1.2  1991/11/11  04:21:16  ian
-   Added 'f' protocol
-
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-
-   */
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
 
 #include "uucp.h"
 
@@ -213,6 +48,9 @@ char tstuu_rcsid[] = "$Id$";
 
 #if HAVE_SELECT
 #include <sys/time.h>
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 #endif
 
 #if HAVE_POLL
@@ -322,24 +160,6 @@ extern long times ();
 
 #if ! HAVE_SELECT && ! HAVE_POLL
  #error You need select or poll
-#endif
-
-/* External functions.  */
-extern int close (), dup2 (), access ();
-extern int read (), write (), unlink ();
-extern int fclose (), fflush (), rand (), system ();
-extern pid_t fork ();
-
-#if HAVE_SELECT
-extern int select ();
-#endif
-
-#if HAVE_POLL
-extern int poll ();
-#endif
-
-#if ! HAVE_WAITPID && HAVE_WAIT4
-extern pid_t wait4 ();
 #endif
 
 #if ! HAVE_REMOVE
