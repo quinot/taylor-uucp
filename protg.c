@@ -1,7 +1,7 @@
 /* protg.c
    The 'g' protocol.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -537,6 +537,22 @@ fbiggstart (qdaemon, pzlog)
   fGshort_packets = FALSE;
   return fgstart (qdaemon, pzlog);
 }
+
+/* The 'v' protocol is identical to the 'g' protocol, except that the
+   packet size defaults to 512 bytes.  Rather than really get it
+   right, we automatically switch from the usual default of 64 to 512.
+   This won't work correctly if somebody does protocol-parameter v
+   packet-size 64.  */
+
+boolean
+fvstart (qdaemon, pzlog)
+     struct sdaemon *qdaemon;
+     char **pzlog;
+{
+  if (iGrequest_packsize == IPACKSIZE)
+    iGrequest_packsize = 512;
+  return fgstart (qdaemon, pzlog);
+}  
 
 /* Exchange initialization messages with the other system.
 
