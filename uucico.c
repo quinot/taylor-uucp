@@ -2238,17 +2238,17 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
     uclear_queue (&sdaem);
 
-    (void) uuconf_system_free (puuconf, &ssys);
-    if (qport == &sport)
-      (void) uuconf_port_free (puuconf, &sport);
-    xfree ((pointer) zloc);
-
     if (fret)
       sstat.ttype = STATUS_COMPLETE;
     else
       sstat.ttype = STATUS_FAILED;
     sstat.ilast = iend_time;
     (void) fsysdep_set_status (qsys, &sstat);
+
+    (void) uuconf_system_free (puuconf, &ssys);
+    if (qport == &sport)
+      (void) uuconf_port_free (puuconf, &sport);
+    xfree ((pointer) zloc);
 
     return fret;
   }
