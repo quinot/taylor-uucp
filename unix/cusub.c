@@ -668,18 +668,8 @@ static boolean fSlocalecho;
 /* The original state of the terminal.  */
 static sterminal sSterm_orig;
 
-#if HAVE_BSD_TTY
-struct tchars sSterm_orig_tchars;
-struct ltchars sSterm_orig_ltchars;
-#endif
-
 /* The new state of the terminal.  */
 static sterminal sSterm_new;
-
-#if HAVE_BSD_TTY
-struct tchars sSterm_new_tchars;
-struct ltchars sSterm_new_ltchars;
-#endif
 
 #if ! HAVE_BSD_TTY
 #ifdef SIGTSTP
@@ -716,60 +706,33 @@ fsysdep_terminal_raw (flocalecho)
      off all output processing, which we don't want to do.  This means
      that we have to disable the interrupt characters, which we do by
      setting them to -1.  */
+  bSeof = sSterm_orig.stchars.t_eofc;
 
-  if (ioctl (0, TIOCGETC, &sSterm_orig_tchars) < 0)
-    {
-      ulog (LOG_ERROR, "TIOCGETC: %s", strerror (errno));
-      return FALSE;
-    }
+  sSterm_new.stchars.t_intrc = -1;
+  sSterm_new.stchars.t_quitc = -1;
+  sSterm_new.stchars.t_startc = -1;
+  sSterm_new.stchars.t_stopc = -1;
+  sSterm_new.stchars.t_eofc = -1;
+  sSterm_new.stchars.t_brkc = -1;
 
-  bSeof = sSterm_orig_tchars.t_eofc;
+  bStstp = sSterm_orig.sltchars.t_suspc;
 
-  sSterm_new_tchars = sSterm_orig_tchars;
-  sSterm_new_tchars.t_intrc = -1;
-  sSterm_new_tchars.t_quitc = -1;
-  sSterm_new_tchars.t_startc = -1;
-  sSterm_new_tchars.t_stopc = -1;
-  sSterm_new_tchars.t_eofc = -1;
-  sSterm_new_tchars.t_brkc = -1;
-  
-  if (ioctl (0, TIOCSETC, &sSterm_new_tchars) < 0)
-    {
-      ulog (LOG_ERROR, "TIOCSETC: %s", strerror (errno));
-      return FALSE;
-    }
-
-  if (ioctl (0, TIOCGLTC, &sSterm_orig_ltchars) < 0)
-    {
-      ulog (LOG_ERROR, "TIOCGLTC: %s", strerror (errno));
-      return FALSE;
-    }
-
-  bStstp = sSterm_orig_ltchars.t_suspc;
-
-  sSterm_new_ltchars = sSterm_orig_ltchars;
-  sSterm_new_ltchars.t_suspc = -1;
-  sSterm_new_ltchars.t_dsuspc = -1;
-  sSterm_new_ltchars.t_rprntc = -1;
-  sSterm_new_ltchars.t_flushc = -1;
-  sSterm_new_ltchars.t_werasc = -1;
-  sSterm_new_ltchars.t_lnextc = -1;
-
-  if (ioctl (0, TIOCSLTC, &sSterm_new_ltchars) < 0)
-    {
-      ulog (LOG_ERROR, "TIOCSLTC: %s", strerror (errno));
-      return FALSE;
-    }
+  sSterm_new.sltchars.t_suspc = -1;
+  sSterm_new.sltchars.t_dsuspc = -1;
+  sSterm_new.sltchars.t_rprntc = -1;
+  sSterm_new.sltchars.t_flushc = -1;
+  sSterm_new.sltchars.t_werasc = -1;
+  sSterm_new.sltchars.t_lnextc = -1;
 
   if (! flocalecho)
     {
-      sSterm_new.sg_flags |= (CBREAK | ANYP);
-      sSterm_new.sg_flags &=~ (ECHO | CRMOD | TANDEM);
+      sSterm_new.stty.sg_flags |= (CBREAK | ANYP);
+      sSterm_new.stty.sg_flags &=~ (ECHO | CRMOD | TANDEM);
     }
   else
     {
-      sSterm_new.sg_flags |= (CBREAK | ANYP | ECHO);
-      sSterm_new.sg_flags &=~ (CRMOD | TANDEM);
+      sSterm_new.stty.sg_flags |= (CBREAK | ANYP | ECHO);
+      sSterm_new.stty.sg_flags &=~ (CRMOD | TANDEM);
     }
 
 #endif /* HAVE_BSD_TTY */
@@ -819,11 +782,6 @@ fsysdep_terminal_restore ()
 {
   if (! fSterm)
     return TRUE;
-
-#if HAVE_BSD_TTY
-  (void) ioctl (0, TIOCSETC, &sSterm_orig_tchars);
-  (void) ioctl (0, TIOCSLTC, &sSterm_orig_ltchars);
-#endif
 
   if (! fsetterminfo (0, &sSterm_orig))
     {
@@ -1010,22 +968,14 @@ fsysdep_terminal_signals (faccept)
 
   if (faccept)
     {
-      sSterm_new_tchars.t_intrc = sSterm_orig_tchars.t_intrc;
-      sSterm_new_tchars.t_quitc = sSterm_orig_tchars.t_quitc;
+      sSterm_new.stchars.t_intrc = sSterm_orig.stchars.t_intrc;
+      sSterm_new.stchars.t_quitc = sSterm_orig.stchars.t_quitc;
     }
   else
     {
-      sSterm_new_tchars.t_intrc = -1;
-      sSterm_new_tchars.t_quitc = -1;
+      sSterm_new.stchars.t_intrc = -1;
+      sSterm_new.stchars.t_quitc = -1;
     }
-
-  if (ioctl (0, TIOCSETC, &sSterm_new_tchars) < 0)
-    {
-      ulog (LOG_ERROR, "TIOCSETC: %s", strerror (errno));
-      return FALSE;
-    }
-
-  return TRUE;
 
 #else /* ! HAVE_BSD_TTY */
 
@@ -1045,6 +995,8 @@ fsysdep_terminal_signals (faccept)
     usset_signal (SIGTSTP, SIG_DFL, TRUE, (boolean *) NULL);
 #endif
 
+#endif /* ! HAVE_BSD_TTY */
+
   if (! fsetterminfo (0, &sSterm_new))
     {
       ulog (LOG_ERROR, "Can't set terminal: %s", strerror (errno));
@@ -1052,8 +1004,6 @@ fsysdep_terminal_signals (faccept)
     }
 
   return TRUE;
-
-#endif /* ! HAVE_BSD_TTY */
 }
 
 /* Start up a command, or possibly just a shell.  Optionally attach

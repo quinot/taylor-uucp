@@ -128,6 +128,16 @@
    scripts.  */
 #define	HAVE_CLOCAL_BUG	0
 
+/* On Ultrix 4.0, at least, setting CBREAK causes input characters to
+   be stripped, regardless of the setting of LPASS8 and LLITOUT.  This
+   can be worked around by using the termio call to reset ISTRIP.
+   This probably does not apply to any other operating system.  */
+#ifdef ultrix
+#define HAVE_STRIP_BUG 1
+#else
+#define HAVE_STRIP_BUG 0
+#endif
+
 /* Set TIMES_TICK to the fraction of a second which times(2) returns
    (for example, if times returns 100ths of a second TIMES_TICK should
    be set to 100).  On a true POSIX system TIMES_TICK may simply be

@@ -168,10 +168,25 @@ extern volatile jmp_buf sSjmp_buf;
 
 #if HAVE_BSD_TTY
 #include <sgtty.h>
-typedef struct sgttyb sterminal;
-#define fgetterminfo(o, q) (ioctl ((o), TIOCGETP, (q)) == 0)
-#define fsetterminfo(o, q) (ioctl ((o), TIOCSETN, (q)) == 0)
-#define fsetterminfodrain(o, q) (ioctl ((o), TIOCSETP, (q)) == 0)
+struct sbsd_terminal
+{
+  struct sgttyb stty;
+  struct tchars stchars;
+  struct ltchars sltchars;
+};
+typedef struct sbsd_terminal sterminal;
+#define fgetterminfo(o, q) \
+  (ioctl ((o), TIOCGETP, &(q)->stty) == 0 \
+   && ioctl ((o), TIOCGETC, &(q)->stchars) == 0 \
+   && ioctl ((o), TIOCGLTC, &(q)->sltchars) == 0)
+#define fsetterminfo(o, q) \
+  (ioctl ((o), TIOCSETN, &(q)->stty) == 0 \
+   && ioctl ((o), TIOCSETC, &(q)->stchars) == 0 \
+   && ioctl ((o), TIOCSLTC, &(q)->sltchars) == 0)
+#define fsetterminfodrain(o, q) \
+  (ioctl ((o), TIOCSETP, &(q)->stty) == 0 \
+   && ioctl ((o), TIOCSETC, &(q)->stchars) == 0 \
+   && ioctl ((o), TIOCSLTC, &(q)->sltchars) == 0)
 #endif /* HAVE_BSD_TTY */
 
 #if HAVE_SYSV_TERMIO

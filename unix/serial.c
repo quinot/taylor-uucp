@@ -88,6 +88,10 @@ const char serial_rcsid[] = "$Id$";
 #endif
 #endif
 
+#if HAVE_STRIP_BUG
+#include <termio.h>
+#endif
+
 #if HAVE_SVR4_LOCKFILES
 /* Get the right definitions for major and minor.  */
 #if MAJOR_IN_MKDEV
@@ -877,14 +881,41 @@ fsserial_open (qconn, ibaud, fwait)
 
 #if HAVE_BSD_TTY
 
-  q->snew.sg_flags = RAW | ANYP;
+  q->snew.stty.sg_flags = RAW | ANYP;
   if (ibaud == 0)
-    ib = q->snew.sg_ospeed;
+    ib = q->snew.stty.sg_ospeed;
   else
     {
-      q->snew.sg_ispeed = ib;
-      q->snew.sg_ospeed = ib;
+      q->snew.stty.sg_ispeed = ib;
+      q->snew.stty.sg_ospeed = ib;
     }
+
+  /* We don't want to receive any interrupt characters.  */
+  q->snew.stchars.t_intrc = -1;
+  q->snew.stchars.t_quitc = -1;
+  q->snew.stchars.t_eofc = -1;
+  q->snew.stchars.t_brkc = -1;
+  q->snew.sltchars.t_suspc = -1;
+  q->snew.sltchars.t_rprntc = -1;
+  q->snew.sltchars.t_dsuspc = -1;
+  q->snew.sltchars.t_flushc = -1;
+  q->snew.sltchars.t_werasc = -1;
+  q->snew.sltchars.t_lnextc = -1;
+
+#ifdef NTTYDISC
+  /* We want to use the ``new'' terminal driver so that we can use the
+     local mode bits to control XON/XOFF.  */
+  {
+    int iparam;
+
+    if (ioctl (q->o, TIOCGETD, &iparam) >= 0
+	&& iparam != NTTYDISC)
+      {
+	iparam = NTTYDISC;
+	(void) ioctl (q->o, TIOCSETD, &iparam);
+      }
+  }
+#endif
 
 #ifdef TIOCHPCL
   /* When the file is closed, hang up the line.  This is a safety
@@ -1274,8 +1305,8 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
   if (qsysdep->fterminal)
     {
 #if HAVE_BSD_TTY
-      qsysdep->snew.sg_ispeed = B0;
-      qsysdep->snew.sg_ospeed = B0;
+      qsysdep->snew.stty.sg_ispeed = B0;
+      qsysdep->snew.stty.sg_ospeed = B0;
 #endif
 #if HAVE_SYSV_TERMIO
       qsysdep->snew.c_cflag = (qsysdep->snew.c_cflag &~ CBAUD) | B0;
@@ -1339,8 +1370,8 @@ fsserial_reset (qconn)
   sbaud = q->snew;
 
 #if HAVE_BSD_TTY
-  sbaud.sg_ispeed = B0;
-  sbaud.sg_ospeed = B0;
+  sbaud.stty.sg_ispeed = B0;
+  sbaud.stty.sg_ospeed = B0;
 #endif
 #if HAVE_SYSV_TERMIO
   sbaud.c_cflag = (sbaud.c_cflag &~ CBAUD) | B0;
@@ -2479,11 +2510,11 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 
   if (fdo)
     {
-      if ((q->snew.sg_flags & iset) != iset
-	  || (q->snew.sg_flags & iclear) != 0)
+      if ((q->snew.stty.sg_flags & iset) != iset
+	  || (q->snew.stty.sg_flags & iclear) != 0)
 	{
-	  q->snew.sg_flags |= iset;
-	  q->snew.sg_flags &=~ iclear;
+	  q->snew.stty.sg_flags |= iset;
+	  q->snew.stty.sg_flags &=~ iclear;
 	  fchanged = TRUE;
 	}
     }
@@ -2586,29 +2617,16 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
       iset = CBREAK | TANDEM;
       iclear = RAW;
       fdo = TRUE;
-
-#ifdef LLITOUT
-      /* This is necessary on Ultrix 3.1, and should be at least
-	 harmless on other machines.  */
-      if ((q->snew.sg_flags & (EVENP | ODDP)) == (EVENP | ODDP))
-	{
-	  int i;
-
-	  i = LLITOUT;
-	  (void) ioctl (q->o, TIOCLBIS, &i);
-	}
-#endif
-
       break;
     }
 
   if (fdo)
     {
-      if ((q->snew.sg_flags & iset) != iset
-	  || (q->snew.sg_flags & iclear) != 0)
+      if ((q->snew.stty.sg_flags & iset) != iset
+	  || (q->snew.stty.sg_flags & iclear) != 0)
 	{
-	  q->snew.sg_flags |= iset;
-	  q->snew.sg_flags &=~ iclear;
+	  q->snew.stty.sg_flags |= iset;
+	  q->snew.stty.sg_flags &=~ iclear;
 	  fchanged = TRUE;
 	}
     }
@@ -2666,6 +2684,47 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 	  return FALSE;
 	}
     }
+
+#if HAVE_BSD_TTY
+  if (txonxoff == XONXOFF_ON
+      && (q->snew.stty.sg_flags & ANYP) == ANYP)
+    {
+      int i;
+
+      /* At least on Ultrix, we seem to have to set LLITOUT and
+	 LPASS8.  This shouldn't foul things up anywhere else.  As far
+	 as I can tell, this has to be done after setting the terminal
+	 into cbreak mode, not before.  */
+#ifndef LLITOUT
+#define LLITOUT 0
+#endif
+#ifndef LPASS8
+#define LPASS8 0
+#endif
+#ifndef LAUTOFLOW
+#define LAUTOFLOW 0
+#endif
+      i = LLITOUT | LPASS8 | LAUTOFLOW;
+      (void) ioctl (q->o, TIOCLBIS, &i);
+
+#if HAVE_STRIP_BUG
+      /* Ultrix 4.0 has a peculiar problem: setting CBREAK always
+	 causes input characters to be stripped.  I hope this does not
+	 apply to other BSD systems.  It is possible to work around
+	 this by using the termio call.  I wish this sort of stuff was
+	 not necessary!!!  */
+      {
+	struct termio s;
+
+	if (ioctl (q->o, TCGETA, &s) >= 0)
+	  {
+	    s.c_iflag &=~ ISTRIP;
+	    (void) ioctl (q->o, TCSETA, &s);
+	  }
+      }
+#endif /* HAVE_STRIP_BUG */
+    }
+#endif /* HAVE_BSD_TTY */
 
   return TRUE;
 }
