@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/11/11  04:21:16  ian
+   Added 'f' protocol
+
    Revision 1.9  1991/11/10  19:24:22  ian
    Added pffile protocol entry point for file level control
 
@@ -289,8 +292,11 @@ main (argc, argv)
     qport = NULL;
   else
     {
-      if (! fread_port_info (zport, &sportinfo))
+      if (! ffind_port (zport, (long) 0, (long) 0, &sportinfo,
+			(boolean (*) P((struct sport *, boolean))) NULL,
+			FALSE))
 	{
+	  ulog (LOG_ERROR, "%s: No such port", zport);
 	  ulog_close ();
 	  usysdep_exit (FALSE);
 	}
