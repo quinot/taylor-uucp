@@ -51,6 +51,7 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
      struct uuconf_port *qport;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
+  FILE *e;
   pointer pblock;
   char *zfree;
   int iret;
@@ -59,13 +60,13 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
   if (ihighbaud == 0L)
     ihighbaud = ibaud;
 
+  e = NULL;
   pblock = NULL;
   zfree = NULL;
   iret = UUCONF_NOT_FOUND;
 
   for (pz = qglobal->qprocess->pzportfiles; *pz != NULL; pz++)
     {
-      FILE *e;
       struct uuconf_cmdtab as[2];
       char *zport;
       struct uuconf_port sdefault;
@@ -217,6 +218,7 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
 	}
 
       (void) fclose (e);
+      e = NULL;
 
       if (iret != UUCONF_NOT_FOUND)
 	break;
@@ -225,6 +227,8 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
       pblock = NULL;
     }
 
+  if (e != NULL)
+    (void) fclose (e);
   if (zfree != NULL)
     free ((pointer) zfree);
   if (iret != UUCONF_SUCCESS && pblock != NULL)
