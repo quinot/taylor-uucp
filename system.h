@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/02/29  04:07:08  ian
+   Added -j option to uucp and uux
+
    Revision 1.25  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -403,14 +406,17 @@ extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
    between fsysdep_in_directory and esysdep_open_send.  The function
    should set *pimode to the mode that should be sent over (this
    should be a UNIX style file mode number).  It should set *pcbytes
-   to the number of bytes contained in the file.  It should return
-   EFILECLOSED on error.  */
+   to the number of bytes contained in the file.  If an error occurs,
+   it should return EFILECLOSED and, if pfgone is not NULL, it should
+   *pfgone to TRUE if the file no longer exists or FALSE if there was
+   some other error.  */
 extern openfile_t esysdep_open_send P((const struct ssysteminfo *qsys,
 				       const char *zname,
 				       boolean fcheck,
 				       const char *zuser,
 				       unsigned int *pimode,
-				       long *pcbytes));
+				       long *pcbytes,
+				       boolean *pfgone));
 
 /* Open a file to receive from another system.  Receiving a file is
    done in two steps.  First esysdep_open_receive is called.  This

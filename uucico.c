@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.72  1992/03/09  05:37:10  ian
+   Only look for hangup string in debugging mode
+
    Revision 1.71  1992/03/09  05:29:20  ian
    Ted Lindgreen: report requested grade on an incoming call
 
@@ -2163,6 +2166,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	  const char *zmail, *zuse;
 	  boolean fspool, fnever;
 	  openfile_t e = EFILECLOSED;
+	  boolean fgone;
 
 	  /* Get the next work line for this system.  All the arguments
 	     are left pointing into a static buffer, so they must be
@@ -2223,7 +2227,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		     command file.  */
 		  if (! fspool)
 		    e = esysdep_open_send (qsys, zuse, TRUE, s.zuser,
-					   &s.imode, &s.cbytes);
+					   &s.imode, &s.cbytes, &fgone);
 		}
 
 	      if (fspool)
@@ -2243,16 +2247,23 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		    }
 		  e = esysdep_open_send (qsys, zuse, FALSE,
 					 (const char *) NULL, &idummy,
-					 &s.cbytes);
+					 &s.cbytes, &fgone);
 		}
 
 	      if (! ffileisopen (e))
 		{
-		  (void) fmail_transfer (FALSE, s.zuser,
-					 (const char *) NULL,
-					 "cannot open file",
-					 s.zfrom, zLocalname,
-					 s.zto, qsys->zname);
+		  /* If the file does not exist, fgone will be set to
+		     TRUE.  In this case we might have sent the file
+		     the last time we talked to the remote system,
+		     because we might have been interrupted in the
+		     middle of a command file.  To avoid confusion, we
+		     don't send a mail message.  */
+		  if (! fgone)
+		    (void) fmail_transfer (FALSE, s.zuser,
+					   (const char *) NULL,
+					   "cannot open file",
+					   s.zfrom, zLocalname,
+					   s.zto, qsys->zname);
 		  (void) fsysdep_did_work (s.pseq);
 		  break;
 		}
@@ -2627,7 +2638,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		}
 
 	      e = esysdep_open_send (qsys, zuse, TRUE, (const char *) NULL,
-				     &s.imode, &cbytes);
+				     &s.imode, &cbytes, (boolean *) NULL);
 	      if (! ffileisopen (e))
 		{
 		  if (! ftransfer_fail ('R', FAILURE_OPEN))
