@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/11/30  23:28:26  ian
+   Marty Shannon: some systems need a fake version of the rename system call
+
    Revision 1.11  1991/11/26  01:45:42  ian
    Marty Shannon: configuration option to not include <sys/wait.h>
 
@@ -89,6 +92,15 @@
    otherwise they will be placed in the default spool directory.  On
    some BNU systems the lock files are placed in /etc/locks.  */
 /* #define LOCKDIR "/etc/locks" */
+
+/* You must also specify the format of the lock files by setting
+   exactly one of the following macros to 1.  The BNU style is to
+   write the locking process ID in ASCII, taking up ten bytes with a
+   following newline.  The V2 style is to write the locking process ID
+   as four binary bytes in the host byte order.  Check an existing
+   lock file to decide which of these choices is more appropriate.  */
+#define HAVE_V2_LOCKFILES 0
+#define HAVE_BNU_LOCKFILES 1
 
 #if HAVE_TAYLOR_CONFIG
 
@@ -278,6 +290,10 @@
   */
 
 /* Make sure the defines do not conflict.  */
+
+#if HAVE_V2_LOCKFILES + HAVE_BNU_LOCKFILES != 1
+ #error LOCKFILES define not set or duplicated
+#endif
 
 #if HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS != 1
  #error Terminal routine macro definition not set or duplicated
