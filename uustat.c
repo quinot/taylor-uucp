@@ -1429,10 +1429,11 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
       return FALSE;
     }
 
-  if (! fsysdep_get_xqt_init ())
+  if (! fsysdep_get_xqt_init ((const char *) NULL))
     return FALSE;
 
-  while ((zfile = zsysdep_get_xqt (&zsystem, &ferr)) != NULL)
+  while ((zfile = zsysdep_get_xqt ((const char *) NULL, &zsystem, &ferr))
+	 != NULL)
     {
       boolean fmatch;
       int i;
@@ -1653,7 +1654,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
       ubuffree (zsystem);
     }
 
-  usysdep_get_xqt_free ();
+  usysdep_get_xqt_free ((const char *) NULL);
 
   return ferr;
 }
@@ -1979,11 +1980,12 @@ fsquery (puuconf, csystems, pazsystems, fnotsystems, iold, iyoung)
     }
 
   /* Get a count of all the execution files.  */
-  if (! fsysdep_get_xqt_init ())
+  if (! fsysdep_get_xqt_init ((const char *) NULL))
     return FALSE;
 
   qlist = NULL;
-  while ((zfile = zsysdep_get_xqt (&zsystem, &ferr)) != NULL)
+  while ((zfile = zsysdep_get_xqt ((const char *) NULL, &zsystem, &ferr))
+	 != NULL)
     {
       struct sxqtlist *qlook;
 
@@ -2016,7 +2018,7 @@ fsquery (puuconf, csystems, pazsystems, fnotsystems, iold, iyoung)
       ubuffree (zfile);
     }
 
-  usysdep_get_xqt_free ();
+  usysdep_get_xqt_free ((const char *) NULL);
 
   if (ferr)
     return FALSE;
