@@ -534,7 +534,7 @@ uscu_child (qconn, opipe)
      int opipe;
 {
   CATCH_PROTECT int oport;
-  CATCH_PROTECT boolean fstopped;
+  CATCH_PROTECT boolean fstopped, fgot;
   CATCH_PROTECT int cwrite;
   CATCH_PROTECT char abbuf[1024];
 
@@ -573,6 +573,7 @@ uscu_child (qconn, opipe)
   usset_signal (SIGTERM, uscu_child_handler, TRUE, (boolean *) NULL);
 
   fstopped = FALSE;
+  fgot = FALSE;
   iSchild_sig = 0;
   cwrite = 0;
 
@@ -642,8 +643,14 @@ uscu_child (qconn, opipe)
 	}	    
       else
 	{
+	  /* On some systems apparently read will return 0 until
+	     something has been written to the port.  We therefore
+	     accept a 0 return until after we have managed to read
+	     something.  Setting errno to 0 apparently avoids a
+	     problem on Coherent.  */
+	  errno = 0;
 	  c = read (oport, abbuf, sizeof abbuf);
-	  if (c == 0
+	  if ((c == 0 && fgot)
 	      || (c < 0 && errno != EINTR))
 	    {
 	      /* This can be a normal way to exit, depending on just
@@ -652,7 +659,10 @@ uscu_child (qconn, opipe)
 	      exit (EXIT_SUCCESS);
 	    }
 	  if (c > 0)
-	    cwrite = c;
+	    {
+	      fgot = TRUE;
+	      cwrite = c;
+	    }
 	}
     }
 }
