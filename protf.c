@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/03/17  01:03:03  ian
+   Miscellaneous cleanup
+
    Revision 1.13  1992/03/13  22:59:25  ian
    Have breceive_char go through freceive_data
 
@@ -203,7 +206,7 @@ ffsendcmd (z)
   int clen;
   char *zalc;
 
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "ffsendcmd: Sending command \"%s\"", z);
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "ffsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
   zalc = (char *) alloca (clen + 2);
@@ -634,7 +637,7 @@ fffile (fstart, fsend, pfredo, cbytes)
 
 	  if (icheck != (iFcheck & 0xffff))
 	    {
-	      DEBUG_MESSAGE2 (DEBUG_PROTO,
+	      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "Checksum failed; calculated 0x%x, got 0x%x",
 			      iFcheck & 0xffff, icheck);
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/03/16  18:57:38  ian
+   Niels Baggesen: improved debugging information
+
    Revision 1.28  1992/03/13  22:59:25  ian
    Have breceive_char go through freceive_data
 
@@ -564,7 +567,8 @@ fgstart (fmaster)
       return TRUE;
     }
 
-  DEBUG_MESSAGE0 (DEBUG_PROTO, "fgstart: Protocol startup failed");
+  DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
+		  "fgstart: Protocol startup failed");
 
   return FALSE;
 }
@@ -738,7 +742,7 @@ fgsendcmd (z)
   int clen;
   boolean fagain;
 
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "fgsendcmd: Sending command \"%s\"", z);
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fgsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
 
@@ -1175,7 +1179,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 
 	      inext = INEXTSEQ (iGremote_ack);
 
-	      DEBUG_MESSAGE1 (DEBUG_PROTO,
+	      DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fgwait_for_packet: Resending packet %d",
 			      inext);
 
@@ -1390,7 +1394,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  ++cGbad_hdr;
 
 	  DEBUG_MESSAGE4
-	    (DEBUG_PROTO,
+	    (DEBUG_PROTO | DEBUG_ABNORMAL,
 	     "fgprocess_data: Bad header: K %d TT %d XOR byte %d calc %d",
 	     ab[IFRAME_K] & 0xff,
 	     CONTROL_TT (ab[IFRAME_CONTROL]),
@@ -1422,7 +1426,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      ++cGbad_hdr;
 
 	      DEBUG_MESSAGE0
-		(DEBUG_PROTO,
+		(DEBUG_PROTO | DEBUG_ABNORMAL,
 		 "fgprocess_data: Bad header: control packet with data");
 
 	      if (! fgcheck_errors ())
@@ -1447,7 +1451,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      ++cGbad_hdr;
 
 	      DEBUG_MESSAGE0
-		(DEBUG_PROTO,
+		(DEBUG_PROTO | DEBUG_ABNORMAL,
 		 "fgprocess_data: Bad header: data packet is type CONTROL");
 
 	      if (! fgcheck_errors ())
@@ -1514,7 +1518,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
       if (ihdrcheck != idatcheck)
 	{
 	  DEBUG_MESSAGE2
-	    (DEBUG_PROTO,
+	    (DEBUG_PROTO | DEBUG_ABNORMAL,
 	     "fgprocess_data: Bad checksum: header 0x%x, data 0x%x",
 	     ihdrcheck, idatcheck);
 
@@ -1585,7 +1589,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_XXX (ab[IFRAME_CONTROL]) != INEXTSEQ (iGrecseq))
 	    {
 	      /* We got the wrong packet number.  */
-	      DEBUG_MESSAGE2 (DEBUG_PROTO,
+	      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fgprocess_data: Got packet %d; expected %d",
 			      CONTROL_XXX (ab[IFRAME_CONTROL]),
 			      INEXTSEQ (iGrecseq));
@@ -1715,10 +1719,14 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       /* Handle control messages here. */
 
-      DEBUG_MESSAGE2 (DEBUG_PROTO,
-		      "fgprocess_data: Got control %s %d",
-		      azGcontrol[CONTROL_XXX (ab[IFRAME_CONTROL])],
-		      CONTROL_YYY (ab[IFRAME_CONTROL]));
+#if DEBUG > 1
+      if (FDEBUGGING (DEBUG_PROTO)
+	  || (FDEBUGGING (DEBUG_ABNORMAL)
+	      && CONTROL_XXX (ab[IFRAME_CONTROL]) != RR))
+	ulog (LOG_DEBUG, "fgprocess_data: Got control %s %d",
+	      azGcontrol[CONTROL_XXX (ab[IFRAME_CONTROL])],
+	      CONTROL_YYY (ab[IFRAME_CONTROL]));
+#endif
 
       switch (CONTROL_XXX (ab[IFRAME_CONTROL]))
 	{
@@ -1748,7 +1756,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      char *zpack;
 
 	      DEBUG_MESSAGE2
-		(DEBUG_PROTO,
+		(DEBUG_PROTO | DEBUG_ABNORMAL,
 		 "fgprocess_data: Remote reject: next %d resending %d",
 		 iGsendseq, iGretransmit_seq);
 
@@ -1765,7 +1773,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	case SRJ:
 	  /* Selectively reject a particular packet.  This is not used
 	     by UUCP, but it's easy to support.  */
-	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+	  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			  "fgprocess_data: Selective reject of %d",
 			  CONTROL_YYY (ab[IFRAME_CONTROL]));
 	  {

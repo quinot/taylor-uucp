@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/03/17  01:03:03  ian
+   Miscellaneous cleanup
+
    Revision 1.14  1992/03/13  22:59:25  ian
    Have breceive_char go through freceive_data
 
@@ -153,7 +156,7 @@ ftsendcmd (z)
   int clen;
   char *zalc;
 
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "ftsendcmd: Sending command \"%s\"", z);
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "ftsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
 

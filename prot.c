@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/03/30  04:07:13  ian
+   Dirk Musstopf: remove temporary file if receive fails
+
    Revision 1.18  1992/03/13  22:59:25  ian
    Have breceive_char go through freceive_data
 
@@ -685,7 +688,7 @@ fgetcmd (fmaster, qcmd)
 	    return TRUE;
 #if DEBUG > 1
 	  if (strcmp (zcmd, "HY") != 0)
-	    DEBUG_MESSAGE1 (DEBUG_PROTO,
+	    DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO | DEBUG_ABNORMAL,
 			    "fgetcmd: Got \"%s\" when expecting \"HY\"",
 			    zcmd);
 #endif
@@ -752,7 +755,7 @@ fploop ()
 {
   boolean fexit;
 
-  DEBUG_MESSAGE0 (DEBUG_PROTO, "fploop: Main protocol loop");
+  DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "fploop: Main protocol loop");
 
   if (ffileisopen (eSendfile))
     {
@@ -1055,7 +1058,7 @@ zgetcmd ()
   /* Wait until a command comes in.  */
   while (qPcmd_queue == NULL)
     {
-      DEBUG_MESSAGE0 (DEBUG_PROTO, "zgetcmd: Waiting for packet");
+      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "zgetcmd: Waiting for packet");
 
       if (! (qProto->pfwait) ())
 	return NULL;
@@ -1079,7 +1082,7 @@ zgetcmd ()
       qPcmd_free->qnext = q;
     }
 
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "zgetcmd: Got command \"%s\"", q->z);
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "zgetcmd: Got command \"%s\"", q->z);
 
   return q->z;
 }

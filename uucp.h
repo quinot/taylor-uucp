@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.65  1992/03/28  22:06:38  ian
+   Michael I Bushnell: renamed enum tstatus to avoid header file conflict
+
    Revision 1.64  1992/03/28  20:31:55  ian
    Franc,ois Pinard: allow a name to be given to an alternate
 
@@ -788,27 +791,31 @@ struct scmd
 /* The bit string is stored in iDebug.  */
 extern int iDebug;
 
+/* Debug abnormal events.  */
+#define DEBUG_ABNORMAL (01)
 /* Debug chat scripts.  */
-#define DEBUG_CHAT (01)
+#define DEBUG_CHAT (02)
 /* Debug initial handshake.  */
-#define DEBUG_HANDSHAKE (02)
+#define DEBUG_HANDSHAKE (04)
+/* Debug UUCP protocol.  */
+#define DEBUG_UUCP_PROTO (010)
 /* Debug protocols.  */
-#define DEBUG_PROTO (04)
+#define DEBUG_PROTO (020)
 /* Debug port actions.  */
-#define DEBUG_PORT (010)
+#define DEBUG_PORT (040)
 /* Debug configuration files.  */
-#define DEBUG_CONFIG (020)
+#define DEBUG_CONFIG (0100)
 /* Debug spool directory actions.  */
-#define DEBUG_SPOOLDIR (040)
+#define DEBUG_SPOOLDIR (0200)
 /* Debug executions.  */
-#define DEBUG_EXECUTE (0100)
+#define DEBUG_EXECUTE (0400)
 /* Debug incoming data.  */
-#define DEBUG_INCOMING (0200)
+#define DEBUG_INCOMING (01000)
 /* Debug outgoing data.  */
-#define DEBUG_OUTGOING (0400)
+#define DEBUG_OUTGOING (02000)
 
 /* Maximum possible value for iDebug.  */
-#define DEBUG_MAX (0777)
+#define DEBUG_MAX (03777)
 
 /* Intializer for array of debug names.  The index of the name in the
    array is the corresponding bit position in iDebug.  We only check
@@ -817,7 +824,7 @@ extern int iDebug;
    NULL.  The string "all" is also recognized to turn on all
    debugging.  */
 #define DEBUG_NAMES \
-  { "ch", "h", "pr", "po", "co", "s", "e", "i", "o", NULL }
+  { "a", "ch", "h", "u", "pr", "po", "co", "s", "e", "i", "o", NULL }
 
 /* The prefix to use to turn off all debugging.  */
 #define DEBUG_NONE "n"

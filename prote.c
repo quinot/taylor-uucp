@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1992/03/17  01:03:03  ian
+   Miscellaneous cleanup
+
    Revision 1.5  1992/03/13  22:59:25  ian
    Have breceive_char go through freceive_data
 
@@ -122,7 +125,7 @@ boolean
 fesendcmd (z)
      const char *z;
 {
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "fesendcmd: Sending command \"%s\"", z);
+  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fesendcmd: Sending command \"%s\"", z);
 
   return fsend_data (z, strlen (z) + 1, TRUE);
 }

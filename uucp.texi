@@ -1309,12 +1309,16 @@ debugging.  The arguments are strings which name the types of debugging
 to be turned on.  The following types of debugging are defined:
 
 @table @samp
+@item abnormal
+Output debugging messages for abnormal situations, such as recoverable errors.
 @item chat
 Output debugging messages for chat scripts.
 @item handshake
 Output debugging messages for the initial handshake.
+@item uucp-proto
+Output debugging messages for the UUCP protocol itself.
 @item proto
-Output debugging messages for protocols.
+Output debugging messages for the individual protocols.
 @item port
 Output debugging messages for actions on the communication port.
 @item config
@@ -1334,7 +1338,7 @@ All of the above.
 The debugging level may also be specified as a number.  A 1 will set
 @samp{chat} debugging, a 2 will set both @samp{chat} and
 @samp{handshake} debugging, and so on down the possibilities.  Currently
-a 9 will turn on all possible debugging, since there are 9 types of
+an 11 will turn on all possible debugging, since there are 11 types of
 debugging messages listed above; more debugging types may be added in
 the future.  The @code{debug} command may be used several times in the
 configuration file; every debugging type named will be turned on.  When
