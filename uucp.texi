@@ -4492,6 +4492,7 @@ Len Tower @file{<tower-prep@@ai.mit.edu>}
 @file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
 @file{vogel@@omega.ssw.de} (Andreas Vogel)
 @file{jv@@mh.nl} (Johan Vromans)
+@file{steve@@nshore.org} (Stephen J. Walick)
 @file{rna-nl!gerben@@relay.nluug.nl} (Drs. Gerben C. Th. Wierda)
 @file{frnkmth!twwells.com!bill} (T. William Wells)
 @file{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
