@@ -38,6 +38,24 @@ const char cusub_rcsid[] = "$Id$";
 #include "prot.h"
 
 #include <errno.h>
+
+/* Get definitions for EAGAIN, EWOULDBLOCK and ENODATA.  */
+#ifndef EAGAIN
+#ifndef EWOULDBLOCK
+#define EAGAIN (-1)
+#define EWOULDBLOCK (-1)
+#else /* defined (EWOULDBLOCK) */
+#define EAGAIN EWOULDBLOCK
+#endif /* defined (EWOULDBLOCK) */
+#else /* defined (EAGAIN) */
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK EAGAIN
+#endif /* ! defined (EWOULDBLOCK) */
+#endif /* defined (EAGAIN) */
+
+#ifndef ENODATA
+#define ENODATA EAGAIN
+#endif
 
 /* Local variables.  */
 
@@ -611,6 +629,12 @@ uscu_child (qconn, opipe)
 	    }
 
 	  c = write (opipe, &b, 1);
+
+	  /* Apparently on some systems we can get EAGAIN here.  */
+	  if (c < 0 &&
+	      (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA))
+	    c = 0;
+
 	  if (c <= 0)
 	    {
 	      /* Should we give an error message here?  */
@@ -629,6 +653,14 @@ uscu_child (qconn, opipe)
 	  while (cwrite > 0)
 	    {
 	      c = write (1, zbuf, cwrite);
+
+	      /* Apparently on some systems we can get EAGAIN here.  */
+	      if (c < 0 &&
+		  (errno == EAGAIN
+		   || errno == EWOULDBLOCK
+		   || errno == ENODATA))
+		c = 0;
+
 	      if (c < 0 && errno == EINTR)
 		break;
 	      if (c <= 0)
@@ -650,6 +682,12 @@ uscu_child (qconn, opipe)
 	     problem on Coherent.  */
 	  errno = 0;
 	  c = read (oport, abbuf, sizeof abbuf);
+
+	  /* Apparently on some systems we can get EAGAIN here.  */
+	  if (c < 0 &&
+	      (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA))
+	    c = 0;
+
 	  if ((c == 0 && fgot)
 	      || (c < 0 && errno != EINTR))
 	    {
