@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.45  1992/01/28  04:34:10  ian
+   Marty Shannon: -f uucp flag not handled correctly
+
    Revision 1.44  1992/01/28  03:50:42  ian
    Chip Salzenberg: set .Status correctly if wrong time to call
 
@@ -240,7 +243,7 @@ static long cmax_size_ever P((const struct ssysteminfo *qsys,
 			      boolean flocal, boolean fsend));
 static long cmax_size_string P((const char *z));
 static boolean fsend_uucp_cmd P((const char *z));
-static const char *zget_uucp_cmd P((boolean freport));
+static const char *zget_uucp_cmd P((boolean frequired));
 static const char *zget_typed_line P((void));
 
 /* Long getopt options.  */
@@ -2939,34 +2942,39 @@ fsend_uucp_cmd (z)
 /* Get a UUCP command beginning with a DLE character and ending with a
    null byte.  This is only used when no protocol is in force.  This
    implementation has the potential of being seriously slow.  It also
-   doesn't have any real error recovery.  The freport argument is
-   passed as TRUE if we should report a timeout error; we don't want
-   to report one if we're closing down the connection anyhow.  */
+   doesn't have any real error recovery.  The frequired argument is
+   passed as TRUE if we need the string; we don't care that much if
+   we're closing down the connection anyhow.  */
 
 #define CTIMEOUT (120)
+#define CSHORTTIMEOUT (10)
 #define CINCREMENT (10)
 
 static const char *
-zget_uucp_cmd (freport)
-     boolean freport;
+zget_uucp_cmd (frequired)
+     boolean frequired;
 {
   static char *zalc;
   static int calc;
   int cgot;
   long iendtime;
 
-  iendtime = isysdep_time () + CTIMEOUT;
+  iendtime = isysdep_time ();
+  if (frequired)
+    iendtime += CTIMEOUT;
+  else
+    iendtime += CSHORTTIMEOUT;
 
   cgot = -1;
   while (TRUE)
     {
       int b;
       
-      b = breceive_char ((int) (iendtime - isysdep_time ()), freport);
+      b = breceive_char ((int) (iendtime - isysdep_time ()), frequired);
       /* Now b == -1 on timeout, -2 on error.  */
       if (b < 0)
 	{
-	  if (b == -1 && freport)
+	  if (b == -1 && frequired)
 	    ulog (LOG_ERROR, "Timeout");
 	  return NULL;
 	}
