@@ -501,6 +501,7 @@ main (argc, argv)
     }
   else
     {
+      *zexclam = '\0';
       zsys = zcmd;
       zcmd = zexclam + 1;
       fxqtlocal = FALSE;
