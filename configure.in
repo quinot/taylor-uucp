@@ -42,74 +42,61 @@ AC_COMPILE_CHECK([time.h and sys/time.h being included together],
 [#include <sys/time.h>
 #include <time.h>],
 [int i;],
-AC_DEFINE([HAVE_SYS_TIME_AND_TIME_H]),
-:)
+AC_DEFINE([HAVE_SYS_TIME_AND_TIME_H]))
 dnl
 AC_COMPILE_CHECK([termios.h and sys/ioctl.h being included together],
 [#include <termios.h>
 #include <sys/ioctl.h>],
 [int i;],
-AC_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H]),
-:)
+AC_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H]))
 dnl
 AC_COMPILE_CHECK([CBREAK],
 [#include <sgtty.h>], [int i = CBREAK;],
-AC_DEFINE([HAVE_CBREAK]),
-:)
+AC_DEFINE([HAVE_CBREAK]))
 dnl
 AC_COMPILE_CHECK([pid_t in sys/types.h],
-[#include <sys/types.h>], [pid_t x;],
-:,
+[#include <sys/types.h>], [pid_t x;], ,
 AC_DEFINE(PID_T, int))
 dnl
 AC_COMPILE_CHECK([uid_t in sys/types.h],
-[#include <sys/types.h>], [uid_t x;],
-:,
+[#include <sys/types.h>], [uid_t x;], ,
 AC_DEFINE(UID_T, int))
 dnl
 AC_COMPILE_CHECK([gid_t in sys/types.h],
-[#include <sys/types.h>], [gid_t x;],
-:,
+[#include <sys/types.h>], [gid_t x;], ,
 AC_DEFINE(GID_T, int))
 dnl
 AC_COMPILE_CHECK([off_t in sys/types.h],
-[#include <sys/types.h>], [off_t x;],
-:,
+[#include <sys/types.h>], [off_t x;], ,
 AC_DEFINE(OFF_T, long))
 dnl
 dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
 AC_COMPILE_CHECK([sig_atomic_t in signal.h],
 [#include <signal.h>], [sig_atomic_t x;],
-AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H]),
-:)
+AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H]))
 dnl
 AC_COMPILE_CHECK([sig_atomic_t in sys/types.h],
 [#include <sys/types.h>], [sig_atomic_t x;],
-AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H]),
-:)
+AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H]))
 dnl
 case $DEFS in
 *HAVE_STDDEF_H*)
   AC_COMPILE_CHECK([size_t in stddef.h],
   [#include <stddef.h>], [size_t x;],
-  AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H]),
-  :) ;;
+  AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H])) ;;
 esac
 dnl
 AC_COMPILE_CHECK([size_t in sys/types.h],
 [#include <sys/types.h>], [size_t x;],
-AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H]),
-:)
+AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H]))
 dnl
 AC_COMPILE_CHECK([time_t in time.h],
 [#include <time.h>], [time_t i;],
-AC_DEFINE([HAVE_TIME_T_IN_TIME_H]),
-:)
+AC_DEFINE([HAVE_TIME_T_IN_TIME_H]))
 dnl
 AC_COMPILE_CHECK([time_t in sys/types.h],
 [#include <sys/types.h>], [time_t i;],
-AC_DEFINE([HAVE_TIME_T_IN_TYPES_H]),
-:)
+AC_DEFINE([HAVE_TIME_T_IN_TYPES_H]))
 dnl
 dnl The filesystem info code is from David MacKenzie's fileutils 3.1
 dnl package.
@@ -123,26 +110,23 @@ case $DEFS in
 *HAVE_SYS_MOUNT_H*HAVE_SYS_FS_TYPES_H*) AC_DEFINE(FS_GETMNT) ;;
 *HAVE_SYS_FS_TYPES_H*HAVE_SYS_MOUNT_H*) AC_DEFINE(FS_GETMNT) ;;
 *) AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h, AC_DEFINE(FS_STATFS),
-   AC_FUNC_CHECK(ustat, [AC_DEFINE(FS_USTAT)], :)) ;;
+   AC_FUNC_CHECK(ustat, [AC_DEFINE(FS_USTAT)])) ;;
 esac
 dnl
 AC_COMPILE_CHECK([void],
 [], [extern void foo (); (void) exit (0);],
-AC_DEFINE([HAVE_VOID]),
-:)
+AC_DEFINE([HAVE_VOID]))
 dnl
 AC_COMPILE_CHECK([unsigned char],
 [], [unsigned char i = (unsigned char) -1;],
-AC_DEFINE([HAVE_UNSIGNED_CHAR]),
-:)
+AC_DEFINE([HAVE_UNSIGNED_CHAR]))
 dnl
 AC_COMPILE_CHECK([errno],
 [#include <errno.h>], [int i = errno; errno = 1;],
-AC_DEFINE([HAVE_ERRNO_DECLARATION]),
-:)
+AC_DEFINE([HAVE_ERRNO_DECLARATION]))
 dnl
 echo checking for combined use of O_NONBLOCK and O_NDELAY
-AC_TEST_PROG([
+AC_TEST_PROGRAM([
 #include <fcntl.h>
 #ifndef O_NDELAY
 #ifdef FNDELAY
@@ -174,7 +158,7 @@ dnl Check for the SCO buggy memmove.  This test case is from Chip
 dnl Salzenberg.  The test case must be run with cc without optimization.
 AC_FUNC_CHECK(memmove,
 [SAVECC=$CC; CC=cc
-AC_TEST_PROG([
+AC_TEST_PROGRAM([
 main()
   {
      register int x1, x2, x3;
@@ -189,8 +173,7 @@ main()
 ],
 AC_DEFINE(HAVE_MEMMOVE),
 echo 1>&2 "Your memmove seems to be buggy")
-CC=$SAVECC],
-:)
+CC=$SAVECC])
 dnl
 AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strstr)
 AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp strlwr)
@@ -206,7 +189,7 @@ AC_HAVE_FUNCS(gettimeofday)
 AC_HAVE_FUNCS(ftw getline)
 dnl Check for the SCO buggy ftime
 AC_FUNC_CHECK(ftime,
-[AC_TEST_PROG([
+[AC_TEST_PROGRAM([
 #include <sys/types.h>
 #include <sys/timeb.h>
 main ()
@@ -229,8 +212,7 @@ main ()
 }
 ],
 AC_DEFINE(HAVE_FTIME),
-echo 1>&2 "Your ftime seems to be buggy")],
-:)
+echo 1>&2 "Your ftime seems to be buggy")])
 dnl
 AC_HAVE_FUNCS(times)
 AC_HAVE_FUNCS(napms nap usleep poll select)
@@ -378,7 +360,7 @@ case $DEFS in
 *HAVE_SIGVEC*)
   AC_COMPILE_CHECK([sv_flags],
   [#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
-  AC_DEFINE([HAVE_SIGVEC_SV_FLAGS]), :) ;;
+  AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])) ;;
 esac
 dnl
 AC_COMPILE_CHECK([times declared as long],
@@ -391,16 +373,14 @@ AC_COMPILE_CHECK([times declared as long],
 #endif
 extern long times ();],
 [],
-AC_DEFINE([TIMES_DECLARATION_OK]),
-:)
+AC_DEFINE([TIMES_DECLARATION_OK]))
 dnl
 AC_COMPILE_CHECK([BSD setpgrp],
 [#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif],
 [getpgrp (0); setpgrp (0, 0);],
-AC_DEFINE([HAVE_BSD_PGRP]),
-:)
+AC_DEFINE([HAVE_BSD_PGRP]))
 dnl
 AC_COMPILE_CHECK([union wait],
 [#include <sys/wait.h>
@@ -408,8 +388,7 @@ AC_COMPILE_CHECK([union wait],
 #define WIFEXITED(u) ((u).w_termsig == 0)
 #endif],
 [union wait u; if (WIFEXITED (u)) wait (&u);],
-AC_DEFINE([HAVE_UNION_WAIT]),
-:)
+AC_DEFINE([HAVE_UNION_WAIT]))
 dnl
 AC_LONG_FILENAMES
 AC_RESTARTABLE_SYSCALLS
