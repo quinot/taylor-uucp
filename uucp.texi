@@ -9,6 +9,8 @@
 
 @ignore
 ---------------------------------------------------------------------->
+Franc,ois Pinard says:
+
 Hi, Ian!  This is the promised merging of the current documents from
 Taylor UUCP 1.01, plus the patches to documentation you sent to me, into
 a taylor.texi file.  Many things remain to do, among which:
@@ -22,18 +24,6 @@ a taylor.texi file.  Many things remain to do, among which:
 - translating and merging a few letters I wrote to friends about UUCP
   installation and configuration.
 - gleaning miscellaneous information from my archives.
-
-I used makeinfo to produce an Info file from this one; be warned I did
-not try TeXing it yet, not having the necessary tools at home.  By GNU
-distribution standards, Taylor UUCP distribution should ideally contain
-a texinfo.tex file which works with this document.
-     
-I'm herein putting the current contents of this file under your full
-control.  If I feel like suggesting modifications to it, I'll send you
-diffs.  Hopefully, you will let me informed of the current status of
-this file for a little while.  I'll provide you with the remainder of
-the documentation in form of sets of full @nodes, which you might attach
-in the documentation tree where you see fit.
 ----------------------------------------------------------------------<
 @end ignore
 
@@ -108,13 +98,13 @@ not rely on the @code{From:} header.  To send a message to the list,
 send it to @file{taylor-uucp@@gnu.ai.mit.edu}.
 
 @menu
-* Copying::                     Taylor UUCP Copying Conditions
+* Copying::                     Taylor UUCP copying conditions
 * Introduction::                Introduction to Taylor UUCP
-* Overall Installation::        Taylor UUCP Installation
+* Overall Installation::        Taylor UUCP installation
 * Configuration files::         Taylor UUCP configuration files
 * Acknowledgements::            Acknowledgements
 
-* Configuration Index::         Configuration Index
+* Index:: 		        Index to configuration files
 
  --- The Detailed Node Listing ---
 
@@ -581,6 +571,8 @@ acceptable.
 @node config file, sys file, Configuration files, Configuration files
 @section The main configuration file
 @cindex config file
+@cindex main configuration file
+@cindex configuration file (config)
 
 The main configuration file may be specified by the @samp{-I} option to
 @code{uucico} (and all the other programs as well).  The default file
@@ -596,6 +588,8 @@ need not be a main configuration file at all.
 @findex hostname
 @itemx uuname @var{string}
 @findex uuname
+@cindex UUCP system name
+@cindex system name
 
 These keywords are equivalent.  They specify the UUCP name of the
 local host.  If there is no configuration file, an appropriate
@@ -603,6 +597,8 @@ function will be used to get the host name, if possible.
 
 @item spool @var{string}
 @findex spool
+@cindex spool directory
+@cindex /usr/spool/uucp
 
 Specify the spool directory.  The default is from @file{sysdep.h}.
 Command files, work files, temporary files, log files, etc., are stored
@@ -613,30 +609,32 @@ in this directory and in subdirectories of it.
 
 Specify the system file(s).  The default is from @file{sysdep.h}.  These
 files holds information about other systems with which this system
-communicates, and are described further below.  Multiple system files
-may be specified by given on the line, and the @code{sysfile} command
-may be repeated; each system file has its own set of defaults (see the
-description below).
+communicates; @xref{sys file}.  Multiple system files may be specified
+by given on the line, and the @code{sysfile} command may be repeated;
+each system file has its own set of defaults.
 
 @item portfile @var{strings}
 @findex portfile
 
 Specify the port file(s).  The default is from @file{sysdep.h}.  These
 files describe ports which are used to call other systems and accept
-calls from other systems.  They are described further below.  No port
-files need be named at all.  Multiple port files may be given on the
-line, and the @code{portfile} command may be repeated.
+calls from other systems; @xref{port file}.  No port files need be named
+at all.  Multiple port files may be given on the line, and the
+@code{portfile} command may be repeated.
 
 @item dialfile @var{strings}
 @findex dialfile
 
 Specify the dial file(s).  The default is from @file{sysdep.h}.  These
-files describe dialing devices (modems).  They are described further
-below.  No dial files need be named at all.  Multiple dial files may be
-given on the line, and the @code{dialfile} command may be repeated.
+files describe dialing devices (modems); @xref{dial file}.  No dial
+files need be named at all.  Multiple dial files may be given on the
+line, and the @code{dialfile} command may be repeated.
 
 @item dialcodefile @var{strings}
 @findex dialcodefile
+@cindex configuration file (dialcode)
+@cindex dialcode file
+@cindex dialcode configuration file
 
 Specify the dialcode file(s).  The default is from @file{sysdep.h}.
 These files specify dialcodes that may be used when sending phone
@@ -654,7 +652,10 @@ may be repeated; all the dialcode files will be read in turn until a
 dialcode is located.
 
 @item pubdir @var{string}
-@findex pubdir
+@findex pubdir in config file
+@cindex public directory
+@cindex uucppublic
+@cindex /usr/spool/uucppublic
 
 Specify the public directory.  The default is from @file{sysdep.h}.  On
 Unix, when a file is named using a leading @kbd{~/}, it is taken from or
@@ -664,23 +665,32 @@ file as described below.
 
 @item callfile @var{strings}
 @findex callfile
+@cindex call out file
+@cindex call configuration file
+@cindex call out login name
+@cindex call out password
+@cindex configuration file (call)
 
 Specify the call out login name and password file(s).  The default is
 from @file{sysdep.h}.  If the call out login name or password for a
-system are given as @kbd{*} (see the description of the system
-configuration file, below), these files are read to get the real login
-name or password.  Each line in the file(s) has three words: the system
-name, the login name, and the password.  This file is only used when
-placing calls to remote systems; the password file described under
-@code{passwdfile} below is used for incoming calls.  The intention of
-the call out file is to permit the system file to be publically
-readable; the call out files must obviously be kept secure.  These files
-need not be used.  Multiple call out files may be specified on the line,
-and the @code{callfile} command may be repeated; all the files will be
-read in turn until the system is found.
+system are given as @kbd{*} (@pxref{sys file}), these files are read to
+get the real login name or password.  Each line in the file(s) has three
+words: the system name, the login name, and the password.  This file is
+only used when placing calls to remote systems; the password file
+described under @code{passwdfile} below is used for incoming calls.  The
+intention of the call out file is to permit the system file to be
+publically readable; the call out files must obviously be kept secure.
+These files need not be used.  Multiple call out files may be specified
+on the line, and the @code{callfile} command may be repeated; all the
+files will be read in turn until the system is found.
 
 @item passwdfile @var{strings}
 @findex passwdfile
+@cindex passwd file
+@cindex passwd configuration file
+@cindex configuration file (passwd)
+@cindex call in login name
+@cindex call in password
 
 Specify the password file(s) to use for login names when @code{uucico}
 is doing its own login prompting, which it does when given the
@@ -689,16 +699,16 @@ is doing its own login prompting, which it does when given the
 and the password (e.g. @code{Ufoo foopas}).  The login name is accepted
 before the system name is known, so these are independent of which
 system is calling in; a particular login may be required for a system by
-using the @code{called-login} command in the system file.  These
-password files are optional, although one must exist if @code{uucico} is
-to present its own login prompts.  Multiple password files may be
-specified on the line, and the @code{passwdfile} command may be
-repeated; all the files will be read in turn until the login name is
-found.
-
+using the @code{called-login} command in the system file (@pxref{sys
+file}).  These password files are optional, although one must exist if
+@code{uucico} is to present its own login prompts.  Multiple password
+files may be specified on the line, and the @code{passwdfile} command
+may be repeated; all the files will be read in turn until the login name
+is found.
 
 @item logfile @var{string}
 @findex logfile
+@cindex log file
 
 Name the log file.  The default is from @file{sysdep.h}.  Logging
 information is written to this file.  If @code{HAVE_BNU_LOGGING} is
@@ -708,12 +718,14 @@ the systems to use it.
 
 @item statfile @var{string}
 @findex statfile
+@cindex statistics file
 
 Name the statistics file.  The default is from @file{sysdep.h}.
 Statistical information about file transfers is written to this file.
 
 @item debugfile @var{string}
 @findex debugfile
+@cindex debugging file
 
 Name the debugging file.  The default is from @file{sysdep.h}.
 Debugging information is written to this file when the debugging level
@@ -725,7 +737,7 @@ the log file because information such as passwords can appear in it, so
 it must be not be publically readable.
 
 @item debug @var{number}
-@findex debug
+@findex debug in config file
 
 Set the debugging level.  The default is 0.  Numbers between 0 and 9 are
 relevant; the larger the number, the more debugging information is
@@ -736,12 +748,13 @@ set specifically for calls to or from a specific system with the
 
 @item unknown @var{string} @dots{}
 @findex unknown
+@cindex unknown systems
 
 The @var{string} and subsequent arguments are treated as though they
-appeared in the system file (see below for a full description).  They
-are used to apply to any unknown systems that may call in, probably to
-set file transfer permissions and the like.  If the @code{unknown}
-command is not used, unknown systems are not permitted to call in.
+appeared in the system file (@pxref{sys file}).  They are used to apply
+to any unknown systems that may call in, probably to set file transfer
+permissions and the like.  If the @code{unknown} command is not used,
+unknown systems are not permitted to call in.
 
 @item v2-files @var{boolean}
 @findex v2-files
@@ -762,6 +775,8 @@ This can be useful while testing.  The default is true.
 @node sys file, port file, config file, Configuration files
 @section The system configuration file
 @cindex sys file
+@cindex system configuration file
+@cindex configuration file (sys) 
 
 These files describe all remote systems known to the UUCP package.
 
@@ -843,7 +858,7 @@ Specify an alias for the current system.  The alias may be used by local
 @code{uucp} and @code{uux} commands.  The default is to have no aliases.
 
 @item debug @var{number}
-@findex debug in system file
+@findex debug in sys file
 
 Set the debugging level used for calls to or from the system.  This may
 be used to debug a connection with a specific system.  It is
@@ -987,9 +1002,9 @@ If this command does not appear, then obviously no additional timetables
 will be defined.
 
 @item baud @var{number}
-@findex baud
+@findex baud in sys file
 @itemx speed @var{number}
-@findex speed
+@findex speed in sys file
 
 Specify the speed (baud is technically incorrect, but widely understood)
 at which to call the system.  This will try all available ports with
@@ -1002,7 +1017,7 @@ port file, but if it is not the natural baud rate of the port will be
 used (whatever that means on the system).
 
 @item port @var{string}
-@findex port
+@findex port in sys file
 
 Name a particular port or type of port to use when calling the system.
 The information for this port is obtained from the port file.  If this
@@ -1014,7 +1029,6 @@ tried in turn until an unlocked one is found which matches the desired
 baud rate.
 
 @item port @var{string} @dots{}
-@findex port
 
 If more than one string follows the @code{port} command, the subsequent
 strings are treated as commands that might appear in the port file (see
@@ -1050,7 +1064,7 @@ specified, the system name is used.
 When used with any other port, this command is ignored.
 
 @item chat @var{strings}
-@findex chat
+@findex chat in sys file
 
 This command is used to specify a chat script to use when logging on to
 a remote system; see the @code{chat-program} command as well.  The
@@ -1168,14 +1182,14 @@ after the @samp{login:} prompt, so they may need a copy of this chat
 script with a @kbd{\d} before the @kbd{\L}.
 
 @item chat-timeout @var{number}
-@findex chat-timeout
+@findex chat-timeout in sys file
 
 The number of seconds to wait for an expect string in the chat script
 before timing out and sending the next subsend or failing the chat
 script entirely.  The default value is 60.
 
 @item chat-fail @var{string}
-@findex chat-fail
+@findex chat-fail in sys file
 
 If the @var{string} is seen at any time during a chat script, the chat
 script is aborted.  The string may not contain any whitespace
@@ -1185,7 +1199,7 @@ is to have none.  The corresponding command in the dialers file has some
 examples where this is useful.
 
 @item chat-seven-bit @var{boolean}
-@findex chat-seven-bit
+@findex chat-seven-bit in sys file
 
 If the argument is true, all incoming characters are stripped to seven
 bits when being compared to the expect string.  Otherwise all eight bits
@@ -1195,7 +1209,7 @@ ignored while running the chat script.  This has no effect on any
 @code{chat-program}, which must ignore parity by itself if necessary.
 
 @item chat-program @var{strings}
-@findex chat-program
+@findex chat-program in sys file
 
 Specify a program to run when calling up the system.  This program is
 expected to run its own version of a chat script, but it may do whatever
@@ -1341,7 +1355,7 @@ to use the @code{protocol} command for the system or no protocol will be
 selected at all (the only reasonable choice would be @samp{protocol f}).
 
 @item protocol-parameter @var{character} @var{string} @dots{}
-@findex protocol-parameter
+@findex protocol-parameter in sys file
 
 @var{character} is a single character specifying a protocol; the
 remaining strings are a command specific to that protocol which will be
@@ -1529,7 +1543,7 @@ dependent header file.  Not all systems may be able to provide the
 amount of available space.
 
 @item pubdir @var{string}
-@findex pubdir
+@findex pubdir in sys file
 
 Specifies the public directory that is used when @kbd{~} is specifed in
 a file transfer or a list of directories.  This essentially overrides
@@ -1579,6 +1593,8 @@ commands rnews rmail
 @node port file, dial file, sys file, Configuration files
 @section The port configuration files
 @cindex port file
+@cindex port configuration file
+@cindex configuration file (port)
 
 The port files may be used to name and describe ports.  The first
 command in each file must be @code{port}.  All command up to the next
@@ -1591,7 +1607,7 @@ name will be tried until an unlocked one is found.
 @table @code
 
 @item port @var{string}
-@findex port
+@findex port in port file
 
 Introduces and names a port.
 
@@ -1607,13 +1623,13 @@ shell), @samp{direct} (for a direct connection to another system) and
 @samp{tcp} (for a connection using TCP).
 
 @item protocol-parameter @var{character} @var{strings} [ any type ]
-@findex protocol-parameter
+@findex protocol-parameter in port file
 
 The same command as the @code{protocol-parameter} command used for
 systems.  This one takes precedence.
 
 @item seven-bit @var{boolean} [ any type ]
-@findex seven-bit
+@findex seven-bit in port file
 
 If the argument is @samp{true}, the port is marked as only supporting
 seven bit transfers.  This is only used during protocol negotiation to
@@ -1622,7 +1638,7 @@ will not prevent eight bit characters from being transmitted.  The
 default is @samp{false}.
 
 @item reliable @var{boolean} [ any type ]
-@findex reliable
+@findex reliable in port file
 
 If the argument is @samp{true} (the default), the port is marked as
 being reliable; if the argument is @samp{false}, the port is marked as
@@ -1639,9 +1655,9 @@ the port name is taken as the device.  Device names are system
 dependent, but a Unix example would be @file{/dev/ttyd0}.
 
 @item baud @var{number} [ modem and direct only ]
-@findex baud
+@findex baud in port file
 @itemx speed @var{number} [modem and direct only ]
-@findex speed
+@findex speed in port file
 
 The speed this port runs at.  If a system specifies a speed but no port
 name, then all ports which match the speed will be tried in order.  If
@@ -1661,7 +1677,7 @@ still used to determine the speed to run at if the system does not
 specify a speed.
 
 @item carrier @var{boolean} [ modem only ]
-@findex carrier
+@findex carrier in port file
 
 The argument indicates whether the port supports carrier.  If it does
 not, carrier will never be required on this port, regardless of what the
@@ -1675,14 +1691,13 @@ to the normal port device.  The default is to output to the normal port
 device.
 
 @item dialer @var{string} [ modem only ]
-@findex dialer
+@findex dialer in port file
 
 Name a dialer to use.  The information is looked up in the dialer file.
 There is no default, and some sort of dialer information must be
 specified to call out on a modem.
 
 @item dialer @var{string} @dots{} [ modem only ]
-@findex dialer
 
 Execute a dialer command.  If a dialer is named, these commands are
 ignored.  They may be used to specify dialer information directly in
@@ -1722,6 +1737,8 @@ used.
 @node dial file, Example, port file, Configuration files
 @section The dialer configuration files
 @cindex dial file
+@cindex dialer configuration file
+@cindex configuration file (dial)
 
 The dialer configuration files define dialers.  The first command in
 each file must be a @code{dialer} command which names the dialer.
@@ -1731,12 +1748,12 @@ with the named dialer.
 @table @code
 
 @item dialer @var{string}
-@findex dialer
+@findex dialer in dial file
 
 Introduces and names a dialer.
 
 @item chat @var{strings}
-@findex chat
+@findex chat in dial file
 
 Specify a chat script to be used to dial the phone.  This will be read
 from and sent to the port specified by the @code{dial-device} command
@@ -1766,18 +1783,18 @@ script implicitly begins with @kbd{\M} and ends with @kbd{\m}.  There is
 no default chat script for dialers.
 
 @item chat-timeout @var{number}
-@findex chat-timeout
+@findex chat-timeout in dial file
 @item chat-fail @var{string}
-@findex chat-fail
+@findex chat-fail in dial file
 @item chat-seven-bit @var{boolean}
-@findex chat-seven-bit
+@findex chat-seven-bit in dial file
 
 These commands work just like the corresponding commands in the system
 file.  The @code{chat-fail} command is useful for strings such as
 @samp{chat-fail BUSY} or @samp{chat-fail NO\sDIALTONE}.
 
 @item chat-program @var{strings}
-@findex chat-program
+@findex chat-program in dial file
 
 Specify a program to run when dialing out on a phone.  See the
 @code{chat-program} command in the system file for more details.  The
@@ -1823,7 +1840,7 @@ in a phone number.  If it is not defined, the @kbd{-} character is
 dropped.  The default is a comma.
 
 @item carrier @var{boolean}
-@findex carrier
+@findex carrier in dial file
 
 If the argument is @samp{true}, the dialer supports the modem carrier
 signal.  After the phone number is dialed, @code{uucico} will insist
@@ -1900,14 +1917,14 @@ This is a simple use of @code{abort-chat}.  It is equivalent to
 @var{string} to the modem when a call is aborted.
 
 @item protocol-parameter @var{character} @var{strings}
-@findex protocol-parameter
+@findex protocol-parameter in dial file
 
 Set protocol parameters, as the similar command in the system
 configuration file or the port configuration file.  These parameters
 take precedence, then those for the port, then those for the system.
 
 @item seven-bit @var{boolean}
-@findex seven-bit
+@findex seven-bit in dial file
 
 If the argument is @samp{true}, the dialer is marked as only supporting
 seven bit transfers.  This is only used during protocol negotiation to
@@ -1917,7 +1934,7 @@ default is @samp{false}.  It would be more common to specify this for a
 port rather than a dialer.
 
 @item reliable @var{boolean}
-@findex reliable
+@findex reliable in dial file
 
 If the argument is @samp{true} (the default), the dialer is marked as
 being reliable; if the argument is @samp{false}, the dialer is marked as
@@ -1986,7 +2003,7 @@ protocol-parameter g timeout 20
 protocol-parameter g retries 10
 @end example
 
-@node Acknowledgements, Configuration Index, Configuration files, Top
+@node Acknowledgements, Index, Configuration files, Top
 @chapter Acknowledgements
 
 This is a list of people who gave help or suggestions while I was
@@ -2071,7 +2088,7 @@ frnkmth!twwells.com!bill (T. William Wells)
 mauxci!eci386!woods@@apple.com (Greg A. Woods)
 @end example
 
-@node Configuration Index,  , Acknowledgements, Top
+@node Index,  , Acknowledgements, Top
 @unnumbered Index for New Style Configuration File
 
 @printindex cp
