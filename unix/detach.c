@@ -114,11 +114,17 @@ usysdep_detach ()
 
 #if ! HAVE_SETSID && HAVE_TIOCNOTTY
   /* Lose the original controlling terminal as well as our process
-     group.  If standard input has been reopened to /dev/null, this
-     will do no harm.  If another port has been opened to become the
-     controlling terminal, it should have been detached when it was
-     closed.  */
-  (void) ioctl (0, TIOCNOTTY, (char *) NULL);
+     group.  */
+  {
+    int o;
+
+    o = open ((char *) "/dev/tty", O_RDONLY);
+    if (o >= 0)
+      {
+	(void) ioctl (o, TIOCNOTTY, (char *) NULL);
+	(void) close (o);
+      }
+  }
 #endif /* ! HAVE_SETSID && HAVE_TIOCNOTTY */
 
   /* Close stdin, stdout and stderr and reopen them on /dev/null, to
