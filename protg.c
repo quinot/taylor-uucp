@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/02/19  19:36:07  ian
+   Rearranged time functions
+
    Revision 1.23  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -989,7 +992,10 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 #endif
 
       if (ffound)
-	cgarbage = 0;
+	{
+	  ctimeouts = 0;
+	  cgarbage = 0;
+	}
       else
 	{
 	  if (cgarbage > cGgarbage_data)
@@ -1006,11 +1012,9 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 
       if (crec != 0)
 	{
-	  ctimeouts = 0;
-
 	  /* If we don't get enough data twice in a row, we may have
 	     dropped some data and still be looking for the end of a
-	     large packet.  Incrementing iGrecstart will force
+	     large packet.  Incrementing iPrecstart will force
 	     fgprocess_data to skip that packet and look through the
 	     rest of the data.  In some situations, this will be a
 	     mistake.  */
