@@ -279,6 +279,12 @@ extern boolean fsysdep_get_status P((const struct uuconf_system *qsys,
    error.  The system will be locked before this call is made.  */
 extern boolean fsysdep_set_status P((const struct uuconf_system *qsys,
 				     const struct sstatus *qset));
+
+/* See whether a remote system is permitted to log in.  This is just
+   to support the remote.unknown shell script for HDB.  If it returns
+   FALSE, the incoming call will be refused.  The zsystem argument is
+   the name given by the remote system.  */
+extern boolean fsysdep_unknown_caller P((const char *zsystem));
 
 /* Check whether there is work for a remote system.  It should return
    TRUE if there is work, FALSE otherwise; there is no way to indicate

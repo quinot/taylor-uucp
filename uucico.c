@@ -1690,15 +1690,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   iuuconf = uuconf_system_info (puuconf, zstr + 1, &ssys);
   if (iuuconf == UUCONF_NOT_FOUND)
     {
-      if (! funknown_system (puuconf, zstr + 1, &ssys))
+      if (! fsysdep_unknown_caller (zstr + 1)
+	  || ! funknown_system (puuconf, zstr + 1, &ssys))
 	{
 	  (void) fsend_uucp_cmd (qconn, "RYou are unknown to me");
 	  ulog (LOG_ERROR, "Call from unknown system %s", zstr + 1);
+	  ubuffree (zstr);
+	  return FALSE;
 	}
-
-#if ! HAVE_TAYLOR_CONFIG && HAVE_HDB_CONFIG
-      /* We should check remote.unknown at this point.  */
-#endif
     }
   else if (iuuconf != UUCONF_SUCCESS)
     {
