@@ -13,9 +13,18 @@ mkdir (zdir, imode)
      const char *zdir;
      int imode;
 {
+  struct stat s;
   const char *azargs[3];
   int aidescs[3];
   pid_t ipid;
+
+  /* Make sure the directory does not exist, since we will otherwise
+     get the wrong errno value.  */
+  if (stat (zdir, &s) == 0)
+    {
+      errno = EEXIST;
+      return -1;
+    }
 
   /* /bin/mkdir will create the directory with mode 777, so we set our
      umask to get the mode we want.  */
