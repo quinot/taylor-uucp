@@ -4693,7 +4693,7 @@ Aleksey P. Rudnev @file{<alex@@kiae.su>}
 @file{tbr@@tfic.bc.ca} (Tom Rushworth)
 @file{rsalz@@bbn.com} (Rich Salz)
 @file{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
-@file{swiers@@plains.NoDak.edu}
+Igor V. Semenyuk @file{<iga@@argrd0.argonaut.su>}
 @file{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
 @file{peter@@ficc.ferranti.com} (Peter da Silva)
 @file{frumious!pat} (Patrick Smith)
@@ -4701,6 +4701,7 @@ Aleksey P. Rudnev @file{<alex@@kiae.su>}
 Harlan Stenn @file{<harlan@@mumps.pfcs.com>}
 @file{chs@@antic.apu.fi} (Hannu Strang)
 @file{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
+@file{swiers@@plains.NoDak.edu}
 Oleg Tabarovsky @file{<olg@@olghome.pccentre.msk.su>}
 John Theus @file{<john@@theus.rain.com>}
 @file{rmtodd@@servalan.servalan.com} (Richard Todd)
