@@ -187,7 +187,7 @@ extern int t_nerr;
 #define ICLEAR_OFLAG (OPOST | OLCUC | ONLCR | OCRNL | ONOCR | ONLRET \
 		      | OFILL | OFDEL | NLDLY | CRDLY | TABDLY | BSDLY \
 		      | VTDLY | FFDLY)
-#define ICLEAR_CFLAG (CBAUD | CLOCAL | CSIZE | PARENB | PARODD)
+#define ICLEAR_CFLAG (CBAUD | CSIZE | PARENB | PARODD)
 #define ISET_CFLAG (CS8 | CREAD | HUPCL)
 #define ICLEAR_LFLAG (ISIG | ICANON | XCASE | ECHO | ECHOE | ECHOK \
 		      | ECHONL | NOFLSH)
@@ -197,11 +197,18 @@ extern int t_nerr;
 		      | INLCR | INPCK | ISTRIP | IXOFF | IXON \
 		      | PARMRK)
 #define ICLEAR_OFLAG (OPOST)
-#define ICLEAR_CFLAG (CLOCAL | CSIZE | PARENB | PARODD)
+#define ICLEAR_CFLAG (CSIZE | PARENB | PARODD)
 #define ISET_CFLAG (CS8 | CREAD | HUPCL)
 #define ICLEAR_LFLAG (ECHO | ECHOE | ECHOK | ECHONL | ICANON | IEXTEN \
 		      | ISIG | NOFLSH | TOSTOP)
 #endif
+
+enum tclocal_setting
+{
+  SET_CLOCAL,
+  CLEAR_CLOCAL,
+  IGNORE_CLOCAL
+};
 
 /* Local functions.  */
 
@@ -216,7 +223,7 @@ static boolean fsserial_lock P((struct sconnection *qconn,
 				boolean fin));
 static boolean fsserial_unlock P((struct sconnection *qconn));
 static boolean fsserial_open P((struct sconnection *qconn, long ibaud,
-				boolean fwait, boolean flocal));
+				boolean fwait, enum tclocal_setting tlocal));
 static boolean fsstdin_open P((struct sconnection *qconn, long ibaud,
 			       boolean fwait));
 static boolean fsmodem_open P((struct sconnection *qconn, long ibaud,
@@ -741,11 +748,6 @@ fsserial_lock (qconn, fin)
 	(void) fsserial_lockfile (FALSE, qconn);
 	return FALSE;
       }
-
-#ifdef TIOCSCTTY
-    /* On BSD 4.4, make it our controlling terminal.  */
-    (void) ioctl (qsysdep->o, TIOCSCTTY, 0);
-#endif
   }
 #endif /* HAVE_TIOCSINUSE || HAVE_TIOCEXCL */
 
@@ -853,11 +855,11 @@ static int cSmin;
    supposedly required on some versions of BSD/386.  */
 
 static boolean
-fsserial_open (qconn, ibaud, fwait, flocal)
+fsserial_open (qconn, ibaud, fwait, tlocal)
      struct sconnection *qconn;
      long ibaud;
      boolean fwait;
-     boolean flocal;
+     enum tclocal_setting tlocal;
 {
   struct ssysdep_conn *q;
   baud_code ib;
@@ -930,11 +932,6 @@ fsserial_open (qconn, ibaud, fwait, flocal)
 	  ulog (LOG_ERROR, "fcntl (FD_CLOEXEC): %s", strerror (errno));
 	  return FALSE;
 	}
-
-#ifdef TIOCSCTTY
-      /* On BSD 4.4, make it our controlling terminal.  */
-      (void) ioctl (q->o, TIOCSCTTY, 0);
-#endif
     }
 
   /* Get the port flags, and make sure the ports are blocking.  */
@@ -1025,7 +1022,7 @@ fsserial_open (qconn, ibaud, fwait, flocal)
   q->snew.c_iflag &=~ ICLEAR_IFLAG;
   q->snew.c_oflag &=~ ICLEAR_OFLAG;
   q->snew.c_cflag &=~ ICLEAR_CFLAG;
-  q->snew.c_cflag |= (ib | ISET_CFLAG) | (flocal ? CLOCAL : 0);
+  q->snew.c_cflag |= ib | ISET_CFLAG;
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
   cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
@@ -1046,7 +1043,7 @@ fsserial_open (qconn, ibaud, fwait, flocal)
   q->snew.c_iflag &=~ ICLEAR_IFLAG;
   q->snew.c_oflag &=~ ICLEAR_OFLAG;
   q->snew.c_cflag &=~ ICLEAR_CFLAG;
-  q->snew.c_cflag |= ISET_CFLAG | (flocal ? CLOCAL : 0);
+  q->snew.c_cflag |= ISET_CFLAG;
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
   cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
@@ -1060,11 +1057,30 @@ fsserial_open (qconn, ibaud, fwait, flocal)
 
 #endif /* HAVE_POSIX_TERMIOS */
 
+#if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
+  switch (tlocal)
+    {
+    case SET_CLOCAL:
+      q->snew.c_cflag |= CLOCAL;
+      break;
+    case CLEAR_CLOCAL:
+      q->snew.c_cflag &=~ CLOCAL;
+      break;
+    case IGNORE_CLOCAL:
+      break;
+    }
+#endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
+
   if (! fsetterminfo (q->o, &q->snew))
     {
       ulog (LOG_ERROR, "Can't set terminal settings: %s", strerror (errno));
       return FALSE;
     }
+
+#ifdef TIOCSCTTY
+  /* On BSD 4.4, make it our controlling terminal.  */
+  (void) ioctl (q->o, TIOCSCTTY, 0);
+#endif
 
   if (ibaud != 0)
     q->ibaud = ibaud;
@@ -1106,7 +1122,7 @@ fsstdin_open (qconn, ibaud, fwait)
   q->owr = 1;
 
   q->o = q->ord;
-  if (! fsserial_open (qconn, ibaud, fwait, FALSE))
+  if (! fsserial_open (qconn, ibaud, fwait, IGNORE_CLOCAL))
     return FALSE;
   q->iwr_flags = fcntl (q->owr, F_GETFL, 0);
   if (q->iwr_flags < 0)
@@ -1127,7 +1143,8 @@ fsmodem_open (qconn, ibaud, fwait)
 {
   if (ibaud == (long) 0)
     ibaud = qconn->qport->uuconf_u.uuconf_smodem.uuconf_ibaud;
-  if (! fsserial_open (qconn, ibaud, fwait, ! fwait))
+  if (! fsserial_open (qconn, ibaud, fwait,
+		       fwait ? CLEAR_CLOCAL : SET_CLOCAL))
     return FALSE;
   return fsserial_hardflow
     (qconn, qconn->qport->uuconf_u.uuconf_smodem.uuconf_fhardflow);
@@ -1143,7 +1160,10 @@ fsdirect_open (qconn, ibaud, fwait)
 {
   if (ibaud == (long) 0)
     ibaud = qconn->qport->uuconf_u.uuconf_sdirect.uuconf_ibaud;
-  if (! fsserial_open (qconn, ibaud, fwait, FALSE))
+  if (! fsserial_open (qconn, ibaud, fwait,
+		       (qconn->qport->uuconf_u.uuconf_sdirect.uuconf_fcarrier
+			? CLEAR_CLOCAL
+			: SET_CLOCAL)))
     return FALSE;
   return fsserial_hardflow
     (qconn, qconn->qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow);

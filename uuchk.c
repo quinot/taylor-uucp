@@ -564,6 +564,8 @@ ikshow_port (qport, pinfo)
 	printf ("   Device %s\n",
 		qport->uuconf_u.uuconf_sdirect.uuconf_zdevice);
       printf ("   Speed %ld\n", qport->uuconf_u.uuconf_sdirect.uuconf_ibaud);
+      printf ("   Carrier %savailable\n",
+	      qport->uuconf_u.uuconf_sdirect.uuconf_fcarrier ? "" : "not ");
       printf ("   Hardware flow control %savailable\n",
 	      qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow ? "" : "not ");
       break;

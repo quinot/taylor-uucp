@@ -398,6 +398,8 @@ struct uuconf_direct_port
   char *uuconf_zdevice;
   /* The baud rate (speed).  */
   long uuconf_ibaud;
+  /* Non-zero if the port uses carrier detect.  */
+  int uuconf_fcarrier;
   /* Non-zero if the port supports hardware flow control.  */
   int uuconf_fhardflow;
 };

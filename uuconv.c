@@ -1761,6 +1761,8 @@ uvwrite_taylor_port (e, qport, zprefix)
 	  fprintf (e, "%sdevice %s\n", zprefix, qd->uuconf_zdevice);
 	if (qd->uuconf_ibaud != 0)
 	  fprintf (e, "%sbaud %ld\n", zprefix, qd->uuconf_ibaud);
+	if (qd->uuconf_fcarrier)
+	  fprintf (e, "%scarrier true\n", zprefix);
 	if (! qd->uuconf_fhardflow)
 	  fprintf (e, "%shardflow false\n", zprefix);
       }

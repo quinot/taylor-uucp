@@ -134,6 +134,9 @@ static const struct cmdtab_offset asPdirect_cmds[] =
   { "speed", UUCONF_CMDTABTYPE_LONG,
       offsetof (struct uuconf_port, uuconf_u.uuconf_sdirect.uuconf_ibaud),
       NULL },
+  { "carrier", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_sdirect.uuconf_fcarrier),
+      NULL },
   { "hardflow", UUCONF_CMDTABTYPE_BOOLEAN,
       offsetof (struct uuconf_port, uuconf_u.uuconf_sdirect.uuconf_fhardflow),
       NULL },
@@ -271,6 +274,7 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	case UUCONF_PORTTYPE_DIRECT:
 	  qport->uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
 	  qport->uuconf_u.uuconf_sdirect.uuconf_ibaud = -1;
+	  qport->uuconf_u.uuconf_sdirect.uuconf_fcarrier = FALSE;
 	  qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow = TRUE;
 	  break;
 	case UUCONF_PORTTYPE_TCP:
