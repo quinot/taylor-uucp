@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/15  21:00:59  ian
+   Efficiency hacks for 'f' and 't' protocols
+
    Revision 1.2  1991/11/13  20:44:20  ian
    Learned author
 
@@ -88,7 +91,7 @@ ftstart (fmaster)
     return FALSE;
   zTbuf = (char *) xmalloc (CTBUFSIZE + CTFRAMELEN);
   fTfile = FALSE;
-  sleep (2);
+  usysdep_sleep (2);
   return TRUE;
 }
 
