@@ -754,6 +754,40 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
   if (iuuconf != UUCONF_SUCCESS)
     {
       ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+
+      /* If we got a non-transient error, we notify the administrator.
+	 We can't bounce it back to the original requestor, because we
+	 don't know how to read the file to figure out who it is (it
+	 would probably be possible to read the file and work it out,
+	 but it doesn't seem worth it for such an unlikely error).  */
+      if (UUCONF_ERROR_VALUE (iuuconf) == UUCONF_SYNTAX_ERROR
+	  || UUCONF_ERROR_VALUE (iuuconf) == UUCONF_UNKNOWN_COMMAND)
+	{
+	  const char *az[20];
+	  char *znew;
+
+	  i = 0;
+	  az[i++] = "The execution file\n\t";
+	  az[i++] = zfile;
+	  az[i++] = "\nfor system\n\t";
+	  az[i++] = qsys->uuconf_zname;
+	  az[i++] = "\nwas corrupt.  ";
+	  znew = zsysdep_save_corrupt_file (zfile);
+	  if (znew == NULL)
+	    {
+	      az[i++] = "The file could not be preserved.\n";
+	      (void) remove (zfile);
+	    }
+	  else
+	    {
+	      az[i++] = "It has been moved to\n\t";
+	      az[i++] = znew;
+	      az[i++] = "\n";
+	    }
+	  (void) fsysdep_mail (OWNER, "Corrupt execution file", i, az);
+	  ubuffree (znew);
+	}
+
       return;
     }
 
