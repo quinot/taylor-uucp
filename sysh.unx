@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/07  19:32:28  ian
+   Chip Salzenberg: allow LOCKDIR, and check that locking process exists
+
    Revision 1.3  1991/09/19  16:15:58  ian
    Chip Salzenberg: configuration option for permitting execution via sh
 
@@ -146,6 +149,10 @@
 #define HAVE_SETITIMER 1
 /* #define HAVE_NAPMS 1 */
 /* #define HAVE_NAP 1 */
+
+/* Define HAVE_SIGSETJMP if you have the sigsetjmp and siglongjmp
+   calls, and they should be used to jump out of signal handler.  */
+#define HAVE_SIGSETJMP 1
 
 /* Define HAVE_EUID if it makes sense to call setuid (geteuid ()).
    This is mainly done to avoid running with root permissions, which
