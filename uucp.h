@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.66  1992/03/30  04:49:10  ian
+   Niels Baggesen: added debugging types abnormal and uucp-proto
+
    Revision 1.65  1992/03/28  22:06:38  ian
    Michael I Bushnell: renamed enum tstatus to avoid header file conflict
 
@@ -1034,7 +1037,11 @@ extern int igradecmp P((int b1, int b2));
 
 /* Make a log entry.  */
 #if ANSI_C && HAVE_VFPRINTF
-extern void ulog P((enum tlog ttype, const char *zfmt, ...));
+extern void ulog P((enum tlog ttype, const char *zfmt, ...))
+#if __GNUC__ > 1
+     __attribute__ ((format (printf, 2, 3)))
+#endif
+     ;
 #else
 extern void ulog ();
 #endif

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/03/30  04:49:10  ian
+   Niels Baggesen: added debugging types abnormal and uucp-proto
+
    Revision 1.19  1992/03/30  04:07:13  ian
    Dirk Musstopf: remove temporary file if receive fails
 
@@ -424,7 +427,8 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 		 the file is larger than that.  Try again later.  It
 		 would be better if we could know whether there will
 		 ever be enough room.  */
-	      ulog (LOG_ERROR, "too large", qcmd->zfrom);
+	      ulog (LOG_ERROR, "Can't receive %s: too large",
+		    qcmd->zfrom);
 	      (void) ffileclose (e);
 	      (void) remove (qcmd->ztemp);
 	      return TRUE;
