@@ -322,7 +322,7 @@ struct shpermissions
   /* String MYNAME value.  */
   char *zmyname;
   /* String PUBDIR value.  */
-  char *zpubdir;
+  const char *zpubdir;
   /* NULL terminated array of ALIAS values.  */
   char **pzalias;
 };
