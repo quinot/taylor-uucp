@@ -1037,8 +1037,6 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   if (! fsysdep_set_status (qsys, qstat))
     return FALSE;
 
-  ulog (LOG_NORMAL, "Login successful");
-
   *pfcalled = TRUE;
   istart_time = isysdep_time ((long *) NULL);
 
@@ -1056,6 +1054,8 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
       ubuffree (zstr);
       return FALSE;
     }
+
+  ulog (LOG_NORMAL, "Login successful");
 
   if (zstr[5] == '=')
     {
