@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.3  1992/02/24  20:36:27  ian
    Roberto Biancardi: skip spaces after strtok (NULL, "")
 
@@ -768,6 +771,28 @@ fsquery ()
     if (! fsquery_system (&pas[i], &qlist, inow))
       fret = FALSE;
 
+  /* Check for the local system in the list of execution files.  */
+  if (qlist != NULL)
+    {
+      struct sxqtlist **pq;
+
+      for (pq = &qlist; *pq != NULL; pq = &(*pq)->qnext)
+	{
+	  if (strcmp ((*pq)->zsystem, zLocalname) == 0)
+	    {
+	      struct sxqtlist *qfree;
+
+	      if (! fsquery_show (&sLocalsys, 0, 0L, *pq, inow))
+		fret = FALSE;
+	      qfree = *pq;
+	      *pq = qfree->qnext;
+	      xfree ((pointer) qfree->zsystem);
+	      xfree ((pointer) qfree);
+	      break;
+	    }
+	}
+    }
+
   /* Print out information for any unknown systems for which we have
      execution files.  */
 
@@ -831,8 +856,11 @@ fsquery_system (qsys, pq, inow)
 
   /* Find the execution information, if any.  */
   while (*pq != NULL)
-    if (strcmp ((*pq)->zsystem, qsys->zname) == 0)
-      break;
+    {
+      if (strcmp ((*pq)->zsystem, qsys->zname) == 0)
+	break;
+      pq = &(*pq)->qnext;
+    }
 
   /* If there are no commands and no executions, don't print any
      information for this system.  */
@@ -854,7 +882,8 @@ fsquery_system (qsys, pq, inow)
   return fret;
 }
 
-/* Print out the query information for a single system.  */
+/* Print out the query information for a single system.  We handle the
+   local system specially.  */
 
 static boolean
 fsquery_show (qsys, cwork, ifirstwork, qxqt, inow)
@@ -864,11 +893,17 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow)
      struct sxqtlist *qxqt;
      long inow;
 {
+  boolean flocal;
   struct sstatus sstat;
   struct tm stime;
 
-  if (! fsysdep_get_status (qsys, &sstat))
-    return FALSE;
+  flocal = strcmp (qsys->zname, zLocalname) == 0;
+
+  if (! flocal)
+    {
+      if (! fsysdep_get_status (qsys, &sstat))
+	return FALSE;
+    }
 
   printf ("%s %dC (", qsys->zname, cwork);
 
@@ -886,6 +921,12 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow)
       printf ("%dX (", qxqt->cxqts);
       usunits_show (inow - qxqt->ifirst);
       printf (")");
+    }
+
+  if (flocal)
+    {
+      printf ("\n");
+      return TRUE;
     }
 
   usysdep_localtime (sstat.ilast, &stime);
