@@ -105,6 +105,11 @@ static long iTchecktime;
 static long iTsecs;
 static long iTmicros;
 
+/* The transfer structure to add the most recent time slice to in
+   fgot_data, and its calcs field.  */
+static struct stransfer *qTtiming;
+static int cTtiming_alcs;
+
 /* The size of the command we have read so far in ftadd_cmd.  */
 static size_t cTcmdlen;
 
@@ -224,6 +229,11 @@ uqueue_receive (qtrans)
   if (qtrans->precfn == NULL)
     ulog (LOG_FATAL, "uqueue_receive: Bad call");
 #endif
+  /* If the receive queue is empty, update the time.  Otherwise, we
+     would count dead time against the next transfer to receive
+     information.  */
+  if (qTreceive == NULL)
+    iTsecs = isysdep_process_time (&iTmicros);
   utdequeue (qtrans);
   utqueue (&qTreceive, qtrans, FALSE);
 }
@@ -654,9 +664,13 @@ floop (qdaemon)
 	{
 	  long isecs, imicros;
 	  int calcs;
+	  boolean fgottime;
+	  long iendsecs = 0;
+	  long iendmicros;
 
 	  isecs = isysdep_process_time (&imicros);
 	  calcs = q->calcs;
+	  fgottime = FALSE;
 
 	  ulog_user (q->s.zuser);
 
@@ -672,7 +686,7 @@ floop (qdaemon)
 	    {
 	      if (q->zlog != NULL)
 		{
-		  ulog (LOG_NORMAL, q->zlog);
+		  ulog (LOG_NORMAL, "%s", q->zlog);
 		  ubuffree (q->zlog);
 		  q->zlog = NULL;
 		}
@@ -728,7 +742,14 @@ floop (qdaemon)
 
 		  if (cdata == 0)
 		    {
+		      /* We must update the time now, because this
+			 call may make an entry in the statistics
+			 file.  */
 		      q->fsendfile = FALSE;
+		      iendsecs = isysdep_process_time (&iendmicros);
+		      q->isecs += iendsecs - isecs;
+		      q->imicros += iendmicros - imicros;
+		      fgottime = TRUE;
 		      if (! (*q->psendfn) (q, qdaemon))
 			fret = FALSE;
 		      break;
@@ -743,25 +764,25 @@ floop (qdaemon)
 	     is only safe because utransfree never actually frees a
 	     transfer structure, it just puts it on the available
 	     list.  */
-	  if (q->calcs == calcs)
+	  if (q->calcs == calcs && ! fgottime)
 	    {
-	      long iendsecs, iendmicros;
-
 	      iendsecs = isysdep_process_time (&iendmicros);
 	      q->isecs += iendsecs - isecs;
 	      q->imicros += iendmicros - imicros;
+	      fgottime = TRUE;
+	    }
 
-	      /* If it's been long enough since the last time we
-		 checked the queue, check it again.  It doesn't really
-		 matter that this may not get called; it will
-		 certainly get called eventually.  */
-	      if (iendsecs - iTchecktime >= CCHECKWAIT)
+	  /* If it's been long enough since the last time we checked
+	     the queue, check it again.  It doesn't really matter that
+	     this may not get called; it will certainly get called
+	     eventually.  */
+	  if (fgottime
+	      && iendsecs - iTchecktime >= CCHECKWAIT)
+	    {
+	      if (! fcheck_queue (qdaemon))
 		{
-		  if (! fcheck_queue (qdaemon))
-		    {
-		      fret = FALSE;
-		      break;
-		    }
+		  fret = FALSE;
+		  break;
 		}
 	    }
 	}
@@ -787,6 +808,8 @@ floop (qdaemon)
   iTchan = 0;
   iTsecs = 0;
   iTmicros = 0;
+  qTtiming = NULL;
+  cTtiming_alcs = 0;
   cTcmdlen = 0;
   qTreceive_ack = NULL;
   for (i = 0; i < IMAX_CHAN + 1; i++)
@@ -826,7 +849,14 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
   int calcs;
   boolean fret;
 
-  if (iTsecs == 0)
+  /* If we haven't initialized the time, initialize it now.  We also
+     set the time if there is nothing in the receive queue.  If the
+     receive queue is empty, it means that some time may have passed
+     since the last time we received data.  We don't want to count
+     that dead time against whatever transfer structure gets this
+     packet.  We also reset the time when putting the first entry on
+     the receive queue in uqueue_receive.  */
+  if (iTsecs == 0 || qTreceive == NULL)
     iTsecs = isysdep_process_time (&iTmicros);
 
   if (fallacked && qTreceive_ack != NULL)
@@ -874,10 +904,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
       if (pfexit != NULL && (qdaemon->fhangup || qTremote != NULL))
 	*pfexit = TRUE;
 
-      /* The time spent to gather a new command does not get charged
-	 to any one command.  */
-      iTsecs = isysdep_process_time (&iTmicros);
-
       return fret;
     }
   else
@@ -896,6 +922,45 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
       return FALSE;
     }
 #endif
+
+  /* If we aren't timing this structure, add the most recent slice to
+     the structure we are timing.  If we are handling multiple
+     channels, this counts part of one transfer against another.  Too
+     bad.  We also add in the time if this might be the last call for
+     this structure.  */
+  if (qTtiming != q
+      || cTtiming_alcs != q->calcs
+      || q->fcmd
+      || ! q->frecfile
+      || cfirst == 0)
+    {
+      inextsecs = isysdep_process_time (&inextmicros);
+
+      /* If this is the same transfer structure, add in the time.  We
+	 can only get away with this because we know that the
+	 structure is not actually freed up (it's put on the qTavail
+	 list).  */
+      if (qTtiming != NULL
+	  && qTtiming->calcs == cTtiming_alcs)
+	{
+	  qTtiming->isecs += inextsecs - iTsecs;
+	  qTtiming->imicros += inextmicros - iTmicros;
+	}
+
+      iTsecs = inextsecs;
+      iTmicros = inextmicros;
+
+      qTtiming = q;
+      cTtiming_alcs = q->calcs;
+
+      /* If it's been sufficiently long since the last time we checked
+	 the work queue, check it again.  */
+      if (iTsecs - iTchecktime >= CCHECKWAIT)
+	{
+	  if (! fcheck_queue (qdaemon))
+	    fret = FALSE;
+	}
+    }
 
   ulog_user (q->s.zuser);
 
@@ -977,7 +1042,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
     {
       if (q->zlog != NULL)
 	{
-	  ulog (LOG_NORMAL, q->zlog);
+	  ulog (LOG_NORMAL, "%s", q->zlog);
 	  ubuffree (q->zlog);
 	  q->zlog = NULL;
 	}
@@ -1034,29 +1099,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
       if (pfexit != NULL && qdaemon->fhangup)
 	*pfexit = TRUE;
     }
-
-  inextsecs = isysdep_process_time (&inextmicros);
-
-  /* If this is the same transfer structure, add in the current time.
-     spent.  We can only get away with this because we know that the
-     structure is not actually freed up (it's put on the qTavail
-     list).  */
-  if (q->calcs == calcs)
-    {
-      q->isecs += inextsecs - iTsecs;
-      q->imicros += inextmicros - iTmicros;
-    }
-
-  /* If it's been sufficiently long since the last time we checked the
-     work queue, check it again.  */
-  if (iTsecs - iTchecktime >= CCHECKWAIT)
-    {
-      if (! fcheck_queue (qdaemon))
-	fret = FALSE;
-    }
-
-  iTsecs = inextsecs;
-  iTmicros = inextmicros;
 
   return fret;
 }
