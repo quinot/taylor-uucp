@@ -141,7 +141,7 @@ zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
 	      zsystem = qentry->d_name;
 	    }
 
-	  zdir = zbufalc (strlen (zStopdir) + strlen (zsystem) + 1);
+	  zdir = zbufalc (strlen (zStopdir) + strlen (zsystem) + sizeof "/");
 	  sprintf (zdir, "%s/%s", zStopdir, zsystem);
 
 	  qSsysdir = opendir (zdir);
