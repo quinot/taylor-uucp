@@ -38,9 +38,6 @@ const char uuxqt_rcsid[] = "$Id$";
 #include "uuconf.h"
 #include "system.h"
 
-/* The program name.  */
-char abProgram[] = "uuxqt";
-
 /* Static variables used to unlock things if we get a fatal error.  */
 static int iQlock_seq = -1;
 static const char *zQunlock_cmd;
@@ -54,6 +51,7 @@ static char *zQmail;
 
 /* Local functions.  */
 static void uqusage P((void));
+static void uqhelp P((void));
 static void uqabort P((void));
 static void uqdo_xqt_file P((pointer puuconf, const char *zfile,
 			     const char *zbase,
@@ -65,7 +63,16 @@ static boolean fqforward P((const char *zfile, char **pzallowed,
 			    const char *zlog, const char *zmail));
 
 /* Long getopt options.  */
-static const struct option asQlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asQlongopts[] =
+{
+  { "command", required_argument, 0, 'c' },
+  { "system", required_argument, 0, 's' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -88,7 +95,9 @@ main (argc, argv)
   boolean fsys;
   struct uuconf_system ssys;
 
-  while ((iopt = getopt_long (argc, argv, "c:I:s:x:", asQlongopts,
+  zProgram = argv[0];
+
+  while ((iopt = getopt_long (argc, argv, "c:I:s:vx:", asQlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -114,6 +123,19 @@ main (argc, argv)
 	  iDebug |= idebug_parse (optarg);
 #endif
 	  break;
+
+	case 'v':
+	  /* Print version and exit.  */
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  uqhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
 
 	case 0:
 	  /* Long option found and flag set.  */
@@ -323,23 +345,30 @@ main (argc, argv)
 }
 
 static void
+uqhelp ()
+{
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	   VERSION);
+  printf ("Usage: %s [-c,--command cmd] [-s,--system system]\n", zProgram);
+  printf (" -c,--command cmd: Set type of command to execute\n");
+  printf (" -s,--system system: Execute commands only for named system\n");
+  printf (" -x,--debug debug: Set debugging level\n");
+#if HAVE_TAYLOR_CONFIG
+  printf (" -I,--config file: Set configuration file to use\n");
+#endif /* HAVE_TAYLOR_CONFIG */
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
+}
+
+static void
 uqusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uuxqt [-c cmd] [-I file] [-s system] [-x debug]\n");
-  fprintf (stderr,
-	   " -c cmd: Set type of command to execute\n");
-  fprintf (stderr,
-	   " -s system: Execute commands only for named system\n");
-  fprintf (stderr,
-	   " -x debug: Set debugging level (0 for none, 9 is max)\n");
-#if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
-#endif /* HAVE_TAYLOR_CONFIG */
+	   "Usage: %s [-c,--command cmd] [-s,--system system]\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
   exit (EXIT_FAILURE);
 }
 
