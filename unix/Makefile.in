@@ -14,14 +14,30 @@ CFLAGS = @CFLAGS@
 RANLIB = @RANLIB@
 prefix = /usr/local
 sbindir = $(prefix)/lib/uucp
+UUDIRFLAGS =
 
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS=-I$(srcdir)/.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\"
+MORECFLAGS=-I$(srcdir)/.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
-OBJS = epopen.o isfork.o iswait.o locfil.o mail.o run.o spawn.o srmdir.o \
-	uacces.o @UNIXOBJS@
+OBJS = access.o addbas.o app3.o app4.o basnam.o cwd.o chmod.o cusub.o \
+	detach.o \
+	efopen.o \
+	epopen.o \
+	exists.o \
+	filnam.o indir.o init.o \
+	isdir.o isfork.o \
+	iswait.o jobid.o lcksys.o link.o locfil.o lock.o loctim.o \
+	mail.o mkdirs.o \
+	mode.o move.o opensr.o pause.o picksb.o \
+	portnm.o proctm.o \
+	run.o seq.o serial.o signal.o sindir.o sleep.o spawn.o splcmd.o \
+	splnam.o spool.o \
+	srmdir.o statsb.o status.o \
+	time.o tmpfil.o trunc.o uacces.o ultspl.o uuto.o walk.o \
+	wldcrd.o work.o \
+	xqtfil.o xqtsub.o @UNIXOBJS@
 
 all: libunix.a
 
@@ -46,8 +62,7 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h $(srcdir)/../sysdep.h
+$(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h $(srcdir)/../sysdep.h $(srcdir)/../system.h
 
-locfil.o: $(srcdir)/../system.h
-mail.o: $(srcdir)/../system.h
-srmdir.o: $(srcdir)/../system.h
+serial.o: $(srcdir)/../conn.h
+cusub.o: $(srcdir)/../cu.h $(srcdir)/../conn.h $(srcdir)/../prot.h
