@@ -372,17 +372,6 @@ main (argc, argv)
       zdestfile = xstrdup (zconst);
     }
 
-  /* Check that we have permission to receive into the desired
-     directory.  If we don't have permission, uucico will fail.  */
-
-  if (fClocaldest)
-    {
-      if (! fin_directory_list (&sLocalsys, zdestfile,
-				sLocalsys.zlocal_receive,
-				TRUE, FALSE, zCuser))
-	ulog (LOG_FATAL, "Not permitted to receive to %s", zdestfile);
-    }
-
   /* Process each source argument.  */
 
   for (i = optind; i < argc - 1 && ! FGOT_SIGNAL (); i++)
@@ -547,6 +536,13 @@ uccopy (zfile, zdest)
 	{
 	  /* Copy one local file to another.  */
 
+	  /* Check that we have permission to receive into the desired
+	     directory.  */
+	  if (! fin_directory_list (&sLocalsys, zdest,
+				    sLocalsys.zlocal_receive,
+				    TRUE, FALSE, zCuser))
+	    ulog (LOG_FATAL, "Not permitted to receive to %s", zdest);
+
 	  zconst = zsysdep_real_file_name (&sLocalsys, zdest, zfile);
 	  if (zconst == NULL)
 	    ucabort ();
@@ -655,11 +651,20 @@ uccopy (zfile, zdest)
 	{
 	  const char *zconst_to;
 
-	  /* Fetch a file from a remote system.  If the remote
-	     filespec is wildcarded, we must generate an 'X'
-	     request.  We currently check for Unix shell
-	     wildcards.  Note that it should do no harm to mistake
-	     a non-wildcard for a wildcard.  */
+	  /* Fetch a file from a remote system.  */
+
+	  /* Check that we have permission to receive into the desired
+	     directory.  If we don't have permission, uucico will
+	     fail.  */
+	  if (! fin_directory_list (qfromsys, zdest,
+				    qfromsys->zlocal_receive,
+				    TRUE, FALSE, zCuser))
+	    ulog (LOG_FATAL, "Not permitted to receive to %s", zdest);
+
+	  /* If the remote filespec is wildcarded, we must generate an
+	     'X' request.  We currently check for Unix shell
+	     wildcards.  Note that it should do no harm to mistake a
+	     non-wildcard for a wildcard.  */
 	  if (zconst[strcspn (zconst, "*?[")] != '\0')
 	    {
 	      const char *zuse;
