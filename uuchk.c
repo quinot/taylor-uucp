@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/03/28  20:31:55  ian
+   Franc,ois Pinard: allow a name to be given to an alternate
+
    Revision 1.27  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -191,7 +194,7 @@ main (argc, argv)
 
   uread_config (zconfig);
 
-  usysdep_initialize (FALSE, FALSE);
+  usysdep_initialize (0);
 
   uread_all_system_info (&c, &pas);
 

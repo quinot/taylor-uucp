@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.24  1992/03/12  21:55:09  ian
    Use fake local name when generating an execution request
 
@@ -300,7 +303,7 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (FALSE, fgetcwd);
+  usysdep_initialize (fgetcwd ? INIT_GETCWD : 0);
 
   ulog_fatal_fn (ucabort);
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1992/04/14  19:03:17  ian
+   Marty Shannon: uustat would remove empty command files
+
    Revision 1.7  1992/03/28  22:54:45  ian
    Allow multiple systems and users or kills and rejuvenates at once
 
@@ -264,7 +267,7 @@ main (argc, argv)
 
   uread_config (zconfig);
 
-  usysdep_initialize (FALSE, FALSE);
+  usysdep_initialize (0);
 
   /* If no commands were specified, we list all commands for the given
      user.  */

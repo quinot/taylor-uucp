@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.96  1992/04/22  02:20:56  ian
+   Chris Lewis: successful call in should clear number of retries
+
    Revision 1.95  1992/04/20  15:48:32  ian
    Added separate zphone argument to fport_dial
 
@@ -559,7 +562,7 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (TRUE, FALSE);
+  usysdep_initialize (INIT_DAEMON);
 
   ulog_to_file (TRUE);
   ulog_fatal_fn (uabort);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.43  1992/03/17  04:42:41  ian
+   Correct bug in previous patch
+
    Revision 1.42  1992/03/17  03:15:40  ian
    Pass command to fsysdep_execute as first element of argument array
 
@@ -268,7 +271,7 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (TRUE, FALSE);
+  usysdep_initialize (INIT_DAEMON);
 
   ulog_to_file (TRUE);
   ulog_fatal_fn (uqabort);

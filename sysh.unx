@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.53  1992/03/30  15:29:58  ian
+   Added HAVE_SVR4_LOCKFILES
+
    Revision 1.52  1992/03/16  01:23:08  ian
    Make blocking writes optional
 
@@ -589,7 +592,7 @@ extern boolean fsultrix_has_spool P((const char *zsystem));
 #endif /* SPOOLDIR_ULTRIX */
 
 /* The working directory from which the program was run (this is set
-   by usysdep_initialize if called with fgetcwd TRUE).  */
+   by usysdep_initialize if called with INIT_GETCWD).  */
 extern char *zScwd;
 
 /*

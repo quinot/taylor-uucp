@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.3  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -130,7 +133,7 @@ main (argc, argv)
 
   uread_config (zconfig);
 
-  usysdep_initialize (FALSE, FALSE);
+  usysdep_initialize (0);
 
 #if ! HAVE_BNU_LOGGING
   zfile = zLogfile;

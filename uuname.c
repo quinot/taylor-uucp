@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1992/03/28  04:42:32  ian
+   Franc,ois Pinard: output aliases, added -a switch
+
    Revision 1.4  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -114,7 +117,7 @@ main (argc, argv)
 
   uread_config (zconfig);
 
-  usysdep_initialize (FALSE, FALSE);
+  usysdep_initialize (0);
 
   if (flocal)
     printf ("%s\n", zLocalname);
