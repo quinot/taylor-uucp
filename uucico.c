@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1991/12/31  19:43:13  ian
+   Added 'e' protocol
+
    Revision 1.33  1991/12/28  04:33:09  ian
    Set fmasterdone correctly in slave mode
 
@@ -550,7 +553,7 @@ main (argc, argv)
   ulog_close ();
   ustats_close ();
 
-  if (fret && fuuxqt)
+  if (fuuxqt)
     usysdep_exit (fsysdep_run ("uuxqt", FALSE));
   else
     usysdep_exit (fret);
