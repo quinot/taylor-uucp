@@ -215,6 +215,8 @@ struct sprocess
   struct stsysloc *qsyslocs;
   /* Taylor UUCP validation restrictions.  */
   struct svalidate *qvalidate;
+  /* Whether the "myname" command is used in a Taylor UUCP file.  */
+  boolean fuses_myname;
 
   /* V2 system file name (L.sys).  */
   char *zv2systems;

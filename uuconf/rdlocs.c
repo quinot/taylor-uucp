@@ -35,11 +35,15 @@ static int itsystem P((pointer pglobal, int argc, char **argv,
 		       pointer pvar, pointer pinfo));
 static int itcalled_login P((pointer pglobal, int argc, char **argv,
 			     pointer pvar, pointer pinfo));
+static int itmyname P((pointer pglobal, int argc, char **argv,
+		       pointer pvar, pointer pinfo));
 
 /* This code scans through the Taylor UUCP system files in order to
    locate each system and to gather the login restrictions (since this
    information is held in additional arguments to the "called-login"
-   command, it can appear anywhere in the systems files).
+   command, it can appear anywhere in the systems files).  It also
+   records whether any "myname" appears, as an optimization for
+   uuconf_taylor_localname.
 
    This table is used to dispatch the appropriate commands.  Most
    commands are simply ignored.  Note that this is a uuconf_cmdtab,
@@ -50,6 +54,7 @@ static const struct uuconf_cmdtab asTcmds[] =
   { "system", UUCONF_CMDTABTYPE_FN | 2, NULL, itsystem },
   { "alias", UUCONF_CMDTABTYPE_FN | 2, (pointer) asTcmds, itsystem },
   { "called-login", UUCONF_CMDTABTYPE_FN | 0, NULL, itcalled_login },
+  { "myname", UUCONF_CMDTABTYPE_FN | 2, NULL, itmyname },
   { NULL, 0, NULL, NULL }
 };
 
@@ -128,7 +133,8 @@ _uuconf_iread_locations (qglobal)
 	  if (strncasecmp (zcmd, "system", sizeof "system" - 1) == 0
 	      || strncasecmp (zcmd, "alias", sizeof "alias" - 1) == 0
 	      || strncasecmp (zcmd, "called-login",
-			      sizeof "called-login" - 1) == 0)
+			      sizeof "called-login" - 1) == 0
+	      || strncasecmp (zcmd, "myname", sizeof "myname" - 1) == 0)
 	    {
 	      iret = uuconf_cmd_line ((pointer) qglobal, zline, asTcmds,
 				      (pointer) &si, (uuconf_cmdtabfn) NULL,
@@ -276,4 +282,22 @@ itcalled_login (pglobal, argc, argv, pvar, pinfo)
     }
 
   return UUCONF_CMDTABRET_KEEP;
+}
+
+/* Handle the "myname" command by simply recording that it appears.
+   This information is used by uuconf_taylor_localname.  */
+
+/*ARGSUSED*/
+static int
+itmyname (pglobal, argc, argv, pvar, pinfo)
+     pointer pglobal;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+
+  qglobal->qprocess->fuses_myname = TRUE;
+  return UUCONF_CMDTABRET_CONTINUE;
 }

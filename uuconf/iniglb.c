@@ -93,6 +93,7 @@ _uuconf_iinit_global (pqglobal)
   qprocess->fread_syslocs = FALSE;
   qprocess->qsyslocs = NULL;
   qprocess->qvalidate = NULL;
+  qprocess->fuses_myname = FALSE;
   qprocess->zv2systems = NULL;
   qprocess->zv2devices = NULL;
   qprocess->zv2userfile = NULL;
