@@ -445,22 +445,27 @@ ipdialer (pglobal, argc, argv, pvar, pinfo)
 
 	  _uuconf_uclear_dialer (qnew);
 
-	  clen = strlen (qport->uuconf_zname);
-	  qnew->uuconf_zname = (char *) uuconf_malloc (qport->uuconf_palloc,
-						       (clen
-							+ sizeof " dialer"));
-	  if (qnew->uuconf_zname == NULL)
+	  if (qport->uuconf_zname == NULL)
+	    qnew->uuconf_zname = (char *) "default port file dialer";
+	  else
 	    {
-	      qglobal->ierrno = errno;
-	      return (UUCONF_MALLOC_FAILED
-		      | UUCONF_ERROR_ERRNO
-		      | UUCONF_CMDTABRET_EXIT);
-	    }
+	      clen = strlen (qport->uuconf_zname);
+	      qnew->uuconf_zname =
+		(char *) uuconf_malloc (qport->uuconf_palloc,
+					clen + sizeof " dialer");
+	      if (qnew->uuconf_zname == NULL)
+		{
+		  qglobal->ierrno = errno;
+		  return (UUCONF_MALLOC_FAILED
+			  | UUCONF_ERROR_ERRNO
+			  | UUCONF_CMDTABRET_EXIT);
+		}
 
-	  memcpy ((pointer) qnew->uuconf_zname,
-		  (pointer) qport->uuconf_zname, clen);
-	  memcpy ((pointer) (qnew->uuconf_zname + clen), (pointer) " dialer",
-		  sizeof " dialer");
+	      memcpy ((pointer) qnew->uuconf_zname,
+		      (pointer) qport->uuconf_zname, clen);
+	      memcpy ((pointer) (qnew->uuconf_zname + clen),
+		      (pointer) " dialer", sizeof " dialer");
+	    }
 
 	  qnew->uuconf_palloc = qport->uuconf_palloc;
 
