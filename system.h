@@ -428,7 +428,43 @@ extern boolean fsysdep_change_mode P((const char *zfile,
    closing the original file, removing it and reopening it.  This
    should return FALSE on error.  */
 extern openfile_t esysdep_truncate P((openfile_t e, const char *zname));
+
+/* It is possible for the acknowledgement of a received file to be
+   lost.  The sending system will then now know that the file was
+   correctly received, and will send it again.  This can be a problem
+   particularly with protocols which support channels, since they may
+   send several small files in a single window, all of which may be
+   received correctly although the sending system never sees the
+   acknowledgement.  If these files involve an execution, the
+   execution will happen twice, which will be bad.
 
+   This function is called when a file is completely received.  It is
+   supposed to try and remember the reception, in case the connection
+   is lost.  It is passed the system, the file name to receive to, and
+   the temporary file name from the sending system.  It should return
+   FALSE on error.  */
+extern boolean fsysdep_remember_reception P((const struct uuconf_system *qsys,
+					     const char *zto,
+					     const char *ztemp));
+
+/* This function is called to see if a file has already been received
+   successfully.  It gets the same arguments as
+   fsysdep_remember_reception.  It should return TRUE if the file was
+   already received, FALSE otherwise.  There is no way to report
+   error.  */
+extern boolean fsysdep_already_received P((const struct uuconf_system *qsys,
+					   const char *zto,
+					   const char *ztemp));
+
+/* This function is called when it is no longer necessary to remember
+   that a file has been received.  This will be called when the
+   protocol knows that the receive message has been acknowledged.  It
+   gets the same arguments as fsysdep_remember_reception.  it should
+   return FALSE on error.  */
+extern boolean fsysdep_forget_reception P((const struct uuconf_system *qsys,
+					   const char *zto,
+					   const char *ztemp));
+
 /* Start expanding a wildcarded file name.  This should return FALSE
    on error; otherwise subsequent calls to zsysdep_wildcard should
    return file names.  */

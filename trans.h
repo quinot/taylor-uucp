@@ -139,7 +139,9 @@ enum tfailure
   /* Can't open necessary file.  */
   FAILURE_OPEN,
   /* Not enough space to receive file.  */
-  FAILURE_SIZE
+  FAILURE_SIZE,
+  /* File was received in a previous conversation.  */
+  FAILURE_RECEIVED
 };
 
 /* The main loop which talks to the remote system, passing transfer
@@ -197,10 +199,12 @@ extern boolean fremote_xcmd_init P((struct sdaemon *qdaemon,
    channel number, and the iremote argument is the remote channel
    number.  Either may be -1, if the protocol does not have channels.
    The ipos argument is the position in the file, if the protocol
-   knows it; for most protocols, this will be -1.  This will set
-   *pfexit to TRUE if there is something for the main loop to do.  A
-   file is complete is when a zero length buffer is passed (cfirst ==
-   0).  A command is complete when data containing a null byte is
+   knows it; for most protocols, this will be -1.  The fallacked
+   argument should be set to TRUE if the remote has acknowledged all
+   outstanding data; see uwindow_acked, below, for details. This will
+   set *pfexit to TRUE if there is something for the main loop to do.
+   A file is complete is when a zero length buffer is passed (cfirst
+   == 0).  A command is complete when data containing a null byte is
    passed.  This will return FALSE on error.  If the protocol pfwait
    entry point should exit and let the top level loop continue,
    *pfexit will be set to TRUE (if pfexit is not NULL).  This will not
@@ -209,4 +213,22 @@ extern boolean fgot_data P((struct sdaemon *qdaemon,
 			    const char *zfirst, size_t cfirst,
 			    const char *zsecond, size_t csecond,
 			    int ilocal, int iremote,
-			    long ipos, boolean *pfexit));
+			    long ipos, boolean fallacked,
+			    boolean *pfexit));
+
+/* This routine is called when an ack is sent for a file receive.  */
+extern void usent_receive_ack P((struct sdaemon *qdaemon,
+				 struct stransfer *qtrans));
+
+/* A protocol may call this routine to indicate the packets have been
+   acknowledged by the remote system.  If the fallacked argument is
+   TRUE, then all outstanding packets have been acknowledged; for
+   convenience, this may also be indicated by passing fallacked as
+   TRUE to fgot_data, above.  Otherwise this routine should be called
+   each time a complete window is acked by the remote system.  The
+   transfer code uses this information to keep track of when an
+   acknowledgement of a file receive has been seen by the other side,
+   so that file receives may be handled cleanly if the connection is
+   lost.  */
+extern void uwindow_acked P((struct sdaemon *qdaemon,
+			     boolean fallacked));

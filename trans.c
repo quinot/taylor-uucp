@@ -93,6 +93,20 @@ static long iTmicros;
 
 /* The size of the command we have read so far in ftadd_cmd.  */
 static size_t cTcmdlen;
+
+/* The structure we use when waiting for an acknowledgement of a
+   confirmed received file in fsent_receive_ack, and a list of those
+   structures.  */
+
+struct sreceive_ack
+{
+  struct sreceive_ack *qnext;
+  char *zto;
+  char *ztemp;
+  boolean fmarked;
+};
+
+static struct sreceive_ack *qTreceive_ack;
 
 /* Queue up a transfer structure before *pq.  This puts it at the head
    or the fail of the list headed by *pq.  */
@@ -613,8 +627,8 @@ floop (qdaemon)
 		    }
 
 		  /* It is possible that this transfer has just been
-		     discarded.  */
-		  if (q != qTsend)
+		     cancelled.  */
+		  if (q != qTsend || ! q->fsendfile)
 		    break;
 
 		  if (cdata == 0)
@@ -651,7 +665,9 @@ floop (qdaemon)
 
   usysdep_get_work_free (qdaemon->qsys);
 
-  if (! fret)
+  if (fret)
+    uwindow_acked (qdaemon, TRUE);
+  else
     ustats_failed (qdaemon->qsys);
 
   /* Clear all the variables in case we make another call.  */
@@ -664,6 +680,7 @@ floop (qdaemon)
   iTsecs = 0;
   iTmicros = 0;
   cTcmdlen = 0;
+  qTreceive_ack = NULL;
   for (i = 0; i < IMAX_CHAN + 1; i++)
     {
       aqTchan[i] = NULL;
@@ -683,7 +700,7 @@ floop (qdaemon)
 
 boolean 
 fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
-	   pfexit)
+	   fallacked, pfexit)
      struct sdaemon *qdaemon;
      const char *zfirst;
      size_t cfirst;
@@ -692,6 +709,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
      int ilocal;
      int iremote;
      long ipos;
+     boolean fallacked;
      boolean *pfexit;
 {
   long inextsecs, inextmicros;
@@ -702,6 +720,9 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 
   if (iTsecs == 0)
     iTsecs = isysdep_process_time (&iTmicros);
+
+  if (fallacked && qTreceive_ack != NULL)
+    uwindow_acked (qdaemon, TRUE);
 
   /* Now we have to decide which transfer structure gets the data.  If
      ilocal is -1, it means that the protocol does not know where to
@@ -837,7 +858,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	return fgot_data (qdaemon, zsecond, csecond,
 			  (const char *) NULL, (size_t) 0,
 			  ilocal, iremote, ipos + (long) cfirst,
-			  pfexit);
+			  FALSE, pfexit);
       if (pfexit != NULL
 	  && (qdaemon->fhangup
 	      || qdaemon->fmaster
@@ -1059,6 +1080,82 @@ fremote_hangup_reply (qtrans, qdaemon)
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, "HN", 0, 0);
   qdaemon->fmaster = TRUE;
   return fret;
+}
+
+/* As described in system.h, we need to keep track of which files have
+   been successfully received for which we do not know that the other
+   system has received our acknowledgement.  This routine is called to
+   keep a list of such files.  */
+
+static struct sreceive_ack *qTfree_receive_ack;
+
+void
+usent_receive_ack (qdaemon, qtrans)
+     struct sdaemon *qdaemon;
+     struct stransfer *qtrans;
+{
+  struct sreceive_ack *q;
+
+  /* We could check the return value here, but if we return FALSE we
+     couldn't do anything but drop the connection, which would hardly
+     be reasonable.  Instead we trust that the administrator will
+     notice and handle any error messages, which are very unlikely to
+     occur if everything is set up correctly.  */
+  (void) fsysdep_remember_reception (qdaemon->qsys, qtrans->s.zto,
+				     qtrans->s.ztemp);
+
+  if (qTfree_receive_ack == NULL)
+    q = (struct sreceive_ack *) xmalloc (sizeof (struct sreceive_ack));
+  else
+    {
+      q = qTfree_receive_ack;
+      qTfree_receive_ack = q->qnext;
+    }
+
+  q->qnext = qTreceive_ack;
+  q->zto = zbufcpy (qtrans->s.zto);
+  q->ztemp = zbufcpy (qtrans->s.ztemp);
+  q->fmarked = FALSE;
+
+  qTreceive_ack = q;
+}
+
+/* This routine is called by the protocol code when either all
+   outstanding data has been acknowledged or one complete window has
+   passed.  It may be called directly by the protocol, or it may be
+   called via fgot_data.  If one complete window has passed, then all
+   unmarked receives are marked, and we know that all marked ones have
+   been acked.  */
+
+void
+uwindow_acked (qdaemon, fallacked)
+     struct sdaemon *qdaemon;
+     boolean fallacked;
+{
+  register struct sreceive_ack **pq;
+
+  pq = &qTreceive_ack;
+  while (*pq != NULL)
+    {
+      if (fallacked || (*pq)->fmarked)
+	{
+	  struct sreceive_ack *q;
+
+	  q = *pq;
+	  (void) fsysdep_forget_reception (qdaemon->qsys, q->zto,
+					   q->ztemp);
+	  ubuffree (q->zto);
+	  ubuffree (q->ztemp);
+	  *pq = q->qnext;
+	  q->qnext = qTfree_receive_ack;
+	  qTfree_receive_ack = q;
+	}
+      else
+	{
+	  (*pq)->fmarked = TRUE;
+	  pq = &(*pq)->qnext;
+	}
+    }
 }
 
 /* This routine is called when an error occurred and we are crashing

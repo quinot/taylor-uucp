@@ -1084,7 +1084,7 @@ moredata:
 						   (const char *) NULL,
 						   (size_t) 0,
 						   -1, -1, (long) -1,
-						   &fexit))
+						   TRUE, &fexit))
 					return FALSE;
 				wpZrxbytes += rxcount;
 				if (!fzsend_hdr (qdaemon, ZHEX, ZACK,
@@ -1104,7 +1104,7 @@ moredata:
 						   (const char *) NULL,
 						   (size_t) 0,
 						   -1, -1, (long) -1,
-						   &fexit))
+						   TRUE, &fexit))
 					return FALSE;
 				wpZrxbytes += rxcount;
 				if (!fzsend_hdr (qdaemon, ZHEX, ZACK,
@@ -1121,7 +1121,7 @@ moredata:
 						   (const char *) NULL,
 						   (size_t) 0,
 						   -1, -1, (long) -1,
-						   &fexit))
+						   TRUE, &fexit))
 					return FALSE;
 				wpZrxbytes += rxcount;
 				goto moredata;
@@ -1134,7 +1134,7 @@ moredata:
 						   (const char *) NULL,
 						   (size_t) 0,
 						   -1, -1, (long) -1,
-						   &fexit))
+						   TRUE, &fexit))
 					return FALSE;
 				wpZrxbytes += rxcount;
 				goto nxthdr;
@@ -1155,7 +1155,7 @@ moredata:
 						(size_t) rxcount,
 						(const char *) NULL,
 						(size_t) 0, -1, -1,
-						(long) -1, &fexit))
+						(long) -1, TRUE, &fexit))
 					return FALSE;
 				/* FIXME: Examine <fexit>? Or maybe ensure it's TRUE? */
 				return TRUE;

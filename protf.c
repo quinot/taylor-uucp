@@ -351,7 +351,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 		  return fgot_data (qdaemon, abPrecbuf + istart,
 				    (size_t) (i - istart + 1),
 				    (const char *) NULL, (size_t) 0,
-				    -1, -1, (long) -1, pfexit);
+				    -1, -1, (long) -1, TRUE, pfexit);
 		}
 	    }
 
@@ -362,7 +362,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	  if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 			   (size_t) (i - iPrecstart),
 			   (const char *) NULL, (size_t) 0,
-			   -1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, TRUE, pfexit))
 	    return FALSE;
 
 	  iPrecstart = i % CRECBUFLEN;
@@ -422,7 +422,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 		      if (! fgot_data (qdaemon, zstart,
 				       (size_t) (zto - zstart),
 				       (const char *) NULL, (size_t) 0,
-				       -1, -1, (long) -1, pfexit))
+				       -1, -1, (long) -1, TRUE, pfexit))
 			return FALSE;
 		    }
 
@@ -442,7 +442,8 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 		    *pcneed = 0;
 		  return fgot_data (qdaemon, (const char *) NULL,
 				    (size_t) 0, (const char *) NULL,
-				    (size_t) 0, -1, -1, (long) -1, pfexit);
+				    (size_t) 0, -1, -1, (long) -1,
+				    TRUE, pfexit);
 		}
 
 	      /* Here we have encountered a special character that
@@ -501,7 +502,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	  cFrec_data += zto - zstart;
 	  if (! fgot_data (qdaemon, zstart, (size_t) (zto - zstart),
 			   (const char *) NULL, (size_t) 0,
-			   -1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, TRUE, pfexit))
 	    return FALSE;
 	}
 

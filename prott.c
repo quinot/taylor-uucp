@@ -212,7 +212,7 @@ ftprocess_data (qdaemon, pfexit, pcneed)
 	  if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 			   (size_t) cfirst, abPrecbuf,
 			   (size_t) CTPACKSIZE - cfirst,
-			   -1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, TRUE, pfexit))
 	    return FALSE;
 
 	  iPrecstart = (iPrecstart + CTPACKSIZE) % CRECBUFLEN;
@@ -261,7 +261,7 @@ ftprocess_data (qdaemon, pfexit, pcneed)
 
       if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 		       (size_t) cfirst, abPrecbuf, (size_t) (clen - cfirst),
-		       -1, -1, (long) -1, pfexit))
+		       -1, -1, (long) -1, TRUE, pfexit))
 	return FALSE;
 
       iPrecstart = (iPrecstart + clen) % CRECBUFLEN;

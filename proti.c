@@ -1162,7 +1162,12 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  && iack != iIsendseq
 	  && CSEQDIFF (iack, iIremote_ack) <= iIrequest_winsize
 	  && CSEQDIFF (iIsendseq, iack) <= iIrequest_winsize)
-	iIremote_ack = iack;
+	{
+	  /* Call uwindow_acked each time packet 0 is acked.  */
+	  if (iack < iIremote_ack)
+	    uwindow_acked (qdaemon, FALSE);
+	  iIremote_ack = iack;
+	}
 
       /* If we haven't handled all previous packets, we must save off this
 	 packet and deal with it later.  */
@@ -1313,7 +1318,9 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 			  zsecond, (size_t) csecond,
 			  IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]),
 			  IHDRWIN_GETCHAN (zhdr[IHDR_LOCAL]),
-			  iIrecpos, pfexit);
+			  iIrecpos,
+			  INEXTSEQ (iIremote_ack) == iIsendseq,
+			  pfexit);
 	iIrecpos += cfirst + csecond;
 	return fret;
       }

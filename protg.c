@@ -1206,6 +1206,11 @@ fggot_ack (qdaemon, iack)
   int inext;
   char *zsend;
 
+  /* Each time packet 0 is acknowledged, we call uwindow_acked since a
+     new window has been acked.  */
+  if (iack < iGremote_ack)
+    uwindow_acked (qdaemon, FALSE);
+
   iGremote_ack = iack;
 
   if (iGretransmit_seq == -1)
@@ -1660,7 +1665,9 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	  if (! fgot_data (qdaemon, zfirst, (size_t) cfirst,
 			   zsecond, (size_t) csecond,
-			   -1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1,
+			   INEXTSEQ (iGremote_ack) == iGsendseq,
+			   pfexit))
 	    return FALSE;
 
 	  /* If fgot_data told us that we were finished, get out.  */

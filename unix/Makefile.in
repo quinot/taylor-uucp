@@ -25,10 +25,10 @@ OBJS = access.o addbas.o app3.o app4.o basnam.o cwd.o chmod.o cusub.o \
 	detach.o efopen.o epopen.o exists.o filnam.o indir.o init.o \
 	isdir.o isfork.o iswait.o jobid.o lcksys.o link.o locfil.o \
 	lock.o loctim.o mail.o mkdirs.o mode.o move.o opensr.o pause.o \
-	picksb.o portnm.o proctm.o run.o seq.o serial.o signal.o \
-	sindir.o sleep.o spawn.o splcmd.o splnam.o spool.o srmdir.o \
-	statsb.o status.o time.o tmpfil.o trunc.o uacces.o ultspl.o \
-	uuto.o walk.o wldcrd.o work.o xqtfil.o xqtsub.o \
+	picksb.o portnm.o proctm.o recep.o run.o seq.o serial.o \
+	signal.o sindir.o sleep.o spawn.o splcmd.o splnam.o spool.o \
+	srmdir.o statsb.o status.o time.o tmpfil.o trunc.o uacces.o \
+	ultspl.o uuto.o walk.o wldcrd.o work.o xqtfil.o xqtsub.o \
 	@UNIXOBJS@
 
 all: libunix.a
@@ -92,6 +92,7 @@ pause.o: $(srcdir)/../system.h
 picksb.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 portnm.o: $(srcdir)/../system.h
 proctm.o: $(srcdir)/../system.h
+recep.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 run.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 seq.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 serial.o: $(srcdir)/../uudefs.h $(srcdir)/../conn.h $(srcdir)/../system.h

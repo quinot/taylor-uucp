@@ -204,7 +204,7 @@ feprocess_data (qdaemon, pfexit, pcneed)
 
 	  if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 			   (size_t) cfirst, (const char *) NULL, (size_t) 0,
-			   -1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, TRUE, pfexit))
 	    return FALSE;
 
 	  iPrecstart = (iPrecstart + cfirst) % CRECBUFLEN;
@@ -274,7 +274,7 @@ feprocess_data (qdaemon, pfexit, pcneed)
 
       if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
 		       (size_t) cfirst, abPrecbuf, (size_t) (clen - cfirst),
-		       -1, -1, (long) -1, pfexit))
+		       -1, -1, (long) -1, TRUE, pfexit))
 	return FALSE;
 
       iPrecstart = (iPrecstart + clen) % CRECBUFLEN;
@@ -284,7 +284,7 @@ feprocess_data (qdaemon, pfexit, pcneed)
 	{
 	  if (! fgot_data (qdaemon, abPrecbuf, (size_t) 0,
 			   (const char *) NULL, (size_t) 0,
-			   -1, -1, (long) -1, pfexit))
+			   -1, -1, (long) -1, TRUE, pfexit))
 	    return FALSE;
 	  if (*pfexit)
 	    return TRUE;

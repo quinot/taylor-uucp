@@ -45,6 +45,8 @@ struct srecinfo
   char *zmail;
   /* Full file name.  */
   char *zfile;
+  /* Temporary file name.  */
+  char *ztemp;
   /* TRUE if this is a spool directory file.  */
   boolean fspool;
   /* TRUE if this was a local request.  */
@@ -53,8 +55,8 @@ struct srecinfo
   boolean freceived;
   /* TRUE if remote request has been replied to.  */
   boolean freplied;
-  /* Final confirmation string.  */
-  const char *zsend;
+  /* TRUE if we moved the file to the final destination.  */
+  boolean fmoved;
 };
 
 /* This structure is kept in the pinfo field if we are refusing a
@@ -111,6 +113,7 @@ urrec_free (qtrans)
     {
       ubuffree (qinfo->zmail);
       ubuffree (qinfo->zfile);
+      ubuffree (qinfo->ztemp);
       xfree (qtrans->pinfo);
     }
 
@@ -249,6 +252,7 @@ flocal_rec_file_init (qdaemon, qcmd)
   else
     qinfo->zmail = zbufcpy (qcmd->zuser);
   qinfo->zfile = zfile;
+  qinfo->ztemp = NULL;
   qinfo->fspool = fspool;
   qinfo->flocal = TRUE;
   qinfo->freceived = FALSE;
@@ -257,7 +261,6 @@ flocal_rec_file_init (qdaemon, qcmd)
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = flocal_rec_send_request;
   qtrans->pinfo = (pointer) qinfo;
-  qtrans->s.ztemp = NULL;
 
   uqueue_local (qtrans);
 
@@ -301,9 +304,9 @@ flocal_rec_send_request (qtrans, qdaemon)
   char *zsend;
   boolean fret;
 
-  qtrans->s.ztemp = zsysdep_receive_temp (qdaemon->qsys, qinfo->zfile,
-					  (const char *) NULL, &cbytes);
-  if (qtrans->s.ztemp == NULL)
+  qinfo->ztemp = zsysdep_receive_temp (qdaemon->qsys, qinfo->zfile,
+				       (const char *) NULL, &cbytes);
+  if (qinfo->ztemp == NULL)
     {
       urrec_free (qtrans);
       return FALSE;
@@ -417,7 +420,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
      since we have no way to tell it to the other side.  SVR4 may have
      some way to do this, but I don't know what it is.  */
   qtrans->e = esysdep_open_receive (qdaemon->qsys, qinfo->zfile,
-				    (const char *) NULL, qtrans->s.ztemp,
+				    (const char *) NULL, qinfo->ztemp,
 				    &crestart);
   if (! ffileisopen (qtrans->e))
     return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
@@ -520,6 +523,11 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
       ulog (LOG_ERROR, "%s: not permitted to receive", qcmd->zfrom);
       return fremote_send_fail (qdaemon, qcmd, FAILURE_PERM, iremote);
     }
+
+  /* See if we have already received this file in a previous
+     conversation.  */
+  if (fsysdep_already_received (qsys, qcmd->zto, qcmd->ztemp))
+    return fremote_send_fail (qdaemon, qcmd, FAILURE_RECEIVED, iremote);
 
   if (fspool)
     {
@@ -629,6 +637,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   else
     qinfo->zmail = zbufcpy (qcmd->znotify);
   qinfo->zfile = zfile;
+  qinfo->ztemp = ztemp;
   qinfo->fspool = fspool;
   qinfo->flocal = FALSE;
   qinfo->freceived = FALSE;
@@ -641,7 +650,6 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   qtrans->pinfo = (pointer) qinfo;
   qtrans->frecfile = TRUE;
   qtrans->e = e;
-  qtrans->s.ztemp = ztemp;
   if (crestart > 0)
     qtrans->ipos = crestart;
 
@@ -690,7 +698,7 @@ fremote_send_reply (qtrans, qdaemon)
 				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
-      (void) remove (qtrans->s.ztemp);
+      (void) remove (qinfo->ztemp);
       urrec_free (qtrans);
       return FALSE;
     }
@@ -705,7 +713,7 @@ fremote_send_reply (qtrans, qdaemon)
 					(long) -1, &fhandled))
 	{
 	  (void) ffileclose (qtrans->e);
-	  (void) remove (qtrans->s.ztemp);
+	  (void) remove (qinfo->ztemp);
 	  urrec_free (qtrans);
 	  return FALSE;
 	}
@@ -782,6 +790,13 @@ fremote_send_fail_send (qtrans, qdaemon)
       break;
     case FAILURE_SIZE:
       ab[2] = '6';
+      break;
+    case FAILURE_RECEIVED:
+      /* Remember this file as though we successfully received it;
+	 when the other side acknowledges our rejection, we know that
+	 we no longer have to remember that we received this file.  */
+      usent_receive_ack (qdaemon, qtrans);
+      ab[2] = '8';
       break;
     default:
       ab[2] = '\0';
@@ -869,7 +884,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 					(long) -1, &fhandled))
 	{
 	  (void) ffileclose (qtrans->e);
-	  (void) remove (qtrans->s.ztemp);
+	  (void) remove (qinfo->ztemp);
 	  urrec_free (qtrans);
 	  return FALSE;
 	}
@@ -886,7 +901,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
       zerr = strerror (errno);
       ulog (LOG_ERROR, "%s: close: %s", qtrans->s.zto, zerr);
     }
-  else if (! fsysdep_move_file (qtrans->s.ztemp, qinfo->zfile, qinfo->fspool,
+  else if (! fsysdep_move_file (qinfo->ztemp, qinfo->zfile, qinfo->fspool,
 				FALSE, ! qinfo->fspool,
 				(qinfo->flocal
 				 ? qtrans->s.zuser
@@ -916,7 +931,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
     }
 
   if (zerr != NULL)
-    (void) remove (qtrans->s.ztemp);
+    (void) remove (qinfo->ztemp);
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  FALSE, qtrans->cbytes, qtrans->isecs, qtrans->imicros);
@@ -1004,10 +1019,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
      we have not yet replied to the remote send request, we leave the
      transfer structure on the remote queue.  Otherwise we add it to
      the send queue.  The psendfn field will already be set.  */
-  if (zerr == NULL)
-    qinfo->zsend = "CY";
-  else
-    qinfo->zsend = "CN5";
+  qinfo->fmoved = zerr == NULL;
   if (qinfo->freplied)
     uqueue_send (qtrans);
 
@@ -1024,8 +1036,15 @@ frec_file_send_confirm (qtrans, qdaemon)
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   boolean fret;
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, qinfo->zsend,
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon,
+					qinfo->fmoved ? "CY" : "CN5",
 					qtrans->ilocal, qtrans->iremote);
+
+  /* Now, if that was a remote command, remember that we received that
+     file, at least until the receive message is acked.  */
+  if (! qinfo->flocal && qinfo->fmoved)
+    usent_receive_ack (qdaemon, qtrans);
+
   urrec_free (qtrans);
   return fret;
 }

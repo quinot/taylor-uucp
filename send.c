@@ -290,7 +290,8 @@ flocal_send_file_init (qdaemon, qcmd)
   return TRUE;
 }
 
-/* Report an error for a local send request.  */
+/* Clean up after a failing local send request.  If zwhy is not NULL,
+   this reports an error to the log file and to the user.  */
 
 static boolean
 flocal_send_fail (qtrans, qcmd, qsys, zwhy)
@@ -299,27 +300,29 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
      const struct uuconf_system *qsys;
      const char *zwhy;
 {
-  char *zfree;
-
-  if (qcmd->bcmd != 'E' || zwhy == NULL)
-    zfree = NULL;
-  else
-    {
-      zfree = zbufalc (sizeof "Execution of \"\": "
-		       + strlen (qcmd->zcmd)
-		       + strlen (zwhy));
-      sprintf (zfree, "Execution of \"%s\": %s", qcmd->zcmd, zwhy);
-      zwhy = zfree;
-    }
-
   if (zwhy != NULL)
-    ulog (LOG_ERROR, "%s: %s", qcmd->zfrom, zwhy);
-  (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
-			 zwhy, qcmd->zfrom, (const char *) NULL,
-			 qcmd->zto, qsys->uuconf_zname,
-			 zsysdep_save_temp_file (qcmd->pseq));
+    {
+      char *zfree;
 
-  ubuffree (zfree);
+      if (qcmd->bcmd != 'E')
+	zfree = NULL;
+      else
+	{
+	  zfree = zbufalc (sizeof "Execution of \"\": "
+			   + strlen (qcmd->zcmd)
+			   + strlen (zwhy));
+	  sprintf (zfree, "Execution of \"%s\": %s", qcmd->zcmd, zwhy);
+	  zwhy = zfree;
+	}
+
+      ulog (LOG_ERROR, "%s: %s", qcmd->zfrom, zwhy);
+      (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
+			     zwhy, qcmd->zfrom, (const char *) NULL,
+			     qcmd->zto, qsys->uuconf_zname,
+			     zsysdep_save_temp_file (qcmd->pseq));
+
+      ubuffree (zfree);
+    }
 
   (void) fsysdep_did_work (qcmd->pseq);
 
@@ -497,6 +500,14 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	  /* The file is too large to ever send.  */
 	  zerr = "too large for receiver";
 	}
+      else if (zdata[2] == '8')
+	{
+	  /* The file was already received by the remote system.  This
+	     is not an error, it just means that the ack from the
+	     remote was lost in the previous conversation, and there
+	     is no need to resend the file.  */
+	  zerr = NULL;
+	}
       else
 	zerr = "unknown reason";
 
@@ -526,6 +537,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	{
 	  qtrans->psendfn = flocal_send_cancelled;
 	  qtrans->precfn = NULL;
+	  qtrans->fsendfile = FALSE;
 	  uqueue_send (qtrans);
 	}
 

@@ -38,6 +38,7 @@ pause.c
 picksb.c
 portnm.c
 proctm.c
+recep.c
 remove.c
 rename.c
 rmdir.c
