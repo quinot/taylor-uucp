@@ -353,7 +353,7 @@ AC_CHECK_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
 AC_CHECK_FUNCS(sigsetjmp setret sigaction sigvec sigset)
 AC_CHECK_FUNCS(sigprocmask sigblock sighold getdtablesize sysconf)
 AC_CHECK_FUNCS(setpgrp setsid setreuid seteuid gethostname uname)
-AC_CHECK_FUNCS(gettimeofday ftw glob dev_info)
+AC_CHECK_FUNCS(gettimeofday ftw glob dev_info getaddrinfo)
 dnl Check for getline, but not in -linet, since ISC has an
 dnl incompatible version there.
 SAVELIBS="$LIBS"
@@ -764,6 +764,17 @@ uucp_cv_struct_wait=yes, uucp_cv_struct_wait=no)])
 AC_MSG_RESULT($uucp_cv_struct_wait)
 if test $uucp_cv_struct_wait = yes; then
   AC_DEFINE([HAVE_UNION_WAIT], 1, [Whether you have union wait])
+fi
+dnl
+AC_MSG_CHECKING(for struct sockaddr_storage)
+AC_CACHE_VAL(uucp_cv_struct_sockaddrstorage,
+[AC_TRY_COMPILE([#include <sys/socket.h>],
+[struct sockaddr_storage s;],
+uucp_cv_struct_sockaddrstorage=yes, uucp_cv_struct_sockaddrstorage=no)])
+AC_MSG_RESULT($uucp_cv_struct_sockaddrstorage)
+if test $uucp_cv_struct_sockaddrstorage = yes; then
+  AC_DEFINE([HAVE_STRUCT_SOCKADDR_STORAGE], 1,
+            [Whether you have struct sockaddr_storage])
 fi
 dnl
 if test "$cross_compiling" = yes; then

@@ -9,6 +9,8 @@ Changes in version 1.07:
     Certain options which could previously be set in Makefile.in are
     now set as options to configure: --with-user, --with-newconfigdir,
     --with-oldconfigdir.
+
+    TCP ports now support IPv6 on modern systems.
 
 Changes in version 1.06:
 

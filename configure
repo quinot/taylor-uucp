@@ -3690,7 +3690,7 @@ else
 fi
 done
 
-for ac_func in gettimeofday ftw glob dev_info
+for ac_func in gettimeofday ftw glob dev_info getaddrinfo
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:3697: checking for $ac_func" >&5
@@ -5337,6 +5337,38 @@ if test $uucp_cv_struct_wait = yes; then
 EOF
 
 fi
+echo $ac_n "checking for struct sockaddr_storage""... $ac_c" 1>&6
+echo "configure:5342: checking for struct sockaddr_storage" >&5
+if eval "test \"`echo '$''{'uucp_cv_struct_sockaddrstorage'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 5347 "configure"
+#include "confdefs.h"
+#include <sys/socket.h>
+int main() {
+struct sockaddr_storage s;
+; return 0; }
+EOF
+if { (eval echo configure:5354: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  uucp_cv_struct_sockaddrstorage=yes
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  uucp_cv_struct_sockaddrstorage=no
+fi
+rm -f conftest*
+fi
+
+echo "$ac_t""$uucp_cv_struct_sockaddrstorage" 1>&6
+if test $uucp_cv_struct_sockaddrstorage = yes; then
+  cat >> confdefs.h <<\EOF
+#define HAVE_STRUCT_SOCKADDR_STORAGE 1
+EOF
+
+fi
 if test "$cross_compiling" = yes; then
  cat >> confdefs.h <<\EOF
 #define HAVE_LONG_FILE_NAMES 0
@@ -5348,7 +5380,7 @@ EOF
 
 else
  echo $ac_n "checking for restartable system calls""... $ac_c" 1>&6
-echo "configure:5352: checking for restartable system calls" >&5
+echo "configure:5384: checking for restartable system calls" >&5
 if eval "test \"`echo '$''{'ac_cv_sys_restartable_syscalls'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5356,7 +5388,7 @@ else
     { echo "configure: error: can not run test program while cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 5360 "configure"
+#line 5392 "configure"
 #include "confdefs.h"
 /* Exit 0 (true) if wait returns something other than -1,
    i.e. the pid of the child, which means that wait was restarted
@@ -5374,7 +5406,7 @@ main () {
 }
 
 EOF
-if { (eval echo configure:5378: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:5410: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   ac_cv_sys_restartable_syscalls=yes
 else
@@ -5397,7 +5429,7 @@ EOF
 fi
 
  echo $ac_n "checking for long file names""... $ac_c" 1>&6
-echo "configure:5401: checking for long file names" >&5
+echo "configure:5433: checking for long file names" >&5
 if eval "test \"`echo '$''{'ac_cv_sys_long_file_names'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else

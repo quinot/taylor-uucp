@@ -72,6 +72,9 @@
 /* Define if you have the ftw function.  */
 #undef HAVE_FTW
 
+/* Define if you have the getaddrinfo function.  */
+#undef HAVE_GETADDRINFO
+
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
 
@@ -503,4 +506,7 @@
 
 /* Whether you have union wait */
 #undef HAVE_UNION_WAIT
+
+/* Whether you have struct sockaddr_storage */
+#undef HAVE_STRUCT_SOCKADDR_STORAGE
 
