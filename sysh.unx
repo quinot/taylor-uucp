@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1991/12/28  07:01:15  ian
+   Added HAVE_FTIME configuration option
+
    Revision 1.17  1991/12/22  22:14:19  ian
    Monty Solomon: added HAVE_UNISTD_H configuration parameter
 
@@ -384,6 +387,14 @@
 #define HAVE_FTIME 0
 #define HAVE_TIMES 0
 #define TIMES_TICK CLK_TCK
+
+/* If you have the POSIX getcwd function to get the current directory,
+   set HAVE_GETCWD to 1.  Otherwise, if you have the BSD getwd
+   function, set HAVE_GETWD to 1.  Otherwise, figure out how to get
+   the pathname of the current directory, patch the code into
+   usysdep_initialize, and tell me what you did.  */
+#define HAVE_GETCWD 1
+#define HAVE_GETWD 0
 
 /* The default amount of free space to require for systems that do
    not specify an amount with the ``free-space'' command.  */
