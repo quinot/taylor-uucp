@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1992/02/08  20:02:36  ian
+   Added HAVE_SETRET configuration option for systems without setjmp
+
    Revision 1.30  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -401,11 +404,12 @@
 
 /* If you have the POSIX getcwd function to get the current directory,
    set HAVE_GETCWD to 1.  Otherwise, if you have the BSD getwd
-   function, set HAVE_GETWD to 1.  Otherwise, figure out how to get
-   the pathname of the current directory, patch the code into
-   usysdep_initialize, and tell me what you did.  */
+   function, set HAVE_GETWD to 1.  Otherwise, set both to 0 and make
+   sure that PWD_PROGRAM is the name of a program that will print the
+   current working directory (followed by a newline) on stdout.  */
 #define HAVE_GETCWD 1
 #define HAVE_GETWD 0
+#define PWD_PROGRAM "/bin/pwd"
 
 /* The NeXT, and possibly other systems, requires the argument to the
    wait function to be a pointer to a variable of type union wait.  On
