@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.62  1992/03/28  04:04:55  ian
+   Niels Baggesen: simplified debugging message macros
+
    Revision 1.61  1992/03/17  01:33:47  ian
    Move definition of const before use for non ANSI C
 
@@ -1179,7 +1182,9 @@ extern pointer memchr P((constpointer p, int b, int c));
 #endif
 
 #if HAVE_BZERO
+#ifndef bzero  /* bzero is sometimes a macro.  */
 extern void bzero ();
+#endif
 #else /* ! HAVE_BZERO */
 #if HAVE_MEMSET
 #define bzero(p, c) memset ((p), 0, (c))
