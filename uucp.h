@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/01/05  03:09:17  ian
+   Changed abProgram and abVersion to non const to avoid compiler bug
+
    Revision 1.28  1991/12/30  04:28:30  ian
    John Theus: check for EOF to work around bug in fread
 
@@ -214,10 +217,11 @@ typedef FILE *openfile_t;
 #define cfileread(e, z, c) fread ((z), 1, (c), (e))
 #define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
+#ifdef SEEK_SET
 #define ffilerewind(e) (fseek (e, (long) 0, SEEK_SET) == 0)
+#else
+#define ffilerewind(e) (fseek (e, (long) 0, 0) == 0)
+#endif
 #define ffileclose(e) (fclose (e) == 0)
 
 extern int fclose (), fseek ();
@@ -242,7 +246,11 @@ typedef int openfile_t;
 #define cfileread(e, z, c) read ((e), (z), (c))
 #define ffilereaderror(e, c) ((c) < 0)
 #define cfilewrite(e, z, c) write ((e), (z), (c))
+#ifdef SEEK_SET
 #define ffilerewind(e) (lseek (e, (long) 0, SEEK_SET) >= 0)
+#else
+#define ffilerewind(e) (lseek (e, (long) 0, 0) >= 0)
+#endif
 #define ffileclose(e) (close (e) >= 0)
 
 extern int read (), write (), close ();
