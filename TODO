@@ -277,3 +277,8 @@ nothing new appears.  Right now if something is added for a system
 after it has already been examined, uuxqt won't see it.
 
 52.
+
+David Nugent: zero out the bytes in blocks allocated for protocols to
+avoid sending out trailing garbage data.
+
+53.
