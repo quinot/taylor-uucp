@@ -2306,6 +2306,7 @@ zget_uucp_cmd (qconn, frequired)
   char *zalc;
   size_t calc;
   size_t cgot;
+  boolean fintro;
   long iendtime;
   int ctimeout;
 #if DEBUG > 1
@@ -2331,7 +2332,8 @@ zget_uucp_cmd (qconn, frequired)
 
   zalc = NULL;
   calc = 0;
-  cgot = -1;
+  cgot = 0;
+  fintro = FALSE;
   while ((ctimeout = (int) (iendtime - isysdep_time ((long *) NULL))) > 0)
     {
       int b;
@@ -2378,11 +2380,10 @@ zget_uucp_cmd (qconn, frequired)
 	}
 #endif
 
-      if (cgot < 0)
+      if (! fintro)
 	{
-	  if (b != '\020')
-	    continue;
-	  cgot = 0;
+	  if (b == '\020')
+	    fintro = TRUE;
 	  continue;
 	}
 
