@@ -68,7 +68,7 @@ uuconf_v2_system_names (pglobal, ppzsystems, falias)
 
   zline = NULL;
   cline = 0;
-  while (getline (&zline, &cline, e) > 0)
+  while (_uuconf_getline (qglobal, &zline, &cline, e) > 0)
     {
       char *zname;
 
