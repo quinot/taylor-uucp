@@ -281,10 +281,10 @@ static int iIlocal_ack;
 static int iIremote_ack;
 
 /* File position we are sending from.  */
-static int iIsendpos;
+static long iIsendpos;
 
 /* File position we are receiving to.  */
-static int iIrecpos;
+static long iIrecpos;
 
 /* TRUE if closing the connection.  */
 static boolean fIclosing;
