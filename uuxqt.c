@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.39  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.38  1992/03/15  01:54:46  ian
    All execs are now done in isspawn, all waits are done in iswait
 
@@ -890,7 +893,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   {
     char *zcopy;
 
-    zcopy = alloca (strlen (zabsolute) + 1);
+    zcopy = (char *) alloca (strlen (zabsolute) + 1);
     strcpy (zcopy, zabsolute);
     zabsolute = zcopy;
   }
