@@ -153,7 +153,10 @@ const char proti_rcsid[] = "$Id$";
 #define IMAXSEQ 32
 
 /* Get the next sequence number given a sequence number.  */
-#define INEXTSEQ(i) ((i + 1) & (IMAXSEQ - 1))
+#define INEXTSEQ(i) (((i) + 1) & (IMAXSEQ - 1))
+
+/* Get the previous sequence number given a sequence number.  */
+#define IPREVSEQ(i) (((i) + IMAXSEQ - 1) & (IMAXSEQ - 1))
 
 /* Compute i1 - i2 in sequence space (i.e., the number of packets from
    i2 to i1).  */
@@ -1253,7 +1256,27 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 
       if (iseq != -1)
 	{
-	  afInaked[iseq] = FALSE;
+	  /* If we already sent a NAK for this packet, and we have not
+	     seen the previous packet, then forget that we sent a NAK
+	     for this and any preceding packets.  This is to handle
+	     the following sequence:
+	         receive packet 0
+		 packets 1 and 2 lost
+		 receive packet 3
+		 send NAK 1
+		 send NAK 2
+		 packet 1 lost
+		 receive packet 2
+	     At this point we want to send NAK 1.  */
+	  if (afInaked[iseq]
+	      && azIrecbuffers[IPREVSEQ (iseq)] == NULL)
+	    {
+	      for (i = INEXTSEQ (iIrecseq);
+		   i != iseq;
+		   i = INEXTSEQ (i))
+		afInaked[i] = FALSE;
+	      afInaked[iseq] = FALSE;
+	    }
 
 	  /* If we haven't handled all previous packets, we must save
 	     off this packet and deal with it later.  */
@@ -1477,13 +1500,35 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 
 	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
 
-	/* The timeout code will send a NAK for the packet the remote
-	   side wants.  So we may see a NAK here for the packet we are
-	   about to send.  */
-	if (iseq == iIsendseq
-	    || (iIremote_winsize > 0
-		&& (CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
-		    || CSEQDIFF (iIsendseq, iseq) > iIremote_winsize)))
+	/* If the remote side times out while waiting for a packet, it
+	   will send a NAK for the next packet it wants to see.  If we
+	   have not sent that packet yet, and we have no
+	   unacknowledged data, it implies that the remote side has a
+	   window full of data to send, which implies that our ACK has
+	   been lost.  Therefore, we send an ACK.  */
+	if (iseq == iIsendseq &&
+	    INEXTSEQ (iIremote_ack) == iIsendseq)
+	  {
+	    char aback[CHDRLEN];
+
+	    aback[IHDR_INTRO] = IINTRO;
+	    aback[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
+	    aback[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
+	    iIlocal_ack = iIrecseq;
+	    aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
+	    aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
+	    aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
+
+	    DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_packet: Sending ACK %d",
+			    iIrecseq);
+
+	    if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
+	      return FALSE;
+	  }
+	else if (iseq == iIsendseq
+		 || (iIremote_winsize > 0
+		     && (CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
+			 || CSEQDIFF (iIsendseq, iseq) > iIremote_winsize)))
 	  {
 	    DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			    "fiprocess_packet: Ignoring out of order NAK %d (sendseq %d)",
