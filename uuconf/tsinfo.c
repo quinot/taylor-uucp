@@ -296,9 +296,20 @@ _uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
     iret = _uuconf_isystem_default (qglobal, qsys, &sdefaults,
 				    si.fdefault_alternates);
 
-  /* The first alternate is always available for calling in.  */
+  /* The first alternate is always available for calling in.  It is
+     always available for calling out if it has some way to choose a
+     port (this would normally be set by uiset_call anyhow, but it
+     won't be if all the port information comes from the defaults).  */
   if (iret == UUCONF_SUCCESS)
-    qsys->uuconf_fcalled = TRUE;
+    {
+      qsys->uuconf_fcalled = TRUE;
+      if (qsys->uuconf_qtimegrade != NULL
+	  || qsys->uuconf_zport != NULL
+	  || qsys->uuconf_qport != NULL
+	  || qsys->uuconf_ibaud >= 0
+	  || qsys->uuconf_zphone != NULL)
+	qsys->uuconf_fcall = TRUE;
+    }
 
   if (iret != UUCONF_SUCCESS)
     {
