@@ -284,6 +284,7 @@ main (argc, argv)
 	      printf ("m [dir]: move file to directory\n");
 	      printf ("a [dir]: move all files from this system to directory\n");
 	      printf ("p: list file to stdout\n");
+	      printf ("d: delete file\n");
 	      printf ("! command: shell escape\n");
 	      fcontinue = TRUE;
 	      break;
