@@ -105,8 +105,10 @@ COMMENTS
 
 First of all, let me know about any comments you have.
 
-See the INSTALL file for instructions about installation and use.
+The documentation is in the file uucp.texi, which is a Texinfo file.
+It may be printed using TeX, or it may be read as an Info file by GNU
+Emacs.  If you have neither, don't despair; the files uucp.info-*,
+which were generated from uucp.texi by the makeinfo program, are
+easily readable by humans.
 
 See the TODO file for things which should be done.
-
-See the THANKS file for people who have helped.
