@@ -1,17 +1,15 @@
-This is the README file for version 1.06 of the Taylor UUCP package.
+This is the README file for version 1.07 of the Taylor UUCP package.
 
-It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
-or, equivalently, uunet!cygint!airs!ian, or c/o Cygnus Support,
-48 Grove Street, Somerville, MA 02144, USA.
+It was written by Ian Lance Taylor.  I can be reached at ian@airs.com.
 
 There is a mailing list for discussion of the package.  The list is
 hosted by Eric Schnoebelen at cirr.com.  To join (or get off) the
-list, send mail to taylor-uucp-request@cirr.com.  Mail to this address
+list, send mail to taylor-uucp-request@gnu.org.  Mail to this address
 is answered by the majordomo program.  To join the list, send the
 message ``subscribe ADDRESS'' where ADDRESS is your e-mail address.
-To send a message to the list, send it to taylor-uucp@cirr.com.  The
-old list address, taylor-uucp@gnu.ai.mit.edu, will also work.  There
-is an archive of all messages sent to the mailing list at ftp.cirr.com.
+To send a message to the list, send it to taylor-uucp@gnu.org.  There
+is an archive of all messages sent to the mailing list at
+http://lists.cirr.com.
 
 This package is covered by the Gnu Public License.  See the file
 COPYING for details.  If you would like to do something with this
@@ -96,8 +94,6 @@ suggestions for new things to do.
 
 The compilation instructions are in uucp.texi.  Here is a summary.
 
-    Edit Makefile.in to set installation directories.
-
     Type ``sh configure''.  You can pass a number of arguments in the
     environment (using bash or sh, enter something like ``CC=gcc
     configure''; using csh, enter something like ``setenv CC gcc; sh
@@ -109,7 +105,18 @@ The compilation instructions are in uucp.texi.  Here is a summary.
         INSTALL: Install program; default install -c or cp
     The configure script will compile a number of test programs to see
     what is available on your system, so if your system is at all
-    unusual you will need to pass in $CC and $LIBS correctly.
+    unusual you will need to pass in $CC and $LIBS correctly.  You can
+    also pass other arguments on the command line.  Use configure
+    --help for a complete list.  Of particular interest:
+        --prefix=DIRNAME
+            The directory under which all files are installed.
+            Default /usr/local.
+        --with-newconfigdir=DIRNAME
+            The directory in which to find new style configuration
+            files.  Default PREFIX/conf/uucp.
+        --with-oldconfigdir=DIRNAME
+            The directory in which to find old style configuration
+            files.  Default /usr/lib/uucp
 
     The configure script will create config.h from config.h.in and
     Makefile from Makefile.in.  It will also create config.status,
