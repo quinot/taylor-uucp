@@ -89,6 +89,7 @@ zsysdep_find_command (zcmd, pzcmds, pzpath, pferr)
      boolean *pferr;
 {
   char **pz;
+  struct stat s;
 
   *pferr = FALSE;
 
@@ -110,7 +111,16 @@ zsysdep_find_command (zcmd, pzcmds, pzpath, pferr)
 	  /* If we already have an absolute path, we can get out
 	     immediately.  */
 	  if (**pz == '/')
-	    return zbufcpy (*pz);
+	    {
+	      /* Quick error check.  */
+	      if (stat (*pz, &s) != 0)
+		{
+		  ulog (LOG_ERROR, "%s: %s", *pz, strerror (errno));
+		  *pferr = TRUE;
+		  return NULL;
+		}
+	      return zbufcpy (*pz);
+	    }
 	  break;
 	}
     }
@@ -124,14 +134,12 @@ zsysdep_find_command (zcmd, pzcmds, pzpath, pferr)
   for (pz = pzpath; *pz != NULL; pz++)
     {
       char *zname;
-      struct stat s;
 
       zname = zsysdep_in_dir (*pz, zcmd);
       if (stat (zname, &s) == 0)
 	return zname;
     }
 
-  *pferr = FALSE;
   return NULL;
 }
 
