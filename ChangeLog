@@ -1,5 +1,8 @@
 2002-02-14  Ian Lance Taylor  <ian@airs.com>
 
+	* send.c (flocal_send_await_reply): Only seek to the end of the
+	file if we are already sending it.
+
 	* trans.c (utransfree): If the file is open, close it.
 	* rec.c (flocal_rec_await_reply): Don't bother closing the file on
 	error.

@@ -619,10 +619,11 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	{
 	  /* Seek to the end of the file so that the next read will
 	     send end of file.  We have to be careful here, because we
-	     may have actually already sent end of file--we could be
-	     being called because of data received while the end of
-	     file block was sent.  */
-	  if (! ffileseekend (qtrans->e))
+	     may not have opened the file yet, or we may have actually
+	     already sent end of file--we could be being called
+	     because of data received while the end of file block was
+	     sent.  */
+	  if (qtrans->fsendfile && ! ffileseekend (qtrans->e))
 	    {
 	      ulog (LOG_ERROR, "seek to end: %s", strerror (errno));
 	      usfree_send (qtrans);
