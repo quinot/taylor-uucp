@@ -328,6 +328,7 @@ struct uuconf_cmdtab asIproto_params[] =
 
 static boolean finak P((struct sdaemon *qdaemon, int iseq));
 static boolean firesend P((struct sdaemon *qdaemon));
+static boolean fiwindow_wait P((struct sdaemon *qdaemon));
 static boolean fiwait_for_packet P((struct sdaemon *qdaemon,
 				    int ctimeout, int cretries,
 				    boolean fone, boolean *ftimedout));
@@ -638,6 +639,47 @@ firesend (qdaemon)
 		     TRUE);
 }
 
+/* Wait until there is an opening in the receive window of the remote
+   system.  */
+
+static boolean
+fiwindow_wait (qdaemon)
+     struct sdaemon *qdaemon;
+{
+  int cwaits;
+
+  cwaits = 0;
+
+  /* iIsendseq is the sequence number we are sending, and iIremote_ack
+     is the last sequence number acknowledged by the remote. */
+  while (CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
+    {
+      /* If a NAK is lost, it is possible for the other side to be
+	 sending a stream of packets while we are waiting for an ACK.
+	 Since we don't have an independent timeout on the receive
+	 end, this means that we will wait until the other side has
+	 finished sending packets and one of us times out.  To avoid
+	 locking ourselves up, if we get 10 packets in a row without
+	 getting the ack we need, we resend the packet the other side
+	 is looking for.  Hopefully that will trigger an ACK or NAK
+	 and get us going again.  */
+      ++cwaits;
+      if (cwaits > 10)
+	{
+	  cwaits = 0;
+	  if (! firesend (qdaemon))
+	    return FALSE;
+	}
+
+      DEBUG_MESSAGE0 (DEBUG_PROTO, "fiwindow_wait: Waiting for ACK");
+      if (! fiwait_for_packet (qdaemon, cItimeout, cIretries,
+			       TRUE, (boolean *) NULL))
+	return FALSE;
+    }
+
+  return TRUE;
+}
+
 /* Get buffer space to use for packet data.  We return a pointer to
    the space to be used for the actual data, leaving room for the
    header.  */
@@ -705,6 +747,14 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
       icksum = icrc (zspos + CHDRLEN, CCKSUMLEN, ICRCINIT);
       UCKSUM_SET (zspos + CHDRLEN + CCKSUMLEN, icksum);
 
+      /* Wait for an opening in the window.  */
+      if (iIremote_winsize > 0
+	  && CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
+	{
+	  if (! fiwindow_wait (qdaemon))
+	    return FALSE;
+	}
+
       DEBUG_MESSAGE1 (DEBUG_PROTO, "fisenddata: Sending SPOS %ld",
 		      ipos);
 
@@ -732,38 +782,11 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
   /* Wait until there is an opening in the window (we hope to not have
      to wait here at all, actually; ideally the window should be large
      enough to avoid a wait).  */
-  if (iIremote_winsize > 0)
+  if (iIremote_winsize > 0
+      && CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
     {
-      int cwaits;
-
-      cwaits = 0;
-      /* iIsendseq is the sequence number we are sending, and
-	 iIremote_ack is the last sequence number acknowledged by the
-	 remote system.  */
-      while (CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
-	{
-	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fisenddata: Waiting for ACK");
-	  if (! fiwait_for_packet (qdaemon, cItimeout, cIretries,
-				   TRUE, (boolean *) NULL))
-	    return FALSE;
-
-	  /* If a NAK is lost, it is possible for the other side to be
-	     sending a stream of packets while we are waiting for an
-	     ACK.  Since we don't have an independent timeout on the
-	     receive end, this means that we will wait until the other
-	     side has finished sending packets and one of us times
-	     out.  To avoid locking ourselves up, if we get 10 packets
-	     in a row without getting the ack we need, we resend the
-	     packet the other side is looking for.  Hopefully that
-	     will trigger an ACK or NAK and get us going again.  */
-	  ++cwaits;
-	  if (cwaits > 10)
-	    {
-	      cwaits = 0;
-	      if (! firesend (qdaemon))
-		return FALSE;
-	    }
-	}
+      if (! fiwindow_wait (qdaemon))
+	return FALSE;
     }
 
   /* We only fill in IHDR_REMOTE now, since only now do know the
