@@ -6,6 +6,7 @@ app3.c
 app4.c
 basnam.c
 chmod.c
+cohtty.c
 cwd.c
 cusub.c
 detach.c

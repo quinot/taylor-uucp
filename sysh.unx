@@ -37,7 +37,7 @@ struct sconnection;
 /* Make sure the defines do not conflict.  These are in this file
    because they are Unix dependent.  */
 
-#if HAVE_V2_LOCKFILES + HAVE_HDB_LOCKFILES + HAVE_SCO_LOCKFILES + HAVE_SVR4_LOCKFILES != 1
+#if HAVE_V2_LOCKFILES + HAVE_HDB_LOCKFILES + HAVE_SCO_LOCKFILES + HAVE_SVR4_LOCKFILES + HAVE_COHERENT_LOCKFILES != 1
  #error LOCKFILES define not set or duplicated
 #endif
 
@@ -363,6 +363,11 @@ struct ssysdep_conn
   sterminal sorig;
   /* Current terminal settings.  */
   sterminal snew;
+#if HAVE_COHERENT_LOCKFILES
+  /* On Coherent we need to hold on to the real port name which will
+     be used to enable the port.  Ick.  */
+  char *zenable;
+#endif
 };
 
 /* These functions do I/O and chat scripts to a port.  They are called
@@ -465,6 +470,13 @@ extern char *zsjobid_to_file P((const char *zid, char **pzsystem,
 /* See whether there is a spool directory for a system when using
    SPOOLDIR_ULTRIX.  */
 extern boolean fsultrix_has_spool P((const char *zsystem));
+
+#if HAVE_COHERENT_LOCKFILES
+/* Lock a coherent tty.  */
+extern boolean lockttyexist P((const char *z));
+extern boolean fscoherent_disable_tty P((const char *zdevice,
+					 char **pzenable));
+#endif
 
 /* Some replacements for standard Unix functions.  */
 

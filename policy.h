@@ -226,11 +226,19 @@
    where xxx is the major device number of the device holding the
    special device file, yyy is the major device number of the port
    device itself, and zzz is the minor device number of the port
-   device.  */
+   device.
+
+   Coherent use a completely different method of terminal locking,
+   which actually doesn't even use files at all.  For locks other than
+   for terminals, HDB type lock files are used.  For this to work, you
+   must extract the file lock.c from the archive /usr/src/misc.tar.Z,
+   move it to the unix subdir as coh_lock.c, and edit unix/Makefile.in
+   to add coh_lock.o to OBJS.  I'm sorry this is so inconvenient.  */
 #define HAVE_V2_LOCKFILES 0
 #define HAVE_HDB_LOCKFILES 1
 #define HAVE_SCO_LOCKFILES 0
 #define HAVE_SVR4_LOCKFILES 0
+#define HAVE_COHERENT_LOCKFILES 0
 
 /* If your system supports Internet mail addresses (which look like
    user@host.domain rather than system!user), HAVE_INTERNET_MAIL

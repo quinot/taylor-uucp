@@ -548,10 +548,12 @@ fsserial_lockfile (flok, qconn)
      boolean flok;
      const struct sconnection *qconn;
 {
+  struct ssysdep_conn *qsysdep;
   const char *z;
   char *zalc;
   boolean fret;
 
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
   if (qconn->qport == NULL)
     z = NULL;
   else
@@ -559,11 +561,7 @@ fsserial_lockfile (flok, qconn)
   zalc = NULL;
   if (z == NULL)
     {
-      const struct ssysdep_conn *qsysdep;
-
-      qsysdep = (const struct ssysdep_conn *) qconn->psysdep;
-
-#if ! HAVE_SVR4_LOCKFILES
+#if ! HAVE_SVR4_LOCKFILES && ! HAVE_COHERENT_LOCKFILES
       {
 	const char *zbase;
 	size_t clen;
@@ -582,8 +580,10 @@ fsserial_lockfile (flok, qconn)
 	      *zl = tolower (*zl);
 	}
 #endif
+	z = zalc;
       }
-#else /* HAVE_SVR4_LOCKFILES */
+#else /* ! HAVE_SVR4_LOCKFILES && ! HAVE_COHERENT_LOCKFILES */
+#if HAVE_SVR4_LOCKFILES
       {
 	struct stat s;
 
@@ -595,16 +595,64 @@ fsserial_lockfile (flok, qconn)
 	zalc = zbufalc (sizeof "LK.123.123.123");
 	sprintf (zalc, "LK.%03d.%03d.%03d", major (s.st_dev),
 		 major (s.st_rdev), minor (s.st_rdev));
+	z = zalc;
       }
-#endif /* HAVE_SVR4_LOCKFILES */
-
-      z = zalc;
+#else /* ! HAVE_SVR4_LOCKFILES */
+#endif /* ! HAVE_SVR4_LOCKFILES */
+      z = strrchr (qsysdep->zdevice, '/') + 1;
+#endif /* ! HAVE_SVR4_LOCKFILES && ! HAVE_COHERENT_LOCKFILES */
     }
 
+#if ! HAVE_COHERENT_LOCKFILES
   if (flok)
     fret = fsdo_lock (z, FALSE, (boolean *) NULL);
   else
     fret = fsdo_unlock (z, FALSE);
+#else /* HAVE_COHERENT_LOCKFILES */
+  if (flok)
+    {
+      if (lockttyexist (z))
+	{
+	  ulog (LOG_NORMAL, "%s: port already locked");
+	  fret = FALSE;
+	}
+      else
+	fret = fscoherent_disable_tty (z, &qsysdep->zenable);
+    }
+  else
+    {
+      fret = TRUE;
+      if (qsysdep->zenable != NULL)
+	{
+	  const char *azargs[3];
+	  int aidescs[3];
+	  pid_t ipid;
+
+	  azargs[0] = "/etc/enable";
+	  azargs[1] = qsysdep->zenable;
+	  azargs[2] = NULL;
+	  aidescs[0] = SPAWN_NULL;
+	  aidescs[1] = SPAWN_NULL;
+	  aidescs[2] = SPAWN_NULL;
+
+	  ipid = ixsspawn (azargs, aidescs, TRUE, FALSE,
+			   (const char *) NULL, TRUE, TRUE,
+			   (const char *) NULL, (const char *) NULL,
+			   (const char *) NULL);
+	  if (ipid < 0)
+	    {
+	      ulog (LOG_ERROR, "ixsspawn (/etc/enable %s): %s",
+		    qsysdep->zenable, strerror (errno));
+	      fret = FALSE;
+	    }
+	  else
+	    fret = ixswait ((unsigned long) ipid, (const char *) NULL) == 0;
+	  ubuffree (qsysdep->zenable);
+	  qsysdep->zenable = NULL;
+	}
+    }
+#endif /* HAVE_COHERENT_LOCKFILES */
+
   ubuffree (zalc);
   return fret;
 }
