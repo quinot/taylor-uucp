@@ -255,7 +255,7 @@ unix/libunix.a: FORCE sysdep.h
 lib/libuucp.a: FORCE
 	(cd lib; $(MAKE) $(MDEFINES) libuucp.a)
 
-FORCE:
+FORCE:;
 
 clean:
 	(cd unix; $(MAKE) $(MDEFINES) clean)
