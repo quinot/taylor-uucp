@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/01/13  05:53:04  ian
+   Mike Park: added HAVE_WAITPID and HAVE_WAIT4 configuration parameters
+
    Revision 1.29  1992/01/13  05:37:20  ian
    Mike Park: use IPUBLIC_DIRECTORY_MODE rather than S_ macros
 
@@ -202,8 +205,7 @@ typedef int wait_t;
 /* External functions.  */
 
 extern int select (), ioctl (), close (), dup2 (), execl (), access ();
-extern int read (), write (), unlink (), open (), kill (), fcntl ();
-extern int mkdir ();
+extern int read (), write (), unlink (), kill (), mkdir ();
 extern int fclose (), fflush (), rand ();
 extern unsigned int sleep ();
 extern pid_t fork ();
@@ -773,21 +775,21 @@ uprepare_test (itest, fcall_uucico, zsys)
   const char *zfrom;
   const char *zto;
 
-  if (mkdir ("/usr/tmp/tstuu", IPUBLIC_DIRECTORY_MODE) != 0
+  if (mkdir ((char *) "/usr/tmp/tstuu", IPUBLIC_DIRECTORY_MODE) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
       exit (EXIT_FAILURE);
     }
 
-  if (mkdir ("/usr/tmp/tstuu/spool1", IPUBLIC_DIRECTORY_MODE) != 0
+  if (mkdir ((char *) "/usr/tmp/tstuu/spool1", IPUBLIC_DIRECTORY_MODE) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
       exit (EXIT_FAILURE);
     }
 
-  if (mkdir ("/usr/tmp/tstuu/spool2", IPUBLIC_DIRECTORY_MODE) != 0
+  if (mkdir ((char *) "/usr/tmp/tstuu/spool2", IPUBLIC_DIRECTORY_MODE) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
