@@ -332,6 +332,7 @@ uucp.info: uucp.texi
 	$(MAKEINFO) $<
 
 install-info: uucp.info
+	if test -d $(infodir); then true; else mkdir $(infodir); fi
 	for i in uucp.info*; do \
 	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
 	done
