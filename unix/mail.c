@@ -74,12 +74,12 @@ fsysdep_mail (zto, zsubject, cstrs, paz)
     pazargs[iarg] = ztok;
 
 #if ! MAIL_PROGRAM_SUBJECT_BODY
-  pazargs[iarg++] = "-s";
-  pazargs[iarg++] = zsubject;
+  pazargs[iarg++] = (char *) "-s";
+  pazargs[iarg++] = (char *) zsubject;
 #endif
 
 #if ! MAIL_PROGRAM_TO_BODY
-  pazargs[iarg++] = zto;
+  pazargs[iarg++] = (char *) zto;
 #endif
 
   pazargs[iarg] = NULL;
