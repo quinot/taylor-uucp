@@ -517,6 +517,9 @@ boolean
 fsysdep_stdin_init (qconn)
      struct sconnection *qconn;
 {
+  /* chmod /dev/tty to prevent other users from writing messages to
+     it.  This is essentially `mesg n'.  */
+  (void) chmod ("/dev/tty", S_IRUSR | S_IWUSR);
   return fsserial_init (qconn, &sstdincmds, (const char *) NULL);
 }
 
