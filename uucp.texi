@@ -953,7 +953,7 @@ default is @samp{chat,handshake}; to turn off these default entries, you
 must use @samp{max-remote-debug none} followed by other
 @code{max-remote-debug} commands specifying the settings you want.
 
-@item time @var{string}
+@item time @var{string} [@var{number}]
 @findex time
 
 Specify when the system may be called.  Each time specification must
@@ -971,11 +971,18 @@ which means to never call the system (although the system may be able to
 call in) or a single word with a name defined in a previous
 @code{timetable} (q.v.) command.
 
+The optional third argument specifies a retry time in minutes.  If a
+call made during a time that matches the time string fails, no more
+calls are permitted until the retry time has passed.  By default an
+exponentially increasing retry time is used: after each failure the next
+retry period is longer.  A retry time specified in the @code{time}
+command is always a fixed amount of time.
+
 The @code{time} command may appear multiple times in a single alternate,
 in which case if any time string matches the system may be called.  The
 default value is @samp{Never}.
 
-@item timegrade @var{character} @var{string}
+@item timegrade @var{character} @var{string} [@var{number}]
 @findex timegrade
 
 The @var{character} is a single character @kbd{A} to @kbd{Z}, @kbd{a} to
@@ -989,6 +996,9 @@ sufficiently high grade according to the time string, the system will
 not be called.  Using the @samp{-s} switch to @code{uucico} to force it
 to call a system causes it to assume there is a job of grade @kbd{0}
 waiting to be run.
+
+The optional fourth argument specifies a retry time in minutes.  See the
+@code{time} command for more details.
 
 Note that the @code{timegrade} command serves two purposes: 1) if there
 is no job of sufficiently high grade the system will not be called, and
