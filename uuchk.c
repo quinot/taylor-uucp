@@ -162,7 +162,82 @@ main (argc, argv)
     }
   else
     {
+      const char *zstr;
+      int iint;
       char **pzsystems;
+
+      iret = uuconf_localname (puuconf, &zstr);
+      if (iret == UUCONF_SUCCESS)
+	printf ("Local node name %s\n", zstr);
+      else if (iret != UUCONF_NOT_FOUND)
+	ukuuconf_error (puuconf, iret);
+
+      iret = uuconf_spooldir (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("Spool directory %s\n", zstr);
+
+      iret = uuconf_pubdir (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("Public directory %s\n", zstr);
+
+      iret = uuconf_lockdir (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("Lock directory %s\n", zstr);
+
+      iret = uuconf_logfile (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("Log file %s\n", zstr);
+
+      iret = uuconf_statsfile (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("Statistics file %s\n", zstr);
+
+      iret = uuconf_debugfile (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("Debug file %s\n", zstr);
+
+      iret = uuconf_debuglevel (puuconf, &zstr);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      if (zstr != NULL)
+	printf ("Global debugging level %s\n", zstr);
+
+      iret = uuconf_maxuuxqts (puuconf, &iint);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      if (iint != 0)
+	printf ("Maximum number of uuxqt processes permitted %d\n", iint);
+
+      iret = uuconf_runuuxqt (puuconf, &iint);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      if (iret > 0)
+	printf ("Start uuxqt every %d jobs\n", iint);
+      else
+	{
+	  switch (iint)
+	    {
+	    case UUCONF_RUNUUXQT_NEVER:
+	      printf ("Never start uuxqt\n");
+	      break;
+	    case UUCONF_RUNUUXQT_ONCE:
+	      printf ("Start uuxqt once per uucico invocation\n");
+	      break;
+	    case UUCONF_RUNUUXQT_PERCALL:
+	      printf ("Start uuxqt once per call\n");
+	      break;
+	    default:
+	      fprintf (stderr, "Illegal value from uuconf_runuuxqt\n");
+	      exit (EXIT_FAILURE);
+	      break;
+	    }
+	}
 
       iret = uuconf_system_names (puuconf, &pzsystems, FALSE);
       if (iret != UUCONF_SUCCESS)
@@ -178,6 +253,7 @@ main (argc, argv)
 	{
 	  struct uuconf_system ssys;
 
+	  printf ("\n");
 	  iret = uuconf_system_info (puuconf, *pzsystems, &ssys);
 	  if (iret != UUCONF_SUCCESS)
 	    ukuuconf_error (puuconf, iret);
@@ -185,8 +261,6 @@ main (argc, argv)
 	    ukshow (&ssys, puuconf);
 	  (void) uuconf_system_free (puuconf, &ssys);
 	  ++pzsystems;
-	  if (*pzsystems != NULL)
-	    printf ("\n");
 	}
     }
 
