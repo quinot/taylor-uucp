@@ -326,3 +326,5 @@ chat.o: system.h conn.h
 conn.o: conn.h
 tcp.o: conn.h sysdep.h system.h
 copy.o: system.h sysdep.h
+
+.NOEXPORT:
