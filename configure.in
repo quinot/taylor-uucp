@@ -295,7 +295,7 @@ AC_CHECK_FUNCS(bsearch vfprintf)
 AC_CHECK_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
 AC_CHECK_FUNCS(sigsetjmp setret sigaction sigvec sigset)
 AC_CHECK_FUNCS(sigprocmask sigblock sighold getdtablesize sysconf)
-AC_CHECK_FUNCS(setpgrp setsid setreuid gethostname uname)
+AC_CHECK_FUNCS(setpgrp setsid setreuid seteuid gethostname uname)
 AC_CHECK_FUNCS(gettimeofday ftw glob dev_info)
 dnl Check for getline, but not in -linet, since ISC has an
 dnl incompatible version there.
