@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1991/11/14  03:40:10  ian
+   Try to figure out whether stdin is a TCP port
+
    Revision 1.18  1991/11/14  03:20:13  ian
    Added seven-bit and reliable commands to help when selecting protocols
 
@@ -1566,10 +1569,15 @@ static boolean faccept_call (zlogin, qport)
 
   if (qsys->zcalled_chat_program != NULL)
     {
+      const char *zport;
+
+      if (qport == NULL)
+	zport = "unknown";
+      else
+	zport = qport->zname;
       if (! fchat_program (qsys->zcalled_chat_program, qsys,
 			   (const struct sdialer *) NULL,
-			   (const char *) NULL,
-			   qport == NULL ? "unknown" : qport->zname,
+			   (const char *) NULL, zport,
 			   iport_baud ()))
 	return FALSE;
     }
