@@ -213,6 +213,7 @@ static boolean fcusend_buf P((struct sconnection *qconn, const char *zbuf,
 static const struct option asCulongopts[] =
 {
   { "phone", required_argument, NULL, 'c' },
+  { "escape", required_argument, NULL, 'E' },
   { "parity", required_argument, NULL, 2 },
   { "halfduplex", no_argument, NULL, 'h' },
   { "prompt", no_argument, NULL, 'n' },
@@ -294,7 +295,7 @@ main (argc, argv)
 	}
     }
 
-  while ((iopt = getopt_long (argc, argv, "a:c:dehnI:l:op:s:tvx:z:",
+  while ((iopt = getopt_long (argc, argv, "a:c:deE:hnI:l:op:s:tvx:z:",
 			      asCulongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -314,6 +315,11 @@ main (argc, argv)
 	case 'e':
 	  /* Even parity.  */
 	  feven = TRUE;
+	  break;
+
+	case 'E':
+	  /* Escape character.  */
+	  zCuvar_escape = optarg;
 	  break;
 
 	case 'h':
