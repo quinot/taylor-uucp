@@ -69,6 +69,7 @@ fparse_cmd (zcmd, qcmd)
   qcmd->znotify = NULL;
   qcmd->cbytes = -1;
   qcmd->zcmd = NULL;
+  qcmd->ipos = 0;
 
   /* Handle hangup commands specially.  If it's just "H", return
      the command 'H' to indicate a hangup request.  If it's "HY"
@@ -121,9 +122,35 @@ fparse_cmd (zcmd, qcmd)
       z = strtok ((char *) NULL, " \t\n");
       if (z != NULL)
 	{
-	  qcmd->cbytes = strtol (z, &zend, 0);
-	  if (*zend != '\0')
-	    qcmd->cbytes = -1;
+	  if (strcmp (z, "dummy") != 0)
+	    {
+	      /* This may be the maximum number of bytes the remote
+		 system wants to receive, if it using Taylor UUCP size
+		 negotiation.  */
+	      qcmd->cbytes = strtol (z, &zend, 0);
+	      if (*zend != '\0')
+		qcmd->cbytes = -1;
+	    }
+	  else
+	    {
+	      /* This is from an SVR4 system, and may include the
+		 position at which to start sending the file.  The
+		 next fields are the mode bits, the remote owner (?),
+		 the remote temporary file name, and finally the
+		 restart position.  */
+	      if (strtok ((char *) NULL, " \t\n") != NULL
+		  && strtok ((char *) NULL, " \t\n") != NULL
+		  && strtok ((char *) NULL, " \t\n") != NULL)
+		{
+		  z = strtok ((char *) NULL, " \t\n");
+		  if (z != NULL)
+		    {
+		      qcmd->ipos = strtol (z, &zend, 0);
+		      if (*zend != '\0')
+			qcmd->ipos = 0;
+		    }
+		}
+	    }
 	}
 
       return TRUE;

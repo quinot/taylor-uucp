@@ -740,6 +740,7 @@ uccopy (zfile, zdest)
 	      s.znotify = zCnotify;
 	      s.cbytes = -1;
 	      s.zcmd = NULL;
+	      s.ipos = 0;
 
 	      ucadd_cmd (&sCdestsys, &s, (const char *) NULL);
 	    }
@@ -803,6 +804,7 @@ uccopy (zfile, zdest)
 	      s.znotify = NULL;
 	      s.cbytes = -1;
 	      s.zcmd = NULL;
+	      s.ipos = 0;
 
 	      zlog = zbufalc (sizeof "Queuing uucp  !" + strlen (zfile)
 			      + strlen (zCforward) + strlen (zdest));
@@ -823,6 +825,7 @@ uccopy (zfile, zdest)
 	      s.znotify = NULL;
 	      s.cbytes = -1;
 	      s.zcmd = NULL;
+	      s.ipos = 0;
 
 	      ucadd_cmd (&sCdestsys, &s, "");
 	    }
@@ -932,6 +935,7 @@ uccopy (zfile, zdest)
 	  s.znotify = "";
 	  s.cbytes = -1;
 	  s.zcmd = NULL;
+	  s.ipos = 0;
 
 	  ucadd_cmd (qfromsys, &s, (const char *) NULL);
 	}
@@ -1005,6 +1009,7 @@ uccopy (zfile, zdest)
 	  s.znotify = NULL;
 	  s.cbytes = -1;
 	  s.zcmd = NULL;
+	  s.ipos = 0;
 
 	  zlog = zbufalc (sizeof "Queueing uucp " + strlen (zcmd));
 	  sprintf (zlog, "Queueing uucp %s", zcmd);

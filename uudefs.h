@@ -128,6 +128,8 @@ struct scmd
   long cbytes;
   /* Command to execute ('E').  */
   const char *zcmd;
+  /* Position to restart from ('R').  */
+  long ipos;
 };
 
 #if DEBUG > 1

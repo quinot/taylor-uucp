@@ -921,6 +921,7 @@ main (argc, argv)
 	      s.znotify = "";
 	      s.cbytes = -1;
 	      s.zcmd = NULL;
+	      s.ipos = 0;
 
 	      zjobid = zsysdep_spool_commands (&sfromsys, bgrade, 1, &s);
 	      if (zjobid == NULL)
@@ -1133,6 +1134,7 @@ main (argc, argv)
       s.znotify = zrequestor;
       s.cbytes = -1;
       s.zcmd = zfullcmd;
+      s.ipos = 0;
       
       ++cXcmds;
       pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
@@ -1367,6 +1369,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
       s.znotify = NULL;
       s.cbytes = -1;
       s.zcmd = NULL;
+      s.ipos = 0;
 
       ++cXcmds;
       pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
@@ -1389,6 +1392,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
   s.znotify = "";
   s.cbytes = -1;
   s.zcmd = NULL;
+  s.ipos = 0;
 
   ++cXcmds;
   pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,

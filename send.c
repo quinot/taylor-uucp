@@ -795,7 +795,8 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
     }
 
   /* If the file is larger than the amount of space the other side
-     reported, we can't send it.  */
+     reported, we can't send it.  Should we adjust this check based on
+     the restart position?  */
   cbytes = csysdep_size (zfile);
   if (cbytes != -1
       && ((qcmd->cbytes != -1 && qcmd->cbytes < cbytes)
@@ -818,6 +819,18 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
       return fremote_rec_fail (FAILURE_OPEN, iremote);
     }
 
+  /* If the remote requested that the file send start from a
+     particular position, arrange to do so.  */
+  if (qcmd->ipos > 0)
+    {
+      if (! ffileseek (e, qcmd->ipos))
+	{
+	  ulog (LOG_ERROR, "seek: %s", strerror (errno));
+	  ubuffree (zfile);
+	  return FALSE;
+	}
+    }
+
   qinfo = (struct ssendinfo *) xmalloc (sizeof (struct ssendinfo));
   qinfo->zmail = NULL;
   qinfo->zfile = zfile;
@@ -832,6 +845,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
   qtrans->iremote = iremote;
   qtrans->pinfo = (pointer) qinfo;
   qtrans->e = e;
+  qtrans->ipos = qcmd->ipos;
   qtrans->s.imode = imode;
 
   uqueue_remote (qtrans);

@@ -1348,6 +1348,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	    s.znotify = "";
 	  s.cbytes = -1;
 	  s.zcmd = NULL;
+	  s.ipos = 0;
 
 	  ubuffree (zsysdep_spool_commands (qoutsys, BDEFAULT_UUX_GRADE,
 					    1, &s));
