@@ -16,6 +16,7 @@ cu.1
 cu.c
 cu.h
 getopt.h
+install-sh
 log.c
 policy.h
 prot.c
