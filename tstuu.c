@@ -172,6 +172,18 @@ extern long times ();
 #define remove unlink
 #endif
 
+/* Buffer chain to hold data read from a uucico.  */
+
+#define BUFCHARS (512)
+
+struct sbuf
+{
+  struct sbuf *qnext;
+  int cstart;
+  int cend;
+  char ab[BUFCHARS];
+};
+  
 /* Local functions.  */
 
 static void umake_file P((const char *zfile, int cextra));
@@ -181,10 +193,11 @@ static void uprepare_test P((boolean fmake, int itest,
 static void ucheck_file P((const char *zfile, const char *zerr,
 			   int cextra));
 static void ucheck_test P((int itest, boolean fcall_uucico));
-static void utransfer P((int ofrom, int oto, int otoslave, int *pc));
 static RETSIGTYPE uchild P((int isig));
 static int cpshow P((char *z, int bchar));
 static void uchoose P((int *po1, int *po2));
+static long cread P((int o, struct sbuf **));
+static boolean fsend P((int o, int oslave, struct sbuf **));
 static boolean fwritable P((int o));
 static void xsystem P((const char *zcmd));
 static FILE *xfopen P((const char *zname, const char *zmode));
@@ -211,6 +224,7 @@ main (argc, argv)
   int omaster1, oslave1, omaster2, oslave2;
   char abpty1[sizeof "/dev/ptyp0"];
   char abpty2[sizeof "/dev/ptyp0"];
+  struct sbuf *qbuf1, *qbuf2;
 
   zcmd1 = NULL;
   zcmd2 = NULL;
@@ -553,9 +567,13 @@ main (argc, argv)
       && errno == EINVAL)
     (void) fcntl (omaster2, F_SETFL, O_NONBLOCK);
 
+  qbuf1 = NULL;
+  qbuf2 = NULL;
+
   while (TRUE)
     {
       int o1, o2;
+      boolean fcont;
 
       o1 = omaster1;
       o2 = omaster2;
@@ -568,13 +586,39 @@ main (argc, argv)
 	  continue;
 	}
 
-      if (o1 != -1
-	  && fwritable (omaster2))
-	utransfer (omaster1, omaster2, oslave2, &cFrom1);
+      if (o1 != -1)
+	cFrom1 += cread (omaster1, &qbuf1);
 
-      if (o2 != - 1
-	  && fwritable (omaster1))
-	utransfer (omaster2, omaster1, oslave1, &cFrom2);
+      if (o2 != -1)
+	cFrom2 += cread (omaster2, &qbuf2);
+
+      do
+	{
+	  fcont = FALSE;
+
+	  if (qbuf1 != NULL
+	      && fwritable (omaster2)
+	      && fsend (omaster2, oslave2, &qbuf1))
+	    fcont = TRUE;
+
+	  if (qbuf2 != NULL
+	      && fwritable (omaster1)
+	      && fsend (omaster1, oslave1, &qbuf2))
+	    fcont = TRUE;
+
+	  if (! fcont
+	      && (qbuf1 != NULL || qbuf2 != NULL))
+	    {
+	      long cgot1, cgot2;
+
+	      cgot1 = cread (omaster1, &qbuf1);
+	      cFrom1 += cgot1;
+	      cgot2 = cread (omaster2, &qbuf2);
+	      cFrom2 += cgot2;
+	      fcont = TRUE;
+	    }
+	}
+      while (fcont);
     }
 
   /*NOTREACHED*/
@@ -1241,152 +1285,6 @@ cpshow (z, ichar)
       return strlen (z) + 1;
     }
 }      
-
-/* Transfer data from one pseudo-terminal to the other.  */
-
-static void
-utransfer (ofrom, oto, otoslave, pc)
-     int ofrom;
-     int oto;
-     int otoslave;
-     int *pc;
-{
-  int cread;
-  char abbuf[10000];
-  char *zwrite;
-
-  cread = read (ofrom, abbuf, sizeof abbuf);
-  if (cread < 0)
-    {
-      if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
-	cread = 0;
-      else
-	{
-	  perror ("read");
-	  uchild (SIGCHLD);
-	}
-    }
-
-  if (zDebug != NULL)
-    {
-      char abshow[325];
-      char *zshow;
-      int i;
-
-      zshow = abshow;
-      for (i = 0; i < cread && i < 80; i++)
-	zshow += cpshow (zshow, abbuf[i]);
-      if (i < cread)
-	{
-	  *zshow++ = '.';
-	  *zshow++ = '.';
-	  *zshow++ = '.';
-	}
-      *zshow = '\0';
-      fprintf (stderr, "Writing to %d: %d \"%s\"\n", oto, cread, abshow);
-      fflush (stderr);
-    }
-
-  if (iPercent > 0)
-    {
-      int i;
-      int c;
-
-      c = 0;
-      for (i = 0; i < cread; i++)
-	{
-	  if (rand () % 1000 < iPercent)
-	    {
-	      ++abbuf[i];
-	      ++c;
-	    }
-	}
-      if (zDebug != NULL && c > 0)
-	fprintf (stderr, "Clobbered %d bytes\n", c);
-    }
-
-  zwrite = abbuf;
-  while (cread > 0)
-    {
-      long cunread;
-      int cdo;
-      int cwrote;
-  
-#ifdef FIONREAD
-      if (ioctl (otoslave, FIONREAD, &cunread) < 0)
-	{
-	  perror ("FIONREAD");
-	  uchild (SIGCHLD);
-	}
-      if (zDebug != NULL)
-	fprintf (stderr, "%ld unread\n", cunread);
-#else /* ! FIONREAD */
-      cunread = 0;
-#endif /* ! FIONREAD */
-
-      cdo = cread;
-      if (256 - cunread < cdo)
-	{
-	  cdo = 256 - cunread;
-	  if (cdo == 0)
-	    continue;
-	}
-
-      cwrote = write (oto, zwrite, cdo);
-      if (cwrote < 0)
-	{
-	  if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
-	    cwrote = 0;
-	  else
-	    {
-	      perror ("write");
-	      uchild (SIGCHLD);
-	    }
-	}
-
-      /* If we weren't able to write anything, try reading some more
-	 to avoid getting deadlocked.  */
-      if (cwrote == 0)
-	{
-	  int cmore;
-
-	  cmore = read (ofrom, zwrite + cread,
-			(sizeof abbuf - (zwrite - abbuf)) - cread);
-	  if (cmore < 0)
-	    {
-	      if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
-		cmore = 0;
-	      else
-		{
-		  perror ("read");
-		  uchild (SIGCHLD);
-		}
-	    }
-	  cread += cmore;
-	}
-
-      cread -= cwrote;
-      zwrite += cwrote;
-      *pc += cwrote;
-    }
-}
-
-/* A version of the system command that checks for errors.  */
-
-static void
-xsystem (zcmd)
-     const char *zcmd;
-{
-  int istat;
-
-  istat = system ((char *) zcmd);
-  if (istat != 0)
-    {
-      fprintf (stderr, "Command failed with status %d\n", istat);
-      fprintf (stderr, "%s\n", zcmd);
-      exit (EXIT_FAILURE);
-    }
-}
 
 /* Pick one of two file descriptors which is ready for reading, or
    return in five seconds.  If the argument is ready for reading,
@@ -1446,6 +1344,182 @@ uchoose (po1, po2)
 #endif /* ! HAVE_SELECT */
 }
 
+/* Read some data from a file descriptor.  This keeps reading until
+   one of the reads gets no data.  */
+
+static long
+cread (o, pqbuf)
+     int o;
+     struct sbuf **pqbuf;
+{
+  long ctotal;
+
+  while (*pqbuf != NULL && (*pqbuf)->qnext != NULL)
+    pqbuf = &(*pqbuf)->qnext;
+
+  ctotal = 0;
+
+  while (TRUE)
+    {
+      int cgot;
+
+      if (*pqbuf != NULL
+	  && (*pqbuf)->cend >= sizeof (*pqbuf)->ab)
+	pqbuf = &(*pqbuf)->qnext;
+
+      if (*pqbuf == NULL)
+	{
+	  *pqbuf = (struct sbuf *) malloc (sizeof (struct sbuf));
+	  if (*pqbuf == NULL)
+	    {
+	      fprintf (stderr, "Out of memory\n");
+	      uchild (SIGCHLD);
+	    }
+	  (*pqbuf)->qnext = NULL;
+	  (*pqbuf)->cstart = 0;
+	  (*pqbuf)->cend = 0;
+	}
+      
+      cgot = read (o, (*pqbuf)->ab + (*pqbuf)->cend,
+		   (sizeof (*pqbuf)->ab) - (*pqbuf)->cend);
+      if (cgot < 0)
+	{
+	  if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
+	    cgot = 0;
+	  else
+	    {
+	      perror ("read");
+	      uchild (SIGCHLD);
+	    }
+	}
+
+      if (cgot == 0)
+	return ctotal;
+
+      ctotal += cgot;
+
+      if (zDebug != NULL)
+	{
+	  char abshow[325];
+	  char *zfrom;
+	  char *zshow;
+	  int i;
+
+	  zfrom = (*pqbuf)->ab + (*pqbuf)->cend;
+	  zshow = abshow;
+	  for (i = 0; i < cgot && i < 80; i++, zfrom++)
+	    zshow += cpshow (zshow, *zfrom);
+	  if (i < cgot)
+	    {
+	      *zshow++ = '.';
+	      *zshow++ = '.';
+	      *zshow++ = '.';
+	    }
+	  *zshow = '\0';
+	  fprintf (stderr, "Read from %d: %d \"%s\"\n", o, cgot, abshow);
+	  fflush (stderr);
+	}
+
+      if (iPercent > 0)
+	{
+	  int i;
+	  int c;
+
+	  c = 0;
+	  for (i = 0; i < cgot; i++)
+	    {
+	      if (rand () % 1000 < iPercent)
+		{
+		  ++(*pqbuf)->ab[(*pqbuf)->cend + i];
+		  ++c;
+		}
+	    }
+	  if (zDebug != NULL && c > 0)
+	    fprintf (stderr, "Clobbered %d bytes\n", c);
+	}
+
+      (*pqbuf)->cend += cgot;
+
+      if (ctotal > 256)
+	return ctotal;
+    }
+}
+
+/* Write data to a file descriptor until one of the writes gets no
+   data.  */
+
+static boolean
+fsend (o, oslave, pqbuf)
+     int o;
+     int oslave;
+     struct sbuf **pqbuf;
+{
+  long ctotal;
+
+  ctotal = 0;
+  while (*pqbuf != NULL)
+    {
+      int cwrite, cwrote;
+
+      if ((*pqbuf)->cstart >= (*pqbuf)->cend)
+	{
+	  struct sbuf *qfree;
+
+	  qfree = *pqbuf;
+	  *pqbuf = (*pqbuf)->qnext;
+	  free ((pointer) qfree);
+	  continue;
+	}
+
+#ifdef FIONREAD
+      {
+	long cunread;
+
+	if (ioctl (oslave, FIONREAD, &cunread) < 0)
+	  {
+	    perror ("FIONREAD");
+	    uchild (SIGCHLD);
+	  }
+	if (zDebug != NULL)
+	  fprintf (stderr, "%ld unread\n", cunread);
+	cwrite = 256 - cunread;
+	if (cwrite <= 0)
+	  break;
+      }
+#else /* ! FIONREAD */
+      if (! fwritable (o))
+	break;
+      cwrite = 1;
+#endif /* ! FIONREAD */
+
+      if (cwrite > (*pqbuf)->cend - (*pqbuf)->cstart)
+	cwrite = (*pqbuf)->cend - (*pqbuf)->cstart;
+
+      cwrote = write (o, (*pqbuf)->ab + (*pqbuf)->cstart, cwrite);
+      if (cwrote < 0)
+	{
+	  if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
+	    cwrote = 0;
+	  else
+	    {
+	      perror ("write");
+	      uchild (SIGCHLD);
+	    }
+	}
+      
+      if (cwrote == 0)
+	break;
+
+      ctotal += cwrote;
+      (*pqbuf)->cstart += cwrote;
+    }
+
+  if (zDebug != NULL && ctotal > 0)
+    fprintf (stderr, "Wrote %ld to %d\n", ctotal, o);
+
+  return ctotal > 0;
+}
+
 /* Check whether a file descriptor can be written to.  */
 
 static boolean
@@ -1494,4 +1568,21 @@ fwritable (o)
 
 #endif /* HAVE_POLL */
 #endif /* ! HAVE_SELECT */
+}
+
+/* A version of the system command that checks for errors.  */
+
+static void
+xsystem (zcmd)
+     const char *zcmd;
+{
+  int istat;
+
+  istat = system ((char *) zcmd);
+  if (istat != 0)
+    {
+      fprintf (stderr, "Command failed with status %d\n", istat);
+      fprintf (stderr, "%s\n", zcmd);
+      exit (EXIT_FAILURE);
+    }
 }
