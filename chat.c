@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/03/04  00:36:44  ian
+   Michael Richardson: better chat script debugging
+
    Revision 1.16  1992/03/03  06:06:48  ian
    T. William Wells: don't complain about missing configuration files
 
@@ -391,6 +394,9 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
   char *zhave;
   int chave;
   long iendtime;
+#if DEBUG > 4
+  int cchars;
+#endif
 
   cmax = cmin = aclens[0];
   for (i = 1; i < cstrings; i++)
@@ -407,6 +413,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
   iendtime = isysdep_time ((long *) NULL) + ctimeout;
 
 #if DEBUG > 4
+  cchars = 0;
   if (iDebug > 4)
     {
       udebug_buffer ("icexpect: Looking for", azstrings[0],
@@ -475,6 +482,13 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 	{
 	  char ab[5];
 
+	  ++cchars;
+	  if (cchars > 60)
+	    {
+	      ulog (LOG_DEBUG_END, "\"");
+	      ulog (LOG_DEBUG_START, "icexpect: Got \"");
+	      cchars = 0;
+	    }
 	  (void) cdebug_char (ab, bchar);
 	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
 	}
@@ -519,14 +533,31 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
    value for fquote.  The fquote variable is TRUE if the debugging
    output is in the middle of a quoted string.  */
 
+static int cCsend_chars;
+
 static boolean
 fcsend_debug (fquote, clen, zbuf)
      boolean fquote;
      int clen;
      const char *zbuf;
 {
+  int cwas;
+
   if (iDebug <= 4)
     return TRUE;
+
+  cwas = cCsend_chars;
+  if (clen > 0)
+    cCsend_chars += clen;
+  else
+    cCsend_chars += strlen (zbuf);
+  if (cCsend_chars > 60 && cwas > 10)
+    {
+      ulog (LOG_DEBUG_END, "%s", fquote ? "\"" : "");
+      fquote = FALSE;
+      ulog (LOG_DEBUG_START, "fcsend: Writing");
+      cCsend_chars = 0;
+    }
 
   if (clen == 0)
     {
@@ -614,6 +645,7 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
       ulog (LOG_DEBUG_START, "fcsend: Writing");
       fPort_debug = FALSE;
       fquote = FALSE;
+      cCsend_chars = 0;
     }
 #endif
 

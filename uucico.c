@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.78  1992/03/11  00:18:50  ian
+   Save temporary file if file send fails
+
    Revision 1.77  1992/03/10  23:01:20  ian
    Don't run uuxqt if we got a SIGTERM
 
@@ -3123,6 +3126,9 @@ zget_uucp_cmd (frequired)
   int cgot;
   long iendtime;
   int ctimeout;
+#if DEBUG > 5
+  int cchars;
+#endif
 
   iendtime = isysdep_time ((long *) NULL);
   if (frequired)
@@ -3131,6 +3137,7 @@ zget_uucp_cmd (frequired)
     iendtime += CSHORTTIMEOUT;
 
 #if DEBUG > 5
+  cchars = 0;
   if (iDebug > 5)
     {
       ulog (LOG_DEBUG_START, "zget_uucp_cmd: Got \"");
@@ -3172,6 +3179,13 @@ zget_uucp_cmd (frequired)
 	{
 	  char ab[5];
 
+	  ++cchars;
+	  if (cchars > 60)
+	    {
+	      ulog (LOG_DEBUG_END, "\"");
+	      ulog (LOG_DEBUG_START, "zget_uucp_cmd: Got \"");
+	      cchars = 0;
+	    }
 	  (void) cdebug_char (ab, b);
 	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
 	}
@@ -3245,6 +3259,9 @@ zget_typed_line ()
   int cgot;
 
 #if DEBUG > 5
+  int cchars;
+
+  cchars = 0;
   if (iDebug > 5)
     {
       ulog (LOG_DEBUG_START, "zget_typed_line: Got \"");
@@ -3281,6 +3298,13 @@ zget_typed_line ()
 	{
 	  char ab[5];
 
+	  ++cchars;
+	  if (cchars > 60)
+	    {
+	      ulog (LOG_DEBUG_END, "\"");
+	      ulog (LOG_DEBUG_START, "zget_typed_line: Got \"");
+	      cchars = 0;
+	    }
 	  (void) cdebug_char (ab, b);
 	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
 	}
