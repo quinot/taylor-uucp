@@ -569,10 +569,18 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 
   /* On a system which can determine microseconds we might very well
      have both csecs == 0 and cmicros == 0.  */
-  if (csecs == 0 && cmicros == 0)
+  if (csecs == 0 && cmicros < 1000)
     cbps = 0;
   else
-    cbps = (1000 * cbytes) / (csecs * 1000 + cmicros / 1000);
+    {
+      long cmillis;
+
+      /* This computation will not overflow provided csecs < 2147483
+	 and cbytes and cbps both fit in a long.  */
+      cmillis = csecs * 1000 + cmicros / 1000;
+      cbps = ((cbytes / cmillis) * 1000
+	      + ((cbytes % cmillis) * 1000) / cmillis);
+    }
 
   if (eLstats == NULL)
     {
