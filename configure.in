@@ -210,7 +210,7 @@ changequote([,])dnl
 for i in socket t_open; do
   def=HAVE_`echo $i|tr "$trfrom" "$trto"`
   AC_FUNC_CHECK([$i],[AC_DEFINE($def)],[missing=1])dnl
-  for lib in "-lsocket" "-lnsl" "-lxti"; do
+  for lib in "-lsocket" "-lsocket -lnsl" "-lnsl" "-lxti"; do
     if test -n "$missing"; then
       case $LIBS in
       *${lib}*) ;;
