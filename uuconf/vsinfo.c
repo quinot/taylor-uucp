@@ -212,6 +212,11 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 				      pblock);
 	  if (iret != UUCONF_SUCCESS)
 	    break;
+
+	  /* Treat any time/grade setting as both a timegrade and a
+	     call-timegrade.  */
+	  if (bgrade != UUCONF_GRADE_LOW)
+	    qset->uuconf_qcalltimegrade = qset->uuconf_qtimegrade;
 	}
 
       if (iret != UUCONF_SUCCESS)
