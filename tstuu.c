@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1992/01/15  19:40:35  ian
+   Mike Park: handle HAVE_UNION_WAIT correctly and completely
+
    Revision 1.32  1992/01/13  19:38:16  ian
    Chip Salzenberg: can't declare execl, since it is varadic
 
@@ -1015,7 +1018,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       (void) remove (zto);
       umake_file (zfrom, 5);
 
-      sprintf (ab, "%s -c ~/from3 test1!~/to3", zuucp2);
+      sprintf (ab, "%s -c \\~/from3 test1!~/to3", zuucp2);
       xsystem (ab);
     }
 
