@@ -346,6 +346,10 @@ extern int idebug_parse P((const char *));
 extern boolean fcopy_file P((const char *zfrom, const char *zto,
 			     boolean fpublic, boolean fmkdirs));
 
+/* Copy an open file to another.  */
+extern boolean fcopy_open_file P((openfile_t efrom, const char *zto,
+				  boolean fpublic, boolean fmkdirs));
+
 /* Translate escape sequences in a buffer, leaving the result in the
    same buffer and returning the length.  */
 extern size_t cescape P((char *zbuf));

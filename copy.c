@@ -48,9 +48,7 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
      boolean fmkdirs;
 {
   FILE *efrom;
-  FILE *eto;
-  char ab[8192];
-  int c;
+  boolean fret;
 
   efrom = fopen (zfrom, BINREAD);
   if (efrom == NULL)
@@ -58,26 +56,37 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       ulog (LOG_ERROR, "fopen (%s): %s", zfrom, strerror (errno));
       return FALSE;
     }
+
+  fret = fcopy_open_file (efrom, zto, fpublic, fmkdirs);
+  (void) fclose (efrom);
+  return fret;
+}
+
+boolean
+fcopy_open_file (efrom, zto, fpublic, fmkdirs)
+     FILE *efrom;
+     const char *zto;
+     boolean fpublic;
+     boolean fmkdirs;
+{
+  FILE *eto;
+  char ab[8192];
+  int c;
+
   eto = esysdep_fopen (zto, fpublic, FALSE, fmkdirs);
   if (eto == NULL)
-    {
-      (void) fclose (efrom);
-      return FALSE;
-    }
+    return FALSE;
 
   while ((c = fread (ab, sizeof (char), sizeof ab, efrom)) != 0)
     {
       if (fwrite (ab, sizeof (char), (size_t) c, eto) != c)
 	{
 	  ulog (LOG_ERROR, "fwrite: %s", strerror (errno));
-	  (void) fclose (efrom);
 	  (void) fclose (eto);
 	  (void) remove (zto);
 	  return FALSE;
 	}
     }
-
-  (void) fclose (efrom);
 
   if (fclose (eto) != 0)
     {
@@ -117,9 +126,7 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
      boolean fmkdirs;
 {
   int ofrom;
-  int oto;
-  char ab[8192];
-  int c;
+  boolean fret;
 
   ofrom = open (zfrom, O_RDONLY | O_NOCTTY, 0);
   if (ofrom < 0)
@@ -127,6 +134,22 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       ulog (LOG_ERROR, "open (%s): %s", zfrom, strerror (errno));
       return FALSE;
     }
+
+  fret = fcopy_open_file (ofrom, zto, fpublic, fmkdirs);
+  (void) close (ofrom);
+  return fret;
+}
+
+boolean
+fcopy_open_file (ofrom, zto, fpublic, fmkdirs)
+     int ofrom;
+     const char *zto;
+     boolean fpublic;
+     boolean fmkdirs;
+{
+  int oto;
+  char ab[8192];
+  int c;
 
   /* These file mode arguments are from the UNIX version of sysdep.h;
      each system dependent header file will need their own
@@ -137,17 +160,13 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       if (errno == ENOENT && fmkdirs)
 	{
 	  if (! fsysdep_make_dirs (zto, fpublic))
-	    {
-	      (void) close (ofrom);
-	      return FALSE;
-	    }
+	    return FALSE;
 	  oto = creat (zto,
 		       fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
 	}
       if (oto < 0)
 	{
 	  ulog (LOG_ERROR, "open (%s): %s", zto, strerror (errno));
-	  (void) close (ofrom);
 	  return FALSE;
 	}
     }
@@ -157,14 +176,11 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       if (write (oto, ab, (size_t) c) != c)
 	{
 	  ulog (LOG_ERROR, "write: %s", strerror (errno));
-	  (void) close (ofrom);
 	  (void) close (oto);
 	  (void) remove (zto);
 	  return FALSE;
 	}
     }
-
-  (void) close (ofrom);
 
   if (close (oto) < 0)
     {
