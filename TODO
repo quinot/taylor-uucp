@@ -316,3 +316,9 @@ even on the slave, which means the slave needs some way to ask the
 master to hang up.  I think some uucico's do this by sending CYM.
 
 137.
+
+Support control over local executions by recognizing the local system
+name in the configuration file.  Think about what is needed to use the
+same configuration files on multiple systems.
+
+138.
