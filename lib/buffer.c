@@ -27,13 +27,21 @@
 
 #include "uudefs.h"
 
-/* We keep a linked list of buffers.  */
+/* We keep a linked list of buffers.  The union is a hack because the
+   default definition of offsetof, in uucp.h, takes the address of the
+   field, and some C compilers will not let you take the address of an
+   array.  */
 
 struct sbuf
 {
   struct sbuf *qnext;
   size_t c;
-  char ab[4];
+  union
+    {
+      char ab[4];
+      char bdummy;
+    }
+  u;
 };
 
 static struct sbuf *qBlist;
@@ -63,7 +71,7 @@ zbufalc (c)
 	  q->c = c;
 	}
     }
-  return q->ab;
+  return q->u.ab;
 }
 
 /* Get a buffer holding a given string.  */
@@ -93,7 +101,7 @@ ubuffree (z)
 
   if (z == NULL)
     return;
-  q = (struct sbuf *) (z - offsetof (struct sbuf, ab));
+  q = (struct sbuf *) (z - offsetof (struct sbuf, u));
   q->qnext = qBlist;
   qBlist = q;
 }
