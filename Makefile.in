@@ -5,6 +5,8 @@ CC = gcc
 CFLAGS = -Wall -Wshadow -Wwrite-strings -g
 LIBS =
 LN = ln
+INSTALL = cp
+INSTALL_PROGRAM = $(INSTALL)
 
 # Define destination directories for make install
 LIBDIR = /usr/lib/uucp
@@ -42,13 +44,16 @@ install: uucico uuxqt uux uucp uuchk
 	-$(LN) $(LIBDIR)/uucico $(LIBDIR)/uucico.old
 	-$(LN) $(LIBDIR)/uuxqt $(LIBDIR)/uuxqt.old
 	rm -f $(LIBDIR)/uucico $(LIBDIR)/uuxqt
-	cp uucico uuxqt uuchk $(LIBDIR)
+	$(INSTALL_PROGRAM) uucico $(LIBDIR)/uucico
+	$(INSTALL_PROGRAM) uuxqt $(LIBDIR)/uuxqt
+	$(INSTALL_PROGRAM) uuchk $(LIBDIR)/uuchk
 	chown uucp $(LIBDIR)/uucico $(LIBDIR)/uuxqt $(LIBDIR)/uuchk
 	chmod 4555 $(LIBDIR)/uucico $(LIBDIR)/uuxqt
 	-$(LN) $(BINDIR)/uux $(BINDIR)/uux.old
 	-$(LN) $(BINDIR)/uucp $(BINDIR)/uucp.old
 	rm -f $(BINDIR)/uux $(BINDIR)/uucp
-	cp uux uucp $(BINDIR)
+	$(INSTALL_PROGRAM) uux $(BINDIR)/uux
+	$(INSTALL_PROGRAM) uucp $(BINDIR)/uucp
 	chown uucp $(BINDIR)/uux $(BINDIR)/uucp
 	chmod 4555 $(BINDIR)/uux $(BINDIR)/uucp
 
