@@ -550,10 +550,17 @@ spaces are read).  The rest of the line is interpreted according to the
 keyword.  Most keywords are followed by numbers, boolean values or
 simple strings (with no embedded spaces).  The @kbd{#} character is used
 for comments, and everything from a @kbd{#} to the end of the line is
-ignored.  Everything after the keyword must be on the same line.  A
-@var{boolean} may be specified as @kbd{y}, @kbd{n}, @kbd{Y}, @kbd{N},
-@kbd{t}, @kbd{f}, @kbd{T}, or @kbd{F} (any trailing characters are
-ignored, so @samp{true}, @samp{false}, etc., are also acceptable).
+ignored unless the @kdb{#} is preceded by a @kbd{\} (backslash); if the
+@kbd{#} is preceeded by a @kdb{\}, the @kdb{\} is removed but the
+@kbd{#} remains in the line (this can be useful for a phone number
+containing a @kdb{#}) (the backslash is not a general quoting character;
+to enter the sequence @samp{\#}, you would use @samp{\\#}).  Everything
+after the keyword must be on the same line.  A @var{boolean} may be
+specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and
+@kbd{n}, @kbd{N}, @kbd{f}, or @kbd{F} for false; any trailing
+characters are ignored, so @code{true}, @code{false}, etc., are also
+acceptable.
+
 
 @menu
 * config file::                 The main configuration file
@@ -626,17 +633,17 @@ given on the line, and the @code{dialfile} command may be repeated.
 Specify the dialcode file(s).  The default is from @file{sysdep.h}.
 These files specify dialcodes that may be used when sending phone
 numbers to a modem.  This permits using the same set of phone numbers in
-different area-codes and phone systems, by using dialcodes to specify
-the calling sequence.  When a phone number goes through dialcode
-translation, the leading alphabetic characters are stripped off.  The
-dialcode files are read line by line, just like any other configuration
-file, and when a line is found whose first word is the same as the
-leading characters from the phone number, the second word on the line
-(which would normally consist of numbers) replaces the dialcode in the
-phone number.  No dialcode file need be used.  Multiple dialcode files
-may be specified on the line, and the @code{dialcodefile} command may be
-repeated; all the dialcode files will be read in turn until a dialcode
-is located.
+different area-codes or with different phone systems, by using dialcodes
+to specify the calling sequence.  When a phone number goes through
+dialcode translation, the leading alphabetic characters are stripped
+off.  The dialcode files are read line by line, just like any other
+configuration file, and when a line is found whose first word is the
+same as the leading characters from the phone number, the second word on
+the line (which would normally consist of numbers) replaces the dialcode
+in the phone number.  No dialcode file need be used.  Multiple dialcode
+files may be specified on the line, and the @code{dialcodefile} command
+may be repeated; all the dialcode files will be read in turn until a
+dialcode is located.
 
 @item pubdir @var{string}
 @findex pubdir
@@ -655,29 +662,41 @@ from @file{sysdep.h}.  If the call out login name or password for a
 system are given as @kbd{*} (see the description of the system
 configuration file, below), these files are read to get the real login
 name or password.  Each line in the file(s) has three words: the system
-name, the login name, and the password.  The intention is to permit the
-system file to be publically readable; the call out files must obviously
-be kept secure.  These files need not be used.  Multiple call out files
-may be specified on the line, and the @code{callfile} command may be
-repeated; all the files will be read in turn until the system is found.
+name, the login name, and the password.  This file is only used when
+placing calls to remote systems; the password file described under
+@code{passwdfile} below is used for incoming calls.  The intention of
+the call out file is to permit the system file to be publically
+readable; the call out files must obviously be kept secure.  These files
+need not be used.  Multiple call out files may be specified on the line,
+and the @code{callfile} command may be repeated; all the files will be
+read in turn until the system is found.
 
 @item passwdfile @var{strings}
 @findex passwdfile
 
 Specify the password file(s) to use for login names when @code{uucico}
-is doing its own login prompting (using the @samp{-e} or @samp{-w}
-switch, or naming a port).  The default is from @file{sysdep.h}.  Each
-line in the file(s) has two words: the login name and the password.
-These files are optional, although one must exist if @code{uucico} is to
-present its own login prompts.  Multiple password files may be specified
-on the line, and the @code{passwdfile} command may be repeated; all the
-files will be read in turn until the login name is found.
+is doing its own login prompting, which it does when given the
+@samp{-e}, @samp{-l} or @samp{-w} switch.  The default is from
+@file{sysdep.h}.  Each line in the file(s) has two words: the login name
+and the password (e.g. @code{Ufoo foopas}).  The login name is accepted
+before the system name is known, so these are independent of which
+system is calling in; a particular login may be required for a system by
+using the @code{called-login} command in the system file.  These
+password files are optional, although one must exist if @code{uucico} is
+to present its own login prompts.  Multiple password files may be
+specified on the line, and the @code{passwdfile} command may be
+repeated; all the files will be read in turn until the login name is
+found.
+
 
 @item logfile @var{string}
 @findex logfile
 
 Name the log file.  The default is from @file{sysdep.h}.  Logging
-information is written to this file.
+information is written to this file.  If @code{HAVE_BNU_LOGGING} is
+defined in @file{conf.h}, then by default a separate log file is used
+for each system.  Using this command to name a log file will cause all
+the systems to use it.
 
 @item statfile @var{string}
 @findex statfile
@@ -703,7 +722,9 @@ it must be not be publically readable.
 Set the debugging level.  The default is 0.  Numbers between 0 and 9 are
 relevant; the larger the number, the more debugging information is
 output.  This may be overridden by the @samp{-x} switch to @code{uucico}
-(and all the other programs as well).
+(and all the other programs as well).  The debugging level may also be
+set specifically for calls to or from a specific system with the
+@code{debug} command in the system file.
 
 @item unknown @var{string} @dots{}
 @findex unknown
@@ -712,7 +733,21 @@ The @var{string} and subsequent arguments are treated as though they
 appeared in the system file (see below for a full description).  They
 are used to apply to any unknown systems that may call in, probably to
 set file transfer permissions and the like.  If the @code{unknown}
-command is not used, unknown systems are not permitted to call.
+command is not used, unknown systems are not permitted to call in.
+
+@item v2-files @var{boolean}
+@findex v2-files
+
+If the code was compiled to be able to read V2 configuration files, a
+false argument to this command will prevent them from being read.
+This can be useful while testing.  The default is true.
+
+@item bnu-files @var{boolean}
+@findex bnu-files
+  
+If the code was compiled to be able to read BNU configuration files, a
+false argument to this command will prevent them from being read.
+This can be useful while testing.  The default is true.
 
 @end table
 
@@ -720,24 +755,39 @@ command is not used, unknown systems are not permitted to call.
 @section The system configuration file
 @cindex sys file
 
-These files describe all remote systems known to the UUCP package.  The
-first set of commands in the file, up to the first @code{system}
-command, specify defaults to be used for all systems in that file.
+These files describe all remote systems known to the UUCP package.
+
+The first set of commands in the file, up to the first @code{system}
+command, specify defaults to be used for all systems in that file.  Each
+different system file uses a different set of defaults.
+
 Subsequently, each set of commands from the first @code{system} up to
 the next @code{system} command describe a particular system (default
-values may be overridden for specific systems).  There is then another
-level of defaults, in that the first set of commands for a particular
-system, up to the first @code{alternate} command, specify defaults.
+values may be overridden for specific systems).
+
+There is then another level of defaults, in that the first set of
+commands for a particular system, up to the first @code{alternate}
+command, specify defaults.
+
 Subsequently, each set of commands from @code{alternate} up to the next
 @code{alternate} command describe an alternate means of calling out or
-calling in.  When a system is called, the commands before the first
-@code{alternate} are used to select a phone number, port and so forth;
-if the call fails for some reason, the commands between the first
-@code{alternate} and the second are used, and so forth.  When a call is
-received the various alternates are checked to permit the login name to
-specify different permissions (this will only be done if the first set
-of commands, before the first @code{alternate} command, use the
-@code{called-login} command).
+calling in.
+
+When a system is called, the commands before the first @code{alternate}
+are used to select a phone number, port and so forth; if the call fails
+for some reason, the commands between the first @code{alternate} and the
+second are used, and so forth.  Well, not quite.  Actually, each
+succeeding alternate will only be used if it is different in some
+relevant way (different phone number, different chat script, etc.).  If
+you want to force the same alternate to be used again (to retry a phone
+call more than once, for example), entering the phone number (or any
+other relevant field) again will make it appear different.
+
+When a call is received the various alternates are checked to permit the
+login name to specify different permissions (this will only be done if
+the first set of commands, before the first @code{alternate} command,
+use the @code{called-login} command).  In this case, the only command
+relevant to whether an alternate is considered is @code{called-login}.
 
 The @code{alternate} command may also be used in the file wide defaults
 (the set of commands before the first @code{system} command).  This
@@ -775,14 +825,23 @@ Start an alternate set of commands, as described above.
 @findex default-alternates
 
 If the argument is false, any remaining default alternates (from the
-defaults specified at the top of the system file) will not be used.
-The default is true.
+defaults specified at the top of the current system file) will not be
+used.  The default is true.
 
 @item alias @var{string}
 @findex alias
 
 Specify an alias for the current system.  The alias may be used by local
 @code{uucp} and @code{uux} commands.  The default is to have no aliases.
+
+@item debug @var{number}
+@findex debug in system file
+
+Set the debugging level used for calls to or from the system.  This may
+be used to debug a connection with a specific system.  It is
+particularly useful when debugging incoming calls, since debugging
+information will be generated whenever the call comes in.  See the
+@code{debug} command in the main configuration file for more details.
 
 @item time @var{string}
 @findex time
@@ -815,19 +874,21 @@ is a time string as described under the @code{time} command.  All jobs
 of grade @var{character} or higher (@kbd{0} > @kbd{9} > @kbd{A} >
 @kbd{Z} > @kbd{a} > @kbd{z}) may be run at the specified time.  An
 ordinary @code{time} command is equivalent to using @code{timegrade}
-with a grade of @kbd{z}.  If there are no jobs of a sufficiently high
-grade according to the time string, the system will not be called.
-Using the @samp{-s} switch to @code{uucico} to force it to call a system
-causes it to assume there is a job of grade @kbd{0} waiting to be run.
+with a grade of @kbd{z}, permitting all jobs.  If there are no jobs of a
+sufficiently high grade according to the time string, the system will
+not be called.  Using the @samp{-s} switch to @code{uucico} to force it
+to call a system causes it to assume there is a job of grade @kbd{0}
+waiting to be run.
 
 Note that the @code{timegrade} command serves two purposes: 1) if there
 is no job of sufficiently high grade the system will not be called 2) if
 the system is called anyway (because the @samp{-s} switch was given to
 @code{uucico}) only jobs of sufficiently high grade will be transferred.
 However, if the other system calls in, the @code{timegrade} commands are
-ignored, and jobs of any grade may be transferred.  Also, the
-@code{timegrade} command will not prevent the other system from
-executing any job it chooses, regardless of who placed the call.
+ignored, and jobs of any grade may be transferred (but see
+@code{call-timegrade} below).  Also, the @code{timegrade} command will
+not prevent the other system from executing any job it chooses,
+regardless of who placed the call.
 
 The @code{timegrade} command may appear multiple times without using
 @code{alternate}.  If this command does not appear, there are no
@@ -843,13 +904,13 @@ is placed to the other system during a time which matches the time
 string, the remote system will be requested to only run jobs of grade
 @var{character} or higher.  Unfortunately, there is no way to guarantee
 that the other system will obey the request (this UUCP package will, but
-there are other which will not); moreover historically job grades are
+there are others which will not); moreover historically job grades are
 somewhat arbitrary so specifying a grade will only be meaningful if the
 other system cooperates in assigning grades.  This grade restriction
 only applies when the other system is called, not when the other system
 calls in.
 
-The @code{call-timegrade} command may be appear multiple times without
+The @code{call-timegrade} command may appear multiple times without
 using @code{alternate}.  If this command does not appear, or if none of
 the time strings match, the remote system will be allowed to send
 whatever grades of work it chooses.
@@ -861,12 +922,15 @@ The @var{string} is a time string as described under the @code{time}
 command.  The @var{number} is the size in bytes of the largest file that
 should be transferred at a time matching the time string if the local
 system placed the call and the request was made by the local system.
-The size of a file requested from the remote system (as opposed to a
-file sent to the remote system) will only be checked if the other system
-is running this package (older UUCP code will not understand a maximum
-size request).  This command may appear multiple times in a single
-alternate.  If this command does not appear, or if none of the time
-strings match, there are no size restrictions.
+This command may appear multiple times in a single alternate.  If this
+command does not appear, or if none of the time strings match, there are
+no size restrictions.
+
+With all the size control commands, the size of a file from the remote
+system (as opposed to a file from the local system) will only be
+checked if the other system is running this package (other UUCP
+packages will not understand a maximum size request, nor will they
+inform the local package of the size of remote files).
 
 @item call-remote-size @var{number} @var{string}
 @findex call-remote-size
@@ -919,7 +983,7 @@ will be defined.
 @itemx speed @var{number}
 @findex speed
 
-Specify the speed (baud is technically incorrect, but easily understood)
+Specify the speed (baud is technically incorrect, but widely understood)
 at which to call the system.  This will try all available ports with
 that baud rate until an unlocked port is found.  The ports are defined
 in the port file.  If both the baud and the port commands appear, both
@@ -961,8 +1025,8 @@ port file.
 
 Give a phone number to call (when using a modem port) or a remote host
 to contact (when using a TCP port).  The commands @code{phone} and
-@code{address} have the same effect, but are intended to be more
-mnemonic depending on the type of port in use.
+@code{address} are equivalent, but are intended to be more mnemonic
+depending on the type of port in use.
 
 When used with a modem port, an @kbd{=} character in the phone number
 means to wait for a secondary dial tone (although only some modems
@@ -972,8 +1036,8 @@ phone number the @code{alternate} command must be used.  This command
 must appear in order to call out on a modem; there is no default.
 
 When used with a TCP port, the string names the host to contact.  It may
-be a domain name or an Internet address.  If no address is specified,
-the system name is used.
+be a domain name or a numeric Internet address.  If no address is
+specified, the system name is used.
 
 When used with any other port, this command is ignored.
 
@@ -1059,11 +1123,11 @@ A carriage return @kbd{\r} will be sent at the end of each send string,
 unless the @kbd{\c} escape sequence appears in the string.  Note that
 some UUCP packages use @kbd{\b} for break, but here it means backspace.
 
-When echo checking is enabled then after writing each character the
-program will wait until the character is echoed.  Echo checking must be
-turned on separately for each send string for which it is desired; it
-will be turned on for characters following @kbd{\E} and turned off for
-characters following @kbd{\e}.
+Echo checking means that after writing each character the program will
+wait until the character is echoed.  Echo checking must be turned on
+separately for each send string for which it is desired; it will be
+turned on for characters following @kbd{\E} and turned off for characters
+following @kbd{\e}.
 
 The default chat script is:
 
@@ -1112,6 +1176,16 @@ characters; escape sequences must be used for them.  Multiple
 is to have none.  The corresponding command in the dialers file has some
 examples where this is useful.
 
+@item chat-seven-bit @var{boolean}
+@findex chat-seven-bit
+
+If the argument is true, all incoming characters are stripped to seven
+bits when being compared to the expect string.  Otherwise all eight bits
+are used in the comparison.  The default is true because some Unix
+systems generate parity bits during the login prompt which must be
+ignored while running the chat script.  This has no effect on any
+@code{chat-program}, which must ignore parity by itself if necessary.
+
 @item chat-program @var{strings}
 @findex chat-program
 
@@ -1120,9 +1194,9 @@ expected to run its own version of a chat script, but it may do whatever
 it wants.  If both @code{chat-program} and @code{chat} are specified,
 the program is executed first followed by the chat script.
 
-The first argument to @code{chat-program} is the program name.  The
-remaining arguments are arguments which are passed to it.  The following
-escape sequences are recognized in the arguments:
+The first argument to the @code{chat-program} command is the program
+name to run.  The remaining arguments are passed to the program.  The
+following escape sequences are recognized in the arguments:
 
 @table @kbd
 @item \L
@@ -1231,22 +1305,24 @@ used in either the port or the dialer to change this.  Each protocol has
 particular requirements that must be met before it will be considered
 during negotiation with the remote side.
 
-The @samp{t} protocol is intended for use over TCP or some other
-communication path with end to end reliability, as it does no checking
-of the data at all.  It will only be considered on a TCP port which is
-both reliable and eight bit.
-
-The @samp{f} protocol is intended for use with error-correcting modems
-only; it checksums each file as a whole, so any error causes the entire
-file to be retransmitted.  It requires a reliable connection, but only
-uses seven-bit transmissions.
+The @samp{t} and @samp{e} protocols are intended for use over TCP or
+some other communication path with end to end reliability, as they do no
+checking of the data at all.  They will only be considered on a TCP port
+which is both reliable and eight bit.
 
 The @samp{g} protocol is robust, but requires an eight-bit connection.
+
+The @samp{f} protocol is intended for use with X.25 connections; it
+checksums each file as a whole, so any error causes the entire file to
+be retransmitted.  It requires a reliable connection, but only uses
+seven-bit transmissions.  It is a streaming protocol, so while it can be
+used on a serial port the port must be completely reliable and flow
+controlled; many aren't.
 
 The protocols will be considered in the order shown above.  This means
 that if neither the @code{seven-bit} nor the @code{reliable} command are
 used, the @samp{t} protocol will be used over a TCP connection and the
-@samp{f} protocol will be used over any other type of connection
+@samp{g} protocol will be used over any other type of connection
 (subject, of course, to what is supported by the remote system; it may
 be assumed that all systems support the @samp{g} protocol).
 
@@ -1272,7 +1348,7 @@ take numeric arguments:
 @item window
 the window size from 1 to 7; default 3
 @item packet-size
-the packet size from 64 to 4096; default 64
+the packet size from 32 to 4096; default 64
 @item startup-retries
 how often to try to start; default 8
 @item init-retries
@@ -1284,12 +1360,14 @@ how often to retry normal packet; default 6
 @item timeout
 timeout in seconds before resending; default 10
 @item garbage
-give up after this many weird bytes; default 10000
+quit after this many weird bytes; default 10000
+@item errors
+quit if this many errors (if < 0, ignored); default 100
 @end table
 
 The @samp{f} protocol is intended for use with error-correcting modems
 only; it checksums each file as a whole, so any error causes the entire
-file to be retransmitted.  It supports the following commands, all of
+file to be retransmitted.  It supports the following commands, both of
 which take numeric arguments:
 
 @table @code
@@ -1299,10 +1377,10 @@ timeout in seconds before giving up; default 120
 how often to retry sending a file; default 2
 @end table
 
-The @samp{t} protocol is intended for use over TCP or some other
-communication path with end to end reliability, as it does no checking
-of the data at all.  It supports a single command, which takes a numeric
-argument:
+The @samp{t} and @samp{e} protocols are intended for use over TCP or
+some other communication path with end to end reliability, as they do no
+checking of the data at all.  They both support a single command, which
+takes a numeric argument:
 
 @table @code
 @item timeout
@@ -1311,39 +1389,25 @@ timeout in seconds before giving up; default 120
 
 @item called-chat @var{strings}
 @findex called-chat
-
-A chat script that is run whenever the local system is called by the
-system being defined.  The chat script defined by the @code{chat}
-command, on the other hand, is used when the remote system is called.
-This called chat script might be used to set special modem parameters
-that are appropriate to a particular system.  It is run after protocol
-negotiation is complete, but before the protocol has been started.  See
-the @code{chat} command for details of how the chat script is defined.
-There is no default.  If the chat script fails, the call will be
-aborted.
-
 @item called-chat-timeout @var{number}
 @findex called-chat-timeout
-
-The timeout to use when executing the @code{called-chat} chat script.
-See the @code{chat-timeout} command for details.  The default is 60
-seconds.
-
 @item called-chat-fail @var{string}
 @findex called-chat-fail
-
-If the specified string is seen when executing the @code{called-chat}
-chat script, the chat script will fail and the call will be aborted.
-See the @code{chat-fail} command for details.  This command may be
-specified multiple times for alternate.  There is no default.
-
+@item called-chat-seven-bit @var{boolean}
+@findex called-chat-seven-bit
 @item called-chat-program @var{strings}
 @findex called-chat-program
-
-A program to run when a call is received.  See the @code{chat-program}
-command for details, including the list of escape sequences which are
-permitted.  If both @code{called-chat} and @code{called-chat-program}
-are specified, the program is run first, then the chat script.
+  
+These commands may be used to define a chat script that is run whenever
+the local system is called by the system being defined.  The chat script
+defined by the @code{chat} command, on the other hand, is used when the
+remote system is called.  This called chat script might be used to set
+special modem parameters that are appropriate to a particular system.
+It is run after protocol negotiation is complete, but before the
+protocol has been started.  See the @code{chat} command for details of
+how the chat script is defined, and what the various commands mean.
+There is no default called chat script.  If the called chat script
+fails, the call will be aborted.
 
 @item call-request @var{boolean}
 @findex call-request
@@ -1463,7 +1527,8 @@ Specifies the public directory that is used when @kbd{~} is specifed in
 a file transfer or a list of directories.  This essentially overrides
 the public directory specified in the main configuration file for this
 system only.  The default is the public directory specified in the main
-configuration file (which defaults to the system dependent header file).
+configuration file (which defaults to a value from the system dependent
+header file).
 
 @item myname @var{string}
 @findex myname
@@ -1570,22 +1635,22 @@ dependent, but a Unix example would be @file{/dev/ttyd0}.
 @itemx speed @var{number} [modem and direct only ]
 @findex speed
 
-The baud rate this port runs at.  If a system specifies a baud rate but
-no port name, then all ports which match the baud rate will be tried in
-order.  If the baud rate is not specified here and is not specified by
-the system, the natural baud rate of the port will be used by default.
+The speed this port runs at.  If a system specifies a speed but no port
+name, then all ports which match the speed will be tried in order.  If
+the speed is not specified here and is not specified by the system, the
+natural speed of the port will be used by default.
 
 @item baud-range @var{number} @var{number} [ modem only ]
 @findex baud-range
 @itemx speed-range @var{number} @var{number} [ modem only ]
 @findex speed-range
 
-Specify a range of baud rates this port can run at.  The first number is
-the minimum baud rate, the second number is the maximum baud rate.
+Specify a range of speeds this port can run at.  The first number is
+the minimum speed, the second number is the maximum speed.
 These numbers will be used when matching a system which specifies a
-desired baud rate.  The simple @code{baud} (or @code{speed}) command is
-still used to determine the baud rate to run at if the system does not
-specify a baud rate.
+desired speed.  The simple @code{speed} (or @code{speed}) command is
+still used to determine the speed to run at if the system does not
+specify a speed.
 
 @item carrier @var{boolean} [ modem only ]
 @findex carrier
@@ -1631,7 +1696,7 @@ system phone number will be used after undergoing dialcodes translation
 (a missing final token is taken as @kbd{\D}).  This will currently not
 work if @code{dial-device} is specified; to handle this correctly will
 require a more systematic notion of chat scripts.  Moreover, only the
-@code{complete} and @code{abort} strings from the first dialer specified
+@code{complete} and @code{abort} chat scripts from the first dialer specified
 are used; also, only the protocol parameters from the first dialer are
 used.
 
@@ -1694,20 +1759,14 @@ no default chat script for dialers.
 
 @item chat-timeout @var{number}
 @findex chat-timeout
-
-The number of seconds to wait for an expect string in the chat script
-before timing out and sending the next subsend or failing the chat
-script entirely.  The default is 60.
-
 @item chat-fail @var{string}
 @findex chat-fail
+@item chat-seven-bit @var{boolean}
+@findex chat-seven-bit
 
-If the @var{string} is seen at any time during a chat script, the chat
-script is aborted.  The string may not contain any whitespace
-characters; escape sequences must be used for them.  An example of this
-might be @samp{chat-fail BUSY} or @samp{chat-fail NO\sDIALTONE}.
-Multiple @code{chat-fail} commands may appear.  The default is to have
-none.
+These commands work just like the corresponding commands in the system
+file.  The @code{chat-fail} command is useful for strings such as
+@samp{chat-fail BUSY} or @samp{chat-fail NO\sDIALTONE}.
 
 @item chat-program @var{strings}
 @findex chat-program
@@ -1780,12 +1839,45 @@ second @var{boolean} need not be present; if it is, and it is
 @samp{true}, the program will sleep for 1 second after toggling DTR.
 The default is not to toggle DTR.
 
+@item complete-chat @var{strings}
+@findex complete-chat
+@item complete-chat-timeout @var{number}
+@findex complete-chat-timeout
+@item complete-chat-fail @var{string}
+@findex complete-chat-fail
+@item complete-chat-seven-bit @var{boolean}
+@findex complete-chat-seven-bit
+@item complete-chat-program @var{strings}
+@findex complete-chat-program
+
+These commands define a chat script which is run when a call is finished
+normally.  This allows the modem to be reset.  There is no default.  The
+chat script may use any of the normal escape sequences, but not
+@kbd{\L}, @kbd{\P}, @kbd{\D}, @kbd{\T}, @kbd{\M} or @kbd{\m}.  The
+program string may use only @kbd{\Y}, @kbd{\S}, and @kbd{\\}.
+
 @item complete @var{string}
 @findex complete
 
-When the call is finished normally, @var{string} is sent to the modem.
-The string may contain any escape sequences defined for the @code{send}
-command.  The default is to send nothing on completion.
+This is a simple use of @code{complete-chat}.  It is equivalent to
+@code{complete-chat "" @var{string}}; this has the effect of sending
+@var{string} to the modem when a call finishes normally.
+
+@item abort-chat @var{strings}
+@findex abort-chat
+@item abort-chat-timeout @var{number}
+@findex abort-chat-timeout
+@item abort-chat-fail @var{string}
+@findex abort-chat-fail
+@item abort-chat-seven-bit @var{boolean}
+@findex abort-chat-seven-bit
+@item abort-chat-program @var{strings}
+@findex abort-chat-program
+
+These commands define a chat script to be run when a call is aborted.
+They may be used to interrupt and reset the modem.  There is no default.
+The set of escape sequences permitted are those that are permitted for
+the @code{complete-chat} set of commands.
 
 @item abort @var{string}
 @findex abort
@@ -1794,6 +1886,10 @@ If the call is somehow aborted, @var{string} is sent to the modem.  If
 this is not defined, the dialer complete string is sent instead.  The
 string may contain any escape sequences defined for the @code{send}
 command.  The default is to send nothing when the program is aborted.
+
+This is a simple use of @code{abort-chat}.  It is equivalent to
+@code{abort-chat "" @var{string}; this has the effect of sending
+@var{string} to the modem when a call is aborted.
 
 @item protocol-parameter @var{character} @var{strings}
 @findex protocol-parameter
