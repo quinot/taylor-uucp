@@ -18,7 +18,7 @@ VPATH = @srcdir@
 
 MORECFLAGS=-I$(srcdir)/.. -DOWNER=\"$(owner)\"
 
-OBJS = epopen.o isfork.o iswait.o spawn.o srmdir.o @UNIXOBJS@
+OBJS = epopen.o isfork.o iswait.o locfil.o spawn.o srmdir.o @UNIXOBJS@
 
 all: libunix.a
 
@@ -51,6 +51,7 @@ epopen.o: $(srcdir)/../sysdep.h
 ftw.o: $(srcdir)/../sysdep.h
 isfork.o: $(srcdir)/../sysdep.h
 iswait.o: $(srcdir)/../sysdep.h
+locfil.o: $(srcdir)/../system.h
 mkdir.o: $(srcdir)/../sysdep.h
 rename.o: $(srcdir)/../sysdep.h
 rmdir.o: $(srcdir)/../sysdep.h

@@ -6,6 +6,7 @@ ftw.c
 epopen.c
 isfork.c
 iswait.c
+locfil.c
 mkdir.c
 remove.c
 rename.c
