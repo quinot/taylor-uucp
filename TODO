@@ -88,11 +88,6 @@ Should there be a way for chat scripts to specify the parity to
 generate?  I don't think there's much point to specifying what parity
 to accept.
 
-15.
-
-There may need to be a compile time switch to determine the behaviour
-of the -z switch to uux.
-
 16.
 
 The -j switch to uucp and uux does nothing.  As far as I can tell, the
@@ -153,12 +148,6 @@ could switch the effective user id to root and then back again;
 otherwise we have to not use setuid and start the program as root.
 Actually, we could use another program to start as root, bind the
 port, and invoke uucico.  That may be the required solution.
-
-27.
-
-Michael Haberler:  there should be an option to invoke uucico which
-outputs a single login: and Password: prompt, handles the call, and
-then exits.  This would be useful when invoked by inetd.
 
 31.
 
