@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/07  18:21:47  ian
+   Chip Salzenberg: move CMAXRETRIES to conf.h for easy configuration
+
    Revision 1.3  1991/09/19  17:43:48  ian
    Chip Salzenberg: undef TRUE and FALSE in case system defines them
 
@@ -47,17 +50,27 @@
 
 #include "conf.h"
 
+/* Get a definition for ANSI_C if we weren't given one.  */
+
+#ifndef ANSI_C
+#ifdef __STDC__
+#define ANSI_C 1
+#else /* ! defined (__STDC__) */
+#define ANSI_C 0
+#endif /* ! defined (__STDC__) */
+#endif /* ! defined (ANSI_C) */
+
 /* The macro P is used when declaring prototypes, to allow a somewhat
    readable syntax for both ANSI and Classic C.  */
 
-#ifdef __STDC__
+#if ANSI_C
 #undef HAVE_VOID
 #define HAVE_VOID 1
 typedef void *pointer;
 typedef const void *constpointer;
 #define P(x) x
 #define BUCHAR(b) ((unsigned char) (b))
-#else /* ! defined (__STDC__) */
+#else /* ! ANSI_C */
 #define const
 #if ! HAVE_VOID
 #define void int
@@ -70,7 +83,7 @@ typedef const char *constpointer;
    all Classic C compilers support unsigned char.  This will work on
    all normal machines.  */
 #define BUCHAR(b) ((b) & 0xff)
-#endif  /* ! defined (__STDC__) */
+#endif /* ! ANSI_C */
 
 /* Use builtin alloca if we can, and only use inline with gcc.  */
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/19  03:23:34  ian
+   Chip Salzenberg: append to private debugging file, don't overwrite it
+
    Revision 1.1  1991/09/10  19:40:31  ian
    Initial revision
 
@@ -38,7 +41,7 @@ char log_rcsid[] = "$Id$";
 #include <string.h>
 #include <signal.h>
 
-#ifdef __STDC__
+#if ANSI_C
 #include <stdarg.h>
 #endif
 
@@ -136,10 +139,10 @@ ulog_system (zsystem)
     }
 }
 
-/* Make a log entry.  We make a token concession to non __STDC__ systems,
+/* Make a log entry.  We make a token concession to non ANSI_C systems,
    but it clearly won't always work.  */
 
-#ifndef __STDC__
+#if ! ANSI_C
 #undef HAVE_VPRINTF
 #endif
 

@@ -70,11 +70,7 @@ struct option
   int val;
 };
 
-#ifdef __STDC__
 extern const struct option *_getopt_long_options;
-#else
-extern struct option *_getopt_long_options;
-#endif
 
 /* If nonzero, '-' can introduce long-named options.
    Set by getopt_long_only.  */
@@ -87,7 +83,7 @@ extern int _getopt_long_only;
 
 extern int option_index;
 
-#ifdef __STDC__
+#if ANSI_C
 int getopt (int argc, char **argv, const char *shortopts);
 int getopt_long (int argc, char **argv, const char *shortopts,
 		 const struct option *longopts, int *longind);
