@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.36  1992/01/15  21:06:11  ian
+   Mike Park: some systems can't include <sys/time.h> and <time.h> together
+
    Revision 1.35  1992/01/15  20:48:41  ian
    Mike Park: removed prototype for times
 
@@ -211,7 +214,7 @@ char tstuu_rcsid[] = "$Id$";
 
 /* External functions.  */
 
-extern int select (), ioctl (), close (), dup2 (), access ();
+extern int select (), close (), dup2 (), access ();
 extern int read (), write (), unlink (), kill (), mkdir ();
 extern int fclose (), fflush (), rand (), system ();
 extern unsigned int sleep ();
