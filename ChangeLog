@@ -1,3 +1,134 @@
+Wed Aug  9 20:52:29 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* Released version 1.06.
+
+	* Makefile.in (VERSION): Change to 1.06.
+
+Tue Aug  1 20:13:36 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* uuconf/tsinfo.c (_uuconf_itaylor_system_internal): Set the fcall
+	field for the first alternate if it has some way of selecting a
+	port.
+
+	* Ard van Breemen: unix/serial.c (fsserial_hardflow): Add support
+	for NCR Tower using IRTS.
+
+	* policy.h (FSYNC_ON_CLOSE): Define.
+	* system.h (fsysdep_sync): Declare.
+	* uucp.h (fstdiosync): Define, twice.
+	* unix/sync.c: New file.
+	* copy.c (fcopy_open_file): Call fsysdep_sync.
+	* cu.c (icutake): Likewise.
+	* rec.c (frec_file_end): Likewise.
+	(frec_file_end): Call fstdiosync.
+	* uucp.c (uccopy): Likewise.
+	* uux.c (main): Likewise.
+	(uxadd_send_file): Likewise.
+	* unix/splcmd.c (zsysdep_spool_commands): Likewise.
+	* unix/Makefile.in (OBJS): Add sync.o.
+	(sync.o): New target.
+
+	* Peter Wemm: unix/filnam.c (fscmd_seq): Increase the delay each
+	time an attempt to lock LCK..SEQ fails.
+
+	* Peter Wemm: uustat.c (fsnotify): Escape a leading "From " when
+	including standard input in a mail message.
+
+Mon Jul 31 22:45:23 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/serial.c (fsserial_lockfile): In the HAVE_SVR4_LOCKFILES
+	case, increase the space allocated to print the major and minor
+	numbers.
+
+Sun Jul 30 22:30:51 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* trans.c (fgot_data): Log a message as soon as anything comes in,
+	not just for file data.
+
+	* prote.c (feprocess_data): Handle a zero length file.
+
+Wed Jul 19 00:14:46 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/xqtfil.c (fSone_dir): New static variable.
+	(fsysdep_get_xqt_init): Add zsystem argument.
+	(zsysdep_get_xqt): Likewise.
+	(usysdep_get_xqt_free): Likewise.
+	* system.h (fsysdep_get_xqt_init): Update declaration.
+	(zsysdep_get_xqt): Likewise.
+	(usysdep_get_xqt_free): Likewise.
+	* uuxqt.c (main): Pass zdosys for system to get_xqt routines.
+	* uustat.c (fsexecutions): Pass NULL for system to get_xqt
+	routines.
+	(fsquery): Likewise.
+
+	* uux.c (main): If we are not starting uucico, and we queued a
+	local execution, start uuxqt.
+
+Tue Jul 18 22:33:08 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* uuxqt.c (REMOVE_QINPUT): Define.
+	(uqdo_xqt_file): Set REMOVE_QINPUT if zQinput is in the spool
+	directory.
+	(isave_files): If REMOVE_QINPUT is set, save the input file.
+	(uqcleanup): If REMOVE_QINPUT and REMOVE_NEEDED are set, remove
+	the input file.
+
+Mon Jul 17 20:59:20 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* uuchk.c (ukshow): Add missing \n.
+
+Sun Jul 16 12:02:03 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* Makefile.in (TEXI2HTML): Define.
+	(doc-dist): Depend upon uucp.html; put HTML files in documentation
+	distribution.
+	(html, uucp.html): New targets.
+
+Mon Jul 10 20:24:48 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/lcksys.c: Rewrite to not truncate the system name in the
+	lock file name, unless HAVE_LONG_FILE_NAMES is 0.
+
+Sat Jul  8 13:41:26 1995  Ian Lance Taylor  <ian@airs.com>
+
+	* Andrey A. Chernov: cu.c (ucuhelp): Mention -E.
+	(fcudo_cmd): Use BUCHAR rather than casting to unsigned int.
+	(icuunrecogvar): Likewise.
+	(uculist_vars): Likewise.
+	(icuunrecogfn): Likewise.
+	* lib/getopt.c (_getopt_internal): Likewise.
+
+	* Andrey A. Chernov: Makefile.in (infodir): Changed commented out
+	setting from share/doc to share/info.
+
+	* Godfrey van der Linden: unix/serial.c (fsysdep_conn_io): Base
+	select or alarm timeout on connection speed.
+
+	* configure.in: Move AC_PREFIX_PROGRAM before AC_PROG_CC.
+	* configure: Rebuild.
+
+	* policy.h (HAVE_BROKEN_SETLKW): Add new define.
+	* unix/filnam.c (USE_POSIX_LOCKS): Don't set if HAVE_BROKEN_SETLKW
+	is set.
+	(fscmd_seq): If the F_SETLKW call returns EINVAL, revert to using
+	lock files.
+
+	* unix/spawn.c (ixsspawn): If setreuid is available, use it,
+	rather than setuid, to set the real user ID to the effective user
+	ID.
+
+	* Thomas Mechtersheimer: uuchk.c (main): Correct typo (iret for
+	iint).
+
+	* Bob Thrush: unix/serial.c (fsserial_hardflow): Correct typo
+	(c_cflags for c_cflag).
+
+	* configure.in: Check for sys/statvfs.h.  Check for memset,
+	memcmp, and memcpy with the correct argument types (apparently
+	some systems require this).
+	* config.h.in (HAVE_SYS_STATVFS_H): Define.
+	* configure: Rebuild.
+
 Mon Jul  3 00:26:50 1995  Ian Lance Taylor  <ian@airs.com>
 
 	* Released version beta 1.06.
