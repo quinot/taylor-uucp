@@ -101,6 +101,7 @@ static char bStstp;
 
 static const char *zsport_line P((const struct uuconf_port *qport));
 static void uscu_child P((struct sconnection *qconn, int opipe));
+static RETSIGTYPE uscu_child_handler P((int isig));
 static RETSIGTYPE uscu_alarm P((int isig));
 static int cscu_escape P((char *pbcmd, const char *zlocalname));
 static RETSIGTYPE uscu_alarm_kill P((int isig));
