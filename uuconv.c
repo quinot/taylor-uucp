@@ -1278,18 +1278,17 @@ uvwrite_hdb_system (e, qsys)
 
 /* Compare two strings from a Permissions entry, returning TRUE if
    they are the same.  */
+
 static boolean
 fvperm_string_cmp (z1, z2)
      const char *z1;
      const char *z2;
 {
-  if (z1 == NULL
-      ? z2 != NULL
-      : z2 == NULL)
-    return FALSE;
-
   if (z1 == NULL)
-    return TRUE;
+    return z2 == NULL;
+
+  if (z2 == NULL)
+    return FALSE;
 
   return strcmp (z1, z2) == 0;
 }
@@ -1302,13 +1301,11 @@ fvperm_array_cmp (pz1, pz2)
      const char **pz1;
      const char **pz2;
 {
-  if (pz1 == NULL
-      ? pz2 != NULL
-      : pz2 == NULL)
-    return FALSE;
-
   if (pz1 == NULL)
-    return TRUE;
+    return pz2 == NULL;
+
+  if (pz2 == NULL)
+    return FALSE;
 
   for (; *pz1 != NULL && *pz2 != NULL; pz1++, pz2++)
     if (strcmp (*pz1, *pz2) != 0)
