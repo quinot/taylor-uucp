@@ -388,7 +388,7 @@ main (argc, argv)
 	{
 	  (void) execl ("uucico", "uucico", "-I", "/usr/tmp/tstuu/Config1",
 			"-q", "-S", zsys, "-pstdin", (const char *) NULL);
-	  fprintf (stderr, "execl failed\n");
+	  perror ("execl failed");
 	  exit (EXIT_FAILURE);
 	}
     }
@@ -422,7 +422,7 @@ main (argc, argv)
       if (fCall_uucico)
 	{
 	  (void) execl (UUCICO_EXECL, (const char *) NULL);
-	  fprintf (stderr, "execl failed\n");
+	  perror ("execl failed");
 	  exit (EXIT_FAILURE);
 	}
       else if (zcmd2 != NULL)
@@ -431,7 +431,7 @@ main (argc, argv)
 	{
 	  (void) execl ("uucico", "uucico", "-I", "/usr/tmp/tstuu/Config2",
 			"-lq", (const char *)NULL);
-	  fprintf (stderr, "execl failed\n");
+	  perror ("execl failed");
 	  exit (EXIT_FAILURE);
 	}
     }
