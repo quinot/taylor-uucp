@@ -1,3 +1,316 @@
+Sat Feb 13 15:57:30 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* Released version 1.04.
+
+	* unix/detach.c: Andrew A. Chernov: Don't check return of setsid.
+
+Sun Jan 31 01:45:56 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* cu.c (main): Pass "cu" to uuconf_init.
+
+	* protz.c (fzprocess): Restore ZPAD char before calling getinsync.
+
+Sat Jan 30 22:19:26 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* Makefile.in (doc-dist): New target.
+
+Wed Jan 27 22:55:26 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* protg.c (fgstart): Set iGremote_segsize when using
+	remote-packet-size.
+
+Tue Jan 26 01:01:34 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* proti.c (fiprocess_data): always send an ACK after receiving
+	half a window, rather than sometimes resending a packet.  Half a
+	window of short packets can arrive very quickly.
+
+	* tstuu.c (main, cread, fsend): rewrote communication routines to
+	avoid deadlock.
+
+Sun Jan 24 01:02:47 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* trans.c (ufailed): don't report statistics if no bytes
+	transferred.
+
+	* Makefile.in (install): simplified somewhat.
+	(dist): distribute the sample directory.
+
+Sat Jan 23 19:47:12 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* configure.in, conf.h.in, tli.c: Karl Swarz: check for and use
+	<sys/tli.h>.
+
+Fri Jan 22 00:09:37 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* send.c (flocal_send_request): Alan Judge: don't send C in option
+	string when faking an E command as an S command.
+
+Thu Jan 21 00:09:31 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uux.c (main): don't use E command if forwarding.
+
+Wed Jan 20 00:22:38 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* send.c (fsend_exec_file_init), rec.c (frec_file_end), uux.c
+	(main): Chip Salzenberg: always put the C line last in an
+	execution file, to support Fredmail.
+
+Tue Jan 19 00:09:43 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* trans.h, trans.c (ftcharge, floop, fgot_data): rewrote timing
+	code.
+
+	* trans.h, trans.c, send.c, rec.c, xcmd.c, protf.c, protz.c
+	(fqueue_local, fqueue_remote, fqueue_send, fqueue_receive): added
+	boolean return value and qdaemon argument.
+
+Mon Jan 18 00:01:46 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uucico.c (fdo_call, faccept_call): Ted Lindgreen, Chip
+	Salzenberg: wait for remote hangup string before hanging up.
+
+	* proti.c (fiprocess_data, fiprocess_packet): stop scanning input
+	buffer after a CLOSE packet.
+
+Sat Jan 16 22:44:28 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* system.h, uucico.c (main), uuxqt.c (main), unix/init.c: Ted
+	Lindgreen: eliminated INIT_DAEMON.
+
+	* log.c (ulog): don't log SIGINT if fLog_sighup is FALSE.
+
+	* unix/move.c (fsysdep_move_file), unix/xqtsub.c
+	(fsysdep_move_uuxqt_files): the system call rename seems to fail
+	on some systems for arbitrary reasons, so always try to copy the
+	file by hand, not just if we get EXDEV.
+
+	* policy.h, unix/pause.c: Gregory Gulik: added HAVE_HUNDREDTHS_NAP
+	configuration parameter.
+
+Wed Jan  6 21:06:45 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* unix/serial.c (fsserial_lockfile): create HDB lock files when
+	using HAVE_COHERENT_LOCKING.
+	unix/cohtty.c (fscoherent_disable_tty): consistently return FALSE
+	on error.
+
+	* unix/cusub.c (fsysdep_terminal_raw): Andrew A. Chernov: if
+	POSIX_TERMIOS, turn of IEXTEN flag.
+
+Sat Jan  2 23:19:27 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* protg.c (fgprocess_data): treat a duplicate RR as an RJ.
+
+Fri Jan  1 11:17:30 1993  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* policy.h, unix/proctm.c: Steven S. Dick: use sysconf
+	(_SC_CLK_TCK) for TIMES_TICK if possible.
+
+	* uuconf/diacod.c: Gregory Gulik: accept an empty dialcode string.
+
+	* system.h, uucico.c (main), uucp.c (main), uux.c (main),
+	unix/run.c: Karsten Thygesen: removed ffork argument from
+	fsysdep_run.
+
+Wed Dec 30 00:21:55 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* unix/link.c: Andrey G Blochintsev: don't fail just because
+	destination directories do not exist.
+
+	* send.c (flocal_send_open_file): Scott Ballantyne: record file
+	name when logging send of execution command.
+
+	* protz.c: Chip Salzenberg: reformatted to 80 columns.
+
+Tue Dec 29 23:50:52 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uuconv.c (uvwrite_time): scott@geom.umn.edu: handle midnight
+	more correctly.
+
+Fri Dec 18 00:49:16 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* system.h, uucp.c (uccopy), uux.c (main), cu.c (icuput, icutake),
+	unix/ufopen.c (esysdep_user_fopen): Doug Evans: open files used
+	for %put and %take using esysdep_user_fopen, rather than with
+	privileges of uucp.  Added frd and fbinary arguments to
+	esysdep_user_fopen.
+
+Thu Dec 17 00:04:53 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* unix/picksb.c (zsysdep_uupick): Peter Wemm: allocation error.
+
+	* uupick.c (main): Peter Wemm: pass INIT_GETCWD to
+	usysdep_initialize; really quit if 'q' is typed.
+
+	* uulog.c (main): Peter Wemm: always canonicalize system name, not
+	just if using HDB_LOGGING.
+
+	* uudefs.h, log.c (ustats), trans.c (ufailed), send.c
+	(fsend_await_confirm), rec.c (frec_file_end): Peter Wemm: added
+	fmaster argument to ustats, used only in HDB_LOGGING.
+
+Wed Dec 16 23:35:51 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uustat.c (main): Marc Unangst: forgot to call strtol for -y.
+
+	* policy.h, sysh.unx: Brian J. Murrell: yet another configuration
+	parameter: HAVE_BROKEN_SETREUID.
+
+Tue Dec 15 00:13:04 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uuconv.c (uvwrite_taylor_system): mnichols@pacesetter.com: use
+	command-path rather than path.
+
+	* trans.c (floop): Marc Unangst: don't clear frequested_hangup if
+	we didn't manage to hang up.
+
+	* uucp.h, rec.c (fremote_send_file_init): Oleg Girko: patches to
+	make code compile if USE_STDIO is 0.
+
+	* unix/proctm.c: Tim Peiffer: reverse sense of TIMES_TICK check in
+	hopes of avoiding ISC preprocessor bug.
+
+	* unix/fsusg.h, unix/fsusg.c, unix/bytfre.c, system.h, conf.h.in,
+	configure.in, unix/Makefile.in, unix/MANIFEST: use new disk space
+	checking routines from GNU fileutils 3.4.
+	* unix/opensr.c (zsysdep_receive_temp): don't check free space
+	here any more.
+	* policy.h, trans.h, trans.c, rec.c, uucico.c, uudefs.h: Chip
+	Salzenberg: check amount of remaining space on disk every
+	FREE_SPACE_DELTA bytes, and abort the file transfer if disk space
+	gets too low.
+
+Wed Dec  2 00:24:12 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* policy.h, unix/serial.c (fsserial_set): Frank Conrad: added
+	HAVE_PARITY_BUG parameter for the Sony NEWS.
+
+Mon Nov 30 00:06:59 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* lib/spool.c (fspool_file): Andrew Chernov: accept any
+	alphanumeric character in the name, because it could be a grade
+	from another system.
+
+Sun Nov 29 22:36:47 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* lib/buffer.c (ubuffree): scott@geom.umn.edu, Richard Gumpertz:
+	use a temporary variable to hold the offsetof result.
+
+	* configure.in: scott@geom.umn.edu: define HAVE_SYS_SELECT_H
+	correctly.
+
+	* protg.c (fgsend_control): Niels Baggesen: report all non-RR
+	packets if DEBUG_ABNORMAL.
+
+	* unix/cusub.c (uscu_child): Ed Carp: apparently the read and
+	write calls can get EAGAIN on some systems.
+
+	* unix/status.c (fsysdep_get_status, fsysdep_set_status): Chip
+	Salzenberg: map status values when using SPOOLDIR_HDB.
+
+	* rec.c (fremote_send_reply): do file restart correctly for E
+	commands.
+
+Sun Nov 22 15:09:43 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* protz.c: Chip Salzenberg: always do bitwise operations on
+	unsigned values.
+
+	* getopt.h: Chip Salzenberg: don't rely on __STDC__.
+
+Thu Nov 19 00:13:46 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uuconf/freblk.c: Niels Baggesen: loop over the right list.
+
+	* uulog.c (main): Peter Wemm: added -D, -F and -S options, made -f
+	take an argument and default to showing 10 current lines.
+	(ulusage): added new options and missing old ones.
+
+Wed Nov 18 22:26:36 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* rec.c (frec_file_end): Andrey G Blochintsev: call
+	fsysdep_remember_reception as soon as the file has been moved to
+	the final destination; write fake execution file via a temporary
+	file to prevent uuxqt from getting at it early.
+	* trans.c (usent_receive_ack): don't call
+	fsysdep_remember_reception here.
+
+	* unix/tmpfil.c (ZDIGS): don't use '.', since we use it to
+	separate parts of the file name.
+
+Sun Nov 15 15:31:49 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uustat.c (fsquery_show, csunits_show): Marc Unangst, Chip
+	Salzenberg: line up uustat -q output.
+
+	* sysh.unx, ftw.c (ftw_dir, ftw), srmdir.c (isremove_dir), walk.c
+	(iswalk_dir): Marc Unangst: stat argument to function argument to
+	ftw is const.
+
+	* unix/serial.c (fsserial_set): Mike Bernson: set CSIZE correctly
+	when changing parity.
+
+	* uux.c (main): Andrew A. Chernov: check for executions which name
+	the local system, to handle dumb mailers.
+
+	* uucp.h: Doug Evans: #undef strerror if HAVE_STRERROR is 0, to
+	avoid macro definition on Xenix.
+
+	* unix/serial.c (fsserial_set): Peter Wemm: only check CRTSCTS if
+	HAVE_POSIX_TERMIOS.
+
+	* cu.c (main): Peter Wemm: use alternates for systems if a call
+	fails.
+
+	* tstuu.c (uprepare_test): Gerben Wierda: set execute bits for
+	Chat1 and Chat2.
+
+	* trans.c (floop): Marc Unangst: don't hang up when requested
+	unless the send queue is empty.
+
+	* uuxqt.c (iqrequestor): Marc Boucher: new function to accept R
+	command with two arguments, as generated by UUPC.
+
+	* uucico.c (faccept_call): Christian Seyb: don't free the system
+	info until after writing the status.
+
+	* configure.in: Marc Boucher: check -lsocket and -lnsl together.
+
+	* unix/portnm.c: Stephen J. Walick: it's types.tcp.h, not
+	tcp.types.h.
+
+	* configure.in: Brian Campbell: check for /usr/bin/mailx.
+
+Sat Nov 14 11:11:04 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uuconf/hlocnm.c (uuconf_hdb_login_localname): Christian Seyb:
+	check for _uuconf_unset as well as NULL.
+
+	* conn.c (fconn_dial): initialize *ptdialerfound.
+
+	* many files: rearranged header files to include "sysdep.h" before
+	system header files.  Also eliminated various pedantic warnings,
+	and made _uuconf_unset char * to avoid possible alignment
+	problems.
+
+Tue Nov 10 00:16:35 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* trans.h, uucico.c (fcall, faccept_call), trans.c (uclear_queue,
+	floop): Stephen J. Walick: move clean up from end of floop into
+	uclear_queue, and call it instead of just doing
+	usysdep_get_work_free.
+
+	* unix/serial.c (fsserial_lockfile): Marc Unangst: bad #endif
+	location for HAVE_SVR4_LOCKFILES.
+	(fsserial_init): Doug Evans: null terminate the device name.
+
+Sun Nov  8 10:58:59 1992  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uucico.c (fcall, faccept_call): Stephen J. Walick: call
+	usysdep_get_work_free here.
+	trans.c (floop): don't call usysdep_get_work free here.
+
 Sun Nov  1 17:05:07 1992  Ian Lance Taylor  (ian@comton.airs.com)
 
 	* Released gamma version 1.04.

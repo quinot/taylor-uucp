@@ -331,6 +331,7 @@ the following values which determine when uuxqt should be run:
 	- perinvocation (when uucico exits for good - current behaviour)
 	- persite (when uucico terminates a conversation - HDBish)
 	- periodic (per 5 or 10 incoming X. files - BSDish)
+	- perturnaround?
 
 163.
 
@@ -384,13 +385,6 @@ T. William Wells: have some way to configure the parity for cu.
 
 Gert Doering: uuchk should display unknown system information.
 
-174.
-
-Brian J. Murrell: when dialing a system, cu looks through the
-alternates of a system when selecting a port, but after it selects a
-port it just tries to dial it.  If the dial fails, it should go on to
-the next alternate, but it doesn't.
-
 175.
 
 T. William Wells:
@@ -442,3 +436,138 @@ system to start sending from that point.  We currently accept SVR4
 style remote file positioning requests, but we do not generate them.
 
 181.
+
+Mark Powell: provide some way to restrict file transfer by size as
+well as grade?  One way would be to let uux select the grade based on
+the file size.
+
+182.
+
+Mark Powell: permit using multiple timetables in a single time
+statement.
+
+183.
+
+Optionally check for interrupts in fcopy_file, since it can take a
+long time to copy a file named in a uucp request.
+
+184.
+
+Ian Moran: if an attempt is made to a copy a file to a directory which
+denies write permission, perhaps the file should be saved somewhere.
+It must be saved in a private location, though.
+
+185.
+
+A syntax error in a command received from the remote system should not
+hold up the queue.  Unfortunately, I don't know what can be done
+except deny the command and report it.  Reporting a garbled command
+error should report the command correctly, rather than just the first
+character.
+
+186.
+
+Franc,ois Pinard: have an option to control nostop vs. stop on the cu
+command line.
+
+187.
+
+Fix the notion of %nostop to be SVID compatible.
+
+188.
+
+Frank Conrad: provide a means to set the strip mode for a port, to
+make it easy to use it from cu.
+
+189.
+
+Marc Unangst: there should be a way to specify that a system should
+only be called if there are jobs of a certain grade, but if the system
+is called then jobs of any grade should be transferred.  This
+basically means splitting the ``timegrade'' command into two commands:
+``place-call-timegrade'' and ``transfer-timegrade''.  Or maybe another
+optional argument to ``timegrade'':
+    timegrade grade time-string [retry] [transfer-any]
+not to mention
+    time time-string [retry] [transfer-any]
+Or maybe a separate command for a system or port like
+    transfer-any BOOL
+
+190.
+
+Chip Salzenberg: it would be really nice if uucico could automatically
+figure out when it could use an E command, so that uux didn't have to
+generate it and so that uucico could use with other versions of uux.
+Unfortunately, it would require uucico to read the execution file to
+see if it were suitable; this would be complex, but it would probably
+be worth it since normally the execution file would wind up not being
+sent.  Of course, the current method works too; it's just harder to
+combine with other versions of UUCP.
+
+191.
+
+Brian J. Murrell: should there be a way to cu a specific alternate?
+
+192.
+
+Andrew A. Chernov: Perhaps cu -pport system should be able to try
+different alternates for the system, because there might be different
+phone numbers to try.
+
+193.
+
+Brian J. Murrell: it would be nice to be able to ^C a cu chat script
+if you know it's going to fail.  Right now you have to use ^\.
+
+194.
+
+Steven S. Dick: have some way to force uucico off the phone at a
+certain time.  If that is done, it might be cool to have some way to
+predict how long a file transfer will take, and not do it if it will
+take too long.  But, if doing file restart, you can just quit and then
+pick it up later.
+
+195.
+
+Franc,ois Pinard: if the disk fills up, or some other error occurs,
+while receiving a file, perhaps it would make sense to turn the
+connection around immediately and see if the other side had anything
+to do, and then try again later.  This would require a protocol
+extension.  I don't know if it's worth it.  The code should be checked
+to see how well it handles a disk full situation.
+
+196.
+
+For real adjustability, provide some mechanism for picking the lead
+characters to use for the shell scripts, between : and #!.
+
+197.
+
+Try alternate IP addresses if there are any.
+
+198.
+
+Lele Gaifax: mention the device in Stats, and provide some way to
+associate the entry in Log with the entry in Stats.
+
+199.
+
+Michael Richardson: provide some way to turn on parity for the login
+chat, since some systems apparently require it.  Provide some way for
+cu to control parity after connecting.
+
+200.
+
+Chip Salzenberg: add max-remote-debug to config.
+
+201.
+
+Gert Doering: change the timeout message in chat scripts to reflect
+which chat script timed out (dialer or login).
+
+202.
+
+Bill Foote: have uuchk check whether a system is defined more than
+once.
+
+203.
