@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/01/28  04:51:34  ian
+   Marty Shannon: don't report failed transfers with BNU logging
+
    Revision 1.15  1992/01/16  18:07:18  ian
    Niels Baggesen: add FAILED to end of xferstats line if appropriate
 
@@ -427,7 +430,11 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (ttype == LOG_FATAL)
     {
       fAborting = TRUE;
+#ifdef SIGABRT
       raise (SIGABRT);
+#else
+      abort ();
+#endif
     }
 }
 
