@@ -1122,9 +1122,9 @@ fsserial_close (q)
       (void) close (q->o);
       q->o = -1;
 
-      /* Sleep for a second to give the terminal a chance to settle,
-	 in case we are about to call out again.  */
-      sleep (1);
+      /* Sleep to give the terminal a chance to settle, in case we are
+	 about to call out again.  */
+      sleep (2);
     }
 
   return TRUE;
@@ -1161,14 +1161,14 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
   struct ssysdep_conn *qsysdep;
   boolean fret;
   struct uuconf_dialer sdialer;
+  const struct uuconf_chat *qchat;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
 
   fret = TRUE;
 
-  /* We're no longer interested in carrier.  */
-  (void) fsmodem_carrier (qconn, FALSE);
-
+  /* Figure out the dialer so that we can run the complete or abort
+     chat scripts.  */
   if (qdialer == NULL)
     {
       if (qconn->qport->uuconf_u.uuconf_smodem.uuconf_pzdialer != NULL)
@@ -1190,13 +1190,27 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
 	qdialer = qconn->qport->uuconf_u.uuconf_smodem.uuconf_qdialer;
     }
 
+  /* Get the complete or abort chat script to use.  */
+  qchat = NULL;
   if (qdialer != NULL)
+    {
+      if (fsuccess)
+	qchat = &qdialer->uuconf_scomplete;
+      else
+	qchat = &qdialer->uuconf_sabort;
+    }
+
+  if (qchat != NULL
+      && (qchat->uuconf_pzprogram != NULL
+	  || qchat->uuconf_pzchat != NULL))
     {
       boolean fsighup_ignored;
       HELD_SIG_MASK smask;
       int i;
       sig_atomic_t afhold[INDEXSIG_COUNT];
-      const struct uuconf_chat *qchat;
+
+      /* We're no longer interested in carrier.  */
+      (void) fsmodem_carrier (qconn, FALSE);
 
       /* The port I/O routines check whether any signal has been
 	 received, and abort if one has.  While we are closing down
@@ -1219,10 +1233,6 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
 	}
       usunblocksigs (smask);
 
-      if (fsuccess)
-	qchat = &qdialer->uuconf_scomplete;
-      else
-	qchat = &qdialer->uuconf_sabort;
       if (! fchat (qconn, puuconf, qchat, (const struct uuconf_system *) NULL,
 		   (const struct uuconf_dialer *) NULL, (const char *) NULL,
 		   FALSE, qconn->qport->uuconf_zname,
@@ -1238,9 +1248,46 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
 	  afSignal[i] = TRUE;
       if (! fsighup_ignored)
 	usset_signal (SIGHUP, ussignal, TRUE, (boolean *) NULL);
+    }
 
-      if (qdialer == &sdialer)
-	(void) uuconf_dialer_free (puuconf, &sdialer);
+  if (qdialer != NULL
+      && qdialer == &sdialer)
+    (void) uuconf_dialer_free (puuconf, &sdialer);
+
+  /* Reset the terminal to make sure we drop DTR.  It should be
+     dropped when we close the descriptor, but that doesn't seem to
+     happen on some systems.  Use a 30 second timeout to avoid hanging
+     while draining output.  */
+  if (qsysdep->fterminal)
+    {
+#if HAVE_BSD_TTY
+      qsysdep->snew.sg_ispeed = B0;
+      qsysdep->snew.sg_ospeed = B0;
+#endif
+#if HAVE_SYSV_TERMIO
+      qsysdep->snew.c_cflag = (sbaud.c_cflag &~ CBAUD) | B0;
+#endif
+#if HAVE_POSIX_TERMIOS
+      (void) cfsetospeed (&qsysdep->snew, B0);
+#endif
+
+      fSalarm = FALSE;
+
+      if (fsysdep_catch ())
+	{
+	  usysdep_start_catch ();
+	  usset_signal (SIGALRM, usalarm, TRUE, (boolean *) NULL);
+	  (void) alarm (30);
+
+	  (void) fsetterminfodrain (qsysdep->o, &qsysdep->snew);
+	}
+
+      usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
+      (void) alarm (0);
+      usysdep_end_catch ();
+
+      /* Let the port settle.  */
+      sleep (2);
     }
 
   if (! fsserial_close (qsysdep))
@@ -1300,7 +1347,7 @@ fsserial_reset (qconn)
     }
 
   /* Give the terminal a chance to settle.  */
-  sleep (1);
+  sleep (2);
 
   if (! fsetterminfo (q->o, &q->snew))
     {
@@ -1347,18 +1394,21 @@ fsysdep_modem_begin_dial (qconn, qdial)
   }
 #endif /* TIOCMODEM */
 
-#ifdef TIOCCDTR
   /* If we supposed to toggle DTR, do so.  */
 
   if (qdial->uuconf_fdtr_toggle)
     {
+#ifdef TIOCCDTR
       (void) ioctl (qsysdep->o, TIOCCDTR, 0);
+      sleep (2);
       (void) ioctl (qsysdep->o, TIOCSDTR, 0);
+#else /* ! defined (TIOCCDTR) */
+      (void) fconn_reset (qconn);
+#endif /* ! defined (TIOCCDTR) */
 
       if (qdial->uuconf_fdtr_toggle_wait)
-	sleep (1);
+	sleep (2);
     }
-#endif /* TIOCCDTR */
 
   if (! fsmodem_carrier (qconn, FALSE))
     return FALSE;
@@ -1698,20 +1748,33 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 	  if (csetmin != cSmin)
 	    {
 	      q->snew.c_cc[VMIN] = csetmin;
-	      if (! fsetterminfo (q->o, &q->snew))
+	      while (! fsetterminfo (q->o, &q->snew))
 		{
-		  int ierr;
+		  if (errno != EINTR
+		      || FGOT_QUIT_SIGNAL ())
+		    {
+		      int ierr;
 
-		  /* We turn off the signal before reporting the error
-		     to minimize any problems with interrupted system
-		     calls.  */
-		  ierr = errno;
-		  usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
-		  alarm (0);
-		  usysdep_end_catch ();
-		  ulog (LOG_ERROR, "Can't set MIN for terminal: %s",
-			strerror (ierr));
-		  return FALSE;
+		      /* We turn off the signal before reporting the
+			 error to minimize any problems with
+			 interrupted system calls.  */
+		      ierr = errno;
+		      usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
+		      alarm (0);
+		      usysdep_end_catch ();
+		      ulog (LOG_ERROR, "Can't set MIN for terminal: %s",
+			    strerror (ierr));
+		      return FALSE;
+		    }
+
+		  if (fSalarm)
+		    {
+		      ulog (LOG_ERROR,
+			    "Timed out when setting MIN to %d; retrying",
+			    csetmin);
+		      fSalarm = FALSE;
+		      alarm (ctimeout);
+		    }
 		}
 	      cSmin = csetmin;
 	    }
@@ -2323,7 +2386,7 @@ fsserial_break (qconn)
 
 #if HAVE_BSD_TTY
   (void) ioctl (q->o, TIOCSBRK, 0);
-  sleep (1);
+  sleep (2);
   (void) ioctl (q->o, TIOCCBRK, 0);
   return TRUE;
 #endif /* HAVE_BSD_TTY */
