@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.32  1992/04/21  04:21:35  ian
+   Give fport_set independent control over parity and XON/XOFF
+
    Revision 1.31  1992/03/31  19:39:08  ian
    Niels Baggesen: packet to retransmit did not get reset correctly
 
@@ -964,23 +967,18 @@ fgsenddata (zdata, cdata)
   z[IFRAME_XOR] = (char) (z[IFRAME_K] ^ z[IFRAME_CHECKLOW]
 			  ^ z[IFRAME_CHECKHIGH] ^ z[IFRAME_CONTROL]);
 
-  /* If we've retransmitted a packet, but it hasn't been acked yet,
-     and this isn't the next packet after the retransmitted one (note
-     that iGsendseq has already been incremented at this point) then
-     don't send this packet yet.  The other side is probably not ready
-     for it yet.  Instead, code in fgprocess_data will send the
-     outstanding packets when an ack is received.  */
+  /* If we're waiting for acks of retransmitted packets, then don't
+     send this packet yet.  The other side may not be ready for it
+     yet.  Instead, code in fggot_ack will send the outstanding
+     packets when an ack is received.  */
 
   ++cGsent_packets;
 
-  if (iGretransmit_seq != -1
-      && INEXTSEQ (INEXTSEQ (iGretransmit_seq)) != iGsendseq)
+  if (iGretransmit_seq != -1)
     {
       ++cGdelayed_packets;
       return TRUE;
     }
-
-  iGretransmit_seq = -1;
 
   DEBUG_MESSAGE2 (DEBUG_PROTO,
 		  "fgsenddata: Sending packet %d (%d bytes)",
@@ -1245,7 +1243,7 @@ fggot_ack (iack)
 
   iGremote_ack = iack;
 
-  if (iack != iGretransmit_seq)
+  if (iGretransmit_seq == -1)
     return TRUE;
 
   inext = INEXTSEQ (iGretransmit_seq);
