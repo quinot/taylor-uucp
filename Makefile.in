@@ -62,7 +62,7 @@ TSTUU = tstuu
 
 # Source directory and, if necessary, VPATH
 srcdir = @srcdir@
-@VPATH@
+VPATH = @srcdir@
 
 # Define programs and flags
 CC = @CC@
