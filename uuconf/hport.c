@@ -217,6 +217,7 @@ uuconf_hdb_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 		   | UUCONF_RELIABLE_EIGHT | UUCONF_RELIABLE_FULLDUPLEX
 		   | UUCONF_RELIABLE_SPECIFIED);
 	      qport->uuconf_u.uuconf_stcp.uuconf_zport = pzsplit[1];
+	      qport->uuconf_u.uuconf_stcp.uuconf_iversion = 0;
 	      ppzdialer = &qport->uuconf_u.uuconf_stcp.uuconf_pzdialer;
 	    }
 	  else if (ctoks >= 5

@@ -421,6 +421,9 @@ struct uuconf_tcp_port
   /* The TCP port number to use.  May be a name or a number.  May be
      NULL, in which case "uucp" is looked up using getservbyname.  */
   char *uuconf_zport;
+  /* The IP version number to use.  This is 0 for any, 4 for IPv4, 6
+     for IPv6.  */
+  int uuconf_iversion;
   /* A NULL terminated sequence of dialer/token pairs (element 0 is a
      dialer name, element 1 is a token, etc.)  May be NULL.  */
   char **uuconf_pzdialer;

@@ -12,7 +12,9 @@ Changes in version 1.07:
 
     The exit status of uux now uses values from <sysexits.h>.
 
-    TCP ports now support IPv6 on modern systems.
+    TCP ports now support IPv6 on modern systems.  A new ``version''
+    command in the port file may be used to restrict a TCP port to
+    just IPv4 or just IPv6.
 
     \M and \m may now be used in any chat script, not just a dialer
     chat script.

@@ -5228,6 +5228,16 @@ string @samp{uucp} is looked up in @file{/etc/services}.  If it is not
 found, port number 540 (the standard UUCP-over-TCP port number) will be
 used.
 
+@item version @var{string} [ tcp only ]
+@findex version
+
+Specify the IP version number to use.  The default is @samp{0}, which
+permits any version.  The other possible choices are @samp{4}, which
+requires @samp{IPv4}, or @samp{6}, which requires @samp{IPv6}.  Normally
+it is not necessary to use this command, but in some cases, as
+@samp{IPv6} is rolled out across the Internet, it may be necessary to
+require UUCP to use a particular type of connection.
+
 @item push @var{strings} [ tli only ]
 @findex push
 

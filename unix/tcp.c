@@ -74,6 +74,9 @@ typedef struct sockaddr_in sockaddr_storage;
 
 /* Local functions.  */
 static void utcp_free P((struct sconnection *qconn));
+#if HAVE_GETADDRINFO
+static boolean ftcp_set_hints P((int iversion, struct addrinfo *qhints));
+#endif
 static boolean ftcp_set_flags P((struct ssysdep_conn *qsysdep));
 static boolean ftcp_open P((struct sconnection *qconn, long ibaud,
 			    boolean fwait, boolean fuser));
@@ -140,6 +143,40 @@ utcp_free (qconn)
   xfree (qconn->psysdep);
 }
 
+#if HAVE_GETADDRINFO
+
+/* Set the hints for an addrinfo structure from the IP version.  */
+
+static boolean
+ftcp_set_hints (iversion, qhints)
+     int iversion;
+     struct addrinfo *qhints;
+{
+  switch (iversion)
+    {
+    case 0:
+      qhints->ai_family = 0;
+      break;
+    case 4:
+      qhints->ai_family = PF_INET;
+      break;
+    case 6:
+#ifdef PF_INET6
+      qhints->ai_family = PF_INET6;
+#else
+      ulog (LOG_ERROR, "IPv6 requested but not supported");
+      return FALSE;
+#endif
+      break;
+    default:
+      ulog (LOG_ERROR, "Invalid IP version number %d", iversion);
+      return FALSE;
+    }
+  return TRUE;
+}
+
+#endif /* HAVE_GETADDRINFO */
+
 /* Set the close on exec flag for a socket.  */
 
 static boolean
@@ -208,6 +245,9 @@ ftcp_open (qconn, ibaud, fwait, fuser)
 
 #if HAVE_GETADDRINFO
   bzero ((pointer) &shints, sizeof shints);
+  if (! ftcp_set_hints (qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion,
+			&shints))
+    return FALSE;
   shints.ai_socktype = SOCK_STREAM;
   shints.ai_flags = AI_PASSIVE;
   ierr = getaddrinfo (NULL, zport, &shints, &qres);
@@ -234,10 +274,21 @@ ftcp_open (qconn, ibaud, fwait, fuser)
 	    break;
 	}
     }
-#endif
+#endif /* HAVE_GETADDRINFO */
 
   if (qsysdep->o < 0)
     {
+      if (qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion != 0
+	  && qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion != 4)
+	{
+#ifdef HAVE_GETADDRINFO
+	  ulog (LOG_ERROR, "Could not get IPv6 socket");
+#else
+	  ulog (LOG_ERROR, "Only IPv4 sockets are supported");
+#endif
+	  return FALSE;
+	}
+
       qsysdep->o = socket (AF_INET, SOCK_STREAM, 0);
       if (qsysdep->o < 0)
 	{
@@ -248,6 +299,30 @@ ftcp_open (qconn, ibaud, fwait, fuser)
 
   if (! ftcp_set_flags (qsysdep))
     return FALSE;
+
+#if HAVE_GETADDRINFO
+#ifdef IPV6_BINDV6ONLY
+  if (quse != NULL && quse->ai_family == AF_INET6)
+    {
+      int iflag;
+
+      if (qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion == 0)
+	iflag = 0;
+      else
+	iflag = 1;
+      if (setsockopt (qsysdep->o, IPPROTO_IPV6, IPV6_BINDV6ONLY,
+		      (char *) &iflag, sizeof (iflag)) < 0)
+	{
+	  ulog (LOG_ERROR, "setsockopt (IPV6_BINDONLY): %s",
+		strerror (errno));
+	  (void) close (qsysdep->o);
+	  qsysdep->o = -1;
+	  freeaddrinfo (qres);
+	  return FALSE;
+	}
+    }
+#endif /* defined (IPV6_BINDV6ONLY) */
+#endif /* HAVE_GETADDRINFO */
 
   /* Run as a server and wait for a new connection.  The code in
      uucico.c has already detached us from our controlling terminal.
@@ -267,6 +342,10 @@ ftcp_open (qconn, ibaud, fwait, fuser)
 	{
 	  (void) close (qsysdep->o);
 	  qsysdep->o = -1;
+#ifdef HAVE_GETADDRINFO
+	  if (qres != NULL)
+	    freeaddrinfo (qres);
+#endif
 	  return FALSE;
 	}
     }
@@ -449,6 +528,9 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
 
 #if HAVE_GETADDRINFO
   bzero ((pointer) &shints, sizeof shints);
+  if (! ftcp_set_hints (qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion,
+			&shints))
+    return FALSE;
   shints.ai_socktype = SOCK_STREAM;
   ierr = getaddrinfo (zhost, zport, &shints, &qres);
   if (ierr == EAI_SERVICE && strcmp (zport, "uucp") == 0)
@@ -463,9 +545,11 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
       ulog (LOG_ERROR, "getaddrinfo: %s", gai_strerror (ierr));
       qres = NULL;
       quse = NULL;
+      ierr = 0;
     }
   else
     {
+      ierr = 0;
       for (quse = qres; quse != NULL; quse = quse->ai_next)
 	{
 	  qsysdep->o = socket (quse->ai_family, quse->ai_socktype,
@@ -474,6 +558,7 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
 	    {
 	      if (connect (qsysdep->o, quse->ai_addr, quse->ai_addrlen) >= 0)
 		break;
+	      ierr = errno;
 	      close (qsysdep->o);
 	      qsysdep->o = -1;
 	    }
@@ -487,6 +572,20 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
     {
       struct hostent *qhost;
       struct sockaddr_in sin;
+
+      if (qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion != 0
+	  && qconn->qport->uuconf_u.uuconf_stcp.uuconf_iversion != 4)
+	{
+#if HAVE_GETADDRINFO
+	  if (ierr != 0)
+	    ulog (LOG_ERROR, "connect: %s", strerror (ierr));
+	  else
+	    ulog (LOG_ERROR, "Could not get IPv6 address or socket");
+#else
+	  ulog (LOG_ERROR, "Only IPv4 sockets are supported");
+#endif
+	  return FALSE;
+	}
 
       qsysdep->o = socket (AF_INET, SOCK_STREAM, 0);
       if (qsysdep->o < 0)

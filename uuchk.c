@@ -871,6 +871,8 @@ ikshow_port (qport, pinfo)
       qtcp = &qport->uuconf_u.uuconf_stcp;
       printf ("   Port type tcp\n");
       printf ("   TCP service %s\n", qtcp->uuconf_zport);
+      if (qtcp->uuconf_iversion != 0)
+	printf ("   IP version %d\n", qtcp->uuconf_iversion);
       if (qtcp->uuconf_pzdialer != NULL
 	  && qtcp->uuconf_pzdialer[0] != NULL)
 	{

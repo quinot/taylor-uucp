@@ -1,3 +1,19 @@
+2002-02-26  Ian Lance Taylor  <ian@airs.com>
+
+	* uuconf.h (struct uuconf_tcp_port): Add uuconf_iversion field.
+	* unix/tcp.c (ftcp_set_hints): New static function.
+	(ftcp_open): Use ftcp_set_hints.  Check version when falling back
+	to IPv4 code.  Use IPV6_BINDV6ONLY option if it is defined.
+	(ftcp_dial): Use ftcp_set_hints.  Check version when falling back
+	to IPv4 code.
+	* uuconf/tportc.c (asPtcp_cmds): Add "version".
+	(_uuconf_iport_cmd): Initialize uuconf_iversion field.
+	* uuconf/hport.c (uuconf_hdb_find_port): Initialize
+	uuconf_iversion field.
+	* uuconf/vsinfo.c (_uuconf_iv2_system_internal): Likewise.
+	* uuchk.c (ikshow_port): Report TCP port version number.
+	* uucp.texi (port File): Document new "version" command.
+
 2002-02-24  Ian Lance Taylor  <ian@airs.com>
 
 	* conn.c (fconn_lock): Add fuser parameter.  Change all callers.
