@@ -104,6 +104,7 @@ zsport_line (qport)
       break;
     case UUCONF_PORTTYPE_TCP:
     case UUCONF_PORTTYPE_TLI:
+    case UUCONF_PORTTYPE_PIPE:
       return NULL;
     }
 
@@ -563,6 +564,8 @@ uscu_child (qconn, opipe)
   CATCH_PROTECT int cwrite;
   CATCH_PROTECT char abbuf[1024];
 
+  fgot = FALSE;
+
   /* It would be nice if we could just use fsserial_read, but that
      will log signals that we don't want logged.  There should be a
      generic way to extract the file descriptor from the port.  */
@@ -581,6 +584,10 @@ uscu_child (qconn, opipe)
 	case UUCONF_PORTTYPE_STDIN:
 	  oport = 0;
 	  break;
+	case UUCONF_PORTTYPE_PIPE:
+	  /* A read of 0 on a pipe always means EOF (see below).  */
+	  fgot = TRUE;
+	  /* Fall through.  */
 	case UUCONF_PORTTYPE_MODEM:
 	case UUCONF_PORTTYPE_DIRECT:
 	case UUCONF_PORTTYPE_TCP:
@@ -598,7 +605,6 @@ uscu_child (qconn, opipe)
   usset_signal (SIGTERM, uscu_child_handler, TRUE, (boolean *) NULL);
 
   fstopped = FALSE;
-  fgot = FALSE;
   iSchild_sig = 0;
   cwrite = 0;
 
@@ -1101,8 +1107,9 @@ fsysdep_shell (qconn, zcmd, tcmd)
 	  oread = owrite = -1;
 	  break;
 	case UUCONF_PORTTYPE_STDIN:
-	  oread = 0;
-	  owrite = 1;
+	case UUCONF_PORTTYPE_PIPE:
+	  oread = ((struct ssysdep_conn *) qconn->psysdep)->ord;
+	  owrite = ((struct ssysdep_conn *) qconn->psysdep)->owr;
 	  break;
 	case UUCONF_PORTTYPE_MODEM:
 	case UUCONF_PORTTYPE_DIRECT:

@@ -351,12 +351,16 @@ struct ssysdep_conn
 {
   /* File descriptor.  */
   int o;
+  /* File descriptor to read from (used by stdin and pipe port types).  */
+  int ord;
+  /* File descriptor to write to (used by stdin and pipe port types).  */
+  int owr;
   /* Device name.  */
   char *zdevice;
   /* File status flags.  */
   int iflags;
-  /* File status flags for descriptor 1 (-1 if not standard input).  */
-  int istdout_flags;
+  /* File status flags for write descriptor (-1 if not used).  */
+  int iwr_flags;
   /* Hold the real descriptor when using a dialer device.  */
   int ohold;
   /* TRUE if this is a terminal and the remaining fields are valid.  */
@@ -369,6 +373,8 @@ struct ssysdep_conn
   sterminal sorig;
   /* Current terminal settings.  */
   sterminal snew;
+  /* Process ID of currently executing pipe command, or -1.  */
+  pid_t ipid;
 #if HAVE_COHERENT_LOCKFILES
   /* On Coherent we need to hold on to the real port name which will
      be used to enable the port.  Ick.  */
@@ -427,6 +433,19 @@ extern FILE *espopen P((const char **pazargs, boolean frd,
    The process ID should be pid_t, but we can't put that in a
    prototype.  */
 extern int ixswait P((unsigned long ipid, const char *zreport));
+
+/* Read from a connection using two file descriptors.  */
+extern boolean fsdouble_read P((struct sconnection *qconn, char *zbuf,
+				size_t *pclen, size_t cmin, int ctimeout,
+				boolean freport));
+
+/* Write to a connection using two file descriptors.  */
+extern boolean fsdouble_write P((struct sconnection *qconn,
+				 const char *zbuf, size_t clen));
+
+/* Run a chat program on a connection using two file descriptors.  */
+extern boolean fsdouble_chat P((struct sconnection *qconn,
+				char **pzprog));
 
 /* Find a spool file in the spool directory.  For a local file, the
    bgrade argument is the grade of the file.  This is needed for

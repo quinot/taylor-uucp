@@ -1629,6 +1629,9 @@ uvwrite_taylor_port (e, qport, zprefix)
     case UUCONF_PORTTYPE_TLI:
       ztype = "tli";
       break;
+    case UUCONF_PORTTYPE_PIPE:
+      ztype = "pipe";
+      break;
     }
 
   fprintf (e, "%stype %s\n", zprefix, ztype);
@@ -1736,6 +1739,18 @@ uvwrite_taylor_port (e, qport, zprefix)
 	if (qt->uuconf_zservaddr != NULL)
 	  fprintf (e, "%sserver-address %s\n", zprefix,
 		   qt->uuconf_zservaddr);
+      }
+      break;
+    case UUCONF_PORTTYPE_PIPE:
+      {
+	struct uuconf_pipe_port *qp;
+
+	qp = &qport->uuconf_u.uuconf_spipe;
+	if (qp->uuconf_pzcmd != NULL)
+	  {
+	    sprintf (ab, "%scommad", zprefix);
+	    uvwrite_string_array (e, qp->uuconf_pzcmd, ab);
+	  }
       }
       break;
     }

@@ -50,7 +50,8 @@ static const char * const azPtype_names[] =
   "modem",
   "direct",
   "tcp",
-  "tli"
+  "tli",
+  "pipe"
 };
 
 #define CPORT_TYPES (sizeof azPtype_names / sizeof azPtype_names[0])
@@ -169,11 +170,22 @@ static const struct cmdtab_offset asPtli_cmds[] =
 
 #define CTLI_CMDS (sizeof asPtli_cmds / sizeof asPtli_cmds[0])
 
+/* The pipe port command table.  */
+static const struct cmdtab_offset asPpipe_cmds[] =
+{
+  { "command", UUCONF_CMDTABTYPE_FULLSTRING,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_spipe.uuconf_pzcmd),
+      NULL },
+  { NULL, 0, 0, NULL}
+};
+
+#define CPIPE_CMDS (sizeof asPpipe_cmds / sizeof asPpipe_cmds[0])
+
 #undef max
 #define max(i1, i2) ((i1) > (i2) ? (i1) : (i2))
 #define CCMDS \
   max (max (max (CPORT_CMDS, CSTDIN_CMDS), CMODEM_CMDS), \
-       max (max (CDIRECT_CMDS, CTCP_CMDS), CTLI_CMDS))
+       max (max (CDIRECT_CMDS, CTCP_CMDS), max (CTLI_CMDS, CPIPE_CMDS)))
 
 /* Handle a command passed to a port from a Taylor UUCP configuration
    file.  This can be called when reading either the port file or the
@@ -270,6 +282,9 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 				     | UUCONF_RELIABLE_EIGHT
 				     | UUCONF_RELIABLE_FULLDUPLEX);
 	  break;
+	case UUCONF_PORTTYPE_PIPE:
+	  qport->uuconf_u.uuconf_spipe.uuconf_pzcmd = NULL;
+	  break;
 	}
 
       if (fgottype)
@@ -309,6 +324,10 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	case UUCONF_PORTTYPE_TLI:
 	  qcmds = asPtli_cmds;
 	  ccmds = CTLI_CMDS;
+	  break;
+	case UUCONF_PORTTYPE_PIPE:
+	  qcmds = asPpipe_cmds;
+	  ccmds = CPIPE_CMDS;
 	  break;
 	default:
 	  return UUCONF_SYNTAX_ERROR;

@@ -239,11 +239,6 @@ static boolean fsdirect_close P((struct sconnection *qconn,
 				 boolean fsuccess));
 static boolean fsserial_reset P((struct sconnection *qconn));
 static boolean fsstdin_reset P((struct sconnection *qconn));
-static boolean fsstdin_read P((struct sconnection *qconn,
-			       char *zbuf, size_t *pclen, size_t cmin,
-			       int ctimeout, boolean freport));
-static boolean fsstdin_write P((struct sconnection *qconn,
-				const char *zwrite, size_t cwrite));
 static boolean fsserial_break P((struct sconnection *qconn));
 static boolean fsstdin_break P((struct sconnection *qconn));
 static boolean fsserial_set P((struct sconnection *qconn,
@@ -257,8 +252,6 @@ static boolean fsstdin_set P((struct sconnection *qconn,
 static boolean fsmodem_carrier P((struct sconnection *qconn,
 				  boolean fcarrier));
 static boolean fsrun_chat P((int oread, int owrite, char **pzprog));
-static boolean fsstdin_chat P((struct sconnection *qconn,
-			       char **pzprog));
 static long isserial_baud P((struct sconnection *qconn));
 
 /* The command table for standard input ports.  */
@@ -272,13 +265,13 @@ static const struct sconncmds sstdincmds =
   fsstdin_close,
   fsstdin_reset,
   NULL, /* pfdial */
-  fsstdin_read,
-  fsstdin_write,
+  fsdouble_read,
+  fsdouble_write,
   fsysdep_conn_io,
   fsstdin_break,
   fsstdin_set,
   NULL, /* pfcarrier */
-  fsstdin_chat,
+  fsdouble_chat,
   isserial_baud
 };
 
@@ -489,6 +482,8 @@ fsserial_init (qconn, qcmds, zdevice)
       q->zdevice[sizeof "/dev/" + clen - 1] = '\0';
     }
   q->o = -1;
+  q->ord = -1;
+  q->owr = -1;
   q->ftli = FALSE;
   qconn->psysdep = (pointer) q;
   qconn->qcmds = qcmds;
@@ -940,7 +935,7 @@ fsserial_open (qconn, ibaud, fwait)
       ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
       return FALSE;
     }
-  q->istdout_flags = -1;
+  q->iwr_flags = -1;
 
   if (! fgetterminfo (q->o, &q->sorig))
     {
@@ -1084,8 +1079,9 @@ fsserial_open (qconn, ibaud, fwait)
   return TRUE;
 }
 
-/* Open a standard input port.  The code alternates q->o between 0 and
-   1 as appropriate.  It is always 0 before any call to fsblock.  */
+/* Open a standard input port.  The code alternates q->o between
+   q->ord and q->owr as appropriate.  It is always q->ord before any
+   call to fsblock.  */
 
 static boolean
 fsstdin_open (qconn, ibaud, fwait)
@@ -1096,11 +1092,14 @@ fsstdin_open (qconn, ibaud, fwait)
   struct ssysdep_conn *q;
 
   q = (struct ssysdep_conn *) qconn->psysdep;
-  q->o = 0;
+  q->ord = 0;
+  q->owr = 1;
+
+  q->o = q->ord;
   if (! fsserial_open (qconn, ibaud, fwait))
     return FALSE;
-  q->istdout_flags = fcntl (1, F_GETFL, 0);
-  if (q->istdout_flags < 0)
+  q->iwr_flags = fcntl (q->owr, F_GETFL, 0);
+  if (q->iwr_flags < 0)
     {
       ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
       return FALSE;
@@ -1174,14 +1173,14 @@ fsblock (qs, fblock)
 
   qs->iflags = iwant;
 
-  if (qs->istdout_flags >= 0)
+  if (qs->iwr_flags >= 0 && qs->ord != qs->owr)
     {
       if (fblock)
-	iwant = qs->istdout_flags &~ (O_NDELAY | O_NONBLOCK);
+	iwant = qs->iwr_flags &~ (O_NDELAY | O_NONBLOCK);
       else
-	iwant = qs->istdout_flags | iSunblock;
+	iwant = qs->iwr_flags | iSunblock;
 
-      if (fcntl (1, F_SETFL, iwant) < 0)
+      if (fcntl (qs->owr, F_SETFL, iwant) < 0)
 	{
 	  /* We don't bother to fix up iSunblock here, since we
 	     succeeded above.  */
@@ -1189,7 +1188,7 @@ fsblock (qs, fblock)
 	  return FALSE;
 	}
 
-      qs->istdout_flags = iwant;
+      qs->iwr_flags = iwant;
     }
 
   return TRUE;
@@ -1260,9 +1259,9 @@ fsstdin_close (qconn, puuconf, qdialer, fsuccess)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  (void) close (1);
+  (void) close (qsysdep->owr);
   (void) close (2);
-  qsysdep->o = 0;
+  qsysdep->o = qsysdep->ord;
   return fsserial_close (qsysdep);
 }
 
@@ -1486,7 +1485,7 @@ fsstdin_reset (qconn)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  qsysdep->o = 0;
+  qsysdep->o = qsysdep->ord;
   return fsserial_reset (qconn);
 }
 
@@ -2114,10 +2113,10 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
   return fret;
 }
 
-/* Read from a stdin port.  */
+/* Read from a port with separate read/write file descriptors.  */
 
-static boolean
-fsstdin_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
+boolean
+fsdouble_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
      struct sconnection *qconn;
      char *zbuf;
      size_t *pclen;
@@ -2128,7 +2127,7 @@ fsstdin_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  qsysdep->o = 0;
+  qsysdep->o = qsysdep->ord;
   return fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport);
 }
 
@@ -2225,10 +2224,10 @@ fsysdep_conn_write (qconn, zwrite, cwrite)
   return TRUE;
 }
 
-/* Write to a stdin port.  */
+/* Write to a port with separate read/write file descriptors.  */
 
-static boolean
-fsstdin_write (qconn, zwrite, cwrite)
+boolean
+fsdouble_write (qconn, zwrite, cwrite)
      struct sconnection *qconn;
      const char *zwrite;
      size_t cwrite;
@@ -2236,10 +2235,10 @@ fsstdin_write (qconn, zwrite, cwrite)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  qsysdep->o = 0;
+  qsysdep->o = qsysdep->ord;
   if (! fsblock (qsysdep, TRUE))
     return FALSE;
-  qsysdep->o = 1;
+  qsysdep->o = qsysdep->owr;
   return fsysdep_conn_write (qconn, zwrite, cwrite);
 }
 
@@ -2303,8 +2302,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
       /* If we are running on standard input, we switch the file
 	 descriptors by hand.  */
-      if (q->istdout_flags >= 0)
-	q->o = 0;
+      if (q->ord >= 0)
+	q->o = q->ord;
 
       /* Do an unblocked read.  */
       if (! fsblock (q, FALSE))
@@ -2378,8 +2377,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	cdo = SINGLE_WRITE;
 #endif
 
-      if (q->istdout_flags >= 0)
-	q->o = 1;
+      if (q->owr >= 0)
+	q->o = q->owr;
 
       /* Loop until we get something besides EINTR.  */
       while (TRUE)
@@ -2446,8 +2445,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	{
 	  /* We didn't write any data.  Do a blocking write.  */
 
-	  if (q->istdout_flags >= 0)
-	    q->o = 0;
+	  if (q->ord >= 0)
+	    q->o = q->ord;
 
 	  if (! fsblock (q, TRUE))
 	    return FALSE;
@@ -2460,8 +2459,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 			  "fsysdep_conn_io: Blocking write of %lu",
 			  (unsigned long) cdo);
 
-	  if (q->istdout_flags >= 0)
-	    q->o = 1;
+	  if (q->owr >= 0)
+	    q->o = q->owr;
 
 	  /* Loop until we get something besides EINTR.  */
 	  while (TRUE)
@@ -2562,7 +2561,7 @@ fsstdin_break (qconn)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  qsysdep->o = 1;
+  qsysdep->o = qsysdep->owr;
   return fsserial_break (qconn);
 }
 
@@ -2876,7 +2875,7 @@ fsstdin_set (qconn, tparity, tstrip, txonxoff)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  qsysdep->o = 0;
+  qsysdep->o = qsysdep->ord;
   return fsserial_set (qconn, tparity, tstrip, txonxoff);
 }
 
@@ -2940,15 +2939,18 @@ fsrun_chat (oread, owrite, pzprog)
   return ixswait ((unsigned long) ipid, "Chat program") == 0;
 }
 
-/* Run a chat program on a stdin port.  */
+/* Run a chat program on a port using separate read/write file
+   descriptors.  */
 
-/*ARGSUSED*/
-static boolean
-fsstdin_chat (qconn, pzprog)
+boolean
+fsdouble_chat (qconn, pzprog)
      struct sconnection *qconn;
      char **pzprog;
 {
-  return fsrun_chat (0, 1, pzprog);
+  struct ssysdep_conn *qsysdep;
+
+  qsysdep = (struct ssysdep_conn *) qconn->psysdep;
+  return fsrun_chat (qsysdep->ord, qsysdep->owr, pzprog);
 }
 
 /* Run a chat program on any general type of connection.  */

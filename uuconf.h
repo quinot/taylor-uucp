@@ -348,7 +348,9 @@ enum uuconf_porttype
   /* A TCP port.  Not supported on all systems.  */
   UUCONF_PORTTYPE_TCP,
   /* A TLI port.  Not supported on all systems.  */
-  UUCONF_PORTTYPE_TLI
+  UUCONF_PORTTYPE_TLI,
+  /* A pipe port.  Not supported on all systems.  */
+  UUCONF_PORTTYPE_PIPE
 };
 
 /* Additional information for a stdin port (there is none).  */
@@ -431,6 +433,14 @@ struct uuconf_tli_port
   char *uuconf_zservaddr;
 };
 
+/* Additional information for a pipe port.  */
+
+struct uuconf_pipe_port
+{
+  /* The command and its arguments.  */
+  char **uuconf_pzcmd;
+};
+
 /* Information kept for a port.  */
 
 struct uuconf_port
@@ -460,6 +470,7 @@ struct uuconf_port
       struct uuconf_direct_port uuconf_sdirect;
       struct uuconf_tcp_port uuconf_stcp;
       struct uuconf_tli_port uuconf_stli;
+      struct uuconf_pipe_port uuconf_spipe;
     } uuconf_u;
 };
 

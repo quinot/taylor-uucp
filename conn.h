@@ -308,5 +308,6 @@ extern boolean fsysdep_tcp_init P((struct sconnection *qconn));
 #if HAVE_TLI
 extern boolean fsysdep_tli_init P((struct sconnection *qconn));
 #endif
+extern boolean fsysdep_pipe_init P((struct sconnection *qconn));
 
 #endif /* ! defined (CONN_H) */

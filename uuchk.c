@@ -499,6 +499,7 @@ ikshow_port (qport, pinfo)
   char **pz;
   struct uuconf_modem_port *qmodem;
   struct uuconf_tli_port *qtli;
+  struct uuconf_pipe_port *qpipe;
 
   qi->fgot = TRUE;
 
@@ -616,6 +617,17 @@ ikshow_port (qport, pinfo)
 	}
       if (qtli->uuconf_zservaddr != NULL)
 	printf ("   Server address %s\n", qtli->uuconf_zservaddr);
+      break;
+    case UUCONF_PORTTYPE_PIPE:
+      qpipe = &qport->uuconf_u.uuconf_spipe;
+      printf ("   Port type pipe\n");
+      if (qpipe->uuconf_pzcmd != NULL)
+	{
+	  printf ("   Command");
+	  for (pz = qpipe->uuconf_pzcmd; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
       break;
     default:
       fprintf (stderr, "   CAN'T HAPPEN\n");
