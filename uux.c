@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/01/15  07:06:29  ian
+   Set configuration directory in Makefile rather than sysdep.h
+
    Revision 1.18  1992/01/05  03:09:17  ian
    Changed abProgram and abVersion to non const to avoid compiler bug
 
@@ -196,6 +199,9 @@ main (argc, argv)
   char abxqt_xname[CFILE_NAME_LEN];
   boolean fneedshell;
   char *zprint;
+  const char *zcall_system;
+  boolean fcall_any;
+  boolean fexit;
 
   /* We need to be able to read a single - as an option, which getopt
      won't do.  So that we can still use getopt, we run through the
@@ -507,6 +513,9 @@ main (argc, argv)
      exclamation point character is interpreted as a file name, and is
      sent to the appropriate system.  */
 
+  zcall_system = NULL;
+  fcall_any = FALSE;
+
   for (i = 0; i < cargs; i++)
     {
       const char *zsystem, *zconst;
@@ -806,6 +815,14 @@ main (argc, argv)
 	      usysdep_exit (FALSE);
 	    }
 
+	  if (fcall_any)
+	    zcall_system = NULL;
+	  else
+	    {
+	      fcall_any = TRUE;
+	      zcall_system = xstrdup (qfromsys->zname);
+	    }
+
 	  /* Now if the execution is to occur on another system, we
 	     must create an execute file to send the file there.  The
 	     name of the file on the execution system is put into
@@ -1007,6 +1024,14 @@ main (argc, argv)
 	  ulog_close ();
 	  usysdep_exit (FALSE);
 	}
+
+      if (fcall_any)
+	zcall_system = NULL;
+      else
+	{
+	  fcall_any = TRUE;
+	  zcall_system = qxqtsys->zname;
+	}
     }
 
   /* If all that worked, make a log file entry.  All log file reports
@@ -1038,10 +1063,19 @@ main (argc, argv)
 
   ulog_close ();
 
-  if (fuucico)
-    usysdep_exit (fsysdep_run ("uucico -r1", TRUE));
+  if (! fuucico)
+    fexit = TRUE;
   else
-    usysdep_exit (TRUE);
+    {
+      if (zcall_system != NULL)
+	fexit = fsysdep_run (TRUE, "uucico", "-s", zcall_system);
+      else if (fcall_any)
+	fexit = fsysdep_run (TRUE, "uucico", "-r1", (const char *) NULL);
+      else
+	fexit = TRUE;
+    }
+
+  usysdep_exit (fexit);
 
   /* Avoid error about not returning a value.  */
   return 0;

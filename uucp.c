@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1992/01/15  07:06:29  ian
+   Set configuration directory in Makefile rather than sysdep.h
+
    Revision 1.9  1992/01/05  03:09:17  ian
    Changed abProgram and abVersion to non const to avoid compiler bug
 
@@ -84,6 +87,7 @@ static sigret_t uccatch P((int isig));
 static void ucadd_cmd P((const struct ssysteminfo *qsys,
 			 const struct scmd *qcmd));
 static void ucspool_cmds P((int bgrade));
+static const char *zcone_system P((boolean *pfany));
 
 int
 main (argc, argv)
@@ -124,6 +128,7 @@ main (argc, argv)
   char absend_options[5];
   char abrec_options[3];
   char *zoptions;
+  boolean fexit;
 
   while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:rs:Wx:")) != EOF)
     {
@@ -551,10 +556,23 @@ main (argc, argv)
 
   ulog_close ();
 
-  if (fuucico)
-    usysdep_exit (fsysdep_run ("uucico -r1", TRUE));
+  if (! fuucico)
+    fexit = TRUE;
   else
-    usysdep_exit (TRUE);
+    {
+      const char *zsys;
+      boolean fany;
+
+      zsys = zcone_system (&fany);
+      if (zsys != NULL)
+	fexit = fsysdep_run (TRUE, "uucico", "-s", zsys);
+      else if (fany)
+	fexit = fsysdep_run (TRUE, "uucico", "-r1", (const char *) NULL);
+      else
+	fexit = TRUE;
+    }
+
+  usysdep_exit (fexit);
 
   /* Avoid error about not returning.  */
   return 0;
@@ -687,4 +705,26 @@ ucspool_cmds (bgrade)
 	    }
 	}
     }
+}
+
+/* Return the system name for which we have created commands, or NULL
+   if we've created commands for more than one system.  Set *pfany to
+   FALSE if we didn't create work for any system.  */
+
+static const char *
+zcone_system (pfany)
+     boolean *pfany;
+{
+  if (qCjobs == NULL)
+    {
+      *pfany = FALSE;
+      return NULL;
+    }
+
+  *pfany = TRUE;
+
+  if (qCjobs->qnext == NULL)
+    return qCjobs->qsys->zname;
+  else
+    return NULL;
 }

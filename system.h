@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/01/04  21:43:24  ian
+   Chip Salzenberg: added ALLOW_FILENAME_ARGUMENTS to permit them
+
    Revision 1.14  1992/01/04  04:12:54  ian
    David J. Fiander: make sure execution arguments are not bad file names
 
@@ -152,15 +155,18 @@ extern boolean fsysdep_in_directory P((const struct ssysteminfo *qsys,
    return error.  */
 extern boolean fsysdep_file_exists P((const char *zfile));
 
-/* Exit the current program and start a new one.  This is called with
-   a restricted set of arguments, namely "uucico -r1" and "uuxqt".
-   The second argument indicates whether the current program should be
-   replaced with the new program, or whether the new program should be
-   started up and the current program allowed to continue (it will
-   immediately exit in any case).  The return value will be passed
-   directly to usysdep_exit, and should be TRUE on success, FALSE on
-   error.  */
-extern boolean fsysdep_run P((const char *zprogram, boolean ffork));
+/* Exit the current program and start a new one.  If the ffork
+   argument is TRUE, the new program should be started up and the
+   current program should continue (but in all current cases, it will
+   immediately exit anyhow); if the ffork argument is FALSE, the new
+   program should replace the current program.  The three string
+   arguments may be catenated together to form the program to execute;
+   I did it this way to make it easy to call execl(2), and because I
+   never needed more than two arguments.  The program will always be
+   "uucico" or "uuxqt".  The return value will be passed directly to
+   usysdep_exit, and should be TRUE on success, FALSE on error.  */
+extern boolean fsysdep_run P((boolean ffork, const char *zprogram,
+			      const char *zarg1, const char *zarg2));
 
 /* Send a mail message.  This function will be passed an array of
    strings.  All necessary newlines are already included; the strings

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.42  1992/01/20  16:44:54  ian
+   Marty Shannon: update .Status file if it's the wrong time to call
+
    Revision 1.41  1992/01/19  02:27:00  ian
    Marty Shannon: update .Status file on incoming calls
 
@@ -575,7 +578,8 @@ main (argc, argv)
   ustats_close ();
 
   if (fuuxqt)
-    usysdep_exit (fsysdep_run ("uuxqt", FALSE));
+    usysdep_exit (fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
+			       (const char *) NULL));
   else
     usysdep_exit (fret);
 
