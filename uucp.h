@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.57  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.56  1992/03/12  21:58:32  ian
    Added padding byte to scmd
 
@@ -228,6 +231,19 @@
 /* We need <signal.h> for sig_atomic_t.  */
 
 #include <signal.h>
+
+/* On some systems that won't get us sig_atomic_t.  */
+
+#if ! HAVE_SIG_ATOMIC_T_IN_SIGNAL_H
+#if HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H
+#include <sys/types.h>
+#else /* ! HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H */
+#ifndef sig_atomic_t
+/* There is no portable definition for sig_atomic_t.  */
+#define sig_atomic_t char
+#endif /* ! defined (sig_atomic_t) */
+#endif /* ! HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H */
+#endif /* ! HAVE_SIG_ATOMIC_T_IN_SIGNAL_H */
 
 /* Get a definition for ANSI_C if we weren't given one.  */
 

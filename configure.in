@@ -77,11 +77,19 @@ ILT_HEADER_COMMENT([/* If off_t is not defined in <sys/types.h>, give it a defin
 M_LIBTHING_MISSING([off_t in sys/types.h],
 [#include <sys/types.h>], [off_t x;],
 M_DEFINE(off_t, long))dnl
-ILT_HEADER_COMMENT([/* If sig_atomic_t is not defined in <signal.h>, give it a definition
-   here.  */])
-M_LIBTHING_MISSING([sig_atomic_t in signal.h],
+dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
+ILT_LIBTHING_CHECK([sig_atomic_t in signal.h],
 [#include <signal.h>], [sig_atomic_t x;],
-M_DEFINE(sig_atomic_t, char))dnl
+[HAVE_SIG_ATOMIC_T_IN_SIGNAL_H],
+[/* Set HAVE_SIG_ATOMIC_T_IN_SIGNAL_H if sig_atomic_t is defined in
+   <signal.h> as required by ANSI C.  */])
+ILT_LIBTHING_CHECK([sig_atomic_t in sys/types.h],
+[#include <sys/types.h>], [sig_atomic_t x;],
+[HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H],
+[/* Set HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H if sig_atomic_t is defined in
+   <sys/types.h>.  */])
+ILT_HEADER_COMMENT([/* If sig_atomic_t is not defined in <signal.h> or <sys/types.h>, you can
+   give it a definition here.  */])
 dnl
 dnl The filesystem info code is from David MacKenzie's fileutils 3.1
 dnl package.
