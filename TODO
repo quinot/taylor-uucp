@@ -189,11 +189,6 @@ expect strings.
 
 Use POSIX fcntl locks when possible instead of creating a lock file.
 
-130.
-
-Chip Salzenberg: BSD lets you override the timeout for a particular
-expect string by using a trailing ~.
-
 138.
 
 T. William Wells: BNU apparently uses a file named A.whatever to hold
@@ -330,11 +325,6 @@ Marc Sheldon: use exit codes from <sysexits.h> in uux and uucp.
 
 Chip Salzenberg: allow chat failure strings to specify a retry time.
 
-167.
-
-Gregory Bond: allow a dialer sequence for a TCP port, so you can make
-a TCP connection to a modem and then dial out.
-
 168.
 
 Jose A. Manas: allow a maximum connect time, after which we try to
@@ -424,12 +414,6 @@ statement.
 Optionally check for interrupts in fcopy_file, since it can take a
 long time to copy a file named in a uucp request.
 
-184.
-
-Ian Moran: if an attempt is made to a copy a file to a directory which
-denies write permission, perhaps the file should be saved somewhere.
-It must be saved in a private location, though.
-
 185.
 
 A syntax error in a command received from the remote system should not
@@ -508,11 +492,6 @@ connection around immediately and see if the other side had anything
 to do, and then try again later.  This would require a protocol
 extension.  I don't know if it's worth it.  The code should be checked
 to see how well it handles a disk full situation.
-
-196.
-
-For real adjustability, provide some mechanism for picking the lead
-characters to use for the shell scripts, between : and #!.
 
 197.
 
@@ -745,3 +724,15 @@ Emmanuel Mogenet: provide some mechanism for a maximum number of
 garbage bytes during a chat script before giving up.
 
 234.
+
+Scott Ballantyne: The address for a TCP port should be separate from
+the phone number, so that a TCP dialer can use \D.
+
+235.
+
+Peter Wemm: The 'i' protocol default parameters do not work at 2400
+baud, because the time it takes to transfer half the packets is less
+than the timeout time.  Of course people can always change the
+parameters, but it would be nice if this were dealt with somehow.
+
+236.
