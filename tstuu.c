@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.49  1992/03/15  01:54:46  ian
+   All execs are now done in isspawn, all waits are done in iswait
+
    Revision 1.48  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -315,6 +318,7 @@ extern pid_t wait4 ();
 #endif
 
 #if ! HAVE_REMOVE
+#undef remove
 #define remove unlink
 #endif
 
