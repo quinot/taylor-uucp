@@ -152,6 +152,8 @@ _uuconf_ihread_permissions (qglobal)
 
   qglobal->ilineno = 0;
 
+  iret = UUCONF_SUCCESS;
+
   while ((cchars = _uuconf_getline (qglobal, &zline, &cline, e)) > 0)
     {
       int centries;
@@ -358,9 +360,8 @@ ihcolon (pglobal, argc, argv, pvar, pinfo)
   return UUCONF_CMDTABRET_KEEP;
 }
 
-/* Handle the SENDFILES parameter, which can take either "yes" or
-   "call" as an argument.  The string "call" is essentially equivalent
-   to "no".  */
+/* Handle the SENDFILES parameter, which can take "yes" or "call" or
+   "no" as an argument.  The string "call" is equivalent to "no".  */
 
 /*ARGSUSED*/
 static int
@@ -377,6 +378,8 @@ ihsendfiles (pglobal, argc, argv, pvar, pinfo)
     {
     case 'C':
     case 'c':
+    case 'N':
+    case 'n':
       *pi = FALSE;
       break;
     case 'Y':
