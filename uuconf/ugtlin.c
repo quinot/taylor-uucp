@@ -26,7 +26,7 @@
 #include "uucnfi.h"
 
 #if USE_RCS_ID
-char _uuconf_ugtlin_rcsid[] = "$Id$";
+const char _uuconf_ugtlin_rcsid[] = "$Id$";
 #endif
 
 /* Read a line from a file with backslash continuations.  This updates

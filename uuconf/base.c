@@ -26,7 +26,7 @@
 #include "uucnfi.h"
 
 #if USE_RCS_ID
-char _uuconf_base_rcsid[] = "$Id$";
+const char _uuconf_base_rcsid[] = "$Id$";
 #endif
 
 /* This turns a cmdtab_offset table into a uuconf_cmdtab table.  Each
