@@ -1,6 +1,11 @@
-Wed Aug  9 20:52:29 1995  Ian Lance Taylor  <ian@airs.com>
+Thu Aug 10 22:42:53 1995  Ian Lance Taylor  <ian@airs.com>
 
 	* Released version 1.06.
+
+	* trans.c (fgot_data): Only log when data comes in if fsendfile is
+	FALSE.
+
+Wed Aug  9 20:52:29 1995  Ian Lance Taylor  <ian@airs.com>
 
 	* Makefile.in (VERSION): Change to 1.06.
 
