@@ -60,6 +60,10 @@ distclean: clean
 mostlyclean: clean
 realclean: distclean
 
+dist:
+	mkdir ../uucp-$(VERSION)/uuconf
+	ln `cat MANIFEST` ../uucp-$(VERSION)/uuconf
+
 Makefile: Makefile.in
 	(cd ..; sh config.status)
 
