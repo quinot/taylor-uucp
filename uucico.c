@@ -1795,6 +1795,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       (void) fsend_uucp_cmd (qconn, "RCB");
       ulog (LOG_NORMAL, "Will call back");
+
+      /* Clear any existing status.  */
+      sstat.ttype = STATUS_COMPLETE;
+      sstat.cretries = 0;
+      sstat.ilast = ixsysdep_time ((long *) NULL);
+      sstat.cwait = 0;
+      (void) fsysdep_set_status (qsys, &sstat);
+
       ubuffree (zsysdep_spool_commands (qsys, UUCONF_GRADE_HIGH, 0,
 					(const struct scmd *) NULL));
       ubuffree (zstr);
