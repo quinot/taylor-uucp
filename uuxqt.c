@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/01/15  07:06:29  ian
+   Set configuration directory in Makefile rather than sysdep.h
+
    Revision 1.17  1992/01/05  03:09:17  ian
    Changed abProgram and abVersion to non const to avoid compiler bug
 
@@ -778,7 +781,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     zmail = zQuser;
   if (zmail != NULL
       && zQsystem != NULL
-      && strcmp (zQsystem, zLocalname) == 0)
+      && strcmp (zQsystem, zLocalname) != 0)
     {
       char *zset;
 
