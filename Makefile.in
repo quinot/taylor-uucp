@@ -39,12 +39,24 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o tstuu.o prot.o protg.o \
 all: uucico uuxqt uux uucp uuchk $(TSTUU)
 
 install: uucico uuxqt uux uucp uuchk
+	-$(LN) $(LIBDIR)/uucico $(LIBDIR)/uucico.old
+	-$(LN) $(LIBDIR)/uuxqt $(LIBDIR)/uuxqt.old
+	rm -f $(LIBDIR)/uucico $(LIBDIR)/uuxqt
 	cp uucico uuxqt uuchk $(LIBDIR)
 	chown uucp $(LIBDIR)/uucico $(LIBDIR)/uuxqt $(LIBDIR)/uuchk
 	chmod 4555 $(LIBDIR)/uucico $(LIBDIR)/uuxqt
+	-$(LN) $(BINDIR)/uux $(BINDIR)/uux.old
+	-$(LN) $(BINDIR)/uucp $(BINDIR)/uucp.old
+	rm -f $(BINDIR)/uux $(BINDIR)/uucp
 	cp uux uucp $(BINDIR)
 	chown uucp $(BINDIR)/uux $(BINDIR)/uucp
 	chmod 4555 $(BINDIR)/uux $(BINDIR)/uucp
+
+uninstall:
+	cp $(LIBDIR)/uucico.old $(LIBDIR)/uucico
+	cp $(LIBDIR)/uuxqt.old $(LIBDIR)/uuxqt
+	cp $(BINDIR)/uux.old $(BINDIR)/uux
+	cp $(BINDIR)/uucp.old $(BINDIR)/uucp
 
 uucico: $(UUOBJS)
 	$(CC) $(CFLAGS) -o uucico $(UUOBJS) $(LIBS)
