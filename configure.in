@@ -21,6 +21,11 @@ AC_DYNIX_SEQ
 AC_IRIX_SUN
 AC_CROSS_CHECK
 AC_CONST
+AC_COMPILE_CHECK([prototypes],
+[extern int foo (short);
+int foo(short i) { return i; }],
+[int i;],
+[AC_DEFINE(HAVE_PROTOTYPES)])
 dnl
 CFLAGS=${CFLAGS--g}
 AC_SUBST(CFLAGS)dnl
@@ -37,11 +42,11 @@ elif test -s /bin/echo; then
 fi
 AC_LN_S
 dnl
-AC_HAVE_HEADERS(stddef.h string.h strings.h unistd.h stdlib.h limits.h)
-AC_HAVE_HEADERS(time.h sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
+AC_HAVE_HEADERS(stddef.h stdarg.h string.h strings.h unistd.h stdlib.h)
+AC_HAVE_HEADERS(limits.h time.h sys/wait.h sys/ioctl.h dirent.h memory.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
 AC_HAVE_HEADERS(poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h glob.h)
-AC_HAVE_HEADERS(sys/types.tcp.h)
+AC_HAVE_HEADERS(sys/param.h sys/types.tcp.h)
 dnl
 AC_COMPILE_CHECK([sys/select.h],
 [#include <sys/select.h>
@@ -191,7 +196,7 @@ changequote([,])dnl
 for i in socket t_open; do
   def=HAVE_`echo $i|tr "$trfrom" "$trto"`
   AC_FUNC_CHECK([$i],[AC_DEFINE($def)],[missing=1])dnl
-  for lib in "-lsocket" "-lsocket -lnsl" "-lnsl" "-lxti"; do
+  for lib in "-lsocket" "-lnsl" "-lsocket -lnsl" "-lxti"; do
     if test -n "$missing"; then
       case $LIBS in
       *${lib}*) ;;

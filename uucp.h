@@ -103,8 +103,8 @@ typedef long time_t;
    constpointer -- for a generic pointer to constant data.
    BUCHAR -- to convert a character to unsigned.  */
 #if ANSI_C
-#if ! HAVE_VOID || ! HAVE_UNSIGNED_CHAR
- #error ANSI C compiler without void or unsigned char
+#if ! HAVE_VOID || ! HAVE_UNSIGNED_CHAR || ! HAVE_PROTOTYPES
+ #error ANSI C compiler without void or unsigned char or prototypes
 #endif
 #define P(x) x
 typedef void *pointer;
@@ -116,7 +116,11 @@ typedef const void *constpointer;
 #if ! HAVE_VOID
 #define void int
 #endif
+#if HAVE_PROTOTYPES
+#define P(x) x
+#else
 #define P(x) ()
+#endif
 typedef char *pointer;
 typedef const char *constpointer;
 #if HAVE_UNSIGNED_CHAR
