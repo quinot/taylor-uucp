@@ -817,7 +817,7 @@ main (argc, argv)
 		  efile = esysdep_user_fopen (zfile, TRUE, TRUE);
 		  if (! ffileisopen (efile))
 		    uxabort ();
-		  if (! fcopy_open_file (efile, zdata, FALSE, TRUE))
+		  if (! fcopy_open_file (efile, zdata, FALSE, TRUE, TRUE))
 		    uxabort ();
 		  (void) ffileclose (efile);
 		}

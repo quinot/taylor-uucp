@@ -741,7 +741,7 @@ uccopy (zfile, zdest)
 	  efrom = esysdep_user_fopen (zfile, TRUE, TRUE);
 	  if (! ffileisopen (efrom))
 	    ucabort ();
-	  if (! fcopy_open_file (efrom, zto, FALSE, fCmkdirs))
+	  if (! fcopy_open_file (efrom, zto, FALSE, fCmkdirs, TRUE))
 	    ucabort ();
 	  (void) ffileclose (efrom);
 	  ubuffree (zto);
@@ -795,7 +795,7 @@ uccopy (zfile, zdest)
 	      if (! ffileisopen (efrom))
 		ucabort ();
 	      ucrecord_file (ztemp);
-	      if (! fcopy_open_file (efrom, ztemp, FALSE, TRUE))
+	      if (! fcopy_open_file (efrom, ztemp, FALSE, TRUE, TRUE))
 		ucabort ();
 	      (void) ffileclose (efrom);
 	    }
