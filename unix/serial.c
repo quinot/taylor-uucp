@@ -3155,9 +3155,13 @@ fsdouble_chat (qconn, pzprog)
      char **pzprog;
 {
   struct ssysdep_conn *qsysdep;
+  boolean fret;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  return fsrun_chat (qsysdep->ord, qsysdep->owr, pzprog);
+  fret = fsrun_chat (qsysdep->ord, qsysdep->owr, pzprog);
+  if (qsysdep->fterminal)
+    (void) fgetterminfo (qsysdep->ord, &qsysdep->snew);
+  return fret;
 }
 
 /* Run a chat program on any general type of connection.  */
@@ -3168,9 +3172,13 @@ fsysdep_conn_chat (qconn, pzprog)
      char **pzprog;
 {
   struct ssysdep_conn *qsysdep;
+  boolean fret;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  return fsrun_chat (qsysdep->o, qsysdep->o, pzprog);
+  fret = fsrun_chat (qsysdep->o, qsysdep->o, pzprog);
+  if (qsysdep->fterminal)
+    (void) fgetterminfo (qsysdep->o, &qsysdep->snew);
+  return fret;
 }
 
 /* Return baud rate of a serial port.  */
