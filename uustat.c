@@ -97,7 +97,7 @@ struct scmdlist
 
 static void ususage P((void));
 static void ushelp P((void));
-static boolean fsxqt_file_read P((pointer puuconf, const char *zfile));
+static boolean fsxqt_file_read P((pointer puuconf, FILE *));
 static void usxqt_file_free P((void));
 static int isxqt_cmd P((pointer puuconf, int argc, char **argv, pointer pvar,
 			pointer pinfo));
@@ -671,20 +671,12 @@ static const struct uuconf_cmdtab asSxqt_cmds[] =
 /* Read an execution file, setting the above variables.  */
 
 static boolean
-fsxqt_file_read (puuconf, zfile)
+fsxqt_file_read (puuconf, e)
      pointer puuconf;
-     const char *zfile;
+     FILE *e;
 {
-  FILE *e;
   int iuuconf;
   boolean fret;
-
-  e = fopen (zfile, "r");
-  if (e == NULL)
-    {
-      ulog (LOG_ERROR, "fopen (%s): %s", zfile, strerror (errno));
-      return FALSE;
-    }
 
   zSxqt_user = NULL;
   zSxqt_system = NULL;
@@ -698,7 +690,6 @@ fsxqt_file_read (puuconf, zfile)
   iuuconf = uuconf_cmd_file (puuconf, e, asSxqt_cmds, (pointer) NULL,
 			     (uuconf_cmdtabfn) NULL,
 			     UUCONF_CMDTABFLAG_CASE, (pointer) NULL);
-  (void) fclose (e);
   if (iuuconf == UUCONF_SUCCESS)
     fret = TRUE;
   else
@@ -1063,6 +1054,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
       const char *zprog, *zcmd, *zrequestor, *zstdin;
       char *zfree;
       struct scmdlist *qxqt;
+      FILE *exqt = NULL;
       struct scmdlist *qfree;
 
       fmatch = FALSE;
@@ -1070,12 +1062,33 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
       zfree = NULL;
 
       for (qxqt = qlist; qxqt != NULL; qxqt = qxqt->qnext)
-	if (qxqt->s.bcmd == 'E'
-	    || (qxqt->s.bcmd == 'S'
-		&& qxqt->s.zto[0] == 'X'
-		&& qxqt->s.zto[1] == '.'
-		&& fspool_file (qxqt->s.zfrom)))
-	  break;
+	{
+	  if (qxqt->s.bcmd == 'E')
+	    break;
+	  if (qxqt->s.bcmd == 'S'
+	      && qxqt->s.zto[0] == 'X'
+	      && qxqt->s.zto[1] == '.'
+	      && fspool_file (qxqt->s.zfrom))
+	    {
+	      char *zxqt;
+
+	      /* Open the file now, so that, if it does not exist, we
+                 can still report sensibly (the qxqt == NULL case) on
+                 any other files that may exist.  */
+
+	      zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom,
+					      qxqt->s.pseq);
+	      if (zxqt == NULL)
+		return FALSE;
+
+	      exqt = fopen (zxqt, "r");
+
+	      ubuffree (zxqt);
+
+	      if (exqt != NULL)
+		break;
+	    }
+	}
 
       if (qxqt == NULL)
 	{
@@ -1157,20 +1170,13 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	    }
 	  else
 	    {
-	      char *zxqt;
-
-	      zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom,
-					      qxqt->s.pseq);
-	      if (zxqt == NULL)
-		return FALSE;
-
-	      if (! fsxqt_file_read (puuconf, zxqt))
+	      if (! fsxqt_file_read (puuconf, exqt))
 		{
-		  ubuffree (zxqt);
+		  (void) fclose (exqt);
 		  return FALSE;
 		}
 
-	      ubuffree (zxqt);
+	      (void) fclose (exqt);
 
 	      zprog = zSxqt_prog;
 	      zcmd = zSxqt_cmd;
@@ -1430,6 +1436,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
       boolean fmatch;
       int i;
       long itime;
+      FILE *e;
 
       if (csystems > 0)
 	{
@@ -1462,12 +1469,20 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 
       /* We need to read the execution file before we can check the
 	 user name.  */
-      if (! fsxqt_file_read (puuconf, zfile))
+      e = fopen (zfile, "r");
+      if (e == NULL)
 	{
+	  /* Probably uucico just deleted the file.  */
+	  continue;
+	}
+      if (! fsxqt_file_read (puuconf, e))
+	{
+	  (void) fclose (e);
 	  ubuffree (zfile);
 	  ubuffree (zsystem);
 	  continue;      
 	}
+      (void) fclose (e);
 
       if (cusers == 0)
 	fmatch = TRUE;
