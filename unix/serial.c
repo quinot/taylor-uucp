@@ -1275,7 +1275,7 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
       qsysdep->snew.sg_ospeed = B0;
 #endif
 #if HAVE_SYSV_TERMIO
-      qsysdep->snew.c_cflag = (sbaud.c_cflag &~ CBAUD) | B0;
+      qsysdep->snew.c_cflag = (qsysdep->snew.c_cflag &~ CBAUD) | B0;
 #endif
 #if HAVE_POSIX_TERMIOS
       (void) cfsetospeed (&qsysdep->snew, B0);
