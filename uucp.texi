@@ -4002,6 +4002,7 @@ In alphabetical order:
 @file{magus!dolphin!zack} (Zacharias Beckman)
 @file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
 @file{bob@@usixth.sublink.org} (Roberto Biancardi)
+@file{dean@@coplex.com} (Dean Brooks)
 @file{dave@@dlb.com} (Dave Buck)
 @file{gordon@@sneaky.lonestar.org} (Gordon Burditt)
 @file{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
@@ -4044,6 +4045,7 @@ Yanek Martinson @file{<yanek@@mthvax.cs.miami.edu>}
 @file{les@@chinet.chi.il.us} (Leslie Mikesell)
 @file{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
 @file{rmohr@@infoac.rmi.de} (Rupert Mohr)
+@file{service@@infohh.rmi.de} (Dirk Musstopf)
 @file{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
 @file{nolan@@helios.unl.edu} (Michael Nolan)
 david nugent @file{<david@@csource.oz.au>}
