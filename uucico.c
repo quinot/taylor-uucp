@@ -2497,6 +2497,7 @@ uaccept_call_cleanup (puuconf, qfreesys, qport, qfreeport, zloc)
   if (qport == qfreeport)
     (void) uuconf_port_free (puuconf, qfreeport);
   xfree ((pointer) zloc);
+  ulog_system ((const char *) NULL);
 }
 
 /* Apply protocol parameters, once we know the protocol.  */
