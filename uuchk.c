@@ -213,7 +213,7 @@ main (argc, argv)
 	ukuuconf_error (puuconf, iret);
       printf ("uucico -l will %sstrip login names and passwords\n",
 	      (iint & UUCONF_STRIP_LOGIN) != 0 ? "" : "not ");
-      printf ("uucico will %sstrip initial UUCP protocol commands\n",
+      printf ("uucico will %sstrip UUCP protocol commands\n",
 	      (iint & UUCONF_STRIP_PROTO) != 0 ? "" : "not ");
 
       iret = uuconf_maxuuxqts (puuconf, &iint);
