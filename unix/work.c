@@ -426,13 +426,12 @@ fsysdep_get_work_init (qsys, bgrade)
 
 /* Get the next work entry for a system.  This must parse the next
    line in the next work file.  The type of command is set into
-   qcmd->bcmd; if there are no more commands we call
-   fsysdep_get_work_init to rescan, in case any came in since the last
-   call.  If there are still no commands, qcmd->bcmd is set to 'H'.
+   qcmd->bcmd If there are no more commands, qcmd->bcmd is set to 'H'.
    Each field in the structure is set to point to a spot in an
-   malloced string.  The only time we use the grade here is when
-   calling fsysdep_get_work_init to rescan.  */
+   malloced string.  The grade argument is never used; it has been
+   used by fsysdep_get_work_init.  */
 
+/*ARGSUSED*/
 boolean
 fsysdep_get_work (qsys, bgrade, qcmd)
      const struct uuconf_system *qsys;
@@ -471,18 +470,9 @@ fsysdep_get_work (qsys, bgrade, qcmd)
 	    {
 	      if (iSwork_file >= cSwork_files)
 		{
-		  /* Rescan the work directory.  */
-		  if (! fsysdep_get_work_init (qsys, bgrade))
-		    {
-		      ubuffree (zdir);
-		      return FALSE;
-		    }
-		  if (iSwork_file >= cSwork_files)
-		    {
-		      qcmd->bcmd = 'H';
-		      ubuffree (zdir);
-		      return TRUE;
-		    }
+		  qcmd->bcmd = 'H';
+		  ubuffree (zdir);
+		  return TRUE;
 		}
 
 	      if (zdir == NULL)
