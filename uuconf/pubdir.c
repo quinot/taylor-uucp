@@ -38,6 +38,6 @@ uuconf_spooldir (pglobal, pzpub)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 
-  *pzlog = qglobal->qprocess->zpubdir;
+  *pzpub = qglobal->qprocess->zpubdir;
   return UUCONF_SUCCESS;
 }
