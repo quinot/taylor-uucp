@@ -106,7 +106,7 @@ main (argc, argv)
 	  /* Print version and exit.  */
 	  fprintf
 	    (stderr,
-	     "%s: Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
+	     "%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
 	     zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
@@ -322,7 +322,7 @@ static void
 uphelp ()
 {
   fprintf (stderr,
-	   "Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
+	   "Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
 	   " -s,--system system: Only consider files from named system\n");
