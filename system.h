@@ -374,29 +374,36 @@ extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
 				       const char *zuser));
 
 /* Return a temporary file name to receive into.  This file will be
-   opened by esysdep_open_receive.  It may ignore qsys (the system the
-   file is coming from) and zto (the file to be created) although they
-   are passed in case they are useful.  The file mode is not available
-   at this point.  The *pztemp return value must be freed using
-   ubuffree.  The amount of free space should be returned in *pcbytes;
-   ideally it should be the lesser of the amount of free space on the
-   file system of the temporary file and the amount of free space on
-   the file system of the final destination.  If the amount of free
-   space is not available, *pcbytes should be set to -1.  The function
-   should return NULL on error.  */
+   opened by esysdep_open_receive.  The qsys argument is the system
+   the file is coming from, the zto argument is the name the file will
+   have after it has been fully received, and the ztemp argument, if
+   it is not NULL, is from the command sent by the remote system.  The
+   return value must be freed using ubuffree.  The amount of free
+   space should be returned in *pcbytes; ideally it should be the
+   lesser of the amount of free space on the file system of the
+   temporary file and the amount of free space on the file system of
+   the final destination.  If the amount of free space is not
+   available, *pcbytes should be set to -1.  The function should
+   return NULL on error.  */
 extern char *zsysdep_receive_temp P((const struct uuconf_system *qsys,
 				     const char *zfile,
+				     const char *ztemp,
 				     long *pcbytes));
 
-/* Open a file to receive from another system.  The ztemp argument is
-   the return value of zsysdep_receive_temp with the same qsys and
-   zfile arguments.  The function should return EFILECLOSED on error.
-   After the file is written, fsysdep_move_file will be called to move
-   the file to its final destination, and to set the correct file
-   mode.  */
+/* Open a file to receive from another system.  The zreceive argument
+   is the return value of zsysdep_receive_temp with the same qsys,
+   zfile and ztemp arguments.  If the function can determine that this
+   file has already been partially received, it should set *pcrestart
+   to the number of bytes that have been received.  If the file has
+   not been partially received, *pcrestart should be set to -1.  The
+   function should return EFILECLOSED on error.  After the file is
+   written, fsysdep_move_file will be called to move the file to its
+   final destination, and to set the correct file mode.  */
 extern openfile_t esysdep_open_receive P((const struct uuconf_system *qsys,
 					  const char *zto,
-					  const char *ztemp));
+					  const char *ztemp,
+					  const char *zreceive,
+					  long *pcrestart));
 
 /* Move a file.  This is used to move a received file to its final
    location.  The zto argument is the file to create.  The zorig

@@ -27,6 +27,10 @@
 
 #include <errno.h>
 
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #else
@@ -81,6 +85,10 @@
 #include "uuconf.h"
 #include "sysdep.h"
 #include "system.h"
+
+#ifndef time
+extern time_t time ();
+#endif
 
 /* Open a file to send to another system, and return the mode and
    the size.  */
@@ -151,19 +159,29 @@ esysdep_open_send (qsys, zfile, fcheck, zuser)
 }
 
 /* Get a temporary file name to receive into.  This is supposed to set
-   *pcbytes to the size of the largest file that can be accepted.  */
+   *pcbytes to the size of the largest file that can be accepted.  We
+   use the ztemp argument to pick the file name, so that we relocate
+   the file if the transmission is aborted.  */
 
 char *
-zsysdep_receive_temp (qsys, zto, pcbytes)
+zsysdep_receive_temp (qsys, zto, ztemp, pcbytes)
      const struct uuconf_system *qsys;
      const char *zto;
+     const char *ztemp;
      long *pcbytes;
 {
   char *zret;
   long c1, c2;
   char *z1, *z2, *zslash;
 
-  zret = zstemp_file (qsys);
+  if (ztemp != NULL
+      && *ztemp == 'D'
+      && strcmp (ztemp, "D.0") != 0)
+    zret = zsappend3 (".Temp", qsys->uuconf_zname, ztemp);
+  else
+    zret = zstemp_file (qsys);
+  if (zret == NULL)
+    return NULL;
 
   /* Try to determine the amount of free space available for the
      temporary file and for the final destination.  This code is
@@ -270,27 +288,67 @@ zsysdep_receive_temp (qsys, zto, pcbytes)
    doesn't.  */
 
 openfile_t
-esysdep_open_receive (qsys, zto, ztemp)
+esysdep_open_receive (qsys, zto, ztemp, zreceive, pcrestart)
      const struct uuconf_system *qsys;
      const char *zto;
      const char *ztemp;
+     const char *zreceive;
+     long *pcrestart;
 {
   int o;
   openfile_t e;
 
-  o = creat ((char *) ztemp, IPRIVATE_FILE_MODE);
+  /* If we used the ztemp argument in zsysdep_receive_temp, above,
+     then we will have a name consistent across conversations.  In
+     that case, we may have already received some portion of this
+     file.  */
+  o = -1;
+  *pcrestart = -1;
+  if (ztemp != NULL
+      && *ztemp == 'D'
+      && strcmp (ztemp, "D.0") != 0)
+    {
+      o = open ((char *) zreceive, O_WRONLY);
+      if (o >= 0)
+	{
+	  struct stat s;
+
+	  /* For safety, we insist on the file being less than 1 week
+	     old.  This can still catch people, unfortunately.  I
+	     don't know of any good solution to the problem of old
+	     files hanging around.  If anybody has a file they want
+	     restarted, and they know about this issue, they can touch
+	     it to bring it up to date.  */
+	  if (fstat (o, &s) < 0
+	      || time ((time_t *) NULL) + 7 * 24 * 60 * 60 < s.st_mtime)
+	    {
+	      (void) close (o);
+	      o = -1;
+	    }
+	  else
+	    {
+	      DEBUG_MESSAGE2 (DEBUG_SPOOLDIR,
+			      "esysdep_open_receive: Reusing %s",
+			      zreceive);
+	      *pcrestart = (long) s.st_size;
+	    }
+	}
+    }
+
+  if (o < 0)
+    o = creat ((char *) zreceive, IPRIVATE_FILE_MODE);
 
   if (o < 0)
     {
       if (errno == ENOENT)
 	{
-	  if (! fsysdep_make_dirs (ztemp, FALSE))
+	  if (! fsysdep_make_dirs (zreceive, FALSE))
 	    return EFILECLOSED;
-	  o = creat ((char *) ztemp, IPRIVATE_FILE_MODE);
+	  o = creat ((char *) zreceive, IPRIVATE_FILE_MODE);
 	}
       if (o < 0)
 	{
-	  ulog (LOG_ERROR, "creat (%s): %s", ztemp, strerror (errno));
+	  ulog (LOG_ERROR, "creat (%s): %s", zreceive, strerror (errno));
 	  return EFILECLOSED;
 	}
     }
@@ -299,7 +357,7 @@ esysdep_open_receive (qsys, zto, ztemp)
     {
       ulog (LOG_ERROR, "fcntl (FD_CLOEXEC): %s", strerror (errno));
       (void) close (o);
-      (void) remove (ztemp);
+      (void) remove (zreceive);
       return EFILECLOSED;
     }
 
@@ -308,9 +366,9 @@ esysdep_open_receive (qsys, zto, ztemp)
 
   if (e == NULL)
     {
-      ulog (LOG_ERROR, "fdopen (%s): %s", ztemp, strerror (errno));
+      ulog (LOG_ERROR, "fdopen (%s): %s", zreceive, strerror (errno));
       (void) close (o);
-      (void) remove (ztemp);
+      (void) remove (zreceive);
       return EFILECLOSED;
     }
 #else

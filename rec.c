@@ -302,7 +302,7 @@ flocal_rec_send_request (qtrans, qdaemon)
   boolean fret;
 
   qtrans->s.ztemp = zsysdep_receive_temp (qdaemon->qsys, qinfo->zfile,
-					  &cbytes);
+					  (const char *) NULL, &cbytes);
   if (qtrans->s.ztemp == NULL)
     {
       urrec_free (qtrans);
@@ -364,6 +364,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
      size_t cdata;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+  long crestart;
   const char *zlog;
 
   if (zdata[0] != 'R'
@@ -412,8 +413,12 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
   if (qtrans->s.imode == 0)
     qtrans->s.imode = 0666;
 
+  /* Open the file to receive into.  We just ignore any restart count,
+     since we have no way to tell it to the other side.  SVR4 may have
+     some way to do this, but I don't know what it is.  */
   qtrans->e = esysdep_open_receive (qdaemon->qsys, qinfo->zfile,
-				    qtrans->s.ztemp);
+				    (const char *) NULL, qtrans->s.ztemp,
+				    &crestart);
   if (! ffileisopen (qtrans->e))
     return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			    "cannot open file");
@@ -490,6 +495,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   FILE *e;
   char *ztemp;
   long cbytes;
+  long crestart;
   struct srecinfo *qinfo;
   struct stransfer *qtrans;
   const char *zlog;
@@ -556,7 +562,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	}
     }
 
-  ztemp = zsysdep_receive_temp (qsys, zfile, &cbytes);
+  ztemp = zsysdep_receive_temp (qsys, zfile, qcmd->ztemp, &cbytes);
 
   if (qcmd->cbytes != -1)
     {
@@ -586,12 +592,35 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	}
     }
 
-  e = esysdep_open_receive (qsys, zfile, ztemp);
+  /* Open the file to receive into.  This may find an old copy of the
+     file, which will be used for file restart if the other side
+     supports it.  */
+  e = esysdep_open_receive (qsys, zfile, qcmd->ztemp, ztemp, &crestart);
   if (! ffileisopen (e))
     {
       ubuffree (ztemp);
       ubuffree (zfile);
       return fremote_send_fail (qdaemon, qcmd, FAILURE_OPEN, iremote);
+    }
+
+  if (crestart > 0)
+    {
+      if ((qdaemon->ifeatures & FEATURE_RESTART) == 0)
+	crestart = -1;
+      else
+	{
+	  DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
+			  "fremote_send_file_init: Restarting receive from %ld",
+			  crestart);
+	  if (! ffileseek (e, crestart))
+	    {
+	      ulog (LOG_ERROR, "seek: %s", strerror (errno));
+	      (void) ffileclose (e);
+	      ubuffree (ztemp);
+	      ubuffree (zfile);
+	      return FALSE;
+	    }
+	}
     }
 
   qinfo = (struct srecinfo *) xmalloc (sizeof (struct srecinfo));
@@ -613,6 +642,8 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   qtrans->frecfile = TRUE;
   qtrans->e = e;
   qtrans->s.ztemp = ztemp;
+  if (crestart > 0)
+    qtrans->ipos = crestart;
 
   if (qcmd->bcmd == 'E')
     zlog = qcmd->zcmd;
@@ -640,11 +671,20 @@ fremote_send_reply (qtrans, qdaemon)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   const char *zsend;
+  char ab[50];
 
-  if (qtrans->s.bcmd == 'S')
-    zsend = "SY";
-  else
+  if (qtrans->s.bcmd == 'E')
     zsend = "EY";
+  else
+    {
+      if (qtrans->ipos <= 0)
+	zsend = "SY";
+      else
+	{
+	  sprintf (ab, "SY 0x%lx", (unsigned long) qtrans->ipos);
+	  zsend = ab;
+	}
+    }
 
   if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 				       qtrans->iremote))

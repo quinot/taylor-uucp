@@ -1140,12 +1140,16 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     if (! qsys->uuconf_fsequence)
       {
 	if (bgrade == '\0')
-	  sprintf (zsend, "S%s -N0%o", qdaemon->zlocalname,
-		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
+	  sprintf (zsend, "S%s -R -N0%o", qdaemon->zlocalname,
+		   (unsigned int) (FEATURE_SIZES
+				   | FEATURE_EXEC
+				   | FEATURE_RESTART));
 	else
-	  sprintf (zsend, "S%s -p%c -vgrade=%c -N0%o", qdaemon->zlocalname,
-		   bgrade, bgrade,
-		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
+	  sprintf (zsend, "S%s -p%c -vgrade=%c -R -N0%o",
+		   qdaemon->zlocalname, bgrade, bgrade,
+		   (unsigned int) (FEATURE_SIZES
+				   | FEATURE_EXEC
+				   | FEATURE_RESTART));
       }
     else
       {
@@ -1155,12 +1159,16 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	if (iseq < 0)
 	  return FALSE;
 	if (bgrade == '\0')
-	  sprintf (zsend, "S%s -Q%ld -N0%o", qdaemon->zlocalname, iseq,
-		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
+	  sprintf (zsend, "S%s -Q%ld -R -N0%o", qdaemon->zlocalname, iseq,
+		   (unsigned int) (FEATURE_SIZES
+				   | FEATURE_EXEC
+				   | FEATURE_RESTART));
 	else
-	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -N0%o",
+	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -R -N0%o",
 		   qdaemon->zlocalname, iseq, bgrade, bgrade,
-		   (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
+		   (unsigned int) (FEATURE_SIZES
+				   | FEATURE_EXEC
+				   | FEATURE_RESTART));
       }
 
     fret = fsend_uucp_cmd (qconn, zsend);
@@ -1192,8 +1200,40 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	qdaemon->ifeatures |= (int) strtol (zstr + sizeof "ROKN" - 1,
 					   (char **) NULL, 0);
     }
-  else if (strcmp (zstr + 1, "OK") == 0)
-    ;
+  else if (strncmp (zstr + 1, "OK", sizeof "OK" - 1) == 0)
+    {
+      if (zstr[sizeof "ROK" - 1] != '\0')
+	{
+	  char *zopt;
+
+	  /* SVR4 UUCP returns options following the ROK string.  */
+	  zopt = zstr + sizeof "ROK" - 1;
+	  while (*zopt != '\0')
+	    {
+	      char b;
+	      long c;
+	      char *zend;
+
+	      b = *zopt++;
+	      if (isspace (b) || b != '-')
+		continue;
+	      switch (*zopt)
+		{
+		case 'R':
+		  qdaemon->ifeatures |= FEATURE_RESTART;
+		  break;
+		case 'U':
+		  c = strtol (zopt, &zend, 0);
+		  if (c > 0)
+		    qdaemon->cmax_receive = c * (long) 512;
+		  zopt = zend;
+		  break;
+		}
+	      while (*zopt != '\0' && ! isspace (*zopt))
+		++zopt;
+	    }
+	}
+    }
   else if (strcmp (zstr + 1, "CB") == 0)
     {
       ulog (LOG_NORMAL, "Remote system will call back");
@@ -1902,13 +1942,22 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     const char *zreply;
 
     if (! fgotn)
-      zreply = "ROK";
+      {
+	/* SVR4 UUCP expects ROK -R to signal support for file
+	   restart.  */
+	if ((sdaem.ifeatures & FEATURE_RESTART) != 0)
+	  zreply = "ROK -R";
+	else
+	  zreply = "ROK";
+      }
     else if (! fgotnval)
       zreply = "ROKN";
     else
       {
 	sprintf (ab, "ROKN0%o",
-		 (unsigned int) (FEATURE_SIZES | FEATURE_EXEC));
+		 (unsigned int) (FEATURE_SIZES
+				 | FEATURE_EXEC
+				 | FEATURE_RESTART));
 	zreply = ab;
       }
     if (! fsend_uucp_cmd (qconn, zreply))

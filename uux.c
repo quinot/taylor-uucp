@@ -730,15 +730,14 @@ main (argc, argv)
 	  if (! fsysdep_access (zfile))
 	    uxabort ();
 
+	  zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
+					  abtname, abdname, (char *) NULL);
+	  if (zdata == NULL)
+	    uxabort ();
+
 	  if (fcopy || flink || fxqtlocal)
 	    {
 	      boolean fdid;
-
-	      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
-					      abtname, abdname,
-					      (char *) NULL);
-	      if (zdata == NULL)
-		uxabort ();
 
 	      uxrecord_file (zdata);
 
@@ -767,6 +766,9 @@ main (argc, argv)
 	    }
 	  else
 	    {
+	      /* We don't actually use the spool file name, but we
+		 need a name to use as the destination.  */
+	      ubuffree (zdata);
 	      /* Make sure the daemon can access the file.  */
 	      if (! fsysdep_daemon_access (zfile))
 		uxabort ();
@@ -777,14 +779,6 @@ main (argc, argv)
 		      zfile);
 
 	      zuse = zfile;
-
-	      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
-					      (char *) NULL, abdname,
-					      (char *) NULL);
-	      if (zdata == NULL)
-		uxabort ();
-	      ubuffree (zdata);
-	      strcpy (abtname, "D.0");
 	    }
 
 	  if (fxqtlocal)

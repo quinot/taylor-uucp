@@ -672,6 +672,7 @@ uccopy (zfile, zdest)
 	  const char *zloc;
 	  char abtname[CFILE_NAME_LEN];
 	  unsigned int imode;
+	  char *ztemp;
 
 	  /* Copy a local file to a remote file.  We may have to
 	     copy the local file to the spool directory.  */
@@ -683,8 +684,19 @@ uccopy (zfile, zdest)
 	  if (zloc == NULL)
 	    zloc = zClocalname;
 
+	  ztemp = zsysdep_data_file_name (&sCdestsys, zloc, bCgrade,
+					  abtname, (char *) NULL,
+					  (char *) NULL);
+	  if (ztemp == NULL)
+	    ucabort ();
+
 	  if (! fCcopy)
 	    {
+	      /* If we are copying the file, we don't actually use the
+		 temporary file; we still want to get a name for the
+		 other system to use as a key for file restart.  */
+	      ubuffree (ztemp);
+
 	      /* Make sure the daemon will be permitted to send
 		 this file.  */
 	      if (! fsysdep_daemon_access (zfile))
@@ -695,18 +707,9 @@ uccopy (zfile, zdest)
 					 ? (const char *) NULL
 					 : zCuser)))
 		ulog (LOG_FATAL, "Not permitted to send %s", zfile);
-	      strcpy (abtname, "D.0");
 	    }
 	  else
 	    {
-	      char *ztemp;
-
-	      ztemp = zsysdep_data_file_name (&sCdestsys, zloc, bCgrade,
-					      abtname, (char *) NULL,
-					      (char *) NULL);
-	      if (ztemp == NULL)
-		ucabort ();
-
 	      ucrecord_file (ztemp);
 	      if (! fcopy_file (zfile, ztemp, FALSE, TRUE))
 		ucabort ();
