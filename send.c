@@ -317,7 +317,8 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
 	  zfree = zbufalc (strlen (qcmd->zfrom)
 			   + sizeof " (execution of \"\")"
 			   + strlen (qcmd->zcmd));
-	  sprintf (zfree, "%s (execution of \"%s\")", qcmd->zcmd);
+	  sprintf (zfree, "%s (execution of \"%s\")", qcmd->zfrom,
+		   qcmd->zcmd);
 	  zfrom = zfree;
 	}
 
