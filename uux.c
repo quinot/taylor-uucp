@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/02/29  04:07:08  ian
+   Added -j option to uucp and uux
+
    Revision 1.28  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -1202,6 +1205,15 @@ uxcopy_stdin (e)
       if (fsysdep_catch ())
 	{
 	  usysdep_start_catch ();
+	  if (iSignal != 0)
+	    uxabort ();
+
+	  /* There's an unimportant race here.  If the user hits ^C
+	     between the check of iSignal we just did and the time we
+	     enter fread, we won't know about the signal (unless we're
+	     doing a longjmp, but we normally aren't).  It's not a big
+	     problem, because the user can just hit ^C again.  */
+
 	  cread = fread (ab, sizeof (char), sizeof ab, stdin);
 	}
 
