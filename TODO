@@ -198,23 +198,6 @@ don't permit shell scripts to be executed via execl.
 David Nugent: it would be nice to be able to set debugging, log, and
 statistics files on a site by site basis.
 
-67.
-
-Franc,ois Pinard:
-> ---------------------------------------------------------------------->
-> [...]
-> The file:
-> 
->    mcgill-vision!/@/thunder/root/home/thunder/guest/.pinard/h1
-> 
-> has been successfully transferred to:
-> 
->    icule!/usr/spool/uucppublic/h1
-> 
-> as requested by mcgill-vision!guest.
-> 
-> ----------------------------------------------------------------------<
-
 68.
 
 Francois Pinard: attach a name to each alternate and then indicate
@@ -236,12 +219,6 @@ permit shell execution.
 Mike Park: we should accept and Shere=foo message with an alias of the
 system we are calling.
 
-76.
-
-Niels Baggesen: the code should be more consistent about when it sends
-mail for failures.  Right now a send failure may not generate a mail
-message, but it should.
-
 77.
 
 Dave Platt: send short packets for commands when using the 'g'
@@ -254,9 +231,5 @@ Support XCLUDE for port locking.
 79.
 
 Support Internet addressing when mailing uuxqt messages.
-
-80.
-
-Update .Status files on callin.
 
 81.
