@@ -1638,7 +1638,8 @@ Turn off XON/XOFF handling (it is on by default).
 
 @item -E char
 @itemx --escape char
-Set the escape character.  Initially @kbd{~} (tilde).
+Set the escape character.  Initially @kbd{~} (tilde).  To eliminate the
+escape character, use @samp{-E ''}.
 
 @item -z system
 @itemx --system system
