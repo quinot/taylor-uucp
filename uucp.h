@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.71  1992/05/20  22:40:46  ian
+   Changed arguments to fsysdep_move_file, added fsysdep_change_mode
+
    Revision 1.70  1992/04/25  00:42:53  ian
    Change standard type definitions for new autoconf
 
@@ -328,14 +331,17 @@ typedef const char *constpointer;
 #endif /* ! HAVE_UNSIGNED_CHAR */
 #endif /* ! ANSI_C */
 
-/* Only use inline with gcc.  */
+/* Now that we have pointer, define alloca.  */
+#if ! HAVE_ALLOCA
+extern pointer alloca ();
+#endif
 
+/* Only use inline with gcc.  */
 #ifndef __GNUC__
 #define __inline__
 #endif
 
 /* Get the string functions, which are used throughout the code.  */
-
 #if HAVE_MEMORY_H
 #include <memory.h>
 #else
@@ -363,14 +369,12 @@ extern int memcmp ();
 #endif /* ! HAVE_STRING_H */
 
 /* Get what we need from <stdlib.h>.  */
-
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #else /* ! HAVE_STDLIB_H */
 extern pointer malloc (), realloc (), bsearch ();
 extern void free (), exit (), perror (), abort (), qsort ();
 extern long atol (), strtol ();
-extern int atoi ();
 extern char *getenv ();
 #endif /* ! HAVE_STDLIB_H */
 
@@ -400,7 +404,6 @@ extern int errno;
 #define HAVE_TCP HAVE_SOCKET
 
 /* The boolean type holds boolean values.  */
-
 typedef int boolean;
 
 #undef TRUE
@@ -410,7 +413,6 @@ typedef int boolean;
 
 /* The openfile_t type holds an open file.  This depends on whether we
    are using stdio or not.  */
-
 #if USE_STDIO
 
 typedef FILE *openfile_t;
@@ -464,7 +466,6 @@ extern int read (), write (), close ();
 
 /* Define the time_t type.  This still won't help if they don't have
    time or ctime.  */
-
 #if ! HAVE_TIME_T && ! HAVE_SYS_TIME_T
 typedef long time_t;
 #endif
@@ -476,7 +477,6 @@ typedef long time_t;
    prefix; any command which matches the prefix should be used to call
    a function.  The number of arguments should be or'ed in as with
    CMDTABTYPE_FN.  */
-
 #define CMDTABTYPE_BOOLEAN (0x12)
 #define CMDTABTYPE_INT (0x22)
 #define CMDTABTYPE_LONG (0x32)
@@ -495,7 +495,6 @@ typedef long time_t;
 #define CMDFLAG_BACKSLASH (0x4)
 
 /* The enumeration returned by functions called by uprocesscmds.  */
-
 enum tcmdtabret
 {
   CMDTABRET_CONTINUE,
@@ -505,7 +504,6 @@ enum tcmdtabret
 };
 
 /* This structure holds the argument to uprocesscmds.  */
-
 struct scmdtab
 {
   /* Command name.  */
@@ -520,7 +518,6 @@ struct scmdtab
 };
 
 /* This structure holds the information we need for a chat script.  */
-
 struct schat_info
 {
   /* The script itself, if any.  */
@@ -537,7 +534,6 @@ struct schat_info
 
 /* This macro is used to initialize the entries of an schat_info
    structure to the correct default values.  */
-
 #define INIT_CHAT(q) \
   ((q)->zchat = NULL, \
    (q)->zprogram = NULL, \
