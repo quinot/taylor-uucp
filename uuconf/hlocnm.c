@@ -35,7 +35,7 @@ char _uuconf_hlocnm_rcsid[] = "$Id$";
    configuration files.  */
 
 int
-uuconf_hdb_localname (pglobal, zlogin, pzname)
+uuconf_hdb_login_localname (pglobal, zlogin, pzname)
      pointer pglobal;
      const char *zlogin;
      char **pzname;

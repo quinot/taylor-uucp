@@ -37,7 +37,7 @@ char _uuconf_tlocnm_rcsid[] = "$Id$";
    read the systems files.  */
 
 int
-uuconf_taylor_localname (pglobal, zlogin, pzname)
+uuconf_taylor_login_localname (pglobal, zlogin, pzname)
      pointer pglobal;
      const char *zlogin;
      char **pzname;

@@ -1,5 +1,5 @@
 /* locnm.c
-   Get the local name to use.
+   Get the local node name.
 
    Copyright (C) 1992 Ian Lance Taylor
 
@@ -28,47 +28,19 @@
 #if USE_RCS_ID
 char _uuconf_locnm_rcsid[] = "$Id$";
 #endif
-
-#include <errno.h>
 
-/* Get the local name to use, possibly given a login name.  */
+/* Get the local node name.  */
 
 int
-uuconf_localname (pglobal, zlogin, pzname)
+uuconf_localname (pglobal, pzname)
      pointer pglobal;
-     const char *zlogin;
-     char **pzname;
+     const char **pzname;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 
-  if (zlogin != NULL)
-    {
-      int iret;
-
-#if HAVE_TAYLOR_CONFIG
-      iret = uuconf_taylor_localname (pglobal, zlogin, pzname);
-      if (iret != UUCONF_NOT_FOUND)
-	return iret;
-#endif
-
-#if HAVE_HDB_CONFIG
-      iret = uuconf_hdb_localname (pglobal, zlogin, pzname);
-      if (iret != UUCONF_NOT_FOUND)
-	return iret;
-#endif
-    }
-
-  if (qglobal->qprocess->zlocalname != NULL)
-    {
-      *pzname = strdup (qglobal->qprocess->zlocalname);
-      if (*pzname == NULL)
-	{
-	  qglobal->ierrno = errno;
-	  return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
-	}
-      return UUCONF_SUCCESS;
-    }
-
-  *pzname = NULL;
-  return UUCONF_NOT_FOUND;
+  *pzname = qglobal->qprocess->zlocalname;
+  if (*pzname != NULL)
+    return UUCONF_SUCCESS;
+  else
+    return UUCONF_NOT_FOUND;
 }

@@ -46,6 +46,7 @@ init.c
 int.c
 lckdir.c
 lineno.c
+llocnm.c
 local.c
 locnm.c
 logfil.c
