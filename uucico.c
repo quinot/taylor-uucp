@@ -711,6 +711,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
      boolean ftimewarn;
 {
   struct sstatus sstat;
+  long inow;
   struct sdaemon sdaem;
   boolean fbadtime, fnevertime;
   const struct uuconf_system *qsys;
@@ -718,21 +719,24 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
   if (! fsysdep_get_status (qorigsys, &sstat, (boolean *) NULL))
     return FALSE;
 
-  /* Make sure it's been long enough since the last failed call.  */
+  /* Make sure it's been long enough since the last failed call, and
+     that we haven't exceeded the maximum number of retries.  Even if
+     we are over the limit on retries, we permit a call to be made if
+     24 hours have passed.  This 24 hour limit is still controlled by
+     the retry time.  */
+  inow = isysdep_time ((long *) NULL);
   if (! fforce)
     {
-#ifdef CMAXRETRIES
-#if CMAXRETRIES > 0
-      if (sstat.cretries >= CMAXRETRIES)
+      if (qorigsys->uuconf_cmax_retries > 0
+	  && sstat.cretries >= qorigsys->uuconf_cmax_retries
+	  && sstat.ilast + 24 * 60 * 60 < inow)
 	{
 	  ulog (LOG_ERROR, "Too many retries");
 	  return FALSE;
 	}
-#endif /* CMAXRETRIES > 0 */
-#endif /* defined (CMAXRETRIES) */
 
       if (sstat.ttype != STATUS_COMPLETE
-	  && sstat.ilast + sstat.cwait > isysdep_time ((long *) NULL))
+	  && sstat.ilast + sstat.cwait > inow)
 	{
 	  ulog (LOG_NORMAL, "Retry time not reached");
 	  return FALSE;
@@ -823,7 +827,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
       if (! fnevertime)
 	{
 	  sstat.ttype = STATUS_WRONG_TIME;
-	  sstat.ilast = isysdep_time ((long *) NULL);
+	  sstat.ilast = inow;
 	  sstat.cwait = 0;
 	  (void) fsysdep_set_status (qorigsys, &sstat);
 	}

@@ -227,15 +227,6 @@
    not used.  */
 #define BDEFAULT_UUX_GRADE ('N')
 
-/* The maximum number of times to retry calling a system which is not
-   answering.  If this many calls to the system have failed, the
-   system will not be called again until the status file has been
-   removed (on a Unix system the status file is in the .Status
-   subdirectory of the main spool directory, and has the same name as
-   the system name).  If this is set to 0 the system may be called
-   regardless of how many previous calls have failed.  */
-#define CMAXRETRIES 26
-
 /* To compile in use of the new style of configuration files described
    in the documentation, set HAVE_TAYLOR_CONFIG to 1.  */
 #define HAVE_TAYLOR_CONFIG 1

@@ -110,6 +110,7 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
 #define SYSTEM_INTEGERS(OP) \
   do \
     { \
+      OP (uuconf_cmax_retries); \
       OP (uuconf_ibaud); \
       OP (uuconf_ihighbaud); \
       OP (uuconf_cfree_space); \
@@ -257,6 +258,9 @@ _uuconf_isystem_basic_default (qglobal, q)
 
   for (; q != NULL && iret == UUCONF_SUCCESS; q = q->uuconf_qalternate)
     {
+      /* The default of 26 allowable retries is traditional.  */
+      if (q->uuconf_cmax_retries < 0)
+	q->uuconf_cmax_retries = 26;
       if (q->uuconf_schat.uuconf_pzchat == (char **) &_uuconf_unset)
 	{
 	  q->uuconf_schat.uuconf_pzchat = NULL;

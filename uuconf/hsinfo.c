@@ -218,7 +218,6 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 
 	  /* A time string is "time/grade,time/grade;retry".  A
 	     missing grade is taken as BGRADE_LOW.  */
-
 	  zretry = strchr (pzsplit[1], ';');
 	  if (zretry == NULL)
 	    cretry = 0;
@@ -567,6 +566,13 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
       if (iret != UUCONF_SUCCESS)
 	return iret;
     }
+
+  /* HDB does not have a maximum number of retries if a retry time is
+     given in the time field.  */
+  if (qsys->uuconf_qtimegrade != NULL
+      && qsys->uuconf_qtimegrade != (struct uuconf_timespan *) &_uuconf_unset
+      && qsys->uuconf_qtimegrade->uuconf_cretry > 0)
+    qsys->uuconf_cmax_retries = 0;
 
   return UUCONF_SUCCESS;
 }

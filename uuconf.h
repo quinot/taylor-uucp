@@ -206,6 +206,9 @@ struct uuconf_system
      other system should transfer at that time.  May be NULL, in which
      case there are no grade restrictions.  */
   struct uuconf_timespan *uuconf_qcalltimegrade;
+  /* The maximum number of times to retry calling this system.  If
+     this is 0, there is no limit.  */
+  int uuconf_cmax_retries;
   /* The size restrictions by time for local requests during a locally
      placed call.  The ival field of each uuconf_timespan structure is
      the size in bytes of the largest file which may be transferred at
