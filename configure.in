@@ -58,7 +58,11 @@ dnl
 # Under Next 3.2 <utime.h> apparently does not define struct utimbuf
 # by default.
 AC_COMPILE_CHECK([utime.h],
-[#include <utime.h>],
+[#include <sys/types.h>
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#include <utime.h>],
 [struct utimbuf s;],
 [AC_DEFINE(HAVE_UTIME_H)])
 dnl
