@@ -102,7 +102,7 @@ portnm.o: $(srcdir)/../system.h
 priv.o: $(srcdir)/../system.h
 proctm.o: $(srcdir)/../system.h
 recep.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
-run.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
+run.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h Makefile ../Makefile
 seq.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 serial.o: $(srcdir)/../uudefs.h $(srcdir)/../conn.h $(srcdir)/../system.h
 serial.o: $(srcdir)/../uuconf.h
