@@ -131,7 +131,7 @@ AC_DEFINE([HAVE_ERRNO_DECLARATION]))
 dnl
 undefine([index])
 AC_HAVE_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
-AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strstr)
+AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strtoul strstr)
 AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp)
 AC_HAVE_FUNCS(bsearch vfprintf)
 AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
@@ -302,6 +302,10 @@ esac
 case $DEFS in
 *HAVE_STRTOL*) ;;
 *) LIBOBJS="$LIBOBJS strtol.o" ;;
+esac
+case $DEFS in
+*HAVE_STRTOUL*) ;;
+*) LIBOBJS="$LIBOBJS strtou.o" ;;
 esac
 AC_SUBST(LIBOBJS)dnl
 dnl Figure out which functions we need from unix subdirectory

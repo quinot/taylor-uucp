@@ -235,6 +235,7 @@
 #define HAVE_STRDUP 0 /* strdup.o */
 #define HAVE_STRSTR 0 /* strstr.o */
 #define HAVE_STRTOL 0 /* strtol.o */
+#define HAVE_STRTOUL 0 /* strtou.o */
 
 /* If neither of these functions exists, you should add bzero.o to
    lib/Makefile.  */
