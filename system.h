@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/02/19  19:36:07  ian
+   Rearranged time functions
+
    Revision 1.19  1992/02/08  22:33:32  ian
    Only get the current working directory if it's going to be needed
 
@@ -578,5 +581,64 @@ extern boolean fsysdep_access P((const char *zfile));
    it tried the transfer.  If access would be denied, this should log
    an error message and return FALSE.  */
 extern boolean fsysdep_daemon_access P((const char *zfile));
+
+/* Return the jobid of a work file, given the sequence value.  On
+   error this should log an error and return NULL.  The jobid is a
+   string which may be printed out and read in and passed to
+   zsysdep_kill_job, etc., but is not otherwise interpreted.  The
+   return value may point to a common statis buffer.  */
+extern const char *zsysdep_jobid P((const struct ssysteminfo *qsys,
+				    pointer pseq));
+
+/* Kill a job, given the jobid.  This should remove all associated
+   files and in general eliminate the job completely.  On error it
+   should log an error message and return FALSE.  */
+extern boolean fsysdep_kill_job P((const char *zjobid));
+
+/* Rejuvenate a job, given the jobid.  If possible, this should update
+   the time associated with the job such that it will not be
+   eliminated by uuclean or similar programs that check the creation
+   time.  This should affect the return value of isysdep_work_time.
+   On error it should log an error message and return FALSE.  */
+extern boolean fsysdep_rejuvenate_job P((const char *zjobid));
+
+/* Get the time a job was queued, given the sequence number.  There is
+   no way to indicate error.  The return value must use the same epoch
+   as isysdep_time.  */
+extern long isysdep_work_time P((const struct ssysteminfo *qsys,
+				 pointer pseq));
+
+/* Get the time a file was created.  This is called by uustat on
+   execution files.  There is no way to indicate error.  The return
+   value must use the same epoch as isysdep_time.  */
+extern long isysdep_file_time P((const char *zfile));
+
+/* Get the size in bytes of a file.  There is no way to indicate
+   error.  This is only used by uustat.  */
+extern long csysdep_size P((const char *zfile));
+
+/* Start getting status information for all systems with available
+   status information.  There may be status information for unknown
+   systems, which is why this series of functions is used.  The phold
+   argument is used to pass information around, to possibly avoid the
+   use of static variables.  On error this should log an error and
+   return FALSE.  */
+extern boolean fsysdep_all_status_init P((pointer *phold));
+
+/* Get status information for the next system.  This should return the
+   system name and fill in the qstat argument.  The phold argument
+   will be that set by fsysdep_all_status_init.  On error this should
+   log an error, set *pferr to TRUE, and return NULL.  */
+extern const char *zsysdep_all_status P((pointer phold, boolean *pferr,
+					 struct sstatus *qstat));
+
+/* Free up anything allocated by fsysdep_all_status_init and
+   zsysdep_all_status.  The phold argument is that set by
+   fsysdep_all_status_init.  */
+extern void usysdep_all_status_free P((pointer phold));
+
+/* Display the process status of all processes holding lock files.
+   This is uustat -p.  The return value is passed to usysdep_exit.  */
+extern boolean fsysdep_lock_status P((void));
 
 #endif

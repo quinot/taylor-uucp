@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/02/09  05:10:50  ian
+   Added HAVE_MKDIR configuration parameter and mkdir emulation
+
    Revision 1.34  1992/02/09  03:14:48  ian
    Added HAVE_OLD_DIRECTORIES for systems without readdir routines
 
@@ -454,6 +457,18 @@
 #define HAVE_WAITPID 1
 #define HAVE_WAIT4 0
 
+/* Set PS_PROGRAM to the program to run to get a process status,
+   including the arguments to pass it.  This is used by ``uustat -p''.
+   Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process
+   numbers may be appended (e.g. ``ps -flp1,10,100'').  Otherwise ps
+   will be invoked multiple times, with a single process number append
+   each time.  The commented out definitions are appropriate for
+   System V.  */
+#define PS_PROGRAM "/bin/ps -l"
+#define HAVE_PS_MULTIPLE 0
+/* #define PS_PROGRAM "/bin/ps -flp" */
+/* #define HAVE_PS_MULTIPLE 1 */
+
 /* The default amount of free space to require for systems that do
    not specify an amount with the ``free-space'' command.  */
 #define DEFAULT_FREE_SPACE (50000)
@@ -744,11 +759,23 @@ extern boolean fsdirectory_exists P((const char *));
 extern const char *zstilde_expand P((const struct ssysteminfo *qsys,
 				     const char *zfile));
 
+/* Copy a string to the common static buffer.  */
+extern const char *zscopy P((const char *z));
+
 /* Prepend a directory to a file name.  */
 extern const char *zsappend P((const char *zdir, const char *zfile));
 
 /* Get a temporary file name.  */
 extern const char *zstemp_file P((const struct ssysteminfo *qsys));
+
+/* Get a jobid from a system and file name.  */
+extern const char *zsfile_to_jobid P((const struct ssysteminfo *qsys,
+				     const char *zfile));
+
+/* Get a file name from a jobid.  This also returns the associated system
+   in *pzsystem.  */
+extern const char *zsjobid_to_file P((const char *zid,
+				      const char **pzsystem));
 
 #if SPOOLDIR_ULTRIX
 /* See whether there is a spool directory for a system.  */

@@ -29,6 +29,7 @@ sys3.unx
 sys4.unx
 sys5.unx
 sys6.unx
+sys7.unx
 sysh.unx
 sysinf.c
 system.h
@@ -51,6 +52,7 @@ uucp.info-3
 uudir.c
 uulog.c
 uuname.c
+uustat.c
 uux.1
 uux.c
 uuxqt.8
