@@ -451,8 +451,8 @@ directory choices are described at somewhat tedious length in
 Take a look at the top of @file{Makefile.in} and set the appropriate
 values for your system.  These control where the program is installed
 and which user on the system owns them (normally they will be owned by a
-special user @samp{uucp} rather than a real person; they should probably
-not be owned by @samp{root}).
+special user @code{uucp} rather than a real person; they should probably
+not be owned by @code{root}).
 
 @item
 Run the shell script @code{configure}.  This script was generated using
@@ -462,17 +462,44 @@ will generate a file @file{conf.h}, and copy @file{Makefile.in} to
 words between @kbd{@@} characters in @file{Makefile.in}).
 
 You can pass certain arguments to @code{configure} in the environment.
-Useful arguments are @samp{LIBS}, @samp{CC}, and @samp{INSTALL}.  For
-example, if you wanted to include the @file{posix} library, then (using
-@code{sh} or @code{bash}) you could enter @samp{LIBS=-lposix
-./configure}.
+Because @code{configure} will compile and run little test programs to
+see what is available on your system, you must tell it how to run your
+compiler.  It recognizes the following environment variables:
+
+@table @samp
+@item CC
+The C compiler.  If this is not set, then if @code{configure} can find
+@code{gcc} it will use @samp{gcc -O}, otherwise it will use @samp{cc}.
+@item CFLAGS
+Flags to pass to the C compiler.  If this is not set, @code{configure}
+will use @samp{-g}.
+@item LDFLAGS
+Flags to pass to the C compiler when only linking, not compiling.  If
+this is not set, @code{configure} will use the empty string.
+@item LIBS
+Libraries to pass to the C compiler.  If this is not set,
+@code{configure} will use the empty string.
+@item INSTALL
+The program to run to install UUCP in the binary directory.  If
+@code{configure} finds the BSD @code{install} program, it will set this
+to @samp{install -c}; otherwise, it will use @samp{cp}.
+@item INSTALLDATA
+The program to run to install UUCP data files, such as the man pages and
+the info pages.  If @code{configure} finds the BSD @code{install}
+program, it will set this to @samp{install -c -m 644}; otherwise, it
+will use @samp{cp}.
+@end table
+
+Suppose you want to set the environment variable @samp{CC} to
+@samp{rcc}.  If you are using @code{sh} or @code{bash}, invoke
+@code{configure} as @samp{CC=rcc configure}.  If you are using
+@code{csh}, do @samp{setenv CC rcc; sh configure}.
 
 On some systems you will want to use @samp{LIBS=-lmalloc}.  On some you
 will want @samp{LIBS=-lsocket}.  On Xenix derived systems do not use
 @samp{LIBS=-lx} because this will bring in the wrong versions of certain
 routines; if you want to use @samp{-lx} you must specify @samp{LIBS=-lc
--lx}.  I know this information is a bit sketchy; on most systems you
-will not need to give a value for @samp{LIBS} at all.
+-lx}.
 
 If @code{configure} fails for some reason, or if you have a very wierd
 system, you may have to configure the package by hand.  To do this, copy
@@ -483,17 +510,6 @@ within @kbd{@@} characters, and set them correctly for your system.
 @item
 You should verify that @code{configure} worked correctly by checking
 the files @file{conf.h} and @file{Makefile}.  
-
-There are two known problems on SCO 3.2.2 that @code{configure} will not
-figure out.  The default version of @code{memmove} is buggy, so unless
-you have patched it you should set @code{HAVE_MEMMOVE} to 0.  The
-@code{ftime} function will sometimes go backward in time by almost a
-second; this will not cause any real harm, but it will garble your
-transfer time statistics so you may want to set @code{HAVE_FTIME} to 0.
-
-If you find any problems in @file{conf.h} and @file{Makefile} please
-tell me about them so that I can fix them or at least add more warnings
-here.
 
 @item
 This package uses the @code{alloca} function.  The @code{configure}
