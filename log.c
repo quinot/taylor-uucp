@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/03/04  00:36:44  ian
+   Michael Richardson: better chat script debugging
+
    Revision 1.23  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -144,7 +147,7 @@ static char *zLuser;
 static char *zLsystem;
 
 /* The current device name.  */
-static char *zLdevice;
+char *zLdevice;
 
 /* The open log file.  */
 static FILE *eLlog;

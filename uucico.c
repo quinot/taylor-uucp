@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.66  1992/03/07  02:56:30  ian
+   Rewrote time routines
+
    Revision 1.65  1992/03/04  15:05:51  ian
    Michael Haberler: some systems send \n after Shere
 
@@ -907,8 +910,6 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       /* The port is locked by ffind_port.  */
     }
 
-  ulog (LOG_NORMAL, "Calling system %s", qsys->zname);
-
   /* Now try to call the system.  */
 
   if (! fport_open (qport, qsys->ibaud, qsys->ihighbaud, FALSE))
@@ -916,6 +917,9 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       (void) fcall_failed (qsys, STATUS_PORT_FAILED, qstat, cretry);
       return FALSE;
     }
+
+  ulog (LOG_NORMAL, "Calling system %s (port %s)", qsys->zname,
+	zLdevice == NULL ? "unknown" : zLdevice);
 
   cdial_proto_params = 0;
   qdial_proto_params = NULL;
@@ -1359,7 +1363,10 @@ static boolean faccept_call (zlogin, qport)
   struct sport sportinfo;
 #endif
 
-  ulog (LOG_NORMAL, "Incoming call");
+  ulog (LOG_NORMAL, "Incoming call (login %s port %s)",
+	zlogin == NULL ? "unknown" : zlogin,
+	zLdevice == NULL ? "unknown" : zLdevice);
+
   istart_time = isysdep_time ((long *) NULL);
 
   /* Figure out protocol parameters determined by the port.  If no
@@ -1868,7 +1875,18 @@ static boolean faccept_call (zlogin, qport)
       return FALSE;
     }
 
+  /* If we using HAVE_BNU_LOGGING, then the previous ``incoming call''
+     message went to the general log, since we didn't know the system
+     name at that point.  In that case, we repeat the port and login
+     names.  */
+
+#if HAVE_BNU_LOGGING
+  ulog (LOG_NORMAL, "Handshake successful (login %s port %s)",
+	zlogin == NULL ? "unknown" : zlogin,
+	zLdevice == NULL ? "unknown" : zLdevice);
+#else
   ulog (LOG_NORMAL, "Handshake successful");
+#endif
 
   {
     boolean fret;

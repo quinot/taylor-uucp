@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.48  1992/03/07  04:58:09  ian
+   Eric Ziegast: some systems don't define EXIT_SUCCESS or FAILURE
+
    Revision 1.47  1992/03/07  02:56:30  ian
    Rewrote time routines
 
@@ -1181,3 +1184,6 @@ extern openfile_t eSendfile;
 
 /* File being received.  */
 extern openfile_t eRecfile;
+
+/* Device name to log.  This is set by fport_open.  It may be NULL.  */
+extern char *zLdevice;
