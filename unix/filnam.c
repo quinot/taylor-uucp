@@ -56,6 +56,21 @@
 #define SEEK_SET 0
 #endif
 
+/* We use POSIX style fcntl locks if they are available, unless
+   O_CREAT is not defined.  We could use them in the latter case, but
+   the code would have to become more complex to avoid races
+   concerning the use of creat.  It is very unlikely that there is any
+   system which does have POSIX style locking but does not have
+   O_CREAT.  */
+#ifdef F_SETLKW
+#ifdef O_CREAT
+#define USE_POSIX_LOCKS 1
+#endif
+#endif
+#ifndef USE_POSIX_LOCKS
+#define USE_POSIX_LOCKS 0
+#endif
+
 /* External functions.  */
 #ifndef lseek
 extern off_t lseek ();
@@ -83,21 +98,26 @@ fscmd_seq (zsystem, zseq)
      const char *zsystem;
      char *zseq;
 {
-  boolean ferr;
   char *zfree;
   const char *zfile;
   int o;
   int i;
+  boolean fret;
 
-  /* Lock the sequence file.  This may not be correct for all systems,
-     but it only matters if the system UUCP and this UUCP are running
-     at the same time.  */
-  while (! fsdo_lock ("LCK..SEQ", TRUE, &ferr))
-    {
-      if (ferr || FGOT_SIGNAL ())
-	return FALSE;
-      sleep (5);
-    }
+#if ! USE_POSIX_LOCKS
+  {
+    boolean ferr;
+
+    /* Lock the sequence file.  */
+    while (! fsdo_lock ("LCK..SEQ", TRUE, &ferr))
+      {
+	if (ferr || FGOT_SIGNAL ())
+	  return FALSE;
+	sleep (5);
+
+      }
+  }
+#endif
 
   zfree = NULL;
 
@@ -123,12 +143,12 @@ fscmd_seq (zsystem, zseq)
 #endif /* SPOOLDIR_TAYLOR */
 
 #ifdef O_CREAT
-  o = open ((char *) zfile, O_RDWR | O_CREAT | O_NOCTTY, IPUBLIC_FILE_MODE);
+  o = open ((char *) zfile, O_RDWR | O_CREAT | O_NOCTTY, IPRIVATE_FILE_MODE);
 #else
   o = open ((char *) zfile, O_RDWR | O_NOCTTY);
   if (o < 0 && errno == ENOENT)
     {
-      o = creat ((char *) zfile, IPUBLIC_FILE_MODE);
+      o = creat ((char *) zfile, IPRIVATE_FILE_MODE);
       if (o >= 0)
 	{
 	  (void) close (o);
@@ -143,15 +163,17 @@ fscmd_seq (zsystem, zseq)
 	{
 	  if (! fsysdep_make_dirs (zfile, FALSE))
 	    {
+#if ! USE_POSIX_LOCKS
 	      (void) fsdo_unlock ("LCK..SEQ", TRUE);
+#endif
 	      return FALSE;
 	    }
 #ifdef O_CREAT
 	  o = open ((char *) zfile,
 		    O_RDWR | O_CREAT | O_NOCTTY,
-		    IPUBLIC_FILE_MODE);
+		    IPRIVATE_FILE_MODE);
 #else
-	  o = creat ((char *) zfile, IPUBLIC_FILE_MODE);
+	  o = creat ((char *) zfile, IPRIVATE_FILE_MODE);
 	  if (o >= 0)
 	    {
 	      (void) close (o);
@@ -162,10 +184,29 @@ fscmd_seq (zsystem, zseq)
       if (o < 0)
 	{
 	  ulog (LOG_ERROR, "open (%s): %s", zfile, strerror (errno));
+#if ! USE_POSIX_LOCKS
 	  (void) fsdo_unlock ("LCK..SEQ", TRUE);
+#endif
 	  return FALSE;
 	}
     }
+
+#if USE_POSIX_LOCKS
+  {
+    struct flock slock;
+
+    slock.l_type = F_WRLCK;
+    slock.l_whence = SEEK_SET;
+    slock.l_start = 0;
+    slock.l_len = 0;
+    if (fcntl (o, F_SETLKW, &slock) == -1)
+      {
+	ulog (LOG_ERROR, "Locking %s: %s", zfile, strerror (errno));
+	(void) close (o);
+	return FALSE;
+      }
+  }
+#endif
 
   if (read (o, zseq, CSEQLEN) != CSEQLEN)
     strcpy (zseq, "0000");
@@ -199,19 +240,25 @@ fscmd_seq (zsystem, zseq)
     }
 #endif /* SPOOLDIR_ULTRIX || SPOOLDIR_TAYLOR */
 
+  fret = TRUE;
+
   if (lseek (o, (off_t) 0, SEEK_SET) < 0
       || write (o, zseq, CSEQLEN) != CSEQLEN
       || close (o) < 0)
     {
-      ulog (LOG_ERROR, "lseek or write or close: %s", strerror (errno));
+      ulog (LOG_ERROR, "lseek or write or close %s: %s",
+	    zfile, strerror (errno));
       (void) close (o);
-      (void) fsdo_unlock ("LCK..SEQ", TRUE);
-      return FALSE;
+      fret = FALSE;
     }
 
+#if ! USE_POSIX_LOCKS
   (void) fsdo_unlock ("LCK..SEQ", TRUE);
+#endif
 
-  return TRUE;
+  ubuffree (zfree);
+
+  return fret;
 }
 
 /* Get the name of a command or data file for a remote system.  The
