@@ -211,22 +211,6 @@ original UUCP programs, and add an uninstall target to restore them.
 David Nugent: it would be nice to be able to set debugging levels, as
 well as debugging, log, and statistics files, on a site by site basis.
 
-47.
-
-Terry Gardner: if a file transfer fails partway through, record the
-number of bytes transferred in the statistics file.
-
-48.
-
-Terry Gardner: record the length of time spent on a conversation when
-it is over.
-
-54.
-
-John Theus: right now the slave uucico gives an error if there is no
-port file.  The documentation says that this is permitted, and it
-should be.
-
 58.
 
 Lele Gaifax: put the complete year in the log file.
@@ -234,10 +218,6 @@ Lele Gaifax: put the complete year in the log file.
 59.
 
 John Theus: use getwd as an option for getcwd.
-
-60.
-
-Chip Salzenberg: change protocol ordering to 't', 'g', 'f'.
 
 61.
 
