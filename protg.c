@@ -495,6 +495,7 @@ fgstart (qdaemon, pzlog)
 	      i >>= 1;
 	    }
 	  iGremote_packsize = 1 << iseg;
+	  iGremote_segsize = iseg - 5;
 	}
 
       /* Set up packet buffers to use.  We don't do this until we know
