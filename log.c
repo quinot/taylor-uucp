@@ -610,7 +610,7 @@ ulog_close ()
 
 /*ARGSUSED*/
 void
-ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
+ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fcaller)
      boolean fsucceeded;
      const char *zuser;
      const char *zsystem;
@@ -618,7 +618,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
      long cbytes;
      long csecs;
      long cmicros;
-     boolean fmaster;
+     boolean fcaller;
 {
   long cbps;
 
@@ -701,7 +701,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
     ++iseq;
     fprintf (eLstats,
 	     "%s!%s %c (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld%s%s\n",
-	     zsystem, zuser, fmaster ? 'M' : 'S', zldate_and_time (),
+	     zsystem, zuser, fcaller ? 'M' : 'S', zldate_and_time (),
 	     iLid, iseq, zLdevice == NULL ? "unknown" : zLdevice,
 	     fsent ? "->" : "<-",
 	     cbytes, csecs, cmicros / 1000, cbps,
@@ -761,7 +761,7 @@ zldate_and_time ()
 	   s.tm_hour, s.tm_min);
 #endif
 #if HAVE_HDB_LOGGING
-  sprintf (ab, "%d/%d-%02d:%02d:%02d", s.tm_mon + 1, s.tm_mday,
+  sprintf (ab, "%d/%d-%d:%02d:%02d", s.tm_mon + 1, s.tm_mday,
 	   s.tm_hour, s.tm_min, s.tm_sec);
 #endif
 
