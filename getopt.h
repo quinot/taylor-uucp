@@ -16,7 +16,7 @@
    Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
    This file was modified slightly by Ian Lance Taylor, November 1992,
-   for Taylor UUCP.  */
+   for Taylor UUCP, and again in June, 1995.  */
 
 #ifndef _GETOPT_H
 #define _GETOPT_H 1
