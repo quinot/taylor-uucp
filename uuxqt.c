@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.12  1991/12/20  00:17:38  ian
    Don't process execute files for unknown systems
 
@@ -757,6 +760,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
      which the execute file originated, since mail addresses are
      relative to it.  */
 
+  zmail = NULL;
   if (zQrequestor != NULL)
     zmail = zQrequestor;
   else if (zQuser != NULL)
