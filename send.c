@@ -427,7 +427,14 @@ flocal_send_request (qtrans, qdaemon)
       if (qtrans->s.bcmd != 'E')
 	zoptions = qtrans->s.zoptions;
       else if (strchr (qtrans->s.zoptions, 'C') != NULL)
-	zoptions = "C";
+	{
+	  /* This should set zoptions to "C", but at least one UUCP
+	     program gets confused by it.  That means that it will
+	     fail in certain cases, but I suppose we might as well
+	     kowtow to compatibility.  This shouldn't matter to any
+	     other program, I hope.  */
+	  zoptions = "";
+	}
       else
 	zoptions = "c";
 
