@@ -144,9 +144,8 @@ zsysdep_get_xqt (pzsystem, pferr)
 	      return NULL;
 	    }
 
-	  /* No system name may start with a dot (this is enforced by
-	     tisystem in sysinf.c).  This allows us to quickly skip
-	     impossible directories.  */
+	  /* No system name may start with a dot This allows us to
+	     quickly skip impossible directories.  */
 	  if (qtop->d_name[0] == '.')
 	    continue;
 
