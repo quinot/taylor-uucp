@@ -2648,6 +2648,13 @@ each one executes jobs in a separate directory.  The first uses
 If @code{uuxqt} encounters an execution file which it is unable to
 parse, it saves it in the @file{.Corrupt} directory, and sends mail
 about it to the UUCP administrator.
+
+@item .Failed
+@cindex .Failed
+If @code{uuxqt} executes a job, and the job fails, and there is enough
+disk space to hold the command file and all the data files, then
+@code{uuxqt} saves the files in the @file{.Failed} directory, and sends
+mail about it to the UUCP administrator.
 @end table
 
 @node Other Spool Subdirectories, Spool Lock Files, Execution Subdirectories, The Spool Directory Layout
