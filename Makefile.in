@@ -15,9 +15,9 @@ prefix = /usr/local
 # which are suid.
 owner = uucp
 
-# Where to install uucico and uuxqt, and where to read configuration files
-# from by default.  If you use this definition, $(prefix)/lib must exist.
-libdir = $(prefix)/lib/uucp
+# Where to install uucico and uuxqt.  If you use this definition,
+# $(prefix)/lib must exist.
+sbindir = $(prefix)/lib/uucp
 
 # Where to install uucp, uux, uuchk, uustat, uuname, uulog, uuto,
 # uupick and cu.
@@ -34,7 +34,7 @@ infodir = $(prefix)/info
 
 # The directory to look in for new style configuration files (when
 # using HAVE_TAYLOR_CONFIG).  Note that by default this is different
-# from libdir, unlike traditional UUCP packages.
+# from sbindir, unlike traditional UUCP packages.
 newconfigdir = $(prefix)/conf/uucp
 
 # The directory to look in for BNU (when using HAVE_BNU_CONFIG) or
@@ -57,7 +57,7 @@ TSTUU = tstuu
 # necessary because invoking /bin/mkdir from an suid program will
 # leave the directories owned by the wrong user.
 @UUDIR@UUDIR = uudir
-@UUDIR@uudirdir = $(libdir)/util
+@UUDIR@uudirdir = $(sbindir)/util
 @UUDIR@UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(uudirdir)/$(UUDIR)\"
 
 # Source directory and, if necessary, VPATH
@@ -85,7 +85,7 @@ SHELL = /bin/sh
 
 VERSION = 1.03
 
-MORECFLAGS = -I$(srcdir) -I. -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
+MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
 PROGRAMS = uucico uuxqt uux uucp uuchk uustat uuname uulog uuto uupick cu
 
@@ -126,15 +126,15 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uustat.o uuname.o \
 all: $(PROGRAMS) $(TSTUU) $(UUDIR)
 
 install: $(PROGRAMS) uucp.info $(UUDIR)
-	-mkdir $(libdir) $(bindir)
-	-ln $(libdir)/uucico $(libdir)/uucico.old
-	-ln $(libdir)/uuxqt $(libdir)/uuxqt.old
-	rm -f $(libdir)/uucico $(libdir)/uuxqt
-	$(INSTALL_PROGRAM) uucico $(libdir)/uucico
-	$(INSTALL_PROGRAM) uuxqt $(libdir)/uuxqt
-	$(INSTALL_PROGRAM) uuchk $(libdir)/uuchk
-	chown $(owner) $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
-	chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
+	-mkdir $(sbindir) $(bindir)
+	-ln $(sbindir)/uucico $(sbindir)/uucico.old
+	-ln $(sbindir)/uuxqt $(sbindir)/uuxqt.old
+	rm -f $(sbindir)/uucico $(sbindir)/uuxqt
+	$(INSTALL_PROGRAM) uucico $(sbindir)/uucico
+	$(INSTALL_PROGRAM) uuxqt $(sbindir)/uuxqt
+	$(INSTALL_PROGRAM) uuchk $(sbindir)/uuchk
+	chown $(owner) $(sbindir)/uucico $(sbindir)/uuxqt $(sbindir)/uuchk
+	chmod 4555 $(sbindir)/uucico $(sbindir)/uuxqt
 	-if test "$(UUDIR)X" != "X"; then if test ! -d $(uudirdir); then mkdir $(uudirdir); fi; chown $(owner) $(uudirdir); chmod 100 $(uudirdir); $(INSTALL_PROGRAM) uudir $(uudirdir)/uudir; chown root $(uudirdir)/uudir; chmod 4555 $(uudirdir)/uudir; else true; fi
 	-ln $(bindir)/uux $(bindir)/uux.old
 	-ln $(bindir)/uucp $(bindir)/uucp.old
@@ -171,11 +171,11 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	-$(INSTALL_DATA) $(srcdir)/uucp.info-4 $(infodir)/uucp.info-4
 
 uninstall:
-	rm -f $(libdir)/uucico $(libdir)/uuxqt
-	-cp $(libdir)/uucico.old $(libdir)/uucico
-	-cp $(libdir)/uuxqt.old $(libdir)/uuxqt
-	-chown $(owner) $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
-	-chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
+	rm -f $(sbindir)/uucico $(sbindir)/uuxqt
+	-cp $(sbindir)/uucico.old $(sbindir)/uucico
+	-cp $(sbindir)/uuxqt.old $(sbindir)/uuxqt
+	-chown $(owner) $(sbindir)/uucico $(sbindir)/uuxqt $(sbindir)/uuchk
+	-chmod 4555 $(sbindir)/uucico $(sbindir)/uuxqt
 	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uustat
 	rm -f $(bindir)/uuname $(bindir)/uulog $(bindir)/uuto
 	rm -f $(bindir)/uupick $(bindir)/cu
