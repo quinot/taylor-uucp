@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/09  18:53:07  ian
+   Reworked protocol interface
+
    Revision 1.2  1991/11/08  04:07:04  ian
    Brian Campbell: made cGsent_bytes and cGreceived_bytes long, not int
 
@@ -43,6 +46,7 @@ char protg_rcsid[] = "$Id$";
 
 #include "prot.h"
 #include "system.h"
+#include "port.h"
 
 /* Each 'g' protocol packet begins with six bytes.  They are:
 
@@ -236,7 +240,7 @@ static boolean fggot_ack P((int iack));
 static boolean fgprocess_data P((boolean fdoacks, boolean freturncontrol,
 				 boolean *pfexit, int *pcneed,
 				 boolean *pffound));
-static boolean fginit_sendbuffers P((void));
+static boolean fginit_sendbuffers P((boolean fallocate));
 static int igchecksum P((const char *zdata, int clen));
 static int igchecksum2 P((const char *zfirst, int cfirst,
 			  const char *zsecond, int csecond));
@@ -252,6 +256,10 @@ fgstart (fmaster)
 {
   int iseg;
   int i;
+
+  /* The 'g' protocol requires a full eight bit interface.  */
+  if (! fport_set (PORTSETTING_EIGHT))
+    return FALSE;
 
   iGsendseq = 1;
   iGremote_ack = 0;
@@ -295,7 +303,7 @@ fgstart (fmaster)
 
       iGremote_packsize = 1 << (iGremote_segsize + 5);
 
-      if (! fginit_sendbuffers ())
+      if (! fginit_sendbuffers (TRUE))
 	return FALSE;
 
 #if DEBUG > 2
@@ -418,7 +426,9 @@ boolean
 fgshutdown ()
 {
   (void) fgsend_control (CLOSE, 0);
-  return fgsend_control (CLOSE, 0);
+  (void) fgsend_control (CLOSE, 0);
+  (void) fginit_sendbuffers (FALSE);
+  return TRUE;
 }
 
 /* Send a command string.  We send packets containing the string until
@@ -482,7 +492,8 @@ fgsendcmd (z)
 static char *azGsendbuffers[CSENDBUFFERS];
 
 static boolean
-fginit_sendbuffers ()
+fginit_sendbuffers (fallocate)
+     boolean fallocate;
 {
   int i;
 
@@ -491,9 +502,14 @@ fginit_sendbuffers ()
   for (i = 0; i < CSENDBUFFERS; i++)
     {
       xfree ((pointer) azGsendbuffers[i]);
-      azGsendbuffers[i] = (char *) malloc (CFRAMELEN + iGremote_packsize);
-      if (azGsendbuffers[i] == NULL)
-	return FALSE;
+      if (fallocate)
+	{
+	  azGsendbuffers[i] = (char *) malloc (CFRAMELEN + iGremote_packsize);
+	  if (azGsendbuffers[i] == NULL)
+	    return FALSE;
+	}
+      else
+	azGsendbuffers[i] = NULL;
     }
   return TRUE;
 }
