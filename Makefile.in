@@ -82,7 +82,7 @@ LN_S = @LN_S@
 
 SHELL = /bin/sh
 
-VERSION = beta1.03
+VERSION = 1.03
 
 MORECFLAGS = -I$(srcdir) -I. -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
@@ -253,8 +253,10 @@ configure: configure.in
 
 # GNU standards want these targets
 
-distclean: clean
+mostlyclean: clean
+
 realclean: clean
+	rm conf.h
 
 TAGS:
 	etags *.h *.c
