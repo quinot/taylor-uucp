@@ -233,14 +233,6 @@ together, for some reason.
 David Nugent: it would be nice to be able to debugging levels, as well
 as debugging, log, and statistics files, on a site by site basis.
 
-44.
-
-David Nugent: it's possible for a NO CARRIER string to be left sitting
-in the modem's input buffer from the previous call, which clobbers the
-start of the next call.  We should flush the input buffer after
-opening it.  This can be done with TIOCFLUSH under BSD, TCFLSH under
-SYSV, or tcflush under POSIX.
-
 47.
 
 Terry Gardner: if a file transfer fails partway through, record the
@@ -269,11 +261,6 @@ it could do.
 David Nugent: uuxqt should keep looping through the directories until
 nothing new appears.  Right now if something is added for a system
 after it has already been examined, uuxqt won't see it.
-
-52.
-
-David Nugent: zero out the bytes in blocks allocated for protocols to
-avoid sending out trailing garbage data.
 
 53.
 
