@@ -821,7 +821,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
     {
       if (qorigsys->uuconf_cmax_retries > 0
 	  && sstat.cretries >= qorigsys->uuconf_cmax_retries
-	  && sstat.ilast + SECS_PER_DAY < inow)
+	  && sstat.ilast + SECS_PER_DAY > inow)
 	{
 	  ulog (LOG_ERROR, "Too many retries");
 	  return FALSE;
