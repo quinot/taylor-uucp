@@ -614,10 +614,16 @@ main (argc, argv)
       if (fdetach)
 	usysdep_detach ();
       if (zsystem == NULL)
-	fret = fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
-			    (const char *) NULL);
+	{
+	  if (! fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
+			     (const char *) NULL))
+	    fret = FALSE;
+	}
       else
-	fret = fsysdep_run (FALSE, "uuxqt", "-s", zsystem);
+	{
+	  if (! fsysdep_run (FALSE, "uuxqt", "-s", zsystem))
+	    fret = FALSE;
+	}
     }
 
   usysdep_exit (fret);
