@@ -2035,6 +2035,7 @@ In alphabetical order:
 
 @example
 "Earle F. Ake - SAIC" <ake@@Dayton.SAIC.COM>
+Rudnev Aleksey <alex@@kiae.su>
 mra@@searchtech.com (Michael Almond)
 chris@@nike.calpoly.edu (Christopher J. Ambler)
 jantypas@@soft21.s21.com (John Antypas)
