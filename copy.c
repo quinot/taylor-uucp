@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1992/02/24  20:07:43  ian
+   John Theus: some systems don't have <fcntl.h>
+
    Revision 1.6  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -127,6 +130,10 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
 #define O_RDWR 2
 #endif
 
+#ifndef O_NOCTTY
+#define O_NOCTTY 0
+#endif
+
 boolean
 fcopy_file (zfrom, zto, fpublic, fmkdirs)
      const char *zfrom;
@@ -139,7 +146,7 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
   char ab[8192];
   int c;
 
-  ofrom = open (zfrom, O_RDONLY, 0);
+  ofrom = open (zfrom, O_RDONLY | O_NOCTTY, 0);
   if (ofrom < 0)
     {
       ulog (LOG_ERROR, "open (%s): %s", zfrom, strerror (errno));
