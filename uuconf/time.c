@@ -106,7 +106,7 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
 	{
 	  if ((bfirst == (*pz)[0]
 	       || (isupper (BUCHAR ((*pz)[0]))
-		   && bfirst == tolower (BUCHAR ((*pz)[0]))))
+		   && (int) bfirst == (int) tolower (BUCHAR ((*pz)[0]))))
 	      && strcasecmp (ztime, *pz) == 0)
 	    zfound = pz[1];
 	  pz += 2;
