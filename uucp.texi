@@ -75,14 +75,7 @@ translation approved by the author instead of in the original English.
 
 This is the documentation for the Taylor UUCP package, version 1.06.
 The programs were written by Ian Lance Taylor.  The author can be
-reached at @code{<ian@@airs.com>}, or at
-@display
-Ian Lance Taylor
-c/o Cygnus Support
-48 Grove Street
-Somerville, MA 02144
-USA
-@end display
+reached at @code{<ian@@airs.com>}.
 
 There is a mailing list for discussion of the package.  The list is
 hosted by Eric Schnoebelen at @code{cirr.com}.  To join (or get off) the
