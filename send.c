@@ -62,7 +62,7 @@ struct ssendinfo
 static void usfree_send P((struct stransfer *qtrans));
 static boolean flocal_send_fail P((struct stransfer *qtrans,
 				   struct scmd *qcmd,
-				   const struct uuconf_system *qsys,
+				   struct sdaemon *qdaemon,
 				   const char *zwhy));
 static boolean flocal_send_request P((struct stransfer *qtrans,
 				      struct sdaemon *qdaemon));
@@ -196,7 +196,7 @@ flocal_send_file_init (qdaemon, qcmd)
 	 is possible, but it might have changed since then.  */
       if (! qsys->uuconf_fcall_transfer
 	  && ! qsys->uuconf_fcalled_transfer)
-	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qdaemon,
 				 "not permitted to transfer files");
 
       /* We can't do the request now, but it may get done later.  */
@@ -213,7 +213,7 @@ flocal_send_file_init (qdaemon, qcmd)
 				qsys->uuconf_pzlocal_send,
 				qsys->uuconf_zpubdir, TRUE,
 				TRUE, qcmd->zuser))
-	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qdaemon,
 				 "not permitted to send");
       zfile = zbufcpy (qcmd->zfrom);
     }
@@ -233,13 +233,13 @@ flocal_send_file_init (qdaemon, qcmd)
     {
       ubuffree (zfile);
       if (cbytes != -1)
-	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qdaemon,
 				 "can not get size");
       /* A cbytes value of -1 means that the file does not exist.
 	 This can happen legitimately if it has already been sent from
 	 the spool directory.  */
       if (! fspool)
-	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qdaemon,
 				 "does not exist");
       (void) fsysdep_did_work (qcmd->pseq);
       return TRUE;
@@ -264,7 +264,7 @@ flocal_send_file_init (qdaemon, qcmd)
 		      
       if (qdaemon->cmax_ever != -1
 	  && qdaemon->cmax_ever < qcmd->cbytes)
-	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qdaemon,
 				 "too large to send");
 
       return TRUE;
@@ -296,12 +296,14 @@ flocal_send_file_init (qdaemon, qcmd)
    this reports an error to the log file and to the user.  */
 
 static boolean
-flocal_send_fail (qtrans, qcmd, qsys, zwhy)
+flocal_send_fail (qtrans, qcmd, qdaemon, zwhy)
      struct stransfer *qtrans;
      struct scmd *qcmd;
-     const struct uuconf_system *qsys;
+     struct sdaemon *qdaemon;
      const char *zwhy;
 {
+  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
+
   if (zwhy != NULL)
     {
       const char *zfrom;
@@ -337,12 +339,17 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
 	ztemp = NULL;
       (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
 			     zwhy, zfrom, (const char *) NULL,
-			     qcmd->zto, qsys->uuconf_zname, ztemp);
+			     qcmd->zto, qdaemon->qsys->uuconf_zname, ztemp);
 
       ubuffree (zfree);
     }
 
-  (void) fsysdep_did_work (qcmd->pseq);
+  /* We can only mark this job as complete if we are not going to try
+     to send a separate execution file.  */
+  if (qtrans->s.bcmd != 'E'
+      || (qdaemon->ifeatures & FEATURE_EXEC) != 0
+      || qinfo->zexec != NULL)
+    (void) fsysdep_did_work (qcmd->pseq);
 
   if (qtrans != NULL)
     usfree_send (qtrans);
@@ -369,7 +376,7 @@ flocal_send_request (qtrans, qdaemon)
   /* Make sure the file meets any remote size restrictions.  */
   if (qdaemon->cmax_receive != -1
       && qdaemon->cmax_receive < qinfo->cbytes)
-    return flocal_send_fail (qtrans, &qtrans->s, qdaemon->qsys,
+    return flocal_send_fail (qtrans, &qtrans->s, qdaemon,
 			     "too large for receiver");
 
   /* Make sure the file still exists--it may have been removed between
@@ -587,7 +594,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
       else
 	{
 	  if (! flocal_send_fail ((struct stransfer *) NULL, &qtrans->s,
-				  qdaemon->qsys, zerr))
+				  qdaemon, zerr))
 	    return FALSE;
 	}
 
