@@ -703,21 +703,36 @@ main (argc, argv)
 
   if (fuuxqt)
     {
+      char *zsysarg, *zconfigarg;
+
       /* Detach from the controlling terminal before starting up uuxqt,
 	 so that it runs as a true daemon.  */
       if (fdetach)
 	usysdep_detach ();
+
       if (zsystem == NULL)
-	{
-	  if (! fsysdep_run ("uuxqt", (const char *) NULL,
-			     (const char *) NULL))
-	    fret = FALSE;
-	}
+	zsysarg = NULL;
       else
 	{
-	  if (! fsysdep_run ("uuxqt", "-s", zsystem))
-	    fret = FALSE;
+	  zsysarg = zbufalc (sizeof "-s" + strlen (zsystem));
+	  sprintf (zsysarg, "-s%s", zsystem);
 	}
+
+      if (zconfig == NULL)
+	zconfigarg = NULL;
+      else
+	{
+	  zconfigarg = zbufalc (sizeof "-I" + strlen (zsystem));
+	  sprintf (zconfigarg, "-I%s", zsystem);
+	  if (zsysarg == NULL)
+	    {
+	      zsysarg = zconfigarg;
+	      zconfigarg = NULL;
+	    }
+	}
+
+      if (! fsysdep_run ("uuxqt", zsysarg, zconfigarg))
+	fret = FALSE;
     }
 
   usysdep_exit (fret);

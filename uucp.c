@@ -577,12 +577,35 @@ main (argc, argv)
       boolean fany;
 
       zsys = zcone_system (&fany);
-      if (zsys != NULL)
-	fexit = fsysdep_run ("uucico", "-Cs", zsys);
-      else if (fany)
-	fexit = fsysdep_run ("uucico", "-r1", (const char *) NULL);
-      else
+
+      if (zsys == NULL && ! fany)
 	fexit = TRUE;
+      else
+	{
+	  const char *zarg;
+	  char *zconfigarg;
+
+	  if (zsys == NULL)
+	    zarg = "-r1";
+	  else
+	    {
+	      char *z;
+
+	      z = zbufalc (sizeof "-Cs" + strlen (zsys));
+	      sprintf (z, "-Cs%s", zsys);
+	      zarg = z;
+	    }
+
+	  if (zconfig == NULL)
+	    zconfigarg = NULL;
+	  else
+	    {
+	      zconfigarg = zbufalc (sizeof "-I" + strlen (zconfig));
+	      sprintf (zconfigarg, "-I%s", zconfig);
+	    }
+
+	  fexit = fsysdep_run ("uucico", zarg, zconfigarg);
+	}
     }
 
   usysdep_exit (fexit);

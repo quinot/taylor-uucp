@@ -1259,16 +1259,34 @@ main (argc, argv)
 
   ulog_close ();
 
-  if (! fuucico)
+  if (! fuucico
+      || (zcall_system == NULL && ! fcall_any))
     fexit = TRUE;
   else
     {
-      if (zcall_system != NULL)
-	fexit = fsysdep_run ("uucico", "-Cs", zcall_system);
-      else if (fcall_any)
-	fexit = fsysdep_run ("uucico", "-r1", (const char *) NULL);
+      const char *zcicoarg;
+      char *zconfigarg;
+
+      if (zcall_system == NULL)
+	zcicoarg = "-r1";
       else
-	fexit = TRUE;
+	{
+	  char *z;
+
+	  z = zbufalc (sizeof "-Cs" + strlen (zcall_system));
+	  sprintf (z, "-Cs%s", zcall_system);
+	  zcicoarg = z;
+	}
+
+      if (zconfig == NULL)
+	zconfigarg = NULL;
+      else
+	{
+	  zconfigarg = zbufalc (sizeof "-I" + strlen (zconfig));
+	  sprintf (zconfigarg, "-I%s", zconfig);
+	}
+
+      fexit = fsysdep_run ("uucico", zcicoarg, zconfigarg);
     }
 
   usysdep_exit (fexit);
