@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1992/03/13  22:59:25  ian
+   Have breceive_char go through freceive_data
+
    Revision 1.12  1992/03/12  19:56:10  ian
    Debugging based on types rather than number
 
@@ -151,6 +154,7 @@ static long cFrec_retries;
 
 /* Start the protocol.  */
 
+/*ARGSUSED*/
 boolean
 ffstart (fmaster)
      boolean fmaster;
@@ -259,14 +263,14 @@ ffsenddata (zdata, cdata)
 	  if (b <= 037)
 	    {
 	      *ze++ = '\172';
-	      *ze++ = b + 0100;
+	      *ze++ = (char) (b + 0100);
 	    }
 	  else if (b <= 0171)
-	    *ze++ = b;
+	    *ze++ = (char) b;
 	  else
 	    {
 	      *ze++ = '\173';
-	      *ze++ = b - 0100;
+	      *ze++ = (char) (b - 0100);
 	    }
 	}
       else
@@ -274,17 +278,17 @@ ffsenddata (zdata, cdata)
 	  if (b <= 0237)
 	    {
 	      *ze++ = '\174';
-	      *ze++ = b - 0100;
+	      *ze++ = (char) (b - 0100);
 	    }
 	  else if (b <= 0371)
 	    {
 	      *ze++ = '\175';
-	      *ze++ = b - 0200;
+	      *ze++ = (char) (b - 0200);
 	    }
 	  else
 	    {
 	      *ze++ = '\176';
-	      *ze++ = b - 0300;
+	      *ze++ = (char) (b - 0300);
 	    }
 	}
     }
@@ -423,7 +427,7 @@ ffprocess_data (pfexit, pcneed)
 
 	      /* Here we have encountered a special character that
 		 does not follow another special character.  */
-	      bFspecial = b;
+	      bFspecial = (char) b;
 	    }
 	  else
 	    {
@@ -451,7 +455,7 @@ ffprocess_data (pfexit, pcneed)
 		  break;
 		}
 
-	      *zto++ = bnext;
+	      *zto++ = (char) bnext;
 	      bFspecial = 0;
 
 	      /* Rotate the checksum left.  */

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.40  1992/03/16  19:44:45  ian
+   Cast result of alloca
+
    Revision 1.39  1992/03/15  04:51:17  ian
    Keep an array of signals we've received rather than a single variable
 
@@ -345,8 +348,8 @@ main (argc, argv)
 
 	  ulog_system (qusesys->zname);
 	  uqdo_xqt_file (zcopy, qusesys, zcmd, &fprocessed);
-	  ulog_system (NULL);
-	  ulog_user (NULL);
+	  ulog_system ((const char *) NULL);
+	  ulog_user ((const char *) NULL);
 
 	  if (fprocessed)
 	    fany = TRUE;
@@ -599,8 +602,10 @@ tqfile (argc, argv, pvar, zerr)
     return CMDTABRET_FREE;
 
   ++cQfiles;
-  azQfiles = (char **) xrealloc (azQfiles, cQfiles * sizeof (char *));
-  azQfiles_to = (char **) xrealloc (azQfiles_to, cQfiles * sizeof (char *));
+  azQfiles = (char **) xrealloc ((pointer) azQfiles,
+				 cQfiles * sizeof (char *));
+  azQfiles_to = (char **) xrealloc ((pointer) azQfiles_to,
+				    cQfiles * sizeof (char *));
 
   azQfiles[cQfiles - 1] = xstrdup (argv[1]);
   if (argc == 3)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/03/13  22:59:25  ian
+   Have breceive_char go through freceive_data
+
    Revision 1.13  1992/03/12  19:56:10  ian
    Debugging based on types rather than number
 
@@ -113,6 +116,7 @@ static boolean ftprocess_data P((boolean *pfexit, int *pcneed));
 
 /* Start the protocol.  */
 
+/*ARGSUSED*/
 boolean
 ftstart (fmaster)
      boolean fmaster;
@@ -191,8 +195,8 @@ ftsenddata (zdata, cdata)
      set to 0 in ftstart so we don't touch them here.  This is useful
      because we cannot portably right shift by 24 or 16, since we
      might be dealing with sixteen bit integers.  */
-  zdata[-2] = (cdata >> 8) & 0xff;
-  zdata[-1] = cdata & 0xff;
+  zdata[-2] = (char) ((cdata >> 8) & 0xff);
+  zdata[-1] = (char) (cdata & 0xff);
 
   /* We pass FALSE to fsend_data since we don't expect the other side
      to be sending us anything just now.  */

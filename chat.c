@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/03/16  21:21:59  ian
+   Scott Ballantyne: go ahead and send an illegal send script character
+
    Revision 1.20  1992/03/16  00:47:15  ian
    Turn off DEBUG_PORT for chat script debugging
 
@@ -485,7 +488,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
       if (fstrip)
 	bchar &= 0x7f;
 
-      zhave[chave] = bchar;
+      zhave[chave] = (char) bchar;
       ++chave;
 
 #if DEBUG > 1
@@ -547,6 +550,8 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 static int cCsend_chars;
 static int iColddebug;
 
+static boolean fcsend_debug P((boolean, int, const char *));
+
 static boolean
 fcsend_debug (fquote, clen, zbuf)
      boolean fquote;
@@ -595,6 +600,8 @@ fcsend_debug (fquote, clen, zbuf)
 }
 
 /* Finish up the debugging information for fcsend.  */
+
+static void ucsend_debug_end P((boolean, boolean));
 
 static void
 ucsend_debug_end (fquote, ferr)

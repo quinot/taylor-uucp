@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1992/03/13  22:59:25  ian
+   Have breceive_char go through freceive_data
+
    Revision 1.4  1992/03/12  19:56:10  ian
    Debugging based on types rather than number
 
@@ -89,6 +92,7 @@ static boolean feprocess_data P((boolean *pfexit, int *pcneed));
 
 /* Start the protocol.  */
 
+/*ARGSUSED*/
 boolean
 festart (fmaster)
      boolean fmaster;

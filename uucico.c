@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.83  1992/03/16  05:16:03  ian
+   Recognize SVR4 -U flag
+
    Revision 1.82  1992/03/16  04:38:00  ian
    Turn off DEBUG_PORT for handshake debugging
 
@@ -3237,7 +3240,7 @@ zget_uucp_cmd (frequired)
 	 strip the parity bit.  This may need to be configurable at
 	 some point, although only if system names can have eight bit
 	 characters.  */
-      if (! isprint (b))
+      if (! isprint (BUCHAR (b)))
 	b &= 0x7f;
 
 #if DEBUG > 1
@@ -3285,7 +3288,7 @@ zget_uucp_cmd (frequired)
 	  zalc = (char *) xrealloc ((pointer) zalc, calc);
 	}
 
-      zalc[cgot] = b;
+      zalc[cgot] = (char) b;
       ++cgot;
 
       if (b == '\0')
@@ -3387,7 +3390,7 @@ zget_typed_line ()
       if (b == '\r' || b == '\n')
 	b = '\0';
 
-      zalc[cgot] = b;
+      zalc[cgot] = (char) b;
       ++cgot;
 
       if (b == '\0')
