@@ -156,10 +156,10 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("uuconv (Taylor UUCP) %s\n", VERSION);
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("This program is free software; you may redistribute it under the terms of\n");
+	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -523,24 +523,17 @@ uvusage ()
 static void
 uvhelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-	   VERSION);
-  fprintf (stderr, "Converts UUCP configuration files from one format to another.\n");
-  fprintf (stderr,
-	   "Usage: %s -i input -o output [-p program] [-I file]\n", zProgram);
-  fprintf (stderr,
-	   " -i,--input input: Set input type (one of taylor, v2, hdb)\n");
-  fprintf (stderr,
-	   " -o,--output output: Set output type (one of taylor, v2, hdb)\n");
-  fprintf (stderr,
-	   " -p,--program program: Program to convert (e.g., uucp or cu)\n");
-  fprintf (stderr,
-	   " -I,--config file: Set Taylor UUCP configuration file to use\n");
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
+	  VERSION);
+  printf ("Converts UUCP configuration files from one format to another.\n");
+  printf ("Usage: %s -i input -o output [-p program] [-I file]\n", zProgram);
+  printf (" -i,--input input: Set input type (one of taylor, v2, hdb)\n");
+  printf (" -o,--output output: Set output type (one of taylor, v2, hdb)\n");
+  printf (" -p,--program program: Program to convert (e.g., uucp or cu)\n");
+  printf (" -I,--config file: Set Taylor UUCP configuration file to use\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
+  printf ("Report bugs to taylor-uucp@gnu.org\n");
 }
 
 /* Write out a timespan.  */

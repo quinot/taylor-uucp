@@ -104,10 +104,10 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("uupick (Taylor UUCP) %s\n", VERSION);
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("This program is free software; you may redistribute it under the terms of\n");
+	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -321,21 +321,16 @@ upusage ()
 static void
 uphelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-	   VERSION);
-  fprintf (stderr,
-	   " -s,--system system: Only consider files from named system\n");
-  fprintf (stderr,
-	   " -x,--debug debug: Set debugging level\n");
+  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
+	  VERSION);
+  printf (" -s,--system system: Only consider files from named system\n");
+  printf (" -x,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
+  printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
+  printf ("Report bugs to taylor-uucp@gnu.org\n");
 }
 
 /* This routine is called by usysdep_walk_tree when moving the

@@ -259,8 +259,10 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  printf ("%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-		  zProgram, VERSION);
+	  printf ("uucp (Taylor UUCP) %s\n", VERSION);
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("This program is free software; you may redistribute it under the terms of\n");
+	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -641,7 +643,7 @@ ucusage ()
 static void
 uchelp ()
 {
-  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
+  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	   VERSION);
   printf ("Usage: %s [options] file1 [file2 ...] dest\n", zProgram);
   printf (" -c,--nocopy: Do not copy local files to spool directory\n");
@@ -664,6 +666,7 @@ uchelp ()
 #endif /* HAVE_TAYLOR_CONFIG */
   printf (" -v,--version: Print version and exit\n");
   printf (" --help: Print help and exit\n");
+  printf ("Report bugs to taylor-uucp@gnu.org\n");
 }
 
 /* This is called for each file in a directory heirarchy.  */

@@ -387,8 +387,10 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  printf ("%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-		  zProgram, VERSION);
+	  printf ("uustat (Taylor UUCP) %s\n", VERSION);
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("This program is free software; you may redistribute it under the terms of\n");
+	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -597,7 +599,7 @@ ususage ()
 static void
 ushelp ()
 {
-  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
+  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
   printf ("Usage: %s [options]\n", zProgram);
   printf (" -a,--all: list all UUCP jobs\n");
@@ -629,6 +631,7 @@ ushelp ()
 #endif /* HAVE_TAYLOR_CONFIG */
   printf (" -v,--version: Print version and exit\n");
   printf (" --help: Print help and exit\n");
+  printf ("Report bugs to taylor-uucp@gnu.org\n");
 }
 
 /* We need to be able to read information from an execution file.  */

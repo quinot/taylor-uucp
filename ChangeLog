@@ -1,5 +1,30 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* uuchk.c (ukhelp): Update copyright.  Add bug reporting address.
+	* uucico.c (uhelp): Likewise.
+	* uucp.c (uchelp): Likewise.
+	* uulog.c (ulhelp): Likewise.
+	* uuname.c (unhelp): Likewise.
+	* uustat.c (ushelp): Likewise.
+	* uux.c (uxhelp): Likewise.
+	* uuxqt.c (uqhelp): Likewise.
+	* cu.c (ucuhelp): Likewise.  Output to stdout.
+	* uuconv.c (uvhelp): Likewise.
+	* uupick.c (uphelp): Likewise.
+
+	* uuchk.c (main): Update version statement to current GNU
+	standard.  Update copyright in version statement.
+	* uucico.c (main): Likewise.
+	* uucp.c (main): Likewise.
+	* uulog.c (main): Likewise.
+	* uuname.c (main): Likewise.
+	* uustat.c (main): Likewise.
+	* uux.c (main): Likewise.
+	* uuxqt.c (main): Likewise.
+	* cu.c (main): Likewise.  Output version to stdout.
+	* uuconv.c (main): Likewise.
+	* uupick.c (main): Likewise.
+
 	* Tim Pozar: uucp.texi (Acknowledgements): Note that gnuucp was
 	based on uuslave.
 

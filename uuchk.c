@@ -114,8 +114,10 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  printf ("%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-		  zKprogram, VERSION);
+	  printf ("uuchk (Taylor UUCP) %s\n", VERSION);
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("This program is free software; you may redistribute it under the terms of\n");
+	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 	  
@@ -323,13 +325,14 @@ static void ukusage ()
 static void
 ukhelp ()
 {
-  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
+  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
   printf ("Usage: %s [-s system] [-I file] [-v]\n", zKprogram);
   printf (" -s,--system system: Only print configuration for named system\n");
   printf (" -I,--config file: Set configuration file to use\n");
   printf (" -v,--version: Print version and exit\n");
   printf (" --help: Print help and exit\n");
+  printf ("Report bugs to taylor-uucp@gnu.org\n");
 }
 
 /* Print a list of configuration file names.  */

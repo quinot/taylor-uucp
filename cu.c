@@ -378,10 +378,10 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("cu (Taylor UUCP) %s\n", VERSION);
+	  printf ("Copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n");
+	  printf ("This program is free software; you may redistribute it under the terms of\n");
+	  printf ("the GNU General Public LIcense.  This program has ABSOLUTELY NO WARRANTY.\n");
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -830,49 +830,30 @@ ucuusage ()
 static void
 ucuhelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995 Ian Lance Taylor\n",
-	   VERSION);
-  fprintf (stderr,
-	   "Usage: %s [options] [system or phone-number]\n", zProgram);
-  fprintf (stderr,
-	   " -a,-p,--port port: Use named port\n");
-  fprintf (stderr,
-	   " -l,--line line: Use named device (e.g. tty0)\n");
-  fprintf (stderr,
-	   " -s,--speed,--baud speed, -#: Use given speed\n");
-  fprintf (stderr,
-	   " -c,--phone phone: Phone number to call\n");
-  fprintf (stderr,
-	   " -z,--system system: System to call\n");
-  fprintf (stderr,
-	   " -e: Set even parity\n");
-  fprintf (stderr,
-	   " -o: Set odd parity\n");
-  fprintf (stderr,
-	   " --parity={odd,even}: Set parity\n");
-  fprintf (stderr,
-	   " -E,--escape char: Set escape character\n");
-  fprintf (stderr,
-	   " -h,--halfduplex: Echo locally\n");
-  fprintf (stderr,
-	   " --nostop: Turn off XON/XOFF handling\n");
-  fprintf (stderr,
-	   " -t,--mapcr: Map carriage return to carriage return/linefeed\n");
-  fprintf (stderr,
-	   " -n,--prompt: Prompt for phone number\n");
-  fprintf (stderr,
-	   " -d: Set maximum debugging level\n");
-  fprintf (stderr,
-	   " -x,--debug debug: Set debugging type\n");
+  printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
+	  VERSION);
+  printf ("Usage: %s [options] [system or phone-number]\n", zProgram);
+  printf (" -a,-p,--port port: Use named port\n");
+  printf (" -l,--line line: Use named device (e.g. tty0)\n");
+  printf (" -s,--speed,--baud speed, -#: Use given speed\n");
+  printf (" -c,--phone phone: Phone number to call\n");
+  printf (" -z,--system system: System to call\n");
+  printf (" -e: Set even parity\n");
+  printf (" -o: Set odd parity\n");
+  printf (" --parity={odd,even}: Set parity\n");
+  printf (" -E,--escape char: Set escape character\n");
+  printf (" -h,--halfduplex: Echo locally\n");
+  printf (" --nostop: Turn off XON/XOFF handling\n");
+  printf (" -t,--mapcr: Map carriage return to carriage return/linefeed\n");
+  printf (" -n,--prompt: Prompt for phone number\n");
+  printf (" -d: Set maximum debugging level\n");
+  printf (" -x,--debug debug: Set debugging type\n");
 #if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
+  printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
+  printf ("Report bugs to taylor-uucp@gnu.org\n");
 }
 
 /* This function is called when a fatal error occurs.  */
