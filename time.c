@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/03/17  00:32:40  ian
+   Cast argument to qttime_parse
+
    Revision 1.11  1992/03/09  05:08:16  ian
    Added status for wrong time to call, not used if system can't be called
 
@@ -310,7 +313,7 @@ qttime_parse (ztime, qlist, ival, picmp, cretry)
   bfirst = tolower (BUCHAR (*ztime));
   for (i = 0; i < cTtable; i++)
     {
-      if (bfirst == tolower (BUCHAR (pasTtable[i].zname[0]))
+      if ((int) bfirst == (int) tolower (BUCHAR (pasTtable[i].zname[0]))
 	  && strncasecmp (ztime, pasTtable[i].zname, zend - ztime) == 0)
 	{
 	  ztime = pasTtable[i].ztime;
