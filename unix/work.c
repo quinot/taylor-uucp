@@ -98,12 +98,12 @@ zswork_directory (zsystem)
 #if SPOOLDIR_V2
   return zbufcpy (".");
 #endif /* SPOOLDIR_V2 */
-#if SPOOLDIR_BSD42 | SPOOLDIR_BSD43
+#if SPOOLDIR_BSD42 || SPOOLDIR_BSD43
   return zbufcpy ("C.");
-#endif /* SPOOLDIR_BSD42 | SPOOLDIR_BSD43 */
-#if SPOOLDIR_HDB
+#endif /* SPOOLDIR_BSD42 || SPOOLDIR_BSD43 */
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
   return zbufcpy (zsystem);
-#endif /* SPOOLDIR_HDB */
+#endif /* SPOOLDIR_HDB || SPOOLDIR_SVR4 */
 #if SPOOLDIR_ULTRIX
   return zsappend3 ("sys",
 		    (fsultrix_has_spool (zsystem)
@@ -145,7 +145,7 @@ fswork_file (zsystem, zfile, pbgrade)
   *pbgrade = zfile[cfilesys + 2];
   return strncmp (zfile + 2, zsystem, cfilesys) == 0;
 #endif /* V2 || BSD42 || BSD43 || ULTRIX */
-#if SPOOLDIR_HDB
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
   int clen;
 
   /* The file name should be C.ssssssgqqqq where g is exactly one
@@ -160,7 +160,7 @@ fswork_file (zsystem, zfile, pbgrade)
     return FALSE;
   *pbgrade = zfile[clen - 5];
   return TRUE;
-#endif /* SPOOLDIR_HDB */
+#endif /* SPOOLDIR_HDB || SPOOLDIR_SVR4 */
 #if SPOOLDIR_TAYLOR
   /* We don't keep the system name in the file name, since that
      forces truncation.  Our file names are always C.gqqqq.  */
@@ -193,27 +193,60 @@ fsysdep_has_work (qsys)
   char *zdir;
   DIR *qdir;
   struct dirent *qentry;
+#if SPOOLDIR_SVR4
+  DIR *qgdir;
+  struct dirent *qgentry;
+#endif
 
   zdir = zswork_directory (qsys->uuconf_zname);
   if (zdir == NULL)
     return FALSE;
   qdir = opendir ((char *) zdir);
-  ubuffree (zdir);
   if (qdir == NULL)
-    return FALSE;
-
-  while ((qentry = readdir (qdir)) != NULL)
     {
-      char bgrade;
-
-      if (fswork_file (qsys->uuconf_zname, qentry->d_name, &bgrade))
-	{
-	  closedir (qdir);
-	  return TRUE;
-	}
+      ubuffree (zdir);
+      return FALSE;
     }
 
+#if SPOOLDIR_SVR4
+  qgdir = qdir;
+  while ((qgentry = readdir (qgdir)) != NULL)
+    {
+      char *zsub;
+
+      if (qgentry->d_name[0] == '.'
+	  || qgentry->d_name[1] != '\0')
+	continue;
+      zsub = zsysdep_in_dir (zdir, qgentry->d_name);
+      qdir = opendir (zsub);
+      ubuffree (zsub);
+      if (qdir == NULL)
+	continue;
+#endif
+
+      while ((qentry = readdir (qdir)) != NULL)
+	{
+	  char bgrade;
+
+	  if (fswork_file (qsys->uuconf_zname, qentry->d_name, &bgrade))
+	    {
+	      closedir (qdir);
+#if SPOOLDIR_SVR4
+	      closedir (qgdir);
+#endif
+	      ubuffree (zdir);
+	      return TRUE;
+	    }
+	}
+
+#if SPOOLDIR_SVR4
+      closedir (qdir);
+    }
+  qdir = qgdir;
+#endif
+
   closedir (qdir);
+  ubuffree (zdir);
   return FALSE;
 }
 
@@ -237,12 +270,16 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
   struct dirent *qentry;
   size_t chad;
   size_t callocated;
+#if SPOOLDIR_SVR4
+  DIR *qgdir;
+  struct dirent *qgentry;
+#endif
 
   zdir = zswork_directory (qsys->uuconf_zname);
   if (zdir == NULL)
     return FALSE;
 
-  qdir = opendir ((char *) zdir);
+  qdir = opendir (zdir);
   if (qdir == NULL)
     {
       boolean fret;
@@ -258,8 +295,6 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
       return fret;
     }
 
-  ubuffree (zdir);
-
   chad = cSwork_files;
   callocated = cSwork_files;
 
@@ -273,40 +308,80 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
   if (chad > 0)
     qsort ((pointer) azSwork_files, chad, sizeof (char *), iswork_cmp);
 
-  while ((qentry = readdir (qdir)) != NULL)
+#if SPOOLDIR_SVR4
+  qgdir = qdir;
+  while ((qgentry = readdir (qgdir)) != NULL)
     {
-      char bfilegrade;
-      char *zname;
+      char *zsub;
 
-      zname = qentry->d_name;
-      if (fswork_file (qsys->uuconf_zname, zname, &bfilegrade)
-	  && (azSwork_files == NULL
-	      || bsearch ((pointer) &zname,
-			  (pointer) azSwork_files,
-			  chad, sizeof (char *),
-			  iswork_cmp) == NULL))
+      if (qgentry->d_name[0] == '.'
+	  || qgentry->d_name[1] != '\0'
+	  || UUCONF_GRADE_CMP (bgrade, qgentry->d_name[0]) < 0)
+	continue;
+      zsub = zsysdep_in_dir (zdir, qgentry->d_name);
+      qdir = opendir (zsub);
+      if (qdir == NULL)
 	{
-	  if (UUCONF_GRADE_CMP (bgrade, bfilegrade) < 0)
-	    continue;
-	  
-	  DEBUG_MESSAGE1 (DEBUG_SPOOLDIR,
-			  "fsysdep_get_work_init: Found %s",
-			  qentry->d_name);
-
-	  if (cSwork_files >= callocated)
+	  if (errno != ENOTDIR && errno != ENOENT)
 	    {
-	      callocated += CWORKFILES;
-	      azSwork_files =
-		(char **) xrealloc ((pointer) azSwork_files,
-				    callocated * sizeof (char *));
+	      ulog (LOG_ERROR, "opendir (%s): %s", zsub,
+		    strerror (errno));
+	      ubuffree (zsub);
+	      return FALSE;
 	    }
-
-	  azSwork_files[cSwork_files] = zbufcpy (qentry->d_name);
-	  ++cSwork_files;
+	  ubuffree (zsub);
+	  continue;
 	}
+      ubuffree (zsub);
+#endif
+
+      while ((qentry = readdir (qdir)) != NULL)
+	{
+	  char bfilegrade;
+	  char *zname;
+
+#if ! SPOOLDIR_SVR4
+	  zname = zbufcpy (qentry->d_name);
+#else
+	  zname = zsysdep_in_dir (qgentry->d_name, qentry->d_name);
+#endif
+
+	  if (! fswork_file (qsys->uuconf_zname, qentry->d_name,
+			     &bfilegrade)
+	      || UUCONF_GRADE_CMP (bgrade, bfilegrade) < 0
+	      || (azSwork_files != NULL
+		  && bsearch ((pointer) &zname,
+			      (pointer) azSwork_files,
+			      chad, sizeof (char *),
+			      iswork_cmp) != NULL))
+	    ubuffree (zname);
+	  else
+	    {
+	      DEBUG_MESSAGE1 (DEBUG_SPOOLDIR,
+			      "fsysdep_get_work_init: Found %s",
+			      zname);
+
+	      if (cSwork_files >= callocated)
+		{
+		  callocated += CWORKFILES;
+		  azSwork_files =
+		    (char **) xrealloc ((pointer) azSwork_files,
+					callocated * sizeof (char *));
+		}
+
+	      azSwork_files[cSwork_files] = zname;
+	      ++cSwork_files;
+	    }
+	}
+
+#if SPOOLDIR_SVR4
+      closedir (qdir);
     }
+  qdir = qgdir;
+#endif
 
   closedir (qdir);
+  ubuffree (zdir);
 
   /* Sorting the files alphabetically will get the grades in the
      right order, since all the file prefixes are the same.  */
@@ -488,7 +563,7 @@ fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
 	    {
 	      char *zreal;
 
-	      zreal = zsysdep_spool_file_name (qsys, qcmd->ztemp);
+	      zreal = zsysdep_spool_file_name (qsys, qcmd->ztemp, TRUE);
 	      if (zreal == NULL)
 		{
 		  ubuffree (qSwork_file->aslines[iline].zline);

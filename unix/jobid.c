@@ -77,7 +77,7 @@ zsjobid_to_file (zid, pzsystem)
   sprintf (abname, "C.%s", zend);
 #endif
 
-  zret = zsfind_file (abname, zsys);
+  zret = zsfind_file (abname, zsys, TRUE);
 
   if (zret != NULL && pzsystem != NULL)
     *pzsystem = zsys;

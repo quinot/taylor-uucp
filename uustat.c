@@ -141,7 +141,8 @@ static boolean fsnotify P((pointer puuconf, int icmd, const char *zcomment,
 			   struct scmdlist *qcmd, const char *zid,
 			   const char *zuser,
 			   const struct uuconf_system *qsys,
-			   const char *zstdin, const char *zrequestor));
+			   const char *zstdin, boolean fstdinlocal,
+			   const char *zrequestor));
 static boolean fsquery P((pointer puuconf));
 static void usunits_show P((long idiff));
 static boolean fsmachines P((void));
@@ -1043,7 +1044,8 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 			  if (strchr (qshow->s.zoptions, 'C') != NULL
 			      || fspool_file (qshow->s.zfrom))
 			    zfile = zsysdep_spool_file_name (qsys,
-							     qshow->s.ztemp);
+							     qshow->s.ztemp,
+							     TRUE);
 			  else
 			    zfile = zbufcpy (qshow->s.zfrom);
 			  printf ("Sending %s (%ld bytes) to %s",
@@ -1091,7 +1093,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	    {
 	      char *zxqt;
 
-	      zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom);
+	      zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom, TRUE);
 	      if (zxqt == NULL)
 		return FALSE;
 
@@ -1117,7 +1119,8 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 
 		  if (strchr (qsize->s.zoptions, 'C') != NULL
 		      || fspool_file (qsize->s.zfrom))
-		    zfile = zsysdep_spool_file_name (qsys, qsize->s.ztemp);
+		    zfile = zsysdep_spool_file_name (qsys, qsize->s.ztemp,
+						     TRUE);
 		  else
 		    zfile = zbufcpy (qsize->s.zfrom);
 		  if (zfile != NULL)
@@ -1215,7 +1218,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 		{
 		  if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
 				  zcmd, qlist, zlistid, qlist->s.zuser,
-				  qsys, zstdin, zrequestor))
+				  qsys, zstdin, TRUE, zrequestor))
 		    return FALSE;
 		}
 
@@ -1499,7 +1502,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 	      if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
 			      zSxqt_cmd, (struct scmdlist *) NULL,
 			      (const char *) NULL, zSxqt_user, &ssys,
-			      zSxqt_stdin, zSxqt_requestor))
+			      zSxqt_stdin, FALSE, zSxqt_requestor))
 		{
 		  ferr = TRUE;
 		  usxqt_file_free ();
@@ -1515,7 +1518,8 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 		{
 		  char *z;
 
-		  z = zsysdep_spool_file_name (&ssys, pazSxqt_files[i]);
+		  z = zsysdep_spool_file_name (&ssys, pazSxqt_files[i],
+					       FALSE);
 		  if (z != NULL)
 		    {
 		      (void) remove (z);
@@ -1545,7 +1549,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 
 static boolean
 fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
-	  qsys, zstdin, zrequestor)
+	  qsys, zstdin, fstdinlocal, zrequestor)
      pointer puuconf;
      int icmd;
      const char *zcomment;
@@ -1557,6 +1561,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
      const char *zuser;
      const struct uuconf_system *qsys;
      const char *zstdin;
+     boolean fstdinlocal;
      const char *zrequestor;
 {
   const char **pz;
@@ -1647,7 +1652,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 
       fspool = fspool_file (zstdin);
       if (fspool)
-	zfile = zsysdep_spool_file_name (qsys, zstdin);
+	zfile = zsysdep_spool_file_name (qsys, zstdin, fstdinlocal);
       else
 	zfile = zsysdep_local_file (zstdin, qsys->uuconf_zpubdir);
 

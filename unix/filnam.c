@@ -97,10 +97,10 @@ fscmd_seq (zsystem, zseq)
 
   zfree = NULL;
 
-#if SPOOLDIR_V2 | SPOOLDIR_BSD42 | SPOOLDIR_BSD43
+#if SPOOLDIR_V2 || SPOOLDIR_BSD42 || SPOOLDIR_BSD43
   zfile = "SEQF";
 #endif
-#if SPOOLDIR_HDB
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
   zfree = zsysdep_in_dir (".Sequence", zsystem);
   zfile = zfree;
 #endif
@@ -171,14 +171,14 @@ fscmd_seq (zsystem, zseq)
      On Ultrix, arbitrary characters are allowed in the sequence
      number.  On other systems, the sequence number apparently must be
      in hex.  */
-#if SPOOLDIR_V2 || SPOOLDIR_BSD42 || SPOOLDIR_BSD43 || SPOOLDIR_HDB
+#if SPOOLDIR_V2 || SPOOLDIR_BSD42 || SPOOLDIR_BSD43 || SPOOLDIR_HDB || SPOOLDIR_SVR4
   i = (int) strtol (zseq, (char **) NULL, 16);
   ++i;
   if (i > 0xffff)
     i = 0;
   /* The sprintf argument has CSEQLEN built into it.  */
   sprintf (zseq, "%04x", (unsigned int) i);
-#endif /* SPOOLDIR_V2 || SPOOLDIR_BSD42 || SPOOLDIR_BSD43 || SPOOLDIR_HDB */
+#endif
 #if SPOOLDIR_ULTRIX || SPOOLDIR_TAYLOR
   for (i = CSEQLEN - 1; i >= 0; i--)
     {
@@ -254,22 +254,31 @@ zsfile_name (btype, zsystem, zlocalname, bgrade, ztname, zdname, zxname)
 	}
       else if (btype == 'D')
 	{
+	  /* This name doesn't really matter that much; it's just the
+	     name we use on the local system.  The name we use on the
+	     remote system, which we return in zdname, should contain
+	     our system name so that remote UUCP's running SPOOLDIR_V2
+	     and the like can distinguish while files come from which
+	     systems.  */
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
+	  sprintf (absimple, "D.%.7s%c%s", zsystem, bgrade, abseq);
+#else /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 */
 #if ! SPOOLDIR_TAYLOR
-	  /* Note that a data file uses the local system's name.  */
-	  sprintf (absimple, "D.%.7s%c%s", zSlocalname, bgrade, abseq);
-#else
+	  sprintf (absimple, "D.%.7s%c%s", zlocalname, bgrade, abseq);
+#else /* SPOOLDIR_TAYLOR */
 	  if (bgrade == 'X')
 	    sprintf (absimple, "D.X%s", abseq);
 	  else
 	    sprintf (absimple, "D.%s", abseq);
-#endif
+#endif /* SPOOLDIR_TAYLOR */
+#endif /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 */
 	}
 #if DEBUG > 0
       else
 	ulog (LOG_FATAL, "zsfile_name: Can't happen");
 #endif
 
-      zname = zsfind_file (absimple, zsystem);
+      zname = zsfind_file (absimple, zsystem, TRUE);
       if (zname == NULL)
 	return NULL;
 
@@ -342,7 +351,7 @@ zsysdep_xqt_file_name ()
 
       sprintf (absx, "X.%.7sX%s", zSlocalname, abseq);
 
-      zname = zsfind_file (absx, zSlocalname);
+      zname = zsfind_file (absx, zSlocalname, TRUE);
       if (zname == NULL)
 	return NULL;
 

@@ -334,10 +334,13 @@ extern void usysdep_get_work_free P((const struct uuconf_system *qsys));
 extern char *zsysdep_add_base P((const char *zfile,
 				 const char *zname));
 
-/* Get a file name from the spool directory.  This should return
-   NULL on error.  */
+/* Get a file name from the spool directory.  This should return NULL
+   on error.  The flocal argument is TRUE if the file was created by a
+   local process; this is, unfortunately, needed to support SVR4 spool
+   directories.  */
 extern char *zsysdep_spool_file_name P((const struct uuconf_system *qsys,
-					const char *zfile));
+					const char *zfile,
+					boolean flocal));
 
 /* Make necessary directories.  This should create all non-existent
    directories for a file.  If the fpublic argument is TRUE, anybody

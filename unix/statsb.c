@@ -227,7 +227,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 	{
 	  char *ztemp;
 
-	  ztemp = zsysdep_spool_file_name (&ssys, s.ztemp);
+	  ztemp = zsysdep_spool_file_name (&ssys, s.ztemp, TRUE);
 	  if (ztemp == NULL)
 	    fret = FALSE;
 	  else

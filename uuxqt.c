@@ -735,7 +735,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     {
       char *zreal;
 
-      zreal = zsysdep_spool_file_name (qsys, azQfiles[i]);
+      zreal = zsysdep_spool_file_name (qsys, azQfiles[i], FALSE);
       if (zreal == NULL)
 	{
 	  uqcleanup (zfile, iclean);
@@ -1006,7 +1006,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
       fspool = fspool_file (zQinput);
       if (fspool)
-	zreal = zsysdep_spool_file_name (qsys, zQinput);
+	zreal = zsysdep_spool_file_name (qsys, zQinput, FALSE);
       else
 	zreal = zsysdep_local_file (zQinput, qsys->uuconf_zpubdir);
       if (zreal == NULL)

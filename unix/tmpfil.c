@@ -77,7 +77,7 @@ zstemp_file (qsys)
 #if SPOOLDIR_BSD43 || SPOOLDIR_ULTRIX || SPOOLDIR_TAYLOR
   return zsysdep_in_dir (".Temp", ab);
 #endif
-#if SPOOLDIR_HDB
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
   return zsysdep_in_dir (qsys->uuconf_zname, ab);
 #endif
 }

@@ -225,7 +225,7 @@ flocal_send_file_init (qdaemon, qcmd)
   else
     {
       fspool = TRUE;
-      zfile = zsysdep_spool_file_name (qsys, qcmd->ztemp);
+      zfile = zsysdep_spool_file_name (qsys, qcmd->ztemp, TRUE);
       if (zfile == NULL)
 	return FALSE;
 

@@ -46,20 +46,20 @@ const char xqtfil_rcsid[] = "$Id$";
 
 /* Under the V2 or BSD42 spool directory scheme, all execute files are
    in the main spool directory.  Under the BSD43 scheme, they are all
-   in the directory X..  Under the HDB scheme, they are in directories
-   named after systems.  Under the ULTRIX scheme, they are in X.
-   subdirectories of subdirectories of sys.  Under the TAYLOR scheme,
-   they are all in the subdirectory X. of a directory named after
-   the system.
+   in the directory X..  Under the HDB or SVR4 scheme, they are in
+   directories named after systems.  Under the ULTRIX scheme, they are
+   in X.  subdirectories of subdirectories of sys.  Under the TAYLOR
+   scheme, they are all in the subdirectory X. of a directory named
+   after the system.
 
-   This means that for HDB, ULTRIX or TAYLOR, we have to search
+   This means that for HDB, ULTRIX, SVR4 or TAYLOR, we have to search
    directories of directories.  */
 
-#if SPOOLDIR_V2 | SPOOLDIR_BSD42
+#if SPOOLDIR_V2 || SPOOLDIR_BSD42
 #define ZDIR "."
 #define SUBDIRS 0
 #endif
-#if SPOOLDIR_HDB | SPOOLDIR_TAYLOR
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4 || SPOOLDIR_TAYLOR
 #define ZDIR "."
 #define SUBDIRS 1
 #endif
@@ -156,7 +156,7 @@ zsysdep_get_xqt (pzsystem, pferr)
 
 	  ubuffree (zSdir);
 
-#if SPOOLDIR_HDB
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
 	  zSdir = zbufcpy (qtop->d_name);
 #endif
 #if SPOOLDIR_ULTRIX
@@ -200,7 +200,7 @@ zsysdep_get_xqt (pzsystem, pferr)
 	{
 	  char *zret;
 
-#if SPOOLDIR_HDB | SPOOLDIR_TAYLOR
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4 || SPOOLDIR_TAYLOR
 	  *pzsystem = zbufcpy (zSsystem);
 #else
 	  {

@@ -253,6 +253,7 @@
    SPOOLDIR_BSD43 -- Use a BSD 4.3 style spool directory
    SPOOLDIR_HDB -- Use a HDB (BNU) style spool directory
    SPOOLDIR_ULTRIX -- Use an Ultrix style spool directory
+   SPOOLDIR_SVR4 -- Use a System V Release 4 spool directory
    SPOOLDIR_TAYLOR -- Use a new style spool directory
 
    If you are not worried about compatibility with a currently running
@@ -262,6 +263,7 @@
 #define SPOOLDIR_BSD43 0
 #define SPOOLDIR_HDB 0
 #define SPOOLDIR_ULTRIX 0
+#define SPOOLDIR_SVR4 0
 #define SPOOLDIR_TAYLOR 1
 
 /* You must select which type of logging you want by setting exactly
