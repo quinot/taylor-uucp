@@ -367,3 +367,78 @@ Franc,ois Pinard: when given uustat -k00FC, check each possible job ID
 and use it if there is an unambiguous one.
 
 170.
+
+T. William Wells: if ! HAVE_SETREUID && ! HAVE_SAVED_SETUID, fork a
+subprocesses to revoke setuid and read the file over a pipe.
+
+171.
+
+Provide some option to have the internal uuconf functions not start
+with an underscore.
+
+172.
+
+T. William Wells: have some way to configure the parity for cu.
+
+173.
+
+Gert Doering: uuchk should display unknown system information.
+
+174.
+
+Brian J. Murrell: when dialing a system, cu looks through the
+alternates of a system when selecting a port, but after it selects a
+port it just tries to dial it.  If the dial fails, it should go on to
+the next alternate, but it doesn't.
+
+175.
+
+T. William Wells:
+Cu will not let itself be interrupted before the connection is
+established. If the chat script doesn't write something, cu does
+something odd, I've forgotten exactly what. Cu takes an
+inordinate amount of time after the line drops to exit. Somebody,
+cu, I think, but maybe uucico, drops dtr twice sometimes. Again,
+somebody will attempt to write after a hangup signal has been
+received. Once a hangup has been received, I/O should not be
+attempted. Among other things this will save the bacon of those
+who have brain damaged serial drivers (FAS, sigh, is among them)
+that don't handle output properly on a dropped line.
+
+Me:
+Note that sometimes you do want to write to a line after receiving a
+hangup signal.  For example, you might want to use ATZ to reset a
+modem.
+
+176.
+
+Hans-Dieter Doll: provide some way (another escape sequence) to pass
+the protocol to a chat-program.  Or, allow the protocol as an argument
+to the chat script command, which is more general, but maybe a bit too
+fancy.
+
+177.
+
+Nickolay Saukh: use a default port for cu, you can just do ``cu
+number''.
+
+178.
+
+Don Phillips: should there be some way to restrict of grade of
+transfers even when the other system places the call?
+
+179.
+
+Nickolay Saukh: add something to chat scripts to specify the timeout
+for an expect string, e.g. AT\c OK\W3 to wait for 3 seconds.  Except
+that perhaps the unit should not be seconds.  Berkeley apparently uses
+~number, not \W number, but I don't see any reason to prevent use of
+the ~ character in an expect string.
+
+180.
+
+Nickolay Saukh: if we have received a partial file, request the remote
+system to start sending from that point.  We currently accept SVR4
+style remote file positioning requests, but we do not generate them.
+
+181.
