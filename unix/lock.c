@@ -43,6 +43,12 @@ const char lock_rcsid[] = "$Id$";
 #endif
 #endif
 
+#if TM_IN_SYS_TIME
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
+
 #if HAVE_QNX_LOCKFILES
 #include <sys/kernel.h>
 #include <sys/psinfo.h>
@@ -62,6 +68,10 @@ const char lock_rcsid[] = "$Id$";
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
+#endif
+
+#ifndef localtime
+extern struct tm *localtime ();
 #endif
 
 #if HAVE_QNX_LOCKFILES
@@ -209,10 +219,12 @@ fsdo_lock (zlock, fspooldir, pferr)
     {
       int cgot;
       pid_t ipid;
+      boolean freadonly;
+      struct stat st;
+      char abtime[sizeof "1991-12-31 12:00:00"];
 #if HAVE_QNX_LOCKFILES
       nid_t inid;
 #endif
-      boolean freadonly;
 
       fret = FALSE;
 
@@ -308,12 +320,27 @@ fsdo_lock (zlock, fspooldir, pferr)
 	break;
 #endif
 
+      if (fstat (o, &st) < 0)
+	strcpy (abtime, "unknown");
+      else
+	{
+	  time_t itm;
+	  struct tm *q;
+
+	  itm = (time_t) st.st_mtime;
+	  q = localtime (&itm);
+	  sprintf (abtime, "%04d-%02d-%02d %02d:%02d:%02d",
+		   q->tm_year + 1900, q->tm_mon + 1, q->tm_mday, q->tm_hour,
+		   q->tm_min, q->tm_sec);
+	}
+
 #if HAVE_QNX_LOCKFILES
-      ulog (LOG_ERROR, "Found stale lock %s held by process %ld on node %ld",
-	    zpath, (long) ipid, (long) inid);
+      ulog (LOG_ERROR,
+	    "Stale lock %s held by process %ld on node %ld created %s",
+	    zpath, (long) ipid, (long) inid, abtime);
 #else
-      ulog (LOG_ERROR, "Found stale lock %s held by process %ld",
-	    zpath, (long) ipid);
+      ulog (LOG_ERROR, "Stale lock %s held by process %ld created %s",
+	    zpath, (long) ipid, abtime);
 #endif
 
       /* This is a stale lock, created by a process that no longer
