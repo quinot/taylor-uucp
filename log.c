@@ -367,8 +367,8 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 		 running on an inbound call stderr is actually
 		 connected to a remote system, but is better than
 		 doing nothing.  */
-	      fprintf (stderr, "%s: %s: can not open log file\n",
-		       zProgram, zLogfile);
+	      fprintf (stderr, "%s: %s: can not open log file: %s\n",
+		       zProgram, zLogfile, strerror (errno));
 	      if (pfLfatal != NULL)
 		(*pfLfatal) ();
 	      usysdep_exit (FALSE);
