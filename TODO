@@ -213,31 +213,10 @@ Lele Gaifax: put the complete year in the log file.
 
 John Theus: use getwd as an option for getcwd.
 
-61.
-
-Add bcopy, etc., for the mem functions.
-
-62.
-
-Add index, rindex for strchr, strrchr.
-
-63.
-
-Marty Shannon: use getenv ("HZ") for TIMES_TICK.
-
-64.
-
-Franc,ois Pinard: if 'g' protocol sends to something which echoes
-everything, it will never get out of fgwait_for_packet.
-
 65.
 
 Monty Solomon: add an option to use ``union wait'' as the argument to
 wait(2).
-
-66.
-
-Monty Solomon: getopt.c defines bcopy and index.
 
 67.
 
