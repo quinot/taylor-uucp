@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.11  1992/01/18  22:48:53  ian
    Reworked sending of mail and general handling of failed transfers
 
@@ -261,7 +264,11 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
   /* Tell the protocol that we are starting to send a file.  */
   if (qProto->pffile != NULL)
     {
-      if (! (*qProto->pffile) (TRUE, TRUE, (boolean *) NULL, qcmd->cbytes))
+      boolean (*pffile) P((boolean, boolean, boolean *, long));
+
+      /* Simplify expression for ancient compilers.  */
+      pffile = qProto->pffile;
+      if (! pffile (TRUE, TRUE, (boolean *) NULL, qcmd->cbytes))
 	return FALSE;
     }
 
@@ -445,7 +452,11 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
   /* Tell the protocol that we are starting to receive a file.  */
   if (qProto->pffile != NULL)
     {
-      if (! (*qProto->pffile) (TRUE, FALSE, (boolean *) NULL, (long) -1))
+      boolean (*pffile) P((boolean, boolean, boolean *, long));
+
+      /* Simplify expression for ancient compilers.  */
+      pffile = qProto->pffile;
+      if (! pffile (TRUE, FALSE, (boolean *) NULL, (long) -1))
 	return FALSE;
     }
 
@@ -782,9 +793,12 @@ fploop ()
 		  if (qProto->pffile != NULL)
 		    {
 		      boolean fredo;
+		      boolean (*pffile) P((boolean, boolean, boolean *,
+					   long));
 
-		      if (! (*qProto->pffile) (FALSE, TRUE, &fredo,
-					       (long) -1))
+		      /* Simplify expression for ancient compilers.  */
+		      pffile = qProto->pffile;
+		      if (! pffile (FALSE, TRUE, &fredo, (long) -1))
 			return FALSE;
 
 		      if (fredo)
@@ -873,8 +887,11 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	  if (qProto->pffile != NULL)
 	    {
 	      boolean fredo;
+	      boolean (*pffile) P((boolean, boolean, boolean *, long));
 
-	      if (! (*qProto->pffile) (FALSE, FALSE, &fredo, (long) -1))
+	      /* Simplify expression for ancient compilers.  */
+	      pffile = qProto->pffile;
+	      if (! pffile (FALSE, FALSE, &fredo, (long) -1))
 		return FALSE;
 	    
 	      if (fredo)
