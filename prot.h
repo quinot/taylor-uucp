@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/31  19:43:13  ian
+   Added 'e' protocol
+
    Revision 1.7  1991/11/15  21:00:59  ian
    Efficiency hacks for 'f' and 't' protocols
 
@@ -149,8 +152,9 @@ extern boolean freceive_file P((boolean fmaster, openfile_t e,
    This function should tell the slave that the master wants to
    execute a transfer.  The slave may queue up work to do.  The return
    value is FALSE if some error occurred.  This always does its work
-   immediately, so it does not use qcmd->pseq.  */
-extern boolean fxcmd P((const struct scmd *qcmd));
+   immediately, so it does not use qcmd->pseq.  It sets *pfnever to
+   TRUE if the request was denied.  */
+extern boolean fxcmd P((const struct scmd *qcmd, boolean *pfnever));
 
 /* Confirm a transfer.  This is only called by the slave.  This is
    called after a transfer request has been received to confirm that

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1992/01/16  18:16:58  ian
+   Niels Baggesen: add some debugging messages
+
    Revision 1.9  1991/12/31  19:34:19  ian
    Added number of bytes to pffile protocol entry point
 
@@ -187,35 +190,45 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
       if (zrec[1] == 'N')
 	{
 	  const char *zerr;
+	  boolean fnever;
 
+	  fnever = TRUE;
 	  if (zrec[2] == '2')
 	    zerr = "permission denied";
 	  else if (zrec[2] == '4')
 	    {
-	      /* This means the remote system cannot create
-		 work files; log the error and try again later.  */
-	      ulog (LOG_ERROR,
-		    "Can't send %s: remote cannot create work files",
-		    qcmd->zfrom);
-	      (void) ffileclose (e);
-	      return TRUE;
+	      zerr = "remote cannot create work files";
+	      fnever = FALSE;
 	    }
 	  else if (zrec[2] == '6')
 	    {
-	      /* The remote system says the file is too large.  It
-		 would be better if we could determine whether it will
-		 always be too large.  */
-	      ulog (LOG_ERROR, "%s is too big to send now",
-		    qcmd->zfrom);
-	      (void) ffileclose (e);
-	      return TRUE;
+	      zerr = "too large for receiver now";
+	      fnever = FALSE;
+	    }
+	  else if (zrec[2] == '7')
+	    {
+	      /* The file is too large to ever send.  */
+	      zerr = "too large for receiver";
 	    }
 	  else
-	    zerr = "unknown reason";
+	    {
+	      char *zset;
+
+	      zset = (char *) alloca (sizeof "unknown reason: "
+				      + strlen (zrec));
+	      sprintf (zset, "unknown reason: %s", zrec);
+	      zerr = zset;
+	    }
 
 	  ulog (LOG_ERROR, "Can't send %s: %s", qcmd->zfrom, zerr);
-	  (void) fsysdep_did_work (qcmd->pseq);
 	  (void) ffileclose (e);
+	  if (fnever)
+	    {
+	      (void) fsysdep_did_work (qcmd->pseq);
+	      (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
+				     qcmd->zfrom, zLocalname,
+				     qcmd->zto, ztosys);
+	    }
 	  return TRUE;
 	}
     }
@@ -264,6 +277,7 @@ fpsendfile_confirm ()
 {
   const char *zrec;
   long cbytes;
+  const char *zerr;
 
   zrec = zgetcmd ();
   if (zrec == NULL)
@@ -275,19 +289,27 @@ fpsendfile_confirm ()
   if (zrec[0] != 'C'
       || (zrec[1] != 'Y' && zrec[1] != 'N'))
     {
-      ulog (LOG_ERROR, "Bad confirmation for sent file");
-      (void) fsent_file (FALSE, cbytes);
+      zerr = "Bad confirmation for sent file";
+      ulog (LOG_ERROR, zerr);
+      (void) fsent_file (FALSE, cbytes, zerr, FALSE);
     }
   else if (zrec[1] == 'N')
     {
       if (zrec[2] == '5')
-	ulog (LOG_ERROR, "File could not be stored in final location");
+	zerr = "File could not be stored in final location";
       else
-	ulog (LOG_ERROR, "File send failed for unknown reason");
-      (void) fsent_file (FALSE, cbytes);
+	{
+	  char *zset;
+
+	  zset = (char *) alloca (sizeof "File send failed: " + strlen (zrec));
+	  sprintf (zset, "File send failed: %s", zrec);
+	  zerr = zset;
+	}
+      ulog (LOG_ERROR, zerr);
+      (void) fsent_file (FALSE, cbytes, zerr, TRUE);
     }
   else
-    (void) fsent_file (TRUE, cbytes);
+    (void) fsent_file (TRUE, cbytes, (const char *) NULL, FALSE);
 
   return TRUE;
 }
@@ -371,16 +393,25 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 		 the file is larger than that.  Try again later.  It
 		 would be better if we could know whether there will
 		 ever be enough room.  */
-	      ulog (LOG_ERROR, "%s is too big to receive",
-		    qcmd->zfrom);
+	      ulog (LOG_ERROR, "too large", qcmd->zfrom);
 	      (void) ffileclose (e);
 	      return TRUE;
 	    }
 	  else
-	    zerr = "unknown reason";
+	    {
+	      char *zset;
+
+	      zset = (char *) alloca (sizeof "unknown reason: "
+				      + strlen (zrec));
+	      sprintf (zset, "unknown reason: %s", zrec);
+	      zerr = zset;
+	    }
 	  ulog (LOG_ERROR, "Can't receive %s: %s", qcmd->zfrom, zerr);
-	  (void) fsysdep_did_work (qcmd->pseq);
 	  (void) ffileclose (e);
+	  (void) fsysdep_did_work (qcmd->pseq);
+	  (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
+				 qcmd->zfrom, zfromsys,
+				 qcmd->zto, zLocalname);
 	  return TRUE;
 	}
       
@@ -429,7 +460,7 @@ fprecfile_confirm ()
   cbytes = cPreceived_bytes;
   cPreceived_bytes = -1;
 
-  if (freceived_file (TRUE, cbytes))
+  if (freceived_file (TRUE, cbytes, (const char *) NULL, FALSE))
     return (qProto->pfsendcmd) ("CY");
   else
     return (qProto->pfsendcmd) ("CN5");
@@ -439,12 +470,15 @@ fprecfile_confirm ()
    ignored the pseq entry in the scmd structure.  */
 
 boolean
-fxcmd (qcmd)
+fxcmd (qcmd, pfnever)
      const struct scmd *qcmd;
+     boolean *pfnever;
 {
   int clen;
   char *zsend;
   const char *zrec;
+
+  *pfnever = FALSE;
 
   /* We send the string
      X from to user options
@@ -476,9 +510,10 @@ fxcmd (qcmd)
   if (zrec[1] == 'N')
     {
       ulog (LOG_ERROR, "Work request denied");
+      *pfnever = TRUE;
       return TRUE;
     }
-  
+
   return TRUE;
 }
 
@@ -714,11 +749,14 @@ fploop ()
 		  cdata = cfileread (eSendfile, zdata, cdata);
 		  if (ffilereaderror (eSendfile, cdata))
 		    {
+		      const char *zerr;
+
 		      /* The protocol gives us no way to report a file
 			 sending error, so we just drop the connection.
 			 What else can we do?  */
-		      ulog (LOG_ERROR, "read: %s", strerror (errno));
-		      usendfile_error ();
+		      zerr = strerror (errno);
+		      ulog (LOG_ERROR, "read: %s", zerr);
+		      usendfile_error (zerr, TRUE);
 		      return FALSE;
 		    }
 		}
@@ -752,9 +790,11 @@ fploop ()
 			  ulog (LOG_NORMAL, "Resending file");
 			  if (! ffilerewind (eSendfile))
 			    {
-			      ulog (LOG_ERROR, "rewind: %s",
-				    strerror (errno));
-			      usendfile_error ();
+			      const char *zerr;
+
+			      zerr = strerror (errno);
+			      ulog (LOG_ERROR, "rewind: %s", zerr);
+			      usendfile_error (zerr, FALSE);
 			      return FALSE;
 			    }
 			  continue;
@@ -859,12 +899,14 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	  cwrote = cfilewrite (eRecfile, (char *) zdata, cdata);
 	  if (cwrote != cdata && ! fPreceived_error)
 	    {
+	      const char *zerr;
+
 	      if (cwrote < 0)
-		ulog (LOG_ERROR, "write: %s", strerror (errno));
+		zerr = strerror (errno);
 	      else
-		ulog (LOG_ERROR, "write of %d wrote only %d",
-		      cdata, cwrote);
-	      urecfile_error ();
+		zerr = "could not write all data";
+	      ulog (LOG_ERROR, "write: %s", zerr);
+	      urecfile_error (zerr, TRUE);
 	      fPreceived_error = TRUE;
 	    }
 
@@ -1150,13 +1192,13 @@ ustats_failed ()
     {
       cbytes = cPsent_bytes;
       cPsent_bytes = -1;
-      (void) fsent_file (FALSE, cbytes);
+      (void) fsent_file (FALSE, cbytes, "connection failure", FALSE);
     }
 
   if (cPreceived_bytes != -1)
     {
       cbytes = cPreceived_bytes;
       cPreceived_bytes = -1;
-      (void) freceived_file (FALSE, cbytes);
+      (void) freceived_file (FALSE, cbytes, "connection failure", FALSE);
     }
 }

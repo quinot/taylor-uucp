@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1992/01/15  19:53:27  ian
+   Mike Park: If HAVE_ALLOCA is 0 when using gcc, don't define alloca
+
    Revision 1.32  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -686,11 +689,13 @@ extern boolean fstore_sendfile P((openfile_t e, pointer pseq,
 				  const char *ztosys, const char *zuser,
 				  const char *zmail));
 
-/* Finish sending a file.  */
-extern boolean fsent_file P((boolean freceived, long cbytes));
+/* Finish sending a file.  The zwhy and fnever arguments are used
+   if the file was not received correctly.  */
+extern boolean fsent_file P((boolean freceived, long cbytes,
+			     const char *zwhy, boolean fnever));
 
 /* Note an error sending a file.  Do not call fsent_file after this.  */
-extern void usendfile_error P((void));
+extern void usendfile_error P((const char *zwhy, boolean fnever));
 
 /* Store information about a file being received.  */
 extern boolean fstore_recfile P((openfile_t e, pointer pseq,
@@ -699,16 +704,24 @@ extern boolean fstore_recfile P((openfile_t e, pointer pseq,
 				 unsigned int imode, const char *zmail,
 				 const char *ztemp));
 
-/* Finish receiving a file.  */
-extern boolean freceived_file P((boolean fsent, long cbytes));
+/* Finish receiving a file.  The zwhy and fnever arguments are used
+   if the file was not received correctly.  */
+extern boolean freceived_file P((boolean fsent, long cbytes,
+				 const char *zwhy, boolean fnever));
 
 /* Note an error receiving a file.  The function freceived_file must
    still be called after this is called.  */
-extern void urecfile_error P((void));
+extern void urecfile_error P((const char *zwhy, boolean fnever));
 
 /* Prepare to receive a file again by discarding the previous
    contents.  */
 extern boolean frecfile_rewind P((void));
+
+/* Send mail about a file transfer.  */
+extern boolean fmail_transfer P((boolean fok, const char *zuser,
+				 const char *zmail, const char *zwhy,
+				 const char *zfrom, const char *zfromsys,
+				 const char *zto, const char *ztosys));
 
 /* See whether a file is one of a list of directories.  The qsys and
    zsystem arguments are passed down to allow ~ expansion.  */
