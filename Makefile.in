@@ -225,9 +225,9 @@ uulog: $(UULOGOBJS) $(UULIBS)
 uusched: uusched.in Makefile
 	-rm -f uusched
 	if [ "x$(POUNDBANG)" = "xno" ]; then \
-	  sed -e 's,#!/bin/sh,:,' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched; \
+	  sed -e 's,#!/bin/sh,:,' -e 's,@SBINDIR@,$(sbindir),' < $(srcdir)/uusched.in > uusched; \
 	else \
-	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched; \
+	  sed -e 's,@SBINDIR@,$(sbindir),' < $(srcdir)/uusched.in > uusched; \
 	fi
 	chmod 0555 uusched
 
