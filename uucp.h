@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1991/12/15  04:17:11  ian
+   Added chat-seven-bit command to control parity bit stripping
+
    Revision 1.17  1991/12/15  03:42:33  ian
    Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
 
@@ -699,7 +702,8 @@ extern void ulog_close P((void));
 
 /* Make an entry in the statistics file.  */
 extern void ustats P((const char *zuser, const char *zsystem,
-		      boolean fsent, long cbytes, long csecs));
+		      boolean fsent, long cbytes, long csecs,
+		      long cmicros));
 
 /* Close the statistics file.  */
 extern void ustats_close P((void));

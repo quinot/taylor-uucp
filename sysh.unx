@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/12/11  04:21:37  ian
+   Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
+
    Revision 1.13  1991/12/09  19:07:07  ian
    Richard Todd: add HAVE_V2_LOCKFILES--binary number in lock file
 
@@ -324,6 +327,19 @@
 #define HAVE_ULTRIX_STATFS 1
 #define HAVE_SCO_STATFS 0
 #define HAVE_USTAT 0
+
+/* If you have the gettimeofday function which takes a pointer to a
+   timeval structure and fills in the time in seconds and
+   microseconds, set HAVE_GETTIMEOFDAY to 1.  Otherwise, if you have
+   the times function which returns the time since some epoch in
+   fractions of a second, set HAVE_TIMES to 1.  If you set HAVE_TIMES
+   to 1 you must also set TIMES_TICK to the fraction of a second which
+   times returns (for example, if times returns 100ths of a second
+   TIMES_TICK should be set to 100).  On a true POSIX system
+   TIMES_TICK may simply be defined as CLK_TCK.  */
+#define HAVE_GETTIMEOFDAY 1
+#define HAVE_TIMES 0
+#define TIMES_TICK CLK_TCK
 
 /* The default amount of free space to require for systems that do
    not specify an amount with the ``free-space'' command.  */

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/12/13  04:02:23  ian
+   David Nugent: move ERROR: from start of line to after date and time
+
    Revision 1.4  1991/12/11  04:21:37  ian
    Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
 
@@ -409,19 +412,22 @@ ulog_close ()
    failed file transfers in here, but we currently do not.  */
 
 void
-ustats (zuser, zsystem, fsent, cbytes, csecs)
+ustats (zuser, zsystem, fsent, cbytes, csecs, cmicros)
      const char *zuser;
      const char *zsystem;
      boolean fsent;
      long cbytes;
      long csecs;
+     long cmicros;
 {
   long cbps;
 
-  if (csecs == 0)
-    cbps = cbytes;
+  /* On a system which can determine microseconds we might very well
+     have both csecs == 0 and cmicros == 0.  */
+  if (csecs == 0 && cmicros == 0)
+    cbps = 0;
   else
-    cbps = cbytes / csecs;
+    cbps = (1000 * cbytes) / (csecs * 1000 + cmicros / 1000);
 
   if (eLstats == NULL)
     {
@@ -437,10 +443,10 @@ ustats (zuser, zsystem, fsent, cbytes, csecs)
 
 #if HAVE_TAYLOR_LOGGING
   fprintf (eLstats,
-	   "%s %s (%s) %s %ld bytes in %ld seconds (%ld bytes/sec)\n",
+	   "%s %s (%s) %s %ld bytes in %ld.%03ld seconds (%ld bytes/sec)\n",
 	   zuser, zsystem, zldate_and_time (),
 	   fsent ? "sent" : "received",
-	   cbytes, csecs, cbps);
+	   cbytes, csecs, cmicros / 1000, cbps);
 #endif /* HAVE_TAYLOR_LOGGING */
 #if HAVE_V2_LOGGING
   /* Apparently V2 normally also logs failed transfers, with "failed
@@ -450,7 +456,7 @@ ustats (zuser, zsystem, fsent, cbytes, csecs)
 	   zuser, zsystem, zldate_and_time (),
 	   (long) time ((time_t *) NULL),
 	   fsent ? "sent" : "received",
-	   cbytes, csecs);
+	   cbytes, csecs + cmicros / 500000);
 #endif /* HAVE_V2_LOGGING */
 #if HAVE_BNU_LOGGING
   {
@@ -465,11 +471,11 @@ ustats (zuser, zsystem, fsent, cbytes, csecs)
        from different calls.  */
     ++iseq;
     fprintf (eLstats,
-	     "%s!%s M (%s) (C,%d,%d) [%s] %s %ld / %ld.000 secs, %ld %s\n",
+	     "%s!%s M (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld %s\n",
 	     zsystem, zuser, zldate_and_time (), iLid, iseq,
 	     zLdevice == NULL ? "unknown" : zLdevice,
 	     fsent ? "->" : "<-",
-	     cbytes, csecs, cbps, "bytes/sec");
+	     cbytes, csecs, cmicros / 1000, cbps, "bytes/sec");
   }
 #endif /* HAVE_BNU_LOGGING */
 

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/14  16:09:07  ian
+   Added -l option to uux to link files into the spool directory
+
    Revision 1.10  1991/12/11  03:59:19  ian
    Create directories when necessary; don't just assume they exist
 
@@ -161,6 +164,11 @@ extern boolean fsysdep_mail P((const char *zto, const char *zsubject,
 /* Get the time in seconds since some epoch.  The actual epoch is
    unimportant, so long as the time values are consistent.  */
 extern long isysdep_time P((void));
+
+/* Get the time in seconds and microseconds (millionths of a second)
+   since some epoch.  If microseconds can not be determined, *pimicros
+   can just be set to zero.  */
+extern void usysdep_full_time P((long *pisecs, long *pimicros));
 
 /* Sleep for a number of seconds.  */
 extern void usysdep_sleep P((int cseconds));
