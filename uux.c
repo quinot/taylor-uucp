@@ -23,15 +23,18 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/09/19  03:23:34  ian
+   Chip Salzenberg: append to private debugging file, don't overwrite it
+
    Revision 1.3  1991/09/19  02:30:37  ian
    From Chip Salzenberg: check whether signal is ignored differently
 
    Revision 1.2  1991/09/11  02:33:14  ian
    Added ffork argument to fsysdep_run
 
- * Revision 1.1  1991/09/10  19:40:31  ian
- * Initial revision
- *
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -108,6 +111,7 @@ main (argc, argv)
   int i;
   int clen;
   char *zargs;
+  char *zarg;
   char *zcmd;
   char *zexclam;
   struct ssysteminfo sxqtsys;
@@ -272,26 +276,41 @@ main (argc, argv)
     zuser = "unknown";
 
   /* The command and files arguments could be quoted in any number of
-     ways, so we split them apart ourselves.  We strip any spaces
-     following < or > to make them easier to handle below.  */
-  clen = 0;
+     ways, so we split them apart ourselves.  We force a space after
+     a leading > or < to make them easier to handle below.  */
+  clen = 1;
   for (i = optind; i < argc; i++)
-    clen += strlen (argv[i]) + 1;
+    clen += strlen (argv[i]) + 2;
 
   zargs = (char *) alloca (clen);
   *zargs = '\0';
-  for (i = optind; i < argc - 1; i++)
+  for (i = optind; i < argc; i++)
     {
-      strcat (zargs, argv[i]);
-      if (strcmp (argv[i], "<") != 0 && strcmp (argv[i], ">") != 0)
-	strcat (zargs, " ");
+      const char *zcat;
+      
+      if (argv[i][0] == '>')
+	{
+	  strcat (zargs, "> ");
+	  zcat = argv[i] + 1;
+	}
+      else if (argv[i][0] == '<')
+	{
+	  strcat (zargs, "< ");
+	  zcat = argv[i] + 1;
+	}
+      else
+	zcat = argv[i];
+
+      strcat (zargs, zcat);
+      strcat (zargs, " ");
     }
-  strcat (zargs, argv[i]);
 
   /* The first argument is the command to execute.  Figure out which
      system the command is to be executed on.  */
-
-  zcmd = strtok (zargs, " \t");
+  zcmd = zargs;
+  zargs += strcspn (zargs, " \t");
+  if (*zargs != '\0')
+    *zargs++ = '\0';
   zexclam = strchr (zcmd, '!');
   if (zexclam == NULL)
     {
@@ -337,13 +356,10 @@ main (argc, argv)
   pzargs = (char **) xmalloc (calloc_args * sizeof (char *));
   cargs = 0;
 
-  while (TRUE)
+  for (zarg = strtok (zargs, " \t");
+       zarg != NULL;
+       zarg = strtok ((char *) NULL, " \t"))
     {
-      char *zarg;
-
-      zarg = strtok ((char *) NULL, " \t");
-      if (zarg == NULL)
-	break;
       if (cargs >= calloc_args)
 	{
 	  calloc_args += 10;
@@ -385,8 +401,8 @@ main (argc, argv)
     {
       const char *zsystem;
       char *zfile;
+      boolean finput, foutput;
       boolean flocal;
-      boolean finput;
 
       /* Check for a parenthesized argument; remove the parentheses
 	 and otherwise ignore it (this is how an exclamation point is
@@ -403,14 +419,29 @@ main (argc, argv)
 	  continue;
 	}
 
+      /* Check whether we are doing a redirection.  */
+
+      finput = FALSE;
+      foutput = FALSE;
+      if (i + 1 < cargs)
+	{
+	  if (pzargs[i][0] == '<')
+	    finput = TRUE;
+	  else if (pzargs[i][0] == '>')
+	    foutput = TRUE;
+	  if (finput || foutput)
+	    {
+	      pzargs[i] = NULL;
+	      i++;
+	    }
+	}
+
       zexclam = strchr (pzargs[i], '!');
 
       /* If there is no exclamation point and no redirection, this
 	 argument is left untouched.  */
 
-      if (zexclam == NULL
-	  && pzargs[i][0] != '<'
-	  && pzargs[i][0] != '>')
+      if (zexclam == NULL && ! finput && ! foutput)
 	continue;
 
       /* Get the system name and file name for this file.  */
@@ -418,16 +449,13 @@ main (argc, argv)
       if (zexclam == NULL)
 	{
 	  zsystem = zLocalname;
-	  zfile = pzargs[i] + 1;
+	  zfile = pzargs[i];
 	  flocal = TRUE;
 	}
       else
 	{
 	  *zexclam = '\0';
 	  zsystem = pzargs[i];
-	  if (zsystem[0] == '>'
-	      || zsystem[0] == '<')
-	    ++zsystem;
 	  if (zsystem[0] != '\0')
 	    flocal = strcmp (zsystem, zLocalname) == 0;
 	  else
@@ -442,7 +470,7 @@ main (argc, argv)
 	 and create an O command which tells uuxqt where to send the
 	 output.  */
 
-      if (pzargs[i][0] == '>')
+      if (foutput)
 	{
 	  if (strcmp (zsystem, qxqtsys->zname) == 0)
 	    uxadd_xqt_line ('O', zfile, (const char *) NULL);
@@ -452,7 +480,6 @@ main (argc, argv)
 	  continue;
 	}
 
-      finput = pzargs[i][0] == '>';
       if (finput)
 	{
 	  if (fread_stdin)
