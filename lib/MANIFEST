@@ -12,6 +12,7 @@ getop1.c
 memchr.c
 memcmp.c
 memcpy.c
+parse.c
 spool.c
 status.c
 strcas.c

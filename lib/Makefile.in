@@ -17,7 +17,7 @@ VPATH = @srcdir@
 
 MORECFLAGS = -I$(srcdir)/.. -I..
 
-OBJS = buffer.o crc.o debug.o escape.o getopt.o getop1.o spool.o \
+OBJS = buffer.o crc.o debug.o escape.o getopt.o getop1.o parse.o spool.o \
 	status.o xfree.o xmall.o xreall.o \
 	@LIBOBJS@
 
@@ -57,6 +57,7 @@ debug.o: $(srcdir)/../uudefs.h
 escape.o: $(srcdir)/../uudefs.h
 getopt.o: $(srcdir)/../getopt.h $(srcdir)/../uudefs.h
 getop1.o: $(srcdir)/../getopt.h
+parse.o: $(srcdir)/../uudefs.h
 spool.o: $(srcdir)/../uudefs.h
 status.o: $(srcdir)/../uudefs.h
 xfree.o: $(srcdir)/../uudefs.h
