@@ -65,6 +65,11 @@ For a complete list, see ChangeLog.
 
     Many configuration options were added.
 
+    The documentation is now in a Texinfo file.
+
+    The default configuration file names are now fixed, although the
+    directory in which they are found is not.
+
     The 'e' protocol was added.
 
     The default protocol ordering was changed to 't', 'e', 'g', 'f'.
@@ -101,9 +106,7 @@ For a complete list, see ChangeLog.
 
     The ``Call complete'' message includes the conversation length.
 
-COMMENTS
-
-First of all, let me know about any comments you have.
+DOCUMENTATION
 
 The documentation is in the file uucp.texi, which is a Texinfo file.
 It may be printed using TeX, or it may be read as an Info file by GNU
@@ -111,4 +114,21 @@ Emacs.  If you have neither, don't despair; the files uucp.info-*,
 which were generated from uucp.texi by the makeinfo program, are
 easily readable by humans.
 
-See the TODO file for things which should be done.
+See the TODO file for things which should be done.  Send me
+suggestions for new things to do.
+
+The compilation instructions are in uucp.texi.  Here is a summary.
+
+    Type ``make configure-unix''.
+
+    Edit Makefile according to the comments.
+
+    Edit conf.h according to the comments.
+
+    Edit sysdep.h according to the comments.
+
+    Type ``make''.
+
+    Use ``uuchk'' to check configuration files.
+
+    Type ``make install'' to install.

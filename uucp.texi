@@ -5,7 +5,6 @@
 @setchapternewpage odd
 @c %**end of header
 @setchapternewpage odd
-@syncodeindex fn cp
 
 @ignore
 ---------------------------------------------------------------------->
@@ -104,7 +103,8 @@ send it to @file{taylor-uucp@@gnu.ai.mit.edu}.
 * Configuration files::         Taylor UUCP configuration files
 * Acknowledgements::            Acknowledgements
 
-* Index:: 		        Index to configuration files
+* Index (concepts)::		Concept index
+* Index (configuration file):: 	Index to new configuration files
 
  --- The Detailed Node Listing ---
 
@@ -342,8 +342,8 @@ be made suid, because it will display passwords if it can read them.
 
 If your system supports BSD style pseudo-terminals, and you compiled the
 code to support the new style of configuration files, you should be able
-to use the @code{tstuu} program to test the @code{uucico} daemon.  Just type
-@samp{tstuu} with no arguments while logged in to the compilation
+to use the @code{tstuu} program to test the @code{uucico} daemon.  Just
+type @samp{tstuu} with no arguments while logged in to the compilation
 directory (since it runs @file{./uucp}, @file{./uux} and
 @file{./uucico}) to run a lengthy series of tests (it takes over ten
 minutes on a slow VAX).  You will need a fair amount of space available
@@ -422,9 +422,10 @@ them.
 @node Installation, Usage, Testing, Overall Installation
 @section Installing Taylor UUCP
 
-You can install by suing to @code{root} and typing make install.  Or you
-can look at what make install does and do it by hand.  It's pretty
-simplistic.
+You can install by suing to @code{root} and typing @samp{make install}.
+Or you can look at what make install does and do it by hand.  It tries
+to preserve your old programs, if any.  You can retrieve them by typing
+@samp{make uninstall}.
 
 @node Usage, TCP, Installation, Overall Installation
 @section Using Taylor UUCP
@@ -575,10 +576,12 @@ acceptable.
 @cindex configuration file (config)
 
 The main configuration file may be specified by the @samp{-I} option to
-@code{uucico} (and all the other programs as well).  The default file
-location is set in the system dependent header file @file{sysdep.h}.  As
-all the values that may be specified in it also have defaults, there
-need not be a main configuration file at all.
+@code{uucico} (and all the other programs as well).  It is named
+@file{config} and is in the directory @var{newconfigdir} which is
+defined by the Makefile variable @file{newconfigdir} (by default it is
+@file{/usr/local/lib/uucp}).  As all the values that may be specified in
+it also have defaults, there need not be a main configuration file at
+all.
 
 @table @code
 
@@ -607,28 +610,30 @@ in this directory and in subdirectories of it.
 @item sysfile @var{strings}
 @findex sysfile
 
-Specify the system file(s).  The default is from @file{sysdep.h}.  These
-files holds information about other systems with which this system
-communicates; @xref{sys file}.  Multiple system files may be specified
-by given on the line, and the @code{sysfile} command may be repeated;
-each system file has its own set of defaults.
+Specify the system file(s).  The default is the file @file{sys} in the
+directory @var{newconfigdir}.  These files holds information about other
+systems with which this system communicates; @xref{sys file}.  Multiple
+system files may be specified by given on the line, and the
+@code{sysfile} command may be repeated; each system file has its own set
+of defaults.
 
 @item portfile @var{strings}
 @findex portfile
 
-Specify the port file(s).  The default is from @file{sysdep.h}.  These
-files describe ports which are used to call other systems and accept
-calls from other systems; @xref{port file}.  No port files need be named
-at all.  Multiple port files may be given on the line, and the
-@code{portfile} command may be repeated.
+Specify the port file(s).  The default is the file @file{port} in the
+directory @var{newconfigdir}.  These files describe ports which are used to
+call other systems and accept calls from other systems; @xref{port
+file}.  No port files need be named at all.  Multiple port files may be
+given on the line, and the @code{portfile} command may be repeated.
 
 @item dialfile @var{strings}
 @findex dialfile
 
-Specify the dial file(s).  The default is from @file{sysdep.h}.  These
-files describe dialing devices (modems); @xref{dial file}.  No dial
-files need be named at all.  Multiple dial files may be given on the
-line, and the @code{dialfile} command may be repeated.
+Specify the dial file(s).  The default is the file @file{dial} in the
+directory @var{newconfigdir}.  These files describe dialing devices
+(modems); @xref{dial file}.  No dial files need be named at all.
+Multiple dial files may be given on the line, and the @code{dialfile}
+command may be repeated.
 
 @item dialcodefile @var{strings}
 @findex dialcodefile
@@ -636,20 +641,20 @@ line, and the @code{dialfile} command may be repeated.
 @cindex dialcode file
 @cindex dialcode configuration file
 
-Specify the dialcode file(s).  The default is from @file{sysdep.h}.
-These files specify dialcodes that may be used when sending phone
-numbers to a modem.  This permits using the same set of phone numbers in
-different area-codes or with different phone systems, by using dialcodes
-to specify the calling sequence.  When a phone number goes through
-dialcode translation, the leading alphabetic characters are stripped
-off.  The dialcode files are read line by line, just like any other
-configuration file, and when a line is found whose first word is the
-same as the leading characters from the phone number, the second word on
-the line (which would normally consist of numbers) replaces the dialcode
-in the phone number.  No dialcode file need be used.  Multiple dialcode
-files may be specified on the line, and the @code{dialcodefile} command
-may be repeated; all the dialcode files will be read in turn until a
-dialcode is located.
+Specify the dialcode file(s).  The default is the file @file{dialcode}
+in the directory @var{newconfigdir}.  These files specify dialcodes that
+may be used when sending phone numbers to a modem.  This permits using
+the same set of phone numbers in different area-codes or with different
+phone systems, by using dialcodes to specify the calling sequence.  When
+a phone number goes through dialcode translation, the leading alphabetic
+characters are stripped off.  The dialcode files are read line by line,
+just like any other configuration file, and when a line is found whose
+first word is the same as the leading characters from the phone number,
+the second word on the line (which would normally consist of numbers)
+replaces the dialcode in the phone number.  No dialcode file need be
+used.  Multiple dialcode files may be specified on the line, and the
+@code{dialcodefile} command may be repeated; all the dialcode files will
+be read in turn until a dialcode is located.
 
 @item pubdir @var{string}
 @findex pubdir in config file
@@ -661,7 +666,7 @@ Specify the public directory.  The default is from @file{sysdep.h}.  On
 Unix, when a file is named using a leading @kbd{~/}, it is taken from or
 to the public directory.  Each system may use a separate public
 directory by using the @code{pubdir} command in the system configuration
-file as described below.
+file; @xref{sys file}.
 
 @item callfile @var{strings}
 @findex callfile
@@ -672,17 +677,18 @@ file as described below.
 @cindex configuration file (call)
 
 Specify the call out login name and password file(s).  The default is
-from @file{sysdep.h}.  If the call out login name or password for a
-system are given as @kbd{*} (@pxref{sys file}), these files are read to
-get the real login name or password.  Each line in the file(s) has three
-words: the system name, the login name, and the password.  This file is
-only used when placing calls to remote systems; the password file
-described under @code{passwdfile} below is used for incoming calls.  The
-intention of the call out file is to permit the system file to be
-publically readable; the call out files must obviously be kept secure.
-These files need not be used.  Multiple call out files may be specified
-on the line, and the @code{callfile} command may be repeated; all the
-files will be read in turn until the system is found.
+the file @file{call} in the directory @var{newconfigdir}.  If the call
+out login name or password for a system are given as @kbd{*} (@pxref{sys
+file}), these files are read to get the real login name or password.
+Each line in the file(s) has three words: the system name, the login
+name, and the password.  This file is only used when placing calls to
+remote systems; the password file described under @code{passwdfile}
+below is used for incoming calls.  The intention of the call out file is
+to permit the system file to be publically readable; the call out files
+must obviously be kept secure.  These files need not be used.  Multiple
+call out files may be specified on the line, and the @code{callfile}
+command may be repeated; all the files will be read in turn until the
+system is found.
 
 @item passwdfile @var{strings}
 @findex passwdfile
@@ -694,17 +700,17 @@ files will be read in turn until the system is found.
 
 Specify the password file(s) to use for login names when @code{uucico}
 is doing its own login prompting, which it does when given the
-@samp{-e}, @samp{-l} or @samp{-w} switch.  The default is from
-@file{sysdep.h}.  Each line in the file(s) has two words: the login name
-and the password (e.g. @code{Ufoo foopas}).  The login name is accepted
-before the system name is known, so these are independent of which
-system is calling in; a particular login may be required for a system by
-using the @code{called-login} command in the system file (@pxref{sys
-file}).  These password files are optional, although one must exist if
-@code{uucico} is to present its own login prompts.  Multiple password
-files may be specified on the line, and the @code{passwdfile} command
-may be repeated; all the files will be read in turn until the login name
-is found.
+@samp{-e}, @samp{-l} or @samp{-w} switch.  The default is the file
+@file{passwd} in the directory @var{newconfigdir}.  Each line in the
+file(s) has two words: the login name and the password (e.g. @code{Ufoo
+foopas}).  The login name is accepted before the system name is known,
+so these are independent of which system is calling in; a particular
+login may be required for a system by using the @code{called-login}
+command in the system file (@pxref{sys file}).  These password files are
+optional, although one must exist if @code{uucico} is to present its own
+login prompts.  Multiple password files may be specified on the line,
+and the @code{passwdfile} command may be repeated; all the files will be
+read in turn until the login name is found.
 
 @item logfile @var{string}
 @findex logfile
@@ -864,7 +870,8 @@ Set the debugging level used for calls to or from the system.  This may
 be used to debug a connection with a specific system.  It is
 particularly useful when debugging incoming calls, since debugging
 information will be generated whenever the call comes in.  See the
-@code{debug} command in the main configuration file for more details.
+@code{debug} command in the main configuration file (@pxref{config
+file}) for more details.
 
 @item time @var{string}
 @findex time
@@ -904,14 +911,14 @@ to call a system causes it to assume there is a job of grade @kbd{0}
 waiting to be run.
 
 Note that the @code{timegrade} command serves two purposes: 1) if there
-is no job of sufficiently high grade the system will not be called 2) if
-the system is called anyway (because the @samp{-s} switch was given to
-@code{uucico}) only jobs of sufficiently high grade will be transferred.
-However, if the other system calls in, the @code{timegrade} commands are
-ignored, and jobs of any grade may be transferred (but see
-@code{call-timegrade} below).  Also, the @code{timegrade} command will
-not prevent the other system from executing any job it chooses,
-regardless of who placed the call.
+is no job of sufficiently high grade the system will not be called, and
+2) if the system is called anyway (because the @samp{-s} switch was
+given to @code{uucico}) only jobs of sufficiently high grade will be
+transferred.  However, if the other system calls in, the
+@code{timegrade} commands are ignored, and jobs of any grade may be
+transferred (but see @code{call-timegrade} below).  Also, the
+@code{timegrade} command will not prevent the other system from
+executing any job it chooses, regardless of who placed the call.
 
 The @code{timegrade} command may appear multiple times without using
 @code{alternate}.  If this command does not appear, there are no
@@ -950,10 +957,10 @@ command does not appear, or if none of the time strings match, there are
 no size restrictions.
 
 With all the size control commands, the size of a file from the remote
-system (as opposed to a file from the local system) will only be
-checked if the other system is running this package (other UUCP
-packages will not understand a maximum size request, nor will they
-inform the local package of the size of remote files).
+system (as opposed to a file from the local system) will only be checked
+if the other system is running this package (other UUCP packages will
+not understand a maximum size request, nor will they inform this package
+of the size of remote files).
 
 @item call-remote-size @var{number} @var{string}
 @findex call-remote-size
@@ -1699,9 +1706,10 @@ specified to call out on a modem.
 
 @item dialer @var{string} @dots{} [ modem only ]
 
-Execute a dialer command.  If a dialer is named, these commands are
-ignored.  They may be used to specify dialer information directly in
-simple situations without needing to go to a separate file.  There is no
+Execute a dialer command.  If a dialer is named (by using the first form
+of this command, described just above), these commands are ignored.
+They may be used to specify dialer information directly in simple
+situations without needing to go to a separate file.  There is no
 default, and some sort of dialer information must be specified to call
 out on a modem.
 
@@ -1952,7 +1960,7 @@ actually used here to call @file{uunet}.  There is also a call out
 password file which, for obvious reasons, is not shown.
 
 The main configuration file (this would not be needed if the local name
-of this system were airs or @file{airs.airs.com}):
+of this system were @file{airs} or @file{airs.airs.com}):
 
 @example
 nodename airs
@@ -2003,7 +2011,7 @@ protocol-parameter g timeout 20
 protocol-parameter g retries 10
 @end example
 
-@node Acknowledgements, Index, Configuration files, Top
+@node Acknowledgements, Index (concepts), Configuration files, Top
 @chapter Acknowledgements
 
 This is a list of people who gave help or suggestions while I was
@@ -2088,10 +2096,15 @@ frnkmth!twwells.com!bill (T. William Wells)
 mauxci!eci386!woods@@apple.com (Greg A. Woods)
 @end example
 
-@node Index,  , Acknowledgements, Top
-@unnumbered Index for New Style Configuration File
+@node Index (concepts), Index (configuration file), Acknowledgements, Top
+@unnumbered Concept Index
 
 @printindex cp
+
+@node Index (configuration file), , Index (concepts), Top
+@unnumbered Index to New Configuration File
+
+@printindex fn
 
 @contents
 @bye
