@@ -1,5 +1,14 @@
 2002-02-07  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/xqtsub.c (fsysdep_copy_uuxqt_files): Rename from
+	fsysdep_move_uuxqt_files.  Remove fto parameter.  Use link instead
+	of rename.  Don't bother moving files back on failure.
+	* uuxqt.c (uqdo_xqt_file): Call fsysdep_copy_uuxqt_files rather
+	than fsysdep_move_uuxqt_files.  Remove call to
+	fsysdep_move_uuxqt_files after failure.
+	* system.h (fsysdep_copy_uuxqt_files): Rename declaration from
+	fsysdep_move_uuxqt_files.
+
 	* Ignatios Souvatzis: uucp.texi (Execution File Format): Correct
 	example of X. file.
 

@@ -1345,9 +1345,9 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
   /* Move the required files to the execution directory if necessary.  */
   zinput = zQinput;
-  if (! fsysdep_move_uuxqt_files (cQfiles, (const char **) azQfiles,
+  if (! fsysdep_copy_uuxqt_files (cQfiles, (const char **) azQfiles,
 				  (const char **) azQfiles_to,
-				  TRUE, iQlock_seq, &zinput))
+				  iQlock_seq, &zinput))
     {
       /* If we get an error, try again later.  */
       uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
@@ -1387,11 +1387,6 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 			 zoutput, fshell, iQlock_seq, &zerror, &ftemp))
     {
       ubuffree (zfullcmd);
-
-      (void) fsysdep_move_uuxqt_files (cQfiles, (const char **) azQfiles,
-				       (const char **) azQfiles_to,
-				       FALSE, iQlock_seq,
-				       (char **) NULL);
 
       if (ftemp)
 	{

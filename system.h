@@ -686,22 +686,20 @@ extern boolean fsysdep_lock_uuxqt_dir P((int ilock));
    should return FALSE on error.  */
 extern boolean fsysdep_unlock_uuxqt_dir P((int ilock));
 
-/* Move files into or out of the execution directory.  The code will
-   already have checked that all the files exist.  The elements in the
-   pzfrom array will be complete filenames, and the elements in the
+/* Copy files into the execution directory indicated by ilock.  The
+   code will already have checked that all the files exist.  The
+   copying may be done using the link system call.  The elements in
+   the pzfrom array will be complete filenames.  The elements in the
    pzto array will be either NULL (in which case the file should not
-   be moved) or simple base names.  If fto is TRUE, the files in
-   pzfrom should be moved to pzto; otherwise, the files in pzto should
-   be moved to pzfrom (this is used if a temporary failure occurs, in
-   which case the execution will be retried later).  If pzinput and
-   *pzinput are not NULL, then it is the name of the standard input
-   file; if it is the same as any element of pzfrom, then *pzinput
-   should be set to the zbufcpy of the corresponding pzto value, if
+   be copied) or simple base names.  If pzinput and *pzinput are not
+   NULL, then *pzinput is the name of the standard input file; if it
+   is the same as any element of pzfrom, then *pzinput will be set to
+   the zbufcpy of the full path for the corresponding pzto value, if
    any.  */
-extern boolean fsysdep_move_uuxqt_files P((int cfiles,
+extern boolean fsysdep_copy_uuxqt_files P((int cfiles,
 					   const char *const *pzfrom,
 					   const char *const *pzto,
-					   boolean fto, int ilock,
+					   int ilock,
 					   char **pzinput));
 
 /* Expand a file name on the local system, defaulting to the current

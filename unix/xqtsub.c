@@ -611,11 +611,10 @@ fsysdep_unlock_uuxqt_dir (iseq)
 /* Move files into the execution directory.  */
 
 boolean
-fsysdep_move_uuxqt_files (cfiles, pzfrom, pzto, fto, iseq, pzinput)
+fsysdep_copy_uuxqt_files (cfiles, pzfrom, pzto, iseq, pzinput)
      int cfiles;
      const char *const *pzfrom;
      const char *const *pzto;
-     boolean fto;
      int iseq;
      char **pzinput;
 {
@@ -656,55 +655,26 @@ fsysdep_move_uuxqt_files (cfiles, pzfrom, pzto, fto, iseq, pzinput)
 	  zinput = NULL;
 	}
 
-      if (! fto)
+      if (link (zfrom, zto) < 0)
 	{
-	  const char *ztemp;
-	  
-	  ztemp = zfrom;
-	  zfrom = zto;
-	  zto = ztemp;
-	  (void) chmod (zfrom, IPRIVATE_FILE_MODE);
-	}
-
-      if (rename (zfrom, zto) < 0)
-	{
-#if HAVE_RENAME
-	  /* On some systems the system call rename seems to fail for
-	     arbitrary reasons.  To get around this, we always try to
-	     copy the file by hand if the rename failed.  */
-	  errno = EXDEV;
-#endif
-
-	  if (errno != EXDEV)
+	  if (errno != EXDEV && errno != EEXIST && errno != EMLINK)
 	    {
-	      ulog (LOG_ERROR, "rename (%s, %s): %s", zfrom, zto,
+	      ulog (LOG_ERROR, "link (%s, %s): %s", zfrom, zto,
 		    strerror (errno));
 	      ubuffree (zfree);
-	      break;
+	      return FALSE;
 	    }
 
 	  if (! fcopy_file (zfrom, zto, FALSE, FALSE, FALSE))
 	    {
 	      ubuffree (zfree);
-	      break;
+	      return FALSE;
 	    }
-	  if (remove (zfrom) < 0)
-	    ulog (LOG_ERROR, "remove (%s): %s", zfrom,
-		  strerror (errno));
 	}
 
-      if (fto)
-	(void) chmod (zto, IPUBLIC_FILE_MODE);
+      (void) chmod (zto, IPUBLIC_FILE_MODE);
 
       ubuffree (zfree);
-    }
-
-  if (i < cfiles)
-    {
-      if (fto)
-	(void) fsysdep_move_uuxqt_files (i, pzfrom, pzto, FALSE, iseq,
-					 (char **) NULL);
-      return FALSE;
     }
 
   return TRUE;
