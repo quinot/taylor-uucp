@@ -271,9 +271,9 @@ fconn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 
 #if DEBUG > 1
   if (FDEBUGGING (DEBUG_INCOMING))
-    udebug_buffer ("fport_read: Read", zbuf, *pclen);
+    udebug_buffer ("fconn_read: Read", zbuf, *pclen);
   else if (FDEBUGGING (DEBUG_PORT))
-    ulog (LOG_DEBUG, "fport_read: Read %lu", (unsigned long) *pclen);
+    ulog (LOG_DEBUG, "fconn_read: Read %lu", (unsigned long) *pclen);
 #endif
 
   return fret;
@@ -289,9 +289,9 @@ fconn_write (qconn, zbuf, clen)
 {
 #if DEBUG > 1
   if (FDEBUGGING (DEBUG_OUTGOING))
-    udebug_buffer ("fport_write: Writing", zbuf, clen);
+    udebug_buffer ("fconn_write: Writing", zbuf, clen);
   else if (FDEBUGGING (DEBUG_PORT))
-    ulog (LOG_DEBUG, "fport_write: Writing %lu", (unsigned long) clen);
+    ulog (LOG_DEBUG, "fconn_write: Writing %lu", (unsigned long) clen);
 #endif
 
   return (*qconn->qcmds->pfwrite) (qconn, zbuf, clen);
@@ -313,25 +313,25 @@ fconn_io (qconn, zwrite, pcwrite, zread, pcread)
   size_t cread = *pcread;
 
   if (cread == 0 || cwrite == 0)
-    ulog (LOG_FATAL, "fport_io: cread %lu; cwrite %lu",
+    ulog (LOG_FATAL, "fconn_io: cread %lu; cwrite %lu",
 	  (unsigned long) cread, (unsigned long) cwrite);
 #endif
 
 #if DEBUG > 1
   if (FDEBUGGING (DEBUG_OUTGOING))
-    udebug_buffer ("fport_io: Writing", zwrite, cwrite);
+    udebug_buffer ("fconn_io: Writing", zwrite, cwrite);
 #endif
 
   fret = (*qconn->qcmds->pfio) (qconn, zwrite, pcwrite, zread, pcread);
 
   DEBUG_MESSAGE4 (DEBUG_PORT,
-		  "fport_io: Wrote %lu of %lu, read %lu of %lu",
+		  "fconn_io: Wrote %lu of %lu, read %lu of %lu",
 		  (unsigned long) *pcwrite, (unsigned long) cwrite,
 		  (unsigned long) *pcread, (unsigned long) cread);
 
 #if DEBUG > 1
   if (*pcread > 0 && FDEBUGGING (DEBUG_INCOMING))
-    udebug_buffer ("fport_io: Read", zread, *pcread);
+    udebug_buffer ("fconn_io: Read", zread, *pcread);
 #endif
 
   return fret;
