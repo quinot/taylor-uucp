@@ -211,18 +211,13 @@ Monty Solomon: put corrupted files in a special directory (.Corrupt?).
 
 74.
 
-Yanek Martinson: allow each systems to independently choose whether to
+Yanek Martinson: allow each system to independently choose whether to
 permit shell execution.
 
 75.
 
 Mike Park: we should accept and Shere=foo message with an alias of the
 system we are calling.
-
-77.
-
-Dave Platt: send short packets for commands when using the 'g'
-protocol.
 
 78.
 
@@ -233,3 +228,8 @@ Support XCLUDE for port locking.
 Support Internet addressing when mailing uuxqt messages.
 
 81.
+
+Marty Shannon: log reason for dial failure (chat-fail string) in
+.Status file.
+
+82.
