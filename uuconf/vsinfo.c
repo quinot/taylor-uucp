@@ -174,7 +174,7 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	 here.  */
       zretry = strchr (pzsplit[1], ';');
       if (zretry == NULL)
-	cretry = 0;
+	cretry = 55;
       else
 	{
 	  *zretry = '\0';
