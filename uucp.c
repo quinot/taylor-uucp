@@ -692,7 +692,7 @@ uccopy (zfile, zdest)
 	    zloc = zClocalname;
 
 	  ztemp = zsysdep_data_file_name (&sCdestsys, zloc, bCgrade,
-					  abtname, (char *) NULL,
+					  FALSE, abtname, (char *) NULL,
 					  (char *) NULL);
 	  if (ztemp == NULL)
 	    ucabort ();
@@ -760,8 +760,8 @@ uccopy (zfile, zdest)
 	      if (zbase == NULL)
 		ucabort ();
 
-	      zxqt = zsysdep_data_file_name (&sCdestsys, zloc, 'X',
-					     abxtname, abdname,
+	      zxqt = zsysdep_data_file_name (&sCdestsys, zloc, bCgrade,
+					     TRUE, abxtname, abdname,
 					     abxname);
 	      if (zxqt == NULL)
 		ucabort ();
@@ -947,7 +947,7 @@ uccopy (zfile, zdest)
 	  /* The file either comes from some other system through
 	     qfromsys or is intended for some other system.  Send an
 	     execution request to qfromsys to handle everything.  */
-	  zxqt = zsysdep_data_file_name (qfromsys, zloc, 'X',
+	  zxqt = zsysdep_data_file_name (qfromsys, zloc, bCgrade, TRUE,
 					 abtname, (char *) NULL,
 					 abxname);
 	  if (zxqt == NULL)

@@ -107,7 +107,7 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
       return NULL;
     }
 
-  zjobid = zsfile_to_jobid (qsys, z);
+  zjobid = zsfile_to_jobid (qsys, z, bgrade);
   if (zjobid == NULL)
     (void) remove (z);
   ubuffree (z);

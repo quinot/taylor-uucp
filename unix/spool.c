@@ -182,16 +182,17 @@ const char spool_rcsid[] = "$Id$";
 /* Given the name of a file as specified in a UUCP command, and the
    system for which this file has been created, return where to find
    it in the spool directory.  The file will begin with C. (a command
-   file), D. (a data file) or X. (an execution file).  The flocal
-   argument is TRUE if this file is being created on the behalf of a
-   local user; this is only used for SPOOLDIR_SVR4.  */
+   file), D. (a data file) or X. (an execution file).  Under
+   SPOOLDIR_SVR4 we need to know the grade of the file created by the
+   local system; this is the bgrade argument, which is -1 for a file
+   from a remote system.  */
 
 /*ARGSUSED*/
 char *
-zsfind_file (zsimple, zsystem, flocal)
+zsfind_file (zsimple, zsystem, bgrade)
      const char *zsimple;
      const char *zsystem;
-     boolean flocal;
+     int bgrade;
 {
   if (! fspool_file (zsimple))
     {
@@ -247,18 +248,13 @@ zsfind_file (zsimple, zsystem, flocal)
 #if SPOOLDIR_SVR4
   /* SVR4 uses grade directories within the system directory for local
      command and data files.  */
-  if (! flocal || *zsimple == 'X')
+  if (bgrade < 0 || *zsimple == 'X')
     return zsysdep_in_dir (zsystem, zsimple);
   else
     {
-      size_t clen;
       char abgrade[2];
 
-      clen = strlen (zsimple);
-      if (clen > 4)
-	abgrade[0] = zsimple[clen - 5];
-      else
-	abgrade[0] = 'A';
+      abgrade[0] = bgrade;
       abgrade[1] = '\0';
       return zsappend3 (zsystem, abgrade, zsimple);
     }

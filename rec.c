@@ -210,7 +210,7 @@ flocal_rec_file_init (qdaemon, qcmd)
 	  return FALSE;
 	}
 
-      zfile = zsysdep_spool_file_name (&slocalsys, qcmd->zto, TRUE);
+      zfile = zsysdep_spool_file_name (&slocalsys, qcmd->zto, qcmd->pseq);
 
       (void) uuconf_system_free (puuconf, &slocalsys);
 
@@ -534,7 +534,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 
   if (fspool)
     {
-      zfile = zsysdep_spool_file_name (qsys, qcmd->zto, FALSE);
+      zfile = zsysdep_spool_file_name (qsys, qcmd->zto, (pointer) NULL);
       if (zfile == NULL)
 	return FALSE;
     }
@@ -982,7 +982,8 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	 prepared to see one.  */
       zxqt = zbufcpy (qtrans->s.zto);
       zxqt[0] = 'X';
-      zxqtfile = zsysdep_spool_file_name (qdaemon->qsys, zxqt, FALSE);
+      zxqtfile = zsysdep_spool_file_name (qdaemon->qsys, zxqt,
+					  (pointer) NULL);
       ubuffree (zxqt);
 
       if (zxqtfile != NULL)

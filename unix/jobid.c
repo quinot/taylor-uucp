@@ -32,12 +32,15 @@
 
 /* Translate a file name and an associated system into a job id.
    These job ids are used by uustat.  We use the system name attached
-   to the grade and sequence number.  */
+   to the grade and sequence number.  This won't work correctly if the
+   file name was actually created by some other version of uucp that
+   uses a different length for the sequence number.  Too bad.  */
 
 char *
-zsfile_to_jobid (qsys, zfile)
+zsfile_to_jobid (qsys, zfile, bgrade)
      const struct uuconf_system *qsys;
      const char *zfile;
+     int bgrade;
 {
   size_t clen;
   char *zret;
@@ -45,16 +48,18 @@ zsfile_to_jobid (qsys, zfile)
   clen = strlen (qsys->uuconf_zname);
   zret = zbufalc (clen + CSEQLEN + 2);
   memcpy (zret, qsys->uuconf_zname, clen);
-  memcpy (zret + clen, zfile + strlen (zfile) - CSEQLEN - 1, CSEQLEN + 2);
+  zret[clen] = bgrade;
+  memcpy (zret + clen + 1, zfile + strlen (zfile) - CSEQLEN, CSEQLEN + 1);
   return zret;
 }
 
 /* Turn a job id back into a file name.  */
 
 char *
-zsjobid_to_file (zid, pzsystem)
+zsjobid_to_file (zid, pzsystem, pbgrade)
      const char *zid;
      char **pzsystem;
+     char *pbgrade;
 {
   size_t clen;
   const char *zend;
@@ -82,12 +87,15 @@ zsjobid_to_file (zid, pzsystem)
   sprintf (abname, "C.%s", zend);
 #endif
 
-  zret = zsfind_file (abname, zsys, TRUE);
+  zret = zsfind_file (abname, zsys, *zend);
 
   if (zret != NULL && pzsystem != NULL)
     *pzsystem = zsys;
   else
     ubuffree (zsys);
+
+  if (pbgrade != NULL)
+    *pbgrade = *zend;
 
   return zret;
 }

@@ -147,6 +147,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 {
   char *zfile;
   char *zsys;
+  char bgrade;
   time_t inow = 0;
   int iuuconf;
   struct uuconf_system ssys;
@@ -156,7 +157,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
   size_t cline;
   int isys;
 
-  zfile = zsjobid_to_file (zid, &zsys);
+  zfile = zsjobid_to_file (zid, &zsys, &bgrade);
   if (zfile == NULL)
     return FALSE;
 
@@ -229,7 +230,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 	{
 	  char *ztemp;
 
-	  ztemp = zsysdep_spool_file_name (&ssys, s.ztemp, TRUE);
+	  ztemp = zsfind_file (s.ztemp, ssys.uuconf_zname, bgrade);
 	  if (ztemp == NULL)
 	    fret = FALSE;
 	  else
@@ -285,7 +286,7 @@ isysdep_work_time (qsys, pseq)
   long iret;
 
   zjobid = zsysdep_jobid (qsys, pseq);
-  zfile = zsjobid_to_file (zjobid, (char **) NULL);
+  zfile = zsjobid_to_file (zjobid, (char **) NULL, (char *) NULL);
   if (zfile == NULL)
     return 0;
   ubuffree (zjobid);

@@ -402,9 +402,14 @@ extern FILE *espopen P((const char **pazargs, boolean frd,
    prototype.  */
 extern int iswait P((unsigned long ipid, const char *zreport));
 
-/* Find a spool file in the spool directory.  */
+/* Find a spool file in the spool directory.  For a local file, the
+   bgrade argument is the grade of the file.  This is needed for
+   SPOOLDIR_SVR4.  */
 extern char *zsfind_file P((const char *zsimple, const char *zsystem,
-			    boolean flocal));
+			    int bgrade));
+
+/* Return the grade given a sequence number.  */
+extern char bsgrade P((pointer pseq));
 
 /* Lock a string.  */
 extern boolean fsdo_lock P((const char *, boolean fspooldir,
@@ -432,13 +437,15 @@ extern char *zstemp_file P((const struct uuconf_system *qsys));
 /* Get a command file name.  */
 extern char *zscmd_file P((const struct uuconf_system *qsys, int bgrade));
 
-/* Get a jobid from a system and file name.  */
+/* Get a jobid from a system, a file name, and a grade.  */
 extern char *zsfile_to_jobid P((const struct uuconf_system *qsys,
-				const char *zfile));
+				const char *zfile,
+				int bgrade));
 
 /* Get a file name from a jobid.  This also returns the associated system
-   in *pzsystem.  */
-extern char *zsjobid_to_file P((const char *zid, char **pzsystem));
+   in *pzsystem and the grade in *pbgrade.  */
+extern char *zsjobid_to_file P((const char *zid, char **pzsystem,
+				char *pbgrade));
 
 /* See whether there is a spool directory for a system when using
    SPOOLDIR_ULTRIX.  */

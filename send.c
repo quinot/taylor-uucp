@@ -220,7 +220,7 @@ flocal_send_file_init (qdaemon, qcmd)
   else
     {
       fspool = TRUE;
-      zfile = zsysdep_spool_file_name (qsys, qcmd->ztemp, TRUE);
+      zfile = zsysdep_spool_file_name (qsys, qcmd->ztemp, qcmd->pseq);
       if (zfile == NULL)
 	return FALSE;
     }
@@ -1120,13 +1120,14 @@ fsend_exec_file_init (qtrans, qdaemon)
   qinfo->cbytes = clen;
 
   zxqtfile = zsysdep_data_file_name (qdaemon->qsys, qdaemon->zlocalname,
-				     'X', abtname, (char *) NULL,
-				     abxname);
+				     BDEFAULT_UUX_GRADE, TRUE, abtname,
+				     (char *) NULL, abxname);
   if (zxqtfile == NULL)
     {
       usfree_send (qtrans);
       return FALSE;
     }
+  ubuffree (zxqtfile);
 
   ubuffree ((char *) qtrans->s.zfrom);
   qtrans->s.zfrom = zbufcpy (abtname);

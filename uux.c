@@ -502,8 +502,9 @@ main (argc, argv)
   if (fxqtlocal)
     zXxqt_name = zsysdep_xqt_file_name ();
   else
-    zXxqt_name = zsysdep_data_file_name (&sxqtsys, zxqtloc, 'X', abxqt_tname,
-					 (char *) NULL, abxqt_xname);
+    zXxqt_name = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade, TRUE,
+					 abxqt_tname, (char *) NULL,
+					 abxqt_xname);
   if (zXxqt_name == NULL)
     uxabort ();
 
@@ -731,7 +732,7 @@ main (argc, argv)
 	  if (! fsysdep_access (zfile))
 	    uxabort ();
 
-	  zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
+	  zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade, FALSE,
 					  abtname, abdname, (char *) NULL);
 	  if (zdata == NULL)
 	    uxabort ();
@@ -899,7 +900,7 @@ main (argc, argv)
 		}
 
 	      zdata = zsysdep_data_file_name (&slocalsys, zxqtloc, bgrade,
-					      abtname, (char *) NULL,
+					      FALSE, abtname, (char *) NULL,
 					      (char *) NULL);
 	      if (zdata == NULL)
 		uxabort ();
@@ -973,7 +974,7 @@ main (argc, argv)
 		     execution system.  We need to get a name to give
 		     the file on the execution system (abxtname).  */
 		  zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc,
-						  'X', abxtname,
+						  bgrade, TRUE, abxtname,
 						  (char *) NULL,
 						  (char *) NULL);
 		  if (zdata == NULL)
@@ -1031,8 +1032,8 @@ main (argc, argv)
       char abdname[CFILE_NAME_LEN];
       FILE *e;
 
-      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade, abtname,
-				      abdname, (char *) NULL);
+      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade, FALSE,
+				      abtname, abdname, (char *) NULL);
       if (zdata == NULL)
 	uxabort ();
 
@@ -1335,7 +1336,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
       if (zbase == NULL)
 	uxabort ();
 
-      zxqt = zsysdep_data_file_name (qxqtsys, zxqtloc, 'X', abtname,
+      zxqt = zsysdep_data_file_name (qxqtsys, zxqtloc, bgrade, TRUE, abtname,
 				     abdname, abxname);
       if (zxqt == NULL)
 	uxabort ();

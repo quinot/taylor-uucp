@@ -148,17 +148,21 @@ fswork_file (zsystem, zfile, pbgrade)
 #if SPOOLDIR_HDB || SPOOLDIR_SVR4
   int clen;
 
-  /* The file name should be C.ssssssgqqqq where g is exactly one
+  /* The HDB file name should be C.ssssssgqqqq where g is exactly one
      letter and qqqq is exactly four numbers or letters.  We don't
      check the system name, because it is guaranteed by the directory
-     we are looking in and AIX uucp sets it to the local system rather
-     than the remote one.  */
+     we are looking in and some versions of uucp set it to the local
+     system rather than the remote one.  I'm not sure of the exact
+     format of the SVR4 file name, but it does not include the grade
+     at all.  */
   if (zfile[0] != 'C' || zfile[1] != '.')
     return FALSE;
   clen = strlen (zfile);
   if (clen < 7)
     return FALSE;
+#if ! SPOOLDIR_SVR4
   *pbgrade = zfile[clen - 5];
+#endif
   return TRUE;
 #endif /* SPOOLDIR_HDB || SPOOLDIR_SVR4 */
 #if SPOOLDIR_TAYLOR
@@ -343,6 +347,7 @@ fsysdep_get_work_init (qsys, bgrade)
 	  zname = zbufcpy (qentry->d_name);
 #else
 	  zname = zsysdep_in_dir (qgentry->d_name, qentry->d_name);
+	  bfilegrade = qgentry->d_name[0];
 #endif
 
 	  if (! fswork_file (qsys->uuconf_zname, qentry->d_name,
@@ -550,11 +555,15 @@ fsysdep_get_work (qsys, bgrade, qcmd)
 	      continue;
 	    }
 
+	  qSwork_file->aslines[iline].qfile = qSwork_file;
+	  qcmd->pseq = (pointer) (&qSwork_file->aslines[iline]);
+
 	  if (qcmd->bcmd == 'S' || qcmd->bcmd == 'E')
 	    {
 	      char *zreal;
 
-	      zreal = zsysdep_spool_file_name (qsys, qcmd->ztemp, TRUE);
+	      zreal = zsysdep_spool_file_name (qsys, qcmd->ztemp,
+					       qcmd->pseq);
 	      if (zreal == NULL)
 		{
 		  ubuffree (qSwork_file->aslines[iline].zline);
@@ -564,9 +573,6 @@ fsysdep_get_work (qsys, bgrade, qcmd)
 		}
 	      qSwork_file->aslines[iline].ztemp = zreal;
 	    }
-
-	  qSwork_file->aslines[iline].qfile = qSwork_file;
-	  qcmd->pseq = (pointer) (&qSwork_file->aslines[iline]);
 
 	  ubuffree (zdir);
 	  return TRUE;
@@ -728,5 +734,32 @@ zsysdep_jobid (qsys, pseq)
      const struct uuconf_system *qsys;
      pointer pseq;
 {
-  return zsfile_to_jobid (qsys, ((struct ssline *) pseq)->qfile->zfile);
+  return zsfile_to_jobid (qsys, ((struct ssline *) pseq)->qfile->zfile,
+			  bsgrade (pseq));
+}
+
+/* Get the grade of a work file.  The pseq argument can be NULL when
+   this is called from zsysdep_spool_file_name, and simply means that
+   this is a remote file; returning -1 will cause zsfind_file to do
+   the right thing.  */
+
+char
+bsgrade (pseq)
+     pointer pseq;
+{
+  const char *zfile;
+  char bgrade;
+
+  if (pseq == NULL)
+    return -1;
+
+  zfile = ((struct ssline *) pseq)->qfile->zfile;
+
+#if ! SPOOLDIR_SVR4
+  bgrade = zfile[strlen (zfile) - CSEQLEN - 1];
+#else
+  bgrade = *(strchr (zfile, '/') + 1);
+#endif
+
+  return bgrade;
 }

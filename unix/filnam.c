@@ -67,6 +67,10 @@ extern off_t lseek ();
 /* Local functions.  */
 
 static boolean fscmd_seq P((const char *zsystem, char *zseq));
+static char *zsfile_name P((int btype, const char *zsystem,
+			    const char *zlocalname, int bgrade,
+			    boolean fxqt, char *ztname, char *zdname,
+			    char *zxname));
 
 /* Get a new command sequence number (this is not a sequence number to
    be used for communicating with another system, but a sequence
@@ -222,12 +226,14 @@ fscmd_seq (zsystem, zseq)
    file on the remote system.  None of the names will be more than 14
    characters long.  */
 
+/*ARGSUSED*/
 static char *
-zsfile_name (btype, zsystem, zlocalname, bgrade, ztname, zdname, zxname)
+zsfile_name (btype, zsystem, zlocalname, bgrade, fxqt, ztname, zdname, zxname)
      int btype;
      const char *zsystem;
      const char *zlocalname;
      int bgrade;
+     boolean fxqt;
      char *ztname;
      char *zdname;
      char *zxname;
@@ -266,7 +272,7 @@ zsfile_name (btype, zsystem, zlocalname, bgrade, ztname, zdname, zxname)
 #if ! SPOOLDIR_TAYLOR
 	  sprintf (absimple, "D.%.7s%c%s", zlocalname, bgrade, abseq);
 #else /* SPOOLDIR_TAYLOR */
-	  if (bgrade == 'X')
+	  if (fxqt)
 	    sprintf (absimple, "D.X%s", abseq);
 	  else
 	    sprintf (absimple, "D.%s", abseq);
@@ -278,7 +284,7 @@ zsfile_name (btype, zsystem, zlocalname, bgrade, ztname, zdname, zxname)
 	ulog (LOG_FATAL, "zsfile_name: Can't happen");
 #endif
 
-      zname = zsfind_file (absimple, zsystem, TRUE);
+      zname = zsfind_file (absimple, zsystem, bgrade);
       if (zname == NULL)
 	return NULL;
 
@@ -301,25 +307,30 @@ zsfile_name (btype, zsystem, zlocalname, bgrade, ztname, zdname, zxname)
 }
 
 /* Return a name to use for a data file to be copied to another
-   system.  The name returned will be for a real file.  The ztname
-   argument, if not NULL, will be set to a name that could be passed
-   to zsysdep_spool_file_name to get back the return value of this
+   system.  The name returned will be for a real file.  The zlocalname
+   argument is the local name as seen by the remote system, the bgrade
+   argument is the file grade, and the fxqt argument is TRUE if this
+   file will become an execution file.  The ztname argument, if not
+   NULL, will be set to a name that could be passed to
+   zsysdep_spool_file_name to get back the return value of this
    function.  The zdname argument, if not NULL, will be set to a name
    that the file could be given on another system.  The zxname
    argument, if not NULL, will be set to a name for an execute file on
    another system.  */
 
 char *
-zsysdep_data_file_name (qsys, zlocalname, bgrade, ztname, zdname, zxname)
+zsysdep_data_file_name (qsys, zlocalname, bgrade, fxqt, ztname, zdname,
+			zxname)
      const struct uuconf_system *qsys;
      const char *zlocalname;
      int bgrade;
+     boolean fxqt;
      char *ztname;
      char *zdname;
      char *zxname;
 {
-  return zsfile_name ('D', qsys->uuconf_zname, zlocalname, bgrade, ztname,
-		      zdname, zxname);
+  return zsfile_name ('D', qsys->uuconf_zname, zlocalname, bgrade, fxqt, 
+		      ztname, zdname, zxname);
 }
 
 /* Get a command file name.  */
@@ -330,7 +341,7 @@ zscmd_file (qsys, bgrade)
      int bgrade;
 {
   return zsfile_name ('C', qsys->uuconf_zname, (const char *) NULL,
-		      bgrade, (char *) NULL, (char *) NULL,
+		      bgrade, FALSE, (char *) NULL, (char *) NULL,
 		      (char *) NULL);
 }
 
@@ -351,7 +362,7 @@ zsysdep_xqt_file_name ()
 
       sprintf (absx, "X.%.7sX%s", zSlocalname, abseq);
 
-      zname = zsfind_file (absx, zSlocalname, TRUE);
+      zname = zsfind_file (absx, zSlocalname, -1);
       if (zname == NULL)
 	return NULL;
 

@@ -295,7 +295,7 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 	{
 	  /* We really should get the original grade here.  */
 	  zto = zsysdep_data_file_name (qdestsys, qdaemon->zlocalname,
-					BDEFAULT_UUCP_GRADE,
+					BDEFAULT_UUCP_GRADE, FALSE,
 					abtname, (char *) NULL,
 					(char *) NULL);
 	  if (zto == NULL)

@@ -746,7 +746,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     {
       char *zreal;
 
-      zreal = zsysdep_spool_file_name (qsys, azQfiles[i], FALSE);
+      zreal = zsysdep_spool_file_name (qsys, azQfiles[i], (pointer) NULL);
       if (zreal == NULL)
 	{
 	  uqcleanup (zfile, iclean);
@@ -1028,7 +1028,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
       fspool = fspool_file (zQinput);
       if (fspool)
-	zreal = zsysdep_spool_file_name (qsys, zQinput, FALSE);
+	zreal = zsysdep_spool_file_name (qsys, zQinput, (pointer) NULL);
       else
 	zreal = zsysdep_local_file (zQinput, qsys->uuconf_zpubdir);
       if (zreal == NULL)
@@ -1111,7 +1111,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	}
 
       zdata = zsysdep_data_file_name (qoutsys, zlocalname,
-				      BDEFAULT_UUX_GRADE, abtemp,
+				      BDEFAULT_UUX_GRADE, FALSE, abtemp,
 				      abdata, (char *) NULL);
       if (zdata == NULL)
 	{
@@ -1416,11 +1416,13 @@ uqcleanup (zfile, iflags)
   ubuffree (zQoutfile);
   ubuffree (zQoutsys);
 
-  for (i = 0; azQargs[i] != NULL; i++)
-    ubuffree (azQargs[i]);
-
-  xfree ((pointer) azQargs);
-  azQargs = NULL;
+  if (azQargs != NULL)
+    {
+      for (i = 0; azQargs[i] != NULL; i++)
+	ubuffree (azQargs[i]);
+      xfree ((pointer) azQargs);
+      azQargs = NULL;
+    }
 
   xfree ((pointer) zQcmd);
   zQcmd = NULL;

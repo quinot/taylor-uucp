@@ -347,12 +347,12 @@ extern char *zsysdep_add_base P((const char *zfile,
 				 const char *zname));
 
 /* Get a file name from the spool directory.  This should return NULL
-   on error.  The flocal argument is TRUE if the file was created by a
-   local process; this is, unfortunately, needed to support SVR4 spool
-   directories.  */
+   on error.  The pseq argument is TRUE if the file was found from
+   searching the work directory; this is, unfortunately, needed to
+   support SVR4 spool directories.  */
 extern char *zsysdep_spool_file_name P((const struct uuconf_system *qsys,
 					const char *zfile,
-					boolean flocal));
+					pointer pseq));
 
 /* Make necessary directories.  This should create all non-existent
    directories for a file.  If the fpublic argument is TRUE, anybody
@@ -516,28 +516,28 @@ extern char *zsysdep_spool_commands P((const struct uuconf_system *qsys,
 				       const struct scmd *pascmds));
 
 /* Get a file name to use for a data file to be copied to another
-   system.  A file which will become an execute file will use a grade
-   of 'X' (actually this is just convention, but it affects where the
-   file will be placed in the spool directory on Unix).  The ztname,
-   zdname and zxname arguments will all either be NULL or point to an
-   array of CFILE_NAME_LEN characters in length.  The ztname array
-   should be set to a temporary file name that could be passed to
-   zsysdep_spool_file_name to retrieve the return value of this
-   function; this will be appropriate for the temporary name in a send
-   request.  The zdname array should be set to a data file name that
-   is appropriate for the spool directory of the other system; this
-   will be appropriate for the name of the destination file in a send
-   request of a data file for an execution of some sort.  The zxname
-   array should be set to an execute file name that is appropriate for
-   the other system.  The zlocalname argument is the name of the local
-   system as seen by the remote system.  This should return NULL on
+   system.  The ztname, zdname and zxname arguments will all either be
+   NULL or point to an array of CFILE_NAME_LEN characters in length.
+   The ztname array should be set to a temporary file name that could
+   be passed to zsysdep_spool_file_name to retrieve the return value
+   of this function; this will be appropriate for the temporary name
+   in a send request.  The zdname array should be set to a data file
+   name that is appropriate for the spool directory of the other
+   system; this will be appropriate for the name of the destination
+   file in a send request of a data file for an execution of some
+   sort.  The zxname array should be set to an execute file name that
+   is appropriate for the other system.  The zlocalname argument is
+   the name of the local system as seen by the remote system, the
+   bgrade argument is the grade, and fxqt is TRUE if this file is
+   going to become an execution file.  This should return NULL on
    error.  */
 #define CFILE_NAME_LEN (15)
 
 extern char *zsysdep_data_file_name P((const struct uuconf_system *qsys,
 				       const char *zlocalname,
-				       int bgrade, char *ztname,
-				       char *zdname, char *zxname));
+				       int bgrade, boolean fxqt,
+				       char *ztname, char *zdname,
+				       char *zxname));
 
 /* Get a name for a local execute file.  This is used by uux for a
    local command with remote files.  Returns NULL on error.  */
