@@ -1,7 +1,7 @@
 /* uudir.c
    Create a directory owned by uucp.  This is Unix specific.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -22,6 +22,8 @@
    The author of the program may be contacted at ian@airs.com or
    c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
+
+#include "uucp.h"
 
 #if USE_RCS_ID
 const char uudir_rcsid[] = "$Id$";
