@@ -1,0 +1,54 @@
+/* local.c
+   Get default information for the local system.
+
+   Copyright (C) 1992 Ian Lance Taylor
+
+   This file is part of the Taylor UUCP uuconf library.
+
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License
+   as published by the Free Software Foundation; either version 2 of
+   the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   You should have received a copy of the GNU Library General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+   The author of the program may be contacted at ian@airs.com or
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
+
+#include "uucnfi.h"
+
+#if USE_RCS_ID
+char _uuconf_local_rcsid[] = "$Id$";
+#endif
+
+#include <errno.h>
+
+/* Get default information about the local system.  */
+
+int
+uuconf_system_local (pglobal, qsys)
+     pointer pglobal;
+     struct uuconf_system *qsys;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+
+  _uuconf_uclear_system (qsys);
+  qsys->uuconf_palloc = uuconf_malloc_block ();
+  if (qsys->uuconf_palloc == NULL)
+    {
+      qglobal->ierrno = errno;
+      return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+    }
+
+  qsys->uuconf_zname = (char *) qglobal->qprocess->zlocalname;
+
+  return _uuconf_isystem_basic_default (qglobal, qsys);
+}
