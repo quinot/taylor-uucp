@@ -64,6 +64,8 @@ uuconf_maxuuxqts (pglobal, pcmax)
 	char *z;
 	size_t c;
 
+	z = NULL;
+	c = 0;
 	if (getline (&z, &c, e) > 0)
 	  {
 	    *pcmax = (int) strtol (z, (char **) NULL, 10);
