@@ -234,3 +234,11 @@ has already seen their INITA.
 Execute uuxqt even if uucico gets an error.
 
 72.
+
+Monty Solomon: put corrupted files in a special directory (.Corrupt?).
+
+73.
+
+Chip Salzenberg: make file name restrictions a configuration option.
+
+74.
