@@ -57,13 +57,13 @@ translation approved by the author instead of in the original English.
 @titlepage
 @title Taylor UUCP
 @subtitle Version 1.02
-@author Ian Lance Taylor <@file{ian@@airs.com}>
+@author Ian Lance Taylor @file{<ian@@airs.com>}
 
 @page
 @vskip 0pt plus 1filll
 Copyright @copyright{} 1992 Free Software Foundation, Inc.
 
-Published by Ian Lance Taylor <@file{ian@@airs.com}>.
+Published by Ian Lance Taylor @file{<ian@@airs.com>}.
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -86,15 +86,15 @@ translation approved by the author instead of in the original English.
 
 This is the documentation for the Taylor UUCP package, version 1.02.
 The programs were written by Ian Lance Taylor.  The author can be
-reached at @file{ian@@airs.com}, or, equivalently,
-@file{uunet!airs!ian}, or @cite{c/o Infinity Development, P.O. Box 520,
-Waltham MA, 02254}.
+reached at @file{<ian@@airs.com>}, or, equivalently,
+@file{<uunet!airs!ian>}, or @cite{c/o Infinity Development, P.O. Box
+520, Waltham MA, 02254}.
 
 There is a mailing list for discussion of the package.  To join the
-list, send a message to @file{taylor-uucp-request@@gnu.ai.mit.edu}.
+list, send a message to @file{<taylor-uucp-request@@gnu.ai.mit.edu>}.
 Make sure you include the address you want to receive messages at; do
 not rely on the @code{From:} header.  To send a message to the list,
-send it to @file{taylor-uucp@@gnu.ai.mit.edu}.
+send it to @file{<taylor-uucp@@gnu.ai.mit.edu>}.
 
 @menu
 * Copying::                     Taylor UUCP copying conditions
@@ -2043,103 +2043,107 @@ protocol-parameter g retries 10
 This is a list of people who gave help or suggestions while I was
 working on the Taylor UUCP project.  Appearance on this list does not
 constitute endorsement of the program, particularly since some of the
-comments were criticisms.
+comments were criticisms.  I've probably left some people off, and I
+apologize for any oversight; it does not mean your contribution was
+unappreciated.
 
 First of all, I would like to thank the people at Infinity Development
 Systems (formerly AIRS, which lives on in the domain name, at least for
 now) for permitting me to use their computers and @file{uunet} access.
-I would also like to thank Richard Stallman <rms@@gnu.ai.mit.edu> for
-founding the Free Software Foundation and John Gilmore <gnu@@cygnus.com>
-for writing the initial version of gnuucp which was a direct inspiration
-for this somewhat larger project.  Chip Salzenberg <chip@@tct.com>
-contributed many early patches, and Franc,ois Pinard
-<pinard@@iro.umontreal.ca> tirelessly tested the code and suggested many
-improvements (and also put together the initial version of this
-document).  Finally, Verbus M. Counts <verbus@@westmark.com> and Centel
-Federal Systems, Inc. deserve special thanks, since they actually paid
-me money to port this code.
+I would also like to thank Richard Stallman @file{<rms@@gnu.ai.mit.edu>}
+for founding the Free Software Foundation and John Gilmore
+@file{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
+was a direct inspiration for this somewhat larger project.  Chip
+Salzenberg @file{<chip@@tct.com>} contributed many early patches, and
+Franc,ois Pinard @file{<pinard@@iro.umontreal.ca>} tirelessly tested the
+code and suggested many improvements (and also put together the initial
+version of this document).  Finally, Verbus M. Counts
+@file{<verbus@@westmark.com>} and Centel Federal Systems, Inc. deserve
+special thanks, since they actually paid me money to port this code.
 
 In alphabetical order:
 
 @example
-"Earle F. Ake - SAIC" <ake@@Dayton.SAIC.COM>
-mra@@searchtech.com (Michael Almond)
-chris@@nike.calpoly.edu (Christopher J. Ambler)
-jantypas@@soft21.s21.com (John Antypas)
-nba@@sysware.DK (Niels Baggesen)
-magus!dolphin!zack (Zacharias Beckman)
-mike@@mbsun.ann-arbor.mi.us (Mike Bernson)
-bob@@usixth.sublink.org (Roberto Biancardi)
-dave@@dlb.com (Dave Buck)
-gordon@@sneaky.lonestar.org (Gordon Burditt)
-mib@@gnu.ai.mit.edu (Michael I Bushnell)
-Brian Campbell <brianc@@quantum.on.ca>
-verbus@@westmark.westmark.com (Verbus M. Counts)
-cbmvax!snark.thyrsus.com!cowan (John Cowan)
-denny@@dakota.alisa.com (Bob Denny)
-peter@@ficc.ferranti.com (Peter da Silva)
-dje@@ersys.edmonton.ab.ca (Doug Evans)
-fenner@@jazz.psu.edu (Bill Fenner)
-"David J. Fiander" <golem!david@@news.lsuc.on.ca>
-Lele Gaifax (piggy@@idea.sublink.org)
-Peter.Galbavy@@micromuse.co.uk
-hunter@@phoenix.pub.uu.oz.au (James Gardiner [hunter])
-Terry Gardner <cphpcom!tjg01>
-jimmy@@tokyo07.info.com (Jim Gottlieb)
-ryan@@cs.umb.edu (Daniel R. Guilderson)
-greg@@gagme.chi.il.us (Gregory Gulik)
-Michael Haberler <mah@@parrot.prv.univie.ac.at>
-guy@@auspex.auspex.com (Guy Harris)
-Petri Helenius <pete@@fidata.fi>
-Peter Honeyman <honey@@citi.umich.edu>
-bei@@dogface.austin.tx.us (Bob Izenberg)
-harvee!esj (Eric S Johansson)
-chris@@cj_net.in-berlin.de (Christof Junge)
-tron@@Veritas.COM (Ronald S. Karr)
-kent@@sparky.IMD.Sterling.COM (Kent Landfield)
-lebaron@@inrs-telecom.uquebec.ca  (Gregory LeBaron)
-libove@@libove.det.dec.com (Jay Vassos-Libove)
-bruce%blilly@@Broadcast.Sony.COM (Bruce Lilly)
-"Arne Ludwig" <arne@@rrzbu.hanse.de>
-Matthew Lyle <matt@@mips.mitek.com>
-djm@@eng.umd.edu (David J. MacKenzie)
-John R MacMillan <chance!john@@sq.sq.com>
-mem@@mv.MV.COM (Mark E. Mallett)
-martelli@@cadlab.sublink.org (Alex Martelli)
-Yanek Martinson <yanek@@mthvax.cs.miami.edu>
-les@@chinet.chi.il.us (Leslie Mikesell)
-mmitchel@@digi.lonestar.org (Mitch Mitchell)
-rmohr@@infoac.rmi.de (Rupert Mohr)
-lyndon@@cs.athabascau.ca (Lyndon Nerenberg)
-nolan@@helios.unl.edu (Michael Nolan)
-david nugent <david@@csource.oz.au>
-abekas!dragoman!mikep@@decwrl.dec.com (Mike Park)
-dplatt@@ntg.com (Dave Platt)
-eldorado@@tharr.UUCP (Mark Powell)
-pozar@@kumr.lns.com (Tim Pozar)
-putsch@@uicc.com (Jeff Putsch)
-Jarmo Raiha <jarmo@@ksvltd.FI>
-mcr@@Sandelman.OCUnix.On.Ca (Michael Richardson)
-ross@@sun490.fdu.edu (Jeff Ross)
-Aleksey P. Rudnev <alex@@kiae.su>
-wolfgang@@wsrcc.com (Wolfgang S. Rupprecht)
-tbr@@tfic.bc.ca (Tom Rushworth)
-rsalz@@bbn.com (Rich Salz)
-sojurn!mike@@hobbes.cert.sei.cmu.edu (Mike Sangrey)
-s4mjs!mjs@@nirvo.nirvonics.com (M. J. Shannon Jr.)
-frumious!pat (Patrick Smith)
-roscom!monty@@bu.edu (Monty Solomon)
-chs@@antic.apu.fi (Hannu Strang)
-ralf@@reswi.ruhr.de (Ralf E. Stranzenbach)
-Oleg Tabarovsky <olg@@olghome.pccentre.msk.su>
-John Theus <john@@theus.rain.com>
-rmtodd@@servalan.servalan.com (Richard Todd)
-Len Tower <tower-prep@@ai.mit.edu>
-mju@@mudos.ann-arbor.mi.us (Marc Unangst)
-jv@@mh.nl (Johan Vromans)
-frnkmth!twwells.com!bill (T. William Wells)
-mauxci!eci386!woods@@apple.com (Greg A. Woods)
-Eric Ziegast <uunet!ziegast>
+"Earle F. Ake - SAIC" @file{<ake@@Dayton.SAIC.COM>}
+@file{mra@@searchtech.com} (Michael Almond)
+@file{chris@@nike.calpoly.edu} (Christopher J. Ambler)
+@file{jantypas@@soft21.s21.com} (John Antypas)
+@file{nba@@sysware.DK} (Niels Baggesen)
+@file{magus!dolphin!zack} (Zacharias Beckman)
+@file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
+@file{bob@@usixth.sublink.org} (Roberto Biancardi)
+@file{dave@@dlb.com} (Dave Buck)
+@file{gordon@@sneaky.lonestar.org} (Gordon Burditt)
+@file{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
+Brian Campbell @file{<brianc@@quantum.on.ca>}
+@file{verbus@@westmark.westmark.com} (Verbus M. Counts)
+@file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
+@file{denny@@dakota.alisa.com} (Bob Denny)
+@file{dje@@ersys.edmonton.ab.ca} (Doug Evans)
+@file{fenner@@jazz.psu.edu} (Bill Fenner)
+"David J. Fiander" @file{<golem!david@@news.lsuc.on.ca>}
+Thomas Fischer @file{<batman@@olorin.dark.sub.org>}
+Lele Gaifax @file{<piggy@@idea.sublink.org>}
+@file{Peter.Galbavy@@micromuse.co.uk}
+@file{hunter@@phoenix.pub.uu.oz.au} (James Gardiner [hunter])
+Terry Gardner @file{<cphpcom!tjg01>}
+@file{jimmy@@tokyo07.info.com} (Jim Gottlieb)
+@file{ryan@@cs.umb.edu} (Daniel R. Guilderson)
+@file{greg@@gagme.chi.il.us} (Gregory Gulik)
+Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
+@file{guy@@auspex.auspex.com} (Guy Harris)
+Petri Helenius @file{<pete@@fidata.fi>}
+Peter Honeyman @file{<honey@@citi.umich.edu>}
+@file{bei@@dogface.austin.tx.us} (Bob Izenberg)
+@file{harvee!esj} (Eric S Johansson)
+@file{chris@@cj_net.in-berlin.de} (Christof Junge)
+@file{tron@@Veritas.COM} (Ronald S. Karr)
+@file{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
+@file{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
+@file{libove@@libove.det.dec.com} (Jay Vassos-Libove)
+@file{bruce%blilly@@Broadcast.Sony.COM} (Bruce Lilly)
+Ted Lindgreen @file{<tlindgreen@@encore.nl>}
+"Arne Ludwig" @file{<arne@@rrzbu.hanse.de>}
+Matthew Lyle @file{<matt@@mips.mitek.com>}
+@file{djm@@eng.umd.edu} (David J. MacKenzie)
+John R MacMillan @file{<chance!john@@sq.sq.com>}
+@file{mem@@mv.MV.COM} (Mark E. Mallett)
+@file{martelli@@cadlab.sublink.org} (Alex Martelli)
+Yanek Martinson @file{<yanek@@mthvax.cs.miami.edu>}
+@file{les@@chinet.chi.il.us} (Leslie Mikesell)
+@file{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
+@file{rmohr@@infoac.rmi.de} (Rupert Mohr)
+@file{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
+@file{nolan@@helios.unl.edu} (Michael Nolan)
+david nugent @file{<david@@csource.oz.au>}
+@file{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
+@file{dplatt@@ntg.com} (Dave Platt)
+@file{eldorado@@tharr.UUCP} (Mark Powell)
+@file{pozar@@kumr.lns.com} (Tim Pozar)
+@file{putsch@@uicc.com} (Jeff Putsch)
+Jarmo Raiha @file{<jarmo@@ksvltd.FI>}
+@file{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
+@file{ross@@sun490.fdu.edu} (Jeff Ross)
+Aleksey P. Rudnev @file{<alex@@kiae.su>}
+@file{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
+@file{tbr@@tfic.bc.ca} (Tom Rushworth)
+@file{rsalz@@bbn.com} (Rich Salz)
+@file{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
+@file{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
+@file{peter@@ficc.ferranti.com} (Peter da Silva)
+@file{frumious!pat} (Patrick Smith)
+@file{roscom!monty@@bu.edu} (Monty Solomon)
+@file{chs@@antic.apu.fi} (Hannu Strang)
+@file{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
+Oleg Tabarovsky @file{<olg@@olghome.pccentre.msk.su>}
+John Theus @file{<john@@theus.rain.com>}
+@file{rmtodd@@servalan.servalan.com} (Richard Todd)
+Len Tower @file{<tower-prep@@ai.mit.edu>}
+@file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
+@file{jv@@mh.nl} (Johan Vromans)
+@file{frnkmth!twwells.com!bill} (T. William Wells)
+@file{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
+Eric Ziegast @file{<uunet!ziegast>}
 @end example
 
 @node Index (concepts), Index (configuration file), Acknowledgements, Top
