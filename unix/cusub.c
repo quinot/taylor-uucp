@@ -1114,7 +1114,14 @@ fsysdep_shell (qconn, zcmd, tcmd)
   int aidescs[3];
   pid_t ipid;
 
-  azargs[0] = "/bin/sh";
+  if (tcmd != SHELL_NORMAL)
+    azargs[0] = "/bin/sh";
+  else
+    {
+      azargs[0] = getenv ("SHELL");
+      if (azargs[0] == NULL)
+	azargs[0] = "/bin/sh";
+    }
   if (zcmd == NULL || *zcmd == '\0')
     azargs[1] = NULL;
   else
