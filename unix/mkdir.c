@@ -4,11 +4,6 @@
    /bin/mkdir program.  */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
 
 #include <errno.h>

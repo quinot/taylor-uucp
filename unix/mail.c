@@ -20,14 +20,10 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
 #include "system.h"
 
@@ -35,6 +31,10 @@
 
 #if HAVE_TIME_H
 #include <time.h>
+#endif
+
+#ifndef ctime
+extern char *ctime ();
 #endif
 
 /* Mail a message to a user.  */

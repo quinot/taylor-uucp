@@ -20,14 +20,10 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
 
 #include <errno.h>
@@ -248,7 +244,8 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 	  ++cpar_close;
 	  ++cchild_close;
 
-	  if (fcntl (aidescs[i], F_SETFD, FD_CLOEXEC) < 0)
+	  if (fcntl (aidescs[i], F_SETFD,
+		     fcntl (aidescs[i], F_GETFD, 0) | FD_CLOEXEC) < 0)
 	    {
 	      ierr = errno;
 	      ferr = TRUE;
@@ -309,13 +306,15 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 
   for (i = 0; i < 3; i++)
     {
-      if (aichild_descs[i] == i)
-	(void) fcntl (i, F_SETFD, 0);
-      else
+      if (aichild_descs[i] != i)
 	{
 	  (void) dup2 (aichild_descs[i], i);
 	  (void) close (aichild_descs[i]);
 	}
+      /* This should only be necessary if aichild_descs[i] == i, but
+	 some systems copy the close-on-exec flag for a dupped
+	 descriptor, which is wrong according to POSIX.  */
+      (void) fcntl (i, F_SETFD, fcntl (i, F_GETFD, 0) &~ FD_CLOEXEC);
     }
 
   zcmd = pazargs[0];

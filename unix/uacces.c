@@ -20,16 +20,11 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
-#include "system.h"
 
 #include <pwd.h>
 #include <errno.h>
@@ -76,7 +71,7 @@ fsuser_access (q, imode, zuser)
 
 	  if (zuser_hold != NULL)
 	    {
-	      xfree ((pointer) zuser_hold);
+	      ubuffree (zuser_hold);
 	      zuser_hold = NULL;
 	      cgroups_hold = 0;
 	      xfree ((pointer) paigroups_hold);
@@ -95,7 +90,7 @@ fsuser_access (q, imode, zuser)
 	      struct group *qg;
 #endif
 
-	      zuser_hold = xstrdup (zuser);
+	      zuser_hold = zbufcpy (zuser);
 
 	      iuid_hold = qpwd->pw_uid;
 	      igid_hold = qpwd->pw_gid;

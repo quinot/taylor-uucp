@@ -20,14 +20,10 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
 #include "system.h"
 
@@ -77,7 +73,7 @@ fsysdep_rmdir (zdir)
 	  ulog (LOG_ERROR, "rmdir (%s): %s", q->zdir, strerror (errno));
 	  fret = FALSE;
 	}
-      xfree ((pointer) q->zdir);
+      ubuffree (q->zdir);
       qnext = q->qnext;
       xfree ((pointer) q);
       q = qnext;
@@ -100,7 +96,7 @@ isremove_dir (zfile, qstat, iflag)
 
       q = (struct sdirlist *) xmalloc (sizeof (struct sdirlist));
       q->qnext = qSdirlist;
-      q->zdir = xstrdup (zfile);
+      q->zdir = zbufcpy (zfile);
       qSdirlist = q;
     }
   else

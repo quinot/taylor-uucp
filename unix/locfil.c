@@ -1,7 +1,7 @@
 /* locfil.c
    Expand a file name on the local system.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -20,13 +20,14 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
+#include "sysdep.h"
+#include "system.h"
 
 #include <pwd.h>
-
-#include "system.h"
 
 #ifndef getpwnam
 extern struct passwd *getpwnam ();
@@ -35,25 +36,22 @@ extern struct passwd *getpwnam ();
 /* Turn a file name into an absolute path, by doing tilde expansion
    and moving any other type of file into the public directory.  */
 
-const char *
+char *
 zsysdep_local_file (zfile, zpubdir)
      const char *zfile;
      const char *zpubdir;
 {
-  static size_t calc;
-  static char *zalc;
   const char *zdir;
-  size_t csize;
 
   if (*zfile == '/')
-    return zfile;
+    return zbufcpy (zfile);
 
   if (*zfile != '~')
     zdir = zpubdir;
   else
     {
       if (zfile[1] == '\0')
-	return zpubdir;
+	return zbufcpy (zpubdir);
 
       if (zfile[1] == '/')
 	{
@@ -80,20 +78,12 @@ zsysdep_local_file (zfile, zpubdir)
 	    }
 
 	  if (zfile[cuserlen] == '\0')
-	    return q->pw_dir;
+	    return zbufcpy (q->pw_dir);
 
 	  zdir = q->pw_dir;
 	  zfile += cuserlen + 1;
 	}
     }
 
-  csize = strlen (zdir) + strlen (zfile) + sizeof "/";
-  if (csize > calc)
-    {
-      zalc = (char *) xrealloc ((pointer) zalc, csize);
-      calc = csize;
-    }
-
-  sprintf (zalc, "%s/%s", zdir, zfile);
-  return zalc;
+  return zsysdep_in_dir (zdir, zfile);
 }

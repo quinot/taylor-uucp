@@ -2,14 +2,9 @@
    Retry fork several times before giving up.  */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include "sysdep.h"
 
 #include <errno.h>
-
-#include "sysdep.h"
 
 pid_t
 isfork ()

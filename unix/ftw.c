@@ -20,11 +20,6 @@ Cambridge, MA 02139, USA.
 Modified by Ian Lanc Taylor for Taylor UUCP, June 1992.  */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
 
 #include <errno.h>
