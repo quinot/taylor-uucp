@@ -24,63 +24,74 @@ if test -s /bin/echo; then
 fi
 AC_LN_S
 dnl
-ILT_HEADER_CHECK(string.h strings.h unistd.h stdlib.h limits.h time.h)
-ILT_HEADER_CHECK(sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
-ILT_HEADER_CHECK(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
-ILT_HEADER_CHECK(poll.h stropts.h)
+AC_HAVE_HEADERS(string.h strings.h unistd.h stdlib.h limits.h time.h)
+AC_HAVE_HEADERS(sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
+AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
+AC_HAVE_HEADERS(poll.h stropts.h ftw.h)
 dnl
 AC_MAJOR_HEADER
 dnl
 AC_RETSIGTYPE
 dnl
-AC_LIBTHING_PRESENT([time_t in time.h],
+AC_LIBTHING_CHECK([time_t in time.h],
 [#include <time.h>], [time_t i;],
-AC_DEFINE([HAVE_TIME_T]))
+AC_DEFINE([HAVE_TIME_T]),
+:)
 dnl
-AC_LIBTHING_PRESENT([time_t in sys/types.h],
+AC_LIBTHING_CHECK([time_t in sys/types.h],
 [#include <sys/types.h>], [time_t i;],
-AC_DEFINE([HAVE_SYS_TIME_T]))
+AC_DEFINE([HAVE_SYS_TIME_T]),
+:)
 dnl
-AC_LIBTHING_PRESENT([time.h and sys/time.h being included together],
+AC_LIBTHING_CHECK([time.h and sys/time.h being included together],
 [#include <sys/time.h>
 #include <time.h>],
 [int i;],
-AC_DEFINE([HAVE_SYS_TIME_AND_TIME_H]))
+AC_DEFINE([HAVE_SYS_TIME_AND_TIME_H]),
+:)
 dnl
-AC_LIBTHING_PRESENT([termios.h and sys/ioctl.h being included together],
+AC_LIBTHING_CHECK([termios.h and sys/ioctl.h being included together],
 [#include <termios.h>
 #include <sys/ioctl.h>],
 [int i;],
-AC_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H]))
+AC_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H]),
+:)
 dnl
-AC_LIBTHING_PRESENT([CBREAK],
+AC_LIBTHING_CHECK([CBREAK],
 [#include <sgtty.h>], [int i = CBREAK;],
-AC_DEFINE([HAVE_CBREAK]))
+AC_DEFINE([HAVE_CBREAK]),
+:)
 dnl
-AC_LIBTHING_MISSING([pid_t in sys/types.h],
+AC_LIBTHING_CHECK([pid_t in sys/types.h],
 [#include <sys/types.h>], [pid_t x;],
+:,
 AC_DEFINE(PID_T, int))
 dnl
-AC_LIBTHING_MISSING([uid_t in sys/types.h],
+AC_LIBTHING_CHECK([uid_t in sys/types.h],
 [#include <sys/types.h>], [uid_t x;],
+:,
 AC_DEFINE(UID_T, int))
 dnl
-AC_LIBTHING_MISSING([gid_t in sys/types.h],
+AC_LIBTHING_CHECK([gid_t in sys/types.h],
 [#include <sys/types.h>], [gid_t x;],
+:,
 AC_DEFINE(GID_T, int))
 dnl
-AC_LIBTHING_MISSING([off_t in sys/types.h],
+AC_LIBTHING_CHECK([off_t in sys/types.h],
 [#include <sys/types.h>], [off_t x;],
+:,
 AC_DEFINE(OFF_T, long))
 dnl
 dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
-AC_LIBTHING_PRESENT([sig_atomic_t in signal.h],
+AC_LIBTHING_CHECK([sig_atomic_t in signal.h],
 [#include <signal.h>], [sig_atomic_t x;],
-AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H]))
+AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H]),
+:)
 dnl
-AC_LIBTHING_PRESENT([sig_atomic_t in sys/types.h],
+AC_LIBTHING_CHECK([sig_atomic_t in sys/types.h],
 [#include <sys/types.h>], [sig_atomic_t x;],
-AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H]))
+AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H]),
+:)
 dnl
 dnl The filesystem info code is from David MacKenzie's fileutils 3.1
 dnl package.
@@ -96,23 +107,26 @@ elif test -f $INCLUDEDIR/sys/mount.h -a -f $INCLUDEDIR/sys/fs_types.h; then
 elif grep MOUNT_UFS $INCLUDEDIR/sys/mount.h >/dev/null 2>&1; then
   AC_DEFINE(FS_STATFS)
 else
-  AC_LIBTHING_PRESENT([ustat], , [ustat();], AC_DEFINE(FS_USTAT))
+  AC_LIBTHING_CHECK([ustat], , [ustat();], AC_DEFINE(FS_USTAT), :)
 fi
 dnl
-AC_LIBTHING_PRESENT([void],
+AC_LIBTHING_CHECK([void],
 [], [extern void foo (); (void) exit (0);],
-AC_DEFINE([HAVE_VOID]))
+AC_DEFINE([HAVE_VOID]),
+:)
 dnl
-AC_LIBTHING_PRESENT([unsigned char],
+AC_LIBTHING_CHECK([unsigned char],
 [], [unsigned char i = (unsigned char) -1;],
-AC_DEFINE([HAVE_UNSIGNED_CHAR]))
+AC_DEFINE([HAVE_UNSIGNED_CHAR]),
+:)
 dnl
-AC_LIBTHING_PRESENT([errno],
+AC_LIBTHING_CHECK([errno],
 [#include <errno.h>], [int i = errno; errno = 1;],
-AC_DEFINE([HAVE_ERRNO_DECLARATION]))
+AC_DEFINE([HAVE_ERRNO_DECLARATION])
+:)
 dnl
 echo checking for combined use of O_NONBLOCK and O_NDELAY
-ILT_TEST_PROGRAM([
+AC_TEST_PROGRAM([
 #include <fcntl.h>
 #ifndef O_NDELAY
 #ifdef FNDELAY
@@ -138,13 +152,13 @@ dnl
 AC_ALLOCA
 dnl
 undefine([index])
-ILT_FUNC_CHECK(memset memcmp memchr memcpy bcopy bcmp bzero)
+AC_HAVE_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
 dnl
 dnl Check for the SCO buggy memmove.  This test case is from Chip
 dnl Salzenberg.  The test case must be run with cc without optimization.
-ILT_FUNC_PRESENT(memmove,
+AC_FUNC_CHECK(memmove,
 [SAVECC=$CC; CC=cc
-ILT_TEST_PROGRAM([
+AC_TEST_PROGRAM([
 main()
   {
      register int x1, x2, x3;
@@ -159,21 +173,22 @@ main()
 ],
 AC_DEFINE(HAVE_MEMMOVE),
 echo 1>&2 "Your memmove seems to be buggy")
-CC=$SAVECC])
+CC=$SAVECC],
+:)
 dnl
-ILT_FUNC_CHECK(strchr strrchr index rindex strerror strtol strstr)
-ILT_FUNC_CHECK(strdup strcasecmp stricmp strlwr bsearch vfprintf)
-ILT_FUNC_CHECK(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
-ILT_FUNC_CHECK(sigsetjmp setret)
-ILT_FUNC_CHECK(sigaction sigvec sigset)
-ILT_FUNC_CHECK(sigprocmask sigblock sighold)
-ILT_FUNC_CHECK(getdtablesize sysconf)
-ILT_FUNC_CHECK(setpgrp setsid)
-ILT_FUNC_CHECK(gethostname uname)
-ILT_FUNC_CHECK(gettimeofday)
+AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strstr)
+AC_HAVE_FUNCS(strdup strcasecmp stricmp strlwr bsearch vfprintf)
+AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
+AC_HAVE_FUNCS(sigsetjmp setret)
+AC_HAVE_FUNCS(sigaction sigvec sigset)
+AC_HAVE_FUNCS(sigprocmask sigblock sighold)
+AC_HAVE_FUNCS(getdtablesize sysconf)
+AC_HAVE_FUNCS(setpgrp setsid)
+AC_HAVE_FUNCS(gethostname uname)
+AC_HAVE_FUNCS(gettimeofday)
 dnl Check for the SCO buggy ftime
-ILT_FUNC_PRESENT(ftime,
-[ILT_TEST_PROGRAM([
+AC_FUNC_CHECK(ftime,
+[AC_TEST_PROGRAM([
 #include <sys/types.h>
 #include <sys/timeb.h>
 main ()
@@ -196,10 +211,11 @@ main ()
 }
 ],
 AC_DEFINE(HAVE_FTIME),
-echo 1>&2 "Your ftime seems to be buggy")])
+echo 1>&2 "Your ftime seems to be buggy")],
+:)
 dnl
-ILT_FUNC_CHECK(times)
-ILT_FUNC_CHECK(napms nap usleep poll select)
+AC_HAVE_FUNCS(times)
+AC_HAVE_FUNCS(napms nap usleep poll select)
 case $DEFS in
 *HAVE_NAPMS*) ;;
 *HAVE_NAP*)  ;;
@@ -211,10 +227,10 @@ case $DEFS in
    ;;
 esac
 dnl
-ILT_FUNC_CHECK(getgrent)
-ILT_FUNC_CHECK(socket)
+AC_HAVE_FUNCS(getgrent)
+AC_HAVE_FUNCS(socket)
 dnl
-ILT_FUNC_CHECK(getcwd getwd)
+AC_HAVE_FUNCS(getcwd getwd)
 case $DEFS in
 *HAVE_GETCWD*) ;;
 *HAVE_GETCD*) ;;
@@ -223,7 +239,7 @@ case $DEFS in
    fi ;;
 esac
 dnl
-ILT_FUNC_CHECK(mkdir)
+AC_HAVE_FUNCS(mkdir)
 case $DEFS in
 *HAVE_MKDIR*) UUDIR='# ' ;;
 *) UUDIR=
@@ -233,7 +249,15 @@ case $DEFS in
 esac
 AC_SUBST(UUDIR)dnl
 dnl
-AC_LIBTHING_PRESENT([times declared as long],
+AC_HAVE_FUNCS(rmdir)
+case $DEFS in
+*HAVE_RMDIR*) ;;
+*) if test -s /bin/rmdir; then
+     AC_DEFINE([RMDIR_PROGRAM], `echo '"/bin/rmdir"'`)
+   fi ;;
+esac
+dnl
+AC_LIBTHING_CHECK([times declared as long],
 [#include <sys/types.h>
 #ifdef HAVE_LIBC_H
 #include <libc.h>
@@ -243,18 +267,21 @@ AC_LIBTHING_PRESENT([times declared as long],
 #endif
 extern long times ();],
 [],
-AC_DEFINE([TIMES_DECLARATION_OK]))
+AC_DEFINE([TIMES_DECLARATION_OK])
+:)
 dnl
-AC_LIBTHING_PRESENT([BSD setpgrp],
+AC_LIBTHING_CHECK([BSD setpgrp],
 [#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif],
 [getpgrp (0); setpgrp (0, 0);],
-AC_DEFINE([HAVE_BSD_PGRP]))
+AC_DEFINE([HAVE_BSD_PGRP]),
+:)
 dnl
-AC_LIBTHING_PRESENT([union wait],
+AC_LIBTHING_CHECK([union wait],
 [#include <sys/wait.h>], [union wait u; wait (&u);],
-AC_DEFINE([HAVE_UNION_WAIT]))
+AC_DEFINE([HAVE_UNION_WAIT]),
+:)
 dnl
 AC_UTIME_NULL
 AC_LONG_FILENAMES
