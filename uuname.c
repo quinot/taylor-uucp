@@ -1,7 +1,7 @@
 /* uuname.c
    List the names of known remote UUCP sites.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -99,7 +99,7 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	  printf ("%s: Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
@@ -180,9 +180,6 @@ static void
 unusage ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	   VERSION);
-  fprintf (stderr,
 	   "Usage: %s [-a] [-l] [-I file]\n", zProgram);
   fprintf (stderr, "Use %s --help for help\n", zProgram);
   exit (EXIT_FAILURE);
@@ -192,7 +189,7 @@ unusage ()
 
 static void unhelp ()
 {
-  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 	   VERSION);
   printf ("Usage: %s [-a] [-l] [-I file]\n", zProgram);
   printf (" -a,--aliases: display aliases\n");

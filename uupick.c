@@ -1,7 +1,7 @@
 /* uupick.c
    Get files stored in the public directory by uucp -t.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -107,7 +107,7 @@ main (argc, argv)
 	  /* Print version and exit.  */
 	  fprintf
 	    (stderr,
-	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     "%s: Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 	     zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
@@ -319,7 +319,7 @@ static void
 uphelp ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	   "Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
 	   " -s,--system system: Only consider files from named system\n");

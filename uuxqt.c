@@ -1,7 +1,7 @@
 /* uuxqt.c
    Run uux commands.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -126,7 +126,7 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	  printf ("%s: Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
@@ -363,7 +363,7 @@ main (argc, argv)
 static void
 uqhelp ()
 {
-  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 	   VERSION);
   printf ("Usage: %s [-c,--command cmd] [-s,--system system]\n", zProgram);
   printf (" -c,--command cmd: Set type of command to execute\n");
@@ -379,9 +379,6 @@ uqhelp ()
 static void
 uqusage ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	   VERSION);
   fprintf (stderr,
 	   "Usage: %s [-c,--command cmd] [-s,--system system]\n", zProgram);
   fprintf (stderr, "Use %s --help for help\n", zProgram);

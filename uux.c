@@ -308,7 +308,7 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	  printf ("%s: Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
@@ -1300,7 +1300,7 @@ main (argc, argv)
 static void
 uxhelp ()
 {
-  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 	  VERSION);
   printf ("Usage: %s [options] [-] command\n", zProgram);
   printf (" -,-p,--stdin: Read standard input for standard input of command\n");
@@ -1326,9 +1326,6 @@ uxhelp ()
 static void
 uxusage ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	   VERSION);
   fprintf (stderr,
 	   "Usage: %s [options] [-] command\n", zProgram);
   fprintf (stderr, "Use %s --help for help\n", zProgram);
