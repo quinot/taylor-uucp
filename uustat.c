@@ -71,9 +71,6 @@ const char uustat_rcsid[] = "$Id$";
    -xdebug set debugging level
    -yhour report jobs younger than specified number of hours  */
 
-/* The program name.  */
-char abProgram[] = "uustat";
-
 /* What to do with a job that matches the selection criteria; these
    values may be or'red together.  */
 #define JOB_SHOW (01)
@@ -96,6 +93,7 @@ struct scmdlist
 /* Local functions.  */
 
 static void ususage P((void));
+static void ushelp P((void));
 static boolean fsxqt_file_read P((pointer puuconf, const char *zfile));
 static void usxqt_file_free P((void));
 static int isxqt_cmd P((pointer puuconf, int argc, char **argv, pointer pvar,
@@ -148,7 +146,36 @@ static int csunits_show P((long idiff));
 static boolean fsmachines P((void));
 
 /* Long getopt options.  */
-static const struct option asSlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asSlongopts[] =
+{
+  { "all", no_argument, NULL, 'a' },
+  { "mail-lines", required_argument, NULL, 'B' },
+  { "command", required_argument, NULL, 'c' },
+  { "not-command", required_argument, NULL, 'C' },
+  { "executions", no_argument, NULL, 'e' },
+  { "prompt", no_argument, NULL, 'i' },
+  { "kill", required_argument, NULL, 'k' },
+  { "kill-all", no_argument, NULL, 'K' },
+  { "status", no_argument, NULL, 'm' },
+  { "mail", no_argument, NULL, 'M' },
+  { "notify", no_argument, NULL, 'N' },
+  { "older-than", required_argument, NULL, 'o' },
+  { "ps", no_argument, NULL, 'p' },
+  { "list", no_argument, NULL, 'q' },
+  { "no-list", no_argument, NULL, 'Q' },
+  { "rejuvenate", required_argument, NULL, 'r' },
+  { "system", required_argument, NULL, 's' },
+  { "not-system", required_argument, NULL, 'S' },
+  { "user", required_argument, NULL, 'u' },
+  { "not-user", required_argument, NULL, 'U' },
+  { "comment", required_argument, NULL, 'W' },
+  { "younger-than", required_argument, NULL, 'y' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -204,8 +231,10 @@ main (argc, argv)
   const char *azoneuser[1];
   boolean fret;
 
+  zProgram = argv[0];
+
   while ((iopt = getopt_long (argc, argv,
-			      "aB:c:C:eiI:k:KmMNo:pqQr:s:S:u:U:W:x:y:",
+			      "aB:c:C:eiI:k:KmMNo:pqQr:s:S:u:U:vW:x:y:",
 			      asSlongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -345,13 +374,26 @@ main (argc, argv)
 	  iyounghours = (int) strtol (optarg, (char **) NULL, 10);
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  ushelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  ususage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -379,7 +421,7 @@ main (argc, argv)
 
   if (ccmds > 1)
     {
-      ulog (LOG_ERROR, "Too many options");
+      fprintf (stderr, "%s: too many options\n", zProgram);
       ususage ();
     }
 
@@ -515,62 +557,47 @@ main (argc, argv)
 static void
 ususage ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	   VERSION);
-  fprintf (stderr,
-	   "Usage: uustat [options]\n");
-  fprintf (stderr,
-	   " -a: list all UUCP jobs\n");
-  fprintf (stderr, 
-	   " -B num: number of lines to return in -M or -N mail message\n");
-  fprintf (stderr,
-	   " -c command: list requests for named command\n");
-  fprintf (stderr,
-	   " -C command: list requests for other than named command\n");
-  fprintf (stderr,
-	   " -e: list queued executions rather than job requests\n");
-  fprintf (stderr,
-	   " -i: prompt for whether to kill each listed job\n");
-  fprintf (stderr,
-	   " -k job: kill specified UUCP job\n");
-  fprintf (stderr,
-	   " -K: kill each listed job\n");
-  fprintf (stderr,
-	   " -m: report status for all remote machines\n");
-  fprintf (stderr,
-	   " -M: mail report on each listed job to UUCP administrator\n");
-  fprintf (stderr,
-	   " -N: mail report on each listed job to requestor\n");
-  fprintf (stderr,
-	   " -o hours: list all jobs older than given number of hours\n");
-  fprintf (stderr,
-	   " -p: show status of all processes holding UUCP locks\n");
-  fprintf (stderr,
-	   " -q: list number of jobs for each system\n");
-  fprintf (stderr,
-	   " -Q: don't list jobs, just take actions (-i, -K, -M, -N)\n");
-  fprintf (stderr,
-	   " -r job: rejuvenate specified UUCP job\n");
-  fprintf (stderr,
-	   " -s system: list all jobs for specified system\n");
-  fprintf (stderr,
-	   " -S system: list all jobs for other than specified system\n");
-  fprintf (stderr,
-	   " -u user: list all jobs for specified user\n");
-  fprintf (stderr,
-	   " -U user: list all jobs for other than specified user\n");
-  fprintf (stderr,
-	   " -W comment: comment to include in mail messages\n");
-  fprintf (stderr,
-	   " -y hours: list all jobs younger than given number of hours\n");
-  fprintf (stderr,
-	   " -x debug: Set debugging level (0 for none, 9 is max)\n");
-#if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
-#endif /* HAVE_TAYLOR_CONFIG */
+  fprintf (stderr, "Usage: %s [options]\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
   exit (EXIT_FAILURE);
+}
+
+/* Print a help message.  */
+
+static void
+ushelp ()
+{
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	  VERSION);
+  printf ("Usage: %s [options]\n", zProgram);
+  printf (" -a,--all: list all UUCP jobs\n");
+  printf (" -B,--mail-lines num: number of lines to return in -M or -N mail message\n");
+  printf (" -c,--command command: list requests for named command\n");
+  printf (" -C,--not-command command: list requests for other than named command\n");
+  printf (" -e,--executions: list queued executions rather than job requests\n");
+  printf (" -i,--prompt: prompt for whether to kill each listed job\n");
+  printf (" -k,--kill job: kill specified UUCP job\n");
+  printf (" -K,--kill-all: kill each listed job\n");
+  printf (" -m,--status: report status for all remote machines\n");
+  printf (" -M,--mail: mail report on each listed job to UUCP administrator\n");
+  printf (" -N,--notify: mail report on each listed job to requestor\n");
+  printf (" -o,--older-than hours: list all jobs older than given number of hours\n");
+  printf (" -p,--ps: show status of all processes holding UUCP locks\n");
+  printf (" -q,--list: list number of jobs for each system\n");
+  printf (" -Q,--no-list: don't list jobs, just take actions (-i, -K, -M, -N)\n");
+  printf (" -r,--rejuvenate job: rejuvenate specified UUCP job\n");
+  printf (" -s,--system system: list all jobs for specified system\n");
+  printf (" -S,--not-system system: list all jobs for other than specified system\n");
+  printf (" -u,--user user: list all jobs for specified user\n");
+  printf (" -U,--not-user user: list all jobs for other than specified user\n");
+  printf (" -W,--comment comment: comment to include in mail messages\n");
+  printf (" -y,--younger-than hours: list all jobs younger than given number of hours\n");
+  printf (" -x,--debug debug: Set debugging level (0 for none, 9 is max)\n");
+#if HAVE_TAYLOR_CONFIG
+  printf (" -I,--config file: Set configuration file to use\n");
+#endif /* HAVE_TAYLOR_CONFIG */
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
 }
 
 /* We need to be able to read information from an execution file.  */
@@ -1211,7 +1238,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	      int b;
 
 	      /* Ask stdin whether this job should be killed.  */
-	      fprintf (stderr, "%s: Kill %s? ", abProgram, zlistid);
+	      fprintf (stderr, "%s: Kill %s? ", zProgram, zlistid);
 	      (void) fflush (stderr);
 	      b = getchar ();
 	      fkill = b == 'y' || b == 'Y';
@@ -1459,7 +1486,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 	      int b;
 
 	      /* Ask stdin whether this job should be killed.  */
-	      fprintf (stderr, "%s: Kill %s? ", abProgram, zSxqt_cmd);
+	      fprintf (stderr, "%s: Kill %s? ", zProgram, zSxqt_cmd);
 	      (void) fflush (stderr);
 	      b = getchar ();
 	      fkill = b == 'y' || b == 'Y';
