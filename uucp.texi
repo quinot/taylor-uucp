@@ -4618,6 +4618,7 @@ Bob Cunningham @file{<bob@@soest.hawaii.edu>}
 @file{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @file{denny@@dakota.alisa.com} (Bob Denny)
 @file{gert@@greenie.gold.sub.org} (Gert Doering)
+Andrew Evans @file{<andrew@@airs.com>}
 @file{dje@@ersys.edmonton.ab.ca} (Doug Evans)
 Marc Evans @file{<marc@@synergytics.com>}
 @file{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
