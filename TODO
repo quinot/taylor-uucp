@@ -231,3 +231,29 @@ Franc,ois Pinard: if 'g' protocol sends to something which echoes
 everything, it will never get out of fgwait_for_packet.
 
 65.
+
+Monty Solomon: add an option to use ``union wait'' as the argument to
+wait(2).
+
+66.
+
+Monty Solomon: getopt.c defines bcopy and index.
+
+67.
+
+Franc,ois Pinard:
+> ---------------------------------------------------------------------->
+> [...]
+> The file:
+> 
+>    mcgill-vision!/@/thunder/root/home/thunder/guest/.pinard/h1
+> 
+> has been successfully transferred to:
+> 
+>    icule!/usr/spool/uucppublic/h1
+> 
+> as requested by mcgill-vision!guest.
+> 
+> ----------------------------------------------------------------------<
+
+68.
