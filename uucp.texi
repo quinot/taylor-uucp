@@ -94,7 +94,8 @@ pub/taylor-uucp.
 * Copying::                     Taylor UUCP Copying Conditions
 * Introduction::                Introduction to Taylor UUCP
 * Invoking the UUCP Programs::  Invoking the UUCP Programs
-* Overall Installation::        Taylor UUCP Installation
+* Installing Taylor UUCP::      Installing Taylor UUCP
+* Using Taylor UUCP::           Using Taylor UUCP
 * Configuration Files::         Taylor UUCP Configuration Files
 * Protocols::                   UUCP Protocol Descriptions
 * Hacking::                     Hacking Taylor UUCP
@@ -151,67 +152,82 @@ Invoking uucico
 * uucico Description::          Description of uucico
 * uucico Options::              Options Supported by uucico
 
-Taylor UUCP Overall Installation
-
-* Configuration::               Configuring Taylor UUCP
-* Compilation::                 Compiling Taylor UUCP
-* Testing::                     Testing Taylor UUCP
-* Installation::                Installing Taylor UUCP
-* TCP::                         TCP together with Taylor UUCP
-
 Installing Taylor UUCP
 
-* Running uucico::              Running uucico
-* Using UUCP for mail and news::  Using UUCP for mail and news.
-* Trimming UUCP Log Files::     Trimming UUCP Log Files
+* Compilation::                 Compiling Taylor UUCP
+* Testing the Compilation::     Testing the Compilation
+* Installing the Binaries::     Installing the Binaries
+* Configuration::               Configuring Taylor UUCP
+* Testing the Installation::    Testing the Installation
 
-Using UUCP for mail and news.
+Using Taylor UUCP
+
+* Running uucico::              Running uucico
+* Mail and News::               Using UUCP for Mail and News
+* The Spool Directory Layout::  The Spool Directory Layout
+* Spool Directory Cleaning::    Cleaning the UUCP Spool Directory
+
+Using UUCP for Mail and News.
 
 * Sending mail or news::        Sending mail or news via UUCP
 * Receiving mail or news::      Receiving mail or news via UUCP
 
+The Spool Directory Layout
+
+* System Spool Directories::    System Spool Directories
+* Status Directory::            Status Spool Directory
+* Execution Subdirectories::    Execution Spool Subdirectories
+* Other Spool Subdirectories::  Other Spool Subdirectories
+* Spool Lock Files::            Spool Directory Lock Files
+
 Taylor UUCP Configuration Files
 
-* Configuration File Format::   Configuration file format
-* Configuration File Overview::  Configuration File Overview
-* Configuration Examples::      Examples of configuration files
-* Time Strings::                How to write time strings
-* Chat Scripts::                How to write chat scripts
-* config File::                 The main configuration file
-* sys File::                    The system configuration file
-* port File::                   The port configuration files
-* dial File::                   The dialer configuration files
-* Security::                    Security issues
+* Configuration Overview::      Configuration File Overview
+* Configuration File Format::   Configuration File Format
+* Configuration Examples::      Examples of Configuration Files
+* Time Strings::                How to Write Time Strings
+* Chat Scripts::                How to Write Chat Scripts
+* config File::                 The Main Configuration File
+* sys File::                    The System Configuration File
+* port File::                   The Port Configuration Files
+* dial File::                   The Dialer Configuration Files
+* UUCP Over TCP::               UUCP Over TCP
+* Security::                    Security Issues
 
 Examples of Configuration Files
 
-* config File Examples::        Examples of the main configuration file
-* Leaf Example::                Call a single remote site
-* Gateway Example::             The gateway for several local systems
+* config File Examples::        Examples of the Main Configuration File
+* Leaf Example::                Call a Single Remote Site
+* Gateway Example::             The Gateway for Several Local Systems
 
 The Main Configuration File
 
-* Miscellaneous (config)::      Miscellaneous config file commands
-* Configuration File Names::    Using different configuration files
-* Log File Names::              Using different log files
-* Debugging Levels::            Debugging levels
+* Miscellaneous (config)::      Miscellaneous config File Commands
+* Configuration File Names::    Using Different Configuration Files
+* Log File Names::              Using Different Log Files
+* Debugging Levels::            Debugging Levels
 
 The System Configuration File
 
-* Defaults and Alternates::     Using defaults and alternates
-* Naming the System::           Naming the system
-* Calling Out::                 Calling out
-* Accepting a Call::            Accepting a call
-* Protocol Selection::          Protocol selection
-* File Transfer Control::       File transfer control
-* Miscellaneous (sys)::         Miscellaneous sys file commands
-* Default sys File Values::     Default values
+* Defaults and Alternates::     Using Defaults and Alternates
+* Naming the System::           Naming the System
+* Calling Out::                 Calling Out
+* Accepting a Call::            Accepting a Call
+* Protocol Selection::          Protocol Selection
+* File Transfer Control::       File Transfer Control
+* Miscellaneous (sys)::         Miscellaneous sys File Commands
+* Default sys File Values::     Default Values
 
 Calling Out
 
-* When to Call::                When to call
-* Placing the Call::            Placing the call
-* Logging In::                  Logging in
+* When to Call::                When to Call
+* Placing the Call::            Placing the Call
+* Logging In::                  Logging In
+
+UUCP Over TCP
+
+* TCP Client::                  Connecting to Another System Over TCP
+* TCP Server::                  Running a TCP Server
 
 UUCP Protocol Internals
 
@@ -235,17 +251,17 @@ UUCP Protocol Internals
 
 UUCP Protocol
 
-* The Initial Handshake::       
-* UUCP Protocol Commands::      
-* The Final Handshake::         
+* The Initial Handshake::       The Initial Handshake
+* UUCP Protocol Commands::      UUCP Protocol Commands
+* The Final Handshake::         The Final Handshake
 
 UUCP Protocol Commands
 
-* The S Command::               
-* The R Command::               
-* The X Command::               
-* The E Command::               
-* The H Command::               
+* The S Command::               The S Command
+* The R Command::               The R Command
+* The X Command::               The X Command
+* The E Command::               The E Command
+* The H Command::               The H Command
 
 Hacking Taylor UUCP
 
@@ -499,12 +515,12 @@ The @code{tstuu} program is a test harness for the UUCP package; it can
 help check that the package has been configured and compiled correctly.
 However, it uses pseudo-terminals, which means that it is less portable
 than the rest of the package.  If it works, it can be useful when
-initially installing Taylor UUCP.  For more details, see @ref{Testing,
-tstuu}.
+initially installing Taylor UUCP.  For more details, see @ref{Testing
+the Compilation, tstuu}.
 
 @end table
 
-@node Invoking the UUCP Programs, Overall Installation, Introduction, Top
+@node Invoking the UUCP Programs, Installing Taylor UUCP, Introduction, Top
 @chapter Invoking the UUCP Programs
 
 This chapter describes how to run the UUCP programs.
@@ -1262,7 +1278,7 @@ display.
 @item -#
 @itemx -n lines
 @itemx --lines lines
-Here @samp{#} is a number; e.g. @samp{-10}.  The specified number of
+Here @samp{#} is a number; e.g., @samp{-10}.  The specified number of
 lines is displayed from the end of the log file.  The default is to
 display the entire log file, unless the @samp{-f}, @samp{-F}, or
 @samp{--follow} options are used, in which case the default is to
@@ -1944,62 +1960,29 @@ It causes @code{uucico} to call all systems for which there is work.
 Any option which may be given to @code{uucico} may also be given to
 @code{uusched}.  @xref{Invoking uucico}.
 
-@node Overall Installation, Configuration Files, Invoking the UUCP Programs, Top
-@chapter Taylor UUCP Overall Installation
+@node Installing Taylor UUCP, Using Taylor UUCP, Invoking the UUCP Programs, Top
+@chapter Installing Taylor UUCP
 
 These are the installation instructions for the Taylor UUCP package.
 
 @menu
-* Configuration::               Configuring Taylor UUCP
 * Compilation::                 Compiling Taylor UUCP
-* Testing::                     Testing Taylor UUCP
-* Installation::                Installing Taylor UUCP
-* TCP::                         TCP together with Taylor UUCP
+* Testing the Compilation::     Testing the Compilation
+* Installing the Binaries::     Installing the Binaries
+* Configuration::               Configuring Taylor UUCP
+* Testing the Installation::    Testing the Installation
 @end menu
 
-@node Configuration, Compilation, Overall Installation, Overall Installation
-@section Configuring Taylor UUCP
-
-You will have to decide what types of configuration files you want to
-use.  This package supports a new sort of configuration file; see
-@ref{Configuration Files}.  It also supports V2 configuration files
-(@file{L.sys}, @file{L-devices}, etc.) and HDB configuration files
-(@file{Systems}, @file{Devices}, etc.).  No documentation is provided
-for V2 or HDB configuration files.  All types of configuration files can
-be used at once, if you are so inclined.  Currently using just V2
-configuration files is not really possible, because there is no way to
-specify a dialer (there are no built in dialers, and the program does
-not know how to read @file{acucap} or @file{modemcap}); however, V2
-configuration files can be used with a new style dial file (@pxref{dial
-File}), or with a HDB @file{Dialers} file.
-
-Use of HDB configuration files has two known bugs.  A blank line in the
-middle of an entry in the @file{Permissions} file will not be ignored as
-it should be.  Dialer programs, as found in some versions of HDB, are
-not recognized directly.  If you must use a dialer program, rather than
-an entry in @file{Devices}, you must use the @code{chat-program} command
-in a new style dial file; see @ref{dial File}.  You will have to invoke
-the dialer program via a shell script or another program, since an exit
-code of 0 is required to recognize success; the @code{dialHDB} program
-in the @file{contrib} directory may be used for this purpose.
-
-The @code{uuconv} program can be used to convert from V2 or HDB
-configuration files to the new style (it can also do the reverse
-translation, if you are so inclined).  It will not do all of the work,
-and the results should be carefully checked, but it can be quite useful.
-
-If you are installing a new system, you will, of course, have to write
-the configuration files; see @ref{Configuration Files}.
-
-You must also decide what sort of spool directory you want to use.  If
-you will be using only these programs for UUCP, I recommend
-@samp{SPOOLDIR_TAYLOR}; otherwise select the spool directory
-corresponding to your existing UUCP package.  The details of the spool
-directory choices are described at somewhat tedious length in
-@file{unix/spool.c}.
-
-@node Compilation, Testing, Configuration, Overall Installation
+@node Compilation, Testing the Compilation, Installing Taylor UUCP, Installing Taylor UUCP
 @section Compiling Taylor UUCP
+
+If you have a source code distribution, you must first compile it for
+your system.  Free versions of Unix, such as Linux, NetBSD, or FreeBSD,
+often come with pre-compiled binary distributions of UUCP.  If you are
+using a binary distribution, you may skip to the configuration section
+(@pxref{Configuration}).
+
+Follow these steps to compile the source code.
 
 @enumerate
 
@@ -2040,16 +2023,11 @@ Libraries to pass to the C compiler.  If this is not set,
 The program to run to install UUCP in the binary directory.  If this is
 not set, then if @code{configure} finds the BSD @code{install} program,
 it will set this to @samp{install -c}; otherwise, it will use @samp{cp}.
-@item INSTALLDATA
-The program to run to install UUCP data files, such as the man pages and
-the info pages.  If this is not set, then if @code{configure} finds the
-BSD @code{install} program, it will set this to @samp{install -c -m
-644}; otherwise, it will use @samp{cp}.
 @end table
 
-Suppose you want to set the environment variable @samp{CC} to
-@samp{rcc}.  If you are using @code{sh} or @code{bash}, invoke
-@code{configure} as @samp{CC=rcc configure}.  If you are using
+Suppose, for example, you want to set the environment variable @samp{CC}
+to @samp{rcc}.  If you are using @code{sh}, @code{bash}, or @code{ksh},
+invoke @code{configure} as @samp{CC=rcc configure}.  If you are using
 @code{csh}, do @samp{setenv CC rcc; sh configure}.
 
 On some systems you will want to use @samp{LIBS=-lmalloc}.  On Xenix
@@ -2086,7 +2064,7 @@ On some versions of BSDI there is a bug in the shell which causes the
 default value for @samp{CFLAGS} to be set incorrectly.  If @samp{echo
 $@{CFLAGS--g@}} echoes @samp{g} rather than @samp{-g}, then you must set
 @samp{CFLAGS} in the environment before running configure.  There is a
-patch available from BSDI for this bug.  (From David Vrona).
+patch available from BSDI for this bug.  (Reported by David Vrona).
 
 @item
 On AIX 3.2.5, and possibly other versions, @samp{cc -E} does not work,
@@ -2095,24 +2073,35 @@ running configure by doing something like @samp{touch /tmp/foo.c; cc -E
 /tmp/foo.c}.  This may give a warning about the file being empty, but it
 should not give the @samp{Option NOROCONST} warning.  The workaround is
 to remove the @samp{,noroconst} entry from the @samp{options} clause in
-the @samp{cc} stanza in @file{/etc/xlc.cfg}.  (From Chris Lewis).
+the @samp{cc} stanza in @file{/etc/xlc.cfg}.  (Reported by Chris Lewis).
 
 @item
 You should verify that @code{configure} worked correctly by checking
 @file{config.h} and the instances of @file{Makefile}.
 
 @item
-Edit @file{policy.h} for your local system.  The comments should explain
-the various choices.  The default values are intended to be reasonable,
-so you may not have to make any changes.
+Edit @file{policy.h} for your local system.  The comments explain the
+various choices.  The default values are intended to be reasonable, so
+you may not have to make any changes.
+
+You must decide what type of configuration files to use; for more
+information on the choices, see @ref{Configuration}.
+
+You must also decide what sort of spool directory you want to use.  If
+this is a new installation, I recommend @samp{SPOOLDIR_TAYLOR};
+otherwise, select the spool directory corresponding to your existing
+UUCP package.
 
 @item
-Type @samp{make} to compile everything.  The @file{tstuu.c} file is not
-particularly portable; if you can't figure out how to compile it you can
-safely ignore it, as it is only used for testing (to use STREAMS
-pseudo-terminals, tstuu.c must be compiled with
-@samp{-DHAVE_STREAMS_PTYS}; this is not automatically determined at the
-moment).  If you have any other problems there is probably a bug in the
+Type @samp{make} to compile everything.
+
+The @file{tstuu.c} file is not particularly portable; if you can't
+figure out how to compile it you can safely ignore it, as it is only
+used for testing.  To use STREAMS pseudo-terminals, tstuu.c must be
+compiled with @samp{-DHAVE_STREAMS_PTYS}; this is not determined by the
+configure script.
+
+If you have any other problems there is probably a bug in the
 @code{configure} script.
 
 @item
@@ -2122,50 +2111,43 @@ just ask for help.
 
 @end enumerate
 
-@node Testing, Installation, Compilation, Overall Installation
-@section Testing Taylor UUCP
-
-This package is in use at hundreds, perhaps thousands, of sites, and has
-been running at @file{airs.com} for several years.  However, it will
-doubtless fail in some situations.  Do not rely on this code until you
-have proven to yourself that it will work.
-
-You can use the @code{uuchk} program to test your configuration files.
-It will read them and print out a verbose description.  This program
-should not be made setuid, because it will display passwords if it can
-read them.
+@node Testing the Compilation, Installing the Binaries, Compilation, Installing Taylor UUCP
+@section Testing the Compilation
 
 If your system supports pseudo-terminals, and you compiled the code to
-support the new style of configuration files, you should be able to use
-the @code{tstuu} program to test the @code{uucico} daemon (if your
-system supports STREAMS based pseudo-terminals, you must compile tstuu.c
-with @samp{-DHAVE_STREAMS_PTYS}, at least at the moment; the STREAMS
-based code was contributed by Marc Boucher).
+support the new style of configuration files (@code{HAVE_TAYLOR_CONFIG}
+was set to 1 in @file{policy.h}), you should be able to use the
+@code{tstuu} program to test the @code{uucico} daemon.  If your system
+supports STREAMS based pseudo-terminals, you must compile tstuu.c with
+@samp{-DHAVE_STREAMS_PTYS}.  (The STREAMS based code was contributed by
+Marc Boucher).
 
-To run @code{tstuu}, just type @samp{tstuu} with no arguments while
-logged in to the compilation directory (since it runs @file{./uucp},
-@file{./uux} and @file{./uucico}).  It will run a lengthy series of
-tests (it takes over ten minutes on a slow VAX).  You will need a fair
-amount of space available in @file{/usr/tmp}.  You will probably want to
-put it in the background.  Do not use @kbd{^Z}, because the program
-traps on @code{SIGCHLD} and winds up dying.  It will create a directory
-@file{/usr/tmp/tstuu} and fill it with configuration files, and create
-spool directories @file{/usr/tmp/tstuu/spool1} and
-@file{/usr/tmp/tstuu/spool2}.
+To run @code{tstuu}, just type @samp{tstuu} with no arguments.  You must
+run it in the compilation directory, since it runs @file{./uucp},
+@file{./uux} and @file{./uucico}.  The @code{tstuu} program will run a
+lengthy series of tests (it takes over ten minutes on a slow VAX).  You
+will need a fair amount of space available in @file{/usr/tmp}.  You will
+probably want to put it in the background.  Do not use @kbd{^Z}, because
+the program traps on @code{SIGCHLD} and winds up dying.  The
+@code{tstuu} program will create a directory @file{/usr/tmp/tstuu} and
+fill it with configuration files, and create spool directories
+@file{/usr/tmp/tstuu/spool1} and @file{/usr/tmp/tstuu/spool2}.
 
 If your system does not support the @code{FIONREAD} call, the
 @samp{tstuu} program will run very slowly.  This may or may not get
 fixed in a later version.
 
-The program will finish with an execute file named
+The @code{tstuu} program will finish with an execute file named
 @file{X.@var{something}} and a data file named @file{D.@var{something}}
 in the directory @file{/usr/tmp/tstuu/spool1} (or, more likely, in
 subdirectories, depending on the choice of @code{SPOOLDIR} in
 @file{policy.h}).  Two log files will be created in the directory
 @file{/usr/tmp/tstuu}.  They will be named @file{Log1} and @file{Log2},
 or, if you have selected @code{HAVE_HDB_LOGGING} in @file{policy.h},
-@file{Log1/uucico/test2} and @file{Log2/uucico/test1}.  You can test
-@code{uuxqt} by running the command @samp{./uuxqt -I
+@file{Log1/uucico/test2} and @file{Log2/uucico/test1}.  There should be
+no errors in the log files.
+
+You can test @code{uuxqt} by running the command @samp{./uuxqt -I
 /usr/tmp/tstuu/Config1}.  This should leave a command file
 @file{C.@var{something}} and a data file @file{D.@var{something}} in
 @file{/usr/tmp/tstuu/spool1} or in subdirectories.  Again, there should
@@ -2200,45 +2182,13 @@ to keep them from starting @code{uucico}) to make sure they create the
 right sorts of files.  Unfortunately, if you don't know what the right
 sorts of files are, I'm not going to tell you here.
 
-If @code{tstuu} passes, or you can't run it for some reason or other,
-move on to testing with some other system.  Set up the configuration
-files (@pxref{Configuration Files}), or use an existing configuration.
-Tell @code{uucico} to dial out to the system by using the @samp{-s}
-system switch (e.g.  @samp{uucico -s uunet}).  The log file should tell
-you what happens.
+If you can not run @code{tstuu}, or if it fails inexplicably, don't
+worry about it too much.  On some systems @code{tstuu} will fail because
+of problems using pseudo terminals, which will not matter in normal use.
+The real test of the package is talking to another system.
 
-If you compiled the code with debugging enabled, you can use debugging
-mode to get a great deal of information about what sort of data is
-flowing back and forth; the various possibilities are described under
-the @code{debug} command (@pxref{Debugging Levels}).  When initially
-setting up a connection @samp{-x chat} is probably the most useful (e.g.
-@samp{uucico -s uunet -x chat}); you may also want to use @samp{-x
-handshake,incoming,outgoing}.  You can use @samp{-x} multiple times on
-one command line, or you can give it comma separated arguments as in the
-last example.  Use @samp{-x all} to turn on all possible debugging
-information.  The debugging information is written to a file, normally
-@file{/usr/spool/uucp/Debug}, although the default can be changed in
-@file{policy.h} and the @file{config} file can override the name with
-the @code{debugfile} command.  The debugging file may contain passwords
-and some file contents as they are transmitted over the line, so the
-debugging file is only readable by the @code{uucp} user.
-
-You can use the @samp{-f} switch to force @code{uucico} to call out even
-if the last call failed recently; using @samp{-S} when naming a system
-has the same effect.  Otherwise the status file (in the @file{.Status}
-subdirectory of the main spool directory, normally
-@file{/usr/spool/uucp}) will prevent too many attempts from occurring in
-rapid succession.
-
-Again, please let me know about any problems you have and how you got
-around them.  If you do report a problem, please include the version
-number of the package you are using, and a sample of the debugging file
-showing the problem (debugging information is usually what is needed,
-not just the log file).  General questions such as ``why doesn't uucico
-dial out'' are impossible to answer without much more information.
-
-@node Installation, TCP, Testing, Overall Installation
-@section Installing Taylor UUCP
+@node Installing the Binaries, Configuration, Testing the Compilation, Installing Taylor UUCP
+@section Installing the Binaries
 
 You can install the executable files by becoming @code{root} and typing
 @samp{make install}.  Or you can look at what @samp{make install} does
@@ -2253,17 +2203,108 @@ information, and they are not stripped when they are installed.  You may
 want to strip the installed programs to save disk space.  See your
 system documentation for strip for more information.
 
-However, simply installing the executable files is not enough.  You must
-also arrange for them to be used correctly.
+Of course, simply installing the executable files is not enough.  You
+must also arrange for them to be used correctly.
+
+@node Configuration, Testing the Installation, Installing the Binaries, Installing Taylor UUCP
+@section Configuring Taylor UUCP
+
+You will have to decide what types of configuration files you want to
+use.  This package supports a new sort of configuration file; see
+@ref{Configuration Files}.  It also supports V2 configuration files
+(@file{L.sys}, @file{L-devices}, etc.) and HDB configuration files
+(@file{Systems}, @file{Devices}, etc.).  No documentation is provided
+for V2 or HDB configuration files.  All types of configuration files can
+be used at once, if you are so inclined.  Currently using just V2
+configuration files is not really possible, because there is no way to
+specify a dialer (there are no built in dialers, and the program does
+not know how to read @file{acucap} or @file{modemcap}); however, V2
+configuration files can be used with a new style dial file (@pxref{dial
+File}), or with a HDB @file{Dialers} file.
+
+Use of HDB configuration files has two known bugs.  A blank line in the
+middle of an entry in the @file{Permissions} file will not be ignored as
+it should be.  Dialer programs, as found in some versions of HDB, are
+not recognized directly.  If you must use a dialer program, rather than
+an entry in @file{Devices}, you must use the @code{chat-program} command
+in a new style dial file; see @ref{dial File}.  You will have to invoke
+the dialer program via a shell script or another program, since an exit
+code of 0 is required to recognize success; the @code{dialHDB} program
+in the @file{contrib} directory may be used for this purpose.
+
+The @code{uuconv} (@pxref{Invoking uuconv}) program can be used to
+convert from V2 or HDB configuration files to the new style (it can also
+do the reverse translation, if you are so inclined).  It will not do all
+of the work, and the results should be carefully checked, but it can be
+quite useful.
+
+If you are installing a new system, you will, of course, have to write
+the configuration files; see @ref{Configuration Files} for details on
+how to do this.
+
+After writing the configuration files, use the @code{uuchk} program to
+verify that they are what you expect; see @ref{Invoking uuchk}.
+
+@node Testing the Installation,  , Configuration, Installing Taylor UUCP
+@section Testing the Installation
+
+After you have written the configuration files, and verified them with
+the @code{uuchk} program, you must check that UUCP can correctly contact
+another system.
+
+Tell @code{uucico} to dial out to the system by using the @samp{-s}
+system switch (e.g., @samp{uucico -s uunet}).  The log file should tell
+you what happens.  The exact location of the log file depends upon the
+settings in @file{policy.h} when you compiled the program, and on the
+use of the @code{logfile} command in the @file{config} file.  Typical
+locations are @file{/usr/spool/uucp/Log} or a subdirectory under
+@file{/usr/spool/uucp/.Log}.
+
+If you compiled the code with debugging enabled, you can use debugging
+mode to get a great deal of information about what sort of data is
+flowing back and forth; the various possibilities are described with the
+@code{debug} command (@pxref{Debugging Levels}).  When initially setting
+up a connection @samp{-x chat} is probably the most useful (e.g.,
+@samp{uucico -s uunet -x chat}); you may also want to use @samp{-x
+handshake,incoming,outgoing}.  You can use @samp{-x} multiple times on
+one command line, or you can give it comma separated arguments as in the
+last example.  Use @samp{-x all} to turn on all possible debugging
+information.
+
+The debugging information is written to a file, normally
+@file{/usr/spool/uucp/Debug}, although the default can be changed in
+@file{policy.h} and the @file{config} file can override the default with
+the @code{debugfile} command.  The debugging file may contain passwords
+and some file contents as they are transmitted over the line, so the
+debugging file is only readable by the @code{uucp} user.
+
+You can use the @samp{-f} switch to force @code{uucico} to call out even
+if the last call failed recently; using @samp{-S} when naming a system
+has the same effect.  Otherwise the status file (in the @file{.Status}
+subdirectory of the main spool directory, normally
+@file{/usr/spool/uucp}) will prevent too many attempts from occurring in
+rapid succession.
+
+Please let me know about any problems you have and how you got around
+them.  If you do report a problem, please include the version number of
+the package you are using, the operating system you are running it on,
+and a sample of the debugging file showing the problem (debugging
+information is usually what is needed, not just the log file).  General
+questions such as ``why doesn't uucico dial out'' are impossible to
+answer without much more information.
+
+@node Using Taylor UUCP, Configuration Files, Installing Taylor UUCP, Top
+@chapter Using Taylor UUCP
 
 @menu
 * Running uucico::              Running uucico
-* Using UUCP for mail and news::  Using UUCP for mail and news.
-* Trimming UUCP Log Files::     Trimming UUCP Log Files
+* Mail and News::               Using UUCP for Mail and News
+* The Spool Directory Layout::  The Spool Directory Layout
+* Spool Directory Cleaning::    Cleaning the UUCP Spool Directory
 @end menu
 
-@node Running uucico, Using UUCP for mail and news, Installation, Installation
-@subsection Running uucico
+@node Running uucico, Mail and News, Using Taylor UUCP, Using Taylor UUCP
+@section Running uucico
 
 By default @code{uucp} and @code{uux} will automatically start up
 @code{uucico} to call another system whenever work is queued up.
@@ -2272,11 +2313,11 @@ which prevent the call at that time (perhaps because telephone rates are
 high) (@pxref{When to Call}).  Also, a remote system may have work
 queued up for your system, but may not be calling you for some reason
 (perhaps you have agreed that your system should always place the call).
-To make sure that works get transferred between the systems withing a
+To make sure that work gets transferred between the systems withing a
 reasonable time period, you should arrange to periodically invoke
 @code{uucico}.
 
-These periodic invocations are normally caused by entries in the
+These periodic invocations are normally triggered by entries in the
 @file{crontab} file.  The exact format of @file{crontab} files, and how
 new entries are added, varies from system to system; check your local
 documentation (try @samp{man cron}).
@@ -2285,7 +2326,7 @@ To attempt to call all systems with outstanding work, use the command
 @samp{uucico -r1}.  To attempt to call a particular system, use the
 command @samp{uucico -s @var{system}}.  To attempt to call a particular
 system, but only if there is work for it, use the command @samp{uucico
--C -s @var{system}}.
+-C -s @var{system}}.  (@pxref{Invoking uucico}).
 
 A common case is to want to try to call a system at a certain time, with
 periodic retries if the call fails.  A simple way to do this is to
@@ -2293,32 +2334,34 @@ create an empty UUCP command file, known as a @dfn{poll file}.  If a
 poll file exists for a system, then @samp{uucico -r1} will place a call
 to it.  If the call succeeds, the poll file will be deleted.
 
-The file can be easily created using the @samp{uux} command.  If
-@samp{uux} is told to request the execution of an empty command, it will
-instead create a poll file.  To create a poll file for @var{system},
-just do something like this:
+A poll file can be easily created using the @samp{uux} command, by
+requesting the execution of an empty command.  To create a poll file for
+@var{system}, just do something like this:
 @example
 uux -r @var{system}!
 @end example
 The @samp{-r} tells @samp{uux} to not start up @samp{uucico}
 immediately.  Of course, if you do want @samp{uucico} to start up right
-away, just omit the @samp{-r}; if the call fails, the poll file will be
-left around to cause a later call.
+away, omit the @samp{-r}; if the call fails, the poll file will be left
+around to cause a later call.
 
 For example, I use the following crontab entries locally:
 
 @example
 45 * * * * /bin/echo /usr/lib/uucp/uucico -r1 | /bin/su uucpa
-40 4,10,15 * * * uux -r uunet\!
+40 4,10,15 * * * /usr/bin/uux -r uunet!
 @end example
 
 Every hour, at 45 minutes past, this will check if there is any work to
 be done, and, if there is, will call the appropriate system.  Also, at
 4:40am, 10:40am and 3:40pm this will create a poll file file for
-@samp{uunet}, forcing the next check to call @samp{uunet}.
+@samp{uunet}, forcing the next run of @code{uucico} to call
+@samp{uunet}.
 
-@node Using UUCP for mail and news, Trimming UUCP Log Files, Running uucico, Installation
-@subsection Using UUCP for mail and news.
+@node Mail and News, The Spool Directory Layout, Running uucico, Using Taylor UUCP
+@section Using UUCP for Mail and News.
+@cindex mail
+@cindex news
 
 Taylor UUCP does not include a mail package.  All Unix systems come with
 some sort of mail delivery agent, typically @code{sendmail} or
@@ -2343,25 +2386,27 @@ receiving.
 * Receiving mail or news::      Receiving mail or news via UUCP
 @end menu
 
-@node Sending mail or news, Receiving mail or news, Using UUCP for mail and news, Using UUCP for mail and news
-@unnumberedsubsubsec Sending mail or news via UUCP
+@node Sending mail or news, Receiving mail or news, Mail and News, Mail and News
+@subsection Sending mail or news via UUCP
 
 When mail is to be sent from your machine to another machine via UUCP,
 the mail delivery agent will invoke @code{uux}.  It will generally run a
-command such as @samp{uux - @var{system}!rmail}, where @var{system} is
-the remote system to which the mail is being sent.  It may pass other
-options to @code{uux}, such as @samp{-r} or @samp{-g}.
+command such as @samp{uux - @var{system}!rmail @var{address}}, where
+@var{system} is the remote system to which the mail is being sent.  It
+may pass other options to @code{uux}, such as @samp{-r} or @samp{-g}
+(@pxref{Invoking uux}).
 
-News also invokes @code{uux} in order to transfer articles to another
-system.  The only difference is that news will use @code{uux} to invoke
-@code{rnews} on the remote system, rather than @code{rmail}.
+The news system also invokes @code{uux} in order to transfer articles to
+another system.  The only difference is that news will use @code{uux} to
+invoke @code{rnews} on the remote system, rather than @code{rmail}.
 
 You should arrange for your mail and news systems to invoke the Taylor
-UUCP version of @code{uux} when sending mail via UUCP.  If you simply
-replace any existing version of @code{uux} with the Taylor UUCP version,
-this will probably happen automatically.  However, if both versions
-exist on your system, you will probably have to modify the mail and news
-configuration files in some way.
+UUCP version of @code{uux} when sending mail via UUCP.  If only have
+Taylor UUCP, or if you simply replace any existing version of @code{uux}
+with the Taylor UUCP version, this will probably happen automatically.
+However, if you have two UUCP packages installed on your system, you
+will probably have to modify the mail and news configuration files in
+some way.
 
 Actually, if both the system UUCP and Taylor UUCP are using the same
 spool directory format, the system @code{uux} will probably work fine
@@ -2369,117 +2414,315 @@ with the Taylor @code{uucico} (the reverse is not the case: the Taylor
 @code{uux} requires the Taylor @code{uucico}).  However, data transfer
 will be somewhat more efficient if the Taylor @code{uux} is used.
 
-@node Receiving mail or news,  , Sending mail or news, Using UUCP for mail and news
-@unnumberedsubsubsec Receiving mail or news via UUCP
+@node Receiving mail or news,  , Sending mail or news, Mail and News
+@subsection Receiving mail or news via UUCP
 
-As noted in @ref{Sending mail or news}, mail is sent by requesting a
-remote execution of @code{rmail}.  To receive mail, then, all that is
-necessary is for UUCP to invoke @code{rmail} itself.
-
-Any mail delivery agent will provide an appropriate version of
-@code{rmail}; you must simply make sure that it is in the command path
-used by UUCP (it almost certainly already is).  The default command path
-is set in @file{policy.h}, and it may be overridden for a particular
-system by the @code{command-path} command (@pxref{Miscellaneous (sys)}).
+To receive mail, all that is necessary is for UUCP to invoke
+@code{rmail}.  Any mail delivery agent will provide an appropriate
+version of @code{rmail}; you must simply make sure that it is in the
+command path used by UUCP (it almost certainly already is).  The default
+command path is set in @file{policy.h}, and it may be overridden for a
+particular system by the @code{command-path} command
+(@pxref{Miscellaneous (sys)}).
 
 Similarly, for news UUCP must be able to invoke @code{rnews}.  Any news
 system will provide a version of @code{rnews}, and you must ensure that
 is in a directory on the path that UUCP will search.
 
-@node Trimming UUCP Log Files,  , Using UUCP for mail and news, Installation
-@subsection Trimming UUCP Log Files
+@node The Spool Directory Layout, Spool Directory Cleaning, Mail and News, Using Taylor UUCP
+@section The Spool Directory Layout
+@cindex spool directory
 
-You should also periodically trim the log files, as they will otherwise
-continue to grow without limit.  The names of the log files are set in
+In general, the layout of the spool directory may be safely ignored.
+However, it is documented here for the curious.  This description only
+covers the @code{SPOOLDIR_TAYLOR} layout.  The ways in which the other
+spool directory layouts differ are described in the source file
+@file{unix/spool.c}.
+
+Directories and files are only created when they are needed, so a
+typical system will not have all of the items described here.
+
+@menu
+* System Spool Directories::    System Spool Directories
+* Status Directory::            Status Spool Directory
+* Execution Subdirectories::    Execution Spool Subdirectories
+* Other Spool Subdirectories::  Other Spool Subdirectories
+* Spool Lock Files::            Spool Directory Lock Files
+@end menu
+
+@node System Spool Directories, Status Directory, The Spool Directory Layout, The Spool Directory Layout
+@subsection System Spool Directories
+@cindex system spool directories
+
+@table @file
+@item @var{system}
+There is a subdirectory of the main spool directory for each remote
+system.
+
+@item @var{system}/C.
+This directory stores files describing file transfer commands to be sent
+to the @var{system}.  Each file name starts with @file{C.@var{g}}, where
+@var{g} is the job grade.  Each file contains one or more commands.  For
+details of the commands, see @ref{UUCP Protocol Commands}.
+
+@item @var{system}/D.
+This directory stores data files.  Files with names like
+@file{D.@var{g}@var{ssss}}, where @var{g} is the grade and @var{ssss} is
+a sequence number, are waiting to be transferred to the @var{system}, as
+directed by the files in the @file{@var{system}/C.} directory.  Files
+with other names, typically @file{D.@var{system}@var{g}@var{ssss}}, have
+been received from @var{system} and are waiting to be processed by an
+execution file in the @file{@var{system}/X.} directory.
+
+@item @var{system}/D.X
+This directory stores data files which will become execution files on
+the remote system.  In current practice, this directory rarely exists,
+because most simple executions, including typical uses of @code{rmail}
+and @code{rnews}, send an @samp{E} command rather than an execution file
+(@pxref{The E Command}).
+
+@item @var{system}/X.
+This directory stores execution files which have been received from
+@var{system}.  This directory normally exists, even though the
+corresponding @file{D.X} directory does not, because @code{uucico} will
+create an execution file on the fly when it receives an @samp{E}
+command.
+
+@item @var{system}/SEQF
+This file holds the sequence number of the last job sent to
+@var{system}.  The sequence number is used to ensure that file names are
+unique in the remote system spool directory.  The file is four bytes
+long.  Sequence numbers are composed of digits and the upper case
+letters.
+@end table
+
+@node Status Directory, Execution Subdirectories, System Spool Directories, The Spool Directory Layout
+@subsection Status Directory
+
+@table @file
+@item .Status
+@cindex .Status
+@cindex status files
+This directory holds status files for each remote system.  The name of
+the status file is the name of the system which it describes.  The
+status files describe the last conversation with the system.  Running
+@code{uustat --status} basically just formats and prints the contents of
+the status files (@pxref{uustat Examples}).
+
+Each status file has a single text line with six fields.
+
+@table @asis
+@item code
+A code indicating the status of the last conversation.  The following
+values are defined, though not all are actually used.
+@table @samp
+@item 0
+Conversation completed normally.
+@item 1
+@code{uucico} was unable to open the port.
+@item 2
+The last call to the system failed while dailing.
+@item 3
+The last call to the system failed while logging in.
+@item 4
+The last call to the system failed during the initial UUCP protocol
+handshake (@pxref{The Initial Handshake}).
+@item 5
+The last call to the system failed after the initial handshake.
+@item 6
+@code{uucico} is currently talking to the system.
+@item 7
+The last call to the system failed because it was the wrong time to call
+(this is not used if it calling the system is never permitted).
+@end table
+
+@item retries
+The number of retries since the last successful call.
+
+@item time of last call
+The time of the last call, in seconds since the epoch (as reported by
+the @code{time} system call).
+
+@item wait
+If the last call failed, this is the number of seconds since the last
+call before @code{uucico} may attempt another call.  This is set based
+on the retry time; see @ref{When to Call}.  The @samp{-f} or @samp{-S}
+options to @code{uucico} direct it to ignore this wait time; see
+@ref{Invoking uucico}.
+
+@item description
+A text description of the status, corresponding to the code in the first
+field.  This may contain spaces.
+
+@item system name
+The name of the remote system.
+@end table
+@end table
+
+@node Execution Subdirectories, Other Spool Subdirectories, Status Directory, The Spool Directory Layout
+@subsection Execution Subdirectories
+
+@table @file
+@item .Xqtdir
+@cindex .Xqtdir
+When @code{uuxqt} executes a job requested by @code{uux}, it first
+changes the working directory to the @file{.Xqtdir} subdirectory.  This
+permits the job to create any sort of temporary file without worrying
+about overrwriting other files in the spool directory.  Any files left
+in the @file{.Xqtdir} subdirectory are removed after each execution is
+complete.
+
+@item .Xqtdir@var{nnnn}
+When several instances of @code{uuxqt} are executing simultaneously,
+each one executes jobs in a separate directory.  The first uses
+@file{.Xqtdir}, the second uses @file{.Xqtdir0001}, the third uses
+@file{.Xqtdir0002}, and so forth.
+
+@item .Corrupt
+@cindex .Corrupt
+If @code{uuxqt} encounters an execution file which it is unable to
+parse, it saves it in the @file{.Corrupt} directory, and sends mail
+about it to the UUCP administrator.
+@end table
+
+@node Other Spool Subdirectories, Spool Lock Files, Execution Subdirectories, The Spool Directory Layout
+@subsection Other Spool Subdirectories
+
+@table @file
+@item .Temp
+@cindex .Temp
+This directory holds data files as they are being received from a remote
+system, before they are moved to their final destination.  For file send
+requests which use a valid temporary file name in the @var{temp} field
+of the @samp{S} or @samp{E} command (@pxref{The S Command}),
+@code{uucico} receives the file into
+@file{.Temp/@var{system}/@var{temp}}, where @var{system} is the name of
+the remote system, and @var{temp} is the temporary file name.  If a
+conversation fails during a file transfer, these files are used to
+automatically restart the file transfer from the point of failure.
+
+If the @samp{S} or @samp{E} command does not include a temporary file
+name, automatic restart is not possible.  In this case, the files are
+received into a randomly named file in the @file{.Temp} directory
+itself.
+
+@item .Preserve
+@cindex .Preserve
+This directory holds data files which could not be transferred to a
+remote system for some reason (for example, the data file might be
+large, and exceed size restrictions imposed by the remote system).  When
+a locally requested file transfer fails, @code{uucico} will store the
+data file in the @file{.Preserve} directory, and send mail to the
+requestor describing the failure and naming the saved file.
+
+@item .Received
+@cindex .Received
+This directory records which files have been received.  If a
+conversation fails just after @code{uucico} acknowledges receipt of a
+fail, it is possible for the acknowledgement to be lost.  If this
+happens, the remote system will resend the file.  If the file were an
+execution request, and @code{uucico} did not keep track of which files
+it had already received, this could lead to the execution being
+performed twice.
+
+To avoid this problem, when a conversation fails, @code{uucico} records
+each file that has been received, but for which the remote system may
+not have received the acknowledgement.  It records this information by
+creating an empty file with the name
+@file{.Received/@var{system}/@var{temp}}, where @var{system} is the name
+of the remote system, and @var{temp} is the @var{temp} field of the
+@samp{S} or @samp{E} command from the remote system (@pxref{The S
+Command}).  Then, if the remote system offers the file again in the next
+conversation, @code{uucico} refuses the send request and deletes the
+record in the @file{.Received} directory.  This approach only works for
+file sends which use a temporary file name, but this is true of all
+execution requests.
+@end table
+
+@node Spool Lock Files,  , Other Spool Subdirectories, The Spool Directory Layout
+@subsection Lock Files in the Spool Directory
+@cindex lock files in spool directory
+
+Lock files for devices and systems are stored in the lock directory,
+which may or may not be the same as the spool directory.  The lock
+directory is set at compilation time by @code{LOCKDIR} in
+@file{policy.h}, which may be overridden by the @code{lockdir} command
+in the @file{config} file (@pxref{Miscellaneous (config)}).
+
+For a description of the names used for device lock files, and the
+format of the contents of a lock file, see @ref{UUCP Lock Files}.
+
+@table @file
+@item LCK..@var{sys}
+@cindex LCK..@var{sys}
+@cindex system lock files
+A lock file for a system, where @var{sys} is the first eight characters
+of the system name.  As noted above, these lock files are kept in the
+lock directory, which may not be the spool directory.  These lock files
+are created by @code{uucico} while talking to a remote system, and are
+used to prevent multiple simultaneous conversations with a system.  Note
+that the naming convention requires that the names of each directly
+connected remote system be unique in the first eight characters.
+
+@item LCK.XQT.@var{NN}
+@cindex LCK.XQT.@var{NN}
+When @code{uuxqt} starts up, it uses lock files to determine how many
+other @code{uuxqt} daemons are currently running.  It first tries to
+lock @file{LCK.XQT.0}, then @file{LCK.XQT.1}, and so forth.  This is
+used to implement the @code{max-uuxqts} command (@pxref{Miscellaneous
+(config)}).  It is also used to parcel out the @file{.Xqtdir}
+subdirectories (@pxref{Execution Subdirectories}).
+
+@item LXQ.@var{cmd}
+@cindex LXQ.@var{cmd}
+When @code{uuxqt} is invoked with the @samp{-c} or @samp{--command}
+option (@pxref{Invoking uuxqt}), it creates a lock file named after the
+command it is executing.  For example, @samp{uuxqt -c rmail} will create
+the lock file @file{LXQ.rmail}.  This prevents other @code{uuxqt}
+daemons from executing jobs of the specified type.
+
+@item @var{system}/X./L.@var{xxx}
+@cindex L.@var{xxx}
+While @code{uuxqt} is executing a particular job, it creates a lock file
+with the same name as the @file{X.} file describing the job, but
+replacing the initial @samp{X} with @samp{L}.  This ensures that if
+multiple @code{uuxqt} daemons are running, they do not simultaneously
+execute the same job.
+
+@item LCK..SEQ
+This lock file is used to control access to the sequence files for each
+system (@pxref{System Spool Directories}).  It is only used on systems
+which do not support POSIX file locking using the @code{fcntl} system
+call.
+@end table
+
+@node Spool Directory Cleaning,  , The Spool Directory Layout, Using Taylor UUCP
+@section Cleaning the Spool Directory
+@cindex spool directory, cleaning
+@cindex cleaning the spool directory
+
+The spool directory may need to be cleaned up periodically.  Under some
+circumstances, files may accumulate in various subdirectories, such as
+@file{.Preserve} (@pxref{Other Spool Subdirectories}) or @file{.Corrupt}
+(@pxref{Execution Subdirectories}).
+
+Also, if a remote system stops calling in, you may want to arrange for
+any queued up mail to be returned to the sender.  This can be done using
+the @code{uustat} command (@pxref{Invoking uustat}).
+
+The @file{contrib} directory includes a simple @file{uuclean} script
+which may be used as an example of a clean up script.  It can be run
+daily out of @file{crontab}.
+
+You should periodically trim the UUCP log files, as they will otherwise
+grow without limit.  The names of the log files are set in
 @file{policy.h}, and may be overridden in the configuration file
 (@pxref{config File}).  By default they are are
-@file{/usr/spool/uucp/Log} and @file{/usr/spool/uucp/Stats}.
+@file{/usr/spool/uucp/Log} and @file{/usr/spool/uucp/Stats}.  You may
+find the @code{savelog} program in the @file{contrib} directory to be of
+use.  There is a manual page for it in @file{contrib} as well.
 
-You may find the @code{savelog} program in the @file{contrib} directory
-to be of use.  There is a manual page for it in @file{contrib} as well.
-
-@node TCP,  , Installation, Overall Installation
-@section TCP together with Taylor UUCP
-
-If your system has a Berkeley style socket library, or a System V style
-TLI interface library, you can compile the code to permit making
-connections over TCP.  Specifying that a system should be reached via
-TCP is easy, but nonobvious.
-
-If you are using the new style configuration files, see
-@ref{Configuration Files}.  Basically, you can just add the line
-@samp{port type tcp} to the entry in the system configuration file.  By
-default UUCP will get the port number by looking up @samp{uucp} in
-@file{/etc/services}; if @samp{uucp} is not found, port 540 will be
-used.  You can set the port number to use with the command @samp{port
-service @var{xxx}}, where @var{xxx} can be either a number or a name to
-look up in @file{/etc/services}.  You can specify the address of the
-remote host with @samp{address @var{a.b.c}}; if you don't give an
-address, the remote system name will be used.  You should give an
-explicit chat script for the system when you use TCP; the default chat
-script begins with a carriage return, which will not work with some UUCP
-TCP servers.
-
-If you are using V2 configuration files, add a line like this to
-@file{L.sys}:
-
-@example
-@var{sys} Any TCP uucp @var{host}.@var{domain} chat-script
-@end example
-
-This will make an entry for system @var{sys}, to be called at any time,
-over TCP, using port number @samp{uucp} (as found in
-@file{/etc/services}; this may be specified as a number), using remote
-host @file{@var{host}.@var{domain}}, with some chat script.
-
-@need 1000
-If you are using HDB configuration files, add a line like this to
-Systems:
-
-@example
-@var{sys} Any TCP - @var{host}.@var{domain} chat-script
-@end example
-
-and a line like this to Devices:
-
-@example
-TCP uucp - -
-@end example
-
-You only need one line in Devices regardless of how many systems you
-contact over TCP.  This will make an entry for system @var{sys}, to be
-called at any time, over TCP, using port number @samp{uucp} (as found in
-@file{/etc/services}; this may be specified as a number), using remote
-host @file{@var{host}.@var{domain}}, with some chat script.
-
-The @code{uucico} daemon can also be run as a TCP server.  To use the
-default port number, which is a reserved port, @code{uucico} must be
-invoked by root (or it must be set user ID to root, but I don't
-recommend doing that).
-
-Basically, you must define a port, either using the port file
-(@pxref{port File}) if you are using the new configuration method or
-with an entry in Devices if you are using HDB; there is no way to define
-a port using V2.  If you are using HDB the port must be named
-@samp{TCP}; a line as shown above will suffice.  You can then start
-@code{uucico} as @samp{uucico -p TCP} (after the @samp{-p}, name the
-port; in HDB it must be @samp{TCP}).  This will wait for incoming
-connections, and fork off a child for each one.  Each connection will be
-prompted with @samp{login:} and @samp{Password:}; the results will be
-checked against the UUCP (not the system) password file
-(@pxref{Configuration File Names}).
-
-Of course, you can get a similar effect by using the BSD @code{uucpd}
-program.
-
-You can also have @code{inetd} start up @code{uucico} with the @samp{-l}
-switch, which will cause it to prompt with @samp{login:} and
-@samp{Password:} and check the results against the UUCP (not the system)
-password file (you may want to also use the @samp{-D} switch to avoid a
-fork, which in this case is unnecessary).  This may be used in place of
-@code{uucpd}.
-
-@node Configuration Files, Protocols, Overall Installation, Top
+@node Configuration Files, Protocols, Using Taylor UUCP, Top
 @chapter Taylor UUCP Configuration Files
 
 This chapter describes the configuration files accepted by the Taylor
@@ -2498,51 +2741,20 @@ useful when testing a new configuration.  When you use the @samp{-I}
 option the programs will revoke any setuid privileges.
 
 @menu
-* Configuration File Format::   Configuration file format
-* Configuration File Overview::  Configuration File Overview
-* Configuration Examples::      Examples of configuration files
-* Time Strings::                How to write time strings
-* Chat Scripts::                How to write chat scripts
-* config File::                 The main configuration file
-* sys File::                    The system configuration file
-* port File::                   The port configuration files
-* dial File::                   The dialer configuration files
-* Security::                    Security issues
+* Configuration Overview::      Configuration File Overview
+* Configuration File Format::   Configuration File Format
+* Configuration Examples::      Examples of Configuration Files
+* Time Strings::                How to Write Time Strings
+* Chat Scripts::                How to Write Chat Scripts
+* config File::                 The Main Configuration File
+* sys File::                    The System Configuration File
+* port File::                   The Port Configuration Files
+* dial File::                   The Dialer Configuration Files
+* UUCP Over TCP::               UUCP Over TCP
+* Security::                    Security Issues
 @end menu
 
-@node Configuration File Format, Configuration File Overview, Configuration Files, Configuration Files
-@section Configuration File Format
-
-All the configuration files follow a simple line-oriented
-@samp{@var{keyword} @var{value}} format.  Empty lines are ignored, as
-are leading spaces; unlike HDB, lines with leading spaces are read.  The
-first word on each line is a keyword.  The rest of the line is
-interpreted according to the keyword.  Most keywords are followed by
-numbers, boolean values or simple strings with no embedded spaces.
-
-The @kbd{#} character is used for comments.  Everything from a @kbd{#}
-to the end of the line is ignored unless the @kbd{#} is preceded by a
-@kbd{\} (backslash); if the @kbd{#} is preceeded by a @kbd{\}, the
-@kbd{\} is removed but the @kbd{#} remains in the line.  This can be
-useful for a phone number containing a @kbd{#}.  To enter the sequence
-@samp{\#}, use @samp{\\#}.  
-
-The backslash character may be used to continue lines.  If the last
-character in a line is a backslash, the backslash is removed and the
-line is continued by the next line.  The second line is attached to the
-first with no intervening characters; if you want any whitespace between
-the end of the first line and the start of the second line, you must
-insert it yourself.
-
-However, the backslash is not a general quoting character.  For example,
-you cannot use it to get an embedded space in a string argument.
-
-Everything after the keyword must be on the same line.  A @var{boolean}
-may be specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and
-@kbd{n}, @kbd{N}, @kbd{f}, or @kbd{F} for false; any trailing characters
-are ignored, so @code{true}, @code{false}, etc., are also acceptable.
-
-@node Configuration File Overview, Configuration Examples, Configuration File Format, Configuration Files
+@node Configuration Overview, Configuration File Format, Configuration Files, Configuration Files
 @section Configuration File Overview
 
 UUCP uses several different types of configuration files, each
@@ -2585,7 +2797,39 @@ dialer.
 There are other types of configuration files, but these are the
 important ones.  The other types are described below.
 
-@node Configuration Examples, Time Strings, Configuration File Overview, Configuration Files
+@node Configuration File Format, Configuration Examples, Configuration Overview, Configuration Files
+@section Configuration File Format
+
+All the configuration files follow a simple line-oriented
+@samp{@var{keyword} @var{value}} format.  Empty lines are ignored, as
+are leading spaces; unlike HDB, lines with leading spaces are read.  The
+first word on each line is a keyword.  The rest of the line is
+interpreted according to the keyword.  Most keywords are followed by
+numbers, boolean values or simple strings with no embedded spaces.
+
+The @kbd{#} character is used for comments.  Everything from a @kbd{#}
+to the end of the line is ignored unless the @kbd{#} is preceded by a
+@kbd{\} (backslash); if the @kbd{#} is preceeded by a @kbd{\}, the
+@kbd{\} is removed but the @kbd{#} remains in the line.  This can be
+useful for a phone number containing a @kbd{#}.  To enter the sequence
+@samp{\#}, use @samp{\\#}.  
+
+The backslash character may be used to continue lines.  If the last
+character in a line is a backslash, the backslash is removed and the
+line is continued by the next line.  The second line is attached to the
+first with no intervening characters; if you want any whitespace between
+the end of the first line and the start of the second line, you must
+insert it yourself.
+
+However, the backslash is not a general quoting character.  For example,
+you cannot use it to get an embedded space in a string argument.
+
+Everything after the keyword must be on the same line.  A @var{boolean}
+may be specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and
+@kbd{n}, @kbd{N}, @kbd{f}, or @kbd{F} for false; any trailing characters
+are ignored, so @code{true}, @code{false}, etc., are also acceptable.
+
+@node Configuration Examples, Time Strings, Configuration File Format, Configuration Files
 @section Examples of Configuration Files
 
 This section provides few typical examples of configuration files.
@@ -2593,9 +2837,9 @@ There are also sample configuration files in the @file{sample}
 subdirectory of the distribution.
 
 @menu
-* config File Examples::        Examples of the main configuration file
-* Leaf Example::                Call a single remote site
-* Gateway Example::             The gateway for several local systems
+* config File Examples::        Examples of the Main Configuration File
+* Leaf Example::                Call a Single Remote Site
+* Gateway Example::             The Gateway for Several Local Systems
 @end menu
 
 @node config File Examples, Leaf Example, Configuration Examples, Configuration Examples
@@ -2788,7 +3032,7 @@ which I will show the configuration file.  @file{elmer} calls out to
 @file{uupsi}.  As an additional complication, @file{uupsi} knows
 @file{elmer} as @file{airs}; this will show how a machine can have one
 name on an internal network but a different name to the external world.
-@file{elmer} has two modems.  It also has an TCP/IP connection to
+@file{elmer} has two modems.  It also has an TCP connection to
 @file{uupsi}, but since that is supposed to be reserved for interactive
 work (it is, perhaps, only a 9600 baud SLIP line) it will only use it if
 the modems are not available.
@@ -3219,10 +3463,10 @@ a separate file @file{@var{file}} and put @samp{cu sysfile
 @file{@var{file}}} in @file{config}.
 
 @menu
-* Miscellaneous (config)::      Miscellaneous config file commands
-* Configuration File Names::    Using different configuration files
-* Log File Names::              Using different log files
-* Debugging Levels::            Debugging levels
+* Miscellaneous (config)::      Miscellaneous config File Commands
+* Configuration File Names::    Using Different Configuration Files
+* Log File Names::              Using Different Log Files
+* Debugging Levels::            Debugging Levels
 @end menu
 
 @node Miscellaneous (config), Configuration File Names, config File, config File
@@ -3273,7 +3517,9 @@ Specify the directory to place lock files in.  The default is from
 @file{policy.h}; see the information in that file.  Normally the lock
 directory should be set correctly in @file{policy.h}, and not changed
 here.  However, changing the lock directory is sometimes useful for
-testing purposes.
+testing purposes.  This only affects lock files for devices and systems;
+it does not affect certain internal lock files which are stored in the
+spool directory (@pxref{Spool Lock Files}).
 
 @item unknown @var{string} @dots{}
 @findex unknown
@@ -3467,7 +3713,7 @@ Specify the password file(s) to use for login names when @code{uucico}
 is doing its own login prompting, which it does when given the
 @samp{-e}, @samp{-l} or @samp{-w} switches.  The default is the file
 @file{passwd} in the directory @var{newconfigdir}.  Each line in the
-file(s) has two words: the login name and the password (e.g. @code{Ufoo
+file(s) has two words: the login name and the password (e.g., @code{Ufoo
 foopas}).  They may contain escape sequences like those in a chat script
 expect string (@pxref{Chat Scripts}).  The login name is accepted before
 the system name is known, so these are independent of which system is
@@ -3578,7 +3824,7 @@ running any of the programs, the @samp{-x} switch (actually, for
 @code{uulog} it's the @samp{-X} switch) may be used to turn on
 debugging.  The argument to the @samp{-x} switch is one of the strings
 listed above, or a number as described above, or a comma separated list
-of strings (e.g.  @samp{-x chat,handshake}).  The @samp{-x} switch may
+of strings (e.g.,  @samp{-x chat,handshake}).  The @samp{-x} switch may
 also appear several times on the command line, in which case all named
 debugging types will be turned on.  The @samp{-x} debugging is in
 addition to any debugging specified by the @code{debug} command; there
@@ -3605,14 +3851,14 @@ the directory @var{newconfigdir}.  This may be overridden by the
 These files describe all remote systems known to the UUCP package.
 
 @menu
-* Defaults and Alternates::     Using defaults and alternates
-* Naming the System::           Naming the system
-* Calling Out::                 Calling out
-* Accepting a Call::            Accepting a call
-* Protocol Selection::          Protocol selection
-* File Transfer Control::       File transfer control
-* Miscellaneous (sys)::         Miscellaneous sys file commands
-* Default sys File Values::     Default values
+* Defaults and Alternates::     Using Defaults and Alternates
+* Naming the System::           Naming the System
+* Calling Out::                 Calling Out
+* Accepting a Call::            Accepting a Call
+* Protocol Selection::          Protocol Selection
+* File Transfer Control::       File Transfer Control
+* Miscellaneous (sys)::         Miscellaneous sys File Commands
+* Default sys File Values::     Default Values
 @end menu
 
 @node Defaults and Alternates, Naming the System, sys File, sys File
@@ -3729,9 +3975,9 @@ This section describes commands used when placing a call to another
 system.
 
 @menu
-* When to Call::                When to call
-* Placing the Call::            Placing the call
-* Logging In::                  Logging in
+* When to Call::                When to Call
+* Placing the Call::            Placing the Call
+* Logging In::                  Logging In
 @end menu
 
 @node When to Call, Placing the Call, Calling Out, Calling Out
@@ -4006,7 +4252,7 @@ have to specify the simple chat script @samp{ogin: \L word: \P}.
 @findex call-login
 
 Specify the login name to send with @kbd{\L} in the chat script.  If the
-string is @samp{*} (e.g. @samp{call-login *}) the login name will be
+string is @samp{*} (e.g., @samp{call-login *}) the login name will be
 fetched from the call out login name and password file
 (@pxref{Configuration File Names}).  The string may contain escape
 sequences as though it were an expect string in a chat script
@@ -4016,7 +4262,7 @@ sequences as though it were an expect string in a chat script
 @findex call-password
 
 Specify the password to send with @kbd{\P} in the chat script.  If the
-string is @samp{*} (e.g. @samp{call-password *}) the password will be
+string is @samp{*} (e.g., @samp{call-password *}) the password will be
 fetched from the call-out login name and password file
 (@pxref{Configuration File Names}).  The string may contain escape
 sequences as though it were an expect string in a chat script
@@ -4033,7 +4279,7 @@ sequences as though it were an expect string in a chat script
 @findex called-login
 
 The first @var{string} specifies the login name that the system must use
-when calling in.  If it is @samp{ANY} (e.g. @samp{called-login ANY}) any
+when calling in.  If it is @samp{ANY} (e.g., @samp{called-login ANY}) any
 login name may be used; this is useful to override a file-wide default
 and to indicate that future alternates may have different login names.
 Case is significant.  The default value is @samp{ANY}.  
@@ -4913,7 +5159,7 @@ of UUCP; it is responsible for maintaining security.
 
 @end table
 
-@node dial File, Security, port File, Configuration Files
+@node dial File, UUCP Over TCP, port File, Configuration Files
 @section The Dialer Configuration File
 @cindex dial file
 @cindex dialer configuration file
@@ -5114,7 +5360,90 @@ causes them to not do bidirectional transfers.
 
 @end table
 
-@node Security,  , dial File, Configuration Files
+@node UUCP Over TCP, Security, dial File, Configuration Files
+@section UUCP Over TCP
+
+If your system has a Berkeley style socket library, or a System V style
+TLI interface library, you can compile the code to permit making
+connections over TCP.  Specifying that a system should be reached via
+TCP is easy, but nonobvious.
+
+@menu
+* TCP Client::                  Connecting to Another System Over TCP
+* TCP Server::                  Running a TCP Server
+@end menu
+
+@node TCP Client, TCP Server, UUCP Over TCP, UUCP Over TCP
+@subsection Connecting to Another System Over TCP
+
+If you are using the new style configuration files (@pxref{Configuration
+Files}), add the line @samp{port type tcp} to the entry in the
+@file{sys} file.  By default UUCP will get the port number by looking up
+@samp{uucp} in @file{/etc/services}; if the @samp{uucp} service is not
+defined, port 540 will be used.  You can set the port number to use with
+the command @samp{port service @var{xxx}}, where @var{xxx} can be either
+a number or a name to look up in @file{/etc/services}.  You can specify
+the address of the remote host with @samp{address @var{a.b.c}}; if you
+don't give an address, the remote system name will be used.  You should
+give an explicit chat script for the system when you use TCP; the
+default chat script begins with a carriage return, which will not work
+with some UUCP TCP servers.
+
+If you are using V2 configuration files, add a line like this to
+@file{L.sys}:
+@example
+@var{sys} Any TCP uucp @var{host}.@var{domain} chat-script
+@end example
+This will make an entry for system @var{sys}, to be called at any time,
+over TCP, using port number @samp{uucp} (as found in
+@file{/etc/services}; this may be specified as a number), using remote
+host @file{@var{host}.@var{domain}}, with some chat script.
+
+If you are using HDB configuration files, add a line like this to
+Systems:
+@example
+@var{sys} Any TCP - @var{host}.@var{domain} chat-script
+@end example
+and a line like this to Devices:
+@example
+TCP uucp - -
+@end example
+You only need one line in Devices regardless of how many systems you
+contact over TCP.  This will make an entry for system @var{sys}, to be
+called at any time, over TCP, using port number @samp{uucp} (as found in
+@file{/etc/services}; this may be specified as a number), using remote
+host @file{@var{host}.@var{domain}}, with some chat script.
+
+@node TCP Server,  , TCP Client, UUCP Over TCP
+@subsection Running a TCP Server
+
+The @code{uucico} daemon be run as a TCP server.  To use the default
+port number, which is a reserved port, @code{uucico} must be invoked by
+root (or it must be set user ID to root, but I don't recommend doing
+that).
+
+You must define a port, either using the port file (@pxref{port File}),
+if you are using the new configuration method, or with an entry in
+Devices if you are using HDB; there is no way to define a port using V2.
+If you are using HDB the port must be named @samp{TCP}; a line as shown
+above will suffice.  You can then start @code{uucico} as @samp{uucico -p
+TCP} (after the @samp{-p}, name the port; in HDB it must be @samp{TCP}).
+This will wait for incoming connections, and fork off a child for each
+one.  Each connection will be prompted with @samp{login:} and
+@samp{Password:}; the results will be checked against the UUCP (not the
+system) password file (@pxref{Configuration File Names}).
+
+Another way to run a UUCP TCP server is to use the BSD @code{uucpd}
+program.
+
+Yet another way to run a UUCP TCP server is to use @code{inetd}.
+Arrange for @code{inetd} to start up @code{uucico} with the @samp{-l}
+switch.  This will cause @code{uucico} to prompt with @samp{login:} and
+@samp{Password:} and check the results against the UUCP (not the system)
+password file (you may want to also use the @samp{-D} switch to avoid a
+fork, which in this case is unnecessary).
+
+@node Security,  , UUCP Over TCP, Configuration Files
 @section Security
 
 This discussion of UUCP security applies only to Unix.  It is a bit
@@ -5749,9 +6078,9 @@ conversation consists of three parts: an initial handshake, a series of
 file transfer requests, and a final handshake.
 
 @menu
-* The Initial Handshake::       
-* UUCP Protocol Commands::      
-* The Final Handshake::         
+* The Initial Handshake::       The Initial Handshake
+* UUCP Protocol Commands::      UUCP Protocol Commands
+* The Final Handshake::         The Final Handshake
 @end menu
 
 @node The Initial Handshake, UUCP Protocol Commands, UUCP Protocol, UUCP Protocol
@@ -5982,11 +6311,11 @@ execution, or received from another system for an execution), or
 another system).
 
 @menu
-* The S Command::               
-* The R Command::               
-* The X Command::               
-* The E Command::               
-* The H Command::               
+* The S Command::               The S Command
+* The R Command::               The R Command
+* The X Command::               The X Command
+* The E Command::               The E Command
+* The H Command::               The H Command
 @end menu
 
 @node The S Command, The R Command, UUCP Protocol Commands, UUCP Protocol Commands
@@ -7501,8 +7830,8 @@ code itself.
 
 The code is carefully segregated into a system independent portion and a
 system dependent portion.  The system dependent code is in the
-@file{unix} subdirectory, and also in the files @file{tcp.c},
-@file{tli.c} and @file{sysh.unx} (also known as @file{sysdep.h}).
+@file{unix} subdirectory, and also in the file @file{sysh.unx} (also
+known as @file{sysdep.h}).
 
 With the right configuration parameters, the system independent code
 calls only ANSI C functions.  Some of the less common ANSI C functions
@@ -7520,9 +7849,9 @@ dependent code.  I think that this code can conform to POSIX 1003.1,
 given the right compilation parameters.  I'm a bit less certain about
 this, though.
 
-The code is in use on a 16 bit segmented system with no function
-prototypes, so I'm certain that all casts to long and pointers are done
-when necessary.
+The code has been used on a 16 bit segmented system with no function
+prototypes, so I'm fairly certain that all casts to long and pointers
+are done when necessary.
 
 @node Naming Conventions, Patches, System Dependence, Hacking
 @section Naming Conventions
@@ -7640,45 +7969,31 @@ comments were criticisms.  I've probably left some people off, and I
 apologize for any oversight; it does not mean your contribution was
 unappreciated.
 
-@ifinfo
 First of all, I would like to thank the people at Infinity Development
-Systems (formerly AIRS, which lives on in the domain name, at least for
-now) for permitting me to use their computers and @file{uunet} access.
-I would also like to thank Richard Stallman @code{<rms@@gnu.ai.mit.edu>}
-for founding the Free Software Foundation and John Gilmore
+Systems (formerly AIRS, which lives on in the domain name) for
+permitting me to use their computers and @file{uunet} access.  I would
+also like to thank Richard Stallman @code{<rms@@gnu.ai.mit.edu>} for
+founding the Free Software Foundation and John Gilmore
 @code{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
 was a direct inspiration for this somewhat larger project.  Chip
 Salzenberg @code{<chip@@tct.com>} has contributed many patches.
-Franc,ois Pinard @code{<pinard@@iro.umontreal.ca>} tirelessly tested the
-code and suggested many improvements.  He also put together the initial
-version of this document.  Doug Evans contributed the zmodem protocol.
-Marc Boucher @code{<marc@@CAM.ORG>} contributed the code supporting the
-pipe port type.  Finally, Verbus M. Counts @code{<verbus@@westmark.com>}
-and Centel Federal Systems, Inc. deserve special thanks, since they
-actually paid me money to port this code to System III.
+@ifinfo
+Franc,ois
 @end ifinfo
 @iftex
-First of all, I would like to thank the people at Infinity Development
-Systems (formerly AIRS, which lives on in the domain name, at least for
-now) for permitting me to use their computers and @file{uunet} access.
-I would also like to thank Richard Stallman @code{<rms@@gnu.ai.mit.edu>}
-for founding the Free Software Foundation and John Gilmore
-@code{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
-was a direct inspiration for this somewhat larger project.  Chip
-Salzenberg @code{<chip@@tct.com>} has contributed many patches.
 @tex
-Fran\c cois Pinard
+Fran\c cois
 @end tex
-@code{<pinard@@iro.umontreal.ca>} tirelessly tested the code and
-suggested many improvements.  He also put together the initial version
-of this document.  Doug Evans @code{dje@@cygnus.com} contributed the
-zmodem protocol.  Marc Boucher @code{<marc@@CAM.ORG>} contributed the
-code supporting the pipe port type.  Jorge Cwik
-@code{jorge@@laser.satlink.net} contributed the @samp{y} protocol code.
-Finally, Verbus M. Counts @code{<verbus@@westmark.com>} and Centel
-Federal Systems, Inc. deserve special thanks, since they actually paid
-me money to port this code to System III.
 @end iftex
+Pinard @code{<pinard@@iro.umontreal.ca>} tirelessly tested the code and
+suggested many improvements.  He also put together the initial version
+of this manual.  Doug Evans contributed the zmodem protocol.  Marc
+Boucher @code{<marc@@CAM.ORG>} contributed the code supporting the pipe
+port type.  Jorge Cwik @code{jorge@@laser.satlink.net} contributed the
+@samp{y} protocol code.  Finally, Verbus M. Counts
+@code{<verbus@@westmark.com>} and Centel Federal Systems, Inc. deserve
+special thanks, since they actually paid me money to port this code to
+System III.
 
 In alphabetical order:
 
