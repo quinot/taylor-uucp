@@ -180,9 +180,12 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     what is available on your system, so if your system is at all
     unusual you will need to pass in $CC and $LIBS correctly.
 
-    The configure script will create conf.h, and copy Makefile.in to
-    Makefile with substitutions.  It will also create config.status,
-    which may be used to recreate the configuration.
+    The configure script will create conf.h from conf.h.in and
+    Makefile from Makefile.in.  It will also create config.status,
+    which is a shell script; if configure gets a couple of things
+    wrong, you can correct them in config.status and do ``sh
+    config.status'' to redo the configuration.  Please report any such
+    problems, so that they can be fixed in later versions.
 
     Examine conf.h and Makefile to make sure they're right.
 

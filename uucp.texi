@@ -474,7 +474,7 @@ compiler.  It recognizes the following environment variables:
 @table @samp
 @item CC
 The C compiler.  If this is not set, then if @code{configure} can find
-@code{gcc} it will use @samp{gcc -O}, otherwise it will use @samp{cc}.
+@code{gcc} it will use it, otherwise it will use @samp{cc}.
 @item DEFS
 Flags to pass the C compiler during configuration testing.  If this is
 not set, @code{configure} will use the empty string.
@@ -503,17 +503,24 @@ Suppose you want to set the environment variable @samp{CC} to
 @code{configure} as @samp{CC=rcc configure}.  If you are using
 @code{csh}, do @samp{setenv CC rcc; sh configure}.
 
-On some systems you will want to use @samp{LIBS=-lmalloc}.  On some you
-will want @samp{LIBS=-lsocket}.  On Xenix derived systems do not use
-@samp{LIBS=-lx} because this will bring in the wrong versions of certain
-routines; if you want to use @samp{-lx} you must specify @samp{LIBS=-lc
--lx}.
+On some systems you will want to use @samp{LIBS=-lmalloc}.  On Xenix
+derived systems do not use @samp{LIBS=-lx} because this will bring in
+the wrong versions of certain routines; if you want to use @samp{-lx}
+you must specify @samp{LIBS=-lc -lx}.
+
+The @code{configure} script will create @file{conf.h} from
+@file{conf.h.in} and @file{Makefile} from @file{Makefile.in}.  It will
+also create @file{config.status}, which is a shell script; if
+@code{configure} gets a couple of things wrong, you can correct them in
+@file{config.status} and do @samp{sh config.status} do redo the
+configuration.  Please report any such problems, so that they can be
+fixed in later versions.
 
 If @code{configure} fails for some reason, or if you have a very wierd
 system, you may have to configure the package by hand.  To do this, copy
-the file @file{conf.h-dist} to @file{conf.h} and edit it for your
-system.  Then copy @file{Makefile.in} to @file{Makefile}, find the words
-within @kbd{@@} characters, and set them correctly for your system.
+the file @file{conf.h.in} to @file{conf.h} and edit it for your system.
+Then copy @file{Makefile.in} to @file{Makefile}, find the words within
+@kbd{@@} characters, and set them correctly for your system.
 
 @item
 You should verify that @code{configure} worked correctly by checking
