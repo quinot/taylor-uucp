@@ -46,12 +46,8 @@
 #define O_RDWR 2
 #endif
 
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
-
-#if HAVE_SYS_PARAM_H
-#include <sys/param.h>
+#ifndef FD_CLOEXEC
+#define FD_CLOEXEC 1
 #endif
 
 #ifndef environ
@@ -82,7 +78,12 @@ extern char **environ;
 
    If fkeepenv is FALSE, a standard environment is created.  The
    environment arguments (zpath, zuu_machine and zuu_user) are only
-   used if fkeepenv is FALSE; any of them may be NULL.  */
+   used if fkeepenv is FALSE; any of them may be NULL.
+
+   This routine expects that all file descriptors have been set to
+   close-on-exec, so it doesn't have to worry about closing them
+   explicitly.  It sets the close-on-exec flag for the new pipe
+   descriptors it returns.  */
 
 pid_t
 isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
@@ -111,7 +112,6 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
   int cchild_close;
   int aichild_close[3];
   pid_t iret = 0;
-  int cdescs;
   const char *zcmd;
 
   /* If we might have to use the shell, allocate enough space for the
@@ -247,6 +247,13 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 
 	  ++cpar_close;
 	  ++cchild_close;
+
+	  if (fcntl (aidescs[i], F_SETFD, FD_CLOEXEC) < 0)
+	    {
+	      ierr = errno;
+	      ferr = TRUE;
+	      break;
+	    }	      
 	}
     }
 
@@ -301,33 +308,15 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 #endif
 
   for (i = 0; i < 3; i++)
-    if (aichild_descs[i] != i)
-      (void) dup2 (aichild_descs[i], i);
-
-
-#if HAVE_GETDTABLESIZE
-  cdescs = getdtablesize ();
-#else
-#if HAVE_SYSCONF
-  cdescs = sysconf (_SC_OPEN_MAX);
-#else
-#ifdef OPEN_MAX
-  cdescs = OPEN_MAX;
-#else
-#ifdef NOFILE
-  cdescs = NOFILE;
-#else
-  cdescs = -1;
-#endif /* ! defined (NOFILE) */
-#endif /* ! defined (OPEN_MAX) */
-#endif /* ! HAVE_SYSCONF */
-#endif /* ! HAVE_GETDTABLESIZE */
-
-  if (cdescs < 0)
-    cdescs = 20;
-
-  for (i = 3; i < cdescs; i++)
-    (void) close (i);
+    {
+      if (aichild_descs[i] == i)
+	(void) fcntl (i, F_SETFD, 0);
+      else
+	{
+	  (void) dup2 (aichild_descs[i], i);
+	  (void) close (aichild_descs[i]);
+	}
+    }
 
   zcmd = pazargs[0];
   pazargs[0] = strrchr (zcmd, '/');
