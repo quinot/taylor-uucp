@@ -103,7 +103,7 @@ fsysdep_remember_reception (qsys, zto, ztemp)
     {
       if (errno == ENOENT)
 	{
-	  if (fsysdep_make_dirs (zfile, TRUE))
+	  if (fsysdep_make_dirs (zfile, FALSE))
 	    {
 	      ubuffree (zfile);
 	      return FALSE;
