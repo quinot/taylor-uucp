@@ -44,10 +44,12 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
      int ccmds;
      const struct scmd *pascmds;
 {
-  char *z;
+  char abtempfile[sizeof "C..1234567890"];
+  char *ztemp;
   FILE *e;
   int i;
   const struct scmd *q;
+  char *z;
   char *zjobid;
 
 #if DEBUG > 0
@@ -55,14 +57,17 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
     ulog (LOG_FATAL, "Bad grade %d", bgrade);
 #endif
 
-  z = zscmd_file (qsys, bgrade);
-  if (z == NULL)
+  /* Write the commands into a temporary file and then rename it to
+     avoid a race with uucico reading the file.  */
+  sprintf (abtempfile, "TMP%010lx", (unsigned long) getpid ());
+  ztemp = zsfind_file (abtempfile, qsys->uuconf_zname, bgrade);
+  if (ztemp == NULL)
     return NULL;
 
-  e = esysdep_fopen (z, FALSE, FALSE, TRUE);
+  e = esysdep_fopen (ztemp, FALSE, FALSE, TRUE);
   if (e == NULL)
     {
-      ubuffree (z);
+      ubuffree (ztemp);
       return NULL;
     }
 
@@ -93,8 +98,8 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 		"zsysdep_spool_commands: Unrecognized type %d",
 		q->bcmd);
 	  (void) fclose (e);
-	  (void) remove (z);
-	  ubuffree (z);
+	  (void) remove (ztemp);
+	  ubuffree (ztemp);
 	  return NULL;
 	}
     }
@@ -102,10 +107,28 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
   if (fclose (e) != 0)
     {
       ulog (LOG_ERROR, "fclose: %s", strerror (errno));
-      (void) remove (z);
+      (void) remove (ztemp);
+      ubuffree (ztemp);
+      return NULL;
+    }
+
+  z = zscmd_file (qsys, bgrade);
+  if (z == NULL)
+    {
+      (void) remove (ztemp);
+      ubuffree (ztemp);
+      return NULL;
+    }
+
+  if (! fsysdep_move_file (ztemp, z, FALSE, FALSE, FALSE,
+			   (const char *) NULL))
+    {
+      ubuffree (ztemp);
       ubuffree (z);
       return NULL;
     }
+
+  ubuffree (ztemp);
 
   zjobid = zsfile_to_jobid (qsys, z, bgrade);
   if (zjobid == NULL)

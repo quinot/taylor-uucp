@@ -194,7 +194,12 @@ zsfind_file (zsimple, zsystem, bgrade)
      const char *zsystem;
      int bgrade;
 {
-  if (! fspool_file (zsimple))
+  /* zsysdep_spool_commands calls this with TMPXXX which we must treat
+     as a C. file.  */
+  if ((zsimple[0] != 'T'
+       || zsimple[1] != 'M'
+       || zsimple[2] != 'P')
+      && ! fspool_file (zsimple))
     {
       ulog (LOG_ERROR, "Unrecognized file name %s", zsimple);
       return NULL;
@@ -263,6 +268,7 @@ zsfind_file (zsimple, zsystem, bgrade)
   switch (*zsimple)
     {
     case 'C':
+    case 'T':
 #if SPOOLDIR_BSD42 || SPOOLDIR_BSD43
       return zsysdep_in_dir ("C.", zsimple);
 #endif /* SPOOLDIR_BSD42 || SPOOLDIR_BSD43 */
