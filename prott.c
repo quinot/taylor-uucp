@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/15  23:27:21  ian
+   Include system.h in prott.c and protf.c
+
    Revision 1.4  1991/11/15  23:20:59  ian
    Changed sleep to usysdep_sleep
 
@@ -73,7 +76,7 @@ static char *zTbuf;
 static boolean fTfile;
 
 /* The timeout we use.  */
-static int cTtimeout = 30;
+static int cTtimeout = 120;
 
 struct scmdtab asTproto_params[] =
 {

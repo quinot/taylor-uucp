@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/15  23:32:15  ian
+   Don't use 1 second timeouts--loses data on System V
+
    Revision 1.2  1991/11/15  21:00:59  ian
    Efficiency hacks for 'f' and 't' protocols
 
@@ -70,7 +73,7 @@ char protf_rcsid[] = "$Id$";
 #define CFBUFSIZE (256)
 
 /* The timeout to wait for data to arrive before giving up.  */
-static int cFtimeout = 30;
+static int cFtimeout = 120;
 
 /* The maximum number of retries.  */
 static int cFmaxretries = 2;
