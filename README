@@ -113,10 +113,12 @@ For a complete list, see ChangeLog.
 DOCUMENTATION
 
 The documentation is in the file uucp.texi, which is a Texinfo file.
-It may be printed using TeX, or it may be read as an Info file by GNU
-Emacs.  If you have neither, don't despair; the files uucp.info-*,
-which were generated from uucp.texi by the makeinfo program, are
-easily readable by humans.
+You can print it using TeX in combination with the file texinfo.tex;
+neither are provided, but both are fairly readily available.  You can
+also read it as an Info file with GNU Emacs.  If these programs are
+not available, don't despair; the files uucp.info-*, which were
+generated from uucp.texi by the makeinfo program, are easily readable
+by humans.
 
 See the TODO file for things which should be done.  Send me
 suggestions for new things to do.

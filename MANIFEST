@@ -33,7 +33,6 @@ sysh.unx
 sysinf.c
 system.h
 tcp.c
-texinfo.tex
 time.c
 tstout.c
 tstuu.c
