@@ -1589,17 +1589,21 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 
   i = 0;
   if (zid == NULL)
-    pz[i++] = "A UUCP execution request\n";
+    pz[i++] = "A UUCP execution request";
   else
     {
       pz[i++] = "UUCP job\n\t";
       pz[i++] = zid;
-      pz[i++] = "\n";
+      pz[i++] = "\nfor system\n\t";
+      pz[i++] = qsys->uuconf_zname;
     }
-  pz[i++] = "requested by\n\t";
+  pz[i++] = "\nrequested by\n\t";
   pz[i++] = zuser != NULL ? zuser : OWNER;
-  pz[i++] = "\non system\n\t";
-  pz[i++] = qsys->uuconf_zname;
+  if (zid == NULL)
+    {
+      pz[i++] = "\non system\n\t";
+      pz[i++] = qsys->uuconf_zname;
+    }
   pz[i++] = "\n";
 
   if (fkilled)
@@ -1734,8 +1738,6 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       && (zrequestor != NULL || zuser != NULL))
     {
       const char *zmail;
-      int iuuconf;
-      const char *zloc;
       char *zfree;
 
       if (zrequestor != NULL)
@@ -1743,31 +1745,39 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       else
 	zmail = zuser;
 
-      iuuconf = uuconf_localname (puuconf, &zloc);
-      if (iuuconf == UUCONF_NOT_FOUND)
-	{
-	  zloc = zsysdep_localname ();
-	  if (zloc == NULL)
-	    return FALSE;
-	}
-      else if (iuuconf != UUCONF_SUCCESS)
-	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-
       zfree = NULL;
-      if (strcmp (qsys->uuconf_zname, zloc) != 0
-#if HAVE_INTERNET_MAIL
-	  && strchr (zmail, '@') == NULL
-#endif
-	  )
-	{
-	  zfree = zbufalc (strlen (qsys->uuconf_zname)
-			   + strlen (zmail)
-			   + sizeof "!");
-	  sprintf (zfree, "%s!%s", qsys->uuconf_zname, zmail);
-	  zmail = zfree;
-	}
 
-      xfree ((pointer) zloc);
+      if (zid == NULL)
+	{
+	  int iuuconf;
+	  const char *zloc;
+
+	  /* This is an execution request, which may be from another
+	     system.  If it is, we must prepend that system name to
+	     the user name extracted from the X. file.  */
+	  iuuconf = uuconf_localname (puuconf, &zloc);
+	  if (iuuconf == UUCONF_NOT_FOUND)
+	    {
+	      zloc = zsysdep_localname ();
+	      if (zloc == NULL)
+		return FALSE;
+	    }
+	  else if (iuuconf != UUCONF_SUCCESS)
+	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+	  if (strcmp (qsys->uuconf_zname, zloc) != 0
+#if HAVE_INTERNET_MAIL
+	      && strchr (zmail, '@') == NULL
+#endif
+	      )
+	    {
+	      zfree = zbufalc (strlen (qsys->uuconf_zname)
+			       + strlen (zmail)
+			       + sizeof "!");
+	      sprintf (zfree, "%s!%s", qsys->uuconf_zname, zmail);
+	      zmail = zfree;
+	    }
+	}
 
       if (! fsysdep_mail (zmail, zsubject, i, pz))
 	fret = FALSE;
