@@ -107,9 +107,8 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf (stderr,
-		   "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-		   zKprogram, VERSION);
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zKprogram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 	  
@@ -184,18 +183,13 @@ static void ukusage ()
 static void
 ukhelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	   VERSION);
-  fprintf (stderr,
-	   "Usage: %s [{-I,--config} file] [-v] [--version] [--help]\n",
-	   zKprogram);
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	  VERSION);
+  printf ("Usage: %s [{-I,--config} file] [-v] [--version] [--help]\n",
+	  zKprogram);
+  printf (" -I,--config file: Set configuration file to use\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
 }
 
 /* Dump out the information for a system.  */
@@ -359,6 +353,8 @@ ukshow (qsys, puuconf)
 	      iret = uuconf_callout (puuconf, qsys, &zlogin, &zpass);
 	      if (iret == UUCONF_NOT_FOUND)
 		printf (" Can not determine login name or password\n");
+	      else if (UUCONF_ERROR_VALUE (iret) == UUCONF_FOPEN_FAILED)
+		printf (" Can not read call out file\n");
 	      else if (iret != UUCONF_SUCCESS)
 		ukuuconf_error (puuconf, iret);
 	      else
