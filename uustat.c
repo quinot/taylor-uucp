@@ -1688,7 +1688,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 	  e = fopen (zfile, "r");
 	  if (e != NULL)
 	    {
-	      int clines;
+	      int clines, clen;
 	      char *zline;
 	      size_t cline;
 
@@ -1699,8 +1699,19 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 
 	      zline = NULL;
 	      cline = 0;
-	      while (getline (&zline, &cline, e) > 0)
+	      while ((clen = getline (&zline, &cline, e)) > 0)
 		{
+		  if (memchr (zline, '\0', clen) != NULL)
+		    {
+		      int ifree;
+
+		      /* A null character means this is probably a
+			 binary file.  */
+		      for (ifree = istdin; ifree < i; ifree++)
+			ubuffree ((char *) pz[ifree]);
+		      i = istdin - 1;
+		      break;
+		    }
 		  ++clines;
 		  if (clines > cstdin)
 		    break;

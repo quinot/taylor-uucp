@@ -17,7 +17,9 @@ command ] [
 .B \-o
 hours ] [
 .B \-y
-hours ]
+hours ] [
+.B \-B
+lines ]
 .PP
 .B uustat
 [
@@ -205,7 +207,12 @@ or
 with an affirmative response) the mail will indicate that.  A comment
 specified by the
 .B \-W
-option may be included.
+option may be included.  If the job is an execution, the initial
+portion of its standard input will be included in the mail message;
+the number of lines to include may be set with the
+.B \-B
+option (the default is 100).  If the standard input contains null
+characters, it is assumed to be a binary file and is not included.
 .TP 5
 .B \-N
 For each listed job, send mail to the user who requested the job.  The
