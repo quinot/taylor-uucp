@@ -128,7 +128,7 @@ struct spass
 static void uusage P((void));
 static void uhelp P((void));
 static void uabort P((void));
-static boolean fcall P((pointer puuconf,
+static boolean fcall P((pointer puuconf, const char *zconfig, boolean fuuxqt,
 			const struct uuconf_system *qsys,
 			struct uuconf_port *qport, boolean fifwork,
 			boolean fforce, boolean fdetach,
@@ -142,11 +142,12 @@ static boolean fdo_call P((struct sdaemon *qdaemon,
 			   const struct uuconf_dialer *qdialer,
 			   boolean *pfcalled, enum tstatus_type *pterr));
 static int iuport_lock P((struct uuconf_port *qport, pointer pinfo));
-static boolean flogin_prompt P((pointer puuconf,
-				struct sconnection *qconn,
+static boolean flogin_prompt P((pointer puuconf, const char *zconfig,
+				boolean fuuxqt, struct sconnection *qconn,
 				const char *zlogin));
 static int icallin_cmp P((int iwhich, void *pinfo, const char *zfile));
-static boolean faccept_call P((pointer puuconf, const char *zlogin,
+static boolean faccept_call P((pointer puuconf, const char *zconfig,
+			       boolean fuuxqt, const char *zlogin,
 			       struct sconnection *qconn,
 			       const char **pzsystem));
 static void uaccept_call_cleanup P((pointer puuconf,
@@ -480,8 +481,8 @@ main (argc, argv)
 	  else
 	    {
 	      fLocked_system = TRUE;
-	      fret = fcall (puuconf, &sLocked_system, qport, fifwork,
-			    fforce, fdetach, fquiet);
+	      fret = fcall (puuconf, zconfig, fuuxqt, &sLocked_system, qport,
+			    fifwork, fforce, fdetach, fquiet);
 	      if (fLocked_system)
 		{
 		  (void) fsysdep_unlock_system (&sLocked_system);
@@ -564,8 +565,8 @@ main (argc, argv)
 		  else
 		    {
 		      fLocked_system = TRUE;
-		      if (! fcall (puuconf, &sLocked_system, qport, TRUE,
-				   fforce, fdetach, fquiet))
+		      if (! fcall (puuconf, zconfig, fuuxqt, &sLocked_system,
+				   qport, TRUE, fforce, fdetach, fquiet))
 			fret = FALSE;
 
 		      /* Now ignore any SIGHUP that we got.  */
@@ -651,7 +652,8 @@ main (argc, argv)
 	  if (fendless)
 	    {
 	      while (! FGOT_SIGNAL ()
-		     && flogin_prompt (puuconf, &sconn, (const char *) NULL))
+		     && flogin_prompt (puuconf, zconfig, fuuxqt, &sconn,
+				       (const char *) NULL))
 		{
 		  /* Close and reopen the port in between calls.  */
 		  if (! fconn_close (&sconn, puuconf,
@@ -665,7 +667,8 @@ main (argc, argv)
 	  else
 	    {
 	      if (flogin)
-		fret = flogin_prompt (puuconf, &sconn, zlogin);
+		fret = flogin_prompt (puuconf, zconfig, fuuxqt, &sconn,
+				      zlogin);
 	      else
 		{
 #if DEBUG > 1
@@ -673,7 +676,8 @@ main (argc, argv)
 #endif
 		  if (zlogin == NULL)
 		    zlogin = zsysdep_login_name ();
-		  fret = faccept_call (puuconf, zlogin, &sconn, &zsystem);
+		  fret = faccept_call (puuconf, zconfig, fuuxqt, zlogin,
+				       &sconn, &zsystem);
 #if DEBUG > 1
 		  iDebug = iholddebug;
 #endif
@@ -706,36 +710,21 @@ main (argc, argv)
 
   if (fuuxqt)
     {
-      char *zsysarg, *zconfigarg;
+      int irunuuxqt;
 
-      /* Detach from the controlling terminal before starting up uuxqt,
-	 so that it runs as a true daemon.  */
-      if (fdetach)
-	usysdep_detach ();
-
-      if (zsystem == NULL)
-	zsysarg = NULL;
-      else
+      iuuconf = uuconf_runuuxqt (puuconf, &irunuuxqt);
+      if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      else if (irunuuxqt == UUCONF_RUNUUXQT_ONCE)
 	{
-	  zsysarg = zbufalc (sizeof "-s" + strlen (zsystem));
-	  sprintf (zsysarg, "-s%s", zsystem);
-	}
+	  /* Detach from the controlling terminal before starting up uuxqt,
+	     so that it runs as a true daemon.  */
+	  if (fdetach)
+	    usysdep_detach ();
 
-      if (zconfig == NULL)
-	zconfigarg = NULL;
-      else
-	{
-	  zconfigarg = zbufalc (sizeof "-I" + strlen (zsystem));
-	  sprintf (zconfigarg, "-I%s", zsystem);
-	  if (zsysarg == NULL)
-	    {
-	      zsysarg = zconfigarg;
-	      zconfigarg = NULL;
-	    }
+	  if (! fspawn_uuxqt (FALSE, zsystem, zconfig))
+	    fret = FALSE;
 	}
-
-      if (! fsysdep_run (FALSE, "uuxqt", zsysarg, zconfigarg))
-	fret = FALSE;
     }
 
   usysdep_exit (fret);
@@ -830,8 +819,11 @@ uabort ()
    calls are not permitted at this time.  */
 
 static boolean
-fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
+fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
+       fquiet)
      pointer puuconf;
+     const char *zconfig;
+     boolean fuuxqt;
      const struct uuconf_system *qorigsys;
      struct uuconf_port *qport;
      boolean fifwork;
@@ -876,6 +868,17 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
     }
 
   sDaemon.puuconf = puuconf;
+  sDaemon.zconfig = zconfig;
+  if (! fuuxqt)
+    sDaemon.irunuuxqt = UUCONF_RUNUUXQT_NEVER;
+  else
+    {
+      int iuuconf;
+
+      iuuconf = uuconf_runuuxqt (puuconf, &sDaemon.irunuuxqt);
+      if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+    }
   sDaemon.qsys = NULL;
   sDaemon.zlocalname = NULL;
   sDaemon.qconn = NULL;
@@ -887,6 +890,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
   sDaemon.cmax_receive = -1;
   sDaemon.csent = 0;
   sDaemon.creceived = 0;
+  sDaemon.cxfiles_received = 0;
   sDaemon.ifeatures = 0;
   sDaemon.frequest_hangup = FALSE;
   sDaemon.fhangup_requested = FALSE;
@@ -1586,6 +1590,11 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	(void) fsysdep_set_status (qsys, qstat);
       }
 
+    if (qdaemon->irunuuxqt == UUCONF_RUNUUXQT_PERCALL
+	|| (qdaemon->irunuuxqt > 0 && qdaemon->cxfiles_received > 0))
+      (void) fspawn_uuxqt (TRUE, qdaemon->qsys->uuconf_zname,
+			   qdaemon->zconfig);
+
     return fret;
   }
 }
@@ -1630,8 +1639,10 @@ struct scallin_info
 /* Prompt for a login name and a password, and run as the slave.  */
 
 static boolean
-flogin_prompt (puuconf, qconn, zlogin)
+flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin)
      pointer puuconf;
+     const char *zconfig;
+     boolean fuuxqt;
      struct sconnection *qconn;
      const char *zlogin;
 {
@@ -1700,7 +1711,8 @@ flogin_prompt (puuconf, qconn, zlogin)
 #if DEBUG > 1
       iholddebug = iDebug;
 #endif
-      (void) faccept_call (puuconf, zlogin, qconn, (const char **) NULL);
+      (void) faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn,
+			   (const char **) NULL);
 #if DEBUG > 1
       iDebug = iholddebug;
 #endif
@@ -1744,8 +1756,10 @@ icallin_cmp (iwhich, pinfo, zfile)
    will be set to the system that called in if known.  */
 
 static boolean
-faccept_call (puuconf, zlogin, qconn, pzsystem)
+faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
      pointer puuconf;
+     const char *zconfig;
+     boolean fuuxqt;
      const char *zlogin;
      struct sconnection *qconn;
      const char **pzsystem;
@@ -1848,6 +1862,15 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     }
 
   sDaemon.puuconf = puuconf;
+  sDaemon.zconfig = zconfig;
+  if (! fuuxqt)
+    sDaemon.irunuuxqt = UUCONF_RUNUUXQT_NEVER;
+  else
+    {
+      iuuconf = uuconf_runuuxqt (puuconf, &sDaemon.irunuuxqt);
+      if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+    }
   sDaemon.qsys = NULL;
   sDaemon.zlocalname = NULL;
   sDaemon.qconn = qconn;
@@ -1859,6 +1882,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sDaemon.cmax_receive = -1;
   sDaemon.csent = 0;
   sDaemon.creceived = 0;
+  sDaemon.cxfiles_received = 0;
   sDaemon.ifeatures = 0;
   sDaemon.frequest_hangup = FALSE;
   sDaemon.fhangup_requested = FALSE;
@@ -2531,6 +2555,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     sstat.ilast = iend_time;
     (void) fsysdep_set_status (qsys, &sstat);
 
+    if (sDaemon.irunuuxqt == UUCONF_RUNUUXQT_PERCALL
+	|| (sDaemon.irunuuxqt > 0 && sDaemon.cxfiles_received > 0))
+      (void) fspawn_uuxqt (TRUE, qsys->uuconf_zname, zconfig);
+
     uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
 
     return fret;
@@ -2901,4 +2929,46 @@ zget_typed_line (qconn)
 	  return zalc;
 	}
     }
+}
+
+/* Spawn a uuxqt job.  This probably belongs in some other file, but I
+   don't have a good place for it.  */
+
+boolean
+fspawn_uuxqt (ffork, zsys, zconfig)
+     boolean ffork;
+     const char *zsys;
+     const char *zconfig;
+{
+  char *zsysarg;
+  char *zconfigarg;
+  boolean fret;
+
+  if (zsys == NULL)
+    zsysarg = NULL;
+  else
+    {
+      zsysarg = zbufalc (sizeof "-s" + strlen (zsys));
+      sprintf (zsysarg, "-s%s", zsys);
+    }
+
+  if (zconfig == NULL)
+    zconfigarg = NULL;
+  else
+    {
+      zconfigarg = zbufalc (sizeof "-I" + strlen (zconfig));
+      sprintf (zconfigarg, "-I%s", zconfig);
+      if (zsysarg == NULL)
+	{
+	  zsysarg = zconfigarg;
+	  zconfigarg = NULL;
+	}
+    }
+
+  fret = fsysdep_run (ffork, "uuxqt", zsysarg, zconfigarg);
+
+  ubuffree (zsysarg);
+  ubuffree (zconfigarg);
+
+  return fret;
 }

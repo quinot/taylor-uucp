@@ -1,7 +1,7 @@
 /* rec.c
    Routines to receive a file.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -1191,6 +1191,21 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	{
 	  urrec_free (qtrans);
 	  return FALSE;
+	}
+    }
+
+  /* See if we should spawn a uuxqt process.  */
+  if (zerr == NULL
+      && (qtrans->s.bcmd == 'E'
+	  || (qinfo->fspool && qtrans->s.zto[0] == 'X')))
+    {
+      ++qdaemon->cxfiles_received;
+      if (qdaemon->irunuuxqt > 0
+	  && qdaemon->cxfiles_received >= qdaemon->irunuuxqt)
+	{
+	  if (fspawn_uuxqt (TRUE, qdaemon->qsys->uuconf_zname,
+			    qdaemon->zconfig))
+	    qdaemon->cxfiles_received = 0;
 	}
     }
 

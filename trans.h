@@ -1,7 +1,7 @@
 /* trans.h
    Header file for file and command transfer routines.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -56,6 +56,10 @@ struct sdaemon
 {
   /* Global uuconf pointer.  */
   pointer puuconf;
+  /* Configuration file name argument (from -I option).  */
+  const char *zconfig;
+  /* How often to spawn uuxqt (from uuconf_runuuxqt).  */
+  int irunuuxqt;
   /* Remote system information.  */
   const struct uuconf_system *qsys;
   /* Local name being used.  */
@@ -78,6 +82,9 @@ struct sdaemon
   long csent;
   /* Number of bytes received.  */
   long creceived;
+  /* Number of execution files received since the last time we spawned
+     uuxqt.  */
+  long cxfiles_received;
   /* Features supported by the remote side.  */
   int ifeatures;
   /* TRUE if we should request the remote side to hang up.  */
@@ -272,3 +279,10 @@ extern void usent_receive_ack P((struct sdaemon *qdaemon,
    lost.  */
 extern void uwindow_acked P((struct sdaemon *qdaemon,
 			     boolean fallacked));
+
+/* Spawn a uuxqt process.  The ffork argument is passed to
+   fsysdep_run.  If the zsys argument is not NULL, then -s zsys is
+   passed to uuxqt.  The zconfig argument is the name of the
+   configuration file, from the -I option.  */
+extern boolean fspawn_uuxqt P((boolean ffork, const char *zsys,
+			       const char *zconfig));
