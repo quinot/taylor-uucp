@@ -146,8 +146,8 @@ const char proti_rcsid[] = "$Id$";
 #define SPOS (4)
 #define CLOSE (5)
 
-/* Largest possible packet size (plus 1).  */
-#define IMAXPACKSIZE (1 << 12)
+/* Largest possible packet size.  */
+#define IMAXPACKSIZE ((1 << 12) - 1)
 
 /* Largest possible sequence number (plus 1).  */
 #define IMAXSEQ 32
@@ -419,7 +419,7 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
   pfIreceive = pfreceive;
 
   if (iIforced_remote_packsize <= 0
-      || iIforced_remote_packsize >= imaxpacksize)
+      || iIforced_remote_packsize > imaxpacksize)
     iIforced_remote_packsize = 0;
   else
     iIremote_packsize = iIforced_remote_packsize;
