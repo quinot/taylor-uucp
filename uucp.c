@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/02/08  22:33:32  ian
+   Only get the current working directory if it's going to be needed
+
    Revision 1.15  1992/02/08  20:33:57  ian
    Handle all possible signals raised by abort
 
@@ -498,7 +501,7 @@ main (argc, argv)
 	      s.zto = zdestfile;
 	      s.zuser = zuser;
 	      s.zoptions = absend_options;
-	      s.ztemp = abtname;
+	      s.ztemp = xstrdup (abtname);
 	      s.imode = imode;
 	      s.znotify = znotify;
 	      s.cbytes = -1;
