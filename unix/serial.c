@@ -107,7 +107,6 @@ const char serial_rcsid[] = "$Id$";
 #endif /* HAVE_SVR4_LOCKFILES */
 
 /* Get definitions for both O_NONBLOCK and O_NDELAY.  */
-
 #ifndef O_NDELAY
 #ifdef FNDELAY
 #define O_NDELAY FNDELAY
@@ -126,15 +125,6 @@ const char serial_rcsid[] = "$Id$";
 
 #if O_NDELAY == 0 && O_NONBLOCK == 0
  #error No way to do nonblocking I/O
-#endif
-
-/* If we can define them both together, do so.  This is because some
-   ancient drivers on some systems appear to look for one but not the
-   other.  Otherwise just use O_NONBLOCK.  */
-#if COMBINED_UNBLOCK
-#define FILE_UNBLOCKED (O_NDELAY | O_NONBLOCK)
-#else
-#define FILE_UNBLOCKED O_NONBLOCK
 #endif
 
 /* Get definitions for both EAGAIN and EWOULDBLOCK.  */
@@ -324,6 +314,15 @@ static const struct sconncmds sdirectcmds =
   fsysdep_conn_chat,
   isserial_baud
 };
+
+/* If the system will let us set both O_NDELAY and O_NONBLOCK, we do
+   so.  This is because some ancient drivers on some systems appear to
+   look for one but not the other.  Some other systems will give an
+   EINVAL error if we attempt to set both, so we use a static global
+   to hold the value we want to set.  If we get EINVAL, we change the
+   global and try again (if some system gives an error other than
+   EINVAL, the code will have to be modified).  */
+static int iSunblock = O_NDELAY | O_NONBLOCK;
 
 /* This code handles SIGALRM.  See the discussion above
    fsysdep_conn_read.  Normally we ignore SIGALRM, but the handler
@@ -611,16 +610,27 @@ fsserial_lock (qconn, fin)
     if (fin)
       iflag = 0;
     else
-      iflag = FILE_UNBLOCKED;
+      iflag = iSunblock;
 
     qsysdep->o = open ((char *) qsysdep->zdevice, O_RDWR | iflag);
     if (qsysdep->o < 0)
       {
-	if (errno != EBUSY)
-	  ulog (LOG_ERROR, "open (%s): %s", qsysdep->zdevice,
-		strerror (errno));
-	(void) fsserial_lockfile (FALSE, qconn);
-	return FALSE;
+#if O_NONBLOCK != 0
+	if (! fin && iSunblock != O_NONBLOCK && errno == EINVAL)
+	  {
+	    iSunblock = O_NONBLOCK;
+	    qsysdep->o = open ((char *) qsysdep->zdevice,
+			       O_RDWR | O_NONBLOCK);
+	  }
+#endif
+	if (qsysdep->o < 0)
+	  {
+	    if (errno != EBUSY)
+	      ulog (LOG_ERROR, "open (%s): %s", qsysdep->zdevice,
+		    strerror (errno));
+	    (void) fsserial_lockfile (FALSE, qconn);
+	    return FALSE;
+	  }
       }
 
 #if HAVE_TIOCSINUSE
@@ -800,13 +810,24 @@ fsserial_open (qconn, ibaud, fwait)
       if (fwait)
 	iflag = 0;
       else
-	iflag = FILE_UNBLOCKED;
+	iflag = iSunblock;
 
       q->o = open ((char *) q->zdevice, O_RDWR | iflag);
       if (q->o < 0)
 	{
-	  ulog (LOG_ERROR, "open (%s): %s", q->zdevice, strerror (errno));
-	  return FALSE;
+#if O_NONBLOCK != 0
+	  if (! fwait && iSunblock != O_NONBLOCK && errno == EINVAL)
+	    {
+	      iSunblock = O_NONBLOCK;
+	      q->o = open ((char *) q->zdevice, O_RDWR | O_NONBLOCK);
+	    }
+#endif
+	  if (q->o < 0)
+	    {
+	      ulog (LOG_ERROR, "open (%s): %s", q->zdevice,
+		    strerror (errno));
+	      return FALSE;
+	    }
 	}
 
       if (fcntl (q->o, F_SETFD, fcntl (q->o, F_GETFD, 0) | FD_CLOEXEC) < 0)
@@ -1006,19 +1027,32 @@ fsblock (qs, fblock)
      boolean fblock;
 {
   int iwant;
+  int isys;
 
   if (fblock)
-    iwant = qs->iflags &~ FILE_UNBLOCKED;
+    iwant = qs->iflags &~ (O_NDELAY | O_NONBLOCK);
   else
-    iwant = qs->iflags | FILE_UNBLOCKED;
+    iwant = qs->iflags | iSunblock;
 
   if (iwant == qs->iflags)
     return TRUE;
 
-  if (fcntl (qs->o, F_SETFL, iwant) < 0)
+  isys = fcntl (qs->o, F_SETFL, iwant);
+  if (isys < 0)
     {
-      ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
-      return FALSE;
+#if O_NONBLOCK != 0
+      if (! fblock && iSunblock != O_NONBLOCK && errno == EINVAL)
+	{
+	  iSunblock = O_NONBLOCK;
+	  iwant = qs->iflags | O_NONBLOCK;
+	  isys = fcntl (qs->o, F_SETFL, iwant);
+	}
+#endif
+      if (isys < 0)
+	{
+	  ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
+	  return FALSE;
+	}
     }
 
   qs->iflags = iwant;
@@ -1026,12 +1060,14 @@ fsblock (qs, fblock)
   if (qs->istdout_flags >= 0)
     {
       if (fblock)
-	iwant = qs->istdout_flags &~ FILE_UNBLOCKED;
+	iwant = qs->istdout_flags &~ (O_NDELAY | O_NONBLOCK);
       else
-	iwant = qs->istdout_flags | FILE_UNBLOCKED;
+	iwant = qs->istdout_flags | iSunblock;
 
       if (fcntl (1, F_SETFL, iwant) < 0)
 	{
+	  /* We don't bother to fix up iSunblock here, since we
+	     succeeded above.  */
 	  ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
 	  return FALSE;
 	}

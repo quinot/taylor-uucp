@@ -182,12 +182,6 @@
 /* Set HAVE_ERRNO_DECLARATION to 1 if errno is declared in <errno.h>.  */
 #define HAVE_ERRNO_DECLARATION 0
 
-/* Set COMBINED_UNBLOCK to 1 if the flags O_NONBLOCK and O_NDELAY can
-   both be specified at once on a file descriptor.  If your system
-   does not support both flags, it doesn't matter what you set this
-   to.  */
-#define COMBINED_UNBLOCK 0
-
 /* There are now a number of functions to check for.  For each of
    these, the macro HAVE_FUNC should be set to 1 if your system has
    FUNC.  For example, HAVE_VFPRINTF should be set to 1 if your system

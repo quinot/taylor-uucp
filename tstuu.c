@@ -107,15 +107,6 @@ typedef int wait_status;
  #error No way to do nonblocking I/O
 #endif
 
-/* If we can define them both together, do so.  This is because some
-   ancient drivers on some systems appear to look for one but not the
-   other.  Otherwise just use O_NONBLOCK.  */
-#if COMBINED_UNBLOCK
-#define FILE_UNBLOCKED (O_NDELAY | O_NONBLOCK)
-#else
-#define FILE_UNBLOCKED O_NONBLOCK
-#endif
-
 /* Get definitions for both EAGAIN and EWOULDBLOCK.  */
 
 #ifndef EAGAIN
@@ -438,8 +429,12 @@ main (argc, argv)
 
   signal (SIGCHLD, uchild);
 
-  (void) fcntl (omaster1, F_SETFL, FILE_UNBLOCKED);
-  (void) fcntl (omaster2, F_SETFL, FILE_UNBLOCKED);
+  if (fcntl (omaster1, F_SETFL, O_NDELAY | O_NONBLOCK) < 0
+      && errno == EINVAL)
+    (void) fcntl (omaster1, F_SETFL, O_NONBLOCK);
+  if (fcntl (omaster2, F_SETFL, O_NDELAY | O_NONBLOCK) < 0
+      && errno == EINVAL)
+    (void) fcntl (omaster2, F_SETFL, O_NONBLOCK);
 
   while (TRUE)
     {

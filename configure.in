@@ -125,30 +125,6 @@ AC_COMPILE_CHECK([errno],
 [#include <errno.h>], [int i = errno; errno = 1;],
 AC_DEFINE([HAVE_ERRNO_DECLARATION]))
 dnl
-echo checking for combined use of O_NONBLOCK and O_NDELAY
-AC_TEST_PROGRAM([
-#include <fcntl.h>
-#ifndef O_NDELAY
-#ifdef FNDELAY
-#define O_NDELAY FNDELAY
-#else
-#define O_NDELAY 0
-#endif
-#endif
-#ifndef O_NONBLOCK
-#ifdef FNBLOCK
-#define O_NONBLOCK FNBLOCK
-#else
-#define O_NONBLOCK 0
-#endif
-#endif
-main () { exit (fcntl (open ("conftest.c", O_RDONLY),
-		       F_SETFL,
-		       O_NONBLOCK | O_NDELAY)); }
-],
-AC_DEFINE(COMBINED_UNBLOCK),
-true)
-dnl
 AC_ALLOCA
 dnl
 undefine([index])
