@@ -518,10 +518,13 @@ ILT_HEADER_COMMENT([
 /* That's the end of the list of the functions.  Now there are a few
    last miscellaneous items.  */])
 
-ILT_LIBTHING_CHECK([long times declaration],
-[#include <sys/types.h>
-`if test -f $INCLUDEDIR/sys/times.h; then echo '#include <sys/times.h>'; fi`],
-[extern long times ();], [TIMES_DECLARATION_OK],
+echo checking whether times can be declared as long
+echo "#include <sys/types.h>
+`if test -f $INCLUDEDIR/sys/times.h; then echo '#include <sys/times.h>'; fi`
+main () { exit(0); } extern long times ();" > conftest.c
+eval $compile
+M_DEFINE([TIMES_DECLARATION_OK],
+[`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
 [
 /* On some systems times is declared in <sys/times.h> as returning
    int, so the code cannot safely declare it as returning long.  On
@@ -529,6 +532,7 @@ ILT_LIBTHING_CHECK([long times declaration],
    declared as returning long.  Set TIMES_DECLARATION_OK to 1 if times
    can be safely declared as returning long.  If you will not be using
    times, it doesn't matter what you set this to.  */])
+rm -f conftest conftest.c
 
 ILT_LIBTHING_CHECK([BSD setpgrp],
 [`if test -f $INCLUDEDIR/unistd.h; then echo '#include <unistd.h>'; fi`],
