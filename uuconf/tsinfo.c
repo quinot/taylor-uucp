@@ -303,8 +303,7 @@ _uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
   if (iret == UUCONF_SUCCESS)
     {
       qsys->uuconf_fcalled = TRUE;
-      if (qsys->uuconf_qtimegrade != NULL
-	  || qsys->uuconf_zport != NULL
+      if (qsys->uuconf_zport != NULL
 	  || qsys->uuconf_qport != NULL
 	  || qsys->uuconf_ibaud >= 0
 	  || qsys->uuconf_zphone != NULL)
