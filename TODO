@@ -772,3 +772,6 @@ the dial file, presumably using uuconf_find_port for the former and
 uuconf_dialer_names for the latter.
 
 243.
+
+Kai Michael Kretschmann: Add a configure option to drop the connection
+if jobs are coming in too slowly, indicating a bad connection.
