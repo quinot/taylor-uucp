@@ -1701,7 +1701,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 	      cline = 0;
 	      while ((clen = getline (&zline, &cline, e)) > 0)
 		{
-		  if (memchr (zline, '\0', clen) != NULL)
+		  if (memchr (zline, '\0', (size_t) clen) != NULL)
 		    {
 		      int ifree;
 

@@ -754,7 +754,7 @@ uvwrite_taylor_system (e, q)
       if (qlast != NULL)
 	{
 	  fprintf (e, "alternate");
-	  if (q->uuconf_zalternate != &_uuconf_unset
+	  if (q->uuconf_zalternate != (char *) &_uuconf_unset
 	      && q->uuconf_zalternate != NULL)
 	    fprintf (e, " %s", q->uuconf_zalternate);
 	  fprintf (e, "\n");
@@ -827,7 +827,7 @@ uvwrite_taylor_system (e, q)
       if (CHANGED (uuconf_zport) || CHANGED (uuconf_qport))
 	{
 	  if (q->uuconf_zport != NULL
-	      && q->uuconf_zport != &_uuconf_unset)
+	      && q->uuconf_zport != (char *) &_uuconf_unset)
 	    uvwrite_string (e, q->uuconf_zport, "port");
 	  else if (q->uuconf_qport != NULL
 		   && (q->uuconf_qport
@@ -977,7 +977,7 @@ uvwrite_v2_system (e, q)
 	  fprintf (e, " ");
 	  uvwrite_time (e, q->uuconf_qtimegrade);
 
-	  if (q->uuconf_zport != &_uuconf_unset
+	  if (q->uuconf_zport != (char *) &_uuconf_unset
 	      || q->uuconf_qport != (struct uuconf_port *) &_uuconf_unset)
 	    {
 	      struct uuconf_port *qp;
@@ -989,7 +989,7 @@ uvwrite_v2_system (e, q)
 		      && qp->uuconf_ttype == UUCONF_PORTTYPE_TCP);
 	      if (ftcp
 		  || (q->uuconf_zport != NULL
-		      && q->uuconf_zport != &_uuconf_unset))
+		      && q->uuconf_zport != (char *) &_uuconf_unset))
 		{
 		  if (ftcp)
 		    fprintf (e, " TCP");
@@ -1069,15 +1069,15 @@ uvwrite_hdb_system (e, qsys)
 		  && q->uuconf_qport != (struct uuconf_port *) &_uuconf_unset
 		  && q->uuconf_qport->uuconf_ttype == UUCONF_PORTTYPE_TCP)
 		zport = "TCP";
-	      if (zport != NULL && zport != &_uuconf_unset)
+	      if (zport != NULL && zport != (char *) &_uuconf_unset)
 		{
 		  fprintf (e, " %s", zport);
-		  if (q->uuconf_zprotocols != &_uuconf_unset
+		  if (q->uuconf_zprotocols != (char *) &_uuconf_unset
 		      && q->uuconf_zprotocols != NULL)
 		    fprintf (e, ",%s", q->uuconf_zprotocols);
 
 		  if (q->uuconf_ibaud >= 0
-		      || q->uuconf_zphone != &_uuconf_unset)
+		      || q->uuconf_zphone != (char *) &_uuconf_unset)
 		    {
 		      fprintf (e, " ");
 		      if (q->uuconf_ibaud < 0)
@@ -1148,10 +1148,10 @@ uvwrite_hdb_system (e, qsys)
       if (q->uuconf_pzcmds != (char **) &_uuconf_unset
 	  && q->uuconf_pzcmds != NULL)
 	sperm.pzcommands = q->uuconf_pzcmds;
-      if (q->uuconf_zlocalname != &_uuconf_unset
+      if (q->uuconf_zlocalname != (char *) &_uuconf_unset
 	  && q->uuconf_zlocalname != NULL)
 	sperm.zmyname = q->uuconf_zlocalname;
-      if (q->uuconf_zpubdir != &_uuconf_unset
+      if (q->uuconf_zpubdir != (char *) &_uuconf_unset
 	  && q->uuconf_zpubdir != NULL)
 	sperm.zpubdir = q->uuconf_zpubdir;
       if (q->uuconf_pzalias != (char **) &_uuconf_unset
@@ -1159,7 +1159,7 @@ uvwrite_hdb_system (e, qsys)
 	sperm.pzalias = q->uuconf_pzalias;
 
       if (q->uuconf_fcalled
-	  && q->uuconf_zcalled_login != &_uuconf_unset
+	  && q->uuconf_zcalled_login != (char *) &_uuconf_unset
 	  && q->uuconf_zcalled_login != NULL)
 	{
 	  azlogname[0] = q->uuconf_zcalled_login;
@@ -1196,7 +1196,7 @@ uvwrite_hdb_system (e, qsys)
       sperm.zpubdir = NULL;
       sperm.pzalias = NULL;
 
-      if (q->uuconf_zcalled_login != &_uuconf_unset
+      if (q->uuconf_zcalled_login != (char *) &_uuconf_unset
 	  && q->uuconf_zcalled_login != NULL)
 	azlogname[0] = q->uuconf_zcalled_login;
       else
@@ -1216,10 +1216,10 @@ uvwrite_hdb_system (e, qsys)
 	sperm.pzwrite = q->uuconf_pzremote_receive;
       if (q->uuconf_fcallback >= 0)
 	sperm.fcallback = q->uuconf_fcallback;
-      if (q->uuconf_zlocalname != &_uuconf_unset
+      if (q->uuconf_zlocalname != (char *) &_uuconf_unset
 	  && q->uuconf_zlocalname != NULL)
 	sperm.zmyname = q->uuconf_zlocalname;
-      if (q->uuconf_zpubdir != &_uuconf_unset
+      if (q->uuconf_zpubdir != (char *) &_uuconf_unset
 	  && q->uuconf_zpubdir != NULL)
 	sperm.zpubdir = q->uuconf_zpubdir;
 

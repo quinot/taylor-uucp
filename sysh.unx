@@ -229,12 +229,14 @@ typedef struct termios sterminal;
 /* The length of the sequence number used in a file name.  */
 #define CSEQLEN (4)
 
-/* Get some standard definitions.  */
-
+/* Get some standard definitions.  Avoid including the files more than
+   once--some might have been included by uucp.h.  */
 #if USE_STDIO && HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#if ! USE_TYPES_H
 #include <sys/types.h>
+#endif
 #include <sys/stat.h>
 
 /* Get definitions for the file permission bits.  */

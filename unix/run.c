@@ -25,11 +25,11 @@
 
 #include "uucp.h"
 
-#include <errno.h>
-
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
+
+#include <errno.h>
 
 /* Start up a new program and end the current one.  We always go
    through ixsspawn, and never exec directly.  We don't have to worry

@@ -25,6 +25,10 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
+
 #include <errno.h>
 
 #if HAVE_FCNTL_H
@@ -34,10 +38,6 @@
 #include <sys/file.h>
 #endif
 #endif
-
-#include "uudefs.h"
-#include "sysdep.h"
-#include "system.h"
 
 /* Move (rename) a file from one name to another.  This routine will
    optionally create necessary directories, and fpublic indicates

@@ -29,8 +29,6 @@
 const char cusub_rcsid[] = "$Id$";
 #endif
 
-#include <errno.h>
-
 #include "uudefs.h"
 #include "uuconf.h"
 #include "sysdep.h"
@@ -38,6 +36,8 @@ const char cusub_rcsid[] = "$Id$";
 #include "cu.h"
 #include "conn.h"
 #include "prot.h"
+
+#include <errno.h>
 
 /* Local variables.  */
 

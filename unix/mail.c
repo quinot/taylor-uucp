@@ -25,15 +25,15 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
+
 #include <errno.h>
 
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-
-#include "uudefs.h"
-#include "sysdep.h"
-#include "system.h"
 
 #ifndef ctime
 extern char *ctime ();

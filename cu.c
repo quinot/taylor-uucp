@@ -29,10 +29,6 @@
 const char cu_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
-#include <ctype.h>
-#include <errno.h>
-
 #include "cu.h"
 #include "uudefs.h"
 #include "uuconf.h"
@@ -41,6 +37,10 @@ const char cu_rcsid[] = "$Id$";
 #include "system.h"
 #include "sysdep.h"
 #include "getopt.h"
+
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
 
 /* Here are the user settable variables.  The user is permitted to
    change these while running the program, using ~s.  */

@@ -2,6 +2,7 @@
    Get the port name of stdin.  */
 
 #include "uucp.h"
+
 #include "sysdep.h"
 #include "system.h"
 

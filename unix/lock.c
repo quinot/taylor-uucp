@@ -29,6 +29,10 @@
 const char lock_rcsid[] = "$Id$";
 #endif
 
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
+
 #include <errno.h>
 
 #if HAVE_FCNTL_H
@@ -52,10 +56,6 @@ const char lock_rcsid[] = "$Id$";
 #ifndef SEEK_SET
 #define SEEK_SET 0
 #endif
-
-#include "uudefs.h"
-#include "sysdep.h"
-#include "system.h"
 
 /* Lock something.  If the fspooldir argument is TRUE, the argument is
    a file name relative to the spool directory; otherwise the argument

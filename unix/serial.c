@@ -29,6 +29,10 @@
 const char serial_rcsid[] = "$Id$";
 #endif
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "conn.h"
 #include "sysdep.h"
 
 #include <errno.h>
@@ -167,11 +171,6 @@ const char serial_rcsid[] = "$Id$";
 #define HAVE_TIOCEXCL 1
 #endif
 #endif
-
-#include "uudefs.h"
-#include "uuconf.h"
-#include "system.h"
-#include "conn.h"
 
 #if HAVE_TLI
 extern int t_errno;
@@ -2263,7 +2262,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
   while (TRUE)
     {
-      int cgot, cdo, cdid;
+      int cgot, cdid;
+      size_t cdo;
 
       /* This used to always use nonblocking writes, but it turns out
 	 that some systems don't support them on terminals.
@@ -2447,7 +2447,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	    cdo = SINGLE_WRITE;
 
 	  DEBUG_MESSAGE1 (DEBUG_PORT,
-			  "fsysdep_conn_io: Blocking write of %d", cdo);
+			  "fsysdep_conn_io: Blocking write of %lud",
+			  (unsigned long) cdo);
 
 	  if (q->istdout_flags >= 0)
 	    q->o = 1;

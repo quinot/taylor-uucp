@@ -3,11 +3,11 @@
 
 #include "uucp.h"
 
-#include <errno.h>
-
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
+
+#include <errno.h>
 
 long
 csysdep_size (zfile)

@@ -3,11 +3,11 @@
 
 #include "uucp.h"
 
-#include <errno.h>
-
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
+
+#include <errno.h>
 
 /* Run the remote.unknown shell script.  If it succeeds, we return
    FALSE because that means that the system is not permitted to log

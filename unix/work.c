@@ -29,6 +29,11 @@
 const char work_rcsid[] = "$Id$";
 #endif
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "sysdep.h"
+
 #include <ctype.h>
 #include <errno.h>
 
@@ -40,11 +45,6 @@ const char work_rcsid[] = "$Id$";
 #define dirent direct
 #endif /* ! HAVE_DIRENT_H */
 #endif /* HAVE_OPENDIR */
-
-#include "uudefs.h"
-#include "uuconf.h"
-#include "system.h"
-#include "sysdep.h"
 
 /* Local functions.  */
 

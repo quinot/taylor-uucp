@@ -2,6 +2,7 @@
    Walk a directory tree.  */
 
 #include "uucp.h"
+
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"

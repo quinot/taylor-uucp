@@ -25,6 +25,9 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
 #include "sysdep.h"
 
 #include <errno.h>
@@ -82,10 +85,6 @@
 #if FS_USTAT
 #include <ustat.h>
 #endif
-
-#include "uudefs.h"
-#include "uuconf.h"
-#include "system.h"
 
 #ifndef time
 extern time_t time ();

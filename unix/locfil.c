@@ -25,11 +25,11 @@
 
 #include "uucp.h"
 
-#include <pwd.h>
-
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
+
+#include <pwd.h>
 
 #if GETPWNAM_DECLARATION_OK
 #ifndef getpwnam

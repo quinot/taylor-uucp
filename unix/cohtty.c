@@ -24,11 +24,11 @@
  *
  */
 
-#include <ctype.h>
-#include <access.h>
-
 #include "uudefs.h"
 #include "sysdep.h"
+
+#include <ctype.h>
+#include <access.h>
 
 /* fscoherent_disable_tty() is a COHERENT specific function. It takes the name
  * of a serial device and then scans /etc/ttys for a match. If it finds one,

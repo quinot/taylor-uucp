@@ -25,6 +25,10 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "sysdep.h"
+#include "system.h"
+
 #include <ctype.h>
 #include <errno.h>
 
@@ -36,10 +40,6 @@
 #if HAVE_GLOB
 #include <glob.h>
 #endif
-
-#include "uudefs.h"
-#include "sysdep.h"
-#include "system.h"
 
 /* Local variables to hold the wildcard in progress.  */
 

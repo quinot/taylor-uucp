@@ -2,6 +2,7 @@
    Replacement for the getcwd function that just calls /bin/pwd.  */
 
 #include "uucp.h"
+
 #include "sysdep.h"
 
 #include <errno.h>

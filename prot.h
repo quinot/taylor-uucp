@@ -113,7 +113,11 @@ extern int breceive_char P((struct sconnection *qconn,
 extern unsigned long icrc P((const char *z, size_t c, unsigned long ick));
 
 /* The initial CRC value to use for a new buffer.  */
-#define ICRCINIT (0xffffffffL)
+#if ANSI_C
+#define ICRCINIT (0xffffffffUL)
+#else
+#define ICRCINIT ((unsigned long) 0xffffffffL)
+#endif
 
 /* The size of the receive buffer.  */
 #define CRECBUFLEN (16384)

@@ -2,6 +2,7 @@
    See whether a file exists and is a directory.  */
 
 #include "uucp.h"
+
 #include "system.h"
 #include "sysdep.h"
 

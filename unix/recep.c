@@ -25,6 +25,11 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "sysdep.h"
+#include "system.h"
+
 #include <errno.h>
 
 #if HAVE_TIME_H
@@ -38,11 +43,6 @@
 #include <sys/file.h>
 #endif
 #endif
-
-#include "uudefs.h"
-#include "uuconf.h"
-#include "sysdep.h"
-#include "system.h"
 
 static char *zsreceived_name P((const struct uuconf_system *qsys,
 				const char *ztemp));

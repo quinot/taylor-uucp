@@ -2,6 +2,7 @@
    Check whether a file exists.  */
 
 #include "uucp.h"
+
 #include "sysdep.h"
 #include "system.h"
 

@@ -25,6 +25,11 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "uuconf.h"
+#include "system.h"
+#include "sysdep.h"
+
 #include <errno.h>
 #include <pwd.h>
 
@@ -76,11 +81,6 @@
 #endif /* ! defined (PATH_MAX) */
 #endif /* ! defined (MAXPATHLEN) */
 #endif /* HAVE_GETWD */
-
-#include "uudefs.h"
-#include "uuconf.h"
-#include "system.h"
-#include "sysdep.h"
 
 /* External functions.  */
 #ifndef getlogin

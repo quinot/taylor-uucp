@@ -302,6 +302,14 @@ const char protz_rcsid[] = "$Id$";
 #define CSUFFIXLEN		10	/* suffix at end of data packets */
 #define CEXCHANGE_INIT_RETRIES	4
 
+/* The header CRC value.  */
+
+#if ANSI_C
+#define IHDRCRC 0xDEBB20E3UL
+#else
+#define IHDRCRC ((unsigned long) 0xDEBB20E3L)
+#endif
+
 /*
  * Data types ...
  */
@@ -1551,7 +1559,7 @@ fzstart_tx()
 	iZtleft = 0;
 	iZjunk_count = 0;
 
-	wpZtxpos = wpZtxpos + 1024L & ~1023L;	/* next packet boundary */
+	wpZtxpos = (wpZtxpos + 1024L) & ~1023L;	/* next packet boundary */
 	wpZlrxpos = wpZrxpos = wpZtxpos;
 
 	wpZtxstart = wpZtxpos;	/* so we can compute the "file offset" */
@@ -1603,7 +1611,7 @@ long *plredo;
 			 * can reword the protocol definition and say this
 			 * isn't cheating at all.
 			 */
-			if ((wpZtxpos + 1024 & ~1023) == wpZrxpos)
+			if (((wpZtxpos + 1024) & ~1023) == wpZrxpos)
 				return TRUE;
 			cZbytes_resent += wpZtxpos - wpZrxpos;
 			wpZlrxpos = wpZtxpos = wpZrxpos;
@@ -1632,7 +1640,7 @@ long *plredo;
 			 * it. Remember: see above.
 			 */
 			zdecode_data_hdr (rclhdr (rx_hdr), &rx_bytes);
-			if ((wpZrxbytes + 1024L & ~1023L) == rx_bytes) {
+			if (((wpZrxbytes + 1024L) & ~1023L) == rx_bytes) {
 				iZpkt_rcvd_kludge = ZDATA;
 				hvZpkt_hdrval_kludge = rclhdr (rx_hdr);
 				return TRUE;
@@ -1650,7 +1658,7 @@ long *plredo;
 			 * have lost our ZACK, so we send him another.
 			 */
 			zdecode_data_hdr (rclhdr (rx_hdr), &rx_bytes);
-			if ((wpZrxbytes + 1024L & ~1023L) == rx_bytes)
+			if (((wpZrxbytes + 1024L) & ~1023L) == rx_bytes)
 				return TRUE;
 			if (rx_bytes == wpZrxbytes) {
 				if (!fzsend_hdr (qdaemon, ZHEX, ZACK,
@@ -1708,7 +1716,7 @@ long *plredo;
 static boolean
 fzstart_rx()
 {
-	wpZrxbytes = wpZrxbytes + 1024L & ~1023L; /* next packet boundary */
+	wpZrxbytes = (wpZrxbytes + 1024L) & ~1023L; /* next packet boundary */
 
 	return TRUE;
 }
@@ -1825,7 +1833,7 @@ hdrval_t hdrval;
 		*p++ = ZDLE;
 		*p++ = ZBIN;
 		p = zputchar (p, ihdrtype);
-		crc = 0xffffffffL;
+		crc = ICRCINIT;
 		crc = UPDC32 (ihdrtype, crc);
 		stohdr (hdrval, achdrval);
 		for (i = 0; i < 4; i++) {
@@ -1844,7 +1852,7 @@ hdrval_t hdrval;
 		*p++ = ZDLE;
 		*p++ = ZHEX;
 		p = zputhex (p, ihdrtype);
-		crc = 0xffffffffL;
+		crc = ICRCINIT;
 		crc = UPDC32 (ihdrtype, crc);
 		stohdr (hdrval, achdrval);
 		for (i = 0; i < 4; i++) {
@@ -1889,7 +1897,7 @@ int frameend;
 
 	p = zresult;
 
-	crc = 0xffffffffL;
+	crc = ICRCINIT;
 	for ( ; cdata-- != 0; zdata++) {
 		char c;
 
@@ -2033,12 +2041,12 @@ struct sdaemon *qdaemon;
 achdrval_t hdr;
 {
 	int c,i,type;
-	long crc;
+	unsigned long crc;
 
 	if ((c = zdlread (qdaemon)) & ~0377)
 		return c;
 	type = c;
-	crc = 0xffffffffL;
+	crc = ICRCINIT;
 	crc = UPDC32 (c, crc);
 
 	for (i = 0; i < 4; i++) {
@@ -2052,7 +2060,7 @@ achdrval_t hdr;
 			return c;
 		crc = UPDC32 (c, crc);
 	}
-	if (crc != 0xDEBB20E3L)
+	if (crc != IHDRCRC)
 		return ZM_ERROR;
 
 	return type;
@@ -2068,12 +2076,12 @@ struct sdaemon *qdaemon;
 achdrval_t hdr;
 {
 	int c,i,type;
-	long crc;
+	unsigned long crc;
 
 	if ((c = zgethex (qdaemon)) < 0)
 		return c;
 	type = c;
-	crc = 0xffffffffL;
+	crc = ICRCINIT;
 	crc = UPDC32 (c, crc);
 
 	for (i = 0; i < 4; i++) {
@@ -2087,7 +2095,7 @@ achdrval_t hdr;
 			return c;
 		crc = UPDC32 (c, crc);
 	}
-	if (crc != 0xDEBB20E3L)
+	if (crc != IHDRCRC)
 		return ZM_ERROR;
 
 	return type;
@@ -2108,7 +2116,7 @@ int *iprxcount;
 	long crc;
 	char *end;
 
-	crc = 0xffffffffL;
+	crc = ICRCINIT;
 	*iprxcount = 0;
 	end = buf + length;
 	while (buf <= end) {
@@ -2135,7 +2143,7 @@ crcfoo:
 				if ((c = zdlread (qdaemon)) & ~0377)
 					goto crcfoo;
 				crc = UPDC32 (c, crc);
-				if (crc != 0xDEBB20E3L)
+				if (crc != IHDRCRC)
 					return ZM_ERROR;
 				*iprxcount = length - (end - buf);
 				return d;
@@ -2547,7 +2555,7 @@ winpos_t rxpos,lrxpos,txpos;
 	 * Check if <rx_pktpos> valid. It could be old.
 	 */
 
-	if (rx_pktpos < wpZlrxpos || rx_pktpos > (wpZtxpos + 1024L & ~1023L))
+	if (rx_pktpos < wpZlrxpos || rx_pktpos > ((wpZtxpos + 1024L) & ~1023L))
 		return rxpos;
 
 	return rx_pktpos;

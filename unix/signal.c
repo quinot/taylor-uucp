@@ -25,11 +25,11 @@
 
 #include "uucp.h"
 
-#include <errno.h>
-
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
+
+#include <errno.h>
 
 /* Signal handling routines.  When we catch a signal, we want to set
    the appropriate elements of afSignal and afLog_signal to TRUE.  If

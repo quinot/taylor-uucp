@@ -4,6 +4,7 @@
    /bin/mkdir program.  */
 
 #include "uucp.h"
+
 #include "sysdep.h"
 
 #include <errno.h>

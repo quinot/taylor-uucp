@@ -29,11 +29,13 @@
 const char tstuu_rcsid[] = "$Id$";
 #endif
 
+#include "sysdep.h"
+#include "system.h"
+#include "getopt.h"
+
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
-
-#include "sysdep.h"
 
 #if HAVE_SYS_TIMES_H
 #include <sys/times.h>
@@ -91,10 +93,6 @@ typedef int wait_status;
 #include <termio.h>
 extern char *ptsname ();
 #endif
-
-#include "getopt.h"
-
-#include "system.h"
 
 /* Get definitions for both O_NONBLOCK and O_NDELAY.  */
 

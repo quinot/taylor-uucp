@@ -25,6 +25,9 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "sysdep.h"
+
 #include <errno.h>
 
 #if HAVE_FCNTL_H
@@ -44,9 +47,6 @@
 #ifndef FD_CLOEXEC
 #define FD_CLOEXEC 1
 #endif
-
-#include "uudefs.h"
-#include "sysdep.h"
 
 #ifndef environ
 extern char **environ;

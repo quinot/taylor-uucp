@@ -29,12 +29,12 @@
 const char copy_rcsid[] = "$Id$";
 #endif
 
-#include <stdio.h>
-#include <errno.h>
-
 #include "uudefs.h"
 #include "system.h"
 #include "sysdep.h"
+
+#include <stdio.h>
+#include <errno.h>
 
 /* Copy one file to another.  */
 

@@ -5,6 +5,7 @@
    /bin/rmdir program.  */
 
 #include "uucp.h"
+
 #include "sysdep.h"
 
 #include <errno.h>

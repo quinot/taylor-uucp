@@ -20,6 +20,7 @@ Cambridge, MA 02139, USA.
 Modified by Ian Lanc Taylor for Taylor UUCP, June 1992.  */
 
 #include "uucp.h"
+
 #include "sysdep.h"
 
 #include <errno.h>

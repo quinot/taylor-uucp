@@ -29,15 +29,14 @@
 const char uux_rcsid[] = "$Id$";
 #endif
 
-#include <ctype.h>
-#include <errno.h>
-
-#include "getopt.h"
-
 #include "uudefs.h"
 #include "uuconf.h"
 #include "system.h"
 #include "sysdep.h"
+#include "getopt.h"
+
+#include <ctype.h>
+#include <errno.h>
 
 /* These character lists should, perhaps, be in sysdep.h.  */
 

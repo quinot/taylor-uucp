@@ -25,6 +25,8 @@
 
 #include "uucp.h"
 
+#include "uudefs.h"
+#include "system.h"
 #include "sysdep.h"
 
 #include <errno.h>
@@ -52,9 +54,6 @@
 #define O_WRONLY 1
 #define O_RDWR 2
 #endif
-
-#include "uudefs.h"
-#include "system.h"
 
 /* Detach from the controlling terminal.  This is called by uucico if
    it is calling out to another system, so that it can receive SIGHUP
