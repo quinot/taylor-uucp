@@ -267,8 +267,10 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 	  ++cpar_close;
 	  ++cchild_close;
 
-	  if (fcntl (aidescs[i], F_SETFD,
-		     fcntl (aidescs[i], F_GETFD, 0) | FD_CLOEXEC) < 0)
+	  if (fcntl (aipipe[0], F_SETFD,
+		     fcntl (aipipe[0], F_GETFD, 0) | FD_CLOEXEC) < 0
+	      || fcntl (aipipe[1], F_SETFD,
+			fcntl (aipipe[1], F_GETFD, 0) | FD_CLOEXEC) < 0)
 	    {
 	      ierr = errno;
 	      ferr = TRUE;
