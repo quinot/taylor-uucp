@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/11  04:21:16  ian
+   Added 'f' protocol
+
    Revision 1.3  1991/11/10  19:24:22  ian
    Added pffile protocol entry point for file level control
 
@@ -243,5 +246,17 @@ extern boolean ffsenddata P((char *z, int c));
 extern boolean ffprocess P((boolean *pfexit));
 extern boolean ffwait P((void));
 extern boolean fffile P((boolean fstart, boolean fsend, boolean *pfredo));
+
+/* Prototypes for 't' protocol functions.  */
+
+extern struct scmdtab asTproto_params[];
+extern boolean ftstart P((boolean fmaster));
+extern boolean ftshutdown P((void));
+extern boolean ftsendcmd P((const char *z));
+extern char *ztgetspace P((int *pcdata));
+extern boolean ftsenddata P((char *z, int c));
+extern boolean ftprocess P((boolean *pfexit));
+extern boolean ftwait P((void));
+extern boolean ftfile P((boolean fstart, boolean fsend, boolean *pfredo));
 
 #endif

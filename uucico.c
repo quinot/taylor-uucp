@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/11/11  23:47:24  ian
+   Added chat-program to run a program to do a chat script
+
    Revision 1.13  1991/11/11  19:32:03  ian
    Added breceive_char to read characters through protocol buffering
 
@@ -89,7 +92,9 @@ static struct sprotocol asProtocols[] =
   { 'g', FALSE, asGproto_params, fgstart, fgshutdown, fgsendcmd,
       zggetspace, fgsenddata, fgprocess, fgwait, NULL },
   { 'f', FALSE, asFproto_params, ffstart, ffshutdown, ffsendcmd,
-      zfgetspace, ffsenddata, ffprocess, ffwait, fffile }
+      zfgetspace, ffsenddata, ffprocess, ffwait, fffile },
+  { 't', FALSE, asTproto_params, ftstart, ftshutdown, ftsendcmd,
+      ztgetspace, ftsenddata, ftprocess, ftwait, ftfile }
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
