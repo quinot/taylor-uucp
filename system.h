@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.37  1992/05/20  23:31:40  ian
+   Added uuto and uupick
+
    Revision 1.36  1992/05/20  18:21:49  ian
    Added -R option to uucp to recursively copy directories
 
@@ -762,6 +765,11 @@ extern boolean usysdep_walk_tree P((const char *zdir,
    return value may point to a common statis buffer.  */
 extern const char *zsysdep_jobid P((const struct ssysteminfo *qsys,
 				    pointer pseq));
+
+/* See whether the current user is permitted to kill jobs submitted by
+   another user.  This should return TRUE if permission is granted,
+   FALSE otherwise.  */
+extern boolean fsysdep_privileged P((void));
 
 /* Kill a job, given the jobid.  This should remove all associated
    files and in general eliminate the job completely.  On error it
