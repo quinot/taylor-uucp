@@ -209,6 +209,9 @@ struct uuconf_system
   /* The maximum number of times to retry calling this system.  If
      this is 0, there is no limit.  */
   int uuconf_cmax_retries;
+  /* The number of minutes to wait between successful calls to a
+     system.  */
+  int uuconf_csuccess_wait;
   /* The size restrictions by time for local requests during a locally
      placed call.  The ival field of each uuconf_timespan structure is
      the size in bytes of the largest file which may be transferred at

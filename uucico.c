@@ -744,8 +744,9 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 	  return FALSE;
 	}
 
-      if (sstat.ttype != STATUS_COMPLETE
-	  && sstat.ilast + sstat.cwait > inow)
+      if (sstat.ttype == STATUS_COMPLETE
+	  ? sstat.ilast + qorigsys->uuconf_csuccess_wait > inow
+	  : sstat.ilast + sstat.cwait > inow)
 	{
 	  ulog (LOG_NORMAL, "Retry time not reached");
 	  return FALSE;

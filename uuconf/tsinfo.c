@@ -94,6 +94,8 @@ static const struct cmdtab_offset asIcmds[] =
       offsetof (struct uuconf_system, uuconf_qtimegrade), iitimegrade },
   { "max-retries", UUCONF_CMDTABTYPE_INT,
       offsetof (struct uuconf_system, uuconf_cmax_retries), NULL },
+  { "success-wait", UUCONF_CMDTABTYPE_INT,
+      offsetof (struct uuconf_system, uuconf_csuccess_wait), NULL },
   { "call-timegrade", UUCONF_CMDTABTYPE_FN | 3,
       offsetof (struct uuconf_system, uuconf_qcalltimegrade), iitimegrade },
   { "call-local-size", UUCONF_CMDTABTYPE_FN | 3,

@@ -111,6 +111,7 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
   do \
     { \
       OP (uuconf_cmax_retries); \
+      OP (uuconf_csuccess_wait); \
       OP (uuconf_ibaud); \
       OP (uuconf_ihighbaud); \
       OP (uuconf_cfree_space); \
