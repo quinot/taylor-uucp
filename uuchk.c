@@ -1,7 +1,7 @@
 /* uuchk.c
    Display what we think the permissions of systems are.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -70,6 +70,7 @@ static const char *zKprogram;
 /* Long getopt options.  */
 static const struct option asKlongopts[] =
 {
+  { "system", required_argument, NULL,'s' },
   { "config", required_argument, NULL, 'I' },
   { "debug", required_argument, NULL, 'x' },
   { "version", no_argument, NULL, 'v' },
@@ -83,19 +84,23 @@ main (argc, argv)
      char **argv;
 {
   int iopt;
-  /* The configuration file name.  */
+  const char *zsystem = NULL;
   const char *zconfig = NULL;
   int iret;
   pointer puuconf;
-  char **pzsystems;
 
   zKprogram = argv[0];
 
-  while ((iopt = getopt_long (argc, argv, "I:vx:", asKlongopts,
+  while ((iopt = getopt_long (argc, argv, "I:s:vx:", asKlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{
+	case 's':
+	  /* Examine specific system.  */
+	  zsystem = optarg;
+	  break;
+
 	case 'I':
 	  /* Set the configuration file name.  */
 	  zconfig = optarg;
@@ -139,29 +144,50 @@ main (argc, argv)
   if (iret != UUCONF_SUCCESS)
     ukuuconf_error (puuconf, iret);
 
-  iret = uuconf_system_names (puuconf, &pzsystems, FALSE);
-  if (iret != UUCONF_SUCCESS)
-    ukuuconf_error (puuconf, iret);
-
-  if (*pzsystems == NULL)
-    {
-      fprintf (stderr, "%s: no systems found\n", zKprogram);
-      exit (EXIT_FAILURE);
-    }
-
-  while (*pzsystems != NULL)
+  if (zsystem != NULL)
     {
       struct uuconf_system ssys;
 
-      iret = uuconf_system_info (puuconf, *pzsystems, &ssys);
+      iret = uuconf_system_info (puuconf, zsystem, &ssys);
+      if (iret == UUCONF_NOT_FOUND)
+	{
+	  fprintf (stderr, "%s: system not found\n", zsystem);
+	  exit (EXIT_FAILURE);
+	}
+      else if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+
+      ukshow (&ssys, puuconf);
+      (void) uuconf_system_free (puuconf, &ssys);
+    }
+  else
+    {
+      char **pzsystems;
+
+      iret = uuconf_system_names (puuconf, &pzsystems, FALSE);
       if (iret != UUCONF_SUCCESS)
 	ukuuconf_error (puuconf, iret);
-      else
-	ukshow (&ssys, puuconf);
-      (void) uuconf_system_free (puuconf, &ssys);
-      ++pzsystems;
-      if (*pzsystems != NULL)
-	printf ("\n");
+
+      if (*pzsystems == NULL)
+	{
+	  fprintf (stderr, "%s: no systems found\n", zKprogram);
+	  exit (EXIT_FAILURE);
+	}
+
+      while (*pzsystems != NULL)
+	{
+	  struct uuconf_system ssys;
+
+	  iret = uuconf_system_info (puuconf, *pzsystems, &ssys);
+	  if (iret != UUCONF_SUCCESS)
+	    ukuuconf_error (puuconf, iret);
+	  else
+	    ukshow (&ssys, puuconf);
+	  (void) uuconf_system_free (puuconf, &ssys);
+	  ++pzsystems;
+	  if (*pzsystems != NULL)
+	    printf ("\n");
+	}
     }
 
   exit (EXIT_SUCCESS);
@@ -174,7 +200,7 @@ main (argc, argv)
 
 static void ukusage ()
 {
-  fprintf (stderr, "Usage: %s [{-I,--config} file]\n", zKprogram);
+  fprintf (stderr, "Usage: %s [-s system] [-I file]\n", zKprogram);
   fprintf (stderr, "Use %s --help for help\n", zKprogram);
   exit (EXIT_FAILURE);
 }
@@ -186,8 +212,8 @@ ukhelp ()
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 	  VERSION);
-  printf ("Usage: %s [{-I,--config} file] [-v] [--version] [--help]\n",
-	  zKprogram);
+  printf ("Usage: %s [-s system] [-I file] [-v]\n", zKprogram);
+  printf (" -s,--system system: Only print configuration for named system\n");
   printf (" -I,--config file: Set configuration file to use\n");
   printf (" -v,--version: Print version and exit\n");
   printf (" --help: Print help and exit\n");
