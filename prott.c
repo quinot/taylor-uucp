@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/11/12  18:26:03  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -36,8 +39,8 @@ char prott_rcsid[] = "$Id$";
 #include "prot.h"
 #include "port.h"
 
-/* This implementation is based on code provided to me by Earle Ake,
-   who got it from Rick Adams.  I don't know who originally wrote it.
+/* This implementation is based on code provided to me by Earle Ake;
+   it was written by Rick Adams.
 
    This code implements the 't' protocol, which does no error checking
    whatsoever and thus requires an end-to-end verified eight bit
