@@ -2134,7 +2134,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
-  if (zstr[0] != 'U' || zstr[2] != '\0')
+  if (zstr[0] != 'U')
     {
       ulog (LOG_ERROR, "Bad protocol response string");
       sstat.ttype = STATUS_FAILED;
