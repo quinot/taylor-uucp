@@ -13,7 +13,10 @@
    
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+
+   This file was modified slightly by Ian Lance Taylor, November 1992,
+   for Taylor UUCP.  */
 
 #ifndef _GETOPT_H
 #define _GETOPT_H 1
@@ -80,11 +83,7 @@ extern int opterr;
 
 struct option
 {
-#if	__STDC__
   const char *name;
-#else
-  char *name;
-#endif
   /* has_arg can't be an enum because some compilers complain about
      type mismatches in all the code that assumes it is an int.  */
   int has_arg;
@@ -101,26 +100,18 @@ enum _argtype
   optional_argument
 };
 
-#if __STDC__
-extern int getopt (int argc, char *const *argv, const char *shortopts);
-extern int getopt_long (int argc, char *const *argv, const char *shortopts,
-		        const struct option *longopts, int *longind);
-extern int getopt_long_only (int argc, char *const *argv,
-			     const char *shortopts,
-		             const struct option *longopts, int *longind);
+extern int getopt P((int argc, char *const *argv, const char *shortopts));
+extern int getopt_long P((int argc, char *const *argv, const char *shortopts,
+			  const struct option *longopts, int *longind));
+extern int getopt_long_only P((int argc, char *const *argv,
+			       const char *shortopts,
+			       const struct option *longopts, int *longind));
 
 /* Internal only.  Users should not call this directly.  */
-extern int _getopt_internal (int argc, char *const *argv,
-			     const char *shortopts,
-		             const struct option *longopts, int *longind,
-			     int long_only);
-#else /* not __STDC__ */
-extern int getopt ();
-extern int getopt_long ();
-extern int getopt_long_only ();
-
-extern int _getopt_internal ();
-#endif /* not __STDC__ */
+extern int _getopt_internal P((int argc, char *const *argv,
+			       const char *shortopts,
+			       const struct option *longopts, int *longind,
+			       int long_only));
 
 #ifdef	__cplusplus
 }
