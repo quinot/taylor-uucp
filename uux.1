@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.2  1991/12/14  19:11:54  ian
+''' Added -l option to link files
+'''
 ''' Revision 1.1  1991/12/14  19:05:30  ian
 ''' Initial revision
 '''
@@ -110,10 +113,24 @@ are executed first.  Grades run 0 ... 9 A ... Z a ... z from high to
 low.
 .TP5
 .B \-n
-Do not send mail about the status of the job.
+Do not send mail about the status of the job, even if it fails.
 .TP5
 .B \-z
-Send mail about the status of the job if an error occurs.
+Send mail about the status of the job if an error occurs.  For many
+.I uuxqt
+daemons, including the Taylor UUCP
+.I uuxqt,
+this is the default action; for those,
+.B \-z
+will have no effect.  However, some
+.I uuxqt
+daemons will send mail if the job succeeds unless the
+.B \-z
+option is used, and some other
+.I uuxqt
+daemons will not send mail if the job fails unless the
+.B \-z
+option is used.
 .TP5
 .B \-r
 Do not start the
