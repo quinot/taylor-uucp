@@ -4461,6 +4461,7 @@ david nugent @file{<david@@csource.oz.au>}
 @file{pozar@@kumr.lns.com} (Tim Pozar)
 @file{putsch@@uicc.com} (Jeff Putsch)
 Jarmo Raiha @file{<jarmo@@ksvltd.FI>}
+Scott Reynolds @file{<scott@clmqt.marquette.Mi.US>}
 @file{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
 @file{ross@@sun490.fdu.edu} (Jeff Ross)
 Aleksey P. Rudnev @file{<alex@@kiae.su>}
