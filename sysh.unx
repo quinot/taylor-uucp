@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1991/12/28  17:08:47  ian
+   John Theus: offer HAVE_GETWD as an alternative to using getcwd
+
    Revision 1.18  1991/12/28  07:01:15  ian
    Added HAVE_FTIME configuration option
 
@@ -395,6 +398,12 @@
    usysdep_initialize, and tell me what you did.  */
 #define HAVE_GETCWD 1
 #define HAVE_GETWD 0
+
+/* The NeXT, and possibly other systems, requires the argument to the
+   wait function to be a pointer to a variable of type union wait.  On
+   such systems, set HAVE_UNION_WAIT to 1.  Note that on a POSIX
+   system, HAVE_UNION_WAIT should be 0.  */
+#define HAVE_UNION_WAIT 0
 
 /* The default amount of free space to require for systems that do
    not specify an amount with the ``free-space'' command.  */

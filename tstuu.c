@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1991/12/28  06:35:05  ian
+   Use TIMES_TICK rather than CLK_TCK
+
    Revision 1.25  1991/12/28  06:10:50  ian
    Added HAVE_STRCHR and HAVE_INDEX to conf.h
 
@@ -548,9 +551,17 @@ uchild (isig)
   (void) kill (iPid2, SIGTERM);
 
   (void) times (&sbase);
+#if HAVE_UNION_WAIT
+  (void) waitpid (iPid1, (union wait *) NULL, 0);
+#else
   (void) waitpid (iPid1, (int *) NULL, 0);
+#endif
   (void) times (&s1);
+#if HAVE_UNION_WAIT
+  (void) waitpid (iPid2, (union wait *) NULL, 0);
+#else
   (void) waitpid (iPid2, (int *) NULL, 0);
+#endif
   (void) times (&s2);
 
   fprintf (stderr,
