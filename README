@@ -147,7 +147,7 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     This may give a warning about the file being empty, but it should
     not give the ``Option NOROCONST'' warning.  The workaround is to
     remove the ",noroconst" entry from the "options" clause in the
-    "cc" stanza in /etc/xlc.cfg.  (From Chris Lewis).
+    "cc" stanza in /etc/xlc.cfg.  (Reported by Chris Lewis).
 
     Examine config.h and Makefile to make sure they're right.
 
