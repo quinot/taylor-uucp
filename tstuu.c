@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/01/15  20:02:05  ian
+   Mike Park: sh on NeXT interprets leading ~ (incredible, isn't it)
+
    Revision 1.33  1992/01/15  19:40:35  ian
    Mike Park: handle HAVE_UNION_WAIT correctly and completely
 
@@ -207,7 +210,6 @@ extern int read (), write (), unlink (), kill (), mkdir ();
 extern int fclose (), fflush (), rand (), system ();
 extern unsigned int sleep ();
 extern pid_t fork ();
-extern clock_t times ();
 
 #if HAVE_WAITPID
 extern pid_t waitpid ();
