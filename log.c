@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.10  1991/12/29  02:59:50  ian
    Lele Gaifax: put full year in log file
 
@@ -525,7 +528,7 @@ zldate_and_time ()
   struct tm s;
   long imicros;
 #if HAVE_TAYLOR_LOGGING
-  static char ab[sizeof "Dec 31 12:00"];
+  static char ab[sizeof "1991-12-31 12:00:00.00"];
 #endif
 #if HAVE_V2_LOGGING
   static char ab[sizeof "12/31-12:00"];
