@@ -8,6 +8,7 @@ AC_CONFIG_HEADER(conf.h)
 AC_PROG_CC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
+AC_CROSS_CHECK
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 dnl
@@ -141,7 +142,9 @@ AC_HAVE_FUNCS(setpgrp setsid)
 AC_HAVE_FUNCS(gethostname uname)
 AC_HAVE_FUNCS(gettimeofday)
 AC_HAVE_FUNCS(ftw getline)
-dnl Check for the SCO buggy ftime
+dnl Check for the SCO buggy ftime; the code can cope with the bug,
+dnl though it would prefer not to, so if we're cross-configuring we
+dnl accept that ftime exists.
 AC_FUNC_CHECK(ftime,
 [AC_TEST_PROGRAM([
 #include <sys/types.h>
@@ -166,7 +169,8 @@ main ()
 }
 ],
 AC_DEFINE(HAVE_FTIME),
-echo 1>&2 "Your ftime seems to be buggy")])
+echo 1>&2 "Your ftime seems to be buggy",
+AC_DEFINE(HAVE_FTIME))])
 dnl
 AC_HAVE_FUNCS(times)
 AC_HAVE_FUNCS(napms nap usleep poll select)
@@ -341,6 +345,10 @@ AC_COMPILE_CHECK([union wait],
 AC_DEFINE([HAVE_UNION_WAIT]))
 dnl
 AC_LONG_FILE_NAMES
-AC_RESTARTABLE_SYSCALLS
+if $cross_compiling; then
+ AC_DEFINE([HAVE_RESTARTABLE_SYSCALLS], [-1])
+else
+ AC_RESTARTABLE_SYSCALLS
+fi
 dnl
 AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)

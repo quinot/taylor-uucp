@@ -95,6 +95,22 @@ typedef OFF_T off_t;
 #endif
 #endif
 
+/* If we were cross-configured, we will have a value of -1 for
+   HAVE_RESTARTABLE_SYSCALLS.  In this case, we try to guess what the
+   correct value should be.  Yuck.  If we have sigvec, but neither of
+   the above cases applied (which we know because they would have
+   changed HAVE_RESTARTABLE_SYSCALLS) then we are probably on 4.2BSD
+   and system calls are automatically restarted.  Otherwise, assume
+   that they are not.  */
+#if HAVE_RESTARTABLE_SYSCALLS == -1
+#undef HAVE_RESTARTABLE_SYSCALLS
+#if HAVE_SIGVEC
+#define HAVE_RESTARTABLE_SYSCALLS 1
+#else
+#define HAVE_RESTARTABLE_SYSCALLS 0
+#endif
+#endif /* HAVE_RESTARTABLE_SYSCALLS == -1 */
+
 /* We don't handle sigset in combination with restartable system
    calls, so we check for it although this combination will never
    happen.  */
