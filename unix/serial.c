@@ -2146,13 +2146,13 @@ fsysdep_conn_write (qconn, zwrite, cwrite)
     {
       int cdid;
 
-      /* If we've received a signal, don't continue.  */
-      if (FGOT_QUIT_SIGNAL ())
-	return FALSE;
-
       /* Loop until we don't get an interrupt.  */
       while (TRUE)
 	{
+	  /* If we've received a signal, don't continue.  */
+	  if (FGOT_QUIT_SIGNAL ())
+	    return FALSE;
+
 #if HAVE_TLI
 	  if (q->ftli)
 	    {
@@ -2177,8 +2177,6 @@ fsysdep_conn_write (qconn, zwrite, cwrite)
 
 	  /* We were interrupted by a signal.  Log it.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
-	  if (FGOT_QUIT_SIGNAL ())
-	    return FALSE;
 	}
 
       if (cdid < 0)
@@ -2266,10 +2264,6 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
     {
       int cgot, cdo, cdid;
 
-      /* If we've received a signal, don't continue.  */
-      if (FGOT_QUIT_SIGNAL ())
-	return FALSE;
-
       /* This used to always use nonblocking writes, but it turns out
 	 that some systems don't support them on terminals.
 
@@ -2309,6 +2303,10 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	 acceptable EINTR.  */
       while (TRUE)
 	{
+	  /* If we've received a signal, don't continue.  */
+	  if (FGOT_QUIT_SIGNAL ())
+	    return FALSE;
+
 #if HAVE_TLI
 	  if (q->ftli)
 	    {
@@ -2340,8 +2338,6 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
 	  /* We got interrupted by a signal.  Log it.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
-	  if (FGOT_QUIT_SIGNAL ())
-	    return FALSE;
 	}
 
       if (cgot < 0)
@@ -2377,6 +2373,10 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
       /* Loop until we get something besides EINTR.  */
       while (TRUE)
 	{
+	  /* If we've received a signal, don't continue.  */
+	  if (FGOT_QUIT_SIGNAL ())
+	    return FALSE;
+
 #if HAVE_TLI
 	  if (q->ftli)
 	    {
@@ -2406,8 +2406,6 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
 	  /* We got interrupted by a signal.  Log it.  */
 	  ulog (LOG_ERROR, (const char *) NULL);
-	  if (FGOT_QUIT_SIGNAL ())
-	    return FALSE;
 	}
 
       if (cdid < 0)
@@ -2456,6 +2454,10 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	  /* Loop until we get something besides EINTR.  */
 	  while (TRUE)
 	    {
+	      /* If we've received a signal, don't continue.  */
+	      if (FGOT_QUIT_SIGNAL ())
+		return FALSE;
+
 #if HAVE_TLI
 	      if (q->ftli)
 		{
@@ -2480,8 +2482,6 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
 	      /* We got interrupted by a signal.  Log it.  */
 	      ulog (LOG_ERROR, (const char *) NULL);
-	      if (FGOT_QUIT_SIGNAL ())
-		return FALSE;
 	    }
 	  
 	  if (cdid < 0)
