@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.20  1991/11/16  00:33:28  ian
    Remove ?: operator between string literal and variable
 
@@ -1948,7 +1951,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		     be created if they do not already exist.  */
 		  if (strchr (s.zoptions, 'f') != NULL)
 		    {
-		      if (! fsysdep_make_dirs (zuse))
+		      if (! fsysdep_make_dirs (zuse, TRUE))
 			{
 			  (void) fsysdep_did_work (s.pseq);
 			  break;
@@ -2099,7 +2102,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 
 		  if (strchr (s.zoptions, 'f') != NULL)
 		    {
-		      if (! fsysdep_make_dirs (zuse))
+		      if (! fsysdep_make_dirs (zuse, TRUE))
 			{
 			  if (! ftransfer_fail ('S', FAILURE_PERM))
 			    return FALSE;
@@ -2301,6 +2304,7 @@ fdo_xcmd (qsys, q)
   char *zuser = NULL;
   char aboptions[5];
   char *zoptions = NULL;
+  boolean fmkdirs;
   const char *zfile;
 
   zexclam = strchr (q->zto, '!');
@@ -2353,7 +2357,10 @@ fdo_xcmd (qsys, q)
       if (strchr (q->zoptions, 'm') != NULL)
 	*zoptions++ = 'm';
       *zoptions = '\0';
+      fmkdirs = TRUE;
     }
+  else
+    fmkdirs = strchr (q->zoptions, 'f') != NULL;
 
   /* Now we have to process each source file.  The
      source specification may or may use wildcards.  */
@@ -2405,7 +2412,7 @@ fdo_xcmd (qsys, q)
 
       /* Copy the file either to the final destination or to the
 	 spool directory.  */
-      if (! fcopy_file (zfile, zto, qdestsys == NULL))
+      if (! fcopy_file (zfile, zto, qdestsys == NULL, fmkdirs))
 	{
 	  (void) fsysdep_wildcard_end ();
 	  return FALSE;

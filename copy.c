@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/12/01  02:23:12  ian
+   Niels Baggesen: don't multiply include <unistd.h>
+
    Revision 1.2  1991/09/19  03:23:34  ian
    Chip Salzenberg: append to private debugging file, don't overwrite it
 
@@ -49,10 +52,11 @@ char copy_rcsid[] = "$Id$";
 #if USE_STDIO
 
 boolean
-fcopy_file (zfrom, zto, fpublic)
+fcopy_file (zfrom, zto, fpublic, fmkdirs)
      const char *zfrom;
      const char *zto;
      boolean fpublic;
+     boolean fmkdirs;
 {
   FILE *efrom;
   FILE *eto;
@@ -65,7 +69,7 @@ fcopy_file (zfrom, zto, fpublic)
       ulog (LOG_ERROR, "fopen (%s): %s", zfrom, strerror (errno));
       return FALSE;
     }
-  eto = esysdep_fopen (zto, fpublic, FALSE);
+  eto = esysdep_fopen (zto, fpublic, FALSE, fmkdirs);
   if (eto == NULL)
     {
       (void) fclose (efrom);
@@ -101,10 +105,11 @@ fcopy_file (zfrom, zto, fpublic)
 #include <fcntl.h>
 
 boolean
-fcopy_file (zfrom, zto, fpublic)
+fcopy_file (zfrom, zto, fpublic, fmkdirs)
      const char *zfrom;
      const char *zto;
      boolean fpublic;
+     boolean fmkdirs;
 {
   int ofrom;
   int oto;
@@ -125,8 +130,19 @@ fcopy_file (zfrom, zto, fpublic)
 	      fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
   if (oto < 0)
     {
-      (void) close (ofrom);
-      return FALSE;
+      if (errno == ENOENT && fmkdirs)
+	{
+	  if (! fsysdep_make_dirs (zto, fpublic))
+	    return FALSE;
+	  oto = open (zto, O_WRONLY | O_CREAT | O_TRUNC,
+		      fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
+	}
+      if (oto < 0)
+	{
+	  ulog (LOG_ERROR, "open (%s): %s", zto, strerror (errno));
+	  (void) close (ofrom);
+	  return FALSE;
+	}
     }
 
   while ((c = read (ofrom, ab, sizeof ab)) > 0)
@@ -143,7 +159,7 @@ fcopy_file (zfrom, zto, fpublic)
 
   (void) close (ofrom);
 
-  if (close (oto) == EOF)
+  if (close (oto) < 0)
     {
       ulog (LOG_ERROR, "close: %s", strerror (errno));
       (void) remove (zto);

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/11/14  03:40:10  ian
+   Try to figure out whether stdin is a TCP port
+
    Revision 1.8  1991/11/13  23:08:40  ian
    Expand remote pathnames in uucp and uux; fix up uux special cases
 
@@ -234,22 +237,27 @@ extern const char *zsysdep_spool_file_name P((const struct ssysteminfo *,
 					      const char *zfile));
 
 /* Make necessary directories.  This should create all non-existent
-   directories for a file.  It should return FALSE on error.  */
-extern boolean fsysdep_make_dirs P((const char *zfile));
+   directories for a file.  If the fpublic argument is TRUE, anybody
+   should be permitted to create and remove files in the directory;
+   otherwise anybody can list the directory, but only the UUCP system
+   can create and remove files.  It should return FALSE on error.  */
+extern boolean fsysdep_make_dirs P((const char *zfile, boolean fpublic));
 
 /* Create a stdio file, setting appropriate protection.  If the
    fpublic argument is TRUE, the file is made publically accessible;
    otherwise it is treated as a private data file.  If the fappend
    argument is TRUE, the file is opened in append mode; otherwise any
    previously existing file of the same name is removed, and the file
-   is kept private to the UUCP system.  On a system in which file
-   protections are unimportant, this may be implemented as
+   is kept private to the UUCP system.  If the fmkdirs argument is
+   TRUE, then any necessary directories should also be created.  On a
+   system in which file protections are unimportant (and the necessary
+   directories exist), this may be implemented as
 
    fopen (zfile, fappend ? "a" : "w");
 
    */
 extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
-			      boolean fappend));
+			      boolean fappend, boolean fmkdirs));
 
 /* Open a file to send to another system; the qsys argument is the
    system the file is being sent to.  This should set *pimode to the

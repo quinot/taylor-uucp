@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/12/10  19:45:05  ian
+   Added ulog_device to record device name for log file
+
    Revision 1.13  1991/12/10  19:29:02  ian
    Move statistics file stuff from file.c to log.c
 
@@ -666,7 +669,7 @@ extern void ustats_close P((void));
 
 /* Copy one file to another.  */
 extern boolean fcopy_file P((const char *zfrom, const char *zto,
-			     boolean fpublic));
+			     boolean fpublic, boolean fmkdirs));
 
 /* Read a line from a set of files opened by qmulti_open.  The return
    value is an malloc'ed buffer.  This will return NULL when all the

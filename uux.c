@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/07  03:03:12  ian
+   Split arguments like sh; request sh execution if any metachars appear
+
    Revision 1.9  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -447,7 +450,7 @@ main (argc, argv)
       usysdep_exit (FALSE);
     }
 
-  eXxqt_file = esysdep_fopen (zxqtname, FALSE, FALSE);
+  eXxqt_file = esysdep_fopen (zxqtname, FALSE, FALSE, TRUE);
   if (eXxqt_file == NULL)
     {
       ulog_close ();
@@ -589,7 +592,7 @@ main (argc, argv)
 
 	      zdup = xstrdup (zdata);
 
-	      if (! fcopy_file (zfile, zdup, FALSE))
+	      if (! fcopy_file (zfile, zdup, FALSE, TRUE))
 		{
 		  ulog_close ();
 		  usysdep_exit (FALSE);
@@ -771,7 +774,7 @@ main (argc, argv)
 		 directory.  The -W switch to uucp prevents from
 		 adding the current directory to the remote file.  */
 
-	      e = esysdep_fopen (zxqt_file, FALSE, FALSE);
+	      e = esysdep_fopen (zxqt_file, FALSE, FALSE, TRUE);
 	      if (e == NULL)
 		{
 		  ulog_close ();
@@ -831,7 +834,7 @@ main (argc, argv)
 	  usysdep_exit (FALSE);
 	}
 
-      e = esysdep_fopen (zdata, FALSE, FALSE);
+      e = esysdep_fopen (zdata, FALSE, FALSE, TRUE);
       if (e == NULL)
 	{
 	  ulog_close ();

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.4  1991/11/13  23:08:40  ian
    Expand remote pathnames in uucp and uux; fix up uux special cases
 
@@ -360,7 +363,7 @@ main (argc, argv)
 		}
 	      zto = xstrdup (zconst);
 
-	      if (! fcopy_file (zfrom, zto, FALSE))
+	      if (! fcopy_file (zfrom, zto, FALSE, fmkdirs))
 		{
 		  ulog_close ();
 		  usysdep_exit (FALSE);
@@ -399,7 +402,7 @@ main (argc, argv)
 		    }
 		  zdata = xstrdup (zconst);
 
-		  if (! fcopy_file (zfrom, zdata, FALSE))
+		  if (! fcopy_file (zfrom, zdata, FALSE, TRUE))
 		    {
 		      ulog_close ();
 		      usysdep_exit (FALSE);
