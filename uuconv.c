@@ -874,7 +874,7 @@ uvwrite_taylor_system (e, q)
 	uvwrite_boolean (e, q->uuconf_fsequence, "sequence");
 
       if (CHANGED (uuconf_zprotocols))
-	uvwrite_string (e, q->uuconf_zprotocols, "protocols");
+	uvwrite_string (e, q->uuconf_zprotocols, "protocol");
 
       if (CHANGED (uuconf_qproto_params))
 	uvwrite_proto_params (e, q->uuconf_qproto_params, "");
@@ -1631,7 +1631,7 @@ uvwrite_taylor_port (e, qport, zprefix)
   fprintf (e, "%stype %s\n", zprefix, ztype);
 
   if (qport->uuconf_zprotocols != NULL)
-    fprintf (e, "%sprotocols %s\n", zprefix, qport->uuconf_zprotocols);
+    fprintf (e, "%sprotocol %s\n", zprefix, qport->uuconf_zprotocols);
 
   if (qport->uuconf_qproto_params != NULL)
     uvwrite_proto_params (e, qport->uuconf_qproto_params, zprefix);
