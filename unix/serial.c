@@ -742,12 +742,22 @@ static struct sbaud_table
 #endif /* EXTA */
 #endif /* ! defined (B19200) */
 #ifdef B38400
-  { B38400, 38400 }
+  { B38400, 38400 },
 #else /* ! defined (B38400) */
 #ifdef EXTB
-  { EXTB, 38400 }
+  { EXTB, 38400 },
 #endif /* EXTB */
 #endif /* ! defined (B38400) */
+#ifdef B57600
+  { B57600, 57600 },
+#endif
+#ifdef B76800
+  { B76800, 76800 },
+#endif
+#ifdef B115200
+  { B115200, 115200 },
+#endif
+  { B0, 0 }
 };
 
 #define CBAUD_TABLE (sizeof asSbaud_table / sizeof asSbaud_table[0])
