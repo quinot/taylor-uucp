@@ -9,18 +9,6 @@
 @finalout
 @end iftex
 
-@ignore
----------------------------------------------------------------------->
-Franc,ois Pinard says:
-
-Hi, Ian!  This is the promised merging of the current documents from
-Taylor UUCP 1.01, plus the patches to documentation you sent to me, into
-a taylor.texi file.  Many things remain to do, among which:
-
-- merging in the Taylor UUCP program man pages.
-----------------------------------------------------------------------<
-@end ignore
-
 @ifinfo
 This file documents Taylor UUCP, version 1.06.
 
@@ -99,6 +87,7 @@ pub/taylor-uucp.
 @menu
 * Copying::                     Taylor UUCP copying conditions
 * Introduction::                Introduction to Taylor UUCP
+* Invoking the UUCP Programs::  Invoking the UUCP Programs
 * Overall Installation::        Taylor UUCP installation
 * Configuration Files::         Taylor UUCP configuration files
 * Protocols::                   UUCP protocol internals
@@ -109,6 +98,52 @@ pub/taylor-uucp.
 * Index (configuration file)::  Index to new configuration files
 
  --- The Detailed Node Listing ---
+
+Invoking the UUCP Programs
+
+* Standard Options::            Standard Options for the UUCP Programs
+* Invoking uucp::               Invoking uucp
+* Invoking uux::                Invoking uux
+* Invoking uustat::             Invoking uustat
+* Invoking uuname::             Invoking uuname
+* Invoking uulog::              Invoking uulog
+* Invoking uuto::               Invoking uuto
+* Invoking uupick::             Invoking uupick
+* Invoking cu::                 Invoking cu
+* Invoking uucico::             Invoking uucico
+* Invoking uuxqt::              Invoking uuxqt
+* Invoking uuchk::              Invoking uuchk
+* Invoking uuconv::             Invoking uuconv
+* Invoking uusched::            Invoking uusched
+
+Invoking uucp
+
+* uucp Description::            Description of uucp
+* uucp Options::                Options Supported by uucp
+
+Invoking uux
+
+* uux Description::             Description of uux
+* uux Options::                 Options Supported by uux
+* uux Examples::                Examples of uux Usage
+
+Invoking uustat
+
+* uustat Description::          Description of uustat
+* uustat Options::              Options Supported by uustat
+* uustat Examples::             Examples of uustat Usage
+
+Invoking cu
+
+* cu Description::              Description of cu
+* cu Commands::                 Commands Supported by cu
+* cu Variables::                Variables Supported by cu
+* cu Options::                  Options Supported by cu
+
+Invoking uucico
+
+* uucico Description::          Description of uucico
+* uucico Options::              Options Supported by uucico
 
 Taylor UUCP Overall Installation
 
@@ -227,7 +262,7 @@ The precise conditions of the licenses for the programs currently being
 distributed that relate to Taylor UUCP are found in the General Public
 Licenses that accompany them.
 
-@node Introduction, Overall Installation, Copying, Top
+@node Introduction, Invoking the UUCP Programs, Copying, Top
 @chapter Introduction to Taylor UUCP
 
 General introductions to UUCP are available, and perhaps one day I will
@@ -249,7 +284,7 @@ refer to a file on a remote system by using @samp{system!} before the
 file name.  For example, to copy the file @file{notes.txt} to the system
 @samp{airs}, you would say @samp{uucp notes.txt airs!~/notes.txt}.  In
 this example @samp{~} is used to name the UUCP public directory on
-@samp{airs}.
+@samp{airs}.  For more details, see @ref{Invoking uucp, uucp}.
 
 @item uux
 
@@ -260,7 +295,7 @@ by using @samp{system!}.  For example, to run the @code{rnews} program
 on @samp{airs} passing it standard input, you would say @samp{uux -
 airs!rnews}.  The @samp{-} means to read standard input and set things
 up such that when @code{rnews} runs on @samp{airs} it will receive the
-same standard input.
+same standard input.  For more details, see @ref{Invoking uux, uux}.
 
 @end table
 
@@ -284,20 +319,22 @@ your jobs from the queue.  You can also it use it to show the status of
 the UUCP system in various ways, such as showing the connection status
 of all the remote systems your system knows about.  The system
 administrator can use @code{uustat} to automatically discard old jobs
-while sending mail to the user who requested them.
+while sending mail to the user who requested them.  For more details,
+see @ref{Invoking uustat, uustat}.
 
 @item uuname
 
 The @code{uuname} program by default lists all the remote systems your
 system knows about.  You can also use it to get the name of your local
-system.  It is mostly useful for shell scripts.
+system.  It is mostly useful for shell scripts.  For more details, see
+@ref{Invoking uuname, uuname}.
 
 @item uulog
 
 The @code{uulog} program can be used to display entries in the UUCP log
 file.  It can select the entries for a particular system or a particular
 user.  You can use it to see what has happened to your queued jobs in
-the past.
+the past.  For more details, see @ref{Invoking uulog, uulog}.
 
 @item uuto
 @item uupick
@@ -305,13 +342,16 @@ the past.
 @code{uuto} is a simple shell script interface to @code{uucp}.  It will
 transfer a file, or the contents of a directory, to a remote system, and
 notify a particular user on the remote system when it arrives.  The
-remote user can then retrieve the file(s) with @code{uupick}.
+remote user can then retrieve the file(s) with @code{uupick}.  For more
+details, see @ref{Invoking uuto, uuto}, and see @ref{Invoking uupick,
+uupick}.
 
 @item cu
 
 The @code{cu} program can be used to call up another system and
 communicate with it as though you were directly connected.  It can also
 do simple file transfers, though it does not provide any error checking.
+For more details, @ref{Invoking cu, cu}.
 
 @end table
 
@@ -341,7 +381,8 @@ perhaps because the phone line is busy, @code{uucico} leaves the
 requests in the queue and goes on to the next system to call.  It is
 also possible to force @code{uucico} to call a remote system even if
 there is no work to be done for it, so that it can pick up any work that
-may be queued up remotely.
+may be queued up remotely.  For more details, see @ref{Invoking uucico,
+uucico}.
 
 @need 1000
 @item uuxqt
@@ -349,7 +390,8 @@ may be queued up remotely.
 The @code{uuxqt} daemon processes execution requests made by the
 @code{uux} program on remote systems.  It also processes requests made
 on the local system which require files from a remote system.  It is
-normally started by @code{uucico}.
+normally started by @code{uucico}.  For more details, see @ref{Invoking
+uuxqt, uuxqt}.
 
 @end table
 
@@ -393,7 +435,7 @@ installing and configuring UUCP.
 The @code{uuchk} program reads the UUCP configuration files and displays
 a rather lengthy description of what it finds.  This is useful when
 configuring UUCP to make certain that the UUCP package will do what you
-expect it to do.
+expect it to do.  For more details, see @ref{Invoking uuchk, uuchk}.
 
 @item uuconv
 
@@ -401,13 +443,15 @@ The @code{uuconv} program can be used to convert UUCP configuration
 files from one format to another.  This can be useful for administrators
 converting from an older UUCP.  Taylor UUCP is able to read and use old
 configuration file formats, but some new features can not be selected
-using the old formats.
+using the old formats.  For more details, see @ref{Invoking uuconv,
+uuconv}.
 
 @item uusched
 
 The @code{uusched} script is just provided for compatibility with older
 UUCP releases.  It starts @code{uucico} to call, one at a time, all the
-systems for which work has been queued.
+systems for which work has been queued.  For more details, see
+@ref{Invoking uusched, uusched}.
 
 @item tstuu
 
@@ -415,11 +459,1448 @@ The @code{tstuu} program is a test harness for the UUCP package; it can
 help check that the package has been configured and compiled correctly.
 However, it uses pseudo-terminals, which means that it is less portable
 than the rest of the package.  If it works, it can be useful when
-initially installing Taylor UUCP.
+initially installing Taylor UUCP.  For more details, see @ref{Testing,
+tstuu}.
 
 @end table
 
-@node Overall Installation, Configuration Files, Introduction, Top
+@node Invoking the UUCP Programs, Overall Installation, Introduction, Top
+@chapter Invoking the UUCP Programs
+
+This chapter describes how to run the UUCP programs.
+
+@menu
+* Standard Options::            Standard Options for the UUCP Programs
+* Invoking uucp::               Invoking uucp
+* Invoking uux::                Invoking uux
+* Invoking uustat::             Invoking uustat
+* Invoking uuname::             Invoking uuname
+* Invoking uulog::              Invoking uulog
+* Invoking uuto::               Invoking uuto
+* Invoking uupick::             Invoking uupick
+* Invoking cu::                 Invoking cu
+* Invoking uucico::             Invoking uucico
+* Invoking uuxqt::              Invoking uuxqt
+* Invoking uuchk::              Invoking uuchk
+* Invoking uuconv::             Invoking uuconv
+* Invoking uusched::            Invoking uusched
+@end menu
+
+@node Standard Options, Invoking uucp, Invoking the UUCP Programs, Invoking the UUCP Programs
+@section Standard Options
+
+All of the UUCP programs support a few standard options.
+
+@table @samp
+@item -x type
+@itemx --debug type
+Turn on particular debugging types.  The following types are recognized:
+abnormal, chat, handshake, uucp-proto, proto, port, config, spooldir,
+execute, incoming, outgoing.  Not all types of debugging are effective
+for all programs.  See the @code{debug} configuration command for
+details (@pxref{Debugging Levels}).
+
+Multiple types may be given, separated by commas, and the @samp{--debug}
+option may appear multiple times.  A number may also be given, which
+will turn on that many types from the foregoing list; for example,
+@samp{--debug 2} is equivalent to @samp{--debug abnormal,chat}.  To turn
+on all types of debugging, use @samp{-x all}.
+
+The @code{uulog} program uses @samp{-X} rather than @samp{-x} to select
+the debugging type; for @code{uulog}, @samp{-x} has a different meaning
+for reasons of historical compatibility.
+
+@item -I file
+@itemx --config file
+Set the main configuration file to use.  @xref{config File}.  When this
+option is used, the programs will revoke any setuid privileges.
+
+@item -v
+@itemx --version
+Report version information and exit.
+
+@item --help
+Print a help message and exit.
+@end table
+
+@node Invoking uucp, Invoking uux, Standard Options, Invoking the UUCP Programs
+@section Invoking uucp
+
+@menu
+* uucp Description::            Description of uucp
+* uucp Options::                Options Supported by uucp
+@end menu
+
+@node uucp Description, uucp Options, Invoking uucp, Invoking uucp
+@subsection uucp Description
+
+@example
+uucp [options] @file{source-file} @file{destination-file}
+uucp [options] @file{source-file}... @file{destination-directory}
+@end example
+
+The @code{uucp} command copies files between systems.  Each @file{file}
+argument is either a file name on the local machine or is of the form
+@samp{system!file}.  The latter is interpreted as being on a remote
+system.
+
+When @code{uucp} is used with two non-option arguments, the contents of
+the first file are copied to the second.  With more than two non-option
+arguments, each source file is copied into the destination directory.
+
+A file may be transferred to or from @samp{system2} via @samp{system1}
+by using @samp{system1!system2!file}.
+
+Any file name that does not begin with @samp{/} or @samp{~} will be
+prepended with the current directory (unless the @samp{-W} or
+@samp{--noexpand} options are used).  For example, if you are in the
+directory @samp{/home/ian}, then @samp{uucp foo remote!bar} is
+equivalent to @samp{uucp /home/ian/foo remote!/home/ian/bar}.  Note that
+the resulting file name may not be valid on a remote system.
+
+A file name beginning with a simple @samp{~} starts at the UUCP public
+directory; a file name beginning with @samp{~name} starts at the home
+directory of the named user.  The @samp{~} is interpreted on the
+appropriate system.  Note that some shells will interpret an initial
+@samp{~} before @code{uucp} sees it; to avoid this the @samp{~} must be
+quoted.
+
+The shell metacharacters @samp{?} @samp{*} @samp{[} and @samp{]} are
+interpreted on the appropriate system, assuming they are quoted to
+prevent the shell from interpreting them first.
+
+The file copy does not take place immediately, but is queued up for the
+@code{uucico} daemon; the daemon is started immediately unless the
+@samp{-r} or @samp{--nouucico} option is given.  The next time the
+remote system is called, the file(s) will be copied.  @xref{Invoking
+uucico}.
+
+The file mode is not preserved, except for the execute bit.  The
+resulting file is owned by the uucp user.
+
+@node uucp Options,  , uucp Description, Invoking uucp
+@subsection uucp Options
+
+The following options may be given to @code{uucp}.
+
+@table @samp
+@item -c
+@itemx --nocopy
+Do not copy local source files to the spool directory.  If they are
+removed before being processed by the @code{uucico} daemon, the copy
+will fail.  The files must be readable by the @code{uucico} daemon, and
+by the invoking user.
+
+@item -C
+@itemx --copy
+Copy local source files to the spool directory.  This is the default.
+
+@item -d
+@itemx --directories
+Create all necessary directories when doing the copy.  This is the
+default.
+
+@item -f
+@itemx --nodirectories
+If any necessary directories do not exist for the destination file name,
+abort the copy.
+
+@item -R
+@itemx --recursive
+If any of the source file names are directories, copy their contents
+recursively to the destination (which must itself be a directory).
+
+@item -g grade
+@itemx --grade grade
+Set the grade of the file transfer command.  Jobs of a higher grade are
+executed first.  Grades run @kbd{0} to @kbd{9}, @kbd{A} to @kbd{Z},
+@kbd{a} to @kbd{z}, from high to low.  @xref{When to Call}.
+
+@item -m
+@itemx --mail
+Report completion or failure of the file transfer by sending mail.
+
+@item -n user
+@itemx --notify user
+Report completion or failure of the file transfer by sending mail to the
+named user on the destination system.
+
+@item -r
+@itemx --nouucico
+Do not start the @code{uucico} daemon immediately; merely queue up the
+file transfer for later execution.
+
+@item -j
+@itemx --jobid
+Print the jobid on standard output.  The job may be later cancelled by
+passing this jobid to the @samp{-kill} switch of @code{uustat}.
+@xref{Invoking uustat}.
+
+It is possible for some complex operations to produce more than one
+jobid, in which case each will be printed on a separate line.  For
+example
+@example
+uucp sys1!~user1/file1 sys2!~user2/file2 ~user3
+@end example
+will generate two separate jobs, one for the system @samp{sys1} and one
+for the system @samp{sys2}.
+
+@item -W
+@itemx --noexpand
+Do not prepend remote relative file names with the current directory.
+
+@item -t
+@itemx --uuto
+This option is used by the @code{uuto} shell script; see @ref{Invoking
+uuto}.  It causes @code{uucp} to interpret the final argument as
+@samp{system!user}.  The file(s) are sent to
+@samp{~/receive/@var{user}/@var{local}} on the remote system, where
+@var{user} is from the final argument and @var{local} is the local UUCP
+system name.  Also, @code{uucp} will act as though @samp{--notify user}
+were specified.
+
+@item -x type
+@itemx --debug type
+@itemx -I file
+@itemx --config file
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node Invoking uux, Invoking uustat, Invoking uucp, Invoking the UUCP Programs
+@section Invoking uux
+
+@menu
+* uux Description::             Description of uux
+* uux Options::                 Options Supported by uux
+* uux Examples::                Examples of uux Usage
+@end menu
+
+@node uux Description, uux Options, Invoking uux, Invoking uux
+@subsection uux Description
+
+@example
+uux [options] command
+@end example
+
+The @code{uux} command is used to execute a command on a remote system,
+or to execute a command on the local system using files from remote
+systems.  The command is not executed immediately; the request is queued
+until the @code{uucico} daemon calls the system and transfers the
+necessary files.  The daemon is started automatically unless one of the
+@samp{-r} or @samp{--nouucico} options is given.
+
+The actual command execution is done by the @code{uuxqt} daemon on the
+appropriate system.
+
+File arguments can be gathered from remote systems to the execution
+system, as can standard input.  Standard output may be directed to a
+file on a remote system.
+
+The command name may be preceded by a system name followed by an
+exclamation point if it is to be executed on a remote system.  An empty
+system name is taken as the local system.
+
+Each argument that contains an exclamation point is treated as naming a
+file.  The system which the file is on is before the exclamation point,
+and the file name on that system follows it.  An empty system name is
+taken as the local system; this form must be used to transfer a file to
+a command being executed on a remote system.  If the file name is not
+absolute, the current working directory will be prepended to it; the
+result may not be meaningful on the remote system.  A file name may
+begin with @samp{~/}, in which case it is relative to the UUCP public
+directory on the appropriate system.  A file name may begin with
+@samp{~name/}, in which case it is relative to the home directory of the
+named user on the appropriate system.
+
+Standard input and output may be redirected as usual; the file names
+used may contain exclamation points to indicate that they are on remote
+systems.  Note that the redirection characters must be quoted so that
+they are passed to @code{uux} rather than interpreted by the shell.
+Append redirection (@samp{>>}) does not work.
+
+All specified files are gathered together into a single directory
+before execution of the command begins.  This means that each file
+must have a distinct name.  For example,
+@example
+uux 'sys1!diff sys2!~user1/foo sys3!~user2/foo >!foo.diff'
+@end example
+will fail because both files will be copied to @samp{sys1} and stored
+under the name @file{foo}.
+
+Arguments may be quoted by parentheses to avoid interpretation of
+exclamation points.  This is useful when executing the @code{uucp}
+command on a remote system.
+
+Most systems restrict the commands which may be executed using
+@samp{uux}.  Many permit only the execution of @samp{rmail} and
+@samp{rnews}.
+
+@node uux Options, uux Examples, uux Description, Invoking uux
+@subsection uux Options
+
+The following options may be given to @code{uux}.
+
+@table @samp
+@item -
+@itemx -p
+@itemx --stdin
+Read standard input up to end of file, and use it as the standard input
+for the command to be executed.
+
+@item -c
+@itemx --nocopy
+Do not copy local files to the spool directory.  This is the default.
+If they are removed before being processed by the @code{uucico} daemon,
+the copy will fail.  The files must be readable by the @code{uucico}
+daemon, as well as the by the invoker of @code{uux}.
+
+@item -C
+@itemx --copy
+Copy local files to the spool directory.
+
+@item -l
+@itemx --link
+Link local files into the spool directory.  If a file can not be linked
+because it is on a different device, it will be copied unless one of the
+@samp{-c} or @samp{--nocopy} options also appears (in other words, use
+of @samp{--link} switches the default from @samp{--nocopy} to
+@samp{--copy}).  If the files are changed before being processed by the
+@code{uucico} daemon, the changed versions will be used.  The files must
+be readable by the @code{uucico} daemon, as well as by the invoker of
+@code{uux}.
+
+@item -g grade
+@itemx --grade grade
+Set the grade of the file transfer command.  Jobs of a higher grade are
+executed first.  Grades run @kbd{0} to @kbd{9}, @kbd{A} to @kbd{Z},
+@kbd{a} to @kbd{z}, from high to low.  @xref{When to Call}.
+
+@item -n
+@itemx --notification=no
+Do not send mail about the status of the job, even if it fails.
+
+@item -z
+@itemx --notification=error
+Send mail about the status of the job if an error occurs.  For many
+@code{uuxqt} daemons, including the Taylor UUCP @code{uuxqt}, this is
+the default action; for those, @samp{--notification=error} will have no
+effect.  However, some @code{uuxqt} daemons will send mail if the job
+succeeds, unless the @samp{--notification=error} option is used.  Some
+other @code{uuxqt} daemons will not send mail even if the job fails,
+unless the @samp{--notification=error} option is used.
+
+@item -a address
+@itemx --requestor address
+Report job status, as controlled by the @samp{--notification} option, to
+the specified mail address.
+
+@item -r
+@itemx --nouucico
+Do not start the @code{uucico} daemon immediately; merely queue up the
+execution request for later processing.
+
+@item -j
+@itemx --jobid
+Print the jobid on standard output.  A jobid will be generated for each
+file copy operation required to execute the command.  These file copies
+may be later cancelled by passing the jobid to the @samp{-kill} switch
+of @code{uustat}.  @xref{Invoking uustat}.  Cancelling any file copies
+will make it impossible to complete execution of the job.
+
+@item -x type
+@itemx --debug type
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node uux Examples,  , uux Options, Invoking uux
+@subsection uux Examples
+
+Here are some examples of using @code{uux}.
+
+@example
+uux -z - sys1!rmail user1
+@end example
+This will execute the command @samp{rmail user1} on the system
+@samp{sys1}, giving it as standard input whatever is given to @code{uux}
+as standard input.  If a failure occurs, mail will be sent to the user
+who ran the command.
+
+@example
+uux 'diff -c sys1!~user1/file1 sys2!~user2/file2 >!file.diff'
+@end example
+This will fetch the two named files from system @samp{sys1} and system
+@samp{sys2} and execute @samp{diff} putting the result in
+@file{file.diff} in the current directory.  The current directory must
+be writable by the @code{uuxqt} daemon for this to work.
+
+@example
+uux 'sys1!uucp ~user1/file1 (sys2!~user2/file2)'
+@end example
+Execute @code{uucp} on the system @samp{sys1} copying @file{file1} (on
+system @samp{sys1}) to @samp{sys2}.  This illustrates the use of
+parentheses for quoting.
+
+@node Invoking uustat, Invoking uuname, Invoking uux, Invoking the UUCP Programs
+@section Invoking uustat
+
+@menu
+* uustat Description::          Description of uustat
+* uustat Options::              Options Supported by uustat
+* uustat Examples::             Examples of uustat Usage
+@end menu
+
+@node uustat Description, uustat Options, Invoking uustat, Invoking uustat
+@subsection uustat Description
+
+@example
+uustat -a
+uustat --all
+uustat [-eKRiMNQ] [-sS system] [-uU user] [-cC command] [-oy hours]
+       [-B lines] [--executions] [--kill-all] [--rejuvenate-all]
+       [--prompt] [--mail] [--notify] [--no-list] [--system system]
+       [--not-system system] [--user user] [--not-user user]
+       [--command command] [--not-command command] [--older-than hours]
+       [--younger-than hours] [--mail-lines lines]
+uustat [-kr jobid] [--kill jobid] [--rejuvenate jobid]
+uustat -q [-sS system] [-oy hours] [--system system]
+       [--not-system system ] [--older-than hours] [--younger-than hours]
+uustat --list [-sS system] [-oy hours] [--system system ]
+       [--not-system system] [--older-than hours] [--younger-than hours]
+uustat -m
+uustat --status
+uustat -p
+uustat --ps
+@end example
+
+The @code{uustat} command can display various types of status
+information about the UUCP system.  It can also be used to cancel or
+rejuvenate requests made by @code{uucp} or @code{uux}.
+
+With no options, @code{uustat} displays all jobs queued up for the
+invoking user, as if given the @samp{--user} option with the appropriate
+argument.
+
+If any of the @samp{-a}, @samp{--all}, @samp{-e}, @samp{--executions},
+@samp{-s}, @samp{--system}, @samp{-S}, @samp{--not-system}, @samp{-u},
+@samp{--user}, @samp{-U}, @samp{--not-user}, @samp{-c},
+@samp{--command}, @samp{-C}, @samp{--not-command}, @samp{-o},
+@samp{--older-than}, @samp{-y}, or @samp{--younger-than} options are
+given, then all jobs which match the combined specifications are
+displayed.
+
+The @samp{-K} or @samp{--kill-all} option may be used to kill off a
+selected group of jobs, such as all jobs more than 7 days old.
+
+@node uustat Options, uustat Examples, uustat Description, Invoking uustat
+@subsection uustat Options
+
+The following options may be given to @code{uustat}.
+
+@table @samp
+@item -a
+@itemx --all
+List all queued file transfer requests.
+
+@item -e
+@itemx --executions
+List queued execution requests rather than queued file transfer
+requests.  Queued execution requests are processed by @code{uuxqt}
+rather than @code{uucico}.  Queued execution requests may be waiting for
+some file to be transferred from a remote system.  They are created by
+an invocation of @code{uux}.
+
+@item -s system
+@itemx --system system
+List all jobs queued up for the named system.  These options may be
+specified multiple times, in which case all jobs for all the named
+systems will be listed.  If used with @samp{--list}, only the systems
+named will be listed.
+
+@item -S system
+@itemx --not-system system
+List all jobs queued for systems other than the one named.  These
+options may be specified multiple times, in which case no jobs from any
+of the specified systems will be listed.  If used with @samp{--list},
+only the systems not named will be listed.  These options may not be
+used with @samp{-s} or @samp{--system}.
+
+@item -u user
+@itemx --user user
+List all jobs queued up for the named user.  These options may be
+specified multiple times, in which case all jobs for all the named users
+will be listed.
+
+@item -U user
+@itemx --not-user user
+List all jobs queued up for users other than the one named.  These
+options may be specified multiple times, in which case no jobs from any
+of the specified users will be listed.  These options may not be used
+with @samp{-u} or @samp{--user}.
+
+@item -c command
+@itemx --command command
+List all jobs requesting the execution of the named command.  If
+@samp{command} is @samp{ALL} this will list all jobs requesting the
+execution of some command (as opposed to simply requesting a file
+transfer).  These options may be specified multiple times, in which case
+all jobs requesting any of the commands will be listed.
+
+@item -C command
+@itemx --not-command command
+List all jobs requesting execution of some command other than the named
+command, or, if @samp{command} is @samp{ALL}, list all jobs that simply
+request a file transfer (as opposed to requesting the execution of some
+command).  These options may be specified multiple times, in which case
+no job requesting one of the specified commands will be listed.  These
+options may not be used with @samp{-c} or @samp{--command}.
+
+@item -o hours
+@itemx --older-than hours
+List all queued jobs older than the given number of hours.  If used with
+@samp{--list}, only systems whose oldest job is older than the given
+number of hours will be listed.
+
+@item -y hours
+@itemx --younger-than hours
+List all queued jobs younger than the given number of hours.  If used
+with @samp{--list}, only systems whose oldest job is younger than the
+given number of hours will be listed.
+
+@item -k jobid
+@itemx --kill jobid
+Kill the named job.  The job id is shown by the default output format,
+as well as by the @samp{-j} or @samp{--jobid} options to @code{uucp} or
+@code{uux}.  A job may only be killed by the user who created the job,
+or by the UUCP administrator, or the superuser.  The @samp{-k} or
+@samp{--kill} options may be used multiple times on the command line to
+kill several jobs.
+
+@item -r jobid
+@itemx --rejuvenate jobid
+Rejuvenate the named job.  This will mark it as having been invoked at
+the current time, affecting the output of the @samp{-o},
+@samp{--older-than}, @samp{-y}, or @samp{--younger-than} options,
+possibly preserving it from any automated cleanup daemon.  The job id is
+shown by the default output format, as well as by the @samp{-j} or
+@samp{--jobid} options to @code{uucp} or @code{uux}.  A job may only be
+rejuvenated by the user who created the job, or by the UUCP
+administrator, or the superuser.  The @samp{-r} or @samp{--rejuvenate}
+options may be used multiple times on the command line to rejuvenate
+several jobs.
+
+@item -q
+@itemx --list
+Display the status of commands, executions and conversations for all
+remote systems for which commands or executions are queued.  The
+@samp{-s}, @samp{--system}, @samp{-S}, @samp{--not-system}, @samp{-o},
+@samp{--older-than}, @samp{-y}, and @samp{--younger-than} options may be
+used to restrict the systems which are listed.  Systems for which no
+commands or executions are queued will never be listed.
+
+@item -m
+@itemx --status
+Display the status of conversations for all remote systems.
+
+@item -p
+@itemx --ps
+Display the status of all processes holding UUCP locks on systems or
+ports.
+
+@item -i
+@itemx --prompt
+For each listed job, prompt whether to kill the job or not.  If the
+first character of the input line is @kbd{y} or @kbd{Y}, the job will be
+killed.
+
+@item -K
+@itemx --kill-all
+Automatically kill each listed job.  This can be useful for automatic
+cleanup scripts, in conjunction with the @samp{--mail} and
+@samp{--notify} options.
+
+@item -R
+@itemx --rejuvenate-all
+Automatically rejuvenate each listed job.  This may not be used with
+@samp{--kill-all}.
+
+@item -M
+@itemx --mail
+For each listed job, send mail to the UUCP administrator.  If the job is
+killed (due to @samp{--kill-all}, or @samp{--prompt} with an affirmative
+response) the mail will indicate that.  A comment specified by the
+@samp{--comment} option may be included.  If the job is an execution,
+the initial portion of its standard input will be included in the mail
+message; the number of lines to include may be set with the
+@samp{--mail-lines} option (the default is 100).  If the standard input
+contains null characters, it is assumed to be a binary file and is not
+included.
+
+@item -N
+@itemx --notify
+For each listed job, send mail to the user who requested the job.  The
+mail is identical to that sent by the @samp{-M} or @samp{--mail}
+options.
+
+@item -W comment
+@itemx --comment comment
+Specify a comment to be included in mail sent with the @samp{-M},
+@samp{--mail}, @samp{-N}, or @samp{--notify} options.
+
+@item -B lines
+@itemx --mail-lines lines
+When the @samp{-M}, @samp{--mail}, @samp{-N}, or @samp{--notify} options
+are used to send mail about an execution with standard input, this
+option controls the number of lines of standard input to include in the
+message.  The default is 100.
+
+@item -Q
+@itemx --no-list
+Do not actually list the job, but only take any actions indicated by the
+@samp{-i}, @samp{--prompt}, @samp{-K}, @samp{--kill-all}, @samp{-M},
+@samp{--mail}, @samp{-N} or @samp{--notify} options.
+
+@item -x type
+@itemx --debug type
+@itemx -I file
+@itemx --config file
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node uustat Examples,  , uustat Options, Invoking uustat
+@subsection uustat Examples
+
+@example
+uustat --all
+@end example
+Display status of all jobs.  A sample output line is as follows:
+@example
+bugsA027h bugs ian 04-01 13:50 Executing rmail ian@@airs.com (sending 1283 bytes)
+@end example
+The format is
+@example
+jobid system user queue-date command (size)
+@end example
+The jobid may be passed to the @samp{--kill} or @samp{--rejuvenate}
+options.  The size indicates how much data is to be transferred to the
+remote system, and is absent for a file receive request.  The
+@samp{--system}, @samp{--not-system}, @samp{--user}, @samp{--not-user},
+@samp{--command}, @samp{--not-command}, @samp{--older-than}, and
+@samp{--younger-than} options may be used to control which jobs are
+listed.
+
+@example
+uustat --executions
+@end example
+Display status of queued up execution requests.  A sample output line
+is as follows:
+@example
+bugs bugs!ian 05-20 12:51 rmail ian
+@end example
+The format is
+@example
+system requestor queue-date command
+@end example
+The @samp{--system}, @samp{--not-system}, @samp{--user},
+@samp{--not-user}, @samp{--command}, @samp{--not-command},
+@samp{--older-than}, and @samp{--younger-than} options may be used to
+control which requests are listed.
+
+@example
+uustat --list
+@end example
+Display status for all systems with queued up commands.  A sample
+output line is as follows:
+@example
+bugs            4C (1 hour)   0X (0 secs) 04-01 14:45 Dial failed
+@end example
+This indicates the system, the number of queued commands, the age of the
+oldest queued command, the number of queued local executions, the age of
+the oldest queued execution, the date of the last conversation, and the
+status of that conversation.
+
+@example
+uustat --status
+@end example
+Display conversation status for all remote systems.  A sample output
+line is as follows:
+@example
+bugs           04-01 15:51 Conversation complete
+@end example
+This indicates the system, the date of the last conversation, and the
+status of that conversation.  If the last conversation failed,
+@code{uustat} will indicate how many attempts have been made to call the
+system.  If the retry period is currently preventing calls to that
+system, @code{uustat} also displays the time when the next call will be
+permitted.
+
+@example
+uustat --ps
+@end example
+Display the status of all processes holding UUCP locks.  The output
+format is system dependent, as @code{uustat} simply invokes @code{ps} on
+each process holding a lock.
+
+@example
+uustat --command rmail --older-than 168 --kill-all --no-list --mail --notify --comment "Queued for over 1 week"
+@end example
+This will kill all @samp{rmail} commands that have been queued up
+waiting for delivery for over 1 week (168 hours).  For each such
+command, mail will be sent both to the UUCP administrator and to the
+user who requested the rmail execution.  The mail message sent will
+include the string given by the @samp{--comment} option.  The
+@samp{--no-list} option prevents any of the jobs from being listed on
+the terminal, so any output from the program will be error messages.
+
+@node Invoking uuname, Invoking uulog, Invoking uustat, Invoking the UUCP Programs
+@section Invoking uuname
+
+@example
+uuname [-a] [--aliases]
+uuname -l
+uuname --local
+@end example
+
+By default, the @code{uuname} program simply lists the names of all the
+remote systems mentioned in the UUCP configuration files.
+
+The @code{uuname} program may also be used to print the UUCP name of the
+local system.
+
+The @code{uuname} program is mainly for use by shell scripts.
+
+The following options may be given to @code{uuname}.
+
+@table @samp
+@item -a
+@itemx --aliases
+List all aliases for remote systems, as well as their canonical names.
+Aliases may be specified in the @file{sys} file (@pxref{Naming the
+System}).
+
+@item -l
+@itemx --local
+Print the UUCP name of the local system, rather than listing the names
+of all the remote systems.
+
+@item -x type
+@itemx --debug type
+@itemx -I file
+@itemx --config file
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node Invoking uulog, Invoking uuto, Invoking uuname, Invoking the UUCP Programs
+@section Invoking uulog
+
+@example
+uulog [-#] [-n lines] [-sf system] [-u user] [-DSF] [--lines lines]
+      [--system system] [--user user] [--debuglog] [--statslog]
+      [--follow] [--follow=system]
+@end example
+
+The @code{uulog} program may be used to display the UUCP log file.
+Different options may be used to select which parts of the file to
+display.
+
+@table @samp
+@item -#
+@itemx -n lines
+@itemx --lines lines
+Here @samp{#} is a number; e.g. @samp{-10}.  The specified number of
+lines is displayed from the end of the log file.  The default is to
+display the entire log file, unless the @samp{-f}, @samp{-F}, or
+@samp{--follow} options are used, in which case the default is to
+display 10 lines.
+
+@item -s system
+@itemx --system system
+Display only log entries pertaining to the specified system.
+
+@item -u user
+@itemx --user user
+Display only log entries pertaining to the specified user.
+
+@item -D
+@itemx --debuglog
+Display the debugging log file.
+
+@item -S
+@itemx --statslog
+Display the statistics log file.
+
+@item -F
+@itemx --follow
+Keep displaying the log file forever, printing new lines as they are
+appended to the log file.
+
+@item -f system
+@itemx --follow=system
+Keep displaying the log file forever, displaying only log entries
+pertaining to the specified system.
+
+@item -X type
+@itemx --debug type
+@itemx -I file
+@itemx --config file
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.  Note that @code{uulog} specifies the debugging
+type using @samp{-X} rather than the usual @samp{-x}.
+@end table
+
+The operation of @code{uulog} depends to some degree upon the type of
+log files generated by the UUCP programs.  This is a compile time
+option.  If the UUCP programs have been compiled to use HDB style log
+files, @code{uulog} changes in the following ways:
+
+@itemize @bullet
+@item
+The new options @samp{-x} and @samp{--uuxqtlog} may be used to list the
+@code{uuxqt} log file.
+
+@item
+It is no longer possible to omit all arguments: one of @samp{-s},
+@samp{--system}, @samp{-f}, @samp{--follow=system}, @samp{-D},
+@samp{--debuglog}, @samp{-S}, @samp{--statslog}, @samp{-x}, or
+@samp{--uuxqtlog} must be used.
+
+@item
+The option @samp{--system ANY} may be used to list log file entries
+which do not pertain to any particular system.
+@end itemize
+
+@node Invoking uuto, Invoking uupick, Invoking uulog, Invoking the UUCP Programs
+@section Invoking uuto
+
+@example
+uuto files... system!user
+@end example
+
+The @code{uuto} program may be used to conveniently send files to a
+particular user on a remote system.  It will arrange for mail to be sent
+to the remote user when the files arrive on the remote system, and he or
+she may easily retrieve the files using the @code{uupick} program
+(@pxref{Invoking uupick}).  Note that @code{uuto} does not provide any
+security--any user on the remote system can examine the files.
+
+The last argument specifies the system and user name to which to send
+the files.  The other arguments are the files or directories to be sent.
+
+The @code{uuto} program is actually just a trivial shell script which
+invokes the @code{uucp} program with the appropriate arguments.  Any
+option which may be given to @code{uucp} may also be given to
+@code{uuto}.  @xref{Invoking uucp}.
+
+@node Invoking uupick, Invoking cu, Invoking uuto, Invoking the UUCP Programs
+@section Invoking uupick
+
+@example
+uupick [-s system] [--system system]
+@end example
+
+The @code{uupick} program is used to conveniently retrieve files
+transferred by the @code{uuto} program.
+
+For each file transferred by @code{uuto}, @code{uupick} will display the
+source system, the file name, and whether the name refers to a regular
+file or a directory, and wait for the user to specify an action to take.
+One of the following commands must be entered:
+
+@table @samp
+@item q
+Quit out of @code{uupick}.
+
+@item RETURN
+Skip the file.
+
+@item m [directory]
+Move the file or directory to the specified directory.  If no directory
+is specified, the file is moved to the current directory.
+
+@item a [directory]
+Move all files from this system to the specified directory.  If no
+directory is specified, the files are moved to the current directory.
+
+@item p
+List the file on standard output.
+
+@item d
+Delete the file.
+
+@item ! [command]
+Execute @samp{command} as a shell escape.
+@end table
+
+The @samp{-s} or @samp{--system} option may be used to restrict
+@code{uupick} to only present files transferred from a particular
+system.  The @code{uupick} program also supports the standard UUCP
+program options; see @ref{Standard Options}.
+
+@node Invoking cu, Invoking uucico, Invoking uupick, Invoking the UUCP Programs
+@section Invoking cu
+
+@menu
+* cu Description::              Description of cu
+* cu Commands::                 Commands Supported by cu
+* cu Variables::                Variables Supported by cu
+* cu Options::                  Options Supported by cu
+@end menu
+
+@node cu Description, cu Commands, Invoking cu, Invoking cu
+@subsection cu Description
+
+@example
+cu [options] [system | phone | "dir"]
+@end example
+
+The @code{cu} program is used to call up another system and act as a
+dial in terminal.  It can also do simple file transfers with no error
+checking.
+
+The @code{cu} program takes a single non-option argument.
+
+If the argument is the string @samp{dir} cu will make a direct
+connection to the port.  This may only be used by users with write
+access to the port, as it permits reprogramming the modem.
+
+Otherwise, if the argument begins with a digit, it is taken to be a
+phone number to call.
+
+Otherwise, it is taken to be the name of a system to call.
+
+The @samp{-z} or @samp{--system} options may be used to name a system
+beginning with a digit, and the @samp{-c} or @samp{--phone} options may
+be used to name a phone number that does not begin with a digit.
+
+The @code{cu} program locates a port to use in the UUCP configuration
+files.  If a simple system name is given, it will select a port
+appropriate for that system.  The @samp{-p}, @samp{--port}, @samp{-l},
+@samp{--line}, @samp{-s}, and @samp{--speed} options may be used to
+control the port selection.
+
+When a connection is made to the remote system, @code{cu} forks into two
+processes.  One reads from the port and writes to the terminal, while
+the other reads from the terminal and writes to the port.
+
+@node cu Commands, cu Variables, cu Description, Invoking cu
+@subsection cu Commands
+
+The @code{cu} program provides several commands that may be used during
+the conversation.  The commands all begin with an escape character,
+which by default is @kbd{~} (tilde).  The escape character is only
+recognized at the beginning of a line.  To send an escape character to
+the remote system at the start of a line, it must be entered twice.  All
+commands are either a single character or a word beginning with @kbd{%}
+(percent sign).
+
+The @code{cu} program recognizes the following commands.
+
+@table @samp
+@item ~.
+Terminate the conversation.
+
+@item ~! command
+Run command in a shell.  If command is empty, starts up a shell.
+
+@item ~$ command
+Run command, sending the standard output to the remote system.
+
+@item ~| command
+Run command, taking the standard input from the remote system.
+
+@item ~+ command
+Run command, taking the standard input from the remote system and
+sending the standard output to the remote system.
+
+@item ~#, ~%break
+Send a break signal, if possible.
+
+@item ~c directory, ~%cd directory
+Change the local directory.
+
+@item ~> file
+Send a file to the remote system.  This just dumps the file over the
+communication line.  It is assumed that the remote system is expecting
+it.
+
+@item ~<
+Receive a file from the remote system.  This prompts for the local file
+name and for the remote command to execute to begin the file transfer.
+It continues accepting data until the contents of the @samp{eofread}
+variable are seen.
+
+@item ~p from to
+@itemx ~%put from to
+Send a file to a remote Unix system.  This runs the appropriate
+commands on the remote system.
+
+@item ~t from to
+@itemx ~%take from to
+Retrieve a file from a remote Unix system.  This runs the appropriate
+commands on the remote system.
+
+@item ~s variable value
+Set a @code{cu} variable to the given value.  If value is not given, the
+variable is set to @samp{true}.
+
+@item ~! variable
+Set a @code{cu} variable to @samp{false}.
+
+@item ~z
+Suspend the cu session.  This is only supported on some systems.  On
+systems for which ^Z may be used to suspend a job, @samp{~^Z} will also
+suspend the session.
+
+@item ~%nostop
+Turn off XON/XOFF handling.
+
+@item ~%stop
+Turn on XON/XOFF handling.
+
+@item ~v
+List all the variables and their values.
+
+@item ~?
+List all commands.
+@end table
+
+@node cu Variables, cu Options, cu Commands, Invoking cu
+@subsection cu Variables
+
+The @code{cu} program also supports several variables.  They may be
+listed with the @samp{~v} command, and set with the @samp{~s} or
+@samp{~!}  commands.
+
+@table @samp
+@item escape
+The escape character.  The default is @kbd{~} (tilde).
+
+@item delay
+If this variable is true, @code{cu} will delay for a second after
+recognizing the escape character before printing the name of the local
+system.  The default is true.
+
+@item eol
+The list of characters which are considered to finish a line.  The
+escape character is only recognized after one of these is seen.  The
+default is @kbd{carriage return}, @kbd{^U}, @kbd{^C}, @kbd{^O},
+@kbd{^D}, @kbd{^S}, @kbd{^Q}, @kbd{^R}.
+
+@item binary
+Whether to transfer binary data when sending a file.  If this is false,
+then newlines in the file being sent are converted to carriage returns.
+The default is false.
+
+@item binary-prefix
+A string used before sending a binary character in a file transfer, if
+the @samp{binary} variable is true.  The default is @samp{^Z}.
+
+@item echo-check
+Whether to check file transfers by examining what the remote system
+echoes back.  This probably doesn't work very well.  The default is
+false.
+
+@item echonl
+The character to look for after sending each line in a file.  The
+default is carriage return.
+
+@item timeout
+The timeout to use, in seconds, when looking for a character, either
+when doing echo checking or when looking for the @samp{echonl}
+character.  The default is 30.
+
+@item kill
+The character to use delete a line if the echo check fails.  The default
+is @kbd{^U}.
+
+@item resend
+The number of times to resend a line if the echo check continues to
+fail.  The default is 10.
+
+@item eofwrite
+The string to write after sending a file with the @samp{~>} command.
+The default is @samp{^D}.
+
+@item eofread
+The string to look for when receiving a file with the @samp{ ~<}
+command.  The default is @samp{$}, which is intended to be a typical
+shell prompt.
+
+@item verbose
+Whether to print accumulated information during a file transfer.  The
+default is true.
+@end table
+
+@node cu Options,  , cu Variables, Invoking cu
+@subsection cu Options
+
+The following options may be given to @code{cu}.
+
+@table @samp
+@item -e
+@itemx --parity=even
+Use even parity.
+
+@item -o
+@itemx --parity=odd
+Use odd parity.
+
+@item --parity=none
+Use no parity.  No parity is also used if both @samp{-e} and @samp{-o}
+are given.
+
+@item -h
+@itemx --halfduplex
+Echo characters locally (half-duplex mode).
+
+@item --nostop
+Turn off XON/XOFF handling (it is on by default).
+
+@item -E char
+@itemx --escape char
+Set the escape character.  Initially @kbd{~} (tilde).
+
+@item -z system
+@itemx --system system
+The system to call.
+
+@item -c phone-number
+@itemx --phone phone-number
+The phone number to call.
+
+@item -p port
+@itemx -a port
+@itemx --port port
+Name the port to use.
+
+@item -l line
+@itemx --line line
+Name the line to use by giving a device name.  This may be used to dial
+out on ports that are not listed in the UUCP configuration files.  Write
+access to the device is required.
+
+@item -s speed
+@itemx -#
+@itemx --speed speed
+The speed (baud rate) to use.  Here, @samp{-#} means an actual number;
+e.g., @samp{-9600}.
+
+@item -n
+@itemx --prompt
+Prompt for the phone number to use.
+
+@item -d
+Enter debugging mode.  Equivalent to @samp{-debug all}.
+
+@item -x type
+@itemx --debug type
+@itemx -I file
+@itemx --config file
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node Invoking uucico, Invoking uuxqt, Invoking cu, Invoking the UUCP Programs
+@section Invoking uucico
+
+@menu
+* uucico Description::          Description of uucico
+* uucico Options::              Options Supported by uucico
+@end menu
+
+@node uucico Description, uucico Options, Invoking uucico, Invoking uucico
+@subsection uucico Description
+
+@example
+uucico [options]
+@end example
+
+The @code{uucico} daemon processes file transfer requests queued by
+@code{uucp} and @code{uux}.  It is started when @code{uucp} or
+@code{uux} is run (unless they are given the @samp{-r} or
+@samp{--nouucico} options).  It is also typically started periodically
+using entries in the @file{crontab} table(s).
+
+When @code{uucico} is invoked with @samp{-r1}, @samp{--master},
+@samp{-s}, @samp{--system}, or @samp{-S}, the daemon will place a call
+to a remote system, running in master mode.  Otherwise the daemon will
+start in slave mode, accepting a call from a remote system.  Typically a
+special login name will be set up for UUCP which automatically invokes
+@code{uucico} when a remote system calls in and logs in under that name.
+
+When @code{uucico} terminates, it invokes the @code{uuxqt} daemon,
+unless the @samp{-q} or @samp{--nouuxqt} options were given;
+@code{uuxqt} executes any work orders created by @code{uux} on a remote
+system, and any work orders created locally which have received remote
+files for which they were waiting.
+
+If a call fails, @code{uucico} will normally refuse to retry the call
+until a certain (configurable) amount of time has passed.  This may be
+overriden by the @samp{-f}, @samp{--force}, or @samp{-S} options.
+
+The @samp{-l}, @samp{--prompt}, @samp{-e}, or @samp{--loop} options may
+be used to force @code{uucico} to produce its own prompts of
+@samp{login: } and @samp{Password:}.  When another @code{uucico} daemon
+calls in, it will see these prompts and log in as usual.  The login name
+and password will normally be checked against a separate list kept
+specially for @code{uucico} rather than the @file{/etc/passwd} file;
+however, it is possible, on some systems, to configure @code{uucico} to
+use @file{/etc/passwd}.  The @samp{-l} or @samp{--prompt} options will
+prompt once and then exit; in this mode the UUCP administrator, or the
+superuser, may use the @samp{-u} or @samp{--login} option to force a
+login name, in which case @code{uucico} will not prompt for one.  The
+@samp{-e} or @samp{--loop} options will prompt again after the first
+session is over; in this mode @code{uucico} will permanently control a
+port.
+
+If @code{uucico} receives a @code{SIGQUIT}, @code{SIGTERM} or
+@code{SIGPIPE} signal, it will cleanly abort any current conversation
+with a remote system and exit.  If it receives a @code{SIGHUP} signal it
+will abort any current conversation, but will continue to place calls to
+(if invoked with @samp{-r1} or @samp{--master}) and accept calls from
+(if invoked with @samp{-e} or @samp{--loop}) other systems.  If it
+receives a @code{SIGINT} signal it will finish the current conversation,
+but will not place or accept any more calls.
+
+@node uucico Options,  , uucico Description, Invoking uucico
+@subsection uucico Options
+
+The following options may be given to @code{uucico}.
+
+@table @samp
+@item -r1
+@itemx --master
+Start in master mode: call out to a remote system.  Implied by
+@samp{-s}, @samp{--system}, or @samp{-S}.  If no system is specified,
+call any system for which work is waiting to be done.
+
+@item -r0
+@itemx --slave
+Start in slave mode.  This is the default.
+
+@item -s system
+@itemx --system system
+Call the specified system.
+
+@item -S system
+Call the specified system, ignoring any required wait.  This is
+equivalent to @samp{-s system -f}.
+
+@item -f
+@itemx --force
+Ignore any required wait for any systems to be called.
+
+@item -l
+@itemx --prompt
+Prompt for login name and password using @samp{login: } and
+@samp{Password:}.  This allows @code{uucico} to be easily run from
+@code{inetd}.  The login name and password are checked against the UUCP
+password file, which need not be @file{/etc/passwd}.  The @samp{--login}
+option may be used to force a login name, in which cause @code{uucico}
+will only prompt for a password.
+
+@item -p port
+@itemx --port port
+Specify a port to call out on or to listen to.
+
+@item -e
+@itemx --loop
+Enter endless loop of login/password prompts and slave mode daemon
+execution.  The program will not stop by itself; you must use
+@code{kill} to shut it down.
+
+@item -w
+@itemx --wait
+After calling out (to a particular system when @samp{-s},
+@samp{--system}, or @samp{-S} is specifed, or to all systems which have
+work when just @samp{-r1} or @samp{--master} is specifed), begin an
+endless loop as with @samp{--loop}.
+
+@item -q
+@itemx --nouuxqt
+Do not start the @code{uuxqt} daemon when finished.
+
+@item -c
+@itemx --quiet
+If no calls are permitted at this time, then don't make the call, but
+also do not put an error message in the log file and do not update the
+system status (as reported by @code{uustat}).  This can be convenient
+for automated polling scripts, which may want to simply attempt to call
+every system rather than worry about which particular systems may be
+called at the moment.  This option also suppresses the log message
+indicating that there is no work to be done.
+
+@item -C
+@itemx --ifwork
+Only call the system named by @samp{-s}, @samp{--system}, or @samp{-S}
+if there is work for that system.
+
+@item -D
+@itemx --nodetach
+Do not detach from the controlling terminal.  Normally @code{uucico}
+detaches from the terminal before each call out to another system and
+before invoking @code{uuxqt}.  This option prevents this.
+
+@item -u name
+@itemx --login name
+Set the login name to use instead of that of the invoking user.  This
+option may only be used by the UUCP administrator or the superuser.  If
+used with @samp{--prompt}, this will cause @code{uucico} to prompt only
+for the password, not the login name.
+
+@item -z
+@itemx --try-next
+If a call fails after the remote system is reached, try the next
+alternate rather than simply exiting.
+
+@item -i type
+@itemx --stdin type
+Set the type of port to use when using standard input.  The only
+supported port type is TLI, and this is only available on machines which
+support the TLI networking interface.  Specifying @samp{-i TLI} causes
+@code{uucico} to use TLI calls to perform I/O.
+
+@item -X type
+Same as the standard option @samp{-x type}.  Provided for historical
+compatibility.
+
+@item -x type
+@itemx --debug type
+@itemx -I file
+@itemx --config file
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node Invoking uuxqt, Invoking uuchk, Invoking uucico, Invoking the UUCP Programs
+@section Invoking uuxqt
+
+@example
+uuxqt [-c command] [-s system] [--command command] [--system system]
+@end example
+
+The @code{uuxqt} daemon executes commands requested by @code{uux} from
+either the local system or from remote systems.  It is started
+automatically by the @code{uucico} daemon (unless @code{uucico} is given
+the @samp{-q} or @samp{--nouuxqt} options).
+
+There is normally no need to run @code{uuxqt}, since it will be invoked
+by @code{uucico}.  However, @code{uuxqt} can be invoked directly to
+provide greater control over the processing of the work queue.
+
+Multiple invocations of @code{uuxqt} may be run at once, as controlled
+by the @code{max-uuxqts} configuration command; see @ref{Miscellaneous
+(config)}.
+
+The following options may be given to @code{uuxqt}.
+
+@table @samp
+@item -c command
+@itemx --command command
+Only execute requests for the specified command.  For example,
+@samp{uuxqt --command rmail}.
+
+@item -s system
+@itemx --system system
+Only execute requests originating from the specified system.
+
+@item -x type
+@itemx --debug type
+@itemx -I file
+@itemx --config 
+@itemx -v
+@itemx --version
+@itemx --help
+@xref{Standard Options}.
+@end table
+
+@node Invoking uuchk, Invoking uuconv, Invoking uuxqt, Invoking the UUCP Programs
+@section Invoking uuchk
+
+@example
+uuchk [-s system] [--system system]
+@end example
+
+The @code{uuchk} program displays information read from the UUCP
+configuration files.  It should be used to ensure that UUCP has been
+configured correctly.
+
+The @samp{-s} or @samp{--system} options may be used to just display the
+configuration for the specified system, rather than for all systems.
+The @code{uuchk} program also supports the standard UUCP program
+options; see @ref{Standard Options}.
+
+@node Invoking uuconv, Invoking uusched, Invoking uuchk, Invoking the UUCP Programs
+@section Invoking uuconv
+
+@example
+uuconv -i type -o type [-p program] [--program program]
+uuconv --input type --output type [-p program] [--program program]
+@end example
+
+The @code{uuconv} program converts UUCP configuration files from one
+format to another.  The type of configuration file to read is specified
+using the @samp{-i} or @samp{--input} options.  The type of
+configuration file to write is specified using the @samp{-o} or
+@samp{--output} options.
+
+The supported configuration file types are @samp{taylor}, @samp{v2}, and
+@samp{hdb}.  For a description of the @samp{taylor} configuration files,
+see @ref{Configuration Files}.  The other types of configuration files
+are used by traditional UUCP packages, and are not described in this
+manual.
+
+An input configuration of type @samp{v2} or @samp{hdb} is read from a
+compiled in directory (specified by @samp{oldconfigdir} in
+@file{Makefile}).  An input configuration of type @samp{taylor} is read
+from a compiled in directory by default, but may be overridden with the
+standard @samp{-I} or @samp{--config} options (@pxref{Standard
+Options}).
+
+The output configuration is written to files in the directory in which
+@code{uuconv} is run.
+
+Some information in the input files may not be representable in the
+desired output format, in which case @code{uuconv} will silently discard
+it.  The output of @code{uuconv} should be carefully checked before it
+is used.  The @code{uuchk} program may be used for this purpose; see
+@ref{Invoking uuchk}.
+
+The @samp{-p} or @samp{--program} option may be used to convert specific
+@code{cu} configuration information, rather than the default of only
+converting the @code{uucp} configuration information; see @ref{config
+File}.
+
+The @code{uuchk} program also supports the standard UUCP program
+options; see @ref{Standard Options}.
+
+@node Invoking uusched,  , Invoking uuconv, Invoking the UUCP Programs
+@section Invoking uusched
+
+The @code{uusched} program is actually just a shell script which invokes
+the @code{uucico} daemon.  It is provided for backward compatibility.
+It causes @code{uucico} to call all systems for which there is work.
+Any option which may be given to @code{uucico} may also be given to
+@code{uusched}.  @xref{Invoking uucico}.
+
+@node Overall Installation, Configuration Files, Invoking the UUCP Programs, Top
 @chapter Taylor UUCP Overall Installation
 
 These are the installation instructions for the Taylor UUCP package.
@@ -971,9 +2452,9 @@ The configuration files are normally found in the directory
 @file{config}, is the only one which must be in that directory, since it
 may specify a different location for any or all of the other files.  You
 may run any of the UUCP programs with a different main configuration
-file by using the @samp{-I} option; this can be useful when testing a
-new configuration.  When you use the @samp{-I} option the programs will
-revoke any setuid privileges.
+file by using the @samp{-I} or @samp{--config} option; this can be
+useful when testing a new configuration.  When you use the @samp{-I}
+option the programs will revoke any setuid privileges.
 
 @menu
 * Configuration File Format::   Configuration file format
@@ -1653,7 +3134,7 @@ The program will be run as the @code{uucp} user, and the environment
 will be that of the process that started @code{uucico}, so care must be
 taken to maintain security.
 
-No search path is used to find the program; a full path name must be
+No search path is used to find the program; a full file name must be
 given.  If the program is an executable shell script, it will be passed
 to @file{/bin/sh} even on systems which are unable to execute shell
 scripts.
@@ -1802,7 +3283,7 @@ the default is @samp{10}.
 @findex timetable
 
 The @code{timetable} defines a timetable that may be used in
-subsequently appearing time strings; @ref{Time Strings}.  The first
+subsequently appearing time strings; see @ref{Time Strings}.  The first
 string names the timetable entry; the second is a time string.
 
 The following @code{timetable} commands are predefined.  The NonPeak
@@ -1863,7 +3344,7 @@ given on the line, and the @code{portfile} command may be repeated.
 
 Specify the dial file(s).  The default is the file @file{dial} in the
 directory @var{newconfigdir}.  These files describe dialing devices
-(modems); @xref{dial File}.  No dial files need be named at all.
+(modems); see @ref{dial File}.  No dial files need be named at all.
 Multiple dial files may be given on the line, and the @code{dialfile}
 command may be repeated.
 
@@ -2539,8 +4020,8 @@ being defined.  The chat script defined by the @code{chat} command
 is called.  This called chat script might be used to set special modem
 parameters that are appropriate to a particular system.  It is run after
 protocol negotiation is complete, but before the protocol has been
-started.  See @ref{Logging In} for additional escape sequence which may
-be used besides those defined for all chat scripts.  There is no default
+started.  For additional escape sequence which may be used besides those
+defined for all chat scripts, see @ref{Logging In}.  There is no default
 called chat script.  If the called chat script fails, the incoming call
 will be aborted.
 
@@ -3402,8 +4883,8 @@ Introduces and names a dialer.
 
 Specify a chat script to be used to dial the phone.  This chat script is
 used before the login chat script in the @file{sys} file, if any
-(@pxref{Logging In}).  See @ref{Chat Scripts} for full details on chat
-scripts.
+(@pxref{Logging In}).  For full details on chat scripts, see @ref{Chat
+Scripts}.
 
 Taylor UUCP will sleep for one second between attempts to dial out on a
 modem.  If your modem requires a longer wait period, you must start your
