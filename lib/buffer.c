@@ -97,11 +97,13 @@ void
 ubuffree (z)
      char *z;
 {
+  size_t ioff;
   struct sbuf *q;
 
   if (z == NULL)
     return;
-  q = (struct sbuf *) (pointer) (z - offsetof (struct sbuf, u));
+  ioff = offsetof (struct sbuf, u);
+  q = (struct sbuf *) (pointer) (z - ioff);
   q->qnext = qBlist;
   qBlist = q;
 }
