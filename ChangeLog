@@ -1,3 +1,45 @@
+Thu May  5 23:15:11 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Released version 1.05.
+
+	* Makefile.in (doc-dist): Put uucp.ps in uucp-doc-$(VERSION).
+
+Sun May  1 23:41:49 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* uuchk.c (ikshow_port): Show reliability information.
+	(ukshow_dialer): Likewise.
+	(ukshow_reliable): New function.
+
+Sat Apr 16 22:28:10 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Andrew A. Chernov: uucico.c (main): Pass 'z' to getopt.
+	(uhelp): Mention -z aka --try-next.
+
+	* log.c (ustats): Report failed transfers when HAVE_HDB_LOGGING.
+
+Wed Apr 13 23:07:20 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* prot.c (fsend_data): If no room in receive buffer, just write
+	the data out, don't call fconn_io.
+
+Tue Apr 12 21:55:32 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Spider Boardman: unix/serial.c (fsysdep_modem_end_dial): Set
+	terminal characteristics of reopened port.
+
+Sun Apr 10 18:05:34 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* send.c (flocal_send_fail): Always call fsysdep_did_work.
+	(flocal_send_await_reply): Don't call flocal_send_fail if we are
+	going to call fsend_exec_file_init.  Only call
+	fsend_exec_file_init if fnever is TRUE.  Pass fnever to
+	flocal_send_cancelled using the qinfo->fsent flag.
+	(flocal_send_cancelled): Only call fsend_exec_file_init if
+	qinfo->fsent is TRUE.
+
+	* unix/statsb.c (fsysdep_lock_status): If HAVE_QNX_LOCKFILES,
+	initialize painid to NULL.
+
 Tue Apr  5 23:09:00 1994  Ian Lance Taylor  (ian@airs.com)
 
 	* Released version gamma 1.05.
@@ -139,7 +181,7 @@ Wed Mar 23 20:02:26 1994  Ian Lance Taylor  (ian@airs.com)
 	* configure.in: Fix STAT_STATFS2_FSIZE test.
 	* configure: Regenerated.
 
-Tue Mar 22 01:32:21 1994  Ian Lance Taylor  (ian@comton.airs.com)
+Tue Mar 22 01:32:21 1994  Ian Lance Taylor  (ian@airs.com)
 
 	* uucico.c (main): Skip a leading dash in argv[0] which is
 	probably the result of being invoked by the Unix login program.
