@@ -14,12 +14,6 @@ John Cowan <cowan@snark.thyrsus.com> says:
 Of course, getdate() accepts a single date, but we want a range.  A
 better syntax would be certainly be nice.
 
-4.
-
-John R MacMillan <chance!john@sq.sq.com> mentions the HDB notion of
-services; something like this should be added whenever I get around to
-writing a version of cu.
-
 6.
 
 T. William Wells <bill@twwells.com> says:
@@ -103,21 +97,6 @@ Should there be some way to specify the maximum number of retries for
 each system using the new configuration scheme?  The maximum number of
 retries is currently a compilation parameter.
 
-20.
-
-Write some protocols that support bidirectional transfers.
-
-James Gardiner says:
-> MHSnet has this but with also 3  channels per direction.  Each channel
-> sends different size packets.  This alows mail, which is usually smaller,
-> to overtake news or big files.  Mail being the more important.
-> However, with high speed modems, this is no so important.
-
-21.
-
-Support transfers through systems using uucp and uux.  Implement the
-``forward-to'' command to allow control of these transfers.
-
 22.
 
 Add an ftp port type which uses anonymous ftp rather than any of the
@@ -191,11 +170,6 @@ statistics files on a site by site basis.
 Yanek Martinson: allow each system to independently choose whether to
 permit shell execution.
 
-75.
-
-Mike Park: we should accept an Shere=foo message with an alias of the
-system we are calling.
-
 81.
 
 Marty Shannon: log reason for dial failure (chat-fail string) in
@@ -208,10 +182,6 @@ Support restart of failed transfers a la SVR4 UUCP.
 83.
 
 Switch between 'M' and 'S' correctly in the BNU log file output.
-
-85.
-
-Les Mikesell: add TLI and TLIS connection ability.
 
 86.
 
@@ -229,16 +199,10 @@ every 1000 lines or so.
 Marty Shannon: add a time command for ports, to specify when they may
 be used.
 
-112.
-
-Franc,ois Pinard: allow defaults to appear at the top of the dial file
-(and presumably of the port file as well).
-
 115.
 
 T. William Wells: new options for uustat:
 	-i display job ids only
-	-K interactively kill jobs
 Also, there should perhaps be a configuration option to request uustat
 to only display jobs submitted by the user running uustat, except for
 root and uucp.
@@ -285,12 +249,6 @@ Use POSIX fcntl locks when possible instead of creating a lock file.
 Chip Salzenberg: BSD lets you override the timeout for a particular
 expect string by using a trailing ~.
 
-132.
-
-Franc,ois Pinard: cut the total number of 'g' protocol errors by some
-fraction every X bytes.  T. William Wells: only abort if you get a
-certain percentage of errors out of a certain number of packets.
-
 134.
 
 Chip Salzenberg: give .XQTDIR a mode of 0700 and the files put into it
@@ -302,12 +260,6 @@ Thomas Fischer: every so often (1/2 hour) check to see whether there
 is any high grade work to be done and process it.  This should happen
 even on the slave, which means the slave needs some way to ask the
 master to hang up.  I think some uucico's do this by sending CYM.
-
-137.
-
-Support control over local executions by recognizing the local system
-name in the configuration file.  Think about what is needed to use the
-same configuration files on multiple systems.
 
 138.
 
@@ -446,8 +398,9 @@ don't lock on a per system basis, and ignore any per system locks
 (regardless of -s).  If neither option is used, respect existing
 system and command locks, and do any other type of file.
 
-160.
-
-Bob Izenberg: add -f and -# arguments to uulog.
-
 161.
+
+Scott Blachowicz: provide some sort of include mechanism for the
+configuration files.
+
+162.
