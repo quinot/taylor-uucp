@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.48  1992/03/12  21:52:21  ian
+   Corrected readdir prototype
+
    Revision 1.47  1992/03/11  22:06:37  ian
    Marty Shannon: added max-uuxqts command
 
@@ -242,6 +245,8 @@
 #include <setjmp.h>
 #if HAVE_SIGSETJMP
 #undef setjmp
+#undef longjmp
+#undef jmp_buf
 #define setjmp(s) sigsetjmp ((s), TRUE)
 #define longjmp siglongjmp
 #define jmp_buf sigjmp_buf
@@ -296,10 +301,12 @@ typedef struct termios sterminal;
 
 #endif /* HAVE_POSIX_TERMIOS */
 
-/* The root directory (this is needed by the system independent stuff).  */
+/* The root directory (this is needed by the system independent stuff
+   as the default for local-send).  */
 #define ZROOTDIR "/"
 
-/* The name of the execution directory within the spool directory.  */
+/* The name of the execution directory within the spool directory
+   (this is need by the system independent uuxqt.c).  */
 #define XQTDIR ".Xqtdir"
 
 /* The name of the directory in which we preserve file transfers that
@@ -389,45 +396,6 @@ typedef struct termios sterminal;
 #define IDIRECTORY_MODE (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 #define IPUBLIC_DIRECTORY_MODE (S_IRWXU | S_IRWXG | S_IRWXO)
 
-/* The wait status stuff is complex enough that we do it in here.  I
-   could create a new header file but it's too much trouble.  */
-
-#if HAVE_SYS_WAIT_H
-#include <sys/wait.h>
-#endif
-
-/* We use a typedef wait_status_t for wait(2) to put results into.  We
-   use SYSTEM_STATUS(i) as an lvalue to catch the return value of
-   system(3).  We define the POSIX examination functions we need if
-   they are not already defined (if they aren't defined, I assume that
-   we have a standard wait status).  */
-
-#if HAVE_UNION_WAIT
-typedef union wait wait_status_t;
-#define SYSTEM_STATUS(u) ((u).w_status)
-#ifndef WIFEXITED
-#define WIFEXITED(u) ((u).w_termsig == 0)
-#endif
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(u) ((u).w_retcode)
-#endif
-#ifndef WTERMSIG
-#define WTERMSIG(u) ((u).w_termsig)
-#endif
-#else /* ! HAVE_UNION_WAIT */
-typedef int wait_status_t;
-#define SYSTEM_STATUS(i) (i)
-#ifndef WIFEXITED
-#define WIFEXITED(i) (((i) & 0xff) == 0)
-#endif
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(i) (((i) >> 8) & 0xff)
-#endif
-#ifndef WTERMSIG
-#define WTERMSIG(i) ((i) & 0x7f)
-#endif
-#endif /* ! HAVE_UNION_WAIT */
-
 #if ! HAVE_OPENDIR
 
 /* Define some structures to use if we don't have opendir, etc.  These
@@ -487,9 +455,9 @@ struct ssysdep_stdin_port
   boolean fpty;
 };
 
-/* For debugging it is helpful to know whether we are connected through
-   a pty; the fsserial_read routine uses to information to know whether
-   to sleep or not.  */
+/* For debugging it is helpful to know whether we are connected
+   through a pty; the fsserial_read routine uses this information to
+   know whether to sleep or not.  */
 #define SYSDEP_STDIN_CMDS(s) \
  { "pty", CMDTABTYPE_BOOLEAN, (pointer) &(s).fpty, NULL }
 
@@ -525,6 +493,32 @@ extern SIGtype ussignal P((int isig));
 /* Try to fork, repeating several times.  */
 extern pid_t isfork P((void));
 
+/* Spawn a job.  Returns the process ID of the spawned job or -1 on
+   error.  The following macros may be passed in aidescs.  */
+
+/* Set descriptor to /dev/null.  */
+#define SPAWN_NULL (-1)
+/* Set element of aidescs to a pipe for caller to read from.  */
+#define SPAWN_READ_PIPE (-2)
+/* Set element of aidescs to a pipe for caller to write to.  */
+#define SPAWN_WRITE_PIPE (-3)
+
+extern pid_t isspawn P((const char **pazargs, int *aidescs,
+			boolean fkeepuid, boolean fkeepenv,
+			const char *zchdir, boolean fnosigs,
+			boolean fshell, const char *zpath,
+			const char *zuu_machine,
+			const char *zuu_user));
+
+/* Do a form of popen using isspawn.  */
+extern FILE *espopen P((const char **pazargs, boolean frd,
+			pid_t *pipid));
+
+/* Wait for a particular process to finish, returning the exit status.
+   The process ID should be pid_t, but we can't put that in a
+   prototype.  */
+extern int iswait P((unsigned long ipid, const char *zreport));
+
 /* Lock a string.  */
 extern boolean fsdo_lock P((const char *, boolean fspooldir));
 
@@ -535,18 +529,21 @@ extern boolean fsdo_unlock P((const char *, boolean fspooldir));
 extern boolean fsdirectory_exists P((const char *));
 
 /* Expand a leading tilde to the public directory or a user's home
-   directory.  */
+   directory.  Each system may have a different public directory, so
+   the system information must be passed in.  */
 extern const char *zstilde_expand P((const struct ssysteminfo *qsys,
 				     const char *zfile));
 
-/* Check access for a particular user name.  */
+/* Check access for a particular user name, or NULL to check access
+   for any user.  */
 extern boolean fsuser_access P((const struct stat *, int imode,
 				const char *zuser));
 
 /* Copy a string to the common static buffer.  */
 extern const char *zscopy P((const char *z));
 
-/* Prepend a directory to a file name.  */
+/* Prepend a directory to a file name, returning the common static
+   buffer.  */
 extern const char *zsappend P((const char *zdir, const char *zfile));
 
 /* Get a temporary file name.  */
@@ -567,12 +564,8 @@ extern boolean fsultrix_has_spool P((const char *zsystem));
 #endif /* SPOOLDIR_ULTRIX */
 
 /* The working directory from which the program was run (this is set
-   by usysdep_initialize).  */
+   by usysdep_initialize if called with fgetcwd TRUE).  */
 extern char *zScwd;
-
-/* The number of available file descriptors (set by
-   usysdep_initialize).  */
-extern int cSdescriptors;
 
 /*
   Local variables:

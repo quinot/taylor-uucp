@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.48  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.47  1992/03/08  17:02:24  ian
    Ted Lindgreen: don't include <sys/ioctl.h> if it's not there
 
@@ -213,6 +216,16 @@ char tstuu_rcsid[] = "$Id$";
 
 #if HAVE_TIME_H && (HAVE_SYS_TIME_AND_TIME_H || ! HAVE_SELECT)
 #include <time.h>
+#endif
+
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
+#if HAVE_UNION_WAIT
+typedef union wait wait_status;
+#else
+typedef int wait_status;
 #endif
 
 #include "getopt.h"
@@ -627,24 +640,24 @@ uchild (isig)
   (void) times (&sbase);
 
 #if HAVE_WAITPID
-  (void) waitpid (iPid1, (wait_status_t *) NULL, 0);
+  (void) waitpid (iPid1, (wait_status *) NULL, 0);
 #else /* ! HAVE_WAITPID */
 #if HAVE_WAIT4
-  (void) wait4 (iPid1, (wait_status_t *) NULL, 0, (struct rusage *) NULL);
+  (void) wait4 (iPid1, (wait_status *) NULL, 0, (struct rusage *) NULL);
 #else /* ! HAVE_WAIT4 */
-  (void) wait ((wait_status_t *) NULL);
+  (void) wait ((wait_status *) NULL);
 #endif /* ! HAVE_WAIT4 */
 #endif /* ! HAVE_WAITPID */
 
   (void) times (&s1);
 
 #if HAVE_WAITPID
-  (void) waitpid (iPid2, (wait_status_t *) NULL, 0);
+  (void) waitpid (iPid2, (pointer) NULL, 0);
 #else /* ! HAVE_WAITPID */
 #if HAVE_WAIT4
-  (void) wait4 (iPid2, (wait_status_t *) NULL, 0, (struct rusage *) NULL);
+  (void) wait4 (iPid2, (wait_status *) NULL, 0, (struct rusage *) NULL);
 #else /* ! HAVE_WAIT4 */
-  (void) wait ((wait_status_t *) NULL);
+  (void) wait ((wait_status *) NULL);
 #endif /* ! HAVE_WAIT4 */
 #endif /* ! HAVE_WAITPID */
 
@@ -909,7 +922,9 @@ uprepare_test (itest, fcall_uucico, zsys)
 
       xfclose (eprog);
 
-      fprintf (e, "chat-program /bin/sh /usr/tmp/tstuu/Chat1 \\P \\S\n");
+      (void) chmod ("/usr/tmp/tstuu/Chat1", S_IRWXU);
+
+      fprintf (e, "chat-program /usr/tmp/tstuu/Chat1 \\P \\S\n");
 
       fprintf (e, "chat word: \\P\n");
       fprintf (e, "chat-fail login;\n");

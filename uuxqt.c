@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.37  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.36  1992/03/11  22:34:25  ian
    Chip Salzenberg: support Internet mail addresses in uuxqt replies
 
@@ -1165,7 +1168,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  ulog (LOG_NORMAL, "Will retry later (%s)", zfile);
 	  if (zoutput != NULL)
 	    (void) remove (zoutput);
-	  (void) remove (zerror);
+	  if (zerror != NULL)
+	    (void) remove (zerror);
 	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
 	  *pfprocessed = FALSE;
 	  return;
@@ -1187,7 +1191,10 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  pz[i++] = zQcmd;
 	  pz[i++] = "\n";
 
-	  eerr = fopen (zerror, "r");
+	  if (zerror == NULL)
+	    eerr = NULL;
+	  else
+	    eerr = fopen (zerror, "r");
 	  if (eerr == NULL)
 	    {
 	      pz[i++] = "There was no output on standard error\n";
@@ -1274,7 +1281,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	}
     }
 
-  (void) remove (zerror);
+  if (zerror != NULL)
+    (void) remove (zerror);
 
   uqcleanup (zfile, iclean);
 }
