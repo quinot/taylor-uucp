@@ -256,6 +256,13 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 					  cretry, _uuconf_itime_grade_cmp,
 					  &qset->uuconf_qtimegrade,
 					  pblock);
+
+	      /* We treat a syntax error in the time field as
+                 equivalent to ``never'', on the assumption that that
+                 is what HDB does.  */
+	      if (iret == UUCONF_SYNTAX_ERROR)
+		iret = UUCONF_SUCCESS;
+
 	      if (iret != UUCONF_SUCCESS)
 		break;
 
