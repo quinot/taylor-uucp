@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.45  1992/03/04  00:36:44  ian
+   Michael Richardson: better chat script debugging
+
    Revision 1.44  1992/03/02  04:53:07  ian
    Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
 
@@ -283,6 +286,11 @@ extern long atol (), strtol ();
 extern int atoi ();
 extern char *getenv ();
 #endif /* ! HAVE_STDLIB_H */
+
+/* NeXT uses <libc.h> to declare a bunch of functions.  */
+#if HAVE_LIBC_H
+#include <libc.h>
+#endif
 
 /* If we need to declare errno, do so.  I don't want to always do
    this, because some system might theoretically have a different

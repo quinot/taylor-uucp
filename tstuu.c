@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.44  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.43  1992/02/24  20:07:43  ian
    John Theus: some systems don't have <fcntl.h>
 
@@ -260,7 +263,6 @@ char tstuu_rcsid[] = "$Id$";
 extern int select (), close (), dup2 (), access ();
 extern int read (), write (), unlink ();
 extern int fclose (), fflush (), rand (), system ();
-extern unsigned int sleep ();
 extern pid_t fork ();
 
 #if ! HAVE_WAITPID && HAVE_WAIT4

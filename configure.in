@@ -28,7 +28,7 @@ M_DEFINE([PWD_PROGRAM],
 dnl
 ILT_HEADER_CHECK(string.h strings.h unistd.h stdlib.h limits.h time.h)
 ILT_HEADER_CHECK(sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
-ILT_HEADER_CHECK(utime.h fcntl.h sys/file.h)
+ILT_HEADER_CHECK(utime.h fcntl.h sys/file.h libc.h)
 dnl
 ILT_SIGTYPE
 ILT_LIBTHING_CHECK([time_t in time.h],
