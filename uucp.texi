@@ -1273,7 +1273,8 @@ script with a @kbd{\d} before the @kbd{\L}.
 
 The number of seconds to wait for an expect string in the chat script
 before timing out and sending the next subsend or failing the chat
-script entirely.  The default value is 60.
+script entirely.  The default value is 10 for a login chat or 60 for
+any other type of chat.
 
 @item chat-fail @var{string}
 @findex chat-fail in sys file
@@ -1693,7 +1694,7 @@ timetable Night Wk2305-0755,Sa,Su2305-1655
 timetable NonPeak Wk1805-0655,Sa,Su
 time Never
 chat "" \r\c ogin:-BREAK-ogin:-BREAK-ogin: \L word: \P
-chat-timeout 60
+chat-timeout 10
 callback n
 sequence n
 request y
