@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.2  1992/02/23  03:26:51  ian
+ * Overhaul to use automatic configure shell script
+ *
  * Revision 1.1  1992/02/20  04:18:59  ian
  * Initial revision
  *
@@ -629,6 +632,7 @@ fsworkfile_show (qsys, qcmd, itime)
 		  int clen;
 
 		  zcmd = strtok ((char *) NULL, "");
+		  zcmd += strspn (zcmd, " \t");
 		  clen = strlen (zcmd);
 		  if (zcmd[clen - 1] == '\n')
 		    zcmd[clen - 1] = '\0';
