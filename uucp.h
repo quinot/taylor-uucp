@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1991/12/23  05:15:54  ian
+   David Nugent: set debugging level for a specific system
+
    Revision 1.23  1991/12/22  22:14:19  ian
    Monty Solomon: added HAVE_UNISTD_H configuration parameter
 
@@ -810,6 +813,29 @@ extern int strncasecmp P((const char *z1, const char *z2, int clen));
 /* Get a string corresponding to an error message.  */
 extern char *strerror P((int ierr));
 #endif
+
+/* Get the appropriate definitions for memcmp, memcpy, memchr and
+   bzero.  Hopefully the declarations of bzero, bcmp and bcopy will
+   not cause any trouble.  */
+#if HAVE_MEMFNS && HAVE_BFNS
+extern void bzero ();
+#endif /* HAVE_MEMFNS && HAVE_BFNS */
+#if ! HAVE_MEMFNS && HAVE_BFNS
+#define memcmp(p1, p2, c) bcmp ((p1), (p2), (c))
+#define memcpy(pto, pfrom, c) bcopy ((pfrom), (pto), (c))
+extern pointer memchr P((constpointer p, int b, int c));
+extern void bcopy (), bzero ();
+extern int bcmp ();
+#endif /* ! HAVE_MEMFNS && HAVE_BFNS */
+#if HAVE_MEMFNS && ! HAVE_BFNS
+#define bzero(p, c) memset ((p), 0, (c))
+#endif /* HAVE_MEMFNS && ! HAVE_BFNS */
+#if ! HAVE_MEMFNS && ! HAVE_BFNS
+extern int memcmp P((constpointer p1, constpointer p2, int c));
+extern pointer memcpy P((pointer pto, constpointer pfrom, int c));
+extern pointer memchr P((constpointer p, int b, int c));
+extern void bzero P((pointer p, int c));
+#endif /* ! HAVE_MEMFNS && ! HAVE_BFNS */
 
 /* Move a memory block safely.  Go through xmemmove to allow for
    systems which have the prototype (using size_t, which we don't want

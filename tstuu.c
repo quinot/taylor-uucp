@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1991/12/22  22:14:19  ian
+   Monty Solomon: added HAVE_UNISTD_H configuration parameter
+
    Revision 1.21  1991/12/21  22:07:47  ian
    John Theus: don't warn if port file does not exist
 
@@ -1254,6 +1257,30 @@ xsystem (zcmd)
     }
 }
 
+/* We don't want to link in util.c, since that would bring in the log
+   file stuff.  Instead, we have local copies of functions that may be
+   needed by getopt.c.  This should be done in a cleaner way.  */
+
+#if ! HAVE_MEMFNS && ! HAVE_BFNS
+
+/* Copy one block of memory to another.  */
+
+pointer
+memcpy (ptoarg, pfromarg, c)
+     pointer ptoarg;
+     constpointer pfromarg;
+     int c;
+{
+  char *pto = (char *) ptoarg;
+  const char *pfrom = (const char *) pfromarg;
+
+  while (c-- != 0)
+    *pto++ = *pfrom++;
+  return ptoarg;
+}
+
+#endif /* ! HAVE_MEMFNS && ! HAVE_BFNS */
+
 #if ! HAVE_ALLOCA
 
 /* The GNU getopt function calls alloca, and we don't want to link

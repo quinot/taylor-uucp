@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/17  23:14:08  ian
+   T. William Wells: allow dialer complete and abort to be chat scripts
+
    Revision 1.8  1991/12/15  04:17:11  ian
    Added chat-seven-bit command to control parity bit stripping
 
@@ -710,12 +713,12 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 
   if (zcallout_login != NULL)
     {
-      memset (zcallout_login, 0, strlen (zcallout_login));
+      bzero (zcallout_login, strlen (zcallout_login));
       xfree ((pointer) zcallout_login);
     }
   if (zcallout_pass != NULL)
     {
-      memset (zcallout_pass, 0, strlen (zcallout_pass));
+      bzero (zcallout_pass, strlen (zcallout_pass));
       xfree ((pointer) zcallout_pass);
     }
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/27  06:01:55  ian
+   Check for configurable maximum number of errors
+
    Revision 1.9  1991/12/20  03:02:01  ian
    Oleg Tabarovsky: added statistical messages to 'g' and 'f' protocols
 
@@ -593,7 +596,7 @@ fginit_sendbuffers (fallocate)
 	  azGsendbuffers[i] = (char *) malloc (CFRAMELEN + iGremote_packsize);
 	  if (azGsendbuffers[i] == NULL)
 	    return FALSE;
-	  memset (azGsendbuffers[i], 0, CFRAMELEN + iGremote_packsize);
+	  bzero (azGsendbuffers[i], CFRAMELEN + iGremote_packsize);
 	}
       else
 	azGsendbuffers[i] = NULL;

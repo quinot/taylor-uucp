@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/17  22:13:14  ian
+   David Nugent: zero out garbage before sending data
+
    Revision 1.6  1991/11/16  00:31:01  ian
    Increased default 't' and 'f' protocol timeouts
 
@@ -134,7 +137,7 @@ ftsendcmd (z)
   clen = ((clen / CTPACKSIZE) + 1) * CTPACKSIZE;
 
   zalc = (char *) alloca (clen);
-  memset (zalc, 0, clen);
+  bzero (zalc, clen);
   strcpy (zalc, z);
 
   return fsend_data (zalc, clen, TRUE);
