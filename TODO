@@ -139,3 +139,8 @@ UUCP protocols to do file transfers.  This would allow ftp work to be
 done late at night.
 
 23.
+
+If we don't permit command execution, we still want to delete the work
+files we've been given for the command.
+
+24.
