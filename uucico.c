@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.93  1992/04/14  19:03:17  ian
+   Marty Shannon: uustat would remove empty command files
+
    Revision 1.92  1992/04/06  21:10:14  ian
    Marc Boucher: set *pqsys to NULL in faccept_call
 
@@ -604,8 +607,11 @@ main (argc, argv)
 	      fLocked_system = TRUE;
 	      fret = fcall (&sLocked_system, qport, fforce, BGRADE_HIGH,
 			    fnodetach);
-	      (void) fsysdep_unlock_system (&sLocked_system);
-	      fLocked_system = FALSE;
+	      if (fLocked_system)
+		{
+		  (void) fsysdep_unlock_system (&sLocked_system);
+		  fLocked_system = FALSE;
+		}
 	    }
 
 #if DEBUG > 1
@@ -662,8 +668,11 @@ main (argc, argv)
 		      /* Now ignore any SIGHUP that we got.  */
 		      afSignal[INDEXSIG_SIGHUP] = FALSE;
 
-		      (void) fsysdep_unlock_system (&pas[i]);
-		      fLocked_system = FALSE;
+		      if (fLocked_system)
+			{
+			  (void) fsysdep_unlock_system (&pas[i]);
+			  fLocked_system = FALSE;
+			}
 		    }
 
 #if DEBUG > 1
@@ -953,9 +962,18 @@ static boolean fcall (qsys, qport, fforce, bgrade, fnodetach)
 		return FALSE;
 
 	      /* Now we have to dump that port so that we can aquire a
-		 new one.  */
+		 new one.  On Unix this means that we will fork and
+		 get a new process ID, so we must unlock and relock
+		 the system.  */
 	      if (! fnodetach)
-		usysdep_detach ();
+		{
+		  (void) fsysdep_unlock_system (&sLocked_system);
+		  fLocked_system = FALSE;
+		  usysdep_detach ();
+		  if (! fsysdep_lock_system (&sLocked_system))
+		    return FALSE;
+		  fLocked_system = TRUE;
+		}
 	    }
 	}
 
