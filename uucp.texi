@@ -1757,6 +1757,18 @@ require a more systematic notion of chat scripts.  Moreover, only the
 are used; also, only the protocol parameters from the first dialer are
 used.
 
+@item lockname @var{string} [ modem and direct only ]
+@findex lockname
+
+Give the name to use when locking this port.  On UNIX, this is the name
+of the file that will be created in the lock directory.  It is used as
+is, so on UNIX it should generally start with @samp{LCK..}.  For
+example, if a single port were named both @file{/dev/ttycu0} and
+@file{/dev/tty0} (perhaps with different characteristics keyed on the
+minor device number), then the command @code{lockname LCK..ttycu0} could
+be used to force the latter to use the same lock file name as the
+former.
+
 @item service @var{string} [ tcp only ]
 @findex service
 
