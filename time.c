@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.1  1991/09/10  19:40:31  ian
+ * Initial revision
+ *
    */
 
 #include "uucp.h"
@@ -256,10 +259,8 @@ fcheck_time (bgrade, ztimegrade)
       /* Make sure this grade/time pair applies to this grade.  It
 	 doesn't if the grade from ztimegrade is executed before the
 	 grade from bgrade.  */
-      if (igradecmp (*ztimegrade, bgrade) < 0)
-	continue;
-
-      if (fttime_ok (q, ztimegrade + 1))
+      if (igradecmp (*ztimegrade, bgrade) >= 0
+	  && fttime_ok (q, ztimegrade + 1))
 	return TRUE;
 
       ztimegrade += strcspn (ztimegrade, " ");
@@ -293,11 +294,9 @@ btime_low_grade (ztimegrade)
 
   while (TRUE)
     {
-      if (bgrade != '\0'
-	  && igradecmp (bgrade, *ztimegrade) < 0)
-	continue;
-
-      if (fttime_ok (q, ztimegrade + 1))
+      if ((bgrade == '\0'
+	   || igradecmp (bgrade, *ztimegrade) > 0)
+	  && fttime_ok (q, ztimegrade + 1))
 	bgrade = *ztimegrade;
 
       ztimegrade += strcspn (ztimegrade, " ");
