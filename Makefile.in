@@ -273,7 +273,7 @@ distclean:
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
 	rm -f taylor-uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
-	rm -f Makefile conf.h conf.h.stamp config.status
+	rm -f Makefile conf.h config.status
 
 mostlyclean: clean
 
@@ -308,14 +308,14 @@ install-info:
 	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
 	done
 
-conf.h: conf.h.stamp
-
-conf.h.stamp Makefile: config.status
+# Having Makefile depend on conf.h.in insures that conf.h will get
+# rebuilt when conf.h.in changes.  We don't want conf.h to change
+# unnecessarily, nor do we want to run config.status unnecessarily.
+# This won't work on versions of make that don't check dependencies
+# for Makefile, but I'm the only person likely to change conf.h.in
+# anyhow.
+Makefile: config.status Makefile.in conf.h.in
 	sh config.status
-	touch conf.h.stamp
-
-conf.h.stamp: conf.h.in
-Makefile: Makefile.in
 
 config.status: configure
 	configure --no-create
