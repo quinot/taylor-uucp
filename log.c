@@ -29,6 +29,7 @@
 const char log_rcsid[] = "$Id$";
 #endif
 
+#include <ctype.h>
 #include <errno.h>
 
 #if HAVE_STDARG_H
@@ -327,6 +328,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	  {
 	    const char *zsys;
 	    char *zbase;
+	    char *zlower;
 	    char *zfile;
 
 	    /* We want to write to .Log/program/system, e.g.  	
@@ -339,6 +341,14 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    zbase = zsysdep_base_name (zProgram);
 	    if (zbase == NULL)
 	      zbase = zbufcpy (zProgram);
+
+	    /* On some systems the native uusched will invoke uucico
+	       with an upper case argv[0].  We work around that by
+	       forcing the filename to lower case here.  */
+	    for (zlower = zbase; *zlower != '\0'; zlower++)
+	      if (isupper (*zlower))
+		*zlower = tolower (*zlower);
+
 	    zfile = zbufalc (strlen (zLogfile)
 			     + strlen (zbase)
 			     + strlen (zsys)
