@@ -20,7 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   c/o Cygnus Support, Building 200, 1 Kendall Square, Cambridge, MA 02139.
    */
 
 #include "uucp.h"
@@ -268,7 +268,7 @@ main (argc, argv)
 	  break;
 	default:
 	  fprintf (stderr,
-		   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		   "Taylor UUCP %s, copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor\n",
 		   VERSION);
 	  fprintf (stderr,
 		   "Usage: tstuu [-xn] [-t #] [-u] [-1 cmd] [-2 cmd]\n");
