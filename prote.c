@@ -20,40 +20,17 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.7  1992/03/30  04:49:10  ian
-   Niels Baggesen: added debugging types abnormal and uucp-proto
-
-   Revision 1.6  1992/03/17  01:03:03  ian
-   Miscellaneous cleanup
-
-   Revision 1.5  1992/03/13  22:59:25  ian
-   Have breceive_char go through freceive_data
-
-   Revision 1.4  1992/03/12  19:56:10  ian
-   Debugging based on types rather than number
-
-   Revision 1.3  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.2  1992/01/16  18:16:58  ian
-   Niels Baggesen: add some debugging messages
-
-   Revision 1.1  1991/12/31  19:43:30  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char prote_rcsid[] = "$Id$";
+const char prote_rcsid[] = "$Id$";
 #endif
 
 #include "prot.h"
-#include "port.h"
+#include "conn.h"
 #include "system.h"
 
 /* This implementation is based on my implementation of the 't'
@@ -86,24 +63,26 @@ static long cEbytes;
 /* The timeout we use.  */
 static int cEtimeout = 120;
 
-struct scmdtab asEproto_params[] =
+struct uuconf_cmdtab asEproto_params[] =
 {
-  { "timeout", CMDTABTYPE_INT, (pointer) &cEtimeout, NULL },
+  { "timeout", UUCONF_CMDTABTYPE_INT, (pointer) &cEtimeout, NULL },
   { NULL, 0, NULL, NULL }
 };
 
 /* Local function.  */
 
-static boolean feprocess_data P((boolean *pfexit, int *pcneed));
+static boolean feprocess_data P((struct sconnection *qconn, boolean *pfexit,
+				 size_t *pcneed));
 
 /* Start the protocol.  */
 
 /*ARGSUSED*/
 boolean
-festart (fmaster)
+festart (qconn, fmaster)
+     struct sconnection *qconn;
      boolean fmaster;
 {
-  if (! fport_set (PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
+  if (! fconn_set (qconn, PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
 		   XONXOFF_OFF))
     return FALSE;
   zEbuf = (char *) xmalloc (CEBUFSIZE);
@@ -114,11 +93,14 @@ festart (fmaster)
 
 /* Stop the protocol.  */
 
+/*ARGSUSED*/
 boolean 
-feshutdown ()
+feshutdown (qconn)
+     struct sconnection *qconn;
 {
   xfree ((pointer) zEbuf);
   zEbuf = NULL;
+  cEtimeout = 120;
   return TRUE;
 }
 
@@ -126,20 +108,23 @@ feshutdown ()
    null byte.   */
 
 boolean
-fesendcmd (z)
+fesendcmd (qconn, z)
+     struct sconnection *qconn;
      const char *z;
 {
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fesendcmd: Sending command \"%s\"", z);
 
-  return fsend_data (z, strlen (z) + 1, TRUE);
+  return fsend_data (qconn, z, strlen (z) + 1, TRUE);
 }
 
 /* Get space to be filled with data.  We provide a buffer which has
    20 bytes at the start available to hold the length.  */
 
+/*ARGSUSED*/
 char *
-zegetspace (pclen)
-     int *pclen;
+zegetspace (qconn, pclen)
+     struct sconnection *qconn;
+     size_t *pclen;
 {
   *pclen = CEBUFSIZE;
   return zEbuf;
@@ -150,9 +135,10 @@ zegetspace (pclen)
    header bytes in a single call.  */
 
 boolean
-fesenddata (zdata, cdata)
+fesenddata (qconn, zdata, cdata)
+     struct sconnection *qconn;
      char *zdata;
-     int cdata;
+     size_t cdata;
 {
 #if DEBUG > 0
   /* Keep track of the number of bytes we send out to make sure it all
@@ -167,24 +153,26 @@ fesenddata (zdata, cdata)
 
   /* We pass FALSE to fsend_data since we don't expect the other side
      to be sending us anything just now.  */
-  return fsend_data (zdata, cdata, FALSE);
+  return fsend_data (qconn, zdata, cdata, FALSE);
 }
 
 /* Process any data in the receive buffer.  */
 
 boolean
-feprocess (pfexit)
+feprocess (qconn, pfexit)
+     struct sconnection *qconn;
      boolean *pfexit;
 {
-  return feprocess_data (pfexit, (int *) NULL);
+  return feprocess_data (qconn, pfexit, (size_t *) NULL);
 }
 
 /* Process data and return the amount we need in *pfneed.  */
 
 static boolean
-feprocess_data (pfexit, pcneed)
+feprocess_data (qconn, pfexit, pcneed)
+     struct sconnection *qconn;
      boolean *pfexit;
-     int *pcneed;
+     size_t *pcneed;
 {
   int cinbuf, cfirst, clen;
 
@@ -206,7 +194,7 @@ feprocess_data (pfexit, pcneed)
 	  if (cfirst > cinbuf)
 	    cfirst = cinbuf;
 
-	  pnull = memchr (abPrecbuf + iPrecstart, '\0', cfirst);
+	  pnull = memchr (abPrecbuf + iPrecstart, '\0', (size_t) cfirst);
 	  if (pnull != NULL)
 	    cfirst = pnull - (abPrecbuf + iPrecstart) + 1;
 
@@ -214,8 +202,8 @@ feprocess_data (pfexit, pcneed)
 			  "feprocess_data: Got %d command bytes",
 			  cfirst);
 
-	  if (! fgot_data (abPrecbuf + iPrecstart, cfirst, TRUE, FALSE,
-			   pfexit))
+	  if (! fgot_data (abPrecbuf + iPrecstart, (size_t) cfirst, TRUE,
+			   FALSE, pfexit, qconn))
 	    return FALSE;
 
 	  iPrecstart = (iPrecstart + cfirst) % CRECBUFLEN;
@@ -250,11 +238,11 @@ feprocess_data (pfexit, pcneed)
 
       cfirst = CRECBUFLEN - iPrecstart;
       if (cfirst >= CEFRAMELEN)
-	memcpy (ab, abPrecbuf + iPrecstart, CEFRAMELEN);
+	memcpy (ab, abPrecbuf + iPrecstart, (size_t) CEFRAMELEN);
       else
 	{
-	  memcpy (ab, abPrecbuf + iPrecstart, cfirst);
-	  memcpy (ab + cfirst, abPrecbuf, CEFRAMELEN - cfirst);
+	  memcpy (ab, abPrecbuf + iPrecstart, (size_t) cfirst);
+	  memcpy (ab + cfirst, abPrecbuf, (size_t) CEFRAMELEN - cfirst);
 	}
 
       ab[CEFRAMELEN] = '\0';
@@ -283,13 +271,13 @@ feprocess_data (pfexit, pcneed)
 		      "feprocess_data: Got %d data bytes",
 		      cfirst);
 
-      if (! fgot_data (abPrecbuf + iPrecstart, cfirst, FALSE, TRUE,
-		       pfexit))
+      if (! fgot_data (abPrecbuf + iPrecstart, (size_t) cfirst, FALSE,
+		       TRUE, pfexit, qconn))
 	return FALSE;
       if (cfirst < clen)
 	{
-	  if (! fgot_data (abPrecbuf, clen - cfirst, FALSE, TRUE,
-			   pfexit))
+	  if (! fgot_data (abPrecbuf, (size_t) (clen - cfirst), FALSE, TRUE,
+			   pfexit, qconn))
 	    return FALSE;
 	}
 
@@ -298,7 +286,7 @@ feprocess_data (pfexit, pcneed)
 
       if (cEbytes == 0)
 	{
-	  if (! fgot_data (abPrecbuf, 0, FALSE, TRUE, pfexit))
+	  if (! fgot_data (abPrecbuf, (size_t) 0, FALSE, TRUE, pfexit, qconn))
 	    return FALSE;
 	  if (*pfexit)
 	    return TRUE;
@@ -322,19 +310,20 @@ feprocess_data (pfexit, pcneed)
    of a command or a file.  */
 
 boolean
-fewait ()
+fewait (qconn)
+     struct sconnection *qconn;
 {
   while (TRUE)
     {
       boolean fexit;
-      int cneed, crec;
+      size_t cneed, crec;
 
-      if (! feprocess_data (&fexit, &cneed))
+      if (! feprocess_data (qconn, &fexit, &cneed))
 	return FALSE;
       if (fexit)
 	return TRUE;
 
-      if (! freceive_data (cneed, &crec, cEtimeout, TRUE))
+      if (! freceive_data (qconn, cneed, &crec, cEtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)
@@ -349,7 +338,8 @@ fewait ()
    to set fEfile correctly.  */
 
 boolean
-fefile (fstart, fsend, pfredo, cbytes)
+fefile (qconn, fstart, fsend, pfredo, cbytes)
+     struct sconnection *qconn;
      boolean fstart;
      boolean fsend;
      boolean *pfredo;
@@ -368,9 +358,9 @@ fefile (fstart, fsend, pfredo, cbytes)
 			  "Protocol 'e' starting to send %ld bytes",
 			  cbytes);
 
-	  bzero (ab, CEFRAMELEN);
+	  bzero (ab, (size_t) CEFRAMELEN);
 	  sprintf (ab, "%ld", cbytes);
-	  if (! fsend_data (ab, CEFRAMELEN, TRUE))
+	  if (! fsend_data (qconn, ab, (size_t) CEFRAMELEN, TRUE))
 	    return FALSE;
 	  cEbytes = cbytes;
 	}

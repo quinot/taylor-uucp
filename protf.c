@@ -20,67 +20,20 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.15  1992/03/30  04:49:10  ian
-   Niels Baggesen: added debugging types abnormal and uucp-proto
-
-   Revision 1.14  1992/03/17  01:03:03  ian
-   Miscellaneous cleanup
-
-   Revision 1.13  1992/03/13  22:59:25  ian
-   Have breceive_char go through freceive_data
-
-   Revision 1.12  1992/03/12  19:56:10  ian
-   Debugging based on types rather than number
-
-   Revision 1.11  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.10  1992/01/16  18:16:58  ian
-   Niels Baggesen: add some debugging messages
-
-   Revision 1.9  1992/01/14  04:35:23  ian
-   Chip Salzenberg: implement this patch correctly
-
-   Revision 1.8  1992/01/14  04:21:59  ian
-   Chip Salzenberg: avoid use before set warning
-
-   Revision 1.7  1991/12/31  19:34:19  ian
-   Added number of bytes to pffile protocol entry point
-
-   Revision 1.6  1991/12/20  03:02:01  ian
-   Oleg Tabarovsky: added statistical messages to 'g' and 'f' protocols
-
-   Revision 1.5  1991/12/20  00:01:54  ian
-   Franc,ois Pinard: don't crash 'f' protocol because of an illegal byte
-
-   Revision 1.4  1991/11/16  00:31:01  ian
-   Increased default 't' and 'f' protocol timeouts
-
-   Revision 1.3  1991/11/15  23:32:15  ian
-   Don't use 1 second timeouts--loses data on System V
-
-   Revision 1.2  1991/11/15  21:00:59  ian
-   Efficiency hacks for 'f' and 't' protocols
-
-   Revision 1.1  1991/11/11  04:21:16  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char protf_rcsid[] = "$Id$";
+const char protf_rcsid[] = "$Id$";
 #endif
 
 #include <ctype.h>
 #include <errno.h>
 
 #include "prot.h"
-#include "port.h"
+#include "conn.h"
 #include "system.h"
 
 /* This implementation is based on code by Piet Beertema, CWI,
@@ -105,7 +58,8 @@ char protf_rcsid[] = "$Id$";
    are the printable ASCII characters.  */
 
 /* Internal functions.  */
-static boolean ffprocess_data P((boolean *pfexit, int *pcneed));
+static boolean ffprocess_data P((struct sconnection *qconn,
+				 boolean *pfexit, size_t *pcneed));
 
 /* The size of the buffer we allocate to store outgoing data in.  */
 #define CFBUFSIZE (256)
@@ -131,10 +85,10 @@ static char bFspecial;
 /* The number of times we have retried this file.  */
 static int cFretries;
 
-struct scmdtab asFproto_params[] =
+struct uuconf_cmdtab asFproto_params[] =
 {
-  { "timeout", CMDTABTYPE_INT, (pointer) &cFtimeout, NULL },
-  { "retries", CMDTABTYPE_INT, (pointer) &cFmaxretries, NULL },
+  { "timeout", UUCONF_CMDTABTYPE_INT, (pointer) &cFtimeout, NULL },
+  { "retries", UUCONF_CMDTABTYPE_INT, (pointer) &cFmaxretries, NULL },
   { NULL, 0, NULL, NULL }
 };
 
@@ -162,7 +116,8 @@ static long cFrec_retries;
 
 /*ARGSUSED*/
 boolean
-ffstart (fmaster)
+ffstart (qconn, fmaster)
+     struct sconnection *qconn;
      boolean fmaster;
 {
   cFsent_data = 0;
@@ -173,7 +128,7 @@ ffstart (fmaster)
   cFrec_retries = 0;
 
   /* Use XON/XOFF handshaking.  */
-  if (! fport_set (PARITYSETTING_DEFAULT, STRIPSETTING_SEVENBITS,
+  if (! fconn_set (qconn, PARITYSETTING_DEFAULT, STRIPSETTING_SEVENBITS,
 		   XONXOFF_ON))
     return FALSE;
 
@@ -186,8 +141,10 @@ ffstart (fmaster)
 
 /* Shutdown the protocol.  */
 
+/*ARGSIGNORED*/
 boolean
-ffshutdown ()
+ffshutdown (qconn)
+     struct sconnection *qconn;
 {
   xfree ((pointer) zFbuf);
   zFbuf = NULL;
@@ -197,6 +154,8 @@ ffshutdown ()
   if (cFsend_retries != 0 || cFrec_retries != 0)
     ulog (LOG_NORMAL, "Protocol 'f' file retries: %ld sending, %ld receiving",
 	  cFsend_retries, cFrec_retries);
+  cFtimeout = 120;
+  cFmaxretries = 2;
   return TRUE;
 }
 
@@ -204,10 +163,11 @@ ffshutdown ()
    return.  */
 
 boolean
-ffsendcmd (z)
+ffsendcmd (qconn, z)
+     struct sconnection *qconn;
      const char *z;
 {
-  int clen;
+  size_t clen;
   char *zalc;
 
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "ffsendcmd: Sending command \"%s\"", z);
@@ -215,15 +175,17 @@ ffsendcmd (z)
   clen = strlen (z);
   zalc = (char *) alloca (clen + 2);
   sprintf (zalc, "%s\r", z);
-  return fsend_data (zalc, clen + 1, TRUE);
+  return fsend_data (qconn, zalc, clen + 1, TRUE);
 }
 
 /* Get space to be filled with data.  We allocate the space from the
    heap.  */
 
+/*ARGSIGNORED*/
 char *
-zfgetspace (pclen)
-     int *pclen;
+zfgetspace (qconn, pclen)
+     struct sconnection *qconn;
+     size_t *pclen;
 {
   *pclen = CFBUFSIZE;
   if (zFbuf == NULL)
@@ -235,9 +197,10 @@ zfgetspace (pclen)
    and accumulate a checksum.  */
 
 boolean
-ffsenddata (zdata, cdata)
+ffsenddata (qconn, zdata, cdata)
+     struct sconnection *qconn;
      char *zdata;
-     int cdata;
+     size_t cdata;
 {
   char ab[CFBUFSIZE * 2];
   char *ze;
@@ -306,16 +269,17 @@ ffsenddata (zdata, cdata)
 
   /* Passing FALSE tells fsend_data not to bother looking for incoming
      information, since we really don't expect any.  */
-  return fsend_data (ab, ze - ab, FALSE);
+  return fsend_data (qconn, ab, (size_t) (ze - ab), FALSE);
 }
 
 /* Process any data in the receive buffer.  */
 
 boolean
-ffprocess (pfexit)
+ffprocess (qconn, pfexit)
+     struct sconnection *qconn;
      boolean *pfexit;
 {
-  return ffprocess_data (pfexit, (int *) NULL);
+  return ffprocess_data (qconn, pfexit, (size_t *) NULL);
 }
 
 /* Process data and return the amount of data we are looking for in
@@ -324,9 +288,10 @@ ffprocess (pfexit)
    for the checksum.  */
 
 static boolean
-ffprocess_data (pfexit, pcneed)
+ffprocess_data (qconn, pfexit, pcneed)
+     struct sconnection *qconn;
      boolean *pfexit;
-     int *pcneed;
+     size_t *pcneed;
 {
   int i;
   register unsigned int itmpchk;
@@ -350,13 +315,14 @@ ffprocess_data (pfexit, pcneed)
 		  abPrecbuf[i] = '\0';
 		  istart = iPrecstart;
 		  iPrecstart = (i + 1) % CRECBUFLEN;
-		  return fgot_data (abPrecbuf + istart, i - istart + 1,
-				    TRUE, FALSE, pfexit);
+		  return fgot_data (abPrecbuf + istart,
+				    (size_t) (i - istart + 1),
+				    TRUE, FALSE, pfexit, qconn);
 		}
 	    }
 
-	  if (! fgot_data (abPrecbuf + iPrecstart, i - iPrecstart,
-			   TRUE, FALSE, pfexit))
+	  if (! fgot_data (abPrecbuf + iPrecstart, (size_t) (i - iPrecstart),
+			   TRUE, FALSE, pfexit, qconn))
 	    return FALSE;
 
 	  iPrecstart = i % CRECBUFLEN;
@@ -415,8 +381,8 @@ ffprocess_data (pfexit, pcneed)
 		      /* Don't count the checksum in the received bytes.  */
 		      cFrec_bytes += zfrom - zstart - 2;
 		      cFrec_data += zto - zstart;
-		      if (! fgot_data (zstart, zto - zstart, FALSE,
-				       TRUE, pfexit))
+		      if (! fgot_data (zstart, (size_t) (zto - zstart),
+				       FALSE, TRUE, pfexit, qconn))
 			return FALSE;
 		    }
 
@@ -429,7 +395,8 @@ ffprocess_data (pfexit, pcneed)
 		  /* Tell fgot_data that we've read the entire file by
 		     passing 0 length data.  This will set *pfexit to
 		     TRUE and call fffile to verify the checksum.  */
-		  return fgot_data ((char *) NULL, 0, FALSE, TRUE, pfexit);
+		  return fgot_data ((char *) NULL, (size_t) 0, FALSE, TRUE,
+				    pfexit, qconn);
 		}
 
 	      /* Here we have encountered a special character that
@@ -486,7 +453,8 @@ ffprocess_data (pfexit, pcneed)
 			  zto - zstart);
 
 	  cFrec_data += zto - zstart;
-	  if (! fgot_data (zstart, zto - zstart, FALSE, TRUE, pfexit))
+	  if (! fgot_data (zstart, (size_t) (zto - zstart), FALSE, TRUE,
+			   pfexit, qconn))
 	    return FALSE;
 	}
 
@@ -518,26 +486,24 @@ ffprocess_data (pfexit, pcneed)
    command or a file.  */
 
 boolean
-ffwait ()
+ffwait (qconn)
+     struct sconnection *qconn;	
 {
   while (TRUE)
     {
       boolean fexit;
-      int cneed, crec;
+      size_t cneed, crec;
 
-      if (! ffprocess_data (&fexit, &cneed))
+      if (! ffprocess_data (qconn, &fexit, &cneed))
 	return FALSE;
       if (fexit)
 	return TRUE;
 
-      /* We only ask for one character at a time.  This could wind up
-	 being quite inefficient, since we might only get one
-	 character back from each read.  We really want to do
-	 something like get all available characters, then sleep for
-	 half a second and get all available characters again, and
-	 keep this up until we don't get anything after sleeping.  */
-
-      if (! freceive_data (cneed, &crec, cFtimeout, TRUE))
+      /* We really want to do something like get all available
+	 characters, then sleep for half a second and get all
+	 available characters again, and keep this up until we don't
+	 get anything after sleeping.  */
+      if (! freceive_data (qconn, cneed, &crec, cFtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)
@@ -554,7 +520,8 @@ ffwait ()
 
 /*ARGSUSED*/
 boolean
-fffile (fstart, fsend, pfredo, cbytes)
+fffile (qconn, fstart, fsend, pfredo, cbytes)
+     struct sconnection *qconn;
      boolean fstart;
      boolean fsend;
      boolean *pfredo;
@@ -584,11 +551,11 @@ fffile (fstart, fsend, pfredo, cbytes)
 	  /* Send the final checksum.  */
 
 	  sprintf (ab, "\176\176%04x\r", iFcheck & 0xffff);
-	  if (! fsend_data (ab, 7, TRUE))
+	  if (! fsend_data (qconn, ab, (size_t) 7, TRUE))
 	    return FALSE;
 
 	  /* Now look for the acknowledgement.  */
-	  z = zgetcmd ();
+	  z = zgetcmd (qconn);
 	  if (z == NULL)
 	    return FALSE;
 
@@ -623,7 +590,7 @@ fffile (fstart, fsend, pfredo, cbytes)
 	  fFfile = FALSE;
 
 	  /* Get the checksum.  */
-	  z = zgetcmd ();
+	  z = zgetcmd (qconn);
 	  if (z == NULL)
 	    return FALSE;
 
@@ -649,7 +616,7 @@ fffile (fstart, fsend, pfredo, cbytes)
 	      if (cFretries > cFmaxretries)
 		{
 		  ulog (LOG_ERROR, "Too many retries");
-		  (void) ffsendcmd ("Q");
+		  (void) ffsendcmd (qconn, "Q");
 		  return FALSE;
 		}
 
@@ -660,12 +627,12 @@ fffile (fstart, fsend, pfredo, cbytes)
 	      ++cFrec_retries;
 
 	      /* Send an R to tell the other side to resend the file.  */
-	      return ffsendcmd ("R");
+	      return ffsendcmd (qconn, "R");
 	    }
 
 	  /* Send a G to tell the other side the file was received
 	     correctly.  */
-	  return ffsendcmd ("G");
+	  return ffsendcmd (qconn, "G");
 	}
     }
 }

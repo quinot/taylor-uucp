@@ -20,36 +20,13 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.7  1992/02/24  20:07:43  ian
-   John Theus: some systems don't have <fcntl.h>
-
-   Revision 1.6  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.5  1991/12/29  04:04:18  ian
-   Added a bunch of extern definitions
-
-   Revision 1.4  1991/12/11  03:59:19  ian
-   Create directories when necessary; don't just assume they exist
-
-   Revision 1.3  1991/12/01  02:23:12  ian
-   Niels Baggesen: don't multiply include <unistd.h>
-
-   Revision 1.2  1991/09/19  03:23:34  ian
-   Chip Salzenberg: append to private debugging file, don't overwrite it
-
-   Revision 1.1  1991/09/10  19:39:38  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char copy_rcsid[] = "$Id$";
+const char copy_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
@@ -57,9 +34,6 @@ char copy_rcsid[] = "$Id$";
 
 #include "system.h"
 #include "sysdep.h"
-
-/* External functions.  */
-extern int fclose ();
 
 /* Copy one file to another.  */
 
@@ -162,7 +136,10 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
       if (errno == ENOENT && fmkdirs)
 	{
 	  if (! fsysdep_make_dirs (zto, fpublic))
-	    return FALSE;
+	    {
+	      (void) close (ofrom);
+	      return FALSE;
+	    }
 	  oto = creat (zto,
 		       fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
 	}

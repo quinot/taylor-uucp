@@ -20,28 +20,21 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
-#include "uucp.h"
-
 #if USE_RCS_ID
-char uudir_rcsid[] = "$Id$";
-#endif
-
-#include <pwd.h>
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
+const char uudir_rcsid[] = "$Id$";
 #endif
 
 #include "sysdep.h"
 
+#include <pwd.h>
+
 /* External functions.  */
-extern int setuid ();
+#ifndef getpwnam
 extern struct passwd *getpwnam ();
+#endif
 
 /* This is a simple program which sets its real uid to uucp and then
    invokes /bin/mkdir.  It is only used if the system does not support

@@ -20,117 +20,13 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.34  1992/04/22  23:29:24  ian
-   Changed arguments to usysdep_initialize
-
-   Revision 1.33  1992/04/14  17:09:40  ian
-   Jarmo Raiha: heuristic for whether to get current directory can fail
-
-   Revision 1.32  1992/03/15  04:51:17  ian
-   Keep an array of signals we've received rather than a single variable
-
-   Revision 1.31  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.30  1992/03/02  15:20:43  ian
-   Check iSignal before entering fread
-
-   Revision 1.29  1992/02/29  04:07:08  ian
-   Added -j option to uucp and uux
-
-   Revision 1.28  1992/02/29  01:06:59  ian
-   Chip Salzenberg: recheck file permissions before sending
-
-   Revision 1.27  1992/02/28  05:06:15  ian
-   T. William Wells: fsysdep_catch must be a macro
-
-   Revision 1.26  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.25  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.24  1992/02/08  22:33:32  ian
-   Only get the current working directory if it's going to be needed
-
-   Revision 1.23  1992/02/08  20:33:57  ian
-   Handle all possible signals raised by abort
-
-   Revision 1.22  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.21  1992/02/02  20:34:36  ian
-   Niels Baggesen: must check user permissions on access to local files
-
-   Revision 1.20  1992/01/21  19:39:12  ian
-   Chip Salzenberg: uucp and uux start uucico for right system, not any
-
-   Revision 1.19  1992/01/15  07:06:29  ian
-   Set configuration directory in Makefile rather than sysdep.h
-
-   Revision 1.18  1992/01/05  03:09:17  ian
-   Changed abProgram and abVersion to non const to avoid compiler bug
-
-   Revision 1.17  1992/01/05  02:51:38  ian
-   Allocate enough space for log message
-
-   Revision 1.16  1991/12/29  04:04:18  ian
-   Added a bunch of extern definitions
-
-   Revision 1.15  1991/12/21  21:16:05  ian
-   Franc,ois Pinard: remove parentheses from ZSHELLSEPS
-
-   Revision 1.14  1991/12/20  03:07:54  ian
-   Added space and tab to ZSHELLSEPS to stop command at whitespace
-
-   Revision 1.13  1991/12/18  03:54:14  ian
-   Made error messages to terminal appear more normal
-
-   Revision 1.12  1991/12/14  16:09:07  ian
-   Added -l option to uux to link files into the spool directory
-
-   Revision 1.11  1991/12/11  03:59:19  ian
-   Create directories when necessary; don't just assume they exist
-
-   Revision 1.10  1991/12/07  03:03:12  ian
-   Split arguments like sh; request sh execution if any metachars appear
-
-   Revision 1.9  1991/11/21  22:17:06  ian
-   Add version string, print version when printing usage
-
-   Revision 1.8  1991/11/15  19:17:32  ian
-   Hannu Strang: copy stdin using fread/fwrite, not fgets/fputs
-
-   Revision 1.7  1991/11/13  23:08:40  ian
-   Expand remote pathnames in uucp and uux; fix up uux special cases
-
-   Revision 1.6  1991/11/08  21:53:17  ian
-   Brian Campbell: fix argument handling when looking for '-'
-
-   Revision 1.5  1991/11/07  22:52:49  ian
-   Chip Salzenberg: avoid recursive strtok, handle redirection better
-
-   Revision 1.4  1991/09/19  03:23:34  ian
-   Chip Salzenberg: append to private debugging file, don't overwrite it
-
-   Revision 1.3  1991/09/19  02:30:37  ian
-   From Chip Salzenberg: check whether signal is ignored differently
-
-   Revision 1.2  1991/09/11  02:33:14  ian
-   Added ffork argument to fsysdep_run
-
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char uux_rcsid[] = "$Id$";
+const char uux_rcsid[] = "$Id$";
 #endif
 
 #include <ctype.h>
@@ -140,9 +36,6 @@ char uux_rcsid[] = "$Id$";
 
 #include "system.h"
 #include "sysdep.h"
-
-/* External functions.  */
-extern int fclose ();
 
 /* These character lists should, perhaps, be in sysdep.h.  */
 
@@ -166,8 +59,6 @@ char abProgram[] = "uux";
 /* Long getopt options.  */
 
 static const struct option asXlongopts[] = { { NULL, 0, NULL, 0 } };
-
-const struct option *_getopt_long_options = asXlongopts;
 
 /* The execute file we are creating.  */
 
@@ -197,7 +88,6 @@ main (argc, argv)
      int argc;
      char **argv;
 {
-  int iopt;
   /* -a: requestor address for status reports.  */
   const char *zrequestor = NULL;
   /* -b: if true, return standard input on error.  */
@@ -227,40 +117,44 @@ main (argc, argv)
   boolean fexpand = TRUE;
   /* -z: report status only on error.  */
   boolean ferror_ack = FALSE;
+  int iopt;
+  pointer puuconf;
+  int iuuconf;
+  const char *zlocalname;
+  const char *zxqtloc;
   int i;
-  int clen;
+  size_t clen;
   char *zargs;
   char *zarg;
   char *zcmd;
+  const char *zsys;
   char *zexclam;
   boolean fgetcwd;
   const char *zuser;
-  struct ssysteminfo sxqtsys;
-  const struct ssysteminfo *qxqtsys;
+  struct uuconf_system sxqtsys;
   boolean fxqtlocal;
   char **pzargs;
   int calloc_args;
   int cargs;
-  const char *zxqtname;
+  char *zxqtname;
   char abxqt_tname[CFILE_NAME_LEN];
   char abxqt_xname[CFILE_NAME_LEN];
   boolean fneedshell;
   char *zprint;
-  const char *zcall_system;
+  char *zcall_system;
   boolean fcall_any;
   boolean fexit;
 
   /* We need to be able to read a single - as an option, which getopt
      won't do.  So that we can still use getopt, we run through the
      options looking for an option "-"; if we find one we change it to
-     "-p", which is an equivalent option.  */
-
+     "-p", which is equivalent to "-".  */
   for (i = 1; i < argc; i++)
     {
       if (argv[i][0] != '-')
 	break;
       if (argv[i][1] == '\0')
-	argv[i] = xstrdup ("-p");
+	argv[i] = zbufcpy ("-p");
       else
 	{
 	  const char *z;
@@ -282,7 +176,6 @@ main (argc, argv)
 
   /* The leading + in the getopt string means to stop processing
      options as soon as a non-option argument is seen.  */
-
   while ((iopt = getopt (argc, argv, "+a:bcCg:I:jlnprs:Wx:z")) != EOF)
     {
       switch (iopt)
@@ -311,7 +204,8 @@ main (argc, argv)
 
 	case 'I':
 	  /* Configuration file name.  */ 
-	  zconfig = optarg;
+	  if (fsysdep_other_config (optarg))
+	    zconfig = optarg;
 	  break;
 
 	case 'j':
@@ -376,7 +270,7 @@ main (argc, argv)
 	}
     }
 
-  if (! FGRADE_LEGAL (bgrade))
+  if (! UUCONF_GRADE_LEGAL (bgrade))
     {
       ulog (LOG_ERROR, "Ignoring illegal grade");
       bgrade = BDEFAULT_UUX_GRADE;
@@ -385,7 +279,31 @@ main (argc, argv)
   if (optind == argc)
     uxusage ();
 
-  uread_config (zconfig);
+  iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+#if DEBUG > 1
+  {
+    const char *zdebug;
+
+    iuuconf = uuconf_debuglevel (puuconf, &zdebug);
+    if (iuuconf != UUCONF_SUCCESS)
+      ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    if (zdebug != NULL)
+      iDebug |= idebug_parse (zdebug);
+  }
+#endif
+
+  iuuconf = uuconf_localname (puuconf, &zlocalname);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      zlocalname = zsysdep_localname ();
+      if (zlocalname == NULL)
+	exit (EXIT_FAILURE);
+    }
+  else if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
   /* The command and files arguments could be quoted in any number of
      ways, so we split them apart ourselves.  We do this before
@@ -415,7 +333,6 @@ main (argc, argv)
      and characters in ZSHELLSEPS.  We remove whitespace.  We
      separate the redirection characters '>' and '<' into their
      own arguments to make them easier to process below.  */
-
   calloc_args = 10;
   pzargs = (char **) xmalloc (calloc_args * sizeof (char *));
   cargs = 0;
@@ -436,8 +353,8 @@ main (argc, argv)
 	  clen = strcspn (zarg, ZSHELLSEPS);
 	  if (clen > 0)
 	    {
-	      pzargs[cargs] = (char *) xmalloc (clen + 1);
-	      strncpy (pzargs[cargs], zarg, clen);
+	      pzargs[cargs] = zbufalc (clen + 1);
+	      memcpy (pzargs[cargs], zarg, clen);
 	      pzargs[cargs][clen] = '\0';
 	      ++cargs;
 	      zarg += clen;
@@ -449,8 +366,8 @@ main (argc, argv)
 	      clen = strspn (zarg, ZSHELLNONREDIRSEPS);
 	      if (clen == 0)
 		clen = 1;
-	      pzargs[cargs] = (char *) xmalloc (clen + 1);
-	      strncpy (pzargs[cargs], zarg, clen);
+	      pzargs[cargs] = zbufalc (clen + 1);
+	      memcpy (pzargs[cargs], zarg, clen);
 	      pzargs[cargs][clen] = '\0';
 	      ++cargs;
 	      zarg += clen;
@@ -500,7 +417,7 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (fgetcwd ? INIT_GETCWD : 0);
+  usysdep_initialize (puuconf, fgetcwd ? INIT_GETCWD : 0);
 
   ulog_fatal_fn (uxabort);
 
@@ -510,47 +427,55 @@ main (argc, argv)
   zexclam = strchr (zcmd, '!');
   if (zexclam == NULL)
     {
-      qxqtsys = &sLocalsys;
+      zsys = zlocalname;
       fxqtlocal = TRUE;
     }
   else
     {
       *zexclam = '\0';
+      zsys = zcmd;
+      zcmd = zexclam + 1;
 
-      if (*zcmd == '\0' || strcmp (zcmd, zLocalname) == 0)
+      if (*zsys == '\0' || strcmp (zsys, zlocalname) == 0)
 	{
-	  qxqtsys = &sLocalsys;
+	  zsys = zlocalname;
 	  fxqtlocal = TRUE;
 	}
       else
-	{
-	  if (fread_system_info (zcmd, &sxqtsys))
-	    qxqtsys = &sxqtsys;
-	  else
-	    {
-	      if (! fUnknown_ok)
-		ulog (LOG_FATAL, "System %s unknown", zcmd);
-	      qxqtsys = &sUnknown;
-	      sUnknown.zname = zcmd;
-	    }
-
-	  fxqtlocal = FALSE;
-	}
-
-      zcmd = zexclam + 1;
+	fxqtlocal = FALSE;
     }
 
-  /* Make sure we have a spool directory.  */
+  iuuconf = uuconf_system_info (puuconf, zsys, &sxqtsys);
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      if (iuuconf != UUCONF_NOT_FOUND)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
-  if (! fsysdep_make_spool_dir (qxqtsys))
-    uxabort ();
+      if (fxqtlocal)
+	{
+	  iuuconf = uuconf_system_local (puuconf, &sxqtsys);
+	  if (iuuconf != UUCONF_SUCCESS)
+	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+	  sxqtsys.uuconf_zname = (char *) zlocalname;
+	}
+      else
+	{
+	  if (! funknown_system (puuconf, zsys, &sxqtsys))
+	    ulog (LOG_FATAL, "%s: System not found", zsys);
+	}
+    }
+
+  /* Get the local name the remote system know us as.  */
+  zxqtloc = sxqtsys.uuconf_zlocalname;
+  if (zxqtloc == NULL)
+    zxqtloc = zlocalname;
 
   /* Name and open the execute file.  If the execution is to occur on
      a remote system, we must create a data file and copy it over.  */
   if (fxqtlocal)
     zxqtname = zsysdep_xqt_file_name ();
   else
-    zxqtname = zsysdep_data_file_name (qxqtsys, 'X', abxqt_tname,
+    zxqtname = zsysdep_data_file_name (&sxqtsys, zxqtloc, 'X', abxqt_tname,
 				       (char *) NULL, abxqt_xname);
   if (zxqtname == NULL)
     uxabort ();
@@ -559,21 +484,20 @@ main (argc, argv)
   if (eXxqt_file == NULL)
     uxabort ();
 
-  uxrecord_file (xstrdup (zxqtname));
+  uxrecord_file (zxqtname);
 
   /* Specify the user.  */
-  uxadd_xqt_line ('U', zuser, zLocalname);
+  uxadd_xqt_line ('U', zuser, zxqtloc);
 
   /* Look through the arguments.  Any argument containing an
      exclamation point character is interpreted as a file name, and is
      sent to the appropriate system.  */
-
   zcall_system = NULL;
   fcall_any = FALSE;
 
   for (i = 0; i < cargs; i++)
     {
-      const char *zsystem, *zconst;
+      const char *zsystem;
       char *zfile;
       boolean finput, foutput;
       boolean flocal;
@@ -581,7 +505,6 @@ main (argc, argv)
       /* Check for a parenthesized argument; remove the parentheses
 	 and otherwise ignore it (this is how an exclamation point is
 	 quoted).  */
-
       if (pzargs[i][0] == '(')
 	{
 	  clen = strlen (pzargs[i]);
@@ -594,7 +517,6 @@ main (argc, argv)
 	}
 
       /* Check whether we are doing a redirection.  */
-
       finput = FALSE;
       foutput = FALSE;
       if (i + 1 < cargs)
@@ -614,15 +536,13 @@ main (argc, argv)
 
       /* If there is no exclamation point and no redirection, this
 	 argument is left untouched.  */
-
       if (zexclam == NULL && ! finput && ! foutput)
 	continue;
 
       /* Get the system name and file name for this file.  */
-
       if (zexclam == NULL)
 	{
-	  zsystem = zLocalname;
+	  zsystem = zlocalname;
 	  zfile = pzargs[i];
 	  flocal = TRUE;
 	}
@@ -630,44 +550,42 @@ main (argc, argv)
 	{
 	  *zexclam = '\0';
 	  zsystem = pzargs[i];
-	  if (zsystem[0] != '\0')
-	    flocal = strcmp (zsystem, zLocalname) == 0;
+	  if (*zsystem != '\0')
+	    flocal = strcmp (zsystem, zlocalname) == 0;
 	  else
 	    {
-	      zsystem = zLocalname;
+	      zsystem = zlocalname;
 	      flocal = TRUE;
 	    }
 	  zfile = zexclam + 1;
 	}
 
-      /* Add the current working directory to the file name if it's
-	 not an absolute path.  */
-      if (fexpand || flocal)
-	{
-	  zconst = zsysdep_add_cwd (zfile, flocal);
-	  if (zconst == NULL)
-	    uxabort ();
-	  zfile = xstrdup (zconst);
-	}
+      /* Turn the file into an absolute path.  */
+      if (flocal)
+	zfile = zsysdep_local_file_cwd (zfile, sxqtsys.uuconf_zpubdir);
+      else if (fexpand)
+	zfile = zsysdep_add_cwd (zfile);
+      if (zfile == NULL)
+	uxabort ();
 
       /* Check for output redirection.  We strip this argument out,
 	 and create an O command which tells uuxqt where to send the
 	 output.  */
-
       if (foutput)
 	{
 	  if (flocal)
 	    {
-	      if (! fin_directory_list (qxqtsys, zfile,
-					qxqtsys->zremote_receive, TRUE,
+	      if (! fin_directory_list (zfile,
+					sxqtsys.uuconf_pzremote_receive,
+					sxqtsys.uuconf_zpubdir, TRUE,
 					FALSE, (const char *) NULL))
 		ulog (LOG_FATAL, "Not permitted to create %s", zfile);
 	    }
 
-	  if (strcmp (zsystem, qxqtsys->zname) == 0)
+	  if (strcmp (zsystem, sxqtsys.uuconf_zname) == 0)
 	    uxadd_xqt_line ('O', zfile, (const char *) NULL);
 	  else
-	    uxadd_xqt_line ('O', zfile, zsystem);
+	    uxadd_xqt_line ('O', zfile, flocal ? zxqtloc : zsystem);
 	  pzargs[i] = NULL;
 	  continue;
 	}
@@ -682,7 +600,7 @@ main (argc, argv)
       if (flocal)
 	{
 	  char *zuse;
-	  const char *zdata;
+	  char *zdata;
 	  char abtname[CFILE_NAME_LEN];
 	  char abdname[CFILE_NAME_LEN];
 
@@ -696,29 +614,27 @@ main (argc, argv)
 	     to another system, we must set up a transfer request.
 	     First make sure the user has legitimate access, since we
 	     are running setuid.  */
-
 	  if (! fsysdep_access (zfile))
 	    uxabort ();
 
 	  if (fcopy || flink || fxqtlocal)
 	    {
-	      char *zdup;
 	      boolean fdid;
 
-	      zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname,
-					      abdname, (char *) NULL);
+	      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
+					      abtname, abdname,
+					      (char *) NULL);
 	      if (zdata == NULL)
 		uxabort ();
 
-	      zdup = xstrdup (zdata);
-	      uxrecord_file (zdup);
+	      uxrecord_file (zdata);
 
 	      fdid = FALSE;
 	      if (flink)
 		{
 		  boolean fworked;
 
-		  if (! fsysdep_link (zfile, zdup, &fworked))
+		  if (! fsysdep_link (zfile, zdata, &fworked))
 		    uxabort ();
 
 		  if (fworked)
@@ -730,11 +646,9 @@ main (argc, argv)
 
 	      if (! fdid)
 		{
-		  if (! fcopy_file (zfile, zdup, FALSE, TRUE))
+		  if (! fcopy_file (zfile, zdata, FALSE, TRUE))
 		    uxabort ();
 		}
-
-	      xfree ((pointer) zdup);
 
 	      zuse = abtname;
 	    }
@@ -743,19 +657,20 @@ main (argc, argv)
 	      /* Make sure the daemon can access the file.  */
 	      if (! fsysdep_daemon_access (zfile))
 		uxabort ();
-	      if (! fin_directory_list (&sLocalsys, zfile,
-					sLocalsys.zlocal_send,
-					TRUE, TRUE, zuser))
+	      if (! fin_directory_list (zfile, sxqtsys.uuconf_pzlocal_send,
+					sxqtsys.uuconf_zpubdir, TRUE,
+					TRUE, zuser))
 		ulog (LOG_FATAL, "Not permitted to send from %s",
 		      zfile);
 
 	      zuse = zfile;
 
-	      zdata = zsysdep_data_file_name (qxqtsys, bgrade,
+	      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
 					      (char *) NULL, abdname,
 					      (char *) NULL);
 	      if (zdata == NULL)
 		uxabort ();
+	      ubuffree (zdata);
 	      strcpy (abtname, "D.0");
 	    }
 
@@ -779,17 +694,17 @@ main (argc, argv)
 		}
 	      else
 		{
-		  const char *zbase;
+		  char *zbase;
 
 		  zbase = zsysdep_base_name (zfile);
 		  if (zbase == NULL)
 		    uxabort ();
 		  uxadd_xqt_line ('F', abdname, zbase);
-		  pzargs[i] = xstrdup (zbase);
+		  pzargs[i] = zbase;
 		}
 	    }
 	}
-      else if (strcmp (qxqtsys->zname, zsystem) == 0)
+      else if (strcmp (sxqtsys.uuconf_zname, zsystem) == 0)
 	{
 	  /* The file is already on the system where the command is to
 	     be executed.  */
@@ -800,146 +715,98 @@ main (argc, argv)
 	}
       else
 	{
-	  struct ssysteminfo sfromsys;
-	  const struct ssysteminfo *qfromsys;
+	  struct uuconf_system sfromsys;
 	  char abtname[CFILE_NAME_LEN];
-	  char abdname[CFILE_NAME_LEN];
-	  char *ztemp;
 	  struct scmd s;
-	  const char *zjobid;
+	  char *zjobid;
 
-	  /* We need to request a remote file.  Make sure we have a
-	     spool directory for the remote system.  */
-
-	  if (! fread_system_info (zsystem, &sfromsys))
+	  /* We need to request a remote file.  */
+	  iuuconf = uuconf_system_info (puuconf, zsystem, &sfromsys);
+	  if (iuuconf != UUCONF_SUCCESS)
 	    {
-	      if (! fUnknown_ok)
-		ulog (LOG_FATAL, "System %s unknown", zsystem);
-	      sfromsys = sUnknown;
-	      sfromsys.zname = zsystem;
-	    }
-	  qfromsys = &sfromsys;
-
-	  if (! fsysdep_make_spool_dir (qfromsys))
-	    uxabort ();
-
-	  /* We want the file to wind up in the spool directory of the
-	     local system (whether the execution is occurring
-	     locally or not); we have to use an absolute file name
-	     here, because otherwise the file would wind up in the
-	     spool directory of the system it is coming from.  */
-
-	  if (! fxqtlocal)
-	    {
-	      if (! fsysdep_make_spool_dir (&sLocalsys))
-		uxabort ();
+	      if (iuuconf != UUCONF_NOT_FOUND)
+		ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+	      if (! funknown_system (puuconf, zsystem, &sfromsys))
+		ulog (LOG_FATAL, "%s: System not found", zsystem);
 	    }
 
-	  zconst = zsysdep_data_file_name (&sLocalsys, bgrade,
-					   abtname, (char *) NULL,
-					   (char *) NULL);
-	  if (zconst == NULL)
-	    uxabort ();
-
-	  /* Request the file.  The special option '9' is a signal to
-	     uucico that it's OK to receive a file into the spool
-	     directory; normally such requests are rejected.  */
-
-	  s.bcmd = 'R';
-	  s.pseq = NULL;
-	  s.zfrom = zfile;
-	  s.zto = abtname;
-	  s.zuser = zuser;
-	  s.zoptions = "9";
-	  s.ztemp = "";
-	  s.imode = 0600;
-	  s.znotify = "";
-	  s.cbytes = -1;
-
-	  zjobid = zsysdep_spool_commands (qfromsys, bgrade, 1, &s);
-	  if (zjobid == NULL)
-	    uxabort ();
-
-	  if (fjobid)
-	    printf ("%s\n", zjobid);
-
-	  if (fcall_any)
-	    zcall_system = NULL;
-	  else
+	  if (strcmp (sfromsys.uuconf_zname, sxqtsys.uuconf_zname) == 0)
 	    {
-	      fcall_any = TRUE;
-	      zcall_system = xstrdup (qfromsys->zname);
-	    }
-
-	  /* Now if the execution is to occur on another system, we
-	     must create an execute file to send the file there.  The
-	     name of the file on the execution system is put into
-	     abdname.  */
-
-	  if (fxqtlocal)
-	    ztemp = abtname;
-	  else
-	    {
-	      const char *zxqt_file;
-	      FILE *e;
-
-	      /* Get a file name to use on the execution system.  */
-
-	      if (zsysdep_data_file_name (qxqtsys, bgrade,
-					  (char *) NULL, abdname,
-					  (char *) NULL) == NULL)
-		uxabort ();
-	      ztemp = abdname;
-
-	      /* The local spool directory was created above, if it
-		 didn't already exist.  */
-
-	      zxqt_file = zsysdep_xqt_file_name ();
-	      if (zxqt_file == NULL)
-		uxabort ();
-
-	      /* Queue up a uucp command to be executed locally once
-		 the file arrives.  We take advantage of the file
-		 renaming and moving that uuxqt does to remove the
-		 file and avoid the hassles of adding the current
-		 directory.  The -W switch to uucp prevents from
-		 adding the current directory to the remote file.  */
-
-	      e = esysdep_fopen (zxqt_file, FALSE, FALSE, TRUE);
-	      if (e == NULL)
-		uxabort ();
-
-	      eXclose = e;
-	      uxrecord_file (xstrdup (zxqt_file));
-
-	      fprintf (e, "U %s %s\n", zuser, zLocalname);
-	      fprintf (e, "F %s foo\n", abtname);
-	      fprintf (e, "C uucp -CW foo %s!%s\n", qxqtsys->zname,
-		       abdname);
-
-	      eXclose = NULL;
-	      if (fclose (e) != 0)
-		ulog (LOG_FATAL, "fclose: %s", strerror (errno));
-	    }
-
-	  /* Tell the command execution to wait until the file has
-	     been received, and tell it the real file name to use.  */
-
-	  if (finput)
-	    {
-	      uxadd_xqt_line ('F', ztemp, (char *) NULL);
-	      uxadd_xqt_line ('I', ztemp, (char *) NULL);
+	      /* The file is already on the system where the command is to
+		 be executed.  */
+	      if (finput)
+		uxadd_xqt_line ('I', zfile, (const char *) NULL);
+	      else
+		pzargs[i] = zfile;
 	    }
 	  else
 	    {
-	      const char *zbase;
+	      char *zdata;
 
-	      zbase = zsysdep_base_name (zfile);
-	      if (zbase == NULL)
+	      if (! fxqtlocal)
+		ulog (LOG_FATAL, "uux forwarding does not yet work");
+
+	      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade,
+					      abtname, (char *) NULL,
+					      (char *) NULL);
+	      if (zdata == NULL)
 		uxabort ();
-	      uxadd_xqt_line ('F', ztemp, zbase);
-	      pzargs[i] = xstrdup (zbase);
+	      ubuffree (zdata);
+
+	      /* Request the file.  The special option '9' is a signal to
+		 uucico that it's OK to receive a file into the spool
+		 directory; normally such requests are rejected.  */
+	      s.bcmd = 'R';
+	      s.pseq = NULL;
+	      s.zfrom = zfile;
+	      s.zto = abtname;
+	      s.zuser = zuser;
+	      s.zoptions = "9";
+	      s.ztemp = "";
+	      s.imode = 0600;
+	      s.znotify = "";
+	      s.cbytes = -1;
+
+	      zjobid = zsysdep_spool_commands (&sfromsys, bgrade, 1, &s);
+	      if (zjobid == NULL)
+		uxabort ();
+
+	      if (fjobid)
+		printf ("%s\n", zjobid);
+
+	      ubuffree (zjobid);
+
+	      if (fcall_any)
+		{
+		  ubuffree (zcall_system);
+		  zcall_system = NULL;
+		}
+	      else
+		{
+		  fcall_any = TRUE;
+		  zcall_system = zbufcpy (sfromsys.uuconf_zname);
+		}
+
+	      /* Tell the command execution to wait until the file has
+		 been received, and tell it the real file name.  */
+	      if (finput)
+		{
+		  uxadd_xqt_line ('F', abtname, (char *) NULL);
+		  uxadd_xqt_line ('I', abtname, (char *) NULL);
+		}
+	      else
+		{
+		  char *zbase;
+
+		  zbase = zsysdep_base_name (zfile);
+		  if (zbase == NULL)
+		    uxabort ();
+		  uxadd_xqt_line ('F', abtname, zbase);
+		  pzargs[i] = zbase;
+		}
 	    }
+
+	  (void) uuconf_system_free (puuconf, &sfromsys);
 	}
     }
 
@@ -948,13 +815,13 @@ main (argc, argv)
 
   if (fread_stdin)
     {
-      const char *zdata;
+      char *zdata;
       char abtname[CFILE_NAME_LEN];
       char abdname[CFILE_NAME_LEN];
       FILE *e;
 
-      zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname, abdname,
-				      (char *) NULL);
+      zdata = zsysdep_data_file_name (&sxqtsys, zxqtloc, bgrade, abtname,
+				      abdname, (char *) NULL);
       if (zdata == NULL)
 	uxabort ();
 
@@ -963,7 +830,7 @@ main (argc, argv)
 	uxabort ();
 
       eXclose = e;
-      uxrecord_file (xstrdup (zdata));
+      uxrecord_file (zdata);
 
       uxcopy_stdin (e);
 
@@ -986,7 +853,6 @@ main (argc, argv)
      metacharacters, we request remote execution with /bin/sh (this is
      the 'e' command in the execute file).  The default is assumed to
      be remote execution with execve.  */
-
   fprintf (eXxqt_file, "C %s", zcmd);
 
   fneedshell = FALSE;
@@ -1045,9 +911,9 @@ main (argc, argv)
 
   if (cXcmds > 0)
     {
-      const char *zjobid;
+      char *zjobid;
 
-      zjobid = zsysdep_spool_commands (qxqtsys, bgrade, cXcmds, pasXcmds);
+      zjobid = zsysdep_spool_commands (&sxqtsys, bgrade, cXcmds, pasXcmds);
       if (zjobid == NULL)
 	{
 	  ulog_close ();
@@ -1057,20 +923,25 @@ main (argc, argv)
       if (fjobid)
 	printf ("%s\n", zjobid);
 
+      ubuffree (zjobid);
+
       if (fcall_any)
-	zcall_system = NULL;
+	{
+	  ubuffree (zcall_system);
+	  zcall_system = NULL;
+	}
       else
 	{
 	  fcall_any = TRUE;
-	  zcall_system = qxqtsys->zname;
+	  zcall_system = zbufcpy (sxqtsys.uuconf_zname);
 	}
     }
 
   /* If all that worked, make a log file entry.  All log file reports
      up to this point went to stderr.  */
 
-  ulog_to_file (TRUE);
-  ulog_system (qxqtsys->zname);
+  ulog_to_file (puuconf, TRUE);
+  ulog_system (sxqtsys.uuconf_zname);
   ulog_user (zuser);
 
   clen = strlen (zcmd) + 2;
@@ -1120,7 +991,7 @@ uxusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-	   abVersion);
+	   VERSION);
   fprintf (stderr,
 	   "Usage: uux [options] [-] command\n");
   fprintf (stderr,
@@ -1151,8 +1022,7 @@ uxusage ()
 	   " -x debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s%s)\n",
-	   NEWCONFIGLIB, CONFIGFILE);
+	   " -I file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
 }
@@ -1186,11 +1056,11 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp)
 
   s.bcmd = 'S';
   s.pseq = NULL;
-  s.zfrom = xstrdup (zfrom);
-  s.zto = xstrdup (zto);
+  s.zfrom = zbufcpy (zfrom);
+  s.zto = zbufcpy (zto);
   s.zuser = zsysdep_login_name ();
-  s.zoptions = xstrdup (zoptions);
-  s.ztemp = xstrdup (ztemp);
+  s.zoptions = zbufcpy (zoptions);
+  s.ztemp = zbufcpy (ztemp);
   s.imode = 0666;
   s.znotify = "";
   s.cbytes = -1;
@@ -1226,7 +1096,6 @@ uxcopy_stdin (e)
 	     fread, we won't know about the signal (unless we're doing
 	     a longjmp, but we normally aren't).  It's not a big
 	     problem, because the user can just hit ^C again.  */
-
 	  cread = fread (ab, sizeof (char), sizeof ab, stdin);
 	}
 

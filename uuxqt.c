@@ -20,150 +20,13 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.45  1992/05/20  22:40:46  ian
-   Changed arguments to fsysdep_move_file, added fsysdep_change_mode
-
-   Revision 1.44  1992/04/22  23:29:24  ian
-   Changed arguments to usysdep_initialize
-
-   Revision 1.43  1992/03/17  04:42:41  ian
-   Correct bug in previous patch
-
-   Revision 1.42  1992/03/17  03:15:40  ian
-   Pass command to fsysdep_execute as first element of argument array
-
-   Revision 1.41  1992/03/17  01:07:15  ian
-   Miscellaneous cleanup
-
-   Revision 1.40  1992/03/16  19:44:45  ian
-   Cast result of alloca
-
-   Revision 1.39  1992/03/15  04:51:17  ian
-   Keep an array of signals we've received rather than a single variable
-
-   Revision 1.38  1992/03/15  01:54:46  ian
-   All execs are now done in isspawn, all waits are done in iswait
-
-   Revision 1.37  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.36  1992/03/11  22:34:25  ian
-   Chip Salzenberg: support Internet mail addresses in uuxqt replies
-
-   Revision 1.35  1992/03/11  22:06:37  ian
-   Marty Shannon: added max-uuxqts command
-
-   Revision 1.34  1992/03/11  17:04:53  ian
-   Jon Zeeff: retry execution later if temporary failure
-
-   Revision 1.33  1992/03/11  02:09:19  ian
-   Correct bug in previous change
-
-   Revision 1.32  1992/03/04  02:32:26  ian
-   Handle executions on local system
-
-   Revision 1.31  1992/02/29  04:07:08  ian
-   Added -j option to uucp and uux
-
-   Revision 1.30  1992/02/29  01:06:59  ian
-   Chip Salzenberg: recheck file permissions before sending
-
-   Revision 1.29  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.28  1992/02/24  04:58:47  ian
-   Only permit files to be received into directories that are world-writeable
-
-   Revision 1.27  1992/02/23  19:50:50  ian
-   Handle READ and WRITE in Permissions correctly
-
-   Revision 1.26  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.25  1992/02/18  19:03:02  ian
-   Pass fdaemon argument correctly to usysdep_initialize
-
-   Revision 1.24  1992/02/18  04:53:26  ian
-   T. William Wells: make sure sh execution uses absolute path
-
-   Revision 1.23  1992/02/14  21:32:50  ian
-   Niels Baggesen: under HAVE_BNU_LOGGING, don't lost system name when dieing
-
-   Revision 1.22  1992/02/08  22:33:32  ian
-   Only get the current working directory if it's going to be needed
-
-   Revision 1.21  1992/02/08  20:33:57  ian
-   Handle all possible signals raised by abort
-
-   Revision 1.20  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.19  1992/01/16  17:48:41  ian
-   Niels Baggesen: was checking strcmp return incorrectly
-
-   Revision 1.18  1992/01/15  07:06:29  ian
-   Set configuration directory in Makefile rather than sysdep.h
-
-   Revision 1.17  1992/01/05  03:09:17  ian
-   Changed abProgram and abVersion to non const to avoid compiler bug
-
-   Revision 1.16  1992/01/04  21:43:24  ian
-   Chip Salzenberg: added ALLOW_FILENAME_ARGUMENTS to permit them
-
-   Revision 1.15  1992/01/04  04:12:54  ian
-   David J. Fiander: make sure execution arguments are not bad file names
-
-   Revision 1.14  1991/12/29  04:22:41  ian
-   The mailing address was not getting initialized
-
-   Revision 1.13  1991/12/29  04:04:18  ian
-   Added a bunch of extern definitions
-
-   Revision 1.12  1991/12/20  00:17:38  ian
-   Don't process execute files for unknown systems
-
-   Revision 1.11  1991/12/19  03:52:07  ian
-   David Nugent: rescan the list of execute files until nothing can be done
-
-   Revision 1.10  1991/12/18  03:54:14  ian
-   Made error messages to terminal appear more normal
-
-   Revision 1.9  1991/12/17  04:55:01  ian
-   David Nugent: ignore SIGHUP in uucico and uuxqt
-
-   Revision 1.8  1991/12/09  18:49:06  ian
-   Richard Todd: the requestor address is relative to the requesting system
-
-   Revision 1.7  1991/12/06  23:42:18  ian
-   Don't acknowledge success by default
-
-   Revision 1.6  1991/12/01  01:28:44  ian
-   Mitch Mitchell: fixed comment listing supported commands
-
-   Revision 1.5  1991/11/21  22:17:06  ian
-   Add version string, print version when printing usage
-
-   Revision 1.4  1991/11/07  20:52:33  ian
-   Chip Salzenberg: pass command as single argument to /bin/sh
-
-   Revision 1.3  1991/09/19  16:15:58  ian
-   Chip Salzenberg: configuration option for permitting execution via sh
-
-   Revision 1.2  1991/09/19  02:30:37  ian
-   From Chip Salzenberg: check whether signal is ignored differently
-
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char uuxqt_rcsid[] = "$Id$";
+const char uuxqt_rcsid[] = "$Id$";
 #endif
 
 #include <errno.h>
@@ -172,27 +35,29 @@ char uuxqt_rcsid[] = "$Id$";
 #include "getopt.h"
 
 #include "system.h"
-#include "sysdep.h"
-
-/* External functions.  */
-extern int fclose ();
 
 /* The program name.  */
 char abProgram[] = "uuxqt";
 
 /* Static variables used to unlock things if we get a fatal error.  */
 
-static int iQunlock_seq = -1;
+static int iQlock_seq = -1;
 static const char *zQunlock_cmd;
 static const char *zQunlock_file;
 static boolean fQunlock_directory;
+int cQmaxuuxqts;
+
+/* Static variable to free in uqcleanup.  */
+
+static char *zQoutput;
 
 /* Local functions.  */
 
 static void uqusage P((void));
 static void uqabort P((void));
-static void uqdo_xqt_file P((const char *zfile,
-			     const struct ssysteminfo *qsys,
+static void uqdo_xqt_file P((pointer puuconf, const char *zfile,
+			     const struct uuconf_system *qsys,
+			     const char *zlocalname,
 			     const char *zcmd, boolean *pfprocessed));
 static void uqcleanup P((const char *zfile, int iflags));
 
@@ -200,26 +65,26 @@ static void uqcleanup P((const char *zfile, int iflags));
 
 static const struct option asQlongopts[] = { { NULL, 0, NULL, 0 } };
 
-const struct option *_getopt_long_options = asQlongopts;
-
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
-  int iopt;
   /* The type of command to execute (NULL for any type).  */
   const char *zcmd = NULL;
   /* The configuration file name.  */
   const char *zconfig = NULL;
   /* The system to execute commands for.  */
   const char *zdosys = NULL;
+  int iopt;
+  pointer puuconf;
+  int iuuconf;
+  const char *zlocalname;
   boolean fany;
-  const char *z;
-  const char *zgetsys;
+  char *z, *zgetsys;
   boolean ferr;
-  struct ssysteminfo sreadsys;
-  const struct ssysteminfo *qreadsys;
+  boolean fsys;
+  struct uuconf_system ssys;
 
   while ((iopt = getopt (argc, argv, "c:I:s:x:")) != EOF)
     {
@@ -232,7 +97,8 @@ main (argc, argv)
 
 	case 'I':
 	  /* Set the configuration file name.  */
-	  zconfig = optarg;
+	  if (fsysdep_other_config (optarg))
+	    zconfig = optarg;
 	  break;
 
 	case 's':
@@ -259,7 +125,35 @@ main (argc, argv)
   if (optind != argc)
     uqusage ();
 
-  uread_config (zconfig);
+  iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+#if DEBUG > 1
+  {
+    const char *zdebug;
+
+    iuuconf = uuconf_debuglevel (puuconf, &zdebug);
+    if (iuuconf != UUCONF_SUCCESS)
+      ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    if (zdebug != NULL)
+      iDebug |= idebug_parse (zdebug);
+  }
+#endif
+
+  iuuconf = uuconf_localname (puuconf, &zlocalname);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      zlocalname = zsysdep_localname ();
+      if (zlocalname == NULL)
+	exit (EXIT_FAILURE);
+    }
+  else if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+  iuuconf = uuconf_maxuuxqts (puuconf, &cQmaxuuxqts);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
 #ifdef SIGINT
   usysdep_signal (SIGINT);
@@ -277,15 +171,15 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (INIT_DAEMON);
+  usysdep_initialize (puuconf, INIT_DAEMON);
 
-  ulog_to_file (TRUE);
+  ulog_to_file (puuconf, TRUE);
   ulog_fatal_fn (uqabort);
 
   /* Limit the number of uuxqt processes, and make sure we're the only
      uuxqt daemon running for this command.  */
-  iQunlock_seq = isysdep_lock_uuxqt (zcmd);
-  if (iQunlock_seq < 0)
+  iQlock_seq = isysdep_lock_uuxqt (zcmd, cQmaxuuxqts);
+  if (iQlock_seq < 0)
     {
       ulog_close ();
       usysdep_exit (TRUE);
@@ -294,7 +188,6 @@ main (argc, argv)
 
   /* Keep scanning the execute files until we don't process any of
      them.  */
-
   do
     {
       fany = FALSE;
@@ -307,13 +200,12 @@ main (argc, argv)
 	  usysdep_exit (FALSE);
 	}
 
-      qreadsys = NULL;
+      fsys = FALSE;
 
       while ((z = zsysdep_get_xqt (&zgetsys, &ferr)) != NULL)
 	{
-	  char *zcopy;
+	  const char *zloc;
 	  boolean fprocessed;
-	  const struct ssysteminfo *qusesys;
 
 #if ! HAVE_ALLOCA
 	  /* Clear out any accumulated alloca buffers.  */
@@ -323,60 +215,87 @@ main (argc, argv)
 	  /* It would be more efficient to pass zdosys down to the
 	     routines which retrieve execute files.  */
 	  if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
-	    continue;
-
-	  if (strcmp (zgetsys, zLocalname) == 0)
-	    qusesys = &sLocalsys;
-	  else
 	    {
-	      if (qreadsys == NULL
-		  || strcmp (qreadsys->zname, zgetsys) != 0)
+	      ubuffree (z);
+	      ubuffree (zgetsys);
+	      continue;
+	    }
+
+	  if (! fsys || strcmp (ssys.uuconf_zname, zgetsys) != 0)
+	    {
+	      if (fsys)
+		(void) uuconf_system_free (puuconf, &ssys);
+
+	      iuuconf = uuconf_system_info (puuconf, zgetsys,
+					    &ssys);
+	      if (iuuconf != UUCONF_SUCCESS)
 		{
-		  if (fread_system_info (zgetsys, &sreadsys))
-		    qreadsys = &sreadsys;
+		  if (iuuconf != UUCONF_NOT_FOUND)
+		    {
+		      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+		      ubuffree (z);
+		      ubuffree (zgetsys);
+		      continue;
+		    }
+		  else if (strcmp (zgetsys, zlocalname) == 0)
+		    {
+		      iuuconf = uuconf_system_local (puuconf, &ssys);
+		      if (iuuconf != UUCONF_SUCCESS)
+			{
+			  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+			  ubuffree (z);
+			  ubuffree (zgetsys);
+			  continue;
+			}
+		      ssys.uuconf_zname = (char *) zlocalname;
+		    }
 		  else
 		    {
-		      if (! fUnknown_ok)
+		      if (! funknown_system (puuconf, zgetsys, &ssys))
 			{
 			  ulog (LOG_ERROR,
 				"%s: Execute file for unknown system %s",
 				z, zgetsys);
 			  (void) remove (z);
+			  ubuffree (z);
+			  ubuffree (zgetsys);
 			  continue;
 			}
-		      qreadsys = &sUnknown;
-		      sUnknown.zname = xstrdup (zgetsys);
 		    }
-
-		  if (! fsysdep_make_spool_dir (qreadsys))
-		    continue;
 		}
 
-	      qusesys = qreadsys;
+	      fsys = TRUE;
 	    }
 
 	  /* If we've received a signal, get out of the loop.  */
 	  if (FGOT_SIGNAL ())
-	    break;
+	    {
+	      ubuffree (z);
+	      ubuffree (zgetsys);
+	      break;
+	    }
 
-	  zcopy = xstrdup (z);
+	  zloc = ssys.uuconf_zlocalname;
+	  if (zloc == NULL)
+	    zloc = zlocalname;
 
-	  ulog_system (qusesys->zname);
-	  uqdo_xqt_file (zcopy, qusesys, zcmd, &fprocessed);
+	  ulog_system (ssys.uuconf_zname);
+	  uqdo_xqt_file (puuconf, z, &ssys, zloc, zcmd, &fprocessed);
 	  ulog_system ((const char *) NULL);
 	  ulog_user ((const char *) NULL);
 
 	  if (fprocessed)
 	    fany = TRUE;
-	  xfree ((pointer) zcopy);
+	  ubuffree (z);
+	  ubuffree (zgetsys);
 	}
 
       usysdep_get_xqt_free ();
     }
   while (fany && ! FGOT_SIGNAL ());
 
-  (void) fsysdep_unlock_uuxqt (iQunlock_seq, zcmd);
-  iQunlock_seq = -1;
+  (void) fsysdep_unlock_uuxqt (iQlock_seq, zcmd, cQmaxuuxqts);
+  iQlock_seq = -1;
 
   ulog_close ();
 
@@ -394,7 +313,7 @@ uqusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-	   abVersion);
+	   VERSION);
   fprintf (stderr,
 	   "Usage: uuxqt [-c cmd] [-I file] [-s system] [-x debug]\n");
   fprintf (stderr,
@@ -405,8 +324,7 @@ uqusage ()
 	   " -x debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s%s)\n",
-	   NEWCONFIGLIB, CONFIGFILE);
+	   " -I file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
 }
@@ -416,21 +334,21 @@ uqusage ()
 static void
 uqabort ()
 {
-#if ! HAVE_BNU_LOGGING
-  /* When using BNU logging, it's a pain to have no system name.  */
+#if ! HAVE_HDB_LOGGING
+  /* When using HDB logging, it's a pain to have no system name.  */
   ulog_system ((const char *) NULL);
 #endif
 
   ulog_user ((const char *) NULL);
 
   if (fQunlock_directory)
-    (void) fsysdep_unlock_uuxqt_dir ();
+    (void) fsysdep_unlock_uuxqt_dir (iQlock_seq);
 
   if (zQunlock_file != NULL)
     (void) fsysdep_unlock_uuxqt_file (zQunlock_file);
 
-  if (iQunlock_seq >= 0)
-    (void) fsysdep_unlock_uuxqt (iQunlock_seq, zQunlock_cmd);
+  if (iQlock_seq >= 0)
+    (void) fsysdep_unlock_uuxqt (iQlock_seq, zQunlock_cmd, cQmaxuuxqts);
 
   ulog_close ();
 
@@ -463,15 +381,15 @@ uqabort ()
    This code does not currently support the B or M commands.  */
 
 /* Command arguments.  */
-static const char **azQargs;
+static char **azQargs;
 /* Command as a complete string.  */
 static char *zQcmd;
 /* Standard input file name.  */
-static const char *zQinput;
+static char *zQinput;
 /* Standard output file name.  */
-static const char *zQoutfile;
+static char *zQoutfile;
 /* Standard output system.  */
-static const char *zQoutsys;
+static char *zQoutsys;
 /* Number of required files.  */
 static int cQfiles;
 /* Names of required files.  */
@@ -504,53 +422,54 @@ static const char *zQstatus_file;
 static boolean fQuse_sh;
 #endif /* ALLOW_SH_EXECUTION */
 
-static enum tcmdtabret tqcmd P((int argc, char **argv, pointer pvar,
-				const char *zerr));
-static enum tcmdtabret tqout P((int argc, char **argv, pointer pvar,
-				const char *zerr));
-static enum tcmdtabret tqfile P((int argc, char **argv, pointer pvar,
-				 const char *zerr));
-static enum tcmdtabret tquser P((int argc, char **argv, pointer pvar,
-				 const char *zerr));
-static enum tcmdtabret tqset P((int argc, char **argv, pointer pvar,
-				const char *zerr));
+static int iqcmd P((pointer puuconf, int argc, char **argv, pointer pvar,
+		    pointer pinfo));
+static int iqout P((pointer puuconf, int argc, char **argv, pointer pvar,
+		    pointer pinfo));
+static int iqfile P((pointer puuconf, int argc, char **argv, pointer pvar,
+		     pointer pinfo));
+static int iquser P((pointer puuconf, int argc, char **argv, pointer pvar,
+		     pointer pinfo));
+static int iqset P((pointer puuconf, int argc, char **argv, pointer pvar,
+		    pointer pinfo));
 
-static struct scmdtab asQcmds[] =
+static const struct uuconf_cmdtab asQcmds[] =
 {
-  { "C", CMDTABTYPE_FN | 0, NULL, tqcmd },
-  { "I", CMDTABTYPE_STRING, (pointer) &zQinput, NULL },
-  { "O", CMDTABTYPE_FN | 0, NULL, tqout },
-  { "F", CMDTABTYPE_FN | 0, NULL, tqfile },
-  { "R", CMDTABTYPE_STRING, (pointer) &zQrequestor, NULL },
-  { "U", CMDTABTYPE_FN | 3, NULL, tquser },
-  { "N", CMDTABTYPE_FN | 1, (pointer) &fQno_ack, tqset },
-  { "n", CMDTABTYPE_FN | 1, (pointer) &fQsuccess_ack, tqset },
-  { "B", CMDTABTYPE_FN | 1, (pointer) &fQsend_input, tqset },
+  { "C", UUCONF_CMDTABTYPE_FN | 0, NULL, iqcmd },
+  { "I", UUCONF_CMDTABTYPE_STRING, (pointer) &zQinput, NULL },
+  { "O", UUCONF_CMDTABTYPE_FN | 0, NULL, iqout },
+  { "F", UUCONF_CMDTABTYPE_FN | 0, NULL, iqfile },
+  { "R", UUCONF_CMDTABTYPE_STRING, (pointer) &zQrequestor, NULL },
+  { "U", UUCONF_CMDTABTYPE_FN | 3, NULL, iquser },
+  { "N", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQno_ack, iqset },
+  { "n", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQsuccess_ack, iqset },
+  { "B", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQsend_input, iqset },
 #if ALLOW_SH_EXECUTION
-  { "e", CMDTABTYPE_FN | 1, (pointer) &fQuse_sh, tqset },
+  { "e", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQuse_sh, iqset },
 #endif
-  { "E", CMDTABTYPE_FN | 1, (pointer) &fQuse_exec, tqset },
-  { "M", CMDTABTYPE_STRING, (pointer) &zQstatus_file, NULL },
+  { "E", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQuse_exec, iqset },
+  { "M", UUCONF_CMDTABTYPE_STRING, (pointer) &zQstatus_file, NULL },
   { NULL, 0, NULL, NULL }
 };
 
 /* Handle the C command: store off the arguments.  */
 
 /*ARGSUSED*/
-static enum tcmdtabret
-tqcmd (argc, argv, pvar, zerr)
+static int
+iqcmd (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
      int argc;
      char **argv;
      pointer pvar;
-     const char *zerr;
+     pointer pinfo;
 {
   int i;
   int clen;
 
   if (argc <= 1)
-    return CMDTABRET_FREE;
+    return UUCONF_CMDTABRET_CONTINUE;
 
-  azQargs = (const char **) xmalloc (argc * sizeof (char *));
+  azQargs = (char **) xmalloc (argc * sizeof (char *));
   clen = 0;
   for (i = 1; i < argc; i++)
     {
@@ -568,53 +487,59 @@ tqcmd (argc, argv, pvar, zerr)
     }
   strcat (zQcmd, argv[i]);
 
-  return CMDTABRET_CONTINUE;
+  return UUCONF_CMDTABRET_KEEP;
 }
 
 /* Handle the O command, which may have one or two arguments.  */
 
 /*ARGSUSED*/
-static enum tcmdtabret
-tqout (argc, argv, pvar, zerr)
+static int
+iqout (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
      int argc;
      char **argv;
      pointer pvar;
-     const char *zerr;
+     pointer pinfo;
 {
+  const char *zfile = (const char *) pinfo;
+
   if (argc != 2 && argc != 3)
     {
       ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zerr, argv[0]);
-      return CMDTABRET_FREE;
+	    zfile, argv[0]);
+      return UUCONF_CMDTABRET_CONTINUE;
     }
 
-  zQoutfile = argv[1];
+  zQoutfile = zbufcpy (argv[1]);
   if (argc == 3)
-    zQoutsys = argv[2];
+    zQoutsys = zbufcpy (argv[2]);
 
-  return CMDTABRET_CONTINUE;
+  return UUCONF_CMDTABRET_CONTINUE;
 }
 
 /* Handle the F command, which may have one or two arguments.  */
 
 /*ARGSUSED*/
-static enum tcmdtabret
-tqfile (argc, argv, pvar, zerr)
+static int
+iqfile (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
      int argc;
      char **argv;
      pointer pvar;
-     const char *zerr;
+     pointer pinfo;
 {
+  const char *zfile = (const char *) pinfo;
+
   if (argc != 2 && argc != 3)
     {
       ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zerr, argv[0]);
-      return CMDTABRET_FREE;
+	    zfile, argv[0]);
+      return UUCONF_CMDTABRET_CONTINUE;
     }
 
   /* If this file is not in the spool directory, just ignore it.  */
   if (! fspool_file (argv[1]))
-    return CMDTABRET_FREE;
+    return UUCONF_CMDTABRET_CONTINUE;
 
   ++cQfiles;
   azQfiles = (char **) xrealloc ((pointer) azQfiles,
@@ -622,44 +547,46 @@ tqfile (argc, argv, pvar, zerr)
   azQfiles_to = (char **) xrealloc ((pointer) azQfiles_to,
 				    cQfiles * sizeof (char *));
 
-  azQfiles[cQfiles - 1] = xstrdup (argv[1]);
+  azQfiles[cQfiles - 1] = zbufcpy (argv[1]);
   if (argc == 3)
-    azQfiles_to[cQfiles - 1] = xstrdup (argv[2]);
+    azQfiles_to[cQfiles - 1] = zbufcpy (argv[2]);
   else
     azQfiles_to[cQfiles - 1] = NULL;
 
-  return CMDTABRET_FREE;
+  return UUCONF_CMDTABRET_CONTINUE;
 }
 
 /* Handle the U command, which takes two arguments.  */
 
 /*ARGSUSED*/
-static enum tcmdtabret
-tquser (argc, argv, pvar, zerr)
+static int
+iquser (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
      int argc;
      char **argv;
      pointer pvar;
-     const char *zerr;
+     pointer pinfo;
 {
   zQuser = argv[1];
   zQsystem = argv[2];
-  return CMDTABRET_CONTINUE;
+  return UUCONF_CMDTABRET_KEEP;
 }
 
 /* Handle various commands which just set boolean variables.  */
 
 /*ARGSUSED*/
-static enum tcmdtabret
-tqset (argc, argv, pvar, zerr)
+static int
+iqset (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
      int argc;
      char **argv;
      pointer pvar;
-     const char *zerr;
+     pointer pinfo;     
 {
   boolean *pf = (boolean *) pvar;
 
   *pf = TRUE;
-  return CMDTABRET_FREE;
+  return UUCONF_CMDTABRET_CONTINUE;
 }
 
 /* The execution processing does a lot of things that have to be
@@ -671,6 +598,8 @@ tqset (argc, argv, pvar, zerr)
 #define REMOVE_FILE (01)
 #define REMOVE_NEEDED (02)
 #define FREE_QINPUT (04)
+#define FREE_QARGS0 (010)
+#define FREE_OUTPUT (020)
 
 /* Process an execute file.  The zfile argument is the name of the
    execute file.  The qsys argument describes the system it came from.
@@ -679,25 +608,28 @@ tqset (argc, argv, pvar, zerr)
    *pfprocessed to TRUE if the file is ready to be executed.  */
 
 static void
-uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
+uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
+     pointer puuconf;
      const char *zfile;
-     const struct ssysteminfo *qsys;
+     const struct uuconf_system *qsys;
+     const char *zlocalname;
      const char *zcmd;
      boolean *pfprocessed;
 {
-  const char *zcmds;
-  const char *zabsolute;
+  char *zabsolute;
   boolean ferr;
   FILE *e;
+  int iuuconf;
   int i;
   int iclean;
   const char *zmail;
-  const char *zoutput;
+  char *zoutput;
+  char *zinput;
   char abtemp[CFILE_NAME_LEN];
   char abdata[CFILE_NAME_LEN];
-  const char *zerror;
-  struct ssysteminfo soutsys;
-  const struct ssysteminfo *qoutsys;
+  char *zerror;
+  struct uuconf_system soutsys;
+  const struct uuconf_system *qoutsys;
   boolean fshell;
   char *zfullcmd;
   boolean ftemp;
@@ -706,22 +638,13 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 
   /* If we're not permitted to execute anything for this system,
      we can just clobber the file without even looking at it.  */
-  zcmds = qsys->zcmds;
-
-  if (*zcmds == '\0')
+  if (qsys->uuconf_pzcmds == NULL)
     {
       ulog (LOG_ERROR, "%s: No commands permitted for system %s",
-	    zfile, qsys->zname);
+	    zfile, qsys->uuconf_zname);
       (void) remove (zfile);
       return;
     }
-
-  /* If we are only willing to execute a particular command, and it
-     is not one of those accepted by this system, quit now.  */
-  if (zcmd != NULL
-      && strcmp (zcmds, "ALL") != 0
-      && strstr (zcmds, zcmd) == NULL)
-    return;
 
   e = fopen (zfile, "r");
   if (e == NULL)
@@ -747,10 +670,16 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   fQuse_sh = FALSE;
 #endif
 
-  uprocesscmds (e, (struct smulti_file *) NULL, asQcmds, zfile,
-		CMDFLAG_CASESIGNIFICANT);
-
+  iuuconf = uuconf_cmd_file (puuconf, e, asQcmds, (pointer) zfile,
+			     (uuconf_cmdtabfn) NULL,
+			     UUCONF_CMDTABFLAG_CASE, (pointer) NULL);
   (void) fclose (e);
+
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      return;
+    }
 
   iclean = 0;
 
@@ -781,7 +710,6 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     }
 
   /* Lock this particular file.  */
-
   if (! fsysdep_lock_uuxqt_file (zfile))
     {
       uqcleanup (zfile, iclean);
@@ -799,10 +727,9 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 
   /* Make sure that all the required files exist, and get their
      full names in the spool directory.  */
-
   for (i = 0; i < cQfiles; i++)
     {
-      const char *zreal;
+      char *zreal;
 
       zreal = zsysdep_spool_file_name (qsys, azQfiles[i]);
       if (zreal == NULL)
@@ -815,35 +742,19 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  uqcleanup (zfile, iclean);
 	  return;
 	}
-      xfree ((pointer) azQfiles[i]);
-      azQfiles[i] = xstrdup (zreal);
+      ubuffree (azQfiles[i]);
+      azQfiles[i] = zbufcpy (zreal);
+      ubuffree (zreal);
     }
 
-  /* See if we need the execute directory, and lock it if we do.  */
-
-  for (i = 0; i < cQfiles; i++)
+  /* Lock the execution directory.  */
+  if (! fsysdep_lock_uuxqt_dir (iQlock_seq))
     {
-      int itries;
-
-      if (azQfiles_to[i] == NULL)
-	continue;
-
-      for (itries = 0; itries < 5; itries++)
-	{
-	  if (fsysdep_lock_uuxqt_dir ())
-	    break;
-	  usysdep_sleep (30);
-	}
-      if (itries >= 5)
-	{
-	  ulog (LOG_ERROR, "Could not lock execute directory");
-	  uqcleanup (zfile, iclean);
-	  return;
-	}
-
-      fQunlock_directory = TRUE;
-      break;
+      ulog (LOG_ERROR, "Could not lock execute directory");
+      uqcleanup (zfile, iclean);
+      return;
     }
+  fQunlock_directory = TRUE;
 
   iclean |= REMOVE_FILE | REMOVE_NEEDED;
   *pfprocessed = TRUE;
@@ -851,7 +762,6 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   /* Get the address to mail results to.  Prepend the system from
      which the execute file originated, since mail addresses are
      relative to it.  */
-
   zmail = NULL;
   if (zQrequestor != NULL)
     zmail = zQrequestor;
@@ -862,7 +772,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 #if HAVE_INTERNET_MAIL
       && strchr (zmail, '@') == NULL
 #endif
-      && strcmp (zQsystem, zLocalname) != 0)
+      && strcmp (zQsystem, zlocalname) != 0)
     {
       char *zset;
 
@@ -873,8 +783,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     }
 
   /* Get the pathname to execute.  */
-
-  zabsolute = zsysdep_find_command (azQargs[0], zcmds, qsys->zpath,
+  zabsolute = zsysdep_find_command (azQargs[0], qsys->uuconf_pzcmds,
+				    qsys->uuconf_pzpath,
 				    &ferr);
   if (zabsolute == NULL)
     {
@@ -887,7 +797,6 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	}
 
       /* Not permitted.  Send mail to requestor.  */
-	  
       ulog (LOG_ERROR, "Not permitted to execute %s",
 	    azQargs[0]);
 
@@ -911,21 +820,13 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
       return;
     }
 
-  {
-    char *zcopy;
-
-    zcopy = (char *) alloca (strlen (zabsolute) + 1);
-    strcpy (zcopy, zabsolute);
-    zabsolute = zcopy;
-  }
-
   azQargs[0] = zabsolute;
+  iclean |= FREE_QARGS0;
 
 #if ! ALLOW_FILENAME_ARGUMENTS
 
   /* Check all the arguments to make sure they don't try to specify
      files they are not permitted to access.  */
-
   for (i = 1; azQargs[i] != NULL; i++)
     {
       if (! fsysdep_xqt_check_file (qsys, azQargs[i]))
@@ -960,14 +861,14 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   if (zQinput != NULL)
     {
       boolean fspool;
+      char *zreal;
 
       fspool = fspool_file (zQinput);
       if (fspool)
-	zQinput = zsysdep_spool_file_name (qsys, zQinput);
+	zreal = zsysdep_spool_file_name (qsys, zQinput);
       else
-	zQinput = zsysdep_real_file_name (qsys, zQinput,
-					  (const char *) NULL);
-      if (zQinput == NULL)
+	zreal = zsysdep_local_file (zQinput, qsys->uuconf_zpubdir);
+      if (zreal == NULL)
 	{
 	  /* If we get an error, try again later.  */
 	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
@@ -975,12 +876,12 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  return;
 	}
 
-      zQinput = xstrdup (zQinput);
+      zQinput = zreal;
       iclean |= FREE_QINPUT;
 
       if (! fspool
-	  && ! fin_directory_list (qsys, zQinput,
-				   qsys->zremote_send, TRUE, TRUE,
+	  && ! fin_directory_list (zQinput, qsys->uuconf_pzremote_send,
+				   qsys->uuconf_zpubdir, TRUE, TRUE,
 				   (const char *) NULL))
 	{
 	  ulog (LOG_ERROR, "Not permitted to read %s", zQinput);
@@ -1006,27 +907,32 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	}
     }
 
+  zoutput = NULL;
   if (zQoutfile == NULL)
-    {
-      zoutput = NULL;
-      qoutsys = NULL;
-    }
+    qoutsys = NULL;
   else if (zQoutsys != NULL
-	   && strcmp (zQoutsys, zLocalname) != 0)
+	   && strcmp (zQoutsys, zlocalname) != 0)
     {
-      const char *zdata;
-      char *zcopy;
+      char *zdata;
 	 
       /* The output file is destined for some other system, so we must
 	 use a temporary file to catch standard output.  */
-
-      if (strcmp (zQoutsys, qsys->zname) == 0)
+      if (strcmp (zQoutsys, qsys->uuconf_zname) == 0)
 	qoutsys = qsys;
       else
 	{
-	  if (! fread_system_info (zQoutsys, &soutsys))
+	  iuuconf = uuconf_system_info (puuconf, zQoutsys, &soutsys);
+	  if (iuuconf != UUCONF_SUCCESS)
 	    {
-	      if (! fUnknown_ok)
+	      if (iuuconf != UUCONF_NOT_FOUND)
+		{
+		  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+		  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+		  *pfprocessed = FALSE;
+		  return;
+		}
+
+	      if (! funknown_system (puuconf, zQoutsys, &soutsys))
 		{
 		  ulog (LOG_ERROR,
 			"Can't send standard output to unknown system %s",
@@ -1036,22 +942,13 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 		  uqcleanup (zfile, iclean);
 		  return;
 		}
-	      soutsys = sUnknown;
-	      soutsys.zname = zQoutsys;
 	    }
 
 	  qoutsys = &soutsys;
-	 
-	  if (! fsysdep_make_spool_dir (qoutsys))
-	    {
-	      /* If we get an error, try again later.  */
-	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
-	      *pfprocessed = FALSE;
-	      return;
-	    }
 	}
 
-      zdata = zsysdep_data_file_name (qoutsys, BDEFAULT_UUX_GRADE, abtemp,
+      zdata = zsysdep_data_file_name (qoutsys, zlocalname,
+				      BDEFAULT_UUX_GRADE, abtemp,
 				      abdata, (char *) NULL);
       if (zdata == NULL)
 	{
@@ -1060,45 +957,38 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  *pfprocessed = FALSE;
 	  return;
 	}
-	 
-      zcopy = (char *) alloca (strlen (zdata) + 1);
-      strcpy (zcopy, zdata);
-      zoutput = zcopy;
+      zoutput = zdata;
+      zQoutput = zoutput;
+      iclean |= FREE_OUTPUT;
     }
   else
     {
       boolean fok;
-      char *zcopy;
 	 
       qoutsys = NULL;
 
       /* If we permitted the standard output to be redirected into
 	 the spool directory, people could set up phony commands.  */
-
       if (fspool_file (zQoutfile))
 	fok = FALSE;
       else
 	{
-	  zQoutfile = zsysdep_real_file_name (&sLocalsys, zQoutfile,
-					      (const char *) NULL);
-	  if (zQoutfile == NULL)
+	  zoutput = zsysdep_local_file (zQoutfile, qsys->uuconf_zpubdir);
+	  if (zoutput == NULL)
 	    {
 	      /* If we get an error, try again later.  */
 	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
 	      *pfprocessed = FALSE;
 	      return;
 	    }
+	  ubuffree (zQoutfile);
+	  zQoutfile = zoutput;
 
-	  /* Make sure it's OK to receive this file.  Note that this
-	     means that a locally executed uux (which presumably
-	     requires remote files) will only be able to create files
-	     in standard directories.  If we don't it this way, users
-	     could clobber files which uucp has access to; still, it
-	     would be nice to allow them to direct the output to their
-	     home directory.  */
-      
-	  fok = fin_directory_list (qsys, zQoutfile, qsys->zremote_receive,
-				    TRUE, FALSE, (const char *) NULL);
+	  /* Make sure it's OK to receive this file.  */
+	  fok = fin_directory_list (zQoutfile,
+				    qsys->uuconf_pzremote_receive,
+				    qsys->uuconf_zpubdir, TRUE, FALSE,
+				    (const char *) NULL);
 	}
 
       if (! fok)
@@ -1124,49 +1014,25 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  uqcleanup (zfile, iclean);
 	  return;
 	}
-
-      zcopy = (char *) alloca (strlen (zQoutfile) + 1);
-      strcpy (zcopy, zQoutfile);
-      zQoutfile = zcopy;
-      zoutput = zcopy;
     }
 
   /* Move the required files to the execution directory if necessary.  */
-
-  for (i = 0; i < cQfiles; i++)
+  zinput = zQinput;
+  if (! fsysdep_move_uuxqt_files (cQfiles, (const char **) azQfiles,
+				  (const char **) azQfiles_to,
+				  TRUE, iQlock_seq, &zinput))
     {
-      if (azQfiles_to[i] != NULL)
-	{
-	  const char *zname;
-
-	  /* Move the file to the execute directory.  */
-
-	  zname = zsysdep_in_dir (XQTDIR, azQfiles_to[i]);
-	  if (zname == NULL)
-	    {
-	      /* If we get an error, try again later.  */
-	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
-	      *pfprocessed = FALSE;
-	      return;
-	    }
-	  if (! fsysdep_move_file (azQfiles[i], zname, TRUE, FALSE,
-				   FALSE, (const char *) NULL))
-	    {
-	      /* If we get an error, try again later.  This may not be
-		 correct, depending on what kind of error we get.  */
-	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
-	      *pfprocessed = FALSE;
-	      return;
-	    }
-
-	  /* If we just moved the standard input file, adjust the
-	     file name.  */
-	  if (zQinput != NULL && strcmp (azQfiles[i], zQinput) == 0)
-	    {
-	      xfree ((pointer) zQinput);
-	      zQinput = xstrdup (zname);
-	    }
-	}
+      /* If we get an error, try again later.  */
+      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+      *pfprocessed = FALSE;
+      return;
+    }
+  if (zQinput != NULL && strcmp (zQinput, zinput) != 0)
+    {
+      if ((iclean & FREE_QINPUT) != 0)
+	ubuffree (zQinput);
+      zQinput = zinput;
+      iclean |= FREE_QINPUT;
     }
 
 #if ALLOW_SH_EXECUTION
@@ -1188,8 +1054,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
-			 azQargs, zfullcmd, zQinput, zoutput, fshell,
-			 &zerror, &ftemp))
+			 (const char **) azQargs, zfullcmd, zQinput,
+			 zoutput, fshell, iQlock_seq, &zerror, &ftemp))
     {
       if (ftemp)
 	{
@@ -1197,7 +1063,14 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  if (zoutput != NULL)
 	    (void) remove (zoutput);
 	  if (zerror != NULL)
-	    (void) remove (zerror);
+	    {
+	      (void) remove (zerror);
+	      ubuffree (zerror);
+	    }
+	  (void) fsysdep_move_uuxqt_files (cQfiles, (const char **) azQfiles,
+					   (const char **) azQfiles_to,
+					   FALSE, iQlock_seq,
+					   (char **) NULL);
 	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
 	  *pfprocessed = FALSE;
 	  return;
@@ -1231,11 +1104,14 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  else
 	    {
 	      char *zline;
+	      size_t cline;
 
 	      pz[i++] = "Standard error output was:\n";
 	      istart = i;
 
-	      while ((zline = zfgets (eerr, FALSE)) != NULL)
+	      zline = NULL;
+	      cline = 0;
+	      while (getline (&zline, &cline, eerr) > 0)
 		{
 		  if (i >= cgot)
 		    {
@@ -1244,16 +1120,17 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 			    xrealloc ((pointer) pz,
 				      cgot * sizeof (const char *)));
 		    }
-		  pz[i++] = zline;
+		  pz[i++] = zbufcpy (zline);
 		}
 
 	      (void) fclose (eerr);
+	      xfree ((pointer) zline);
 	    }
 
 	  (void) fsysdep_mail (zmail, "Execution failed", i, pz);
 
 	  for (; istart < i; istart++)
-	    xfree ((pointer) pz[istart]);
+	    ubuffree ((char *) pz[istart]);
 	  xfree ((pointer) pz);
 	}
 
@@ -1304,13 +1181,16 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	     actually sent.  */
 	  s.cbytes = -1;
 
-	  (void) zsysdep_spool_commands (qoutsys, BDEFAULT_UUX_GRADE,
-					 1, &s);
+	  ubuffree (zsysdep_spool_commands (qoutsys, BDEFAULT_UUX_GRADE,
+					    1, &s));
 	}
     }
 
   if (zerror != NULL)
-    (void) remove (zerror);
+    {
+      (void) remove (zerror);
+      ubuffree (zerror);
+    }
 
   uqcleanup (zfile, iclean);
 }
@@ -1346,19 +1226,28 @@ uqcleanup (zfile, iflags)
     }
 
   if ((iflags & FREE_QINPUT) != 0)
-    xfree ((pointer) zQinput);
+    ubuffree (zQinput);
+
+  if ((iflags & FREE_QARGS0) != 0)
+    ubuffree (azQargs[0]);
+
+  if ((iflags & FREE_OUTPUT) != 0)
+    ubuffree (zQoutput);
 
   if (fQunlock_directory)
     {
-      (void) fsysdep_unlock_uuxqt_dir ();
+      (void) fsysdep_unlock_uuxqt_dir (iQlock_seq);
       fQunlock_directory = FALSE;
     }
 
   for (i = 0; i < cQfiles; i++)
     {
-      xfree ((pointer) azQfiles[i]);
-      xfree ((pointer) azQfiles_to[i]);
+      ubuffree (azQfiles[i]);
+      ubuffree (azQfiles_to[i]);
     }
+
+  ubuffree (zQoutfile);
+  ubuffree (zQoutsys);
 
   xfree ((pointer) azQargs);
   azQargs = NULL;

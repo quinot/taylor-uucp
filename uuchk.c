@@ -20,136 +20,49 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.28  1992/03/28  20:31:55  ian
-   Franc,ois Pinard: allow a name to be given to an alternate
-
-   Revision 1.27  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.26  1992/03/10  21:47:39  ian
-   Added protocol command for ports
-
-   Revision 1.25  1992/03/09  18:10:26  ian
-   Zacharias Beckman: put acceptable commands and path on different lines
-
-   Revision 1.24  1992/03/07  02:56:30  ian
-   Rewrote time routines
-
-   Revision 1.23  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.22  1992/02/23  19:50:50  ian
-   Handle READ and WRITE in Permissions correctly
-
-   Revision 1.21  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.20  1992/02/08  22:33:32  ian
-   Only get the current working directory if it's going to be needed
-
-   Revision 1.19  1992/02/08  20:33:57  ian
-   Handle all possible signals raised by abort
-
-   Revision 1.18  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.17  1992/01/15  07:06:29  ian
-   Set configuration directory in Makefile rather than sysdep.h
-
-   Revision 1.16  1992/01/14  04:04:17  ian
-   Chip Salzenberg: strcmp is a macro on AIX
-
-   Revision 1.15  1992/01/05  03:09:17  ian
-   Changed abProgram and abVersion to non const to avoid compiler bug
-
-   Revision 1.14  1991/12/23  05:15:54  ian
-   David Nugent: set debugging level for a specific system
-
-   Revision 1.13  1991/12/22  22:14:53  ian
-   Added externs for strcasecmp or strncasecmp
-
-   Revision 1.12  1991/12/18  03:54:14  ian
-   Made error messages to terminal appear more normal
-
-   Revision 1.11  1991/12/17  23:14:08  ian
-   T. William Wells: allow dialer complete and abort to be chat scripts
-
-   Revision 1.10  1991/12/15  04:17:11  ian
-   Added chat-seven-bit command to control parity bit stripping
-
-   Revision 1.9  1991/12/15  03:42:33  ian
-   Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
-
-   Revision 1.8  1991/12/01  14:45:53  ian
-   Bob Izenberg: report dialer/token pairs correctly
-
-   Revision 1.7  1991/11/21  22:17:06  ian
-   Add version string, print version when printing usage
-
-   Revision 1.6  1991/11/13  20:38:00  ian
-   Added TCP port type for connections over TCP
-
-   Revision 1.5  1991/11/12  19:47:04  ian
-   Add called-chat set of commands to run a chat script on an incoming call
-
-   Revision 1.4  1991/11/11  23:47:24  ian
-   Added chat-program to run a program to do a chat script
-
-   Revision 1.3  1991/11/11  16:19:21  ian
-   Added message for no protocol specified
-
-   Revision 1.2  1991/09/19  02:22:44  ian
-   Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
-
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char uuchk_rcsid[] = "$Id$";
+const char uuchk_rcsid[] = "$Id$";
 #endif
 
 #include "getopt.h"
-
-#include "port.h"
-#include "system.h"
-#include "sysdep.h"
-#include "uutime.h"
-
-/* External functions.  */
-extern int strcasecmp ();
 
-/* Program name.  */
-char abProgram[] = "uuchk";
-
 /* Local functions.  */
 
 static void ukusage P((void));
-static void ukshow P((const struct ssysteminfo *qsys));
-static boolean fkshow_port P((struct sport *qport, boolean fin));
-static void ukshow_dialer P((struct sdialer *qdial));
-static void ukshow_chat P((const struct schat_info *qchat,
+static void ukshow P((const struct uuconf_system *qsys,
+		      pointer puuconf));
+static int ikshow_port P((struct uuconf_port *qport, pointer pinfo));
+static void ukshow_dialer P((struct uuconf_dialer *qdial));
+static void ukshow_chat P((const struct uuconf_chat *qchat,
 			   const char *zhdr));
-static void ukshow_size P((const char *z, boolean fcall, boolean flocal));
-static void ukshow_proto_params P((int c, struct sproto_param *pas,
+static void ukshow_size P((struct uuconf_timespan *q, boolean fcall,
+			   boolean flocal));
+static void ukshow_proto_params P((struct uuconf_proto_param *pas,
 				   int cindent));
-static void ukshow_time P((const struct sspan *));
-static struct sspan *qcompress_span P((struct sspan *));
-
-/* Local variables.  */
-static boolean fKgot_port;
+static void ukshow_time P((const struct uuconf_timespan *));
+static struct uuconf_timespan *qcompress_span P((struct uuconf_timespan *));
+static void ukuuconf_error P((pointer puuconf, int iret));
+
+/* Structure used to pass uuconf pointer into ikshow_port and also let
+   it record whether any ports were found.  */
+struct sinfo
+{
+  /* The uuconf global pointer.  */
+  pointer puuconf;
+  /* The system.  */
+  const struct uuconf_system *qsys;
+  /* Whether any ports were seen.  */
+  boolean fgot;
+};
 
 /* Long getopt options.  */
 
 static const struct option asKlongopts[] = { { NULL, 0, NULL, 0 } };
-
-const struct option *_getopt_long_options = asKlongopts;
 
 int
 main (argc, argv)
@@ -159,9 +72,9 @@ main (argc, argv)
   int iopt;
   /* The configuration file name.  */
   const char *zconfig = NULL;
-  int c;
-  struct ssysteminfo *pas;
-  int i;
+  int iret;
+  pointer puuconf;
+  char **pzsystems;
 
   while ((iopt = getopt (argc, argv, "I:x:")) != EOF)
     {
@@ -173,10 +86,8 @@ main (argc, argv)
 	  break;
 
 	case 'x':
-#if DEBUG > 1
-	  /* Set the debugging level.  */
-	  iDebug |= idebug_parse (optarg);
-#endif
+	  /* Set the debugging level.  There is actually no debugging
+	     information for this program.  */
 	  break;
 
 	case 0:
@@ -192,22 +103,30 @@ main (argc, argv)
   if (optind != argc)
     ukusage ();
 
-  uread_config (zconfig);
+  iret = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  if (iret != UUCONF_SUCCESS)
+    ukuuconf_error (puuconf, iret);
 
-  usysdep_initialize (0);
+  iret = uuconf_system_names (puuconf, &pzsystems, FALSE);
+  if (iret != UUCONF_SUCCESS)
+    ukuuconf_error (puuconf, iret);
 
-  uread_all_system_info (&c, &pas);
-
-  for (i = 0; i < c; i++)
+  while (*pzsystems != NULL)
     {
-      ukshow (&pas[i]);
-      if (i < c - 1)
+      struct uuconf_system ssys;
+
+      iret = uuconf_system_info (puuconf, *pzsystems, &ssys);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      else
+	ukshow (&ssys, puuconf);
+      (void) uuconf_system_free (puuconf, &ssys);
+      ++pzsystems;
+      if (*pzsystems != NULL)
 	printf ("\n");
     }
 
-  ulog_close ();
-
-  usysdep_exit (TRUE);
+  exit (EXIT_SUCCESS);
 
   /* Avoid errors about not returning a value.  */
   return 0;
@@ -220,76 +139,59 @@ ukusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-	   abVersion);
+	   VERSION);
   fprintf (stderr,
-	   "Usage: uuchk [-I file] [-x debug]\n");
+	   "Usage: uuchk [-I file]\n");
   fprintf (stderr,
-	   " -x debug: Set debugging level (0 for none, 9 is max)\n");
-#if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s%s)\n",
-	   NEWCONFIGLIB, CONFIGFILE);
-#endif /* HAVE_TAYLOR_CONFIG */
+	   " -I file: Set configuration file to use\n");
   exit (EXIT_FAILURE);
 }
 
 /* Dump out the information for a system.  */
 
 static void
-ukshow (qsys)
-     const struct ssysteminfo *qsys;
+ukshow (qsys, puuconf)
+     const struct uuconf_system *qsys;
+     pointer puuconf;
 {
+  char **pz;
   int i;
-  const struct ssysteminfo *qlast;
+  int iret;
 
-  printf ("System: %s", qsys->zname);
-  if (qsys->zalias != NULL)
-    printf (" (%s)", qsys->zalias);
+  printf ("System: %s", qsys->uuconf_zname);
+  if (qsys->uuconf_pzalias != NULL)
+    {
+      printf (" (");
+      for (pz = qsys->uuconf_pzalias; *pz != NULL; pz++)
+	{
+	  printf ("%s", *pz);
+	  if (pz[1] != NULL)
+	    printf (" ");
+	}
+      printf (")");
+    }
   printf ("\n");
 
-  qlast = NULL;
-  for (i = 0; qsys != NULL; qlast = qsys, qsys = qsys->qalternate, i++)
+  for (i = 0; qsys != NULL; qsys = qsys->uuconf_qalternate, i++)
     {
       boolean fcall, fcalled;
-      struct sspan *qtime, *qspan;
+      struct uuconf_timespan *qtime, *qspan;
 
-      if (i != 0 || qsys->qalternate != NULL)
+      if (i != 0 || qsys->uuconf_qalternate != NULL)
 	{
 	  printf ("Alternate %d", i);
-	  if (qsys->zalternate != NULL)
-	    printf (" (%s)", qsys->zalternate);
+	  if (qsys->uuconf_zalternate != NULL)
+	    printf (" (%s)", qsys->uuconf_zalternate);
 	  printf ("\n");
 	}
 
       /* See if this alternate could be used when calling out.  */
+      fcall = qsys->uuconf_fcall;
+      if (qsys->uuconf_qtimegrade == NULL)
+	fcall = FALSE;
 
-      fcall = (i == 0
-	       || qsys->ztime != qlast->ztime
-	       || qsys->zport != qlast->zport
-	       || qsys->qport != qlast->qport
-	       || qsys->ibaud != qlast->ibaud
-	       || qsys->zphone != qlast->zphone
-	       || qsys->schat.zprogram != qlast->schat.zprogram
-	       || qsys->schat.zchat != qlast->schat.zchat);
-
-      if (! fcall)
-	qtime = NULL;
-      else
-	{
-	  qtime = qtimegrade_parse (qsys->ztime);
-	  if (qtime == NULL)
-	    fcall = FALSE;
-	}
-
-      /* If this is the first alternate, it can be used to accept
-	 a call.  Otherwise it can be used if it specifies a different
-	 login name than the previous alternate.  */
-      fcalled = (i == 0
-		 || (qlast != NULL
-		     && qsys->zcalled_login != NULL
-		     && (qlast->zcalled_login == NULL
-			 || strcmp (qsys->zcalled_login,
-				    qlast->zcalled_login) != 0)));
+      /* See if this alternate could be used when calling in.  */
+      fcalled = qsys->uuconf_fcalled;
 
       if (! fcall && ! fcalled)
 	{
@@ -299,24 +201,25 @@ ukshow (qsys)
 
       if (fcalled)
 	{
-	  if (qsys->zcalled_login != NULL
-	      && strcmp (qsys->zcalled_login, "ANY") != 0)
+	  if (qsys->uuconf_zcalled_login != NULL
+	      && strcmp (qsys->uuconf_zcalled_login, "ANY") != 0)
 	    {
-	      if (i == 0 && qsys->qalternate == NULL)
-		printf (" Caller must log in as %s\n", qsys->zcalled_login);
+	      if (i == 0 && qsys->uuconf_qalternate == NULL)
+		printf (" Caller must log in as %s\n",
+			qsys->uuconf_zcalled_login);
 	      else
 		printf (" When called using login name %s\n",
-			qsys->zcalled_login);
+			qsys->uuconf_zcalled_login);
 	    }
 	  else
 	    printf (" When called using any login name\n");
 
-	  if (qsys->zlocalname != NULL)
+	  if (qsys->uuconf_zlocalname != NULL)
 	    printf (" Will use %s as name of local system\n",
-		    qsys->zlocalname);
+		    qsys->uuconf_zlocalname);
 	}
 
-      if (fcalled && qsys->fcallback)
+      if (fcalled && qsys->uuconf_fcallback)
 	{
 	  printf (" If called, will call back\n");
 	  fcalled = FALSE;
@@ -324,138 +227,130 @@ ukshow (qsys)
 
       if (fcall)
 	{
-	  if (i == 0 && qsys->qalternate == NULL)
+	  struct sinfo si;
+
+	  if (i == 0 && qsys->uuconf_qalternate == NULL)
 	    printf (" Call out");
 	  else
 	    printf (" This alternate applies when calling");
 	  
-	  if (qsys->zport != NULL || qsys->qport != NULL)
+	  if (qsys->uuconf_zport != NULL || qsys->uuconf_qport != NULL)
 	    {
 	      printf (" using ");
-	      if (qsys->zport != NULL)
-		printf ("port %s", qsys->zport);
+	      if (qsys->uuconf_zport != NULL)
+		printf ("port %s", qsys->uuconf_zport);
 	      else
 		printf ("a specially defined port");
-	      if (qsys->ibaud != 0)
+	      if (qsys->uuconf_ibaud != 0)
 		{
-		  printf (" at speed %ld", qsys->ibaud);
-		  if (qsys->ihighbaud != 0)
-		    printf (" to %ld", qsys->ihighbaud);
+		  printf (" at speed %ld", qsys->uuconf_ibaud);
+		  if (qsys->uuconf_ihighbaud != 0)
+		    printf (" to %ld", qsys->uuconf_ihighbaud);
 		}
 	      printf ("\n");
 	    }
-	  else if (qsys->ibaud != 0)
+	  else if (qsys->uuconf_ibaud != 0)
 	    {
-	      printf (" at speed %ld", qsys->ibaud);
-	      if (qsys->ihighbaud != 0)
-		printf (" to %ld", qsys->ihighbaud);
+	      printf (" at speed %ld", qsys->uuconf_ibaud);
+	      if (qsys->uuconf_ihighbaud != 0)
+		printf (" to %ld", qsys->uuconf_ihighbaud);
 	      printf ("\n");
 	    }
 	  else
 	    printf (" using any port\n");
 
-	  if (qsys->qport != NULL)
+	  si.puuconf = puuconf;
+	  si.qsys = qsys;
+	  si.fgot = FALSE;
+
+	  if (qsys->uuconf_qport != NULL)
 	    {
 	      printf (" The port is defined as:\n");
-	      (void) fkshow_port (qsys->qport, FALSE);
+	      (void) ikshow_port (qsys->uuconf_qport, (pointer) &si);
 	    }
 	  else
 	    {
-	      struct sport sdummy;
+	      struct uuconf_port sdummy;
 
 	      printf (" The possible ports are:\n");
-	      fKgot_port = FALSE;
-	      (void) ffind_port (qsys->zport, qsys->ibaud,
-				 qsys->ihighbaud, &sdummy,
-				 fkshow_port, FALSE);
-	      if (! fKgot_port)
+	      iret = uuconf_find_port (puuconf, qsys->uuconf_zport,
+				       qsys->uuconf_ibaud,
+				       qsys->uuconf_ihighbaud,
+				       ikshow_port, (pointer) &si,
+				       &sdummy);
+	      if (iret != UUCONF_NOT_FOUND)
+		ukuuconf_error (puuconf, iret);
+	      if (! si.fgot)
 		printf (" *** There are no matching ports\n");
 	    }
 
-	  if (qsys->zphone != NULL)
+	  if (qsys->uuconf_zphone != NULL)
 	    {
-#if HAVE_TCP
-	      if ((qsys->zport != NULL
-		   && strcmp (qsys->zport, "TCP") == 0)
-		  || (qsys->qport != NULL
-		      && qsys->qport->ttype == PORTTYPE_TCP))
-		printf (" Remote address %s\n", qsys->zphone);
+	      if ((qsys->uuconf_zport != NULL
+		   && strcmp (qsys->uuconf_zport, "TCP") == 0)
+		  || (qsys->uuconf_qport != NULL
+		      && (qsys->uuconf_qport->uuconf_ttype
+			  == UUCONF_PORTTYPE_TCP)))
+		printf (" Remote address %s\n", qsys->uuconf_zphone);
 	      else
-#endif /* HAVE_TCP */
-		printf (" Phone number %s\n", qsys->zphone);
+		printf (" Phone number %s\n", qsys->uuconf_zphone);
 	    }
 
-	  ukshow_chat (&qsys->schat, " Chat");
+	  ukshow_chat (&qsys->uuconf_schat, " Chat");
 
-	  if (qsys->zcall_login != NULL)
+	  if (qsys->uuconf_zcall_login != NULL
+	      || qsys->uuconf_zcall_password != NULL)
 	    {
-	      if (strcmp (qsys->zcall_login, "*") != 0)
-		printf (" Login name %s\n", qsys->zcall_login);
+	      char *zlogin, *zpass;
+
+	      iret = uuconf_callout (puuconf, qsys, &zlogin, &zpass);
+	      if (iret == UUCONF_NOT_FOUND)
+		printf (" Can not determine login name or password\n");
+	      else if (iret != UUCONF_SUCCESS)
+		ukuuconf_error (puuconf, iret);
 	      else
 		{
-		  char *zlogin, *zpass;
-
-		  if (! fcallout_login (qsys, &zlogin, &zpass))
-		    printf (" Can not determine login name\n");
-		  else
+		  if (zlogin != NULL)
 		    {
 		      printf (" Login name %s\n", zlogin);
-		      xfree ((pointer) zlogin);
-		      xfree ((pointer) zpass);
+		      free ((pointer) zlogin);
 		    }
-		}
-	    }
-
-	  if (qsys->zcall_password != NULL)
-	    {
-	      if (strcmp (qsys->zcall_password, "*") != 0)
-		printf (" Password %s\n", qsys->zcall_password);
-	      else
-		{
-		  char *zlogin, *zpass;
-
-		  if (! fcallout_login (qsys, &zlogin, &zpass))
-		    printf (" Can not determine password\n");
-		  else
+		  if (zpass != NULL)
 		    {
 		      printf (" Password %s\n", zpass);
-		      xfree ((pointer) zlogin);
-		      xfree ((pointer) zpass);
+		      free ((pointer) zpass);
 		    }
 		}
 	    }
 
-	  qtime = qcompress_span (qtime);
+	  qtime = qcompress_span (qsys->uuconf_qtimegrade);
 
-	  for (qspan = qtime; qspan != NULL; qspan = qspan->qnext)
+	  for (qspan = qtime; qspan != NULL; qspan = qspan->uuconf_qnext)
 	    {
 	      printf (" ");
 	      ukshow_time (qspan);
 	      printf (" may call if ");
-	      if ((char) qspan->ival == BGRADE_LOW)
+	      if ((char) qspan->uuconf_ival == UUCONF_GRADE_LOW)
 		printf ("any work");
 	      else
-		printf ("work grade %c or higher", (char) qspan->ival);
-	      if (qspan->cretry != 0)
-		printf (" (retry %d)", qspan->cretry);
+		printf ("work grade %c or higher", (char) qspan->uuconf_ival);
+	      if (qspan->uuconf_cretry != 0)
+		printf (" (retry %d)", qspan->uuconf_cretry);
 	      printf ("\n");
 	    }
 
-	  utimespan_free (qtime);
-
-	  if (qsys->zcalltimegrade != NULL)
+	  if (qsys->uuconf_qcalltimegrade != NULL)
 	    {
 	      boolean fprint, fother;
 
-	      qtime = qtimegrade_parse (qsys->zcalltimegrade);
-	      qtime = qcompress_span (qtime);
+	      qtime = qcompress_span (qsys->uuconf_qcalltimegrade);
 	      fprint = FALSE;
 	      fother = FALSE;
-	      if (qtime->istart != 0)
+	      if (qtime->uuconf_istart != 0)
 		fother = TRUE;
-	      for (qspan = qtime; qspan != NULL; qspan = qspan->qnext)
+	      for (qspan = qtime; qspan != NULL; qspan = qspan->uuconf_qnext)
 		{
-		  if ((char) qspan->ival == BGRADE_LOW)
+		  if ((char) qspan->uuconf_ival == UUCONF_GRADE_LOW)
 		    {
 		      fother = TRUE;
 		      continue;
@@ -464,300 +359,301 @@ ukshow (qsys)
 		  printf (" ");
 		  ukshow_time (qspan);
 		  printf (" may accept work grade %c or higher\n",
-			  (char) qspan->ival);
-		  if (qspan->qnext == NULL)
+			  (char) qspan->uuconf_ival);
+		  if (qspan->uuconf_qnext == NULL)
 		    {
-		      if (qspan->iend != 7 * 24 * 60)
+		      if (qspan->uuconf_iend != 7 * 24 * 60)
 			fother = TRUE;
 		    }
 		  else
 		    {
-		      if (qspan->iend != qspan->qnext->istart)
+		      if (qspan->uuconf_iend
+			  != qspan->uuconf_qnext->uuconf_istart)
 			fother = TRUE;
 		    }
 		}
 	      if (fprint && fother)
 		printf (" (At other times may accept any work)\n");
-
-	      utimespan_free (qtime);
 	    }
 	}
 
-      if (qsys->fsequence)
+      if (qsys->uuconf_fsequence)
 	printf (" Sequence numbers are used\n");
 
       if (fcalled)
-	ukshow_chat (&qsys->scalled_chat, " When called, chat");
+	ukshow_chat (&qsys->uuconf_scalled_chat, " When called, chat");
 
-#if DEBUG > 1
-      if (qsys->idebug != 0)
-	printf (" Debugging level 0%o\n", (unsigned int) qsys->idebug);
-      if (qsys->imax_remote_debug != 0)
+      if (qsys->uuconf_zdebug != NULL)
+	printf (" Debugging level %s\n", qsys->uuconf_zdebug);
+      if (qsys->uuconf_zmax_remote_debug != NULL)
 	printf (" Max remote debugging level 0%o\n",
-		(unsigned int) qsys->imax_remote_debug);
-#endif
+		(unsigned int) qsys->uuconf_zmax_remote_debug);
 
       if (fcall)
 	{
-	  ukshow_size (qsys->zcall_local_size, TRUE, TRUE);
-	  ukshow_size (qsys->zcall_remote_size, TRUE, FALSE);
+	  ukshow_size (qsys->uuconf_qcall_local_size, TRUE, TRUE);
+	  ukshow_size (qsys->uuconf_qcall_remote_size, TRUE, FALSE);
 	}
       if (fcalled)
 	{
-	  ukshow_size (qsys->zcalled_local_size, FALSE, TRUE);
-	  ukshow_size (qsys->zcalled_remote_size, FALSE, TRUE);
+	  ukshow_size (qsys->uuconf_qcalled_local_size, FALSE, TRUE);
+	  ukshow_size (qsys->uuconf_qcalled_remote_size, FALSE, TRUE);
 	}
 
       if (fcall)
 	{
 	  printf (" %sllow remote requests when calling\n",
-		  qsys->fcall_request ? "A" : "Do not a");
+		  qsys->uuconf_fcall_request ? "A" : "Do not a");
 	  printf (" May %smake local requests when calling\n",
-		  qsys->fcall_transfer ? "" : "not ");
+		  qsys->uuconf_fcall_transfer ? "" : "not ");
 	}
 
       if (fcalled)
 	{
 	  printf (" %sllow remote requests when called\n",
-		  qsys->fcalled_request ? "A" : "Do not a");
+		  qsys->uuconf_fcalled_request ? "A" : "Do not a");
 	  printf (" May %smake local requests when called\n",
-		  qsys->fcalled_transfer ? "" : "not ");
+		  qsys->uuconf_fcalled_transfer ? "" : "not ");
 	}
 
-      if (qsys->fcall_transfer || qsys->fcalled_transfer)
+      if (qsys->uuconf_fcall_transfer || qsys->uuconf_fcalled_transfer)
 	{
-	  if (qsys->zcalled_local_send == NULL)
-	    printf (" May send by local request: %s\n", qsys->zlocal_send);
-	  else
-	    {
-	      if (fcall && qsys->fcall_transfer)
-		printf (" May send by local request when calling: %s\n",
-			qsys->zlocal_send);
-	      if (fcalled && qsys->fcalled_transfer)
-		printf (" May send by local request when called: %s\n",
-			qsys->zcalled_local_send);
-	    }	    
+	  printf (" May send by local request:");
+	  for (pz = qsys->uuconf_pzlocal_send; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
 	}
-      if (qsys->fcall_request || qsys->fcalled_request)
+      if (qsys->uuconf_fcall_request || qsys->uuconf_fcalled_request)
 	{
-	  if (qsys->zcalled_remote_send == NULL)
-	    printf (" May send by remote request: %s\n", qsys->zremote_send);
-	  else
-	    {
-	      if (fcall && qsys->fcall_request)
-		printf (" May send by remote request when calling: %s\n",
-			qsys->zremote_send);
-	      if (fcalled && qsys->fcalled_request)
-		printf (" May send by remote request when called: %s\n",
-			qsys->zcalled_remote_send);
-	    }
+	  printf (" May send by remote request:");
+	  for (pz = qsys->uuconf_pzremote_send; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
 	}
-      if (qsys->fcall_transfer || qsys->fcalled_transfer)
+      if (qsys->uuconf_fcall_transfer || qsys->uuconf_fcalled_transfer)
 	{
-	  if (qsys->zcalled_local_receive == NULL)
-	    printf (" May accept by local request: %s\n",
-		    qsys->zlocal_receive);
-	  else
-	    {
-	      if (fcall && qsys->fcall_transfer)
-		printf (" May accept by local request when calling: %s\n",
-			qsys->zlocal_receive);
-	      if (fcalled && qsys->fcalled_transfer)
-		printf (" May accept by local request when called: %s\n",
-			qsys->zcalled_local_receive);
-	    }
+	  printf (" May accept by local request:");
+	  for (pz = qsys->uuconf_pzlocal_receive; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
 	}
-      if (qsys->fcall_request || qsys->fcalled_request)
+      if (qsys->uuconf_fcall_request || qsys->uuconf_fcalled_request)
 	{
-	  if (qsys->zcalled_remote_receive == NULL)
-	    printf (" May accept by remote request: %s\n",
-		    qsys->zremote_receive);
-	  else
-	    {
-	      if (fcall && qsys->fcall_request)
-		printf (" May accept by remote request when calling: %s\n",
-			qsys->zremote_receive);
-	      if (fcalled && qsys->fcalled_request)
-		printf (" May accept by remote request when called: %s\n",
-			qsys->zcalled_remote_receive);
-	    }
+	  printf (" May accept by remote request:");
+	  for (pz = qsys->uuconf_pzremote_receive; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
 	}
 
-      printf (" May execute %s\n", qsys->zcmds);
-      printf (" Execution path %s\n", qsys->zpath);
+      printf (" May execute");
+      for (pz = qsys->uuconf_pzcmds; *pz != NULL; pz++)
+	printf (" %s", *pz);
+      printf ("\n");
 
-      if (qsys->cfree_space != 0)
-	printf (" Will leave %ld bytes available\n", qsys->cfree_space);
+      printf (" Execution path");
+      for (pz = qsys->uuconf_pzpath; *pz != NULL; pz++)
+	printf (" %s" , *pz);
+      printf ("\n");
 
-      if (qsys->zpubdir != NULL)
-	printf (" Public directory is %s\n", qsys->zpubdir);
+      if (qsys->uuconf_cfree_space != 0)
+	printf (" Will leave %ld bytes available\n", qsys->uuconf_cfree_space);
 
-      if (qsys->zprotocols != NULL)
-	printf (" Will use protocols %s\n", qsys->zprotocols);
+      if (qsys->uuconf_zpubdir != NULL)
+	printf (" Public directory is %s\n", qsys->uuconf_zpubdir);
+
+      if (qsys->uuconf_zprotocols != NULL)
+	printf (" Will use protocols %s\n", qsys->uuconf_zprotocols);
       else
 	printf (" Will use any known protocol\n");
 
-      if (qsys->cproto_params != 0)
-	ukshow_proto_params (qsys->cproto_params, qsys->qproto_params, 1);
+      if (qsys->uuconf_qproto_params != NULL)
+	ukshow_proto_params (qsys->uuconf_qproto_params, 1);
     }
 }
 
 /* Show information about a port.  */
 
 /*ARGSUSED*/
-static boolean
-fkshow_port (qport, fin)
-     struct sport *qport;
-     boolean fin;
+static int
+ikshow_port (qport, pinfo)
+     struct uuconf_port *qport;
+     pointer pinfo;
 {
-  fKgot_port = TRUE;
+  struct sinfo *qi = (struct sinfo *) pinfo;
+  struct uuconf_modem_port *qmodem;
 
-  printf ("  Port name %s\n", qport->zname);
-  switch (qport->ttype)
+  qi->fgot = TRUE;
+
+  printf ("  Port name %s\n", qport->uuconf_zname);
+  switch (qport->uuconf_ttype)
     {
-    case PORTTYPE_STDIN:
+    case UUCONF_PORTTYPE_STDIN:
       printf ("   Port type stdin\n");
       break;
-    case PORTTYPE_DIRECT:
+    case UUCONF_PORTTYPE_DIRECT:
       printf ("   Port type direct\n");
-      if (qport->u.sdirect.zdevice != NULL)
-	printf ("   Device %s\n", qport->u.sdirect.zdevice);
-      printf ("   Speed %ld\n", qport->u.sdirect.ibaud);
+      if (qport->uuconf_u.uuconf_sdirect.uuconf_zdevice != NULL)
+	printf ("   Device %s\n",
+		qport->uuconf_u.uuconf_sdirect.uuconf_zdevice);
+      printf ("   Speed %ld\n", qport->uuconf_u.uuconf_sdirect.uuconf_ibaud);
       break;
-    case PORTTYPE_MODEM:
+    case UUCONF_PORTTYPE_MODEM:
+      qmodem = &qport->uuconf_u.uuconf_smodem;
       printf ("   Port type modem\n");
-      if (qport->u.smodem.zdevice != NULL)
-	printf ("   Device %s\n", qport->u.smodem.zdevice);
-      if (qport->u.smodem.zdial_device != NULL)
-	printf ("   Dial device %s\n", qport->u.smodem.zdial_device);
-      printf ("   Speed %ld\n", qport->u.smodem.ibaud);
-      if (qport->u.smodem.ilowbaud != qport->u.smodem.ihighbaud)
-	printf ("   Speed range %ld to %ld\n", qport->u.smodem.ilowbaud,
-		qport->u.smodem.ihighbaud);
+      if (qmodem->uuconf_zdevice != NULL)
+	printf ("   Device %s\n", qmodem->uuconf_zdevice);
+      if (qmodem->uuconf_zdial_device != NULL)
+	printf ("   Dial device %s\n", qmodem->uuconf_zdial_device);
+      printf ("   Speed %ld\n", qmodem->uuconf_ibaud);
+      if (qmodem->uuconf_ilowbaud != qmodem->uuconf_ihighbaud)
+	printf ("   Speed range %ld to %ld\n", qmodem->uuconf_ilowbaud,
+		qmodem->uuconf_ihighbaud);
       printf ("   Carrier %savailable\n",
-	      qport->u.smodem.fcarrier ? "" : "not ");
-      if (qport->u.smodem.qdialer != NULL)
+	      qmodem->uuconf_fcarrier ? "" : "not ");
+      if (qmodem->uuconf_qdialer != NULL)
 	{
 	  printf ("   Specially defined dialer\n");
-	  ukshow_dialer (qport->u.smodem.qdialer);
+	  ukshow_dialer (qmodem->uuconf_qdialer);
 	}
-      else if (qport->u.smodem.zdialer != NULL)
+      else if (qmodem->uuconf_pzdialer != NULL
+	       && qmodem->uuconf_pzdialer[0] != NULL)
 	{
-	  const char *zc;
-	  struct sdialer sdial;
+	  struct uuconf_dialer sdial;
+	  int iret;
 
 	  /* This might be a single dialer name, or it might be a
 	     sequence of dialer/token pairs.  */
 
-	  zc = qport->u.smodem.zdialer;
-	  if (zc[strcspn (zc, " \t")] == '\0')
+	  if (qmodem->uuconf_pzdialer[1] == NULL
+	      || qmodem->uuconf_pzdialer[2] == NULL)
 	    {
-	      if (! fread_dialer_info (qport->u.smodem.zdialer, &sdial))
-		printf ("   *** No dialer %s\n", qport->u.smodem.zdialer);
+	      iret = uuconf_dialer_info (qi->puuconf,
+					 qmodem->uuconf_pzdialer[0],
+					 &sdial);
+	      if (iret == UUCONF_NOT_FOUND)
+		printf ("   *** No dialer %s\n", qmodem->uuconf_pzdialer[0]);
+	      else if (iret != UUCONF_SUCCESS)
+		ukuuconf_error (qi->puuconf, iret);
 	      else
 		{
-		  printf ("   Dialer %s\n", qport->u.smodem.zdialer);
+		  printf ("   Dialer %s\n", qmodem->uuconf_pzdialer[0]);
 		  ukshow_dialer (&sdial);
+		  if (qmodem->uuconf_pzdialer[1] != NULL)
+		    printf ("   Token %s\n", qmodem->uuconf_pzdialer[1]);
 		}
 	    }
 	  else
 	    {
-	      char *z, *zdialer;
+	      char **pz;
 
-	      printf ("   Dialer sequence %s\n", zc);
-
-	      z = (char *) alloca (strlen (zc) + 1);
-	      strcpy (z, zc);
-
-	      zdialer = strtok (z, " \t");
-	      while (zdialer != NULL)
+	      pz = qmodem->uuconf_pzdialer;
+	      while (*pz != NULL)
 		{
-		  char *ztoken;
-	       
-		  if (! fread_dialer_info (zdialer, &sdial))
-		    printf ("   *** No dialer %s\n", zdialer);
+		  iret = uuconf_dialer_info (qi->puuconf, *pz, &sdial);
+		  if (iret == UUCONF_NOT_FOUND)
+		    printf ("   *** No dialer %s\n", *pz);
+		  else if (iret != UUCONF_SUCCESS)
+		    ukuuconf_error (qi->puuconf, iret);
 		  else
 		    {
-		      printf ("   Dialer %s\n", zdialer);
+		      printf ("   Dialer %s\n", *pz);
 		      ukshow_dialer (&sdial);
 		    }
 
-		  ztoken = strtok ((char *) NULL, " \t");
-		  if (ztoken == NULL)
-		    zdialer = NULL;
-		  else
-		    zdialer = strtok ((char *) NULL, " \t");
+		  ++pz;
+		  if (*pz != NULL)
+		    {
+		      printf ("   Token %s\n", *pz);
+		      ++pz;
+		    }
 		}
 	    }
 	}
       else
 	printf ("   *** No dialer information\n");
       break;
-#if HAVE_TCP
-    case PORTTYPE_TCP:
+    case UUCONF_PORTTYPE_TCP:
       printf ("   Port type tcp\n");
-      printf ("   TCP service %s\n", qport->u.stcp.zport);
+      printf ("   TCP service %s\n",
+	      qport->uuconf_u.uuconf_stcp.uuconf_zport);
       break;
-#endif /* HAVE_TCP */
     default:
       printf ("   CAN'T HAPPEN\n");
       break;
     }
 
-  if (qport->zprotocols != NULL)
-    printf ("   Will use protocols %s\n", qport->zprotocols);
+  if (qport->uuconf_zprotocols != NULL)
+    printf ("   Will use protocols %s\n", qport->uuconf_zprotocols);
 
-  if (qport->cproto_params != 0)
-    ukshow_proto_params (qport->cproto_params, qport->qproto_params, 3);
+  if (qport->uuconf_qproto_params != NULL)
+    ukshow_proto_params (qport->uuconf_qproto_params, 3);
 
-  /* Return FALSE to force ffind_port to continue searching.  */
-  return FALSE;
+  /* Return NOT_FOUND to force find_port to continue searching.  */
+  return UUCONF_NOT_FOUND;
 }
 
 /* Show information about a dialer.  */
 
 static void
 ukshow_dialer (q)
-     struct sdialer *q;
+     struct uuconf_dialer *q;
 {
-  ukshow_chat (&q->schat, "    Chat");
-  if (q->zdialtone != NULL)
-    printf ("    Wait for dialtone %s\n", q->zdialtone);
-  if (q->zpause != NULL)
-    printf ("    Pause while dialing %s\n", q->zpause);
-  printf ("    Carrier %savailable\n", q->fcarrier ? "" : "not ");
-  if (q->fcarrier)
-    printf ("    Wait %d seconds for carrier\n", q->ccarrier_wait);
-  if (q->fdtr_toggle)
+  ukshow_chat (&q->uuconf_schat, "    Chat");
+  printf ("    Wait for dialtone %s\n", q->uuconf_zdialtone);
+  printf ("    Pause while dialing %s\n", q->uuconf_zpause);
+  printf ("    Carrier %savailable\n", q->uuconf_fcarrier ? "" : "not ");
+  if (q->uuconf_fcarrier)
+    printf ("    Wait %d seconds for carrier\n", q->uuconf_ccarrier_wait);
+  if (q->uuconf_fdtr_toggle)
     {
       printf ("    Toggle DTR");
-      if (q->fdtr_toggle_wait)
+      if (q->uuconf_fdtr_toggle_wait)
 	printf (" and wait");
       printf ("\n");
     }
-  ukshow_chat (&q->scomplete, "    When complete chat");
-  ukshow_chat (&q->sabort, "    When aborting chat");
-  if (q->cproto_params != 0)
-    ukshow_proto_params (q->cproto_params, q->qproto_params, 4);
+  ukshow_chat (&q->uuconf_scomplete, "    When complete chat");
+  ukshow_chat (&q->uuconf_sabort, "    When aborting chat");
+  if (q->uuconf_qproto_params != NULL)
+    ukshow_proto_params (q->uuconf_qproto_params, 4);
 }
 
 /* Show a chat script.  */
 
 static void
 ukshow_chat (qchat, zhdr)
-     const struct schat_info *qchat;
+     const struct uuconf_chat *qchat;
      const char *zhdr;
 {
-  if (qchat->zprogram != NULL)
-    printf ("%s program %s\n", zhdr, qchat->zprogram);
+  char **pz;
 
-  if (qchat->zchat != NULL)
+  if (qchat->uuconf_pzprogram != NULL)
     {
-      printf ("%s script %s\n", zhdr, qchat->zchat);
-      printf ("%s script timeout %d\n", zhdr, qchat->ctimeout);
-      if (qchat->zfail != NULL)
-	printf ("%s failure strings %s\n", zhdr, qchat->zfail);
-      if (qchat->fstrip)
+      printf ("%s program", zhdr);
+      for (pz = qchat->uuconf_pzprogram; *pz != NULL; pz++)
+	printf (" %s", *pz);
+      printf ("\n");
+    }
+
+  if (qchat->uuconf_pzchat != NULL)
+    {
+
+      printf ("%s script", zhdr);
+      for (pz = qchat->uuconf_pzchat; *pz != NULL; pz++)
+	{
+	  if ((*pz)[0] != '-' || pz == qchat->uuconf_pzchat)
+	    printf (" ");
+	  printf ("%s", *pz);
+	}
+      printf ("\n");
+      printf ("%s script timeout %d\n", zhdr, qchat->uuconf_ctimeout);
+      if (qchat->uuconf_pzfail != NULL)
+	{
+	  printf ("%s failure strings", zhdr);
+	  for (pz = qchat->uuconf_pzfail; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
+      if (qchat->uuconf_fstrip)
 	printf ("%s script incoming bytes stripped to seven bits\n", zhdr);
     }
 }
@@ -765,15 +661,15 @@ ukshow_chat (qchat, zhdr)
 /* Show a size/time restriction.  */
 
 static void
-ukshow_size (zstring, fcall, flocal)
-     const char *zstring;
+ukshow_size (qspan, fcall, flocal)
+     struct uuconf_timespan *qspan;
      boolean fcall;
      boolean flocal;
 {
-  struct sspan *qspan, *q;
+  struct uuconf_timespan *q;
   boolean fother;
 
-  qspan = qcompress_span (qtimesize_parse (zstring));
+  qspan = qcompress_span (qspan);
   if (qspan == NULL)
     return;
 
@@ -781,60 +677,56 @@ ukshow_size (zstring, fcall, flocal)
 	  fcall ? "ing" : "ed", flocal ? "local" : "remote");
 
   fother = FALSE;
-  if (qspan->istart >= 60)
+  if (qspan->uuconf_istart >= 60)
     fother = TRUE;
 
-  for (q = qspan; q != NULL; q = q->qnext)
+  for (q = qspan; q != NULL; q = q->uuconf_qnext)
     {
       printf ("  ");
       ukshow_time (q);
-      printf (" may transfer files %ld bytes or smaller\n", q->ival);
-      if (q->qnext == NULL)
+      printf (" may transfer files %ld bytes or smaller\n", q->uuconf_ival);
+      if (q->uuconf_qnext == NULL)
 	{
-	  if (q->iend <= 6 * 24 * 60 + 23 * 60)
+	  if (q->uuconf_iend <= 6 * 24 * 60 + 23 * 60)
 	    fother = TRUE;
 	}
       else
 	{
-	  if (q->iend + 60 <= q->qnext->istart)
+	  if (q->uuconf_iend + 60 <= q->uuconf_qnext->uuconf_istart)
 	    fother = TRUE;
 	}
     }
 
   if (fother)
     printf ("  (At other times may send files of any size)\n");
-
-  utimespan_free (qspan);
 }
 
 /* Show protocol parameters.  */
 
 static void
-ukshow_proto_params (c, pas, cindent)
-     int c;
-     struct sproto_param *pas;
+ukshow_proto_params (pas, cindent)
+     struct uuconf_proto_param *pas;
      int cindent;
 {
-  int ip;
+  struct uuconf_proto_param *q;
 
-  for (ip = 0; ip < c; ip++)
+  for (q = pas; q->uuconf_bproto != '\0'; q++)
     {
-      int ie, isp;
+      int i;
+      struct uuconf_proto_param_entry *qe;
 
-      for (isp = 0; isp < cindent; isp++)
+      for (i = 0; i < cindent; i++)
 	printf (" ");
       printf ("For protocol %c will use the following parameters\n",
-	      pas[ip].bproto);
-      for (ie = 0; ie < pas[ip].centries; ie++)
+	      q->uuconf_bproto);
+      for (qe = q->uuconf_qentries; qe->uuconf_cargs > 0; qe++)
 	{
 	  int ia;
-	  struct sproto_param_entry *qe;
 
-	  qe = &pas[ip].qentries[ie];
-	  for (isp = 0; isp < cindent; isp++)
+	  for (i = 0; i < cindent; i++)
 	    printf (" ");
-	  for (ia = 0; ia < qe->cargs; ia++)
-	    printf (" %s", qe->azargs[ia]);
+	  for (ia = 0; ia < qe->uuconf_cargs; ia++)
+	    printf (" %s", qe->uuconf_pzargs[ia]);
 	  printf ("\n");
 	}
     }
@@ -844,25 +736,25 @@ ukshow_proto_params (c, pas, cindent)
 
 static void
 ukshow_time (q)
-     const struct sspan *q;
+     const struct uuconf_timespan *q;
 {
   int idaystart, idayend;
   int ihourstart, ihourend;
   int iminutestart, iminuteend;
   const char * const zdays = "Sun\0Mon\0Tue\0Wed\0Thu\0Fri\0Sat\0Sun";
 
-  if (q->istart == 0 && q->iend == 7 * 24 * 60)
+  if (q->uuconf_istart == 0 && q->uuconf_iend == 7 * 24 * 60)
     {
       printf ("At any time");
       return;
     }
 
-  idaystart = q->istart / (24 * 60);
-  ihourstart = (q->istart % (24 * 60)) / 60;
-  iminutestart = q->istart % 60;
-  idayend = q->iend / (24 * 60);
-  ihourend = (q->iend % (24 * 60)) / 60;
-  iminuteend = q->iend % 60;
+  idaystart = q->uuconf_istart / (24 * 60);
+  ihourstart = (q->uuconf_istart % (24 * 60)) / 60;
+  iminutestart = q->uuconf_istart % 60;
+  idayend = q->uuconf_iend / (24 * 60);
+  ihourend = (q->uuconf_iend % (24 * 60)) / 60;
+  iminuteend = q->uuconf_iend % 60;
 
   if (idaystart == idayend)
     printf ("%s from %02d:%02d to %02d:%02d", zdays + idaystart * 4,
@@ -877,29 +769,46 @@ ukshow_time (q)
    identical values.  This isn't necessary for uucico, but it looks
    nicer when printed out.  */
 
-static struct sspan *
+static struct uuconf_timespan *
 qcompress_span (qlist)
-     struct sspan *qlist;
+     struct uuconf_timespan *qlist;
 {
-  struct sspan **pq;
+  struct uuconf_timespan **pq;
 
   pq = &qlist;
   while (*pq != NULL)
     {
-      if ((*pq)->qnext != NULL
-	  && (*pq)->iend == (*pq)->qnext->istart
-	  && (*pq)->ival == (*pq)->qnext->ival)
+      if ((*pq)->uuconf_qnext != NULL
+	  && (*pq)->uuconf_iend == (*pq)->uuconf_qnext->uuconf_istart
+	  && (*pq)->uuconf_ival == (*pq)->uuconf_qnext->uuconf_ival)
 	{
-	  struct sspan *qfree;
+	  struct uuconf_timespan *qnext;
 
-	  qfree = (*pq)->qnext;
-	  (*pq)->qnext = qfree->qnext;
-	  (*pq)->iend = qfree->iend;
-	  xfree ((pointer) qfree);
+	  qnext = (*pq)->uuconf_qnext;
+	  (*pq)->uuconf_qnext = qnext->uuconf_qnext;
+	  (*pq)->uuconf_iend = qnext->uuconf_iend;
 	}
       else
-	pq = &(*pq)->qnext;
+	pq = &(*pq)->uuconf_qnext;
     }
 
   return qlist;
+}
+
+/* Display a uuconf error and exit.  */
+
+static void
+ukuuconf_error (puuconf, iret)
+     pointer puuconf;
+     int iret;
+{
+  char ab[512];
+
+  (void) uuconf_error_string (puuconf, iret, ab, sizeof ab);
+  if ((iret & UUCONF_ERROR_FILENAME) == 0)
+    fprintf (stderr, "uuchk: %s\n", ab);
+  else
+    fprintf (stderr, "uuchk:%s\n", ab);
+  if (UUCONF_ERROR_VALUE (iret) != UUCONF_FOPEN_FAILED)
+    exit (EXIT_FAILURE);
 }

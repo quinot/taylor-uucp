@@ -20,87 +20,19 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.22  1992/05/20  22:40:46  ian
-   Changed arguments to fsysdep_move_file, added fsysdep_change_mode
-
-   Revision 1.21  1992/04/02  22:51:09  ian
-   Add gcc 2.0 format checking to ulog, and fixed discovered problems
-
-   Revision 1.20  1992/03/30  04:49:10  ian
-   Niels Baggesen: added debugging types abnormal and uucp-proto
-
-   Revision 1.19  1992/03/30  04:07:13  ian
-   Dirk Musstopf: remove temporary file if receive fails
-
-   Revision 1.18  1992/03/13  22:59:25  ian
-   Have breceive_char go through freceive_data
-
-   Revision 1.17  1992/03/12  19:56:10  ian
-   Debugging based on types rather than number
-
-   Revision 1.16  1992/03/11  01:18:15  ian
-   Niels Baggesen: drop the connection on a write failure
-
-   Revision 1.15  1992/03/11  00:18:50  ian
-   Save temporary file if file send fails
-
-   Revision 1.14  1992/02/09  05:21:55  ian
-   Bob Denny: call fmail_transfer before fsysdep_did_work
-
-   Revision 1.13  1992/02/08  19:41:24  ian
-   Simplify pffile calls for ancient stupid compilers
-
-   Revision 1.12  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.11  1992/01/18  22:48:53  ian
-   Reworked sending of mail and general handling of failed transfers
-
-   Revision 1.10  1992/01/16  18:16:58  ian
-   Niels Baggesen: add some debugging messages
-
-   Revision 1.9  1991/12/31  19:34:19  ian
-   Added number of bytes to pffile protocol entry point
-
-   Revision 1.8  1991/12/30  04:28:30  ian
-   John Theus: check for EOF to work around bug in fread
-
-   Revision 1.7  1991/12/21  23:10:43  ian
-   Terry Gardner: record failed file transfers in statistics file
-
-   Revision 1.6  1991/12/13  04:33:38  ian
-   Franc,ois Pinard: don't bother to warn if the final HY doesn't come in
-
-   Revision 1.5  1991/11/15  21:00:59  ian
-   Efficiency hacks for 'f' and 't' protocols
-
-   Revision 1.4  1991/11/11  19:32:03  ian
-   Added breceive_char to read characters through protocol buffering
-
-   Revision 1.3  1991/11/11  04:21:16  ian
-   Added 'f' protocol
-
-   Revision 1.2  1991/11/10  19:24:22  ian
-   Added pffile protocol entry point for file level control
-
-   Revision 1.1  1991/11/09  18:51:50  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char prot_rcsid[] = "$Id$";
+const char prot_rcsid[] = "$Id$";
 #endif
 
 #include <errno.h>
 
 #include "system.h"
-#include "port.h"
+#include "conn.h"
 #include "prot.h"
 
 /* This file implements the generic UUCP protocol for making and
@@ -112,10 +44,10 @@ char prot_rcsid[] = "$Id$";
 
 /* Local functions.  */
 
-static boolean fpsendfile_confirm P((void));
-static boolean fprecfile_confirm P((void));
-static boolean fploop P((void));
-static void upadd_cmd P((const char *z, int clen, boolean flast));
+static boolean fpsendfile_confirm P((struct sconnection *qconn));
+static boolean fprecfile_confirm P((struct sconnection *qconn));
+static boolean fploop P((struct sconnection *qconn));
+static void upadd_cmd P((const char *z, size_t clen, boolean flast));
 
 /* Variables visible to the protocol-specific routines.  */
 
@@ -153,10 +85,11 @@ static long cPreceived_bytes = -1;
    It returns TRUE otherwise, even if the file transfer failed.  */
 
 boolean
-fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
+fsend_file (fmaster, e, qcmd, qconn, zmail, ztosys, fnew)
      boolean fmaster;
      openfile_t e;
      const struct scmd *qcmd;
+     struct sconnection *qconn;
      const char *zmail;
      const char *ztosys;
      boolean fnew;
@@ -196,7 +129,7 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 		   qcmd->imode, znotify, qcmd->cbytes);
 	}
 
-      if (! (qProto->pfsendcmd) (zsend))
+      if (! (qProto->pfsendcmd) (qconn, zsend))
 	{
 	  (void) ffileclose (e);
 	  return FALSE;
@@ -204,7 +137,7 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 
       /* Now we must await a reply.  */
 
-      zrec = zgetcmd ();
+      zrec = zgetcmd (qconn);
       if (zrec == NULL)
 	{
 	  (void) ffileclose (e);
@@ -257,7 +190,7 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 	  if (fnever)
 	    {
 	      (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
-				     qcmd->zfrom, zLocalname,
+				     qcmd->zfrom, (const char *) NULL,
 				     qcmd->zto, ztosys,
 				     zsysdep_save_temp_file (qcmd->pseq));
 	      (void) fsysdep_did_work (qcmd->pseq);
@@ -274,7 +207,7 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 
       sprintf (absend, "RY 0%o", qcmd->imode);
 
-      if (! (qProto->pfsendcmd) (absend))
+      if (! (qProto->pfsendcmd) (qconn, absend))
 	{
 	  (void) ffileclose (e);
 	  return FALSE;
@@ -292,15 +225,16 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
   /* Tell the protocol that we are starting to send a file.  */
   if (qProto->pffile != NULL)
     {
-      boolean (*pffile) P((boolean, boolean, boolean *, long));
+      boolean (*pffile) P((struct sconnection *, boolean, boolean,
+			   boolean *, long));
 
       /* Simplify expression for ancient compilers.  */
       pffile = qProto->pffile;
-      if (! pffile (TRUE, TRUE, (boolean *) NULL, qcmd->cbytes))
+      if (! pffile (qconn, TRUE, TRUE, (boolean *) NULL, qcmd->cbytes))
 	return FALSE;
     }
 
-  return fploop ();
+  return fploop (qconn);
 }
 
 /* Confirm that a file has been received correctly by the other side.
@@ -310,13 +244,14 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
    send back CN5.  */
 
 static boolean
-fpsendfile_confirm ()
+fpsendfile_confirm (qconn)
+     struct sconnection *qconn;
 {
   const char *zrec;
   long cbytes;
   const char *zerr;
 
-  zrec = zgetcmd ();
+  zrec = zgetcmd (qconn);
   if (zrec == NULL)
     return FALSE;
 
@@ -338,7 +273,8 @@ fpsendfile_confirm ()
 	{
 	  char *zset;
 
-	  zset = (char *) alloca (sizeof "File send failed: " + strlen (zrec));
+	  zset = (char *) alloca (sizeof "File send failed: "
+				  + strlen (zrec));
 	  sprintf (zset, "File send failed: %s", zrec);
 	  zerr = zset;
 	}
@@ -361,10 +297,11 @@ fpsendfile_confirm ()
    fails.  */
 
 boolean
-freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
+freceive_file (fmaster, e, qcmd, qconn, zmail, zfromsys, fspool, fnew)
      boolean fmaster;
      openfile_t e;
      const struct scmd *qcmd;
+     struct sconnection *qconn;
      const char *zmail;
      const char *zfromsys;
      boolean fspool;
@@ -395,7 +332,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
 	sprintf (zsend, "R %s %s %s -%s %ld", qcmd->zfrom, qcmd->zto,
 		 qcmd->zuser, qcmd->zoptions, qcmd->cbytes);
 
-      if (! (qProto->pfsendcmd) (zsend))
+      if (! (qProto->pfsendcmd) (qconn, zsend))
 	{
 	  (void) ffileclose (e);
 	  (void) remove (qcmd->ztemp);
@@ -404,7 +341,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
 
       /* Wait for a reply.  */
 
-      zrec = zgetcmd ();
+      zrec = zgetcmd (qconn);
       if (zrec == NULL)
 	{
 	  (void) ffileclose (e);
@@ -454,7 +391,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
 	  (void) remove (qcmd->ztemp);
 	  (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
 				 qcmd->zfrom, zfromsys,
-				 qcmd->zto, zLocalname,
+				 qcmd->zto, (const char *) NULL,
 				 (const char *) NULL);
 	  (void) fsysdep_did_work (qcmd->pseq);
 	  return TRUE;
@@ -470,7 +407,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
     {
       /* Tell the other system to go ahead and send.  */
 
-      if (! (qProto->pfsendcmd) ("SY"))
+      if (! (qProto->pfsendcmd) (qconn, "SY"))
 	{
 	  (void) ffileclose (e);
 	  (void) remove (qcmd->ztemp);
@@ -488,21 +425,23 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fspool, fnew)
   /* Tell the protocol that we are starting to receive a file.  */
   if (qProto->pffile != NULL)
     {
-      boolean (*pffile) P((boolean, boolean, boolean *, long));
+      boolean (*pffile) P((struct sconnection *, boolean, boolean,
+			   boolean *, long));
 
       /* Simplify expression for ancient compilers.  */
       pffile = qProto->pffile;
-      if (! pffile (TRUE, FALSE, (boolean *) NULL, (long) -1))
+      if (! pffile (qconn, TRUE, FALSE, (boolean *) NULL, (long) -1))
 	return FALSE;
     }
 
-  return fploop ();
+  return fploop (qconn);
 }
 
 /* Confirm that a file was received correctly.  */
 
 static boolean
-fprecfile_confirm ()
+fprecfile_confirm (qconn)
+     struct sconnection *qconn;
 {
   long cbytes;
 
@@ -510,20 +449,21 @@ fprecfile_confirm ()
   cPreceived_bytes = -1;
 
   if (freceived_file (TRUE, cbytes, (const char *) NULL, FALSE))
-    return (qProto->pfsendcmd) ("CY");
+    return (qProto->pfsendcmd) (qconn, "CY");
   else
-    return (qProto->pfsendcmd) ("CN5");
+    return (qProto->pfsendcmd) (qconn, "CN5");
 }
 
 /* Send a transfer request.  This is only called by the master.  It
    ignored the pseq entry in the scmd structure.  */
 
 boolean
-fxcmd (qcmd, pfnever)
+fxcmd (qcmd, qconn, pfnever)
      const struct scmd *qcmd;
+     struct sconnection *qconn;
      boolean *pfnever;
 {
-  int clen;
+  size_t clen;
   char *zsend;
   const char *zrec;
 
@@ -532,7 +472,6 @@ fxcmd (qcmd, pfnever)
   /* We send the string
      X from to user options
      We put a dash in front of options.  */
-      
   clen = (strlen (qcmd->zfrom) + strlen (qcmd->zto)
 	  + strlen (qcmd->zuser) + strlen (qcmd->zoptions) + 7);
   zsend = (char *) alloca (clen);
@@ -540,12 +479,12 @@ fxcmd (qcmd, pfnever)
   sprintf (zsend, "X %s %s %s -%s", qcmd->zfrom, qcmd->zto,
 	   qcmd->zuser, qcmd->zoptions);
 
-  if (! (qProto->pfsendcmd) (zsend))
+  if (! (qProto->pfsendcmd) (qconn, zsend))
     return FALSE;
 
   /* Wait for a reply.  */
 
-  zrec = zgetcmd ();
+  zrec = zgetcmd (qconn);
   if (zrec == NULL)
     return FALSE;
 
@@ -569,18 +508,20 @@ fxcmd (qcmd, pfnever)
 /* Confirm a transfer request.  */
 
 boolean
-fxcmd_confirm ()
+fxcmd_confirm (qconn)
+     struct sconnection *qconn;
 {
-  return (qProto->pfsendcmd) ("XY");
+  return (qProto->pfsendcmd) (qconn, "XY");
 }
 
 /* Signal a file transfer failure to the other side.  This is only called
    by the slave.  */
 
 boolean
-ftransfer_fail (bcmd, twhy)
+ftransfer_fail (bcmd, twhy, qconn)
      int bcmd;
      enum tfailure twhy;
+     struct sconnection *qconn;
 {
   const char *z;
 
@@ -628,26 +569,27 @@ ftransfer_fail (bcmd, twhy)
       return FALSE;
     }
   
-  return (qProto->pfsendcmd) (z);
+  return (qProto->pfsendcmd) (qconn, z);
 }
 
 /* Get and parse a command from the other system.  Handle hangups
    specially.  */
 
 boolean
-fgetcmd (fmaster, qcmd)
+fgetcmd (fmaster, qcmd, qconn)
      boolean fmaster;
      struct scmd *qcmd;
+     struct sconnection *qconn;
 {
   static char *z;
-  static int c;
+  static size_t c;
 
   while (TRUE)
     {
       const char *zcmd;
-      int clen;
+      size_t clen;
 
-      zcmd = zgetcmd ();
+      zcmd = zgetcmd (qconn);
       if (zcmd == NULL)
 	return FALSE;
 
@@ -691,10 +633,10 @@ fgetcmd (fmaster, qcmd)
 	     might jump the gun and hang up.  The fLog_sighup variable
 	     will get set TRUE again when the port is closed.  */
 	  fLog_sighup = FALSE;
-	  if (! (qProto->pfsendcmd) ("HY"))
+	  if (! (qProto->pfsendcmd) (qconn, "HY"))
 	    return TRUE;
 	  fPerror_ok = TRUE;
-	  zcmd = zgetcmd ();
+	  zcmd = zgetcmd (qconn);
 	  fPerror_ok = FALSE;
 	  if (zcmd == NULL)
 	    return TRUE;
@@ -704,7 +646,7 @@ fgetcmd (fmaster, qcmd)
 			    "fgetcmd: Got \"%s\" when expecting \"HY\"",
 			    zcmd);
 #endif
-	  (void) (qProto->pfshutdown) ();
+	  (void) (qProto->pfshutdown) (qconn);
 	  return TRUE;
 	}
 
@@ -717,9 +659,10 @@ fgetcmd (fmaster, qcmd)
 /* Hangup.  */
 
 boolean
-fhangup_request ()
+fhangup_request (qconn)
+     struct sconnection *qconn;
 {
-  return (qProto->pfsendcmd) ("H");
+  return (qProto->pfsendcmd) (qconn, "H");
 }
 
 /* Reply to a hangup request.  This is only called by the slave.  If
@@ -728,30 +671,31 @@ fhangup_request ()
    HY message, and then shut down the protocol.  */
 
 boolean
-fhangup_reply (fconfirm)
+fhangup_reply (fconfirm, qconn)
      boolean fconfirm;
+     struct sconnection *qconn;
 {
   if (! fconfirm)
-    return (qProto->pfsendcmd) ("HN");
+    return (qProto->pfsendcmd) (qconn, "HN");
   else
     {
       const char *z;
 
-      if (! (qProto->pfsendcmd) ("HY"))
+      if (! (qProto->pfsendcmd) (qconn, "HY"))
 	return FALSE;
 
-      z = zgetcmd ();
+      z = zgetcmd (qconn);
       if (z == NULL)
 	return FALSE;
       if (strcmp (z, "HY") != 0)
 	ulog (LOG_ERROR, "Got \"%s\" when expecting \"HY\"", z);
       else
 	{
-	  if (! (qProto->pfsendcmd) ("HY"))
+	  if (! (qProto->pfsendcmd) (qconn, "HY"))
 	    return FALSE;
 	}
 
-      return (qProto->pfshutdown) ();
+      return (qProto->pfshutdown) (qconn);
     }
 }
 
@@ -763,7 +707,8 @@ fhangup_reply (fconfirm)
    received from the remote system.  */
 
 static boolean
-fploop ()
+fploop (qconn)
+     struct sconnection *qconn;
 {
   boolean fexit;
 
@@ -782,11 +727,11 @@ fploop ()
 	  while (iend == iPrecend)
 	    {
 	      char *zdata;
-	      int cdata;
+	      size_t cdata;
 
 	      /* Get a packet and fill it with data.  */
 
-	      zdata = (qProto->pzgetspace) (&cdata);
+	      zdata = (qProto->pzgetspace) (qconn, &cdata);
 	      if (zdata == NULL)
 		return FALSE;
 
@@ -806,7 +751,7 @@ fploop ()
 		    }
 		}
 
-	      if (! (qProto->pfsenddata) (zdata, cdata))
+	      if (! (qProto->pfsenddata) (qconn, zdata, cdata))
 		return FALSE;
 
 	      cPsent_bytes += cdata;
@@ -825,12 +770,12 @@ fploop ()
 		  if (qProto->pffile != NULL)
 		    {
 		      boolean fredo;
-		      boolean (*pffile) P((boolean, boolean, boolean *,
-					   long));
+		      boolean (*pffile) P((struct sconnection *, boolean,
+					   boolean, boolean *, long));
 
 		      /* Simplify expression for ancient compilers.  */
 		      pffile = qProto->pffile;
-		      if (! pffile (FALSE, TRUE, &fredo, (long) -1))
+		      if (! pffile (qconn, FALSE, TRUE, &fredo, (long) -1))
 			return FALSE;
 
 		      if (fredo)
@@ -847,13 +792,13 @@ fploop ()
 			}
 		    }
 
-		  return fpsendfile_confirm ();
+		  return fpsendfile_confirm (qconn);
 		}
 	    }
 
 	  /* Process the data in the receive buffer, and decide
 	     whether it's time to get out.  */
-	  if (! (qProto->pfprocess) (&fexit))
+	  if (! (qProto->pfprocess) (qconn, &fexit))
 	    return FALSE;
 	  if (fexit)
 	    return TRUE;
@@ -872,7 +817,7 @@ fploop ()
 
   /* We have no file to send.  Wait for data to come in.  */
 
-  return (qProto->pfwait) ();
+  return (qProto->pfwait) (qconn);
 }
 
 /* This function is called by the protocol routines when data has
@@ -885,12 +830,13 @@ fploop ()
    error.  */
 
 boolean 
-fgot_data (zdata, cdata, fcmd, ffile, pfexit)
+fgot_data (zdata, cdata, fcmd, ffile, pfexit, qconn)
      const char *zdata;
-     int cdata;
+     size_t cdata;
      boolean fcmd;
      boolean ffile;
      boolean *pfexit;
+     struct sconnection *qconn;
 {
   *pfexit = FALSE;
 
@@ -917,11 +863,12 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	  if (qProto->pffile != NULL)
 	    {
 	      boolean fredo;
-	      boolean (*pffile) P((boolean, boolean, boolean *, long));
+	      boolean (*pffile) P((struct sconnection *, boolean,
+				   boolean, boolean *, long));
 
 	      /* Simplify expression for ancient compilers.  */
 	      pffile = qProto->pffile;
-	      if (! pffile (FALSE, FALSE, &fredo, (long) -1))
+	      if (! pffile (qconn, FALSE, FALSE, &fredo, (long) -1))
 		return FALSE;
 	    
 	      if (fredo)
@@ -933,7 +880,7 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 		}
 	    }
 
-	  if (! fprecfile_confirm ())
+	  if (! fprecfile_confirm (qconn))
 	    return FALSE;
 	  *pfexit = TRUE;
 	  return TRUE;
@@ -987,7 +934,7 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	upadd_cmd (zdata, cdata, FALSE);
       else
 	{
-	  upadd_cmd (zdata, z - zdata, TRUE);
+	  upadd_cmd (zdata, (size_t) (z - zdata), TRUE);
 	  *pfexit = TRUE;
 	}
 
@@ -1005,8 +952,8 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 struct spcmdqueue
 {
   struct spcmdqueue *qnext;
-  int csize;
-  int clen;
+  size_t csize;
+  size_t clen;
   char *z;
 };
 
@@ -1016,7 +963,7 @@ static struct spcmdqueue *qPcmd_free;
 static void
 upadd_cmd (z, clen, flast)
      const char *z;
-     int clen;
+     size_t clen;
      boolean flast;
 {
   struct spcmdqueue *q;
@@ -1044,7 +991,6 @@ upadd_cmd (z, clen, flast)
 
   /* If the last string in this command, add it to the queue of
      finished commands.  */
-
   if (flast)
     {
       struct spcmdqueue **pq;
@@ -1063,7 +1009,8 @@ upadd_cmd (z, clen, flast)
    at least until the next packet is received.  */
 
 const char *
-zgetcmd ()
+zgetcmd (qconn)
+     struct sconnection *qconn;
 {
   struct spcmdqueue *q;
 
@@ -1072,7 +1019,7 @@ zgetcmd ()
     {
       DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "zgetcmd: Waiting for packet");
 
-      if (! (qProto->pfwait) ())
+      if (! (qProto->pfwait) (qconn))
 	return NULL;
     }
 
@@ -1106,18 +1053,19 @@ zgetcmd ()
    can send it, we may run out of buffer space.  */
 
 boolean
-fsend_data (zsend, csend, fdoread)
+fsend_data (qconn, zsend, csend, fdoread)
+     struct sconnection *qconn;
      const char *zsend;
-     int csend;
+     size_t csend;
      boolean fdoread;
 {
   if (! fdoread)
-    return fport_write (zsend, csend);
+    return fconn_write (qconn, zsend, csend);
 
   while (csend > 0)
     {
       char *zrec;
-      int crec, csent;
+      size_t crec, csent;
 
       if (iPrecend < iPrecstart)
 	{
@@ -1137,7 +1085,7 @@ fsend_data (zsend, csend, fdoread)
 
       csent = csend;
 
-      if (! fport_io (zsend, &csent, zrec, &crec))
+      if (! fconn_io (qconn, zsend, &csent, zrec, &crec))
 	return FALSE;
 
       csend -= csent;
@@ -1159,13 +1107,14 @@ fsend_data (zsend, csend, fdoread)
    argument is FALSE, no error should be reported.  */
 
 boolean
-freceive_data (cneed, pcrec, ctimeout, freport)
-     int cneed;
-     int *pcrec;
+freceive_data (qconn, cneed, pcrec, ctimeout, freport)
+     struct sconnection *qconn;
+     size_t cneed;
+     size_t *pcrec;
      int ctimeout;
      boolean freport;
 {
-  /* Set *pcrec to the maximum amount of data we can read.  fport_read
+  /* Set *pcrec to the maximum amount of data we can read.  fconn_read
      expects *pcrec to be the buffer size, and sets it to the amount
      actually received.  */
   if (iPrecend < iPrecstart)
@@ -1189,7 +1138,8 @@ freceive_data (cneed, pcrec, ctimeout, freport)
   if (*pcrec < cneed)
     cneed = *pcrec;
 
-  if (! fport_read (abPrecbuf + iPrecend, pcrec, cneed, ctimeout, freport))
+  if (! fconn_read (qconn, abPrecbuf + iPrecend, pcrec, cneed, ctimeout,
+		    freport))
     return FALSE;
 
   iPrecend = (iPrecend + *pcrec) % CRECBUFLEN;
@@ -1201,7 +1151,7 @@ freceive_data (cneed, pcrec, ctimeout, freport)
    there, otherwise ask freceive_data for at least one character.
    This is used because as a protocol is shutting down freceive_data
    may read ahead and eat characters that should be read outside the
-   protocol routines.  We call freceive_data rather than fport_read
+   protocol routines.  We call freceive_data rather than fconn_read
    with an argument of 1 so that we can get all the available data in
    a single system call.  The ctimeout argument is the timeout in
    seconds; the freport argument is FALSE if no error should be
@@ -1209,7 +1159,8 @@ freceive_data (cneed, pcrec, ctimeout, freport)
    error.  */
 
 int
-breceive_char (ctimeout, freport)
+breceive_char (qconn, ctimeout, freport)
+     struct sconnection *qconn;
      int ctimeout;
      boolean freport;
 {
@@ -1217,9 +1168,9 @@ breceive_char (ctimeout, freport)
 
   if (iPrecstart == iPrecend)
     {
-      int crec;
+      size_t crec;
 
-      if (! freceive_data (1, &crec, ctimeout, freport))
+      if (! freceive_data (qconn, sizeof (char), &crec, ctimeout, freport))
 	return -2;
       if (crec == 0)
 	return -1;

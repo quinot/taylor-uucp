@@ -20,12 +20,13 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char log_rcsid[] = "$Id$";
+const char log_rcsid[] = "$Id$";
 #endif
 
 #include <errno.h>
@@ -44,6 +45,9 @@ char log_rcsid[] = "$Id$";
 
 static const char *zldate_and_time P((void));
 
+/* Log file name.  */
+static const char *zLogfile;
+
 /* The function to call when a LOG_FATAL error occurs.  */
 static void (*pfLfatal) P((void));
 
@@ -67,11 +71,14 @@ static FILE *eLlog;
 
 /* Whether we have tried to open the log file.  We need this because
    we don't want to keep trying to open the log file if we failed the
-   first time.  It can't be static because under HAVE_BNU_LOGGING we
+   first time.  It can't be static because under HAVE_HDB_LOGGING we
    may have to write to various different log files.  */
 static boolean fLlog_tried;
 
 #if DEBUG > 1
+/* Debugging file name.  */
+static const char *zLdebugfile;
+
 /* The open debugging file.  */
 static FILE *eLdebug;
 
@@ -81,6 +88,9 @@ static boolean fLdebug_tried;
 /* Whether we've written out any debugging information.  */
 static boolean fLdebugging;
 #endif
+
+/* Statistics file name.  */
+static const char *zLstatsfile;
 
 /* The open statistics file.  */
 static FILE *eLstats;
@@ -126,9 +136,26 @@ ulog_fatal_fn (pfn)
 /* Decide whether to send log message to the file or not.  */
 
 void
-ulog_to_file (ffile)
+ulog_to_file (puuconf, ffile)
+     pointer puuconf;
      boolean ffile;
 {
+  int iuuconf;
+
+  iuuconf = uuconf_logfile (puuconf, &zLogfile);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+#if DEBUG > 1
+  iuuconf = uuconf_debugfile (puuconf, &zLdebugfile);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+#endif
+
+  iuuconf = uuconf_statsfile (puuconf, &zLstatsfile);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
   fLfile = ffile;
 }
 
@@ -149,16 +176,8 @@ void
 ulog_user (zuser)
      const char *zuser;
 {
-  if (zuser == NULL
-      || zLuser == NULL
-      || strcmp (zuser, zLuser) != 0)
-    {
-      xfree ((pointer) zLuser);
-      if (zuser == NULL)
-	zLuser = NULL;
-      else
-	zLuser = xstrdup (zuser);
-    }
+  ubuffree (zLuser);
+  zLuser = zbufcpy (zuser);
 }
 
 /* Set the system name we are making log entries for.  The name is copied
@@ -172,20 +191,12 @@ ulog_system (zsystem)
       || zLsystem == NULL
       || strcmp (zsystem, zLsystem) != 0)
     {
-      xfree ((pointer) zLsystem);
-      if (zsystem == NULL)
-	zLsystem = NULL;
-      else
-	zLsystem = xstrdup (zsystem);
-#if HAVE_BNU_LOGGING      
-      /* Under BNU logging we now must write to a different log file.  */
-      if (eLlog != NULL)
-	{
-	  (void) fclose (eLlog);
-	  eLlog = NULL;
-	  fLlog_tried = FALSE;
-	}
-#endif /* HAVE_BNU_LOGGING */
+      ubuffree (zLsystem);
+      zLsystem = zbufcpy (zsystem);
+#if HAVE_HDB_LOGGING      
+      /* Under HDB logging we now must write to a different log file.  */
+      ulog_close ();
+#endif /* HAVE_HDB_LOGGING */
     }
 }
 
@@ -195,16 +206,8 @@ void
 ulog_device (zdevice)
      const char *zdevice;
 {
-  if (zdevice == NULL
-      || zLdevice == NULL
-      || strcmp (zdevice, zLdevice) != 0)
-    {
-      xfree ((pointer) zLdevice);
-      if (zdevice == NULL)
-	zLdevice = NULL;
-      else
-	zLdevice = xstrdup (zdevice);
-    }
+  ubuffree (zLdevice);
+  zLdevice = zbufcpy (zdevice);
 }
 
 /* Make a log entry.  We make a token concession to non ANSI_C systems,
@@ -269,7 +272,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       && (fLdebugging || (int) ttype >= (int) LOG_DEBUG))
     {
       fLdebug_tried = TRUE;
-      eLdebug = esysdep_fopen (zDebugfile, FALSE, TRUE, TRUE);
+      eLdebug = esysdep_fopen (zLdebugfile, FALSE, TRUE, TRUE);
       fLdebugging = TRUE;
     }
 #endif /* DEBUG > 1 */
@@ -292,9 +295,9 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (eLlog == NULL && ! fLlog_tried)
 	{
 	  fLlog_tried = TRUE;
-#if ! HAVE_BNU_LOGGING
+#if ! HAVE_HDB_LOGGING
 	  eLlog = esysdep_fopen (zLogfile, TRUE, TRUE, TRUE);
-#else /* HAVE_BNU_LOGGING */
+#else /* HAVE_HDB_LOGGING */
 	  {
 	    const char *zsys;
 	    char *zfile;
@@ -313,7 +316,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    sprintf (zfile, zLogfile, abProgram, zsys);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	  }
-#endif /* HAVE_BNU_LOGGING */
+#endif /* HAVE_HDB_LOGGING */
 
 	  if (eLlog == NULL)
 	    {
@@ -418,7 +421,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 
 	  if (iLid != 0)
 	    {
-#if ! HAVE_BNU_LOGGING
+#if ! HAVE_HDB_LOGGING
 #if HAVE_TAYLOR_LOGGING
 	      fprintf (e, " %d", iLid);
 	      if (edebug != NULL)
@@ -428,7 +431,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	      if (edebug != NULL)
 		fprintf (edebug, "-%d", iLid);
 #endif /* ! HAVE_TAYLOR_LOGGING */
-#else /* HAVE_BNU_LOGGING */
+#else /* HAVE_HDB_LOGGING */
 
 	      /* I assume that the second number here is meant to be
 		 some sort of file sequence number, and that it should
@@ -439,7 +442,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	      fprintf (e, ",%d,%d", iLid, 0);
 	      if (edebug != NULL)
 		fprintf (edebug, ",%d,%d", iLid, 0);
-#endif /* HAVE_BNU_LOGGING */
+#endif /* HAVE_HDB_LOGGING */
 	    }
 
 	  fprintf (e, ") ");
@@ -492,6 +495,20 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 #if CLOSE_LOGFILES
   ulog_close ();
 #endif
+}
+
+/* Log a uuconf error.  */
+
+void
+ulog_uuconf (ttype, puuconf, iuuconf)
+     enum tlog ttype;
+     pointer puuconf;
+     int iuuconf;
+{
+  char ab[512];
+
+  (void) uuconf_error_string (puuconf, iuuconf, ab, sizeof ab);
+  ulog (ttype, ab);
 }
 
 /* Close the log file.  There's nothing useful we can do with errors,
@@ -547,7 +564,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
       if (fLstats_tried)
 	return;
       fLstats_tried = TRUE;
-      eLstats = esysdep_fopen (zStatfile, TRUE, TRUE, TRUE);
+      eLstats = esysdep_fopen (zLstatsfile, TRUE, TRUE, TRUE);
       if (eLstats == NULL)
 	return;
     }
@@ -569,7 +586,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 	   fsucceeded ? "data" : "failed after",
 	   cbytes, csecs + cmicros / 500000);
 #endif /* HAVE_V2_LOGGING */
-#if HAVE_BNU_LOGGING
+#if HAVE_HDB_LOGGING
   {
     static int iseq;
 
@@ -592,7 +609,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 	     cbytes, csecs, cmicros / 1000, cbps,
 	     "bytes/sec");
   }
-#endif /* HAVE_BNU_LOGGING */
+#endif /* HAVE_HDB_LOGGING */
 
   (void) fflush (eLstats);
 
@@ -628,7 +645,7 @@ zldate_and_time ()
 #if HAVE_V2_LOGGING
   static char ab[sizeof "12/31-12:00"];
 #endif
-#if HAVE_BNU_LOGGING
+#if HAVE_HDB_LOGGING
   static char ab[sizeof "12/31-12:00:00"];
 #endif
 
@@ -644,7 +661,7 @@ zldate_and_time ()
   sprintf (ab, "%d/%d-%02d:%02d", s.tm_mon + 1, s.tm_mday,
 	   s.tm_hour, s.tm_min);
 #endif
-#if HAVE_BNU_LOGGING
+#if HAVE_HDB_LOGGING
   sprintf (ab, "%d/%d-%02d:%02d:%02d", s.tm_mon + 1, s.tm_mday,
 	   s.tm_hour, s.tm_min, s.tm_sec);
 #endif

@@ -20,34 +20,16 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.5  1992/03/28  04:42:32  ian
-   Franc,ois Pinard: output aliases, added -a switch
-
-   Revision 1.4  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.3  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.2  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.1  1992/02/14  20:25:55  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char uuname_rcsid[] = "$Id$";
+const char uuname_rcsid[] = "$Id$";
 #endif
 
 #include "system.h"
-#include "sysdep.h"
 #include "getopt.h"
 
 /* The program name.  */
@@ -56,25 +38,26 @@ char abProgram[] = "uuname";
 /* Local functions.  */
 
 static void unusage P((void));
+static void unuuconf_error P((pointer puuconf, int iuuconf));
 
 /* Long getopt options.  */
 
 static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
-
-const struct option *_getopt_long_options = asLongopts;
 
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
-  int iopt;
   /* -a: don't display aliases.  */
-  boolean fnoalias = FALSE;
+  boolean falias = TRUE;
   /* -l: if true, output local node name.  */
   boolean flocal = FALSE;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
+  int iopt;
+  pointer puuconf;
+  int iuuconf;
 
   while ((iopt = getopt (argc, argv, "alI:x:")) != EOF)
     {
@@ -82,7 +65,7 @@ main (argc, argv)
 	{
 	case 'a':
 	  /* Don't display aliases.  */
-	  fnoalias = TRUE;
+	  falias = FALSE;
 	  break;
 
 	case 'l':
@@ -92,7 +75,8 @@ main (argc, argv)
 
 	case 'I':
 	  /* Configuration file name.  */
-	  zconfig = optarg;
+	  if (fsysdep_other_config (optarg))
+	    zconfig = optarg;
 	  break;
 
 	case 'x':
@@ -115,41 +99,52 @@ main (argc, argv)
   if (optind != argc)
     unusage ();
 
-  uread_config (zconfig);
+  iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  if (iuuconf != UUCONF_SUCCESS)
+    unuuconf_error (puuconf, iuuconf);
 
-  usysdep_initialize (0);
+#if DEBUG > 1
+  {
+    const char *zdebug;
+
+    iuuconf = uuconf_debuglevel (puuconf, &zdebug);
+    if (iuuconf != UUCONF_SUCCESS)
+      ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    if (zdebug != NULL)
+      iDebug |= idebug_parse (zdebug);
+  }
+#endif
+
+  usysdep_initialize (puuconf, 0);
 
   if (flocal)
-    printf ("%s\n", zLocalname);
+    {
+      const char *zlocalname;
+
+      iuuconf = uuconf_localname (puuconf, &zlocalname);
+      if (iuuconf == UUCONF_NOT_FOUND)
+	{
+	  zlocalname = zsysdep_localname ();
+	  if (zlocalname == NULL)
+	    usysdep_exit (FALSE);
+	}
+      else if (iuuconf != UUCONF_SUCCESS)
+	unuuconf_error (puuconf, iuuconf);
+      printf ("%s\n", zlocalname);
+    }
   else
     {
-      int c;
-      struct ssysteminfo *pas;
-      int i;
+      char **pznames, **pz;
 
-      uread_all_system_info (&c, &pas);
+      iuuconf = uuconf_system_names (puuconf, &pznames, falias);
+      if (iuuconf != UUCONF_SUCCESS)
+	unuuconf_error (puuconf, iuuconf);
 
-      for (i = 0; i < c; i++)
-	{
-	  printf ("%s\n", pas[i].zname);
-
-	  if (! fnoalias && pas[i].zalias != NULL)
-	    {
-	      char *zcopy, *ztok;
-
-	      zcopy = (char *) alloca (strlen (pas[i].zalias) + 1);
-	      strcpy (zcopy, pas[i].zalias);
-	      for (ztok = strtok (zcopy, " ");
-		   ztok != NULL;
-		   ztok = strtok ((char *) NULL, " "))
-		printf ("%s\n", ztok);
-	    }
-	}
+      for (pz = pznames; *pz != NULL; pz++)
+	printf ("%s\n", *pz);
     }
 
-  ulog_close ();
-
-  usysdep_exit (TRUE);
+  usysdep_exit (EXIT_SUCCESS);
 
   /* Avoid errors about not returning a value.  */
   return 0;
@@ -162,19 +157,33 @@ unusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-	   abVersion);
+	   VERSION);
   fprintf (stderr,
-	   "Usage: uuname [-a]  [-l] [-I file] [-x debug]\n");
+	   "Usage: uuname [-a]  [-l] [-I file]\n");
   fprintf (stderr,
 	   " -a: don't display aliases\n");
   fprintf (stderr,
 	   " -l: print local name\n");
-  fprintf (stderr,
-	   " -x debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s%s)\n",
-	   NEWCONFIGLIB, CONFIGFILE);
+	   " -I file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
+  exit (EXIT_FAILURE);
+}
+
+/* Display a uuconf error and exit.  */
+
+static void
+unuuconf_error (puuconf, iret)
+     pointer puuconf;
+     int iret;
+{
+  char ab[512];
+
+  (void) uuconf_error_string (puuconf, iret, ab, sizeof ab);
+  if ((iret & UUCONF_ERROR_FILENAME) == 0)
+    fprintf (stderr, "uuname: %s\n", ab);
+  else
+    fprintf (stderr, "uuname:%s\n", ab);
   exit (EXIT_FAILURE);
 }

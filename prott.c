@@ -20,67 +20,17 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.16  1992/03/30  04:49:10  ian
-   Niels Baggesen: added debugging types abnormal and uucp-proto
-
-   Revision 1.15  1992/03/17  01:03:03  ian
-   Miscellaneous cleanup
-
-   Revision 1.14  1992/03/13  22:59:25  ian
-   Have breceive_char go through freceive_data
-
-   Revision 1.13  1992/03/12  19:56:10  ian
-   Debugging based on types rather than number
-
-   Revision 1.12  1992/02/08  19:55:32  ian
-   Shifts of integers by more than 15 are not portable
-
-   Revision 1.11  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.10  1992/01/16  18:16:58  ian
-   Niels Baggesen: add some debugging messages
-
-   Revision 1.9  1991/12/31  19:34:19  ian
-   Added number of bytes to pffile protocol entry point
-
-   Revision 1.8  1991/12/28  03:49:23  ian
-   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
-
-   Revision 1.7  1991/12/17  22:13:14  ian
-   David Nugent: zero out garbage before sending data
-
-   Revision 1.6  1991/11/16  00:31:01  ian
-   Increased default 't' and 'f' protocol timeouts
-
-   Revision 1.5  1991/11/15  23:27:21  ian
-   Include system.h in prott.c and protf.c
-
-   Revision 1.4  1991/11/15  23:20:59  ian
-   Changed sleep to usysdep_sleep
-
-   Revision 1.3  1991/11/15  21:00:59  ian
-   Efficiency hacks for 'f' and 't' protocols
-
-   Revision 1.2  1991/11/13  20:44:20  ian
-   Learned author
-
-   Revision 1.1  1991/11/12  18:26:03  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char prott_rcsid[] = "$Id$";
+const char prott_rcsid[] = "$Id$";
 #endif
 
 #include "prot.h"
-#include "port.h"
+#include "conn.h"
 #include "system.h"
 
 /* This implementation is based on code written by Rick Adams.
@@ -109,24 +59,26 @@ static boolean fTfile;
 /* The timeout we use.  */
 static int cTtimeout = 120;
 
-struct scmdtab asTproto_params[] =
+struct uuconf_cmdtab asTproto_params[] =
 {
-  { "timeout", CMDTABTYPE_INT, (pointer) &cTtimeout, NULL },
+  { "timeout", UUCONF_CMDTABTYPE_INT, (pointer) &cTtimeout, NULL },
   { NULL, 0, NULL, NULL }
 };
 
 /* Local function.  */
 
-static boolean ftprocess_data P((boolean *pfexit, int *pcneed));
+static boolean ftprocess_data P((struct sconnection *qconn, boolean *pfexit,
+				 size_t *pcneed));
 
 /* Start the protocol.  */
 
 /*ARGSUSED*/
 boolean
-ftstart (fmaster)
+ftstart (qconn, fmaster)
+     struct sconnection *qconn;
      boolean fmaster;
 {
-  if (! fport_set (PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
+  if (! fconn_set (qconn, PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
 		   XONXOFF_OFF))
     return FALSE;
   zTbuf = (char *) xmalloc (CTBUFSIZE + CTFRAMELEN);
@@ -140,11 +92,14 @@ ftstart (fmaster)
 
 /* Stop the protocol.  */
 
+/*ARGSUSED*/
 boolean 
-ftshutdown ()
+ftshutdown (qconn)
+     struct sconnection *qconn;
 {
   xfree ((pointer) zTbuf);
   zTbuf = NULL;
+  cTtimeout = 120;
   return TRUE;
 }
 
@@ -153,10 +108,11 @@ ftshutdown ()
    TPACKSIZE.  */
 
 boolean
-ftsendcmd (z)
+ftsendcmd (qconn, z)
+     struct sconnection *qconn;
      const char *z;
 {
-  int clen;
+  size_t clen, csend;
   char *zalc;
 
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "ftsendcmd: Sending command \"%s\"", z);
@@ -166,21 +122,23 @@ ftsendcmd (z)
   /* We need to send the smallest multiple of CTPACKSIZE which is
      greater than clen (not equal to clen, since we need room for the
      null byte).  */
-  clen = ((clen / CTPACKSIZE) + 1) * CTPACKSIZE;
+  csend = ((clen / CTPACKSIZE) + 1) * CTPACKSIZE;
 
-  zalc = (char *) alloca (clen);
-  bzero (zalc, clen);
-  strcpy (zalc, z);
+  zalc = (char *) alloca (csend);
+  memcpy (zalc, z, clen);
+  bzero (zalc + clen, csend - clen);
 
-  return fsend_data (zalc, clen, TRUE);
+  return fsend_data (qconn, zalc, clen, TRUE);
 }
 
 /* Get space to be filled with data.  We provide a buffer which has
    four bytes at the start available to hold the length.  */
 
+/*ARGSIGNORED*/
 char *
-ztgetspace (pclen)
-     int *pclen;
+ztgetspace (qconn, pclen)
+     struct sconnection *qconn;
+     size_t *pclen;
 {
   *pclen = CTBUFSIZE;
   return zTbuf + CTFRAMELEN;
@@ -191,9 +149,10 @@ ztgetspace (pclen)
    header bytes in a single call.  */
 
 boolean
-ftsenddata (zdata, cdata)
+ftsenddata (qconn, zdata, cdata)
+     struct sconnection *qconn;
      char *zdata;
-     int cdata;
+     size_t cdata;
 {
   /* Here we do htonl by hand, since it doesn't exist everywhere.  We
      know that the amount of data cannot be greater than CTBUFSIZE, so
@@ -206,24 +165,26 @@ ftsenddata (zdata, cdata)
 
   /* We pass FALSE to fsend_data since we don't expect the other side
      to be sending us anything just now.  */
-  return fsend_data (zdata - CTFRAMELEN, cdata + CTFRAMELEN, FALSE);
+  return fsend_data (qconn, zdata - CTFRAMELEN, cdata + CTFRAMELEN, FALSE);
 }
 
 /* Process any data in the receive buffer.  */
 
 boolean
-ftprocess (pfexit)
+ftprocess (qconn, pfexit)
+     struct sconnection *qconn;
      boolean *pfexit;
 {
-  return ftprocess_data (pfexit, (int *) NULL);
+  return ftprocess_data (qconn, pfexit, (size_t *) NULL);
 }
 
 /* Process data and return the amount we need in *pfneed.  */
 
 static boolean
-ftprocess_data (pfexit, pcneed)
+ftprocess_data (qconn, pfexit, pcneed)
+     struct sconnection *qconn;
      boolean *pfexit;
-     int *pcneed;
+     size_t *pcneed;
 {
   int cinbuf, cfirst, clen;
 
@@ -247,13 +208,13 @@ ftprocess_data (pfexit, pcneed)
 			  "ftprocess_data: Got %d command bytes",
 			  cfirst);
 
-	  if (! fgot_data (abPrecbuf + iPrecstart, cfirst, TRUE, FALSE,
-			   pfexit))
+	  if (! fgot_data (abPrecbuf + iPrecstart, (size_t) cfirst, TRUE,
+			   FALSE, pfexit, qconn))
 	    return FALSE;
 	  if (cfirst < CTPACKSIZE && ! *pfexit)
 	    {
-	      if (! fgot_data (abPrecbuf, CTPACKSIZE - cfirst, TRUE, FALSE,
-			       pfexit))
+	      if (! fgot_data (abPrecbuf, (size_t) CTPACKSIZE - cfirst,
+			       TRUE, FALSE, pfexit, qconn))
 		return FALSE;
 	    }
 
@@ -301,13 +262,13 @@ ftprocess_data (pfexit, pcneed)
 		      "ftprocess_data: Got %d data bytes",
 		      cfirst);
 
-      if (! fgot_data (abPrecbuf + iPrecstart, cfirst, FALSE, TRUE,
-		       pfexit))
+      if (! fgot_data (abPrecbuf + iPrecstart, (size_t) cfirst, FALSE, TRUE,
+		       pfexit, qconn))
 	return FALSE;
       if (cfirst < clen)
 	{
-	  if (! fgot_data (abPrecbuf, clen - cfirst, FALSE, TRUE,
-			   pfexit))
+	  if (! fgot_data (abPrecbuf, (size_t) (clen - cfirst), FALSE, TRUE,
+			   pfexit, qconn))
 	    return FALSE;
 	}
 
@@ -329,19 +290,20 @@ ftprocess_data (pfexit, pcneed)
    of a command or a file.  */
 
 boolean
-ftwait ()
+ftwait (qconn)
+     struct sconnection *qconn;
 {
   while (TRUE)
     {
       boolean fexit;
-      int cneed, crec;
+      size_t cneed, crec;
 
-      if (! ftprocess_data (&fexit, &cneed))
+      if (! ftprocess_data (qconn, &fexit, &cneed))
 	return FALSE;
       if (fexit)
 	return TRUE;
 
-      if (! freceive_data (cneed, &crec, cTtimeout, TRUE))
+      if (! freceive_data (qconn, cneed, &crec, cTtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)
@@ -356,7 +318,8 @@ ftwait ()
 
 /*ARGSUSED*/
 boolean
-ftfile (fstart, fsend, pfredo, cbytes)
+ftfile (qconn, fstart, fsend, pfredo, cbytes)
+     struct sconnection *qconn;
      boolean fstart;
      boolean fsend;
      boolean *pfredo;

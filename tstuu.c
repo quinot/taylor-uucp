@@ -20,21 +20,18 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char tstuu_rcsid[] = "$Id$";
+const char tstuu_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #include "sysdep.h"
 
@@ -181,6 +178,7 @@ static int cpshow P((char *z, int bchar));
 static void uchoose P((int *po1, int *po2));
 static boolean fwritable P((int o));
 static void xsystem P((const char *zcmd));
+static FILE *xfopen P((const char *zname, const char *zmode));
 
 static char *zDebug;
 static int iTest;
@@ -218,13 +216,13 @@ main (argc, argv)
 	  zProtocols = optarg;
 	  break;
 	case 'p':
-	  iPercent = atoi (optarg);
+	  iPercent = (int) strtol (optarg, (char **) NULL, 10);
 	  break;
 	case 's':
 	  zsys = optarg;
 	  break;
 	case 't':
-	  iTest = atoi (optarg);
+	  iTest = (int) strtol (optarg, (char **) NULL, 10);
 	  break;
 	case 'u':
 	  fCall_uucico = TRUE;
@@ -241,7 +239,7 @@ main (argc, argv)
 	default:
 	  fprintf (stderr,
 		   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-		   abVersion);
+		   VERSION);
 	  fprintf (stderr,
 		   "Usage: tstuu [-x] [-t #] [-u] [-1 cmd] [-2 cmd]\n");
 	  exit (EXIT_FAILURE);
@@ -549,8 +547,6 @@ uchild (isig)
 
 /* Open a file without error.  */
 
-static FILE *xfopen P((const char *zname, const char *zmode));
-
 static FILE *
 xfopen (zname, zmode)
      const char *zname;
@@ -718,11 +714,12 @@ uprepare_test (itest, fcall_uucico, zsys)
   fprintf (e, "# First test configuration file\n");
   fprintf (e, "nodename test1\n");
   fprintf (e, "spool /usr/tmp/tstuu/spool1\n");
+  fprintf (e, "lockdir /usr/tmp/tstuu/spool1\n");
   fprintf (e, "sysfile /usr/tmp/tstuu/System1\n");
   fprintf (e, "sysfile /usr/tmp/tstuu/System1.2\n");
   fprintf (e, "portfile /usr/tmp/tstuu/Port1\n");
   (void) remove ("/usr/tmp/tstuu/Log1");
-#if ! HAVE_BNU_LOGGING
+#if ! HAVE_HDB_LOGGING
   fprintf (e, "logfile /usr/tmp/tstuu/Log1\n");
 #else
   fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log1/%s/%s");
@@ -734,8 +731,8 @@ uprepare_test (itest, fcall_uucico, zsys)
 #if HAVE_V2_CONFIG
   fprintf (e, "v2-files no\n");
 #endif
-#if HAVE_BNU_CONFIG
-  fprintf (e, "bnu-files no\n");
+#if HAVE_HDB_CONFIG
+  fprintf (e, "hdb-files no\n");
 #endif
   if (zDebug != NULL)
     fprintf (e, "debug %s\n", zDebug);
@@ -818,9 +815,10 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "# Second test configuration file\n");
       fprintf (e, "nodename test2\n");
       fprintf (e, "spool /usr/tmp/tstuu/spool2\n");
+      fprintf (e, "lockdir /usr/tmp/tstuu/spool2\n");
       fprintf (e, "sysfile /usr/tmp/tstuu/System2\n");
       (void) remove ("/usr/tmp/tstuu/Log2");
-#if ! HAVE_BNU_LOGGING
+#if ! HAVE_HDB_LOGGING
       fprintf (e, "logfile /usr/tmp/tstuu/Log2\n");
 #else
       fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log2/%s/%s");
@@ -832,8 +830,8 @@ uprepare_test (itest, fcall_uucico, zsys)
 #if HAVE_V2_CONFIG
       fprintf (e, "v2-files no\n");
 #endif
-#if HAVE_BNU_CONFIG
-      fprintf (e, "bnu-files no\n");
+#if HAVE_HDB_CONFIG
+      fprintf (e, "hdb-files no\n");
 #endif
       if (zDebug != NULL)
 	fprintf (e, "debug %s\n", zDebug);

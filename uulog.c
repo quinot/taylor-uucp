@@ -20,39 +20,24 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.4  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.3  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.2  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.1  1992/02/14  21:22:51  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char uulog_rcsid[] = "$Id$";
+const char uulog_rcsid[] = "$Id$";
 #endif
 
+#include <ctype.h>
 #include <errno.h>
 
 #include "system.h"
-#include "sysdep.h"
 #include "getopt.h"
 
 /* This is a pretty bad implementation of uulog, which I don't think
    is a very useful program anyhow.  It only takes a single -s and/or
-   -u switch.  When using HAVE_BNU_LOGGING it requires a system.  It
-   does not provide -f.  */
+   -u switch.  When using HAVE_HDB_LOGGING it requires a system.  */
 
 /* The program name.  */
 char abProgram[] = "uulog";
@@ -65,14 +50,15 @@ static void ulusage P((void));
 
 static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
 
-const struct option *_getopt_long_options = asLongopts;
-
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
-  int iopt;
+  /* -f: keep displaying lines forever.  */
+  boolean fforever = FALSE;
+  /* -n lines: number of lines to display.  */
+  int cshow = 0;
   /* -s: system name.  */
   const char *zsystem = NULL;
   /* -u: user name.  */
@@ -81,19 +67,56 @@ main (argc, argv)
   const char *zconfig = NULL;
   /* -x: display uuxqt log file.  */
   boolean fuuxqt = FALSE;
+  int i;
+  int iopt;
+  pointer puuconf;
+  int iuuconf;
+  const char *zlogfile;
   const char *zfile;
   FILE *e;
+  char **pzshow = NULL;
+  int ishow = 0;
+  size_t csystem = 0;
+  size_t cuser = 0;
   char *zline;
-  int csystem = 0;
-  int cuser = 0;
+  size_t cline;
 
-  while ((iopt = getopt (argc, argv, "I:s:u:xX:")) != EOF)
+  /* Look for a straight number argument, and convert it to -n before
+     passing the arguments to getopt.  */
+  for (i = 0; i < argc; i++)
+    {
+      if (argv[i][0] == '-' && isdigit (argv[i][1]))
+	{
+	  size_t clen;
+	  char *znew;
+
+	  clen = strlen (argv[i]);
+	  znew = (char *) alloca (clen + 2);
+	  znew[0] = '-';
+	  znew[1] = 'n';
+	  memcpy (znew + 2, argv[i] + 1, clen);
+	  argv[i] = znew;
+	}
+    }
+
+  while ((iopt = getopt (argc, argv, "fI:n:s:u:xX:")) != EOF)
     {
       switch (iopt)
 	{
+	case 'f':
+	  /* Keep displaying lines forever.  */
+	  fforever = TRUE;
+	  break;
+
 	case 'I':
 	  /* Configuration file name.  */
-	  zconfig = optarg;
+	  if (fsysdep_other_config (optarg))
+	    zconfig = optarg;
+	  break;
+
+	case 'n':
+	  /* Number of lines to display.  */
+	  cshow = (int) strtol (optarg, (char **) NULL, 10);
 	  break;
 
 	case 's':
@@ -131,18 +154,36 @@ main (argc, argv)
   if (optind != argc)
     ulusage ();
 
-  uread_config (zconfig);
+  iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
-  usysdep_initialize (0);
+#if DEBUG > 1
+  {
+    const char *zdebug;
 
-#if ! HAVE_BNU_LOGGING
-  zfile = zLogfile;
+    iuuconf = uuconf_debuglevel (puuconf, &zdebug);
+    if (iuuconf != UUCONF_SUCCESS)
+      ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    if (zdebug != NULL)
+      iDebug |= idebug_parse (zdebug);
+  }
+#endif
+
+  iuuconf = uuconf_logfile (puuconf, &zlogfile);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+  usysdep_initialize (puuconf, 0);
+
+#if ! HAVE_HDB_LOGGING
+  zfile = zlogfile;
 #else
   {
     const char *zprogram;
     char *zalc;
 
-    /* We need a system to find a BNU log file.  */
+    /* We need a system to find a HDB log file.  */
     if (zsystem == NULL)
       ulusage ();
 
@@ -151,11 +192,11 @@ main (argc, argv)
     else
       zprogram = "uucico";
 
-    zalc = (char *) alloca (strlen (zLogfile)
+    zalc = (char *) alloca (strlen (zlogfile)
 			    + strlen (zprogram)
 			    + strlen (zsystem)
 			    + 1);
-    sprintf (zalc, zLogfile, zprogram, zsystem);
+    sprintf (zalc, zlogfile, zprogram, zsystem);
     zfile = zalc;
   }
 #endif
@@ -167,62 +208,106 @@ main (argc, argv)
       usysdep_exit (FALSE);
     }
 
-  /* Read the log file and output the appropriate lines.  */
+  if (cshow > 0)
+    {
+      pzshow = (char **) xmalloc (cshow * sizeof (char *));
+      for (ishow = 0; ishow < cshow; ishow++)
+	pzshow[ishow] = NULL;
+      ishow = 0;
+    }
 
+  /* Read the log file and output the appropriate lines.  */
   if (zsystem != NULL)
     csystem = strlen (zsystem);
 
   if (zuser != NULL)
     cuser = strlen (zuser);
 
-  while ((zline = zfgets (e, FALSE)) != NULL)
-    {
-      char *zluser, *zlsys, *znext;
-      int cluser, clsys;
+  zline = NULL;
+  cline = 0;
 
-      /* Skip any leading whitespace (not that there should be any).  */
-      znext = zline + strspn (zline, " \t");
+  while (TRUE)
+    {
+      while (getline (&zline, &cline, e) > 0)
+	{
+	  char *zluser, *zlsys, *znext;
+	  size_t cluser, clsys;
+
+	  /* Skip any leading whitespace (not that there should be
+	     any).  */
+	  znext = zline + strspn (zline, " \t");
 
 #if ! HAVE_TAYLOR_LOGGING
-      /* The user name is the first field on the line.  */
-      zluser = znext;
-      cluser = strcspn (znext, " \t");
+	  /* The user name is the first field on the line.  */
+	  zluser = znext;
+	  cluser = strcspn (znext, " \t");
 #endif
       
-      /* Skip the first field.  */
-      znext += strcspn (znext, " \t");
-      znext += strspn (znext, " \t");
+	  /* Skip the first field.  */
+	  znext += strcspn (znext, " \t");
+	  znext += strspn (znext, " \t");
 
-      /* The system is the second field on the line.  */
-      zlsys = znext;
-      clsys = strcspn (znext, " \t");
+	  /* The system is the second field on the line.  */
+	  zlsys = znext;
+	  clsys = strcspn (znext, " \t");
 
-      /* Skip the second field.  */
-      znext += clsys;
-      znext += strspn (znext, " \t");
+	  /* Skip the second field.  */
+	  znext += clsys;
+	  znext += strspn (znext, " \t");
 
 #if HAVE_TAYLOR_LOGGING
-      /* The user is the third field on the line.  */
-      zluser = znext;
-      cluser = strcspn (znext, " \t");
+	  /* The user is the third field on the line.  */
+	  zluser = znext;
+	  cluser = strcspn (znext, " \t");
 #endif
 
-      /* See if we should print this line.  */
+	  /* See if we should print this line.  */
+	  if (zsystem != NULL
+	      && (csystem != clsys
+		  || strncmp (zsystem, zlsys, clsys) != 0))
+	    continue;
 
-      if (zsystem != NULL
-	  && (csystem != clsys
-	      || strncmp (zsystem, zlsys, clsys) != 0))
-	continue;
+	  if (zuser != NULL
+	      && (cuser != cluser
+		  || strncmp (zuser, zluser, cluser) != 0))
+	    continue;
 
-      if (zuser != NULL
-	  && (cuser != cluser
-	      || strncmp (zuser, zluser, cluser) != 0))
-	continue;
+	  /* Output the line, or save it if we are outputting only a
+	     particular number of lines.  */
+	  if (cshow <= 0)
+	    printf ("%s", zline);
+	  else
+	    {
+	      ubuffree ((pointer) pzshow[ishow]);
+	      pzshow[ishow] = zbufcpy (zline);
+	      ishow = (ishow + 1) % cshow;
+	    }
+	}
 
-      /* Output the line.  */
+      /* Output the number of lines requested by the -n option.  */
+      if (cshow > 0)
+	{
+	  for (i = 0; i < cshow; i++)
+	    {
+	      if (pzshow[ishow] != NULL)
+		printf ("%s", pzshow[ishow]);
+	      ishow = (ishow + 1) % cshow;
+	    }
+	}
 
-      printf ("%s", zline);
+      /* If -f was not specified, or an error occurred while reading
+	 the file, get out.  */
+      if (! fforever || ferror (e))
+	break;
+
+      clearerr (e);
+      cshow = 0;
+
+      /* Sleep 1 second before going around the loop again.  */
+      usysdep_sleep (1);
     }
+
+  (void) fclose (e);
 
   ulog_close ();
 
@@ -239,14 +324,14 @@ ulusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-	   abVersion);
+	   VERSION);
   fprintf (stderr,
 	   "Usage: uulog [-s system] [-u user] [-x] [-I file] [-X debug]\n");
   fprintf (stderr,
 	   " -s: print entries for named system\n");
   fprintf (stderr,
 	   " -u: print entries for name user\n");
-#if HAVE_BNU_LOGGING
+#if HAVE_HDB_LOGGING
   fprintf (stderr,
 	   " -x: print uuxqt log rather than uucico log\n");
 #endif
@@ -254,8 +339,7 @@ ulusage ()
 	   " -X debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s%s)\n",
-	   NEWCONFIGLIB, CONFIGFILE);
+	   " -I file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
 }

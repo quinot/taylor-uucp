@@ -20,12 +20,13 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
 
 #if USE_RCS_ID
-char uupick_rcsid[] = "$Id$";
+const char uupick_rcsid[] = "$Id$";
 #endif
 
 #include <errno.h>
@@ -33,7 +34,6 @@ char uupick_rcsid[] = "$Id$";
 #include "getopt.h"
 
 #include "system.h"
-#include "sysdep.h"
 
 /* Local functions.  */
 
@@ -48,8 +48,6 @@ char abProgram[] = "uupick";
 
 static const struct option asClongopts[] = { { NULL, 0, NULL, 0 } };
 
-const struct option *_getopt_long_options = asClongopts;
-
 /* Local functions.  */
 
 static void upusage P((void));
@@ -59,13 +57,17 @@ main (argc, argv)
      int argc;
      char **argv;
 {
-  int iopt;
   /* -s: system name.  */
   const char *zsystem = NULL;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
-  const char *zfile, *zfrom, *zfull;
-  const char *zallsys;
+  int iopt;
+  pointer puuconf;
+  int iuuconf;
+  struct uuconf_system ssys;
+  const char *zpubdir;
+  char *zfile, *zfrom, *zfull;
+  char *zallsys;
   char ab[1000];
 
   while ((iopt = getopt (argc, argv, "I:s:x:")) != EOF)
@@ -79,7 +81,8 @@ main (argc, argv)
 
 	case 'I':
 	  /* Name configuration file.  */
-	  zconfig = optarg;
+	  if (fsysdep_other_config (optarg))
+	    zconfig = optarg;
 	  break;
 
 	case 'x':
@@ -102,20 +105,40 @@ main (argc, argv)
   if (argc != optind)
     upusage ();
 
-  uread_config (zconfig);
+  iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
-  usysdep_initialize (INIT_NOCHDIR);
+  usysdep_initialize (puuconf, INIT_NOCHDIR);
 
-  if (! fsysdep_uupick_init (zsystem))
+  zpubdir = NULL;
+  if (zsystem != NULL)
+    {
+      iuuconf = uuconf_system_info (puuconf, zsystem, &ssys);
+      if (iuuconf == UUCONF_SUCCESS)
+	{
+	  zpubdir = zbufcpy (ssys.uuconf_zpubdir);
+	  (void) uuconf_system_free (puuconf, &ssys);
+	}
+      else if (iuuconf != UUCONF_NOT_FOUND)
+	(void) ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    }
+  if (zpubdir == NULL)
+    {
+      iuuconf = uuconf_pubdir (puuconf, &zpubdir);
+      if (iuuconf != UUCONF_SUCCESS)
+	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+    }
+
+  if (! fsysdep_uupick_init (zsystem, zpubdir))
     usysdep_exit (FALSE);
 
   zallsys = NULL;
 
-  while ((zfile = zsysdep_uupick (zsystem, &zfrom, &zfull)) != NULL)
+  while ((zfile = zsysdep_uupick (zsystem, zpubdir, &zfrom, &zfull)) != NULL)
     {
       boolean fdir;
-      char *zto;
-      const char *zconst;
+      char *zto, *zlocal;
       FILE *e;
       boolean fcontinue;
 
@@ -128,6 +151,12 @@ main (argc, argv)
 	  if (zallsys == NULL
 	      || strcmp (zallsys, zfrom) != 0)
 	    {
+	      if (zallsys != NULL)
+		{
+		  ubuffree (zallsys);
+		  zallsys = NULL;
+		}
+
 	      printf ("from %s: %s %s ?\n", zfrom, fdir ? "dir" : "file",
 		      zfile);
 
@@ -158,14 +187,13 @@ main (argc, argv)
 	    case 'a':
 	      zto = ab + 1 + strspn (ab + 1, " \t");
 	      zto[strcspn (zto, " \t\n")] = '\0';
-	      if (*zto == '\0')
-		zconst = zsysdep_add_cwd (zfile, TRUE);
-	      else
-		zconst = zsysdep_in_dir (zto, zfile);
-	      if (zconst == NULL)
+	      zlocal = zsysdep_uupick_local_file (zto);
+	      if (zlocal == NULL)
 		usysdep_exit (FALSE);
-
-	      zto = xstrdup (zconst);
+	      zto = zsysdep_in_dir (zlocal, zfile);
+	      ubuffree (zlocal);
+	      if (zto == NULL)
+		usysdep_exit (FALSE);
 	      if (! fdir)
 		upmove (zfull, zto);
 	      else
@@ -173,11 +201,11 @@ main (argc, argv)
 		  usysdep_walk_tree (zfull, upmovedir, (pointer) zto);
 		  (void) fsysdep_rmdir (zfull);
 		}
-	      xfree ((pointer) zto);
+	      ubuffree (zto);
 
 	      if (ab[0] == 'a')
 		{
-		  zallsys = xstrdup (zfrom);
+		  zallsys = zbufcpy (zfrom);
 		  ab[0] = 'm';
 		}
 
@@ -220,9 +248,13 @@ main (argc, argv)
 	    }
 	}
       while (fcontinue);
+
+      ubuffree (zfull);
+      ubuffree (zfrom);
+      ubuffree (zfile);
     }
 
-  (void) fsysdep_uupick_free (zsystem);
+  (void) fsysdep_uupick_free (zsystem, zpubdir);
 
   usysdep_exit (TRUE);
 
@@ -237,7 +269,7 @@ upusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
-	   abVersion);
+	   VERSION);
   fprintf (stderr,
 	   "Usage: uupick [-s system] [-I config] [-x debug]\n");
   fprintf (stderr,
@@ -246,8 +278,7 @@ upusage ()
 	   " -x debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use (default %s%s)\n",
-	   NEWCONFIGLIB, CONFIGFILE);
+	   " -I file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
   exit (EXIT_FAILURE);
 }
@@ -262,15 +293,13 @@ upmovedir (zfull, zrelative, pinfo)
      pointer pinfo;
 {
   const char *ztodir = (const char *) pinfo;
-  const char *zconst;
-  char *zcopy;
+  char *zto;
 
-  zconst = zsysdep_in_dir (ztodir, zrelative);
-  if (zconst == NULL)
+  zto = zsysdep_in_dir (ztodir, zrelative);
+  if (zto == NULL)
     usysdep_exit (FALSE);
-  zcopy = (char *) alloca (strlen (zconst) + 1);
-  strcpy (zcopy, zconst);
-  upmove (zfull, zcopy);
+  upmove (zfull, zto);
+  ubuffree (zto);
 }
 
 /* Move a file.  */
