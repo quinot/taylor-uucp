@@ -61,9 +61,9 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
   aidescs[1] = SPAWN_NULL;
   aidescs[2] = SPAWN_NULL;
 
-  /* We pass fshell as TRUE, which permits uucico and uuxqt to be
-     replaced by shell scripts.  */
-  ipid = ixsspawn (azargs, aidescs, FALSE, FALSE, (const char *) NULL,
+  /* We pass fsetuid and fshell as TRUE, which permits uucico and
+     uuxqt to be replaced by (non-setuid) shell scripts.  */
+  ipid = ixsspawn (azargs, aidescs, TRUE, FALSE, (const char *) NULL,
 		   FALSE, TRUE, (const char *) NULL,
 		   (const char *) NULL, (const char *) NULL);
   ubuffree (zlib);
