@@ -1,3 +1,8 @@
+2002-02-16  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/splcmd.c (zsysdep_spool_commands): Check for unsupported
+	use of white space.
+
 2002-02-14  Ian Lance Taylor  <ian@airs.com>
 
 	* unix/uid.c (fsuser_perms): Add piegid parameter.  Change all

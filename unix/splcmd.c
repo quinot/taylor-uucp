@@ -73,6 +73,23 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 
   for (i = 0, q = pascmds; i < ccmds; i++, q++)
     {
+      if (q->zfrom[strcspn (q->zfrom, " \t\n")] != '\0'
+	  || q->zto[strcspn (q->zto, " \t\n")] != '\0'
+	  || q->zuser[strcspn (q->zuser, " \t\n")] != '\0'
+	  || q->zoptions[strcspn (q->zoptions, " \t\n")] != '\0'
+	  || ((q->bcmd == 'S' || q->bcmd == 'E')
+	      && (q->ztemp[strcspn (q->ztemp, " \t\n")] != '\0'
+		  || (q->znotify != NULL
+		      && q->znotify[strcspn (q->znotify, " \t\n")] != '\0'))))
+	{
+	  ulog (LOG_ERROR,
+		"Unsupported use of whitespace in file name or mailing address");
+	  (void) fclose (e);
+	  (void) remove (ztemp);
+	  ubuffree (ztemp);
+	  return NULL;
+	}
+
       switch (q->bcmd)
 	{
 	case 'S':
