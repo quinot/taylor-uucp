@@ -629,6 +629,15 @@
    permitted. */
 #define ALLOW_FILENAME_ARGUMENTS 1
 
+/* If you set FSYNC_ON_CLOSE to 1, all output files will be forced out
+   to disk using the fsync system call when they are closed.  This can
+   be useful if you can not afford to lose people's mail if the system
+   crashes.  However, not all systems have the fsync call, and it is
+   always less efficient to use it.  Note that some versions of SCO
+   Unix, and possibly other systems, make fsync a synonym for sync,
+   which is extremely inefficient.  */
+#define FSYNC_ON_CLOSE 0
+
 #if HAVE_TAYLOR_LOGGING
 
 /* The default log file when using HAVE_TAYLOR_LOGGING.  When using
