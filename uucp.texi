@@ -4410,6 +4410,7 @@ Zacharias Beckman @file{<zac@@dolphin.com>}
 @file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
 @file{bob@@usixth.sublink.org} (Roberto Biancardi)
 @file{statsci!scott@@coco.ms.washington.edu} (Scott Blachowicz)
+Gregory Bond @file{<gnb@@bby.com.au>}
 Marc Boucher @file{<marc@@CAM.ORG>}
 @file{dean@@coplex.com} (Dean Brooks)
 @file{dave@@dlb.com} (Dave Buck)
