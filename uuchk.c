@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/03/07  02:56:30  ian
+   Rewrote time routines
+
    Revision 1.23  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -556,7 +559,8 @@ ukshow (qsys)
 	    }
 	}
 
-      printf (" May execute %s (path %s)\n", qsys->zcmds, qsys->zpath);
+      printf (" May execute %s\n", qsys->zcmds);
+      printf (" Execution path %s\n", qsys->zpath);
 
       if (qsys->cfree_space != 0)
 	printf (" Will leave %ld bytes available\n", qsys->cfree_space);
