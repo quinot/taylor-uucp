@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/01/07  17:11:15  ian
+   Discount out of order packets in the error count
+
    Revision 1.15  1992/01/04  22:15:41  ian
    Mark Mallett: wait for INITx from master before sending our INITx
 
@@ -582,7 +585,7 @@ fgsendcmd (z)
 
 #if DEBUG > 4
   if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgsend_cmd: Sending command \"%s\"", z);
+    ulog (LOG_DEBUG, "fgsendcmd: Sending command \"%s\"", z);
 #endif
 
   clen = strlen (z);
