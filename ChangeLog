@@ -1,3 +1,157 @@
+Tue Apr  5 23:09:00 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Released version gamma 1.05.
+
+	* Makefile.in (VERSION): Changed to gamma1.05.
+
+	* uucico.c (fcall): Return TRUE if -C was used and no call was
+	made because there was no work.
+
+Mon Apr  4 20:29:30 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Chris Lewis: unix/serial.c: Include <sys/ioctl.h> if
+	HAVE_TXADDCD.  Check for HAVE_TXADDCD rather than ifdef TXADDCD or
+	TXDELCD.
+
+	* configure.in: Check for TXADDCD in <sys/ioctl.h>.
+	* config.h.in (HAVE_TXADDCD): New configuration macro.
+
+Sun Apr  3 14:05:30 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* send.c (flocal_send_request): Queue stransfer structure up
+	before sending any command or data, because sending data may cause
+	data to be received for this stransfer, and we must be prepared to
+	handle it correctly.
+	(fremote_rec_reply): Likewise.
+	* rec.c (flocal_rec_send_request, fremote_send_reply): Likewise.
+	(fremote_send_fail_send): Likewise.
+	* xcmd.c (flocal_xcmd_request): Likewise.
+
+	* Chris Lewis: unix/serial.c (fsserial_hardflow): Add support for
+	AIX TXADDCD and 3b1 CTSCD.
+
+Sat Apr  2 00:04:30 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* policy.h (USE_TRADITIONAL_STATUS): Permit this to be defined.
+	* lib/status.c: Control initialization of azStatus based on
+	USE_TRADITIONAL_STATUS rather than SPOOLDIR_HDB || SPOOLDIR_SVR4.
+
+Fri Apr  1 23:52:09 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* log.c (ulog): When using HAVE_HDB_LOGGING, force the program
+	name to lower case when using it as a file name.
+
+	* send.c (flocal_send_await_reply): Correct code to really not
+	decrement number of channels to one.
+	* rec.c (flocal_rec_await_reply): Likewise.
+
+Wed Mar 30 22:57:30 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* lib/buffer.c (ubuffree): Change ioff from size_t to int to avoid
+	HP/UX compiler bug.
+
+	* configure.in: Make sure that <utime.h> defines struct utimbuf
+	before assuming that it is present.
+
+Tue Mar 29 23:00:15 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* uuconf/filnam.c: Use UUCONF_CONST, not const, to match
+	declaration in uuconf.h.
+
+Mon Mar 28 20:06:00 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Andrew A. Chernov: policy.h: For several macros, add commented
+	out values appropriate for some free BSD distributions.
+	* Makefile.in: Likewise.
+
+	* uucico.c (icallin_cmp): Use pointer, not void *.
+	* uuconf/callin.c (struct sinfo, uuconf_callin): Likewise.
+
+	* Chris Lewis: uuconv.c (fvperm_string_cmp, fvperm_array_cmp): AIX
+	3.2.5 cc can't handle conditional expressions in if conditions.
+
+Sun Mar 27 15:04:27 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* send.c (flocal_send_fail): Don't assume that qtrans is not NULL.
+
+	* Jeff Ross, Stephen J. Walick: Makefile.in (uusched): Substitute
+	for @SBINDIR@, not @BINDIR@.
+
+	* configure.in: Make sure that <dirent.h> defines struct dirent
+	before assuming that it is present.
+
+	* Benoit Grange: unix/detach.c (usysdep_detach): Correct type of
+	HAVE_BSD_SETPGRP for HAVE_BSD_PGRP.
+
+Sat Mar 26 12:59:36 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Andrew A. Chernov: uucico.c (asLongopts): Add --try-next as
+	synonym for -z.
+	(main): If -z, call fcall with ftrynext as TRUE.
+	(fcall): Add ftrynext argument.  If ftrynext is TRUE, try the next
+	alternate if a call fails.
+
+Fri Mar 25 22:37:51 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* lib/parse.c (fparse_cmd): If we get a decimal 666 or 777 for the
+	mode, turn it into an octal 0666 or 0777.
+
+	* send.c (flocal_send_fail): Accept qdaemon argument rather than
+	qsys.  Changed all callers.  If we are going to send an execution
+	file, don't call fsysdep_did_work.
+
+	* protg.c (fgstart): Say ``sending'' and ``receiving'' instead of
+	``remote'' and ``local'' in log message.
+	* proti.c (fijstart): Likewise.
+
+Thu Mar 24 22:40:49 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* Gert Doering: uuchk.c (ikshow_port): Don't use qtli for a TCP
+	port.
+
+	* Makefile.in (uusched, uuto): Fix typo in sed command.
+
+	* unix/mail.c (fsysdep_mail): Add casts to avoid warnings.
+	* uuconf/runuxq.c (uuconf_runuuxqt): Likewise.
+
+	* Emmanuel Mogenet: unix/pipe.c (fspipe_dial): Make consistently
+	static.
+
+	* unix/serial.c (fsserial_open): Only strip /dev/ from the start
+	of a device name, rather than dropping everything before the last
+	slash.
+
+	* sysh.unx (ftw): Change stat argument to not be const pointer.
+	* unix/ftw.c (ftw_dir, ftw): Change stat argument to func argument
+	to not be const pointer.
+	* unix/srmdir.c (isremove_dir): Change stat argument to not be
+	const pointer.
+	* unix/walk.c (iswalk_dir): Likewise.
+
+Wed Mar 23 20:02:26 1994  Ian Lance Taylor  (ian@airs.com)
+
+	* conn.c (fconn_break): Remove incorrect indirection of function
+	pointer.
+
+	* unix/mkdirs.c (fsysdep_make_dirs): Some systems can return
+	EACCES, not EEXIST, when a directory exists.
+
+	* configure.in: Fix STAT_STATFS2_FSIZE test.
+	* configure: Regenerated.
+
+Tue Mar 22 01:32:21 1994  Ian Lance Taylor  (ian@comton.airs.com)
+
+	* uucico.c (main): Skip a leading dash in argv[0] which is
+	probably the result of being invoked by the Unix login program.
+
+	* configure.in: Check for sys/time.h.
+	* config.h.in (HAVE_SYS_TIME_H): Define.
+
+	* unix/serial.c (fsysdep_modem_begin_dial): Correct type of q for
+	qsysdep.
+
+	* uux.c (main): Check for zXnames being NULL.
+
 Sat Mar 19 14:07:31 1994  Ian Lance Taylor  (ian@airs.com)
 
 	* Released version beta 1.05.
