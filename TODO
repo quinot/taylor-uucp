@@ -348,11 +348,6 @@ away, which is about as stupid as possible.
 
 Franc,ois Pinard: sleep for a second after closing a modem.
 
-102.
-
-Bob Denny: fmail_transfer calls refer to strings after they've been
-freed up.
-
 103.
 
 Rudnev Aleksey: add 'g' protocol parameters to force the local window
@@ -360,7 +355,3 @@ and packet size to use, overriding the (presumably stupid) request by
 the other system.
 
 104.
-
-Marty Shannon: implement Maxuuxqts.
-
-105.
