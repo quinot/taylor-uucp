@@ -465,16 +465,19 @@ fsserial_init (qconn, qcmds, zdevice)
       && qconn->qport != NULL
       && qconn->qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN)
     zdevice = qconn->qport->uuconf_zname;
-  if (zdevice != NULL
-      && *zdevice != '/')
+  if (zdevice == NULL)
+    q->zdevice = NULL;
+  else if (*zdevice == '/')
+    q->zdevice = zbufcpy (zdevice);
+  else
     {
-      char *z;
+      size_t clen;
 
-      z = (char *) xmalloc (sizeof "/dev/" + strlen (zdevice));
-      sprintf (z, "/dev/%s", zdevice);
-      zdevice = z;
+      clen = strlen (zdevice);
+      q->zdevice = zbufalc (sizeof "/dev/" + clen);
+      memcpy (q->zdevice, "/dev/", sizeof "/dev/" - 1);
+      memcpy (q->zdevice + sizeof "/dev/" - 1, zdevice, clen);
     }
-  q->zdevice = zdevice;
   q->o = -1;
   q->ftli = FALSE;
   qconn->psysdep = (pointer) q;
@@ -520,7 +523,7 @@ usserial_free (qconn)
   struct ssysdep_conn *qsysdep;
 
   qsysdep = (struct ssysdep_conn *) qconn->psysdep;
-  xfree ((pointer) qsysdep->zdevice);
+  ubuffree (qsysdep->zdevice);
   xfree ((pointer) qsysdep);
   qconn->psysdep = NULL;
 }
@@ -612,14 +615,14 @@ fsserial_lock (qconn, fin)
     else
       iflag = iSunblock;
 
-    qsysdep->o = open ((char *) qsysdep->zdevice, O_RDWR | iflag);
+    qsysdep->o = open (qsysdep->zdevice, O_RDWR | iflag);
     if (qsysdep->o < 0)
       {
 #if O_NONBLOCK != 0
 	if (! fin && iSunblock != O_NONBLOCK && errno == EINVAL)
 	  {
 	    iSunblock = O_NONBLOCK;
-	    qsysdep->o = open ((char *) qsysdep->zdevice,
+	    qsysdep->o = open (qsysdep->zdevice,
 			       O_RDWR | O_NONBLOCK);
 	  }
 #endif
@@ -822,14 +825,14 @@ fsserial_open (qconn, ibaud, fwait)
       else
 	iflag = iSunblock;
 
-      q->o = open ((char *) q->zdevice, O_RDWR | iflag);
+      q->o = open (q->zdevice, O_RDWR | iflag);
       if (q->o < 0)
 	{
 #if O_NONBLOCK != 0
 	  if (! fwait && iSunblock != O_NONBLOCK && errno == EINVAL)
 	    {
 	      iSunblock = O_NONBLOCK;
-	      q->o = open ((char *) q->zdevice, O_RDWR | O_NONBLOCK);
+	      q->o = open (q->zdevice, O_RDWR | O_NONBLOCK);
 	    }
 #endif
 	  if (q->o < 0)
@@ -1530,7 +1533,7 @@ fsmodem_carrier (qconn, fcarrier)
       {
 	int onew;
  
-	onew = open ((char *) q->zdevice, O_RDWR);
+	onew = open (q->zdevice, O_RDWR);
 	if (onew < 0)
 	  {
 	    ulog (LOG_ERROR, "open (%s): %s", q->zdevice, strerror (errno));

@@ -331,7 +331,7 @@ struct ssysdep_conn
   /* File descriptor.  */
   int o;
   /* Device name.  */
-  const char *zdevice;
+  char *zdevice;
   /* File status flags.  */
   int iflags;
   /* File status flags for descriptor 1 (-1 if not standard input).  */
