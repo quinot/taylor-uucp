@@ -407,7 +407,7 @@ ukshow (qsys, puuconf)
       if (fcalled)
 	{
 	  ukshow_size (qsys->uuconf_qcalled_local_size, FALSE, TRUE);
-	  ukshow_size (qsys->uuconf_qcalled_remote_size, FALSE, TRUE);
+	  ukshow_size (qsys->uuconf_qcalled_remote_size, FALSE, FALSE);
 	}
 
       if (fcall)
