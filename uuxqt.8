@@ -1,0 +1,78 @@
+''' $Id$
+''' $Log$
+'''
+.TH uuxqt 8 "Taylor UUCP 1.01"
+.SH NAME
+uuxqt \- UUCP execution daemon
+.SH SYNOPSIS
+.B uuxqt
+[ options ]
+.SH DESCRIPTION
+The
+.I uuxqt
+daemon executes commands requested by
+.I uux
+(1) from either the local system or from remote systems.
+It is started automatically by the
+.I uucico
+(8) daemon (unless
+.I uucico
+(8) is given the
+.B \-q
+option).
+
+There is normally no need to run this command, since it will be
+invoked by
+.I uucico
+(8).  However, it can be used to provide greater control over the
+processing of the work queue.
+
+Multiple invocations of
+.I uuxqt
+may be run at once.
+.SH OPTIONS
+The following options may be given to
+.I uuxqt.
+.TP5
+.B \-c command
+Only execute requests for the specified command.  For example:
+.EX
+uuxqt -c rmail
+.EE
+.TP5
+.B \-s system
+Only execute requests originating from the specified system.
+.TP5
+.B \-x number
+Set debugging level.  Level 0 is no debugging output, level 9 is full
+debugging output.  The debugging output is sent to the debugging file,
+usually /usr/spool/uucp/Debug.
+.TP5
+.B \-I file
+Set configuration file to use.  This option may not be available,
+depending upon how
+.I uuxqt
+was compiled.
+.SH FILES
+The file names may be changed at compilation time or by the
+configuration file, so these are only approximations.
+
+.br
+/usr/lib/uucp/config - Configuration file.
+.br
+/usr/spool/uucp -
+UUCP spool directory.
+.br
+/usr/spool/uucp/Log -
+UUCP log file.
+.br
+/usr/spool/uucppublic -
+Default UUCP public directory.
+.br
+/usr/spool/uucp/Debug -
+Debugging file.
+.SH SEE ALSO
+uucp(1), uux(1), uucico(8)
+.SH AUTHOR
+Ian Lance Taylor
+(ian@airs.com or uunet!airs!ian)

@@ -1,0 +1,157 @@
+''' $Id$
+''' $Log$
+'''
+.TH uucico 8 "Taylor UUCP 1.01"
+.SH NAME
+uucico \- UUCP file transfer daemon
+.SH SYNOPSIS
+.B uucico
+[ options ]
+.SH DESCRIPTION
+The
+.I uucico
+daemon processes file transfer requests queued by
+.I uucp
+(1) and
+.I uux
+(1).  It is started when
+.I uucp
+or
+.I uux
+is run (unless they are given the
+.B \-r
+option).  It is also typically started periodically using
+entries in the
+.I crontab
+table(s).
+
+When invoked with the
+.B \-r1
+option or the
+.B \-s
+or
+.B \-S
+option, the daemon will place a call to a remote system, running in
+master mode.
+Otherwise the daemon will start in slave mode, accepting a
+call from a remote system.  Typically a special login name will be set
+up for UUCP which automatically invokes
+.I uucico
+when a call is made.
+
+When
+.I uucico
+terminates, it invokes the
+.I uuxqt
+(8) daemon, unless the
+.B \-q
+option is given;
+.I uuxqt
+(8) executes any work orders created by
+.I uux
+(1) on a remote system, and any work orders created locally which have
+received remote files they were waiting for.
+
+If a call fails,
+.I uucico
+will normally refuse to retry the
+call until a certain (configurable) amount of time
+has passed.  This may be overriden by the
+.B -f
+or the
+.B -S
+option.
+
+The
+.B \-e
+option may be used to force
+.I uucico
+to produce its own prompts of "login: " and "Password:".  When another
+daemon calls in, it will see these prompts and login as usual; the
+login name and password will be checked against a separate list kept
+specially for
+.I uucico
+rather than the /etc/passwd file.
+.SH OPTIONS
+The following options may be given to
+.I uucico.
+.TP5
+.B \-r1
+Start in master mode (call out to a system); implied by
+.B \-s
+or
+.B \-S.  If no system is specified, 
+call any system for which work is
+waiting to be done.
+.TP5
+.B \-r0
+Start in slave mode.  This is the default.
+.TP5
+.B \-s system
+Call the named system.
+.TP5
+.B \-S system
+Call the named system, ignoring any required wait.
+.TP5
+.B \-f
+Ignore any required wait for any systems to be called.
+.TP5
+.B \-p port
+Specify a port to call out on or to listen to.  In slave mode, this
+implies
+.B \-e.
+.TP5
+.B \-e
+Enter endless loop of login/password prompts and slave mode daemon
+execution.  The program will not stop by itself; you must use
+.I kill
+(1) to shut it down.
+.TP5
+.B \-w
+After calling out (to a particular system when
+.B \-s
+or 
+.B \-S
+is specifed, or to all systems which have work when
+.B \-r1
+is specifed), begin an endless loop as with
+.B \-e.
+.TP5
+.B \-q
+Do not start the
+.I uuxqt
+(8) daemon when finished.
+.TP5
+.B \-x number, \-X number
+Set debugging level.  Level 0 is no debugging output, level 9 is full
+debugging output.  The debugging output is sent to the debugging file,
+usually /usr/spool/uucp/Debug.
+.TP5
+.B \-I file
+Set configuration file to use.  This option may not be available,
+depending upon how
+.I uucico
+was compiled.
+.SH FILES
+The file names may be changed at compilation time or by the
+configuration file, so these are only approximations.
+
+.br
+/usr/lib/uucp/config - Configuration file.
+.br
+/usr/spool/uucp -
+UUCP spool directory.
+.br
+/usr/spool/uucp/Log -
+UUCP log file.
+.br
+/usr/spool/uucppublic -
+Default UUCP public directory.
+.br
+/usr/spool/uucp/Debug -
+Debugging file.
+.SH SEE ALSO
+kill(1), uucp(1), uux(1), uuxqt(8)
+.SH AUTHOR
+Ian Lance Taylor
+(ian@airs.com or uunet!airs!ian)
