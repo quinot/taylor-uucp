@@ -1,0 +1,186 @@
+dnl Taylor UUCP configuration file
+dnl This should be processed with autoconf to produce a configure script.
+dnl Copyright (c) 1992 Ian Lance Taylor
+dnl This file is not part of the Taylor UUCP package; the file that is
+dnl generated from it is.
+dnl
+M_INIT(uucico.c)
+M_HEADER_FILE(conf.h)
+dnl
+M_PROG_INSTALL
+M_PROG_GCC
+if test "${CC}" = "gcc -O"; then CFLAGS="-Wall -Wshadow -Wwrite-strings -g"; else CFLAGS="-g"; fi
+M_SUBST(CFLAGS)dnl
+dnl
+echo checking for mail program
+M_DEFINE([MAIL_PROGRAM],
+[`if test -s /usr/ucb/mail; then echo '"/usr/ucb/mail"'; else if test -s /bin/mail; then echo '"/bin/mail"'; else echo 'undefined'; fi; fi`],
+[/* Set MAIL_PROGRAM to a program which takes a user name as an argument
+   and accepts a mail message to send to that user on stdin.  */])
+echo checking for echo program
+M_DEFINE([ECHO_PROGRAM],
+[`if test -s /bin/echo; then echo '"/bin/echo"'; else echo '"echo"'; fi`],
+[/* Set ECHO_PROGRAM to a program which echoes its arguments; if echo
+   is a shell builtin you can just use \"echo\".  */])
+echo checking for pwd program
+M_DEFINE([PWD_PROGRAM],
+[`if test -s /bin/pwd; then echo '"/bin/pwd"'; else echo 'undefined'; fi`],
+[/* Set PWD_PROGRAM to a program which prints the name of the current
+   working directory; this is used only on old systems.  */])
+dnl
+ILT_HEADER_CHECK(string.h strings.h unistd.h stdlib.h limits.h time.h)
+ILT_HEADER_CHECK(sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
+dnl
+ILT_SIGTYPE
+ILT_LIBTHING_CHECK([time_t in time.h],
+[#include <time.h>], [time_t i;], [HAVE_TIME_T],
+[/* Define HAVE_TIME_T if time_t is defined in <time.h>.  */])
+ILT_LIBTHING_CHECK([time_t in sys/types.h],
+[#include <sys/types.h>], [time_t i;], [HAVE_SYS_TIME_T],
+[/* Set HAVE_SYS_TIME_T to 1 if time_t is defined in <sys/types.h>.  */])
+dnl
+echo checking for time.h and sys/time.h being included together
+echo "#include <sys/time.h>
+#include <time.h>
+main () { exit (0); }" > conftest.c
+eval $compile
+M_DEFINE([HAVE_SYS_TIME_AND_TIME_H],
+[`(if test -f $INCLUDEDIR/time.h -a -f $INCLUDEDIR/sys/time.h -a -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set HAVE_SYS_TIME_AND_TIME_H to 1 if <time.h> and <sys/time.h> can both
+   be included in a single source file.  */])
+rm -f conftest conftest.c
+dnl
+ILT_LIBTHING_CHECK([CBREAK], [#include <sgtty.h>], [int i = CBREAK;],
+[HAVE_CBREAK],
+[/* HAVE_CBREAK is just used if you don't set one of the terminal driver
+   options in policy.h.  */])
+dnl
+ILT_HEADER_COMMENT([/* If pid_t is not defined in <sys/types.h>, give it a definition here.  */])dnl
+M_PID_T
+ILT_HEADER_COMMENT([/* If uid_t is not defined in <sys/types.h>, give it a definition here.  */])dnl
+M_UID_T
+ILT_HEADER_COMMENT([/* If off_t is not defined in <sys/types.h>, give it a definition here.  */])dnl
+M_LIBTHING_MISSING([off_t in sys/types.h],
+[#include <sys/types.h>], [off_t x;],
+M_DEFINE(off_t, long))dnl
+dnl
+dnl The filesystem info code is from David MacKenzie's fileutils 3.1
+dnl package.
+echo checking how to get filesystem info
+ILT_HEADER_COMMENT([/* Define one of the following:
+   FS_STATVFS for statvfs
+   FS_USG_STATFS for the four argument statfs
+   FS_MNTENT for the two argument statfs with 1K blocks and no f_fsize field
+   FS_GETMNT for statfs with fd_req field
+   FS_STATFS for statfs with f_fsize field
+   FS_USTAT for ustat with 512 byte blocks.  */])
+if test -f $INCLUDEDIR/sys/statvfs.h -a -f $INCLUDEDIR/sys/fstyp.h; then
+  M_DEFINE(FS_STATVFS)
+elif test -f $INCLUDEDIR/sys/statfs.h -a -f $INCLUDEDIR/sys/fstyp.h; then
+  M_DEFINE(FS_USG_STATFS)
+elif test -f $INCLUDEDIR/mntent.h; then
+  M_DEFINE(FS_MNTENT)
+elif test -f $INCLUDEDIR/sys/mount.h -a -f $INCLUDEDIR/sys/fs_types.h; then
+  M_DEFINE(FS_GETMNT)
+elif grep MOUNT_UFS $INCLUDEDIR/sys/mount.h >/dev/null 2>&1; then
+  M_DEFINE(FS_STATFS)
+else
+  M_LIBTHING_PRESENT([ustat], , [ustat();], M_DEFINE(FS_USTAT))
+fi
+dnl
+echo checking for void
+echo "void main() { (void) exit (0); }" > conftest.c
+eval $compile
+M_DEFINE([HAVE_VOID],
+[`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set HAVE_VOID to 1 if the compiler supports the type void.  */])
+rm -f conftest.c conftest
+dnl
+echo checking for unsigned char
+echo "main () { unsigned char i = (unsigned char) -1; exit (0); }" > conftest.c
+eval $compile
+M_DEFINE([HAVE_UNSIGNED_CHAR],
+[`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set HAVE_UNSIGNED_CHAR to 1 if the compiler supports the type unsigned
+   char.  */])
+rm -f conftest.c conftest
+dnl
+ILT_IDENT_CHECK([int.*errno], [errno.h], [HAVE_ERRNO_DECLARATION],
+[/* Set HAVE_ERRNO_DECLARATION to 1 if errno is declared in <errno.h>.  */])
+dnl
+echo checking for combined use of O_NONBLOCK and O_NDELAY
+echo "#include <fcntl.h>
+#ifndef O_NDELAY
+#ifdef FNDELAY
+#define O_NDELAY FNDELAY
+#else
+#define O_NDELAY 0
+#endif
+#endif
+#ifndef O_NONBLOCK
+#ifdef FNBLOCK
+#define O_NONBLOCK FNBLOCK
+#else
+#define O_NONBLOCK 0
+#endif
+#endif
+main () { exit (fcntl (open ("'"conftest.c"'", O_RDONLY),
+		       F_SETFL,
+		       O_NONBLOCK | O_NDELAY)); }" > conftest.c
+eval $compile
+M_DEFINE([COMBINED_UNBLOCK],
+[`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set COMBINED_UNBLOCK to 1 if O_NONBLOCK and O_NDELAY can both be
+   specified at once on a file descriptor.  */])
+dnl
+M_ALLOCA
+ILT_FUNC_CHECK(vprintf raise remove strdup strstr strcasecmp stricmp strerror)
+ILT_FUNC_CHECK(memset memcmp memchr memcpy memmove bcopy bcmp bzero)
+undefine([index])
+ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch)
+ILT_FUNC_CHECK(gethostname uname setitimer napms nap usleep sigsetjmp setret)
+ILT_FUNC_CHECK(getcwd getwd waitpid wait4 socket)
+ILT_FUNC_CHECK(ftruncate ltrunc rename opendir dup2 gettimeofday ftime times)
+echo checking whether times can be declared as returning long
+echo "#include <sys/times.h>
+extern long times (); main() { exit (0); }" > conftest.c
+eval $compile
+M_DEFINE([TIMES_DECLARATION_OK],
+[`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set TIMES_DECLARATION_OK to 1 if times can be safely declared as
+   returning long.  */])
+rm -f conftest conftest.c
+dnl
+echo checking for mkdir
+echo "main() { exit (0); } t() { mkdir(); }" > conftest.c
+eval $compile
+havemkdir=`(if test -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`
+M_DEFINE([HAVE_MKDIR], [${havemkdir}],
+[/* Set HAVE_MKDIR to 1 if you have mkdir.  If you don't have it, set 
+   MKDIR_PROGRAM to the name of the program which will create a directory
+   named on the command line.  */])
+if test "${havemkdir}" = "1"
+then
+ UUDIR='# '
+else
+ UUDIR=
+ M_DEFINE([MKDIR_PROGRAM],
+ [`if test -f /bin/mkdir; then echo '"/bin/mkdir"'; else echo 'undefined'; fi`])
+fi
+M_SUBST(UUDIR)dnl
+rm -f conftest conftest.c
+dnl
+ILT_LIBTHING_CHECK([union wait], [#include <sys/wait.h>],
+[union wait u; wait (&u);], [HAVE_UNION_WAIT],
+[/* Set HAVE_UNION_WAIT to 1 if union wait is defined in <sys/wait.h>.  */])
+dnl
+echo checking for long file names
+(echo "1" > 123456789012345) 2>/dev/null
+(echo "2" > 123456789012346) 2>/dev/null
+long=`cat 123456789012345 2>/dev/null`
+M_DEFINE([HAVE_LONG_NAMES],
+[`if test -f 123456789012345 -a "${long}" = "1"; then echo 1; else echo 0; fi 2>/dev/null`],
+[/* Set HAVE_LONG_NAMES to 1 if the system supports long file names.  */])
+rm -f 123456789012345 123456789012346 2>/dev/null
+dnl
+M_OUTPUT(.)
