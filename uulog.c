@@ -386,7 +386,7 @@ main (argc, argv)
 	      clsys = strcspn (znext, "!");
 	      znext += clsys + 1;
 	      zluser = znext;
-	      clsys = strcspn (znext, " \t");
+	      cluser = strcspn (znext, " \t");
 #endif
 	    }
 
