@@ -404,3 +404,16 @@ Scott Blachowicz: provide some sort of include mechanism for the
 configuration files.
 
 162.
+
+Chris Lewis: add uuxqtpolicy command, probably in config, supporting
+the following values which determine when uuxqt should be run:
+	- never (let cron or something else worry about it)
+	- perinvocation (when uucico exits for good - current behaviour)
+	- persite (when uucico terminates a conversation - HDBish)
+	- periodic (per 5 or 10 incoming X. files - BSDish)
+
+163.
+
+Sort jobs in the send queue by size.  Pretty easy.
+
+164.
