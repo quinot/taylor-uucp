@@ -40,6 +40,13 @@ volatile sig_atomic_t fSjmp;
 volatile jmp_buf sSjmp_buf;
 #endif /* HAVE_RESTARTABLE_SYSCALLS */
 
+/* Some systems, such as SunOS, have a SA_INTERRUPT bit that must be
+   set in the sigaction structure to force system calls to be
+   interrupted.  */
+#ifndef SA_INTERRUPT
+#define SA_INTERRUPT 0
+#endif
+
 /* The SVR3 sigset function can be called just like signal, unless
    system calls are restarted which is extremely unlikely; we prevent
    this case in sysh.unx.  */
@@ -134,7 +141,7 @@ usset_signal (isig, pfn, fforce, pfignored)
 
   s.sa_handler = pfn;
   (void) sigemptyset (&s.sa_mask);
-  s.sa_flags = 0;
+  s.sa_flags = SA_INTERRUPT;
 
   if (sigaction (isig, &s, (struct sigaction *) NULL) != 0)
     ulog (LOG_FATAL, "sigaction (%d): %s", isig, strerror (errno));
