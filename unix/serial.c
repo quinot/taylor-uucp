@@ -616,7 +616,7 @@ fsserial_lockfile (flok, qconn)
 	{
 	  if (lockttyexist (z))
 	    {
-	      ulog (LOG_NORMAL, "%s: port already locked");
+	      ulog (LOG_NORMAL, "%s: port already locked", z);
 	      fret = FALSE;
 	    }
 	  else
