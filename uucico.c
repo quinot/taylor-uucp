@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.53  1992/02/19  19:36:07  ian
+   Rearranged time functions
+
    Revision 1.52  1992/02/14  21:32:50  ian
    Niels Baggesen: under HAVE_BNU_LOGGING, don't lost system name when dieing
 
@@ -909,11 +912,21 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
   if (zstr[5] == '=')
     {
-      if (strcmp(zstr + 6, qsys->zname) != 0)
+      const char *zheresys;
+      int icmp;
+
+      /* Some UUCP packages only provide seven characters in the Shere
+	 machine name.  */
+      zheresys = zstr + 6;
+      if (strlen (zheresys) == 7)
+	icmp = strncmp (zheresys, qsys->zname, 7);
+      else
+	icmp = strcmp (zheresys, qsys->zname);
+      if (icmp != 0)
 	{
 	  (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
 			       cretry);
-	  ulog (LOG_ERROR, "Called wrong system (%s)", zstr + 6);
+	  ulog (LOG_ERROR, "Called wrong system (%s)", zheresys);
 	  return FALSE;
 	}
     }
