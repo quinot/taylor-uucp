@@ -344,11 +344,12 @@ AC_COMPILE_CHECK([union wait],
 [union wait u; if (WIFEXITED (u)) wait (&u);],
 AC_DEFINE([HAVE_UNION_WAIT]))
 dnl
-AC_LONG_FILE_NAMES
 if test -n "$cross_compiling"; then
+ AC_DEFINE([HAVE_LONG_FILE_NAMES], [0])
  AC_DEFINE([HAVE_RESTARTABLE_SYSCALLS], [-1])
 else
  AC_RESTARTABLE_SYSCALLS
+ AC_LONG_FILE_NAMES
 fi
 dnl
 AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)
