@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/01/05  03:11:06  ian
+   Made fcsend static
+
    Revision 1.10  1991/12/28  03:49:23  ian
    Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
 
@@ -174,12 +177,11 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
     {
       int cchatlen;
 
-      cchatlen = strcspn (zchat, " ");
+      cchatlen = strcspn (zchat, " \t");
       strncpy (zbuf, zchat, cchatlen);
       zbuf[cchatlen] = '\0';
       zchat += cchatlen;
-      if (*zchat != '\0')
-	++zchat;
+      zchat += strspn (zchat, " \t");
 
       if (strcmp (zbuf, "\"\"") != 0)
 	{
@@ -251,12 +253,11 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       if (*zchat == '\0')
 	return TRUE;
 
-      cchatlen = strcspn (zchat, " ");
+      cchatlen = strcspn (zchat, " \t");
       strncpy (zbuf, zchat, cchatlen);
       zbuf[cchatlen] = '\0';
       zchat += cchatlen;
-      if (*zchat != '\0')
-	++zchat;
+      zchat += strspn (zchat, " \t");
 
       if (! fcsend (zbuf, qsys, qdial, zphone, ftranslate))
 	return FALSE;
