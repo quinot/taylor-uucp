@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.42  1992/02/24  04:58:47  ian
+   Only permit files to be received into directories that are world-writeable
+
    Revision 1.41  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -165,10 +168,23 @@ char tstuu_rcsid[] = "$Id$";
 
 #include "sysdep.h"
 
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/times.h>
+
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#else
+#if HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+#endif
+
+#ifndef O_RDONLY
+#define O_RDONLY 0
+#define O_WRONLY 1
+#define O_RDWR 2
+#endif
 
 #if HAVE_TIME_H && HAVE_SYS_TIME_AND_TIME_H
 #include <time.h>

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.5  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -110,7 +113,19 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
 
 #else /* ! USE_STDIO */
 
+#if HAVE_FCNTL_H
 #include <fcntl.h>
+#else
+#if HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+#endif
+
+#ifndef O_RDONLY
+#define O_RDONLY 0
+#define O_WRONLY 1
+#define O_RDWR 2
+#endif
 
 boolean
 fcopy_file (zfrom, zto, fpublic, fmkdirs)
@@ -134,16 +149,15 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs)
   /* These file mode arguments are from the UNIX version of sysdep.h;
      each system dependent header file will need their own
      definitions.  */
-  oto = open (zto, O_WRONLY | O_CREAT | O_TRUNC,
-	      fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
+  oto = creat (zto, fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
   if (oto < 0)
     {
       if (errno == ENOENT && fmkdirs)
 	{
 	  if (! fsysdep_make_dirs (zto, fpublic))
 	    return FALSE;
-	  oto = open (zto, O_WRONLY | O_CREAT | O_TRUNC,
-		      fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
+	  oto = creat (zto,
+		       fpublic ? IPUBLIC_FILE_MODE : IPRIVATE_FILE_MODE);
 	}
       if (oto < 0)
 	{
