@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.59  1992/03/17  00:06:56  ian
+   Changed HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H to HAVE_SIG_ATOMIC_T_IN_TYPES_H
+
    Revision 1.58  1992/03/16  23:44:56  ian
    Sometimes sig_atomic_t is in <sys/types.h> but not <signal.h>
 
@@ -1103,6 +1106,7 @@ extern void xfree P((pointer));
 
 #if ! HAVE_REMOVE
 /* Erase a file.  */
+#undef remove
 extern int remove P((const char *zfile));
 #endif
 
