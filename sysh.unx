@@ -228,6 +228,9 @@ typedef struct termios sterminal;
 /* The name of the directory to which we move corrupt files.  */
 #define CORRUPTDIR ".Corrupt"
 
+/* The name of the directory to which we move failed execution files.  */
+#define FAILEDDIR ".Failed"
+
 /* The length of the sequence number used in a file name.  */
 #define CSEQLEN (4)
 
