@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.45  1992/05/20  22:40:46  ian
+   Changed arguments to fsysdep_move_file, added fsysdep_change_mode
+
    Revision 1.44  1992/04/22  23:29:24  ian
    Changed arguments to usysdep_initialize
 
@@ -744,7 +747,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   fQuse_sh = FALSE;
 #endif
 
-  uprocesscmds (e, (struct smulti_file *) NULL, asQcmds, zfile, 0);
+  uprocesscmds (e, (struct smulti_file *) NULL, asQcmds, zfile,
+		CMDFLAG_CASESIGNIFICANT);
 
   (void) fclose (e);
 
