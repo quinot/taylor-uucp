@@ -61,9 +61,11 @@
 #endif
 
 #if HAVE_TIMES
+
 #if HAVE_SYS_TIMES_H
 #include <sys/times.h>
 #endif
+
 #if TIMES_DECLARATION_OK
 /* We use a macro to protect this because times really returns clock_t
    and on some systems, such as Ultrix 4.0, clock_t is int.  We don't
@@ -74,8 +76,16 @@ extern long times ();
 #endif
 #endif /* TIMES_DECLARATION_OK */
 
-#if TIMES_TICK == 0
-/* We don't have a value for TIMES_TICK.  Look for one.  */
+#ifdef _SC_CLK_TCK
+#define HAVE_SC_CLK_TCK 1
+#else
+#define HAVE_SC_CLK_TCK 0
+#endif
+
+/* TIMES_TICK may have been set in policy.h, or we may be able to get
+   it using sysconf.  If neither is the case, try to find a useful
+   definition from the system header files.  */
+#if TIMES_TICK == 0 && (! HAVE_SYSCONF || ! HAVE_SC_CLK_TCK)
 #ifdef CLK_TCK
 #undef TIMES_TICK
 #define TIMES_TICK CLK_TCK
@@ -85,12 +95,17 @@ extern long times ();
 #define TIMES_TICK HZ
 #endif /* defined (HZ) */
 #endif /* ! defined (CLK_TCK) */
-#endif /* TIMES_TICK == 0 */
+#endif /* TIMES_TICK == 0 && (! HAVE_SYSCONF || ! HAVE_SC_CLK_TCK) */
 
 #endif /* HAVE_TIMES */
 
 #ifndef time
 extern time_t time ();
+#endif
+#if HAVE_SYSCONF
+#ifndef sysconf
+extern long sysconf ();
+#endif
 #endif
 
 /* Get the time in seconds and microseconds; this need only work
@@ -150,6 +165,9 @@ ixsysdep_process_time (pimicros)
   if (itick == 0)
     {
 #if TIMES_TICK == 0
+#if HAVE_SYSCONF && HAVE_SC_CLK_TCK
+      itick = (int) sysconf (_SC_CLK_TCK);
+#else /* ! HAVE_SYSCONF || ! HAVE_SC_CLK_TCK */
       const char *z;
 
       z = getenv ("HZ");
@@ -159,6 +177,7 @@ ixsysdep_process_time (pimicros)
       /* If we really couldn't get anything, just use 60.  */
       if (itick == 0)
 	itick = 60;
+#endif /* ! HAVE_SYSCONF || ! HAVE_SC_CLK_TCK */
 #else /* TIMES_TICK != 0 */
       itick = TIMES_TICK;
 #endif /* TIMES_TICK == 0 */

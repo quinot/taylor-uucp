@@ -161,16 +161,18 @@
 #endif
 #endif
 
-/* Set TIMES_TICK to the fraction of a second which times(2) returns
-   (for example, if times returns 100ths of a second TIMES_TICK should
-   be set to 100).  On a true POSIX system TIMES_TICK may simply be
-   defined as CLK_TCK.  On some systems the environment variable HZ is
-   what you want for TIMES_TICK, but on some other systems HZ has the
-   wrong value; check the man page.  If you leave this set to 0, the
-   code will try to guess; it will doubtless be wrong on some systems.
-   If TIMES_TICK is wrong the code may report incorrect file transfer
-   times in the statistics file, but on many systems times(2) will
-   actually not be used and this value will not matter at all.  */
+/* TIMES_TICK is the fraction of a second which times(2) returns (for
+   example, if times returns 100ths of a second TIMES_TICK should be
+   set to 100).  On a true POSIX system (one which has the sysconf
+   function and also has _SC_CLK_TCK defined in <unistd.h>) TIMES_TICK
+   may simply be left as 0.  On some systems the environment variable
+   HZ is what you want for TIMES_TICK, but on some other systems HZ
+   has the wrong value; check the man page.  If you leave this set to
+   0, the code will try to guess; it will doubtless be wrong on some
+   non-POSIX systems.  If TIMES_TICK is wrong the code may report
+   incorrect file transfer times in the statistics file, but on many
+   systems times(2) will actually not be used and this value will not
+   matter at all.  */
 #define TIMES_TICK 0
 
 /* If your system does not support saved set user ID, set
