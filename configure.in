@@ -298,10 +298,6 @@ case $DEFS in
 *) LIBOBJS="$LIBOBJS strdup.o" ;;
 esac
 case $DEFS in
-*HAVE_STRLWR*) ;;
-*) LIBOBJS="$LIBOBJS strlwr.o" ;;
-esac
-case $DEFS in
 *HAVE_STRNCASECMP*) ;;
 *HAVE_STRNICMP*) ;;
 *) LIBOBJS="$LIBOBJS strncs.o" ;;
