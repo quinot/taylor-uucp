@@ -872,6 +872,11 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
 
   *pfcalled = FALSE;
 
+  /* Ignore any SIGHUP signal we may have received up to this point.
+     This is needed on Unix because we may have gotten one from the
+     shell before we detached from the controlling terminal.  */
+  afSignal[INDEXSIG_SIGHUP] = FALSE;
+
   /* If no port was specified on the command line, use any port
      defined for the system.  To select the system port: 1) see if
      port information was specified directly; 2) see if a port was
