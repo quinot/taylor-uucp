@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.44  1992/01/28  03:50:42  ian
+   Chip Salzenberg: set .Status correctly if wrong time to call
+
    Revision 1.43  1992/01/21  19:39:12  ian
    Chip Salzenberg: uucp and uux start uucico for right system, not any
 
@@ -2168,7 +2171,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 
 		  /* The 'f' option means that directories should not
 		     be created if they do not already exist.  */
-		  if (strchr (s.zoptions, 'f') != NULL)
+		  if (strchr (s.zoptions, 'f') == NULL)
 		    {
 		      if (! fsysdep_make_dirs (zuse, TRUE))
 			{
@@ -2331,7 +2334,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		      break;
 		    }
 
-		  if (strchr (s.zoptions, 'f') != NULL)
+		  if (strchr (s.zoptions, 'f') == NULL)
 		    {
 		      if (! fsysdep_make_dirs (zuse, TRUE))
 			{
