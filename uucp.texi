@@ -470,9 +470,12 @@ compiler.  It recognizes the following environment variables:
 @item CC
 The C compiler.  If this is not set, then if @code{configure} can find
 @code{gcc} it will use @samp{gcc -O}, otherwise it will use @samp{cc}.
+@item DEFS
+Flags to pass the C compiler during configuration testing.  If this is
+not set, @code{configure} will use the empty string.
 @item CFLAGS
-Flags to pass to the C compiler.  If this is not set, @code{configure}
-will use @samp{-g}.
+Flags to pass to the C compiler when compiling the actual code.  If this
+is not set, @code{configure} will use @samp{-g}.
 @item LDFLAGS
 Flags to pass to the C compiler when only linking, not compiling.  If
 this is not set, @code{configure} will use the empty string.

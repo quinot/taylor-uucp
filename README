@@ -190,7 +190,8 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     configure''; using csh, enter something like ``setenv CC gcc; sh
     configure''):
         CC: C compiler to use; default is gcc -O if it exists, else cc
-        CFLAGS: Flags to pass to $CC; default -g
+        DEFS: Flags to pass to $CC for configure testing only; default none
+        CFLAGS: Flags to pass to $CC when compiling; default -g
         LDFLAGS: Flags to pass to $CC when only linking; default none
         LIBS: Library arguments to pass to $CC; default none
         INSTALL: Install program; default install -c or cp
