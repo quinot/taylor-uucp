@@ -230,6 +230,12 @@ main (argc, argv)
   char abpty2[sizeof "/dev/ptyp0"];
   struct sbuf *qbuf1, *qbuf2;
 
+#if ! HAVE_TAYLOR_CONFIG
+  fprintf (stderr, "%s: only works when compiled with HAVE_TAYLOR_CONFIG\n",
+	   argv[0]);
+  exit (1);
+#endif
+
   zcmd1 = NULL;
   zcmd2 = NULL;
   zsys = "test2";
