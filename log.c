@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/01/12  19:32:29  ian
+   Handle HAVE_BNU_LOGGING with no %s in zLogfile
+
    Revision 1.13  1992/01/05  04:41:48  ian
    Tweaked HAVE_V2_LOGGING output slightly
 
@@ -513,7 +516,8 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 	     zsystem, zuser, zldate_and_time (), iLid, iseq,
 	     zLdevice == NULL ? "unknown" : zLdevice,
 	     fsent ? "->" : "<-",
-	     cbytes, csecs, cmicros / 1000, cbps, "bytes/sec");
+	     cbytes, csecs, cmicros / 1000, cbps,
+	     fsucceeded ? "bytes/sec" : "bytes/sec FAILED");
   }
 #endif /* HAVE_BNU_LOGGING */
 
