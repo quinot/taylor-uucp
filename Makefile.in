@@ -77,16 +77,19 @@ UUCHKOBJS = uuchk.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
 	log.o sys1.o version.o getopt.o
 UUNAMEOBJS = uuname.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
 	log.o sys1.o version.o getopt.o
+UULOGOBJS = uulog.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
+	log.o sys1.o version.o getopt.o
 TSTOBJS = tstuu.o version.o getopt.o
 
-ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uuname.o uudir.o tstuu.o \
-	prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o file.o \
-	util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o parse.o \
-	copy.o sys1.o sys2.o sys3.o sys4.o sys5.o sys6.o version.o getopt.o
+ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uuname.o uulog.o uudir.o \
+	tstuu.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
+	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
+	parse.o copy.o sys1.o sys2.o sys3.o sys4.o sys5.o sys6.o version.o \
+	getopt.o
 
-all: uucico uuxqt uux uucp uuchk uuname $(TSTUU) $(UUDIR)
+all: uucico uuxqt uux uucp uuchk uuname uulog $(TSTUU) $(UUDIR)
 
-install: uucico uuxqt uux uucp uuchk uuname uucp.info $(UUDIR)
+install: uucico uuxqt uux uucp uuchk uuname uulog uucp.info $(UUDIR)
 	-mkdir $(libdir) $(bindir)
 	-ln $(libdir)/uucico $(libdir)/uucico.old
 	-ln $(libdir)/uuxqt $(libdir)/uuxqt.old
@@ -100,10 +103,12 @@ install: uucico uuxqt uux uucp uuchk uuname uucp.info $(UUDIR)
 	-ln $(bindir)/uux $(bindir)/uux.old
 	-ln $(bindir)/uucp $(bindir)/uucp.old
 	-ln $(bindir)/uuname $(bindir)/uuname.old
-	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uuname
+	-ln $(bindir)/uulog $(bindir)/uulog.old
+	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uuname $(bindir)/uulog
 	$(INSTALL_PROGRAM) uux $(bindir)/uux
 	$(INSTALL_PROGRAM) uucp $(bindir)/uucp
 	$(INSTALL_PROGRAM) uuname $(bindir)/uuname
+	$(INSTALL_PROGRAM) uulog $(bindir)/uulog
 	chown $(owner) $(bindir)/uux $(bindir)/uucp $(bindir)/uuname
 	chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uuname
 	$(INSTALL_DATA) uucico.8 $(man8dir)/uucico$(man8ext)
@@ -141,6 +146,9 @@ uuchk: $(UUCHKOBJS)
 uuname: $(UUNAMEOBJS)
 	$(CC) $(CFLAGS) -o uuname $(UUNAMEOBJS) $(LIBS)
 
+uulog: $(UULOGOBJS)
+	$(CC) $(CFLAGS) -o uulog $(UULOGOBJS) $(LIBS)
+
 tstuu: $(TSTOBJS)
 	$(CC) $(CFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
 
@@ -159,6 +167,8 @@ uuchk.o: uuchk.c
 	$(CC) -c $(CFLAGS) $(CONFIG) uuchk.c
 uuname.o: uuname.c
 	$(CC) -c $(CFLAGS) $(CONFIG) uuname.c
+uulog.o: uulog.c
+	$(CC) -c $(CFLAGS) $(CONFIG) uulog.c
 config.o: config.c
 	$(CC) -c $(CFLAGS) $(CONFIG) config.c
 v2.o: v2.c
@@ -216,6 +226,7 @@ uux.o: uucp.h conf.h system.h getopt.h sysdep.h
 uucp.o: uucp.h conf.h system.h getopt.h sysdep.h
 uuchk.o: uucp.h conf.h port.h sysdep.h system.h getopt.h
 uuname.o: uucp.h conf.h system.h sysdep.h getopt.h
+uulog.o: uucp.h conf.h system.h sysdep.h getopt.h
 tstuu.o: uucp.h conf.h sysdep.h getopt.h
 uudir.o: uucp.h conf.h sysdep.h
 prot.o: uucp.h conf.h system.h prot.h port.h sysdep.h
