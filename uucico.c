@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.68  1992/03/08  17:08:20  ian
+   Ted Lindgreen: ignore -u option
+
    Revision 1.67  1992/03/08  16:42:41  ian
    Ted Lindgreen: report port and login name in log file
 
@@ -286,7 +289,8 @@ static boolean fcall_failed P((const struct ssysteminfo *qsys,
 			       enum tstatus twhy, struct sstatus *qstat,
 			       int cretry));
 static boolean flogin_prompt P((struct sport *qport));
-static boolean faccept_call P((const char *zlogin, struct sport *qport));
+static boolean faccept_call P((const char *zlogin, struct sport *qport,
+			       const struct ssysteminfo **pqsys));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
 			int bgrade, boolean fnew));
 static boolean fdo_xcmd P((const struct ssysteminfo *qsys,
@@ -615,6 +619,7 @@ main (argc, argv)
 	 with "login:" and "Password:" a single time.  */
 
       fret = TRUE;
+      zsystem = NULL;
 
       if (qport != NULL)
 	{
@@ -664,8 +669,13 @@ main (argc, argv)
 		fret = flogin_prompt (qport);
 	      else
 		{
+		  const struct ssysteminfo *qsys;
+
 		  iholddebug = iDebug;
-		  fret = faccept_call (zsysdep_login_name (), qport);
+		  fret = faccept_call (zsysdep_login_name (), qport,
+				       &qsys);
+		  if (qsys != NULL)
+		    zsystem = qsys->zname;
 		  iDebug = iholddebug;
 		}
 	    }
@@ -689,11 +699,14 @@ main (argc, argv)
 	 so that it runs as a true daemon.  */
       if (! fnodetach)
 	usysdep_detach ();
-      usysdep_exit (fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
-				 (const char *) NULL));
+      if (zsystem == NULL)
+	fret = fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
+			    (const char *) NULL);
+      else
+	fret = fsysdep_run (FALSE, "uuxqt", "-s", zsystem);
     }
-  else
-    usysdep_exit (fret);
+
+  usysdep_exit (fret);
 
   /* Avoid complaints about not returning.  */
   return 0;
@@ -1340,7 +1353,8 @@ static boolean flogin_prompt (qport)
 		 really don't care whether the call succeeded or not.
 		 We are going to reset the port anyhow.  */
 	      iholddebug = iDebug;
-	      (void) faccept_call (zhold, qport);
+	      (void) faccept_call (zhold, qport,
+				   (const struct ssysteminfo **) NULL);
 	      iDebug = iholddebug;
 	    }
 	}
@@ -1349,11 +1363,14 @@ static boolean flogin_prompt (qport)
   return TRUE;
 }
 
-/* Accept a call from a remote system.  */
+/* Accept a call from a remote system.  If pqsys is not NULL, *pqsys
+   will be set to the system that called in if known.  */
 
-static boolean faccept_call (zlogin, qport)
+static boolean
+faccept_call (zlogin, qport, pqsys)
      const char *zlogin;
      struct sport *qport;
+     const struct ssysteminfo **pqsys;
 {
   long istart_time;
   int cdial_proto_params;
@@ -1550,6 +1567,9 @@ static boolean faccept_call (zlogin, qport)
 
       qsys = &sUnknown;
     }
+
+  if (pqsys != NULL)
+    *pqsys = qsys;
 
   if (! fcheck_validate (zlogin, qsys->zname))
     {
