@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1991/12/19  04:25:57  ian
+   Terry Gardner: configuration parameter to not use both NONBLOCK and NDELAY
+
    Revision 1.19  1991/12/19  03:55:40  ian
    Give the uucico processes a chance to die on their own
 
@@ -813,7 +816,6 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "debugfile /usr/tmp/tstuu/Debug2\n");
       fprintf (e, "passwdfile /usr/tmp/tstuu/Pass2\n");
       fprintf (e, "pubdir /usr/tmp/tstuu\n");
-      fprintf (e, "portfile /usr/tmp/tstuu/Port2\n");
 #if HAVE_V2_CONFIG
       fprintf (e, "v2-files no\n");
 #endif
@@ -852,9 +854,6 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "# Call in password file\n");
       fprintf (e, "test1 pass1\n");
 
-      xfclose (e);
-
-      e = xfopen ("/usr/tmp/tstuu/Port2", "w");
       xfclose (e);
     }
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1991/12/20  04:30:24  ian
+   Terry Gardner: record conversation time in log file
+
    Revision 1.27  1991/12/20  00:42:24  ian
    Clear user name from error message given by getting next command
 
@@ -1157,9 +1160,9 @@ static boolean faccept_call (zlogin, qport)
      struct sport *qport;
 {
   long istart_time;
-  int cport_proto_params, cdial_proto_params;
-  struct sproto_param *qport_proto_params, *qdial_proto_params;
-  int iport_reliable, idial_reliable;
+  int cdial_proto_params;
+  struct sproto_param *qdial_proto_params;
+  int idial_reliable;
   struct sport sportinfo;
   boolean ftcp_port;
   const char *zport;
@@ -1184,31 +1187,34 @@ static boolean faccept_call (zlogin, qport)
   if (qport != NULL)
     {
       zport = qport->zname;
-      cport_proto_params = qport->cproto_params;
-      qport_proto_params = qport->qproto_params;
-      iport_reliable = qport->ireliable;
       ftcp_port = FALSE;
     }
   else
     {
       zport = zsysdep_port_name (&ftcp_port);
-      if (zport == NULL
-	  || ! ffind_port (zport, (long) 0, (long) 0, &sportinfo,
-			   (boolean (*) P((struct sport *, boolean))) NULL,
-			   FALSE))
-	{
-	  zport = "unknown";
-	  cport_proto_params = 0;
-	  qport_proto_params = NULL;
-	  iport_reliable = 0;
-	}
-      else
-	{
-	  cport_proto_params = sportinfo.cproto_params;
-	  qport_proto_params = sportinfo.qproto_params;
-	  iport_reliable = sportinfo.ireliable;
-	  qport = &sportinfo;
-	}
+
+      /* If the ``portfile'' command was not used to change the
+	 default portfile, and the default portfile does not exist,
+	 then don't try to look up the port.  This keeps a slave
+	 uucico from putting an error message in the log file saying
+	 that the port file does not exist.  The information we want
+	 from the port is only known for HAVE_TAYLOR_CONFIG, so if we
+	 don't have that don't even bother to look up the port.  */
+
+#if HAVE_TAYLOR_CONFIG
+
+      if (zport != NULL
+	  && (strcmp (zPortfile, PORTFILE) != 0
+	      || fsysdep_file_exists (zPortfile))
+	  && ffind_port (zport, (long) 0, (long) 0, &sportinfo,
+			 (boolean (*) P((struct sport *, boolean))) NULL,
+			 FALSE))
+	qport = &sportinfo;
+
+#endif /* HAVE_TAYLOR_CONFIG */
+
+      if (zport == NULL)
+	zport = "unknown";
     }
 
   /* If we've managed to figure out that this is a modem port, now try
@@ -1547,8 +1553,9 @@ static boolean faccept_call (zlogin, qport)
 	   to a reliable eight bit connection.  */
 
 	ir = 0;
-	if ((iport_reliable & RELIABLE_SPECIFIED) != 0)
-	  ir = iport_reliable;
+	if (qport != NULL
+	    && (qport->ireliable & RELIABLE_SPECIFIED) != 0)
+	  ir = qport->ireliable;
 	if ((idial_reliable & RELIABLE_SPECIFIED) != 0)
 	  {
 	    if (ir != 0)
@@ -1619,9 +1626,10 @@ static boolean faccept_call (zlogin, qport)
       if (qsys->cproto_params != 0)
 	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     qsys->cproto_params, qsys->qproto_params);
-      if (cport_proto_params != 0)
+      if (qport != NULL
+	  && qport->cproto_params != 0)
 	uapply_proto_params (qProto->bname, qProto->qcmds,
-			     cport_proto_params, qport_proto_params);
+			     qport->cproto_params, qport->qproto_params);
       if (cdial_proto_params != 0)
 	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     cdial_proto_params, qdial_proto_params);
