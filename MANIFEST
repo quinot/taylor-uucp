@@ -7,7 +7,7 @@ TODO
 alloca.c
 bnu.c
 chat.c
-conf.h-dist
+conf.h.in
 config.c
 configure
 configure.in
