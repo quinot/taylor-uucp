@@ -38,7 +38,9 @@ const char _uuconf_free_rcsid[] = "$Id$";
    other cases, the memory is lost until the entire memory block is
    freed.  */
 
+#if UUCONF_ANSI_C
 void
+#endif
 uuconf_free (pblock, pbuf)
      pointer pblock;
      pointer pbuf;

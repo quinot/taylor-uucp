@@ -33,7 +33,9 @@ const char _uuconf_freblk_rcsid[] = "$Id$";
 
 /* Free up an entire memory block.  */
 
+#if UUCONF_ANSI_C
 void
+#endif
 uuconf_free_block (pblock)
      pointer pblock;
 {
