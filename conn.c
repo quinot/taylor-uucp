@@ -337,7 +337,7 @@ fconn_break (qconn)
 {
   boolean (*pfbreak) P((struct sconnection *));
 
-  pfbreak = *qconn->qcmds->pfbreak;
+  pfbreak = qconn->qcmds->pfbreak;
   if (pfbreak == NULL)
     return TRUE;
 
