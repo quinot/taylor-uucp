@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1992/05/21  03:06:38  ian
+   Force LOCKDIR to always be defined
+
    Revision 1.9  1992/04/14  17:34:03  ian
    Zacharias Beckman: minor touchups for NeXT
 
@@ -140,6 +143,18 @@
    file transfer will use more CPU time than necessary.  If you have
    no idea, 64 should work on most modern systems.  */
 #define SINGLE_WRITE 64
+
+/* Some tty drivers, such as those from SCO and AT&T's Unix PC, have a
+   bug in the implementation of ioctl() that causes CLOCAL to be
+   ineffective until the port is opened a second time.  If
+   HAVE_CLOCAL_BUG is set to 1, code will be added to do this second
+   open on the port.  Set this if you are getting messages that say
+   "Line disconnected" while in the dial chat script after only
+   writing the first few characters to the port.  This bug causes the
+   resetting of CLOCAL to have no effect, so the "\m" (require
+   carrier) escape sequence won't function properly in dialer chat
+   scripts.  */
+#define	HAVE_CLOCAL_BUG	0
 
 /* Set TIMES_TICK to the fraction of a second which times(2) returns
    (for example, if times returns 100ths of a second TIMES_TICK should
