@@ -221,15 +221,18 @@ main (argc, argv)
 	{
 	  struct uuconf_system ssys;
 
+	  /* Canonicalize the system name.  If we can't find the
+	     system information, just use whatever we were given so
+	     that people can check on systems that logged in
+	     anonymously.  */
 	  iuuconf = uuconf_system_info (puuconf, zsystem, &ssys);
-	  if (iuuconf != UUCONF_SUCCESS)
+	  if (iuuconf == UUCONF_SUCCESS)
 	    {
-	      if (iuuconf != UUCONF_NOT_FOUND)
-		ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-	      ulog (LOG_FATAL, "%s: System not found", zsystem);
+	      zsystem = zbufcpy (ssys.uuconf_zname);
+	      (void) uuconf_system_free (puuconf, &ssys);
 	    }
-	  zsystem = zbufcpy (ssys.uuconf_zname);
-	  (void) uuconf_system_free (puuconf, &ssys);
+	  else if (iuuconf != UUCONF_NOT_FOUND)
+	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 	}
     }
 
