@@ -216,7 +216,7 @@ static boolean fsserial_lock P((struct sconnection *qconn,
 				boolean fin));
 static boolean fsserial_unlock P((struct sconnection *qconn));
 static boolean fsserial_open P((struct sconnection *qconn, long ibaud,
-				boolean fwait));
+				boolean fwait, boolean flocal));
 static boolean fsstdin_open P((struct sconnection *qconn, long ibaud,
 			       boolean fwait));
 static boolean fsmodem_open P((struct sconnection *qconn, long ibaud,
@@ -785,8 +785,7 @@ fsserial_unlock (qconn)
   return fret;
 }
 
-/* Open a serial line.  This sets the terminal settings.  We begin in
-   seven bit mode and let the protocol change if necessary.  */
+/* A table to map baud rates into index numbers.  */
 
 #if HAVE_POSIX_TERMIOS
 typedef speed_t baud_code;
@@ -847,11 +846,18 @@ static struct sbaud_table
 static int cSmin;
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
 
+/* Open a serial line.  This sets the terminal settings.  We begin in
+   seven bit mode and let the protocol change if necessary.  If fwait
+   is FALSE we open the terminal in non-blocking mode.  If flocal is
+   TRUE we set CLOCAL on the terminal when using termio[s]; this is
+   supposedly required on some versions of BSD/386.  */
+
 static boolean
-fsserial_open (qconn, ibaud, fwait)
+fsserial_open (qconn, ibaud, fwait, flocal)
      struct sconnection *qconn;
      long ibaud;
      boolean fwait;
+     boolean flocal;
 {
   struct ssysdep_conn *q;
   baud_code ib;
@@ -1019,7 +1025,7 @@ fsserial_open (qconn, ibaud, fwait)
   q->snew.c_iflag &=~ ICLEAR_IFLAG;
   q->snew.c_oflag &=~ ICLEAR_OFLAG;
   q->snew.c_cflag &=~ ICLEAR_CFLAG;
-  q->snew.c_cflag |= (ib | ISET_CFLAG);
+  q->snew.c_cflag |= (ib | ISET_CFLAG) | (flocal ? CLOCAL : 0);
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
   cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
@@ -1040,7 +1046,7 @@ fsserial_open (qconn, ibaud, fwait)
   q->snew.c_iflag &=~ ICLEAR_IFLAG;
   q->snew.c_oflag &=~ ICLEAR_OFLAG;
   q->snew.c_cflag &=~ ICLEAR_CFLAG;
-  q->snew.c_cflag |= ISET_CFLAG;
+  q->snew.c_cflag |= ISET_CFLAG | (flocal ? CLOCAL : 0);
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
   cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
@@ -1100,7 +1106,7 @@ fsstdin_open (qconn, ibaud, fwait)
   q->owr = 1;
 
   q->o = q->ord;
-  if (! fsserial_open (qconn, ibaud, fwait))
+  if (! fsserial_open (qconn, ibaud, fwait, FALSE))
     return FALSE;
   q->iwr_flags = fcntl (q->owr, F_GETFL, 0);
   if (q->iwr_flags < 0)
@@ -1121,7 +1127,7 @@ fsmodem_open (qconn, ibaud, fwait)
 {
   if (ibaud == (long) 0)
     ibaud = qconn->qport->uuconf_u.uuconf_smodem.uuconf_ibaud;
-  if (! fsserial_open (qconn, ibaud, fwait))
+  if (! fsserial_open (qconn, ibaud, fwait, ! fwait))
     return FALSE;
   return fsserial_hardflow
     (qconn, qconn->qport->uuconf_u.uuconf_smodem.uuconf_fhardflow);
@@ -1137,7 +1143,7 @@ fsdirect_open (qconn, ibaud, fwait)
 {
   if (ibaud == (long) 0)
     ibaud = qconn->qport->uuconf_u.uuconf_sdirect.uuconf_ibaud;
-  if (! fsserial_open (qconn, ibaud, fwait))
+  if (! fsserial_open (qconn, ibaud, fwait, FALSE))
     return FALSE;
   return fsserial_hardflow
     (qconn, qconn->qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow);
