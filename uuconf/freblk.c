@@ -48,7 +48,7 @@ uuconf_free_block (pblock)
     {
       struct sadded *qadd;
 
-      for (qadd = q->qadded; qadd != NULL; qadd = qadd->qnext)
+      for (qadd = qloop->qadded; qadd != NULL; qadd = qadd->qnext)
 	free (qadd->padded);
     }
 
