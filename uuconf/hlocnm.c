@@ -57,7 +57,9 @@ uuconf_hdb_login_localname (pglobal, zlogin, pzname)
        qperm = qperm->qnext)
     {
       if (qperm->zmyname != NULL
-	  && qperm->pzlogname != NULL)
+	  && qperm->zmyname != (char *) &_uuconf_unset
+	  && qperm->pzlogname != NULL
+	  && qperm->pzlogname != (char **) &_uuconf_unset)
 	{
 	  char **pz;
 
