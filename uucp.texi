@@ -75,20 +75,24 @@ translation approved by the author instead of in the original English.
 
 This is the documentation for the Taylor UUCP package, version 1.06.
 The programs were written by Ian Lance Taylor.  The author can be
-reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, 48 Grove
-Street, Somerville, MA, 02144, USA}.
+reached at @code{<ian@@airs.com>}, or at
+@display
+Ian Lance Taylor
+c/o Cygnus Support
+48 Grove Street
+Somerville, MA 02144
+USA
+@end display
 
-There is a mailing list for discussion of the package.  To join (or get
-off) the list, send mail to
-@code{<taylor-uucp-request@@gnu.ai.mit.edu>}.  Mail to this address is
-answered by a person, not a program.  When joining the list, please give
-the address at which you wish to receive mail; do not rely on the
-message headers.  To send a message to the list, send it to
-@code{<taylor-uucp@@gnu.ai.mit.edu>}.
-
-Jeff Ross has volunteered to maintain patches for UUCP releases.  They
-may be obtained via anonymous FTP from ftp.fdu.edu, in the directory
-pub/taylor-uucp.
+There is a mailing list for discussion of the package.  The list is
+hosted by Eric Schnoebelen at @code{cirr.com}.  To join (or get off) the
+list, send mail to @code{taylor-uucp-request@@cirr.com}.  Mail to this
+address is answered by the majordomo program.  To join the list, send
+the message @samp{subscribe @var{address}} where @var{address} is your
+e-mail address.  To send a message to the list, send it to
+@code{taylor-uucp@@cirr.com}.  The old list address,
+@code{taylor-uucp@@gnu.ai.mit.edu}, will also work.  There is an archive
+of all messages sent to the mailing list at @code{ftp.cirr.com}.
 
 @menu
 * Copying::                     Taylor UUCP Copying Conditions
@@ -278,12 +282,12 @@ This package is covered by the GNU Public License.  See the file
 package that you feel is reasonable, but you feel is prohibited by the
 license, contact me to see if we can work it out.
 
-Here is some propaganda from the Free Software Foundation.  If you find
-this stuff offensive or annoying, remember that you probably did not
-spend any money to get this code.  I did not write this code to make
-life easier for developers of UUCP packages, I wrote it to help end
-users, and I believe that these are the most appropriate conditions for
-distribution.
+The rest of this section is some descriptive text from the Free Software
+Foundation.  If you find this stuff offensive or annoying, remember that
+you probably did not spend any money to get this code.  I did not write
+this code to make life easier for developers of UUCP packages, I wrote
+it to help end users, and I believe that these are the most appropriate
+conditions for distribution.
 
 All the programs, scripts and documents relating to Taylor UUCP are
 @dfn{free}; this means that everyone is free to use them and free to
@@ -563,7 +567,7 @@ will turn on that many types from the foregoing list; for example,
 on all types of debugging, use @samp{-x all}.
 
 The @code{uulog} program uses @samp{-X} rather than @samp{-x} to select
-the debugging type; for @code{uulog}, @samp{-x} has a different meaning
+the debugging type; for @code{uulog}, @samp{-x} has a different meaning,
 for reasons of historical compatibility.
 
 @item -I file
@@ -1142,9 +1146,9 @@ Do not actually list the job, but only take any actions indicated by the
 uustat --all
 @end example
 Display status of all jobs.  A sample output line is as follows:
-@example
-bugsA027h bugs ian 04-01 13:50 Executing rmail ian@@airs.com (sending 1283 bytes)
-@end example
+@smallexample
+bugsA027h bugs ian 04-01 13:50 Executing rmail ian@@airs.com (sending 12 bytes)
+@end smallexample
 The format is
 @example
 jobid system user queue-date command (size)
@@ -1162,9 +1166,9 @@ uustat --executions
 @end example
 Display status of queued up execution requests.  A sample output line
 is as follows:
-@example
+@smallexample
 bugs bugs!ian 05-20 12:51 rmail ian
-@end example
+@end smallexample
 The format is
 @example
 system requestor queue-date command
@@ -1179,9 +1183,9 @@ uustat --list
 @end example
 Display status for all systems with queued up commands.  A sample
 output line is as follows:
-@example
+@smallexample
 bugs            4C (1 hour)   0X (0 secs) 04-01 14:45 Dial failed
-@end example
+@end smallexample
 This indicates the system, the number of queued commands, the age of the
 oldest queued command, the number of queued local executions, the age of
 the oldest queued execution, the date of the last conversation, and the
@@ -1192,9 +1196,9 @@ uustat --status
 @end example
 Display conversation status for all remote systems.  A sample output
 line is as follows:
-@example
+@smallexample
 bugs           04-01 15:51 Conversation complete
-@end example
+@end smallexample
 This indicates the system, the date of the last conversation, and the
 status of that conversation.  If the last conversation failed,
 @code{uustat} will indicate how many attempts have been made to call the
@@ -1210,7 +1214,7 @@ format is system dependent, as @code{uustat} simply invokes @code{ps} on
 each process holding a lock.
 
 @example
-uustat --command rmail --older-than 168 --kill-all --no-list --mail --notify --comment "Queued for over 1 week"
+uustat -c rmail -o 168 -K -Q -M -N -W "Queued for over 1 week"
 @end example
 This will kill all @samp{rmail} commands that have been queued up
 waiting for delivery for over 1 week (168 hours).  For each such
@@ -2147,11 +2151,10 @@ or, if you have selected @code{HAVE_HDB_LOGGING} in @file{policy.h},
 @file{Log1/uucico/test2} and @file{Log2/uucico/test1}.  There should be
 no errors in the log files.
 
-You can test @code{uuxqt} by running the command @samp{./uuxqt -I
-/usr/tmp/tstuu/Config1}.  This should leave a command file
-@file{C.@var{something}} and a data file @file{D.@var{something}} in
-@file{/usr/tmp/tstuu/spool1} or in subdirectories.  Again, there should
-be no errors in the log file.
+You can test @code{uuxqt} with @samp{./uuxqt -I /usr/tmp/tstuu/Config1}.
+This should leave a command file @file{C.@var{something}} and a data
+file @file{D.@var{something}} in @file{/usr/tmp/tstuu/spool1} or in
+subdirectories.  Again, there should be no errors in the log file.
 
 Assuming you compiled the code with debugging enabled, the @samp{-x}
 switch can be used to set debugging modes; see the @code{debug} command
@@ -2249,8 +2252,8 @@ verify that they are what you expect; see @ref{Invoking uuchk}.
 @section Testing the Installation
 
 After you have written the configuration files, and verified them with
-the @code{uuchk} program, you must check that UUCP can correctly contact
-another system.
+the @code{uuchk} program (@pxref{Invoking uuchk}), you must check that
+UUCP can correctly contact another system.
 
 Tell @code{uucico} to dial out to the system by using the @samp{-s}
 system switch (e.g., @samp{uucico -s uunet}).  The log file should tell
@@ -2869,7 +2872,7 @@ nodename airs
 @end example
 
 @cindex changing spool directory
-@cindex spool directory (changing)
+@cindex spool directory, changing
 The UUCP spool directory name is set in @file{policy.h} when the code is
 compiled.  You might at some point decide that it is appropriate to move
 the spool directory, perhaps to put it on a different disk partition.
@@ -3489,7 +3492,7 @@ will be used to get the host name, if possible.
 
 @item spool @var{string}
 @findex spool
-@cindex spool directory
+@cindex spool directory, setting
 @cindex /usr/spool/uucp
 
 Specify the spool directory.  The default is from @file{policy.h}.  This
@@ -4094,10 +4097,9 @@ not affect the jobs transferred by the remote system.  This grade
 restriction only applies when the other system calls in, not when the
 other system is called.
 
-The @code{called-timegrade} command may appear multiple times without
-using @code{alternate}.  If this command does not appear, or if none of
-the time strings match, any grade may be sent to the remote system upon
-receiving a call.
+The @code{called-timegrade} command may appear multiple times.  If this
+command does not appear, or if none of the time strings match, any grade
+may be sent to the remote system upon receiving a call.
 
 @end table
 
