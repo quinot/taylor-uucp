@@ -1,8 +1,8 @@
 CONFIG
 COPYING
 ChangeLog
-Makefile
 MANIFEST
+Makefile
 README
 THANKS
 TODO
@@ -39,10 +39,14 @@ tstout.c
 tstuu.c
 util.c
 uuchk.c
+uucico.8
 uucico.c
+uucp.1
 uucp.c
 uucp.h
+uux.1
 uux.c
+uuxqt.8
 uuxqt.c
 v2.c
 version.c
