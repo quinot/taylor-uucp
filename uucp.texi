@@ -1,6 +1,6 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
-@setfilename taylor.info
+@setfilename uucp.info
 @settitle Taylor UUCP
 @setchapternewpage odd
 @c %**end of header
@@ -68,13 +68,13 @@ translation approved by the author instead of in the original English.
 @titlepage
 @title Taylor UUCP
 @subtitle Version 1.02
-@author Ian Taylor <@file{ian@@airs.com}>
+@author Ian Lance Taylor <@file{ian@@airs.com}>
 
 @page
 @vskip 0pt plus 1filll
 Copyright @copyright{} 1992 Free Software Foundation, Inc.
 
-Published by Ian Taylor <@file{ian@@airs.com}>.
+Published by Ian Lance Taylor <@file{ian@@airs.com}>.
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -226,11 +226,15 @@ can with a simple shell script interface.
 @end enumerate
 
 If you start using this package, I suggest that you join the mailing
-list (see above) to keep up to date on patches and new versions.  I am
-also open to suggestions for improvements and modifications.
+list (@pxref{Top, , Mailing List}) to keep up to date on patches and new
+versions.  I am also open to suggestions for improvements and
+modifications.
 
 @node Overall Installation, Configuration files, Introduction, Top
 @chapter Taylor UUCP Overall Installation
+@ignore
+INSTALL file starts here
+@end ignore
 
 These are the installation instructions for the Taylor UUCP package,
 version 1.02.
@@ -248,8 +252,8 @@ version 1.02.
 @section Configuring Taylor UUCP
 
 You will have to decide what types of configuration files you want to
-use.  This package supports a new sort of configuration file, described
-elsewhere in this document.  It also supports V2 configuration files
+use.  This package supports a new sort of configuration file;
+@xref{Configuration files}.  It also supports V2 configuration files
 (@file{L.sys}, @file{L-devices}, etc.) and BNU configuration files
 (@file{Systems}, @file{Devices}, etc.).  No documentation is provided
 for V2 or BNU configuration files.  All types of configuration files can
@@ -257,8 +261,8 @@ be used at once, if you are so inclined.  Currently using just V2
 configuration files is not really possible, because there is no way to
 specify a dialer (there are no built in dialers, and the program does
 not know how to read @file{acucap} or @file{modemcap}); however, V2
-configuration files can be used with a dialer file as described
-elsewhere in this document, or with a BNU @file{Dialers} file.
+configuration files can be used with a new style dialer file
+(@pxref{dial file}), or with a BNU @file{Dialers} file.
 
 Use of BNU configuration file has two known bugs.  A protocol string on
 the device name in the Devices file will not work; however, a protocol
@@ -475,10 +479,10 @@ If your system has a Berkeley style socket library, you can compile
 the code to permit making connections over TCP.  Specifying that a
 system should be reached via TCP is easy, but nonobvious.
 
-If you are using the new style configuration files, see above in this
-document; basically when definining the system put in the line
-@samp{port type tcp} and, if necessary, @samp{port service @var{xxx}}
-where @var{xxx} is the port number to use (the default is to look up
+If you are using the new style configuration files, @xref{Configuration
+files}.  Basically when definining the system put in the line @samp{port
+type tcp} and, if necessary, @samp{port service @var{xxx}} where
+@var{xxx} is the port number to use (the default is to look up
 @samp{uucp} in @file{/etc/services} and if not found to use port 540).
 You can specify the address of the remote host with @samp{address
 a.b.c}.  If you don't specify an address, the remote system name will be
@@ -518,23 +522,25 @@ host @file{foo.domain}, with some chat script.
 The @code{uucico} daemon can also be run as a TCP server.  This code is
 not completely solid, although it does work, sort of.  I don't recommend
 investigating it unless you are willing to tinker a bit.  Basically, you
-must define a port, either using the port file as described elsewehre in
-this document if you are using the new configuration methord or with an
-entry in Devices if you are using BNU (there is no way to define a port
-using V2).  If you are using BNU the port must be named @samp{TCP} (a
-line as shown above will suffice).  You can then start @code{uucico} as
-@samp{uucico -p TCP} (after the @samp{-p}, name the port; in BNU it must
-be @samp{TCP}).  This will wait for incoming connections, and fork off a
-child for each one.  Each connection will be prompted with @samp{login:
-} and @samp{Password:}, and the results will be checked against the UUCP
-(not the system) password file (see elsewhere in this document for
-details).  Of course, you can get a similar effect by using the BSD
-@code{uucpd} program.
+must define a port, either using the port file (@pxref{port file}) if
+you are using the new configuration methord or with an entry in Devices
+if you are using BNU (there is no way to define a port using V2).  If
+you are using BNU the port must be named @samp{TCP} (a line as shown
+above will suffice).  You can then start @code{uucico} as @samp{uucico
+-p TCP} (after the @samp{-p}, name the port; in BNU it must be
+@samp{TCP}).  This will wait for incoming connections, and fork off a
+child for each one.  Each connection will be prompted with @samp{login:}
+and @samp{Password:}, and the results will be checked against the UUCP
+(not the system) password file (@pxref{config file}).  Of course, you
+can get a similar effect by using the BSD @code{uucpd} program.
 
 You can also have @code{inetd} start up @code{uucico} with the @samp{-l}
-switch, which will cause it to prompt with @samp{login: } and
+switch, which will cause it to prompt with @samp{login:} and
 @samp{Password:} and check the results against the UUCP (not the system)
 password file.  This may be used in place of @code{uucpd}.
+@ignore
+INSTALL file ends here
+@end ignore
 
 @node Configuration files, Acknowledgements, Overall Installation, Top
 @chapter Taylor UUCP configuration files
@@ -1891,7 +1897,7 @@ string may contain any escape sequences defined for the @code{send}
 command.  The default is to send nothing when the program is aborted.
 
 This is a simple use of @code{abort-chat}.  It is equivalent to
-@code{abort-chat "" @var{string}; this has the effect of sending
+@code{abort-chat "" @var{string}}; this has the effect of sending
 @var{string} to the modem when a call is aborted.
 
 @item protocol-parameter @var{character} @var{strings}
@@ -1992,14 +1998,16 @@ working on the Taylor UUCP project.  Appearance on this list does not
 constitute endorsement of the program, particularly since some of the
 comments were criticisms.
 
-First of all, I would like to thank the people at AIRS (soon to be
-renamed Infinity Development Corporation) for permitting me to use their
-computers and @file{uunet} access.  I would also like to thank Richard
-Stallman <@file{rms@@gnu.ai.mit.edu}> for founding the Free Software
-Foundation and John Gilmore <@file{gnu@@cygnus.com}> for writing the
-initial version of @code{gnuucp} which was a direct inspiration for this
-somewhat larger project.  Also, Chip Salzenberg <@file{chip@@tct.com}>
-contributed many early patches.
+First of all, I would like to thank the people at Infinity Development
+Systems (formerly AIRS, which lives on in the domain name, at least for
+now) for permitting me to use their computers and @file{uunet} access.
+I would also like to thank Richard Stallman <@file{rms@@gnu.ai.mit.edu}>
+for founding the Free Software Foundation and John Gilmore
+<@file{gnu@@cygnus.com}> for writing the initial version of gnuucp which
+was a direct inspiration for this somewhat larger project.  Also, Chip
+Salzenberg <@file{chip@@tct.com}> contributed many early patches, and
+Franc,ois Pinard <@file{pinard@@iro.umontreal.ca}> tirelessly tested the
+code and suggested many improvements.
 
 In alphabetical order:
 
@@ -2007,6 +2015,7 @@ In alphabetical order:
 "Earle F. Ake - SAIC" <ake@@Dayton.SAIC.COM>
 mra@@searchtech.com (Michael Almond)
 chris@@nike.calpoly.edu (Christopher J. Ambler)
+jantypas@@soft21.s21.com (John Antypas)
 nba@@sysware.DK (Niels Baggesen)
 mike@@mbsun.ann-arbor.mi.us (Mike Bernson)
 dave@@dlb.com (Dave Buck)
@@ -2040,11 +2049,11 @@ djm@@eng.umd.edu (David J. MacKenzie)
 John R MacMillan <chance!john@@sq.sq.com>
 mem@@mv.MV.COM (Mark E. Mallett)
 martelli@@cadlab.sublink.org (Alex Martelli)
+Yanek Martinson <yanek@@mthvax.cs.miami.edu>
 les@@chinet.chi.il.us (Leslie Mikesell)
 mmitchel@@digi.lonestar.org (Mitch Mitchell)
 lyndon@@cs.athabascau.ca (Lyndon Nerenberg)
 david nugent <david@@csource.oz.au>
-pinard@@iro.umontreal.ca (Francois Pinard)
 eldorado@@tharr.UUCP (Mark Powell)
 pozar@@kumr.lns.com (Tim Pozar)
 wolfgang@@wsrcc.com (Wolfgang S. Rupprecht)
