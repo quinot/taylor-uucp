@@ -1,5 +1,10 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/seq.c (ixsysdep_get_sequence): If SPOOLDIR_HDB or
+	SPOOLDIR_SVR4, use SQFILE for the name of the sequence file, to
+	avoid colliding with the command sequence number file used by
+	fscmd_seq.
+
 	* uucico.c (fspawn_uuxqt): Ignore the zsys parameter.
 
 	* Godfrey van der Linden: unix/serial.c (fsysdep_conn_io): Limit
