@@ -4423,6 +4423,7 @@ Terry Gardner @file{<cphpcom!tjg01>}
 @file{ryan@@cs.umb.edu} (Daniel R. Guilderson)
 @file{greg@@gagme.chi.il.us} (Gregory Gulik)
 Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
+@file{jh@@moon.nbn.com} (John Harkin)
 @file{guy@@auspex.auspex.com} (Guy Harris)
 Petri Helenius @file{<pete@@fidata.fi>}
 Peter Honeyman @file{<honey@@citi.umich.edu>}
