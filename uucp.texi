@@ -2288,6 +2288,16 @@ subdirectory of the main spool directory, normally
 @file{/usr/spool/uucp}) will prevent too many attempts from occurring in
 rapid succession.
 
+On older System V based systems which do not have the setreuid system
+call, problems may arise if ordinary users can start an execution of
+@code{uuxqt}, perhaps indirectly via @code{uucp} or @code{uux}.  UUCP
+jobs may wind up executing with a real user ID of the user who invoked
+@code{uuxqt}, which can cause problems if the UUCP job checks the real
+user ID for security purposes.  On such systems, it is safest to put
+@samp{run-uuxqt never} (@pxref{Miscellaneous (config)}) in the
+@file{config} file, so that @code{uucico} never starts @code{uuxqt}, and
+invoke @code{uuxqt} directly from a @file{crontab} file.
+
 Please let me know about any problems you have and how you got around
 them.  If you do report a problem, please include the version number of
 the package you are using, the operating system you are running it on,
@@ -2659,13 +2669,16 @@ format of the contents of a lock file, see @ref{UUCP Lock Files}.
 @item LCK..@var{sys}
 @cindex LCK..@var{sys}
 @cindex system lock files
-A lock file for a system, where @var{sys} is the first eight characters
-of the system name.  As noted above, these lock files are kept in the
-lock directory, which may not be the spool directory.  These lock files
-are created by @code{uucico} while talking to a remote system, and are
-used to prevent multiple simultaneous conversations with a system.  Note
-that the naming convention requires that the names of each directly
-connected remote system be unique in the first eight characters.
+A lock file for a system, where @var{sys} is the system name.  As noted
+above, these lock files are kept in the lock directory, which may not be
+the spool directory.  These lock files are created by @code{uucico}
+while talking to a remote system, and are used to prevent multiple
+simultaneous conversations with a system.  
+
+On systems which limit file names to 14 characters, only the first eight
+characters of the system name are used in the lock file name.  This
+requires that the names of each directly connected remote system be
+unique in the first eight characters.
 
 @item LCK.XQT.@var{NN}
 @cindex LCK.XQT.@var{NN}
@@ -8121,6 +8134,7 @@ Tin Le @code{<tin@@saigon.com>}
 @code{gdonl@@ssi1.com} (Don Lewis)
 @code{libove@@libove.det.dec.com} (Jay Vassos-Libove)
 @code{bruce%blilly@@Broadcast.Sony.COM} (Bruce Lilly)
+Godfrey van der Linden @code{<Godfrey_van_der_Linden@@NeXT.COM>}
 Ted Lindgreen @code{<tlindgreen@@encore.nl>}
 @code{andrew@@cubetech.com} (Andrew Loewenstern)
 "Arne Ludwig" @code{<arne@@rrzbu.hanse.de>}
@@ -8135,6 +8149,7 @@ Giles D Malet @code{<shrdlu!gdm@@provar.kwnet.on.ca>}
 @code{martelli@@cadlab.sublink.org} (Alex Martelli)
 W Christopher Martin @code{<wcm@@geek.ca.geac.com>}
 Yanek Martinson @code{<yanek@@mthvax.cs.miami.edu>}
+@code{thomasm@@mechti.wupper.de} (Thomas Mechtersheimer)
 @code{jm@@aristote.univ-paris8.fr} (Jean Mehat)
 @code{me@@halfab.freiburg.sub.org} (Udo Meyer)
 @code{les@@chinet.chi.il.us} (Leslie Mikesell)
