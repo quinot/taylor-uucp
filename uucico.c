@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.91  1992/03/30  04:07:13  ian
+   Dirk Musstopf: remove temporary file if receive fails
+
    Revision 1.90  1992/03/28  22:06:38  ian
    Michael I Bushnell: renamed enum tstatus to avoid header file conflict
 
@@ -1515,6 +1518,9 @@ faccept_call (zlogin, qport, pqsys)
 #if HAVE_TAYLOR_CONFIG
   struct sport sportinfo;
 #endif
+
+  if (pqsys != NULL)
+    *pqsys = NULL;
 
   ulog (LOG_NORMAL, "Incoming call (login %s port %s)",
 	zlogin == NULL ? "unknown" : zlogin,
