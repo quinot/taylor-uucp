@@ -951,7 +951,13 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
 #if LOG_DEVICE_PREFIX
       ulog_device (q->zdevice);
 #else
-      ulog_device (strrchr (q->zdevice, '/') + 1);
+      const char *z;
+
+      if (strncmp (q->zdevice, "/dev/", sizeof "/dev/" - 1) == 0)
+	z = q->zdevice + sizeof "/dev/" - 1;
+      else
+	z = q->zdevice;
+      ulog_device (z);
 #endif
     }
   else
