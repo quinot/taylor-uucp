@@ -223,8 +223,12 @@ it is over.
 
 54.
 
-John Theus: Right now the slave uucico gives an error if there is no
+John Theus: right now the slave uucico gives an error if there is no
 port file.  The documentation says that this is permitted, and it
 should be.
 
 58.
+
+Lele Gaifax: put the complete year in the log file.
+
+59.
