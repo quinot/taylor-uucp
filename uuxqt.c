@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1992/02/29  04:07:08  ian
+   Added -j option to uucp and uux
+
    Revision 1.30  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -272,6 +275,7 @@ main (argc, argv)
 	{
 	  char *zcopy;
 	  boolean fprocessed;
+	  const struct ssysteminfo *qusesys;
 
 #if ! HAVE_ALLOCA
 	  /* Clear out any accumulated alloca buffers.  */
@@ -283,27 +287,34 @@ main (argc, argv)
 	  if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
 	    continue;
 
-	  if (qreadsys == NULL
-	      || strcmp (qreadsys->zname, zgetsys) != 0)
+	  if (strcmp (zdosys, zLocalname) == 0)
+	    qusesys = &sLocalsys;
+	  else
 	    {
-	      if (fread_system_info (zgetsys, &sreadsys))
-		qreadsys = &sreadsys;
-	      else
+	      if (qreadsys == NULL
+		  || strcmp (qreadsys->zname, zgetsys) != 0)
 		{
-		  if (! fUnknown_ok)
+		  if (fread_system_info (zgetsys, &sreadsys))
+		    qreadsys = &sreadsys;
+		  else
 		    {
-		      ulog (LOG_ERROR,
-			    "%s: Execute file for unknown system %s",
-			    z, zgetsys);
-		      (void) remove (z);
-		      continue;
+		      if (! fUnknown_ok)
+			{
+			  ulog (LOG_ERROR,
+				"%s: Execute file for unknown system %s",
+				z, zgetsys);
+			  (void) remove (z);
+			  continue;
+			}
+		      qreadsys = &sUnknown;
+		      sUnknown.zname = xstrdup (zgetsys);
 		    }
-		  qreadsys = &sUnknown;
-		  sUnknown.zname = xstrdup (zgetsys);
+
+		  if (! fsysdep_make_spool_dir (qreadsys))
+		    continue;
 		}
 
-	      if (! fsysdep_make_spool_dir (qreadsys))
-		continue;
+	      qusesys = qreadsys;
 	    }
 
 	  /* If we've received a signal, get out of the loop.  */
@@ -312,8 +323,8 @@ main (argc, argv)
 
 	  zcopy = xstrdup (z);
 
-	  ulog_system (qreadsys->zname);
-	  uqdo_xqt_file (zcopy, qreadsys, zcmd, &fprocessed);
+	  ulog_system (qusesys->zname);
+	  uqdo_xqt_file (zcopy, qusesys, zcmd, &fprocessed);
 	  ulog_system (NULL);
 	  ulog_user (NULL);
 
@@ -637,7 +648,6 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
      const char *zcmd;
      boolean *pfprocessed;
 {
-  char bgrade;
   const char *zcmds;
   const char *zabsolute;
   boolean ferr;
@@ -655,8 +665,6 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   char *zfullcmd;
 
   *pfprocessed = FALSE;
-
-  bgrade = zfile[strlen (zfile) - 5];
 
   /* If we're not permitted to execute anything for this system,
      we can just clobber the file without even looking at it.  */
@@ -1001,8 +1009,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	    }
 	}
 
-      zdata = zsysdep_data_file_name (qoutsys, bgrade, abtemp, abdata,
-				      (char *) NULL);
+      zdata = zsysdep_data_file_name (qoutsys, BDEFAULT_UUX_GRADE, abtemp,
+				      abdata, (char *) NULL);
       if (zdata == NULL)
 	{
 	  /* If we get an error, try again later.  */
@@ -1240,7 +1248,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	     actually sent.  */
 	  s.cbytes = -1;
 
-	  (void) zsysdep_spool_commands (qoutsys, bgrade, 1, &s);
+	  (void) zsysdep_spool_commands (qoutsys, BDEFAULT_UUX_GRADE,
+					 1, &s);
 	}
     }
 
