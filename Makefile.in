@@ -119,7 +119,7 @@ clean:
 	rm -f uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
 
-dist:
+dist: uucp.info
 	-rm -rf uucp-$(VERSION)
 	mkdir uucp-$(VERSION)
 	ln `cat MANIFEST` uucp-$(VERSION)
@@ -127,6 +127,9 @@ dist:
 	chmod 0644 uucp-$(VERSION)/Makefile
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
 	compress taylor-uucp-$(VERSION).tar
+
+uucp.info: uucp.texi
+	makeinfo uucp.texi
 
 # GNU standards want these targets
 
