@@ -83,6 +83,9 @@ for uustat, uuname or uulog.
 
     As usual, many bugs were fixed.
 
+    Several useful and interesting programs and scripts are provided
+    in the contrib directory.  See contrib/README for details.
+
     The programs uustat, uulog and uuname were added.  uucp and uux
     support a -j switch to provide a jobid which uustat can use to
     remove the job.
