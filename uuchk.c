@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.20  1992/02/08  22:33:32  ian
    Only get the current working directory if it's going to be needed
 
@@ -518,13 +521,63 @@ ukshow (qsys)
 	}
 
       if (qsys->fcall_transfer || qsys->fcalled_transfer)
-	printf (" May send by local request: %s\n", qsys->zlocal_send);
+	{
+	  if (qsys->zcalled_local_send == NULL)
+	    printf (" May send by local request: %s\n", qsys->zlocal_send);
+	  else
+	    {
+	      if (fcall && qsys->fcall_transfer)
+		printf (" May send by local request when calling: %s\n",
+			qsys->zlocal_send);
+	      if (fcalled && qsys->fcalled_transfer)
+		printf (" May send by local request when called: %s\n",
+			qsys->zcalled_local_send);
+	    }	    
+	}
       if (qsys->fcall_request || qsys->fcalled_request)
-	printf (" May send by remote request: %s\n", qsys->zremote_send);
+	{
+	  if (qsys->zcalled_remote_send == NULL)
+	    printf (" May send by remote request: %s\n", qsys->zremote_send);
+	  else
+	    {
+	      if (fcall && qsys->fcall_request)
+		printf (" May send by remote request when calling: %s\n",
+			qsys->zremote_send);
+	      if (fcalled && qsys->fcalled_request)
+		printf (" May send by remote request when called: %s\n",
+			qsys->zcalled_remote_send);
+	    }
+	}
       if (qsys->fcall_transfer || qsys->fcalled_transfer)
-	printf (" May accept by local request: %s\n", qsys->zlocal_receive);
+	{
+	  if (qsys->zcalled_local_receive == NULL)
+	    printf (" May accept by local request: %s\n",
+		    qsys->zlocal_receive);
+	  else
+	    {
+	      if (fcall && qsys->fcall_transfer)
+		printf (" May accept by local request when calling: %s\n",
+			qsys->zlocal_receive);
+	      if (fcalled && qsys->fcalled_transfer)
+		printf (" May accept by local request when called: %s\n",
+			qsys->zcalled_local_receive);
+	    }
+	}
       if (qsys->fcall_request || qsys->fcalled_request)
-	printf (" May accept by remote request: %s\n", qsys->zremote_receive);
+	{
+	  if (qsys->zcalled_remote_receive == NULL)
+	    printf (" May accept by remote request: %s\n",
+		    qsys->zremote_receive);
+	  else
+	    {
+	      if (fcall && qsys->fcall_request)
+		printf (" May accept by remote request when calling: %s\n",
+			qsys->zremote_receive);
+	      if (fcalled && qsys->fcalled_request)
+		printf (" May accept by remote request when called: %s\n",
+			qsys->zcalled_remote_receive);
+	    }
+	}
 
       printf (" May execute %s (path %s)\n", qsys->zcmds, qsys->zpath);
 

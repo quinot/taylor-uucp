@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.38  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.37  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -499,12 +502,30 @@ struct ssysteminfo
   boolean fcalled_transfer;
   /* List of directories that may be sent by local request.  */
   const char *zlocal_send;
+  /* List of directories that may be sent by local request when the
+     other system placed the call (if NULL, use zlocal_send).  This is
+     actually never used currently.  */
+  const char *zcalled_local_send;
   /* List of directories that may be sent by remote request.  */
   const char *zremote_send;
+  /* List of directories that may be sent by remote request when the
+     other system placed the call (if NULL, use zremote_send).  This
+     is currently only used by HAVE_BNU_CONFIG.  */
+  const char *zcalled_remote_send;
   /* List of directories that may be received into by local request.  */
   const char *zlocal_receive;
+  /* List of directories that may be received into by local request
+     when the other system placed the call (if NULL, use
+     zlocal_receive).  This is currently only used under
+     HAVE_BNU_CONFIG.  */
+  const char *zcalled_local_receive;
   /* List of directories that may be received into by remote request.  */
   const char *zremote_receive;
+  /* List of directories that may be received into by remote request
+     when the other system placed the call (if NULL, use
+     zremote_receive).  This is currently only used by
+     HAVE_BNU_CONFIG.  */
+  const char *zcalled_remote_receive;
   /* Path to use for command execution.  */
   const char *zpath;
   /* List of commands that may be executed.  */

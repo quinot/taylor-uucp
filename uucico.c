@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.55  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.54  1992/02/20  22:57:19  ian
    Chip Salzenberg: some systems truncate the Shere= machine name
 
@@ -251,6 +254,7 @@ static boolean faccept_call P((const char *zlogin, struct sport *qport));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
 			int bgrade, boolean fnew));
 static boolean fdo_xcmd P((const struct ssysteminfo *qsys,
+			   boolean fcaller,
 			   const struct scmd *qcmd));
 static boolean fok_to_send P((const char *zfrom, boolean flocal,
 			      boolean fcaller,
@@ -2516,7 +2520,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	      ulog (LOG_NORMAL, "Work requested: %s to %s", s.zfrom,
 		    s.zto);
 
-	      if (fdo_xcmd (qsys, &s))
+	      if (fdo_xcmd (qsys, fcaller, &s))
 		{
 		  if (! fxcmd_confirm ())
 		    return FALSE;
@@ -2578,8 +2582,9 @@ fuucp (fmaster, qsys, bgrade, fnew)
    basically requested us to execute a uucp command for them.  */
 
 static boolean
-fdo_xcmd (qsys, q)
+fdo_xcmd (qsys, fcaller, q)
      const struct ssysteminfo *qsys;
+     boolean fcaller;
      const struct scmd *q;
 {
   const char *zexclam;
@@ -2655,6 +2660,7 @@ fdo_xcmd (qsys, q)
 
   while ((zfile = zsysdep_wildcard (qsys, q->zfrom)) != NULL)
     {
+      const char *zsend;
       const char *zto;
       char abtname[CFILE_NAME_LEN];
 
@@ -2664,7 +2670,11 @@ fdo_xcmd (qsys, q)
 
       /* Make sure the remote system is permitted to read the
 	 specified file.  */
-      if (! fin_directory_list (qsys, zfile, qsys->zremote_send))
+      zsend = qsys->zremote_send;
+      if (! fcaller && qsys->zcalled_remote_send != NULL)
+	zsend = qsys->zcalled_remote_send;
+
+      if (! fin_directory_list (qsys, zfile, zsend))
 	{
 	  ulog (LOG_ERROR, "Not permitted to send %s", zfile);
 	  (void) fsysdep_wildcard_end ();
@@ -2680,6 +2690,8 @@ fdo_xcmd (qsys, q)
 	}
       else
 	{
+	  const char *zrec;
+
 	  zto = zsysdep_real_file_name (qsys, zexclam + 1, zfile);
 	  if (zto == NULL)
 	    {
@@ -2688,7 +2700,11 @@ fdo_xcmd (qsys, q)
 	    }
 	  /* We only accept a local destination if the remote system
 	     has the right to create files there.  */
-	  if (! fin_directory_list (qsys, zto, qsys->zremote_receive))
+	  zrec = qsys->zremote_receive;
+	  if (! fcaller && qsys->zcalled_remote_receive != NULL)
+	    zrec = qsys->zcalled_remote_receive;
+
+	  if (! fin_directory_list (qsys, zto, zrec))
 	    {
 	      ulog (LOG_ERROR, "Not permitted to receive %s", zto);
 	      (void) fsysdep_wildcard_end ();
@@ -2764,9 +2780,17 @@ fok_to_send (zfile, flocal, fcaller, qsys, zuser)
     return FALSE;
 
   if (flocal)
-    z = qsys->zlocal_send;
+    {
+      z = qsys->zlocal_send;
+      if (! fcaller && qsys->zcalled_local_send != NULL)
+	z = qsys->zcalled_local_send;
+    }
   else
-    z = qsys->zremote_send;
+    {
+      z = qsys->zremote_send;
+      if (! fcaller && qsys->zcalled_remote_send != NULL)
+	z = qsys->zcalled_remote_send;
+    }
 
   return fin_directory_list (qsys, zfile, z);
 }
@@ -2788,9 +2812,17 @@ fok_to_receive (zto, flocal, fcaller, qsys, zuser)
     return FALSE;
 
   if (flocal)
-    z = qsys->zlocal_receive;
+    {
+      z = qsys->zlocal_receive;
+      if (! fcaller && qsys->zcalled_local_receive != NULL)
+	z = qsys->zcalled_local_receive;
+    }
   else
-    z = qsys->zremote_receive;
+    {
+      z = qsys->zremote_receive;
+      if (! fcaller && qsys->zcalled_remote_receive != NULL)
+	z = qsys->zcalled_remote_receive;
+    }
 
   return fin_directory_list (qsys, zto, z);
 }
