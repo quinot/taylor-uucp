@@ -174,7 +174,7 @@ fsysdep_get_status (qsys, qret, pfnone)
 	  zend = qret->zstring + strlen (qret->zstring);
 	  while (zend != qret->zstring && *zend != ' ')
 	    --zend;
-	  if (*zend == '"' && zend != qret->zstring)
+	  if (zend != qret->zstring && zend[-1] == '"')
 	    --zend;
 	  if (zend != qret->zstring)
 	    *zend = '\0';

@@ -2306,7 +2306,7 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname,
     printf (" ");
 
   if (qxqt == NULL)
-    printf ("  0X (0 secs)  ");
+    printf ("  0X (0 secs)   ");
   else
     {
       printf ("%3dX (", qxqt->cxqts);

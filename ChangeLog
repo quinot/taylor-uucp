@@ -1,5 +1,10 @@
 2002-02-17  Ian Lance Taylor  <ian@airs.com>
 
+	* Don Phillips: uustat.c (fsquery_show): Add space in the 0X case
+	to make everything line up.
+	* unix/status.c (fsysdep_get_status): Correct removal of trailing
+	quote.
+
 	* unix/serial.c (fsserial_open): Make sure that we can not set the
 	ibaud field to zero for a terminal.
 	(fsysdep_conn_io): Only use baud rate in delay calculations on a
