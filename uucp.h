@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.40  1992/02/24  04:58:47  ian
+   Only permit files to be received into directories that are world-writeable
+
    Revision 1.39  1992/02/23  19:50:50  ian
    Handle READ and WRITE in Permissions correctly
 
@@ -846,8 +849,12 @@ extern boolean fcheck_validate P((const char *zlogname,
    the second argument should be executed first.  */
 extern int igradecmp P((int b1, int b2));
 
-/* Make log entry.  */
+/* Make a log entry.  */
+#if HAVE_VPRINTF
 extern void ulog P((enum tlog ttype, const char *zfmt, ...));
+#else
+extern void ulog ();
+#endif
 
 /* If ffile is TRUE, send log entries to the log file rather than to
    stderr.  */
