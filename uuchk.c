@@ -208,6 +208,14 @@ main (argc, argv)
       if (zstr != NULL)
 	printf ("Global debugging level %s\n", zstr);
 
+      iret = uuconf_strip (puuconf, &iint);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      printf ("uucico -l will %sstrip login names and passwords\n",
+	      (iint & UUCONF_STRIP_LOGIN) != 0 ? "" : "not ");
+      printf ("uucico will %sstrip initial UUCP protocol commands\n",
+	      (iint & UUCONF_STRIP_PROTO) != 0 ? "" : "not ");
+
       iret = uuconf_maxuuxqts (puuconf, &iint);
       if (iret != UUCONF_SUCCESS)
 	ukuuconf_error (puuconf, iret);
