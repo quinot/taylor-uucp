@@ -96,6 +96,7 @@ LN_S = @LN_S@
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 DVITPS = dvips
+TEXI2HTML = texi2html
 
 @SET_MAKE@
 
@@ -334,7 +335,7 @@ dist:
 	tar -cvf uucp-$(VERSION).tar uucp-$(VERSION)
 	gzip --best uucp-$(VERSION).tar
 
-doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
+doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps uucp.html
 	-rm -rf uucp-doc-$(VERSION) uucp-doc-dist
 	-rm -f uucp-doc-$(VERSION).tar uucp-doc-$(VERSION).tar.gz
 	mkdir uucp-doc-$(VERSION)
@@ -342,6 +343,7 @@ doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 	ln $(srcdir)/uucp.texi uucp-doc-$(VERSION)
 	for i in uucp.info*; do ln $$i uucp-doc-$(VERSION); done
 	ln uucp.dvi uucp.ps uucp-doc-$(VERSION)
+	for i in uucp*.html; do ln $$i uucp-doc-$(VERSION); done
 	ln uucp.cp uucp.fn uucp.aux uucp-doc-$(VERSION)
 	ln texinfo.tex uucp-doc-$(VERSION)
 	mkdir uucp-doc-dist
@@ -375,6 +377,11 @@ ps: uucp.ps
 
 uucp.ps: uucp.dvi
 	$(DVITPS) -o uucp.ps uucp.dvi
+
+html: uucp.html
+
+uucp.html: uucp.texi
+	$(TEXI2HTML) -menu -split_chapter $(srcdir)/uucp.texi
 
 # Suggested autoconf targets.
 
