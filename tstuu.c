@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.52  1992/04/02  23:02:40  ian
+   Conditionally declare times
+
    Revision 1.51  1992/03/28  04:29:19  ian
    Roberto Biancardi: define SIGCHLD as SIGCLD if necessary
 
@@ -658,10 +661,10 @@ uchild (isig)
   (void) times (&sbase);
 
 #if HAVE_WAITPID
-  (void) waitpid (iPid1, (wait_status *) NULL, 0);
+  (void) waitpid (iPid1, (pointer) NULL, 0);
 #else /* ! HAVE_WAITPID */
 #if HAVE_WAIT4
-  (void) wait4 (iPid1, (wait_status *) NULL, 0, (struct rusage *) NULL);
+  (void) wait4 (iPid1, (pointer) NULL, 0, (struct rusage *) NULL);
 #else /* ! HAVE_WAIT4 */
   (void) wait ((wait_status *) NULL);
 #endif /* ! HAVE_WAIT4 */
@@ -1424,8 +1427,8 @@ uchoose (po1, po2)
   stime.tv_sec = 5;
   stime.tv_usec = 0;
 
-  if (select ((*po1 > *po2 ? *po1 : *po2) + 1, &iread, (int *) NULL,
-	      (int *) NULL, &stime) < 0)
+  if (select ((*po1 > *po2 ? *po1 : *po2) + 1, (pointer) &iread,
+	      (pointer) NULL, (pointer) NULL, &stime) < 0)
     {
       perror ("select");
       uchild (SIGCHLD);
@@ -1481,7 +1484,8 @@ fwritable (o)
   stime.tv_sec = 0;
   stime.tv_usec = 0;
 
-  cfds = select (o + 1, (int *) NULL, &iwrite, (int *) NULL, &stime);
+  cfds = select (o + 1, (pointer) NULL, (pointer) &iwrite,
+		 (pointer) NULL, &stime);
   if (cfds < 0)
     {
       perror ("select");

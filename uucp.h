@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.67  1992/04/02  22:51:09  ian
+   Add gcc 2.0 format checking to ulog, and fixed discovered problems
+
    Revision 1.66  1992/03/30  04:49:10  ian
    Niels Baggesen: added debugging types abnormal and uucp-proto
 
@@ -1184,7 +1187,9 @@ extern char *strerror P((int ierr));
 #if ! HAVE_MEMCMP
 #if HAVE_BCMP
 #define memcmp(p1, p2, c) bcmp ((p1), (p2), (c))
+#ifndef bcmp /* bcmp is sometimes a macro.  */
 extern int bcmp ();
+#endif
 #else /* ! HAVE_BCMP */
 extern int memcmp P((constpointer p1, constpointer p2, int c));
 #endif /* ! HAVE_BCMP */
@@ -1193,7 +1198,9 @@ extern int memcmp P((constpointer p1, constpointer p2, int c));
 #if ! HAVE_MEMCPY
 #if HAVE_BCOPY
 #define memcpy(pto, pfrom, c) bcopy ((pfrom), (pto), (c))
+#ifndef bcopy /* bcopy is sometimes a macro.  */
 extern void bcopy ();
+#endif
 #else /* ! HAVE_BCOPY */
 extern pointer memcpy P((pointer pto, constpointer pfrom, int c));
 #endif /* ! HAVE_BCOPY */
@@ -1204,7 +1211,7 @@ extern pointer memchr P((constpointer p, int b, int c));
 #endif
 
 #if HAVE_BZERO
-#ifndef bzero  /* bzero is sometimes a macro.  */
+#ifndef bzero /* bzero is sometimes a macro.  */
 extern void bzero ();
 #endif
 #else /* ! HAVE_BZERO */

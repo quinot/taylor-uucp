@@ -520,6 +520,7 @@ ILT_HEADER_COMMENT([
 
 echo checking whether times can be declared as long
 echo "#include <sys/types.h>
+`if test -f $INCLUDEDIR/libc.h; then echo '#include <libc.h>'; fi`
 `if test -f $INCLUDEDIR/sys/times.h; then echo '#include <sys/times.h>'; fi`
 main () { exit(0); } extern long times ();" > conftest.c
 eval $compile

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1992/04/01  21:58:35  ian
+   Added CLOSE_LOGFILES configuration parameter
+
    Revision 1.7  1992/03/30  15:29:58  ian
    Added HAVE_SVR4_LOCKFILES
 
@@ -153,9 +156,10 @@
    numbers may be appended (e.g. ``ps -flp1,10,100'').  Otherwise ps
    will be invoked several times, with a single process number append
    each time.  The default definitions should work on most systems,
-   although some may complain about the 'p' option.  The second set of
-   definitions are appropriate for System V.  To use the second set of
-   definitions, change the ``#if 1'' to ``#if 0''.  */
+   although some (such as the NeXT) will complain about the 'p'
+   option.  The second set of definitions are appropriate for System
+   V.  To use the second set of definitions, change the ``#if 1'' to
+   ``#if 0''.  */
 #if 1
 #define PS_PROGRAM "/bin/ps -lp"
 #define HAVE_PS_MULTIPLE 0
@@ -172,10 +176,11 @@
    this way).  If the LOCKDIR macro is defined, these lock files will
    be placed in the named directory; otherwise they will be placed in
    the default spool directory.  On some BNU systems the lock files
-   are placed in /etc/locks.  On some they are placed in
-   /usr/spool/locks.  */
+   are in /etc/locks; on others they may be in /usr/spool/locks.  On
+   the NeXT they are in /usr/spool/uucp/LCK.  */
 /* #define LOCKDIR "/etc/locks" */
 /* #define LOCKDIR "/usr/spool/locks" */
+/* #define LOCKDIR "/usr/spool/uucp/LCK" */
 
 /* You must also specify the format of the lock files by setting
    exactly one of the following macros to 1.  Check an existing lock
