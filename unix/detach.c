@@ -1,7 +1,7 @@
 /* detach.c
    Detach from the controlling terminal.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -107,7 +107,8 @@ usysdep_detach ()
       if (! fignored)
 	usset_signal (SIGHUP, ussignal, TRUE, (boolean *) NULL);
 
-      DEBUG_MESSAGE2 (DEBUG_PORT, "Forked; old PID %ld, new pid %ld",
+      DEBUG_MESSAGE2 (DEBUG_PORT,
+		      "usysdep_detach: Forked; old PID %ld, new pid %ld",
 		      (long) igrp, (long) ipid);
     }
 
