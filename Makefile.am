@@ -27,7 +27,7 @@ AM_CFLAGS = $(WARN_CFLAGS) $(UUDIRFLAGS)
 
 LDADD = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 
-UUHEADERS = uucp.h uudefs.h uuconf.h policy.h system.h getopt.h
+UUHEADERS = uucp.h uudefs.h uuconf.h policy.h system.h sysdep.h getopt.h
 
 uucico_SOURCES = uucico.c trans.h trans.c send.c rec.c xcmd.c prot.h prot.c \
 	protg.c protf.c prott.c prote.c proti.c protj.c proty.c protz.c \
