@@ -37,6 +37,31 @@ const char cusub_rcsid[] = "$Id$";
 #include "conn.h"
 #include "prot.h"
 
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#else
+#if HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+#endif
+
+/* Get definitions for both O_NONBLOCK and O_NDELAY.  */
+#ifndef O_NDELAY
+#ifdef FNDELAY
+#define O_NDELAY FNDELAY
+#else /* ! defined (FNDELAY) */
+#define O_NDELAY 0
+#endif /* ! defined (FNDELAY) */
+#endif /* ! defined (O_NDELAY) */
+
+#ifndef O_NONBLOCK
+#ifdef FNBLOCK
+#define O_NONBLOCK FNBLOCK
+#else /* ! defined (FNBLOCK) */
+#define O_NONBLOCK 0
+#endif /* ! defined (FNBLOCK) */
+#endif /* ! defined (O_NONBLOCK) */
+
 #include <errno.h>
 
 /* 4.2 systems don't define SIGUSR2.  This should work for them.  On
@@ -566,7 +591,7 @@ uscu_child (qconn, opipe)
 
   fgot = FALSE;
 
-  /* It would be nice if we could just use fsserial_read, but that
+  /* It would be nice if we could just use fsysdep_conn_read, but that
      will log signals that we don't want logged.  There should be a
      generic way to extract the file descriptor from the port.  */
   if (qconn->qport == NULL)
@@ -581,13 +606,13 @@ uscu_child (qconn, opipe)
 	  oport = -1;
 	  break;
 #endif
-	case UUCONF_PORTTYPE_STDIN:
-	  oport = 0;
-	  break;
 	case UUCONF_PORTTYPE_PIPE:
 	  /* A read of 0 on a pipe always means EOF (see below).  */
 	  fgot = TRUE;
 	  /* Fall through.  */
+	case UUCONF_PORTTYPE_STDIN:
+	  oport = ((struct ssysdep_conn *) qconn->psysdep)->ord;
+	  break;
 	case UUCONF_PORTTYPE_MODEM:
 	case UUCONF_PORTTYPE_DIRECT:
 	case UUCONF_PORTTYPE_TCP:
@@ -596,6 +621,10 @@ uscu_child (qconn, opipe)
 	  break;
 	}
     }
+
+  /* Force the descriptor into blocking mode.  */
+  (void) fcntl (oport, F_SETFL,
+		fcntl (oport, F_GETFL, 0) &~ (O_NDELAY | O_NONBLOCK));
 
   usset_signal (SIGUSR1, uscu_child_handler, TRUE, (boolean *) NULL);
   usset_signal (SIGUSR2, uscu_child_handler, TRUE, (boolean *) NULL);
