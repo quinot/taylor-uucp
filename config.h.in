@@ -31,6 +31,7 @@
 #define HAVE_UTIME_H 0 /* <utime.h> */
 #define HAVE_FCNTL_H 0 /* <fcntl.h> */
 #define HAVE_SYS_FILE_H 0 /* <sys/file.h> */
+#define HAVE_SYS_TIME_H 0 /* <sys/time.h> */
 #define HAVE_SYS_TIMES_H 0 /* <sys/times.h> */
 #define HAVE_LIBC_H 0 /* <libc.h> */
 #define HAVE_SYSEXITS_H 0 /* <sysexits.h> */
