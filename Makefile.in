@@ -86,7 +86,7 @@ MAKEINFO = makeinfo
 
 SHELL = /bin/sh
 
-VERSION = beta1.04
+VERSION = gamma1.04
 
 MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
