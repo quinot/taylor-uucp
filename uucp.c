@@ -304,6 +304,11 @@ main (argc, argv)
 	}
     }
 
+  if (zCnotify != NULL
+      && zCnotify[strcspn (zCnotify, " \t\n")] != '\0')
+    ulog (LOG_FATAL,
+	  "Unsupported use of whitespace in notification address");
+
   if (argc - optind < 2)
     ucusage ();
 

@@ -345,6 +345,11 @@ main (argc, argv)
       bXgrade = BDEFAULT_UUX_GRADE;
     }
 
+  if (zrequestor != NULL
+      && zrequestor[strcspn (zrequestor, " \t\n")] != '\0')
+    ulog (LOG_FATAL,
+	  "Unsupported use of whitespace in notification address");
+
   if (optind == argc)
     uxusage ();
 

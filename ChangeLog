@@ -1,5 +1,9 @@
 2002-02-16  Ian Lance Taylor  <ian@airs.com>
 
+	* uucp.c (main): Check for unsupported whitespace in notification
+	address.
+	* uux.c (main): Likewise.
+
 	* unix/splcmd.c (zsysdep_spool_commands): Check for unsupported
 	use of white space.
 
