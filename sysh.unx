@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/01/13  05:53:04  ian
+   Mike Park: added HAVE_WAITPID and HAVE_WAIT4 configuration parameters
+
    Revision 1.22  1992/01/11  17:11:11  ian
    Hannu Strang: avoid compiler bug by not using -> in address constant
 
@@ -335,7 +338,6 @@
 
    If you are not worried about compatibility with a currently running
    UUCP, use SPOOLDIR_TAYLOR.  */
-
 #define SPOOLDIR_V2 0
 #define SPOOLDIR_BSD42 0
 #define SPOOLDIR_BSD43 0
@@ -369,7 +371,10 @@
    room before accepting a transferred file.  Unfortunately, there is
    no standard way to determine the amount of free disk space.  One of
    the following macros must be set to 1 in order for the amount of
-   free space to be discovered.
+   free space to be discovered.  This is only helpful when talking to
+   another instance of Taylor UUCP, and in any case setting all the
+   choices to 0 will do no real harm, it will just mean that the
+   package may fill up the disk.
 
    HAVE_ULTRIX_STATFS -- Use the statfs call as found on Ultrix systems
    HAVE_SCO_STATFS -- Use the statfs call as found on SCO Unix
@@ -415,10 +420,10 @@
 #define HAVE_UNION_WAIT 0
 
 /* If you have the POSIX waitpid system call, set HAVE_WAITPID to 1.
-   If you have the wait4 system call, which also lets you specify a
-   particular pid to wait for, set HAVE_WAIT4 to 1.  These are only
-   used by the tstuu test program, and even for that setting them to
-   both 0 will not have seriously bad effects.  */
+   Otherwise, if you have the wait4 system call, which also lets you
+   specify a particular pid to wait for, set HAVE_WAIT4 to 1.  These
+   are only used by the tstuu test program, and even for that setting
+   them both to 0 will not have seriously bad effects.  */
 #define HAVE_WAITPID 1
 #define HAVE_WAIT4 0
 
