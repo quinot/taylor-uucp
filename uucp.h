@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/01/18  22:48:53  ian
+   Reworked sending of mail and general handling of failed transfers
+
    Revision 1.33  1992/01/15  19:53:27  ian
    Mike Park: If HAVE_ALLOCA is 0 when using gcc, don't define alloca
 
@@ -922,6 +925,13 @@ extern char *strrchr P((const char *z, int b));
 /* Turn a string into a long integer.  */
 #if ! HAVE_STRTOL
 extern long strtol P((const char *, char **, int));
+#endif
+
+/* Lookup a key in a sorted array.  */
+#if ! HAVE_BSEARCH
+extern pointer bsearch P((constpointer pkey, constpointer parray,
+			  int celes, int cbytes,
+			  int (*pficmp) P((constpointer, constpointer))));
 #endif
 
 /* Global variables.  */
