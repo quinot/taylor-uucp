@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.1  1991/12/14  19:05:30  ian
+''' Initial revision
+'''
 '''
 .TH uucico 8 "Taylor UUCP 1.01"
 .SH NAME
@@ -63,6 +66,8 @@ or the
 option.
 
 The
+.B \-l
+or
 .B \-e
 option may be used to force
 .I uucico
@@ -71,7 +76,13 @@ daemon calls in, it will see these prompts and login as usual; the
 login name and password will be checked against a separate list kept
 specially for
 .I uucico
-rather than the /etc/passwd file.
+rather than the /etc/passwd file.  The
+.B \-l
+option will prompt once and then exit.  The
+.B \-e
+option will prompt again after the first session is over; in this mode
+.I uucico
+will permanently control a port.
 .SH OPTIONS
 The following options may be given to
 .I uucico.
@@ -95,6 +106,15 @@ Call the named system, ignoring any required wait.
 .TP5
 .B \-f
 Ignore any required wait for any systems to be called.
+.TP5
+.B \-l
+Prompt for login name and password using "login: " and "Password:".
+This allows
+.I uucico
+to be easily run from
+.I inetd
+(8).  The login name and password are checked against the UUCP
+password file, which has no connection to the file /etc/passwd.
 .TP5
 .B \-p port
 Specify a port to call out on or to listen to.  In slave mode, this
@@ -138,6 +158,8 @@ configuration file, so these are only approximations.
 
 .br
 /usr/lib/uucp/config - Configuration file.
+.br
+/usr/lib/uucp/passwd - Default UUCP password file.
 .br
 /usr/spool/uucp -
 UUCP spool directory.

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.24  1991/12/17  04:55:01  ian
    David Nugent: ignore SIGHUP in uucico and uuxqt
 
@@ -154,7 +157,7 @@ static boolean fdo_call P((const struct ssysteminfo *qsys,
 static boolean fcall_failed P((const struct ssysteminfo *qsys,
 			       enum tstatus twhy, struct sstatus *qstat,
 			       int cretry));
-static boolean fwait_for_calls P((struct sport *qport));
+static boolean flogin_prompt P((struct sport *qport));
 static boolean faccept_call P((const char *zlogin, struct sport *qport));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
 			int bgrade, boolean fnew));
@@ -214,6 +217,8 @@ main (argc, argv)
   boolean fmaster = FALSE;
   /* Command line debugging level  */
   int idebug = -1;
+  /* Whether to give a single login prompt.  */
+  boolean flogin = FALSE;
   /* Whether to do an endless loop of accepting calls  */
   boolean floop = FALSE;
   /* Whether to wait for an inbound call after doing an outbound call  */
@@ -222,7 +227,7 @@ main (argc, argv)
   boolean fret = TRUE;
 
   while ((iopt = getopt (argc, argv,
-			 "efI:p:qr:s:S:x:X:w")) != EOF)
+			 "efI:lp:qr:s:S:x:X:w")) != EOF)
     {
       switch (iopt)
 	{
@@ -240,6 +245,11 @@ main (argc, argv)
 	case 'I':
 	  /* Set configuration file name (default is in sysdep.h).  */
 	  zconfig = optarg;
+	  break;
+
+	case 'l':
+	  /* Prompt for login name and password.  */
+	  flogin = TRUE;
 	  break;
 
 	case 'p':
@@ -430,34 +440,68 @@ main (argc, argv)
 
   if (! fmaster)
     {
-      /* If a port was specified by name, we go into endless loop mode.
-	 In this mode, we wait for calls and prompt them with "login:"
-	 and "Password:", so that they think we are a regular UNIX
-	 system.  If we aren't in endless loop mode, we have been called
-	 by some other system.  */
+      /* If a port was specified by name, we go into endless loop
+	 mode.  In this mode, we wait for calls and prompt them with
+	 "login:" and "Password:", so that they think we are a regular
+	 UNIX system.  If we aren't in endless loop mode, we have been
+	 called by some other system.  If flogin is TRUE, we prompt
+	 with "login:" and "Password:" a single time.  */
+
+      fret = TRUE;
+
       if (qport != NULL)
-	floop = TRUE;
-      
-      if (floop)
-	fret = fwait_for_calls (qport);
-      else
 	{
-	  if (! fport_open ((struct sport *) NULL, 0L, 0L, TRUE))
+	  floop = TRUE;
+	  if (! fport_lock (qport, TRUE))
+	    {
+	      ulog (LOG_ERROR, "Port %s is locked", qport->zname);
+	      fret = FALSE;
+	    }
+	}
+
+      if (fret)
+	{
+	  if (! fport_open (qport, (long) 0, (long) 0, TRUE))
 	    fret = FALSE;
+	}
+
+      if (fret)
+	{
+	  if (floop)
+	    {
+	      while (flogin_prompt (qport))
+		{
+		  if (fLocked_system)
+		    {
+		      (void) fsysdep_unlock_system (&sLocked_system);
+		      fLocked_system = FALSE;
+		    }
+		  if (! fport_reset ())
+		    break;
+		}
+	      fret = FALSE;
+	    }
 	  else
 	    {
-	      const char *zlogin;
-
-	      zlogin = zsysdep_login_name ();
-	      if (zlogin == NULL)
-		ulog (LOG_FATAL, "Can't get login name");
-	      fret = faccept_call (zlogin, (struct sport *) NULL);
-	      (void) fport_close (fret);
-	      if (fLocked_system)
+	      if (flogin)
+		fret = flogin_prompt (qport);
+	      else
 		{
-		  (void) fsysdep_unlock_system (&sLocked_system);
-		  fLocked_system = FALSE;
+		  const char *zlogin;
+
+		  zlogin = zsysdep_login_name ();
+		  if (zlogin == NULL)
+		    ulog (LOG_FATAL, "Can't get login name");
+		  fret = faccept_call (zlogin, qport);
 		}
+	    }
+
+	  (void) fport_close (fret);
+
+	  if (fLocked_system)
+	    {
+	      (void) fsysdep_unlock_system (&sLocked_system);
+	      fLocked_system = FALSE;
 	    }
 	}
     }
@@ -494,6 +538,8 @@ uusage ()
 	   " -r state: 1 for master, 0 for slave (default)\n");
   fprintf (stderr,
 	   " -p port: Specify port (implies -e)\n");
+  fprintf (stderr,
+	   " -l: prompt for login name and password\n");
   fprintf (stderr,
 	   " -e: Endless loop of login prompts and daemon execution\n");
   fprintf (stderr,
@@ -1049,70 +1095,50 @@ fcall_failed (qsys, twhy, qstat, cretry)
   return fsysdep_set_status (qsys, qstat);
 }
 
-/* Wait for calls to come in.  This loop goes on until the process is
-   killed.  */
+/* Prompt for a login name and a password, and run as the slave.  */
 
-static boolean fwait_for_calls (qport)
+static boolean flogin_prompt (qport)
      struct sport *qport;
 {
-  if (qport != NULL)
-    {
-      if (! fport_lock (qport, TRUE))
-	{
-	  ulog (LOG_ERROR, "Port %s is locked", qport->zname);
-	  return FALSE;
-	}
-    }
-
-  if (! fport_open (qport, 0L, 0L, TRUE))
-    return FALSE;
-
-  while (TRUE)
-    {
-      const char *zuser, *zpass;
+  const char *zuser, *zpass;
 
 #if DEBUG > 0
-      if (iDebug > 0)
-	ulog (LOG_DEBUG, "fwait_for_calls: Waiting for login");
+  if (iDebug > 0)
+    ulog (LOG_DEBUG, "flogin_prompt: Waiting for login");
 #endif
 
-      do
+  do
+    {
+      if (! fport_write ("login: ", sizeof "login: " - 1))
+	return FALSE;
+      zuser = zget_typed_line ();
+    }
+  while (zuser != NULL && *zuser == '\0');
+
+  if (zuser != NULL)
+    {
+      char *zhold;
+
+      zhold = (char *) alloca (strlen (zuser) + 1);
+      strcpy (zhold, zuser);
+
+      if (! fport_write ("Password:", sizeof "Password:" - 1))
+	return FALSE;
+
+      zpass = zget_typed_line ();
+      if (zpass != NULL)
 	{
-	  if (! fport_write ("login: ", sizeof "login: " - 1))
-	    return FALSE;
-	  zuser = zget_typed_line ();
-	}
-      while (zuser != NULL && *zuser == '\0');
-
-      if (zuser != NULL)
-	{
-	  char *zhold;
-
-	  zhold = (char *) alloca (strlen (zuser) + 1);
-	  strcpy (zhold, zuser);
-
-	  if (! fport_write ("Password:", sizeof "Password:" - 1))
-	    return FALSE;
-
-	  zpass = zget_typed_line ();
-	  if (zpass != NULL)
+	  if (fcheck_login (zhold, zpass))
 	    {
-	      if (fcheck_login (zhold, zpass))
-		{
-		  (void) faccept_call (zhold, qport);
-		  if (fLocked_system)
-		    {
-		      (void) fsysdep_unlock_system (&sLocked_system);
-		      fLocked_system = FALSE;
-		    }
-		}
+	      /* We ignore the return value of faccept_call because we
+		 really don't care whether the call succeeded or not.
+		 We are going to reset the port anyhow.  */
+	      (void) faccept_call (zhold, qport);
 	    }
 	}
-
-      /* Reset the port for the next call.  */
-      if (! fport_reset ())
-	return FALSE;
     }
+
+  return TRUE;
 }
 
 /* Accept a call from a remote system.  */

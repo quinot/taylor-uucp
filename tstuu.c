@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1991/12/17  22:21:19  ian
+   Sleep before printing login to wait until input has been flushed
+
    Revision 1.16  1991/12/17  04:55:01  ian
    David Nugent: ignore SIGHUP in uucico and uuxqt
 
@@ -420,7 +423,7 @@ main (argc, argv)
       else
 	{
 	  (void) execl ("uucico", "uucico", "-I", "/usr/tmp/tstuu/Config2",
-			"-eq", (const char *)NULL);
+			"-lq", (const char *)NULL);
 	  fprintf (stderr, "execl failed\n");
 	  exit (EXIT_FAILURE);
 	}
