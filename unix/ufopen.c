@@ -55,18 +55,21 @@
 
 /* Local functions.  */
 
-static uid_t isuser_perms P((void));
+static boolean fsuser_perms P((uid_t *pieuid));
 static boolean fsuucp_perms P((long ieuid));
 
 /* Switch to permissions of the invoking user.  */
 
-static uid_t
-isuser_perms ()
+static boolean
+fsuser_perms (pieuid)
+     uid_t *pieuid;
 {
   uid_t ieuid, iuid;
 
   ieuid = geteuid ();
   iuid = getuid ();
+  if (pieuid != NULL)
+    *pieuid = ieuid;
 
 #if HAVE_SETREUID
   /* Swap the effective user id and the real user id.  We can then
@@ -76,7 +79,7 @@ isuser_perms ()
     {
       ulog (LOG_ERROR, "setreuid (%ld, %ld): %s",
 	    (long) ieuid, (long) iuid, strerror (errno));
-      return (uid_t) -1;
+      return FALSE;
     }
 #else /* ! HAVE_SETREUID */
 #if HAVE_SAVED_SETUID
@@ -89,7 +92,7 @@ isuser_perms ()
       if (setuid (iuid) < 0)
 	{
 	  ulog (LOG_ERROR, "setuid (%ld): %s", (long) iuid, strerror (errno));
-	  return (uid_t) -1;
+	  return FALSE;
 	}
     }
 #else /* ! HAVE_SAVED_SETUID */
@@ -99,7 +102,7 @@ isuser_perms ()
 #endif /* ! HAVE_SAVED_SETUID */
 #endif /* ! HAVE_SETREUID */
 
-  return ieuid;
+  return TRUE;
 }
 
 /* Restore the uucp permissions.  */
@@ -111,7 +114,7 @@ fsuucp_perms (ieuid)
 {
 #if HAVE_SETREUID
   /* Swap effective and real user id's back to what they were.  */
-  if (isuser_perms () < 0)
+  if (! fsuser_perms ((uid_t *) NULL))
     return FALSE;
 #else /* ! HAVE_SETREUID */
 #if HAVE_SAVED_SETUID
@@ -144,8 +147,7 @@ esysdep_user_fopen (zfile)
   const char *zerr;
   int o = 0;
 
-  ieuid = isuser_perms ();
-  if (ieuid < 0)
+  if (! fsuser_perms (&ieuid))
     return EFILECLOSED;
 
   zerr = NULL;
@@ -163,7 +165,6 @@ esysdep_user_fopen (zfile)
   else
     o = e;
 #endif
-
 
   if (! fsuucp_perms ((long) ieuid))
     {
