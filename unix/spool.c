@@ -230,7 +230,7 @@ zsfind_file (zsimple, zsystem, bgrade)
 	    }
 	  sprintf (zbuf, "X.%s%s", zsystem,
 		   clen < 5 ? zsimple : zsimple + clen - 5);
-	  zsimple = zcopy;
+	  zsimple = zbuf;
 	}
     }
 #endif /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 && ! SPOOLDIR_TAYLOR */
@@ -288,7 +288,7 @@ zsfind_file (zsimple, zsystem, bgrade)
 	ftruncated = TRUE;
 	if (strncmp (zsimple + 2, zSlocalname, strlen (zSlocalname)) == 0)
 	  {
-	    c = strlen (zLocalname);
+	    c = strlen (zSlocalname);
 	    ftruncated = FALSE;
 	  }
 	else if (strncmp (zsimple + 2, zSlocalname, 7) == 0)
