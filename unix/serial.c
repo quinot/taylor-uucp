@@ -2817,7 +2817,11 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	{
 #if HAVE_SELECT
 	  struct timeval stime;
-	  int imask;
+#ifdef FD_ZERO
+	  fd_set smask;
+#else
+	  int smask;
+#endif
 	  int c;
 
 	  /* We didn't write any data.  Call select.  We use a timeout
@@ -2839,9 +2843,14 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	      stime.tv_usec = 0;
 	    }
 
-	  imask = 1 << q->o;
-	  if (imask == 0)
+#ifdef FD_ZERO
+	  FD_ZERO (&smask);
+	  FD_SET (q->o, &smask);
+#else
+	  smask = 1 << q->o;
+	  if (smask == 0)
 	    ulog (LOG_FATAL, "fsysdep_conn_io: File descriptors too large");
+#endif
 
 	  /* If we've received a signal, don't continue.  */
 	  if (FGOT_QUIT_SIGNAL ())
@@ -2851,7 +2860,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
 	  /* We don't bother to loop on EINTR.  If we get a signal, we
              just loop around and try the read and write again.  */
-	  c = select (q->o + 1, (pointer) NULL, (pointer) &imask,
+	  c = select (q->o + 1, (pointer) NULL, (pointer) &smask,
 		      (pointer) NULL, &stime);
 	  if (c < 0 && errno == EINTR)
 	    {

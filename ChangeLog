@@ -1,5 +1,8 @@
 2002-02-17  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/serial.c (fsysdep_conn_io): If FD_ZERO is defined, use
+	fd_set for the select argument.
+
 	* Don Phillips: uustat.c (fsquery_show): Add space in the 0X case
 	to make everything line up.
 	* unix/status.c (fsysdep_get_status): Correct removal of trailing
