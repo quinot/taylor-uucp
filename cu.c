@@ -155,7 +155,7 @@ static const char abCuconnected[]
 #endif
 
 /* Global uuconf pointer.  */
-static pointer *pCuuuconf;
+static pointer pCuuuconf;
 
 /* Connection.  */
 static struct sconnection *qCuconn;

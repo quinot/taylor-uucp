@@ -603,7 +603,7 @@ static const char *zSxqt_stdin;
 static const struct uuconf_cmdtab asSxqt_cmds[] =
 {
   { "C", UUCONF_CMDTABTYPE_FN | 0, NULL, isxqt_cmd },
-  { "I", UUCONF_CMDTABTYPE_STRING, &zSxqt_stdin, NULL },
+  { "I", UUCONF_CMDTABTYPE_STRING, (pointer) &zSxqt_stdin, NULL },
   { "F", UUCONF_CMDTABTYPE_FN | 0, NULL, isxqt_file },
   { "R", UUCONF_CMDTABTYPE_STRING, (pointer) &zSxqt_requestor, NULL },
   { "U", UUCONF_CMDTABTYPE_FN | 3, NULL, isxqt_user },

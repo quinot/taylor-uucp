@@ -49,7 +49,7 @@ uuconf_dialcode (pglobal, zdial, pznum)
 
   as[0].uuconf_zcmd = zdial;
   as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 2;
-  as[0].uuconf_pvar = pznum;
+  as[0].uuconf_pvar = (pointer) pznum;
   as[0].uuconf_pifn = idcode;
 
   as[1].uuconf_zcmd = NULL;
