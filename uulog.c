@@ -213,6 +213,26 @@ main (argc, argv)
 
   usysdep_initialize (puuconf, 0);
 
+  if (zsystem != NULL)
+    {
+#if HAVE_HDB_LOGGING
+      if (strcmp (zsystem, "ANY") != 0)
+#endif
+	{
+	  struct uuconf_system ssys;
+
+	  iuuconf = uuconf_system_info (puuconf, zsystem, &ssys);
+	  if (iuuconf != UUCONF_SUCCESS)
+	    {
+	      if (iuuconf != UUCONF_NOT_FOUND)
+		ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+	      ulog (LOG_FATAL, "%s: System not found", zsystem);
+	    }
+	  zsystem = zbufcpy (ssys.uuconf_zname);
+	  (void) uuconf_system_free (puuconf, &ssys);
+	}
+    }
+
   if (fstats)
     zfile = zstatsfile;
   else if (fdebug)
@@ -228,20 +248,6 @@ main (argc, argv)
       /* We need a system to find a HDB log file.  */
       if (zsystem == NULL)
 	ulusage ();
-
-      if (strcmp (zsystem, "ANY") != 0)
-	{
-	  struct uuconf_system ssys;
-
-	  iuuconf = uuconf_system_info (puuconf, zsystem, &ssys);
-	  if (iuuconf != UUCONF_SUCCESS)
-	    {
-	      if (iuuconf != UUCONF_NOT_FOUND)
-		ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-	      ulog (LOG_FATAL, "%s: System not found", zsystem);
-	    }
-	  zsystem = zbufcpy (ssys.uuconf_zname);
-	}
 
       if (fuuxqt)
 	zprogram = "uuxqt";
