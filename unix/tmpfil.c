@@ -30,7 +30,7 @@
 #include "sysdep.h"
 
 #define ZDIGS \
-  "0123456789abcdefghijklmnopqrtsuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._-"
+  "0123456789abcdefghijklmnopqrtsuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-"
 #define CDIGS (sizeof ZDIGS - 1)
 
 /*ARGSUSED*/
