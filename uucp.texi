@@ -8324,6 +8324,7 @@ Igor V. Semenyuk @code{<iga@@argrd0.argonaut.su>}
 Christopher Sawtell @code{<chris@@gerty.equinox.gen.nz>}
 @code{schuler@@bds.sub.org} (Bernd Schuler)
 @code{uunet!gold.sub.org!root} (Christian Seyb)
+Marcus Shang @code{<marcus.shang@@canada.cdev.com>}
 @code{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
 @code{shields@@tembel.org} (Michael Shields)
 @code{peter@@ficc.ferranti.com} (Peter da Silva)
