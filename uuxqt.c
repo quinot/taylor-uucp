@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/02/23  19:50:50  ian
+   Handle READ and WRITE in Permissions correctly
+
    Revision 1.26  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -1020,10 +1023,12 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	     would be nice to allow them to direct the output to their
 	     home directory.  */
       
-	  fok = (fin_directory_list (qsys, zQoutfile, qsys->zremote_receive)
+	  fok = (fin_directory_list (qsys, zQoutfile, qsys->zremote_receive,
+				     TRUE)
 		 && (qsys->zcalled_remote_receive == NULL
 		     || fin_directory_list (qsys, zQoutfile,
-					    qsys->zcalled_remote_receive)));
+					    qsys->zcalled_remote_receive,
+					    TRUE)));
 	}
 
       if (! fok)

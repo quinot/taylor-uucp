@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.17  1992/02/14  05:17:09  ian
    Niels Baggesen: have to copy abtname into memory
 
@@ -429,7 +432,8 @@ main (argc, argv)
 		 a directory.  */
 
 	      if (! fin_directory_list (&sLocalsys, zdestfile,
-					sLocalsys.zremote_receive))
+					sLocalsys.zremote_receive,
+					TRUE))
 		ulog (LOG_FATAL, "Permission denied for %s", zdestfile);
 
 	      zconst = zsysdep_real_file_name (&sLocalsys, zdestfile,
@@ -568,7 +572,8 @@ main (argc, argv)
 		 directory; this is not critical, but it will give an
 		 error early rather than late.  */
 	      if (! fin_directory_list (qfromsys, zdestfile,
-					qfromsys->zlocal_receive))
+					qfromsys->zlocal_receive,
+					TRUE))
 		ulog (LOG_FATAL, "Not permitted to receive %s", zdestfile);
 
 	      if (strchr (zconst, '*') != NULL

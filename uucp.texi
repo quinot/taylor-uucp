@@ -1508,13 +1508,17 @@ system when requested by the remote system.  The default is @kbd{~}.
 @findex local-receive
 
 Specifies that files may be received into the named directories when
-requested by a local user.  The default is @kbd{~}.
+requested by a local user.  The default is @kbd{~}.  On Unix, files may
+only be received into directories that are writeable by the world,
+regardless of how this is set.
 
 @item remote-receive @var{strings}
 @findex remote-receive
 
 Specifies that files may be received into the named directories when
-requested by the remote system.  The default is @kbd{~}.
+requested by the remote system.  The default is @kbd{~}.  On Unix, files
+may only be received into directories that are writeable by the world,
+regardless of how this is set.
 
 @item command-path @var{string}
 @findex command-path

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.56  1992/02/23  19:50:50  ian
+   Handle READ and WRITE in Permissions correctly
+
    Revision 1.55  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -2674,7 +2677,7 @@ fdo_xcmd (qsys, fcaller, q)
       if (! fcaller && qsys->zcalled_remote_send != NULL)
 	zsend = qsys->zcalled_remote_send;
 
-      if (! fin_directory_list (qsys, zfile, zsend))
+      if (! fin_directory_list (qsys, zfile, zsend, FALSE))
 	{
 	  ulog (LOG_ERROR, "Not permitted to send %s", zfile);
 	  (void) fsysdep_wildcard_end ();
@@ -2704,7 +2707,7 @@ fdo_xcmd (qsys, fcaller, q)
 	  if (! fcaller && qsys->zcalled_remote_receive != NULL)
 	    zrec = qsys->zcalled_remote_receive;
 
-	  if (! fin_directory_list (qsys, zto, zrec))
+	  if (! fin_directory_list (qsys, zto, zrec, TRUE))
 	    {
 	      ulog (LOG_ERROR, "Not permitted to receive %s", zto);
 	      (void) fsysdep_wildcard_end ();
@@ -2792,7 +2795,7 @@ fok_to_send (zfile, flocal, fcaller, qsys, zuser)
 	z = qsys->zcalled_remote_send;
     }
 
-  return fin_directory_list (qsys, zfile, z);
+  return fin_directory_list (qsys, zfile, z, FALSE);
 }
 
 /* See whether it's OK to receive a file from another system.  */
@@ -2824,7 +2827,7 @@ fok_to_receive (zto, flocal, fcaller, qsys, zuser)
 	z = qsys->zcalled_remote_receive;
     }
 
-  return fin_directory_list (qsys, zto, z);
+  return fin_directory_list (qsys, zto, z, TRUE);
 }
 
 /* See whether a request is OK.  This depends on which system placed

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/02/20  04:18:59  ian
+   Added uustat
+
    Revision 1.20  1992/02/19  19:36:07  ian
    Rearranged time functions
 
@@ -170,11 +173,18 @@ extern boolean fsysdep_make_spool_dir P((const struct ssysteminfo *qsys));
    should return TRUE.  Note that this deals with file names only; it
    is not checking whether there actually is a file named zfile.  This
    should return TRUE if the file name is in the directory, FALSE
-   otherwise.  There is no way to return error.  The qsys argument
-   should be used to expand ~ into the public directory.  */
+   otherwise.  If the file name is in the directory, and fwriteable is
+   TRUE, the function should also check that it is permissible to
+   receive a file into the most local directory containing the file
+   (on Unix this means the directory must be world writeable); if not,
+   the function should return FALSE.  There is no way to return error.
+   The qsys argument should be used to expand ~ into the public
+   directory.  */
+
 extern boolean fsysdep_in_directory P((const struct ssysteminfo *qsys,
 				       const char *zfile,
-				       const char *zdir));
+				       const char *zdir,
+				       boolean fwriteable));
 
 /* Return TRUE if a file exists, FALSE otherwise.  There is no way to
    return error.  */

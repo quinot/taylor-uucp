@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.39  1992/02/23  19:50:50  ian
+   Handle READ and WRITE in Permissions correctly
+
    Revision 1.38  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -794,10 +797,12 @@ extern boolean fmail_transfer P((boolean fok, const char *zuser,
 				 const char *zto, const char *ztosys));
 
 /* See whether a file is one of a list of directories.  The qsys and
-   zsystem arguments are passed down to allow ~ expansion.  */
+   zsystem arguments are passed down to allow ~ expansion.  If
+   fwriteable is TRUE it must be legal to write in the directory.  */
 extern boolean fin_directory_list P((const struct ssysteminfo *qsys,
 				     const char *zfile,
-				     const char *zdirs));
+				     const char *zdirs,
+				     boolean fwriteable));
 
 /* Get the login name and password to use when calling a system out
    of the call out login file.  The pzlog and pzpass arguments are set

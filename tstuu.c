@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.41  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
    Revision 1.40  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -798,7 +801,17 @@ uprepare_test (itest, fcall_uucico, zsys)
   const char *zfrom;
   const char *zto;
 
-  if (mkdir ((char *) "/usr/tmp/tstuu", IPUBLIC_DIRECTORY_MODE) != 0
+/* We must make /usr/tmp/tstuu world writeable or we won't be able to
+   receive files into it.  */
+
+  (void) umask (0);
+
+#ifndef S_IWOTH
+#define S_IWOTH 02
+#endif
+
+  if (mkdir ((char *) "/usr/tmp/tstuu",
+	     IPUBLIC_DIRECTORY_MODE | S_IWOTH) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
