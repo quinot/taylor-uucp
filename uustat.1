@@ -1,8 +1,4 @@
 ''' $Id$
-''' $Log$
-''' Revision 1.1  1992/04/01  21:10:46  ian
-''' Initial revision
-''' 
 .TH uustat 1 "Taylor UUCP 1.03"
 .SH NAME
 uustat \- UUCP status inquiry and control
@@ -11,10 +7,13 @@ uustat \- UUCP status inquiry and control
 .PP
 .B uustat
 [
-.B \-s
+.B \-eKiMNQ ] [
+.B \-sS
 system ] [
-.B \-u
-user ] [ 
+.B \-uU
+user ] [
+.B \-cC
+command ] [
 .B \-o
 hours ] [
 .B \-y
@@ -47,57 +46,99 @@ By default
 displays all jobs queued up for the invoking user, as if given the
 .B \-u
 option with the appropriate argument.
+
+If any of the
+.B \-a,
+.B \-e,
+.B \-s,
+.B \-S,
+.B \-u,
+.B \-U,
+.B \-c,
+.B \-C,
+.B \-o,
+.B \-y
+options are given, then all jobs which match the combined
+specifications are displayed.
+
+The 
+.B \-K
+option may be used to kill off a selected group of jobs, such as all
+jobs more than 7 days old.
 .SH OPTIONS
 The following options may be given to
 .I uustat.
 .TP 5
 .B \-a
-List all queued jobs.
+List all queued file transfer requests.
+.TP 5
+.B \-e
+List queued execution requests rather than queued file transfer
+requests.  Queued execution requests are processed by
+.I uuxqt
+(8) rather than
+.I uucico
+(8).  Queued execution requests may be waiting for some file to be
+transferred from a remote system.  They are created by an invocation
+of
+.I uux
+(1).
 .TP 5
 .B \-s system
 List all jobs queued up for the named system.  This option may be
 specified multiple times, in which case all jobs for all the systems
-will be listed.  The
-.B \-u,
-.B \-o,
-and
-.B \-y
-options may be used to restrict which jobs are listed.
+will be listed.
+.TP 5
+.B \-S system
+List all jobs queued for systems other than the one named.  This
+option may be specified multiple times, in which case no jobs from any
+of the specified systems will be listed.  This option may not be used
+with
+.B \-s.
 .TP 5
 .B \-u user
 List all jobs queued up for the named user.  This option may be
 specified multiple times, in which case all jobs for all the users
-will be listed.  The
-.B \-s,
-.B \-o,
-and
-.B \-y
-options may be used to restrict which jobs are listed.
+will be listed.
+.TP 5
+.B \-U user
+List all jobs queued up for users other than the one named.  This
+option may be specified multiple times, in which case no jobs from any
+of the specified users will be listed.  This option may not be used
+with
+.B \-u.
+.TP 5
+.B \-c command
+List all jobs requesting the execution of the named command.  If
+.B command
+is
+.I ALL
+this will list all jobs requesting the execution of some command (as
+opposed to simply requesting a file transfer).  This option may be
+specified multiple times, in which case all jobs requesting any of the
+commands will be listed.
+.TP 5
+.B \-C command
+List all jobs requesting execution of some command other than the
+named command, or, if
+.B command
+is
+.I ALL,
+list all jobs that simply request a file transfer (as opposed to
+requesting the execution of some command).  This option may be
+specified multiple times, in which case no job requesting one of the
+specified commands will be listed.  This option may not be used with
+.B \-c.
 .TP 5
 .B \-o hours
-List all queued jobs older than the given number of hours.  The
-.B \-s,
-.B \-u,
-and
-.B \-y
-options may be used to further restrict which jobs are listed.
+List all queued jobs older than the given number of hours.
 .TP 5
 .B \-y hours
-List all queued jobs younger than the given number of hours.  The
-.B \-s,
-.B \-u,
-and
-.B \-o
-options may be used to further restrict which jobs are listed.
+List all queued jobs younger than the given number of hours.
 .TP 5
 .B \-k jobid
-Kill the named job.  The job id is shown by the
-.B \-s,
-.B \-u,
-.B \-o,
-or
-.B \-y
-options, as well as by the
+Kill the named job.  The job id is shown by the default output format,
+as well as by the
 .B \-j
 option to
 .I uucp
@@ -116,13 +157,7 @@ the current time, affecting the output of the
 or
 .B \-y
 options and preserving it from any automated cleanup daemon.  The job
-id is shown by the
-.B \-s,
-.B \-u,
-.B \-o,
-or
-.B \-y
-options, as well as by the
+id is shown by the default output format, as well as by the
 .B \-j
 option to
 .I uucp
@@ -144,6 +179,55 @@ Display the status of conversations for all remote systems.
 .B \-p
 Display the status of all processes holding UUCP locks on systems or
 ports.
+.TP 5
+.B \-i
+For each listed job, prompt whether to kill the job or not.  If the
+first character of the input line is
+.I y
+or
+.I Y
+the job will be killed.
+.TP 5
+.B \-K
+Automatically kill each listed job.  This can be useful for automatic
+cleanup scripts, in conjunction with the
+.B \-M
+and
+.B \-N
+options.
+.TP 5
+.B \-M
+For each listed job, send mail to the UUCP administrator.  If the job
+is killed (due to
+.B \-K
+or
+.B \-i
+with an affirmative response) the mail will indicate that.  A comment
+specified by the
+.B \-W
+option may be included.
+.TP 5
+.B \-N
+For each listed job, send mail to the user who requested the job.  The
+mail is identical to that sent by the
+.B \-M
+option.
+.TP 5
+.B \-W
+Specify a comment to be included in mail sent with the
+.B \-M
+or
+.B \-N
+options.
+.TP 5
+.B \-Q
+Do not actually list the job, but only take any actions indicated by
+the
+.B \-i,
+.B \-K,
+.B \-M,
+.B \-N
+options.
 .TP 5
 .B \-x type
 Turn on particular debugging types.  The following types are
@@ -184,14 +268,41 @@ or
 options.
 The size indicates how much data is to be transferred to the remote
 system, and is absent for a file receive request.
-
 The
 .B \-s,
+.B \-S,
 .B \-u,
+.B \-U,
+.B \-c,
+.B \-C,
 .B \-o,
 and
 .B \-y
-options also produce output in the above format.
+options may be used to control which jobs are listed.
+
+.EX
+uustat -e
+.EE
+Display status of queued up execution requests.  A sample output line
+is as follows:
+.EX
+bugs bugs!ian 1992-05-20 12:51:07 rmail ian
+.EE
+The format is
+.EX
+system requestor queue-date command
+.EE
+The
+.B \-s,
+.B \-S,
+.B \-u,
+.B \-U,
+.B \-c,
+.B \-C,
+.B \-o,
+and
+.B \-y
+options may be used to control which requests are listed.
 
 .EX
 uustat -q
@@ -231,6 +342,21 @@ format is system dependent, as
 simply invokes
 .I ps
 (1) on each process holding a lock.
+
+.EX
+uustat -c rmail -o 168 -K -Q -M -N -W"Queued for over 1 week"
+.EE
+This will kill all
+.I rmail
+commands that have been queued up waiting for delivery for over 1 week
+(168 hours).  For each such command, mail will be sent both to the
+UUCP administrator and to the user who requested the rmail execution.
+The mail message sent will include the string given by the
+.B \-W
+option.  The
+.B \-Q
+option prevents any of the jobs from being listed on the terminal, so
+any output from the program will be error messages.
 .SH FILES
 The file names may be changed at compilation time or by the
 configuration file, so these are only approximations.
@@ -241,7 +367,7 @@ configuration file, so these are only approximations.
 /usr/spool/uucp -
 UUCP spool directory.
 .SH SEE ALSO
-ps(1), uucp(1), uux(1), uucico(8), uuxqt(8)
+ps(1), rmail(1), uucp(1), uux(1), uucico(8), uuxqt(8)
 .SH AUTHOR
 Ian Lance Taylor
 (ian@airs.com or uunet!airs!ian)

@@ -20,34 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.8  1992/04/14  19:03:17  ian
-   Marty Shannon: uustat would remove empty command files
-
-   Revision 1.7  1992/03/28  22:54:45  ian
-   Allow multiple systems and users or kills and rejuvenates at once
-
-   Revision 1.6  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.5  1992/03/03  21:34:55  ian
-   Handle local execution files
-
-   Revision 1.4  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.3  1992/02/24  20:36:27  ian
-   Roberto Biancardi: skip spaces after strtok (NULL, "")
-
-   Revision 1.2  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.1  1992/02/20  04:18:59  ian
-   Initial revision
-
-   */
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
 
 #include "uucp.h"
 
@@ -55,6 +28,7 @@
 char uustat_rcsid[] = "$Id$";
 #endif
 
+#include <ctype.h>
 #include <errno.h>
 
 #if HAVE_TIME_H
@@ -70,37 +44,99 @@ char uustat_rcsid[] = "$Id$";
    following switches:
 
    -a list all jobs
+   -Blines number of lines of standard input to mail
+   -ccommand list only executions of specified command
+   -Ccommand list only jobs other than executions of specified command
+   -e list execute jobs rather than command requests
+   -i ask user whether to kill each listed job
+   -Ifile set configuration file name
    -kjobid kill job with specified ID
+   -K kill each listed job
    -m report status for all remote machines
+   -M mail uucp about each job killed with -K
+   -N mail requestor about each job killed with -K
    -ohour report jobs older than specified number of hours
    -p do "ps -flp" on all processes holding lock files (Unix specific)
    -q list number of jobs for all systems
+   -Q don't list jobs, just do -K processing
    -rjobid rejuvenate job with specified ID
    -ssystem report on all jobs for specified system
+   -Ssystem report on all jobs other than for specified system
    -uuser report on all jobs for specified user
-   -yhour report jobs younger than specified number of hours
-   -Ifile set configuration file name
-   -xdebug set debugging level  */
+   -Uuser report on all jobs other than for specified user
+   -Wcomment comment to include in mail messages
+   -xdebug set debugging level
+   -yhour report jobs younger than specified number of hours  */
 
 /* The program name.  */
 char abProgram[] = "uustat";
 
+/* What to do with a job that matches the selection criteria; these
+   values may be or'red together.  */
+#define JOB_SHOW (01)
+#define JOB_INQUIRE (02)
+#define JOB_KILL (04)
+#define JOB_MAIL (010)
+#define JOB_NOTIFY (020)
+
+/* This structure is used to accumulate all the lines in a single
+   command file, so that they can all be displayed at once and so that
+   executions can be displayed reasonably.  */
+
+struct scmdlist
+{
+  struct scmdlist *qnext;
+  struct scmd s;
+  long itime;
+};
+
 /* Local functions.  */
 
 static void ususage P((void));
-static boolean fsworkfiles P((int csystems, char **pazsystems,
-			      int cusers, char **pazusers,
-			      long iold, long iyoung));
-static boolean fsworkfiles_system P((const struct ssysteminfo *qsys,
+static boolean fsxqt_file_read P((const char *zfile));
+static void usxqt_file_free P((void));
+static enum tcmdtabret tsxqt_cmd P((int argc, char **argv, pointer pvar,
+				    const char *zerr));
+static enum tcmdtabret tsxqt_file P((int argc, char **argv, pointer pvar,
+				     const char *zerr));
+static enum tcmdtabret tsxqt_user P((int argc, char **argv, pointer pvar,
+				     const char *zerr));
+static boolean fsworkfiles P((int icmd, int csystems, char **pazsystems,
+			      boolean fnotsystems, int cusers,
+			      char **pazusers, boolean fnotusers,
+			      long iold, long iyoung,
+			      int ccommands, char **pazcommands,
+			      boolean fnotcommands, const char *zcomment,
+			      int cstdin));
+static boolean fsworkfiles_system P((int icmd,
+				     const struct ssysteminfo *qsys,
 				     int cusers,  char **pazusers,
-				     long iold, long iyoung));
-static boolean fsworkfile_show P((const struct ssysteminfo *qsys,
+				     boolean fnotusers, long iold,
+				     long iyoung, int ccommands,
+				     char **pazcommands,
+				     boolean fnotcommands,
+				     const char *zcomment, int cstdin));
+static boolean fsworkfile_show P((int icmd, const struct ssysteminfo *qsys,
 				  const struct scmd *qcmd,
-				  long itime));
+				  long itime, int ccommands,
+				  char **pazcommands, boolean fnotcommands,
+				  const char *zcomment, int cstdin));
 static void usworkfile_header P((const struct ssysteminfo *qsys,
 				 const struct scmd *qcmd,
 				 const char *zjobid,
 				 long itime, boolean ffirst));
+static boolean fsexecutions P((int icmd, int csystems, char **pazsystems,
+			       boolean fnotsystems,
+			       int cusers, char **pazusers,
+			       boolean fnotusers, long iold, long iyoung,
+			       int ccommands, char **pazcommands,
+			       boolean fnotcommands, const char *zcomment,
+			       int cstdin));
+static boolean fsnotify P((int icmd, const char *zcomment, int cstdin,
+			   boolean fkilled, const char *zcmd,
+			   struct scmdlist *qcmd, const char *zid,
+			   const char *zuser, const struct ssysteminfo *qsys,
+			   const char *zstdin, const char *zrequestor));
 static boolean fsquery P((void));
 static void usunits_show P((long idiff));
 static boolean fsmachines P((void));
@@ -119,6 +155,14 @@ main (argc, argv)
   int iopt;
   /* -a: list all jobs.  */
   boolean fall = FALSE;
+  /* -B lines: number of lines of standard input to mail.  */
+  int cstdin = 100;
+  /* -c,-C command: list only specified command.  */
+  int ccommands = 0;
+  char **pazcommands = NULL;
+  boolean fnotcommands = FALSE;
+  /* -e: list execute jobs.  */
+  boolean fexecute = FALSE;
   /* -k jobid: kill specified job.  */
   int ckills = 0;
   char **pazkills = NULL;
@@ -133,29 +177,63 @@ main (argc, argv)
   /* -r jobid: rejuvenate specified job.  */
   int crejuvs = 0;
   char **pazrejuvs = NULL;
-  /* -s system: list all jobs for specified system.  */
+  /* -s,-S system: list all jobs for specified system.  */
   int csystems = 0;
   char **pazsystems = NULL;
-  /* -u user: list all jobs for specified user.  */
+  boolean fnotsystems = FALSE;
+  /* -u,-U user: list all jobs for specified user.  */
   int cusers = 0;
   char **pazusers = NULL;
+  boolean fnotusers = FALSE;
+  /* -W comment: comment to include in mail messages.  */
+  const char *zcomment = NULL;
   /* -y hour: report jobs younger than given number of hours.  */
   int iyounghours = -1;
   /* -I file: set configuration file.  */
   const char *zconfig = NULL;
+  /* -Q, -i, -K, -M, -N: what to do with each job.  */
+  int icmd = JOB_SHOW;
   int ccmds;
   long iold;
   long iyoung;
   char *azoneuser[1];
   boolean fret;
 
-  while ((iopt = getopt (argc, argv, "aI:k:mo:pqr:s:u:x:y:")) != EOF)
+  while ((iopt = getopt (argc, argv,
+			 "aB:c:C:eiI:k:KmMNo:pqQr:s:S:u:U:W:x:y:")) != EOF)
     {
       switch (iopt)
 	{
 	case 'a':
 	  /* List all jobs.  */
 	  fall = TRUE;
+	  break;
+
+	case 'B':
+	  /* Number of lines of standard input to mail.  */
+	  cstdin = atoi (optarg);
+	  break;
+
+	case 'C':
+	  /* List jobs for other than specified command.  */
+	  fnotcommands = TRUE;
+	  /* Fall through.  */
+	case 'c':
+	  /* List specified command.  */
+	  ++ccommands;
+	  pazcommands = (char **) xrealloc ((pointer) pazcommands,
+					    ccommands * sizeof (char *));
+	  pazcommands[ccommands - 1] = optarg;
+	  break;
+
+	case 'e':
+	  /* List execute jobs.  */
+	  fexecute = TRUE;
+	  break;
+
+	case 'i':
+	  /* Prompt the user whether to kill each job.  */
+	  icmd |= JOB_INQUIRE;
 	  break;
 
 	case 'I':
@@ -171,9 +249,24 @@ main (argc, argv)
 	  pazkills[ckills - 1] = optarg;
 	  break;
 
+	case 'K':
+	  /* Kill each listed job.  */
+	  icmd |= JOB_KILL;
+	  break;
+
 	case 'm':
 	  /* Report machine status.  */
 	  fmachine = TRUE;
+	  break;
+
+	case 'M':
+	  /* Mail to uucp action taken on each job.  */
+	  icmd |= JOB_MAIL;
+	  break;
+
+	case 'N':
+	  /*  Mail to requestor action taken on each job.  */
+	  icmd |= JOB_NOTIFY;
 	  break;
 
 	case 'o':
@@ -191,6 +284,11 @@ main (argc, argv)
 	  fquery = TRUE;
 	  break;
 
+	case 'Q':
+	  /* Don't list jobs, just do -K processing.  */
+	  icmd &=~ JOB_SHOW;
+	  break;
+
 	case 'r':
 	  /* Rejuvenate specified job.  */
 	  ++crejuvs;
@@ -199,6 +297,10 @@ main (argc, argv)
 	  pazrejuvs[crejuvs - 1] = optarg;
 	  break;
 
+	case 'S':
+	  /* List jobs for other than specified system.  */
+	  fnotsystems = TRUE;
+	  /* Fall through.  */
 	case 's':
 	  /* List jobs for specified system.  */
 	  ++csystems;
@@ -207,12 +309,21 @@ main (argc, argv)
 	  pazsystems[csystems - 1] = optarg;
 	  break;
 
+	case 'U':
+	  /* List jobs for other than specified user.  */
+	  fnotusers = TRUE;
+	  /* Fall through.  */
 	case 'u':
 	  /* List jobs for specified user.  */
 	  ++cusers;
 	  pazusers = (char **) xrealloc ((pointer) pazusers,
 					 cusers * sizeof (char *));
 	  pazusers[cusers - 1] = optarg;
+	  break;
+
+	case 'W':
+	  /* Comment to include in mail messages.  */
+	  zcomment = optarg;
 	  break;
 
 	case 'x':
@@ -243,7 +354,7 @@ main (argc, argv)
   /* To avoid confusion, most options are only permitted by
      themselves.  This restriction might be removed later, but it is
      imposed by most implementations.  We do permit any combination of
-     -s, -u, -o and -y, and any combination of -k and -r.  */
+     -c, -s, -u, -o and -y, and any combination of -k and -r.  */
   ccmds = 0;
   if (fall)
     ++ccmds;
@@ -255,13 +366,13 @@ main (argc, argv)
     ++ccmds;
   if (fquery)
     ++ccmds;
-  if (csystems > 0 || cusers > 0
-      || ioldhours != -1 || iyounghours != -1)
+  if (fexecute || csystems > 0 || cusers > 0 || ioldhours != -1
+      || iyounghours != -1 || ccommands > 0)
     ++ccmds;
 
   if (ccmds > 1)
     {
-      fprintf (stderr, "uustat: Too many options\n");
+      ulog (LOG_ERROR, "Too many options");
       ususage ();
     }
 
@@ -297,13 +408,27 @@ main (argc, argv)
 	iyoung = 0L;
     }
 
-  if (fall
-      || ioldhours != -1
-      || csystems > 0
-      || cusers > 0
-      || iyounghours != -1)
-    fret = fsworkfiles (csystems, pazsystems, cusers, pazusers, iold,
-			iyoung);
+  if (! fexecute
+      && (fall
+	  || csystems > 0
+	  || cusers > 0
+	  || ioldhours != -1
+	  || iyounghours != -1
+	  || ccommands > 0))
+    fret = fsworkfiles (icmd, csystems, pazsystems, fnotsystems, cusers,
+			pazusers, fnotusers, iold,  iyoung, ccommands,
+			pazcommands, fnotcommands, zcomment, cstdin);
+  else if (fexecute)
+    fret = fsexecutions (icmd, csystems, pazsystems, fnotsystems, cusers,
+			 pazusers, fnotusers, iold, iyoung, ccommands,
+			 pazcommands, fnotcommands, zcomment, cstdin);
+  else if (icmd != JOB_SHOW)
+    {
+      ulog (LOG_ERROR,
+	    "-i, -K, -M, -N, -Q not supported with -k, -m, -p, -q, -r");
+      ususage ();
+      fret = FALSE;
+    }
   else if (fquery)
     fret = fsquery ();
   else if (fmachine)
@@ -348,13 +473,29 @@ ususage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
-	   "Usage: uustat [-ampq] [-kr job] [-oy hours] [-s system] [-u user]\n");
+	   "Usage: uustat [options]\n");
   fprintf (stderr,
 	   " -a: list all UUCP jobs\n");
+  fprintf (stderr, 
+	   " -B num: number of lines to return in -M or -N mail message\n");
+  fprintf (stderr,
+	   " -c command: list requests for named command\n");
+  fprintf (stderr,
+	   " -C command: list requests for other than named command\n");
+  fprintf (stderr,
+	   " -e: list queued executions rather than job requests\n");
+  fprintf (stderr,
+	   " -i: prompt for whether to kill each listed job\n");
   fprintf (stderr,
 	   " -k job: kill specified UUCP job\n");
   fprintf (stderr,
+	   " -K: kill each listed job\n");
+  fprintf (stderr,
 	   " -m: report status for all remote machines\n");
+  fprintf (stderr,
+	   " -M: mail report on each listed job to UUCP administrator\n");
+  fprintf (stderr,
+	   " -N: mail report on each listed job to requestor\n");
   fprintf (stderr,
 	   " -o hours: list all jobs older than given number of hours\n");
   fprintf (stderr,
@@ -362,11 +503,19 @@ ususage ()
   fprintf (stderr,
 	   " -q: list number of jobs for each system\n");
   fprintf (stderr,
+	   " -Q: don't list jobs, just take actions (-i, -K, -M, -N)\n");
+  fprintf (stderr,
 	   " -r job: rejuvenate specified UUCP job\n");
   fprintf (stderr,
 	   " -s system: list all jobs for specified system\n");
   fprintf (stderr,
+	   " -S system: list all jobs for other than specified system\n");
+  fprintf (stderr,
 	   " -u user: list all jobs for specified user\n");
+  fprintf (stderr,
+	   " -U user: list all jobs for other than specified user\n");
+  fprintf (stderr,
+	   " -W comment: comment to include in mail messages\n");
   fprintf (stderr,
 	   " -y hours: list all jobs younger than given number of hours\n");
   fprintf (stderr,
@@ -379,23 +528,202 @@ ususage ()
   exit (EXIT_FAILURE);
 }
 
+/* We need to be able to read information from an execution file.  */
+
+/* The user name extracted from an execution file.  */
+static char *zSxqt_user;
+
+/* The system name from an execution file.  */
+static char *zSxqt_system;
+
+/* Address of requesting user (who to send mail to).  */
+static const char *zSxqt_requestor;
+
+/* The command (no arguments) from an execution file.  */
+static char *zSxqt_prog;
+
+/* The full command line from an execution file.  */
+static char *zSxqt_cmd;
+
+/* Number of files associated with an execution file.  */
+static int cSxqt_files;
+
+/* Names of files associated with execution file.  */
+static char **pazSxqt_files;
+
+/* Standard input file name.  */
+static const char *zSxqt_stdin;
+
+/* A command table used to dispatch an execution file.  */
+static const struct scmdtab asSxqt_cmds[] =
+{
+  { "C", CMDTABTYPE_FN | 0, NULL, tsxqt_cmd },
+  { "I", CMDTABTYPE_STRING, &zSxqt_stdin, NULL },
+  { "F", CMDTABTYPE_FN | 0, NULL, tsxqt_file },
+  { "R", CMDTABTYPE_STRING, (pointer) &zSxqt_requestor, NULL },
+  { "U", CMDTABTYPE_FN | 3, NULL, tsxqt_user },
+  { NULL, 0, NULL, NULL }
+};
+
+/* Read an execution file, setting the above variables.  */
+
+static boolean
+fsxqt_file_read (zfile)
+     const char *zfile;
+{
+  FILE *e;
+
+  e = fopen (zfile, "r");
+  if (e == NULL)
+    {
+      ulog (LOG_ERROR, "fopen (%s): %s", zfile, strerror (errno));
+      return FALSE;
+    }
+
+  zSxqt_user = NULL;
+  zSxqt_system = NULL;
+  zSxqt_requestor = NULL;
+  zSxqt_prog = NULL;
+  zSxqt_cmd = NULL;
+  cSxqt_files = 0;
+  pazSxqt_files = NULL;
+
+  uprocesscmds (e, (struct smulti_file *) NULL, asSxqt_cmds,
+		zfile, CMDFLAG_CASESIGNIFICANT);
+		
+  (void) fclose (e);
+
+  if (zSxqt_user == NULL)
+    zSxqt_user = xstrdup ("*unknown*");
+  if (zSxqt_system == NULL)
+    zSxqt_system = xstrdup ("*unknown*");
+  if (zSxqt_prog == NULL)
+    {
+      zSxqt_prog = xstrdup ("*none*");
+      zSxqt_cmd = xstrdup ("*none*");
+    }
+
+  return TRUE;
+}
+
+/* Free up the information read from an execution file.  */
+
+static void
+usxqt_file_free ()
+{
+  int i;
+
+  xfree ((pointer) zSxqt_user);
+  xfree ((pointer) zSxqt_system);
+  xfree ((pointer) zSxqt_prog);
+  xfree ((pointer) zSxqt_cmd);
+  for (i = 0; i < cSxqt_files; i++)
+    xfree ((pointer) pazSxqt_files[i]);
+  xfree ((pointer) pazSxqt_files);
+}
+
+/* Get the command from an execution file.  */
+
+/*ARGSUSED*/
+static enum tcmdtabret
+tsxqt_cmd (argc, argv, pvar, zerr)
+     int argc;
+     char **argv;
+     pointer pvar;
+     const char *zerr;
+{
+  int clen;
+  int i;
+
+  if (argc <= 1)
+    return CMDTABRET_FREE;
+
+  zSxqt_prog = xstrdup (argv[1]);
+
+  clen = 0;
+  for (i = 1; i < argc; i++)
+    clen += strlen (argv[i]) + 1;
+
+  zSxqt_cmd = (char *) xmalloc (clen);
+  zSxqt_cmd[0] = '\0';
+  for (i = 1; i < argc - 1; i++)
+    {
+      strcat (zSxqt_cmd, argv[i]);
+      strcat (zSxqt_cmd, " ");
+    }
+  strcat (zSxqt_cmd, argv[i]);
+
+  return CMDTABRET_FREE;
+}
+
+/* Get the associated files from an execution file.  */
+
+/*ARGSUSED*/
+static enum tcmdtabret
+tsxqt_file (argc, argv, pvar, zerr)
+     int argc;
+     char **argv;
+     pointer pvar;
+     const char *zerr;
+{
+  if (argc != 2 && argc != 3)
+    return CMDTABRET_FREE;
+
+  /* If this file is not in the spool directory, just ignore it.  */
+  if (! fspool_file (argv[1]))
+    return CMDTABRET_FREE;
+
+  ++cSxqt_files;
+  pazSxqt_files = (char **) xrealloc ((pointer) pazSxqt_files,
+				      cSxqt_files * sizeof (char *));
+
+  pazSxqt_files[cSxqt_files - 1] = xstrdup (argv[1]);
+
+  return CMDTABRET_FREE;
+}
+
+/* Get the requesting user and system from an execution file.  */
+
+/*ARGSUSED*/
+static enum tcmdtabret
+tsxqt_user (argc, argv, pvar, zerr)
+     int argc;
+     char **argv;
+     pointer pvar;
+     const char *zerr;
+{
+  zSxqt_user = xstrdup (argv[1]);
+  zSxqt_system = xstrdup (argv[2]);
+  return CMDTABRET_FREE;
+}
+
 /* Handle various possible requests to look at work files.  */
 
 static boolean
-fsworkfiles (csystems, pazsystems, cusers, pazusers, iold, iyoung)
+fsworkfiles (icmd, csystems, pazsystems, fnotsystems, cusers, pazusers,
+	     fnotusers, iold, iyoung, ccommands, pazcommands, fnotcommands,
+	     zcomment, cstdin)
+     int icmd;
      int csystems;
      char **pazsystems;
+     boolean fnotsystems;
      int cusers;
      char **pazusers;
+     boolean fnotusers;
      long iold;
      long iyoung;
+     int ccommands;
+     char **pazcommands;
+     boolean fnotcommands;
+     const char *zcomment;
+     int cstdin;
 {
   boolean fret;
   int i;
 
   fret = TRUE;
 
-  if (csystems > 0)
+  if (csystems > 0 && ! fnotsystems)
     {
       struct ssysteminfo ssys;
 
@@ -408,7 +736,10 @@ fsworkfiles (csystems, pazsystems, cusers, pazusers, iold, iyoung)
 	      continue;
 	    }
 
-	  if (! fsworkfiles_system (&ssys, cusers, pazusers, iold, iyoung))
+	  if (! fsworkfiles_system (icmd, &ssys, cusers, pazusers,
+				    fnotusers, iold, iyoung, ccommands,
+				    pazcommands, fnotcommands, zcomment,
+				    cstdin))
 	    fret = FALSE;
 	}
     }
@@ -420,8 +751,24 @@ fsworkfiles (csystems, pazsystems, cusers, pazusers, iold, iyoung)
       uread_all_system_info (&cs, &pas);
 
       for (i = 0; i < cs; i++)
-	if (! fsworkfiles_system (&pas[i], cusers, pazusers, iold, iyoung))
-	  fret = FALSE;
+	{
+	  if (csystems > 0)
+	    {
+	      int isys;
+
+	      /* We should check the aliases here as well.  */
+	      for (isys = 0; isys < csystems; isys++)
+		if (strcmp (pas[i].zname, pazsystems[isys]) == 0)
+		  break;
+	      if (isys < csystems)
+		continue;
+	    }
+	  if (! fsworkfiles_system (icmd, &pas[i], cusers, pazusers,
+				    fnotusers, iold, iyoung, ccommands,
+				    pazcommands, fnotcommands, zcomment,
+				    cstdin))
+	    fret = FALSE;
+	}
     }
 
   return fret;
@@ -430,12 +777,20 @@ fsworkfiles (csystems, pazsystems, cusers, pazusers, iold, iyoung)
 /* Look at the work files for a particular system.  */
 
 static boolean
-fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
+fsworkfiles_system (icmd, qsys, cusers, pazusers, fnotusers, iold, iyoung,
+		    ccommands, pazcommands, fnotcommands, zcomment, cstdin)
+     int icmd;
      const struct ssysteminfo *qsys;
      int cusers;
      char **pazusers;
+     boolean fnotusers;
      long iold;
      long iyoung;
+     int ccommands;
+     char **pazcommands;
+     boolean fnotcommands;
+     const char *zcomment;
+     int cstdin;
 {
   boolean fret;
 
@@ -457,12 +812,19 @@ fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
 
       if (cusers > 0)
 	{
+	  boolean fmatch;
 	  int i;
 
+	  fmatch = fnotusers;
 	  for (i = 0; i < cusers; i++)
-	    if (strcmp (pazusers[i], s.zuser) == 0)
-	      break;
-	  if (i >= cusers)
+	    {
+	      if (strcmp (pazusers[i], s.zuser) == 0)
+		{
+		  fmatch = ! fmatch;
+		  break;
+		}
+	    }
+	  if (! fmatch)
 	    continue;
 	}
 
@@ -474,14 +836,17 @@ fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
       if (iyoung != (long) -1 && itime < iyoung)
 	continue;
 
-      if (! fsworkfile_show (qsys, &s, itime))
+      if (! fsworkfile_show (icmd, qsys, &s, itime, ccommands, pazcommands,
+			     fnotcommands, zcomment, cstdin))
 	{
 	  usysdep_get_work_free (qsys);
 	  return FALSE;
 	}
     }
 
-  fret = fsworkfile_show (qsys, (const struct scmd *) NULL, 0L);
+  fret = fsworkfile_show (icmd, qsys, (const struct scmd *) NULL, 0L,
+			  ccommands, pazcommands, fnotcommands, zcomment,
+			  cstdin);
 
   usysdep_get_work_free (qsys);
 
@@ -492,18 +857,18 @@ fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
    in the workfile, so we accumulate the lines and show them all at
    once.  This lets us show an execution in a useful fashion.  */
 
-struct scmdlist
-{
-  struct scmdlist *qnext;
-  struct scmd s;
-  long itime;
-};
-
 static boolean
-fsworkfile_show (qsys, qcmd, itime)
+fsworkfile_show (icmd, qsys, qcmd, itime, ccommands, pazcommands,
+		 fnotcommands, zcomment, cstdin)
+     int icmd;
      const struct ssysteminfo *qsys;
      const struct scmd *qcmd;
      long itime;
+     int ccommands;
+     char **pazcommands;
+     boolean fnotcommands;
+     const char *zcomment;
+     int cstdin;
 {
   static struct scmdlist *qlist;
   static const char *zlistid;
@@ -546,76 +911,93 @@ fsworkfile_show (qsys, qcmd, itime)
 
   if (qlist != NULL)
     {
-      struct scmdlist *qlook;
+      boolean fmatch;
+      const char *zstdin;
+      struct scmdlist *qxqt;
+      struct scmdlist *qfree;
 
-      for (qlook = qlist; qlook != NULL; qlook = qlook->qnext)
-	if (qlook->s.bcmd == 'S'
-	    && qlook->s.zto[0] == 'X'
-	    && qlook->s.zto[1] == '.'
-	    && fspool_file (qlook->s.zfrom))
+      fmatch = FALSE;
+      zstdin = NULL;
+
+      for (qxqt = qlist; qxqt != NULL; qxqt = qxqt->qnext)
+	if (qxqt->s.bcmd == 'S'
+	    && qxqt->s.zto[0] == 'X'
+	    && qxqt->s.zto[1] == '.'
+	    && fspool_file (qxqt->s.zfrom))
 	  break;
 
-      if (qlook == NULL)
+      if (qxqt == NULL)
 	{
-	  /* Show all the lines in a regular work file.  */
-
-	  for (qlook = qlist; qlook != NULL; qlook = qlook->qnext)
+	  zSxqt_cmd = NULL;
+	  zSxqt_requestor = NULL;
+	  if (ccommands == 0
+	      || (fnotcommands
+		  && strcmp (pazcommands[0], "ALL") == 0))
 	    {
-	      const char *zfile;
+	      /* Show all the lines in a regular work file.  */
 
-	      usworkfile_header (qsys, &qlook->s, zlistid, qlook->itime,
-				 qlook == qlist);
+	      fmatch = TRUE;
 
-	      switch (qlook->s.bcmd)
+	      if ((icmd & JOB_SHOW) != 0)
 		{
-		case 'S':
-		  if (strchr (qlook->s.zoptions, 'C') != NULL
-		      || fspool_file (qlook->s.zfrom))
-		    zfile = zsysdep_spool_file_name (qsys, qlook->s.ztemp);
-		  else
-		    zfile = zsysdep_real_file_name (qsys, qlook->s.zfrom,
-						    (const char *) NULL);
-		  printf ("Sending %s (%ld bytes) to %s", qlook->s.zfrom,
-			  zfile == NULL ? 0L : csysdep_size (zfile),
-			  qlook->s.zto);
-		  break;
-		case 'R':
-		  printf ("Requesting %s to %s", qlook->s.zfrom,
-			  qlook->s.zto);
-		  break;
-		case 'X':
-		  printf ("Requesting %s to %s", qlook->s.zfrom,
-			  qlook->s.zto);
-		  break;
-#if DEBUG > 0
-		default:
-		  printf ("Bad line %d", qlook->s.bcmd);
-		  break;
-#endif
-		}
+		  struct scmdlist *qshow;
 
-	      printf ("\n");
+		  for (qshow = qlist; qshow != NULL; qshow = qshow->qnext)
+		    {
+		      const char *zfile;
+
+		      usworkfile_header (qsys, &qshow->s, zlistid,
+					 qshow->itime, qshow == qlist);
+
+		      switch (qshow->s.bcmd)
+			{
+			case 'S':
+			  if (strchr (qshow->s.zoptions, 'C') != NULL
+			      || fspool_file (qshow->s.zfrom))
+			    zfile = zsysdep_spool_file_name (qsys,
+							     qshow->s.ztemp);
+			  else
+			    zfile = zsysdep_real_file_name (qsys,
+							    qshow->s.zfrom,
+							    (char *) NULL);
+			  printf ("Sending %s (%ld bytes) to %s",
+				  qshow->s.zfrom,
+				  zfile == NULL ? 0L : csysdep_size (zfile),
+				  qshow->s.zto);
+			  break;
+			case 'R':
+			  printf ("Requesting %s to %s", qshow->s.zfrom,
+				  qshow->s.zto);
+			  break;
+			case 'X':
+			  printf ("Requesting %s to %s", qshow->s.zfrom,
+				  qshow->s.zto);
+			  break;
+#if DEBUG > 0
+			default:
+			  printf ("Bad line %d", qshow->s.bcmd);
+			  break;
+#endif
+			}
+
+		      printf ("\n");
+		    }
+		}
 	    }
 	}
       else
 	{
 	  const char *zxqt;
-	  FILE *e;
 	  long csize;
 	  struct scmdlist *qsize;
-	  char *zline;
 
 	  /* Show the command for an execution file.  */
-	  zxqt = zsysdep_spool_file_name (qsys, qlook->s.zfrom);
+	  zxqt = zsysdep_spool_file_name (qsys, qxqt->s.zfrom);
 	  if (zxqt == NULL)
 	    return FALSE;
 
-	  e = fopen (zxqt, "r");
-	  if (e == NULL)
-	    {
-	      ulog (LOG_ERROR, "fopen (%s): %s", zxqt, strerror (errno));
-	      return FALSE;
-	    }
+	  if (! fsxqt_file_read (zxqt))
+	    return FALSE;
 
 	  csize = 0L;
 	  for (qsize = qlist; qsize != NULL; qsize = qsize->qnext)
@@ -635,49 +1017,109 @@ fsworkfile_show (qsys, qcmd, itime)
 		}
 	    }
 
-	  usworkfile_header (qsys, &qlook->s, zlistid, qlook->itime,
-			     TRUE);
-
-	  while ((zline = zfgets (e, FALSE)) != NULL)
+	  if (ccommands == 0)
+	    fmatch = TRUE;
+	  else
 	    {
-	      char *ztok;
+	      int i;
 
-	      ztok = strtok (zline, " \t");
-	      if (ztok != NULL
-		  && strcmp (ztok, "C") == 0)
+	      fmatch = fnotcommands;
+	      for (i = 0; i < ccommands; i++)
 		{
-		  char *zcmd;
-		  int clen;
-
-		  zcmd = strtok ((char *) NULL, "");
-		  zcmd += strspn (zcmd, " \t");
-		  clen = strlen (zcmd);
-		  if (zcmd[clen - 1] == '\n')
-		    zcmd[clen - 1] = '\0';
-		  printf ("Executing %s", zcmd);
-		  xfree ((pointer) zline);
-		  break;
+		  if (strcmp (pazcommands[i], "ALL") == 0
+		      || strcmp (pazcommands[i], zSxqt_prog) == 0)
+		    {
+		      fmatch = ! fmatch;
+		      break;
+		    }
 		}
-	      xfree ((pointer) zline);
 	    }
 
-	  if (zline == NULL)
-	    printf ("Unrecognized execution");
+	  /* To get the name of the standard input file on this system
+	     we have to look through the list of file transfers to
+	     find the right one on the remote system.  */
+	  if (fmatch)
+	    {
+	      struct scmdlist *qstdin;
 
-	  printf (" (sending %ld bytes)\n", csize);
+	      for (qstdin = qlist; qstdin != NULL; qstdin = qstdin->qnext)
+		{
+		  if (qstdin->s.bcmd == 'S'
+		      && strcmp (qstdin->s.zto, zSxqt_stdin) == 0)
+		    {
+		      if (strchr (qstdin->s.zoptions, 'C') != NULL
+			  || fspool_file (qstdin->s.zfrom))
+			zstdin = qstdin->s.ztemp;
+		      else
+			zstdin = qstdin->s.zfrom;
+		      break;
+		    }
+		}
+	    }
 
-	  (void) fclose (e);
+	  if (fmatch && (icmd & JOB_SHOW) != 0)
+	    {
+	      usworkfile_header (qsys, &qxqt->s, zlistid, qxqt->itime,
+				 TRUE);
+	      printf ("Executing %s (sending %ld bytes)\n",
+		      zSxqt_cmd, csize);
+	    }
 	}
 
+      if (fmatch)
+	{
+	  boolean fkill;
+
+	  fkill = FALSE;
+	  if ((icmd & JOB_INQUIRE) != 0)
+	    {
+	      int b;
+
+	      /* Ask stdin whether this job should be killed.  */
+	      fprintf (stderr, "%s: Kill %s? ", abProgram, zlistid);
+	      (void) fflush (stderr);
+	      b = getchar ();
+	      fkill = b == 'y' || b == 'Y';
+	      while (b != EOF && b != '\n')
+		b = getchar ();
+	    }
+	  else if ((icmd & JOB_KILL) != 0)
+	    fkill = TRUE;
+	      
+	  if (fkill
+	      && strcmp (zsysdep_login_name (), qlist->s.zuser) != 0
+	      && ! fsysdep_privileged ())
+	    ulog (LOG_ERROR, "%s: Not submitted by you", zlistid);
+	  else
+	    {
+	      if ((icmd & (JOB_MAIL | JOB_NOTIFY)) != 0)
+		{
+		  if (! fsnotify (icmd, zcomment, cstdin, fkill, zSxqt_cmd,
+				  qlist, zlistid, qlist->s.zuser, qsys,
+				  zstdin, zSxqt_requestor))
+		    return FALSE;
+		}
+
+	      if (fkill)
+		{
+		  if (! fsysdep_kill_job (zlistid))
+		    return FALSE;
+		}
+	    }
+	}
+
+      if (qxqt != NULL)
+	usxqt_file_free ();
+
       /* Free up the list of entries.  */
-      qlook = qlist;
-      while (qlook != NULL)
+      qfree = qlist;
+      while (qfree != NULL)
 	{
 	  struct scmdlist *qnext;
 
-	  qnext = qlook->qnext;
-	  xfree ((pointer) qlook);
-	  qlook = qnext;
+	  qnext = qfree->qnext;
+	  xfree ((pointer) qfree);
+	  qfree = qnext;
 	}
 
       xfree ((pointer) zlistid);
@@ -725,6 +1167,395 @@ usworkfile_header (qsys, qcmd, zjobid, itime, ffirst)
 	  stime.tm_year + 1900, stime.tm_mon + 1,
 	  stime.tm_mday, stime.tm_hour,
 	  stime.tm_min, stime.tm_sec);
+}
+
+
+/* List queued executions that have not been processed by uuxqt for
+   one reason or another.  */
+
+static boolean
+fsexecutions (icmd, csystems, pazsystems, fnotsystems, cusers, pazusers,
+	      fnotusers, iold, iyoung, ccommands, pazcommands,
+	      fnotcommands, zcomment, cstdin)
+     int icmd;
+     int csystems;
+     char **pazsystems;
+     boolean fnotsystems;
+     int cusers;
+     char **pazusers;
+     boolean fnotusers;
+     long iold;
+     long iyoung;
+     int ccommands;
+     char **pazcommands;
+     boolean fnotcommands;
+     const char *zcomment;
+     int cstdin;
+{
+  const char *zfile;
+  const char *zsystem;
+  boolean ferr;
+  char *zf, *zs;
+
+  if (! fsysdep_get_xqt_init ())
+    return FALSE;
+
+  zf = NULL;
+  zs = NULL;
+
+  while ((zfile = zsysdep_get_xqt (&zsystem, &ferr)) != NULL)
+    {
+      boolean fmatch;
+      int i;
+      long itime;
+
+      if (csystems > 0)
+	{
+	  fmatch = fnotsystems;
+	  for (i = 0; i < csystems; i++)
+	    {
+	      if (strcmp (pazsystems[i], zsystem) == 0)
+		{
+		  fmatch = ! fmatch;
+		  break;
+		}
+	    }
+	  if (! fmatch)
+	    continue;
+	}
+
+      itime = isysdep_file_time (zfile);
+
+      if (iold != (long) -1 && itime > iold)
+	continue;
+
+      if (iyoung != (long) -1 && itime < iyoung)
+	continue;
+
+      xfree ((pointer) zf);
+      zf = xstrdup (zfile);
+      xfree ((pointer) zs);
+      zs = xstrdup (zsystem);
+
+      /* We need to read the execution file before we can check the
+	 user name.  */
+      if (! fsxqt_file_read (zf))
+	continue;      
+
+      if (cusers == 0)
+	fmatch = TRUE;
+      else
+	{
+	  fmatch = fnotusers;
+	  for (i = 0; i < cusers; i++)
+	    {
+	      if (strcmp (zSxqt_user, pazusers[i]) == 0
+		  || (zSxqt_requestor != NULL
+		      && strcmp (zSxqt_requestor, pazusers[i]) == 0))
+		{
+		  fmatch = ! fmatch;
+		  break;
+		}
+	    }
+	}
+
+      if (fmatch && ccommands > 0)
+	{
+	  fmatch = fnotcommands;
+	  for (i = 0; i < ccommands; i++)
+	    {
+	      if (strcmp (pazcommands[i], "ALL") == 0
+		  || strcmp (pazcommands[i], zSxqt_prog) == 0)
+		{
+		  fmatch = ! fmatch;
+		  break;
+		}
+	    }
+	}
+
+      if (fmatch)
+	{
+	  boolean fkill;
+	  struct ssysteminfo ssys;
+	  const struct ssysteminfo *qsys;
+
+	  if ((icmd & JOB_SHOW) != 0)
+	    {
+	      struct tm stime;
+
+	      printf ("%s %s!", zs, zSxqt_system);
+	      if (zSxqt_requestor != NULL)
+		printf ("%s", zSxqt_requestor);
+	      else
+		printf ("%s", zSxqt_user);
+
+	      usysdep_localtime (itime, &stime);
+	      printf (" %04d-%02d-%02d %02d:%02d:%02d ",
+		      stime.tm_year + 1900, stime.tm_mon + 1,
+		      stime.tm_mday, stime.tm_hour,
+		      stime.tm_min, stime.tm_sec);
+
+	      printf ("%s\n", zSxqt_cmd);
+	    }
+
+	  fkill = FALSE;
+	  if ((icmd & JOB_INQUIRE) != 0)
+	    {
+	      int b;
+
+	      /* Ask stdin whether this job should be killed.  */
+	      fprintf (stderr, "%s: Kill %s? ", abProgram, zSxqt_cmd);
+	      (void) fflush (stderr);
+	      b = getchar ();
+	      fkill = b == 'y' || b == 'Y';
+	      while (b != EOF && b != '\n')
+		b = getchar ();
+	    }
+	  else if ((icmd & JOB_KILL) != 0)
+	    fkill = TRUE;
+
+	  if (fkill
+	      && (strcmp (zs, zLocalname) != 0
+		  || strcmp (zSxqt_user, zsysdep_login_name ()) != 0)
+	      && ! fsysdep_privileged ())
+	    ulog (LOG_ERROR, "Job not submitted by you\n");
+	  else
+	    {
+	      if (fread_system_info (zs, &ssys))
+		qsys = &ssys;
+	      else
+		{
+		  sUnknown.zname = zs;
+		  qsys = &sUnknown;
+		}
+
+	      if ((icmd & (JOB_MAIL | JOB_NOTIFY)) != 0)
+		{
+		  if (! fsnotify (icmd, zcomment, cstdin, fkill, zSxqt_cmd,
+				  (struct scmdlist *) NULL,
+				  (const char *) NULL, zSxqt_user, qsys,
+				  zSxqt_stdin, zSxqt_requestor))
+		    {
+		      ferr = TRUE;
+		      break;
+		    }
+		}
+
+	      if (fkill)
+		{
+		  for (i = 0; i < cSxqt_files; i++)
+		    {
+		      const char *z;
+
+		      z = zsysdep_spool_file_name (qsys, pazSxqt_files[i]);
+		      if (z != NULL)
+			(void) remove (z);
+		    }
+		  if (remove (zf) != 0)
+		    ulog (LOG_ERROR, "remove (%s): %s", zf,
+			  strerror (errno));
+		}
+	    }
+	}
+
+      usxqt_file_free ();
+    }
+
+  usysdep_get_xqt_free ();
+
+  xfree ((pointer) zf);
+  xfree ((pointer) zs);
+
+  return ferr;
+}
+
+/* When a job is killed, send mail to the appropriate people.  */
+
+static boolean
+fsnotify (icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser, qsys,
+	  zstdin, zrequestor)
+     int icmd;
+     const char *zcomment;
+     int cstdin;
+     boolean fkilled;
+     const char *zcmd;
+     struct scmdlist *qcmd;
+     const char *zid;
+     const char *zuser;
+     const struct ssysteminfo *qsys;
+     const char *zstdin;
+     const char *zrequestor;
+{
+  const char **pz;
+  int cgot;
+  int i, istdin;
+  const char *zsubject;
+  boolean fret;
+
+  pz = (const char **) xmalloc (20 * sizeof (const char *));
+  cgot = 20;
+
+  i = 0;
+  if (zid == NULL)
+    pz[i++] = "A UUCP execution request\n";
+  else
+    {
+      pz[i++] = "UUCP job\n\t";
+      pz[i++] = zid;
+      pz[i++] = "\n";
+    }
+  pz[i++] = "requested by\n\t";
+  pz[i++] = zuser;
+  pz[i++] = "\non system\n\t";
+  pz[i++] = qsys->zname;
+  pz[i++] = "\n";
+
+  if (fkilled)
+    pz[i++] = "has been killed.\n";
+
+  if (zcomment != NULL)
+    {
+      pz[i++] = zcomment;
+      pz[i++] = "\n";
+    }
+
+  pz[i++] = "The job ";
+  if (fkilled)
+    pz[i++] = "was\n";
+  else
+    pz[i++] = "is\n";
+
+  if (zcmd != NULL)
+    {
+      pz[i++] = "\t";
+      pz[i++] = zcmd;
+    }
+  else
+    {
+      struct scmdlist *qshow;
+
+      for (qshow = qcmd; qshow != NULL; qshow = qshow->qnext)
+	{
+	  if (i + 10 > cgot)
+	    {
+	      cgot += 20;
+	      pz = (const char **) xrealloc ((pointer) pz,
+					     cgot * sizeof (const char *));
+	    }
+
+	  switch (qshow->s.bcmd)
+	    {
+	    case 'S':
+	      pz[i++] = "\tsend ";
+	      break;
+	    default:
+	    case 'R':
+	    case 'X':
+	      pz[i++] = "\trequest ";
+	      break;
+	    }
+	  pz[i++] = qshow->s.zfrom;
+	  pz[i++] = " to ";
+	  pz[i++] = qshow->s.zto;
+	}
+    }
+
+  istdin = i;
+  if (cstdin > 0 && zstdin != NULL)
+    {
+      boolean fspool;
+      const char *zfile;
+      FILE *e;
+
+      fspool = fspool_file (zstdin);
+      if (fspool)
+	zfile = zsysdep_spool_file_name (qsys, zstdin);
+      else
+	zfile = zsysdep_real_file_name (qsys, zstdin, (const char *) NULL);
+
+      if (zfile != NULL
+	  && (fspool
+	      || fin_directory_list (qsys, zfile,
+				     qsys->zremote_send, TRUE, TRUE,
+				     (const char *) NULL)))
+	{
+	  e = fopen (zfile, "r");
+	  if (e != NULL)
+	    {
+	      int clines;
+	      char *zline;
+
+	      pz[i++] = "\n";
+	      istdin = i;
+
+	      clines = 0;
+	      while ((zline = zfgets (e, FALSE)) != NULL)
+		{
+		  ++clines;
+		  if (clines > cstdin)
+		    break;
+		  if (i >= cgot)
+		    {
+		      cgot += 20;
+		      pz = (const char **) xrealloc ((pointer) pz,
+						     (cgot
+						      * sizeof (char *)));
+		    }
+		  pz[i++] = zline;
+		}
+	      (void) fclose (e);
+	    }
+	}
+    }
+
+  if (fkilled)
+    zsubject = "UUCP job killed";
+  else
+    zsubject = "UUCP notification";
+
+  fret = TRUE;
+
+  if ((icmd & JOB_MAIL) != 0)
+    {
+      if (! fsysdep_mail (OWNER, zsubject, i, pz))
+	fret = FALSE;
+    }
+
+  if ((icmd & JOB_NOTIFY) != 0)
+    {
+      const char *zmail;
+
+      if (zrequestor != NULL)
+	zmail = zrequestor;
+      else
+	zmail = zuser;
+
+      if (strcmp (qsys->zname, zLocalname) != 0
+#if HAVE_INTERNET_MAIL
+	  && strchr (zmail, '@') == NULL
+#endif
+	  )
+	{
+	  char *zset;
+
+	  zset = (char *) alloca (strlen (qsys->zname) + strlen (zmail) + 2);
+	  sprintf (zset, "%s!%s", qsys->zname, zmail);
+	  zmail = zset;
+	}
+
+      if (! fsysdep_mail (zmail, zsubject, i, pz))
+	fret = FALSE;
+    }
+
+  while (istdin < i)
+    {
+      xfree ((pointer) pz[istdin]);
+      istdin++;
+    }
+
+  xfree ((pointer) pz);
+
+  return fret;
 }
 
 /* Handle the -q option.  For each remote system this lists the number
