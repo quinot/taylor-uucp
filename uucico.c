@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1991/11/13  23:08:40  ian
+   Expand remote pathnames in uucp and uux; fix up uux special cases
+
    Revision 1.16  1991/11/12  19:47:04  ian
    Add called-chat set of commands to run a chat script on an incoming call
 
@@ -95,12 +98,15 @@ char uucico_rcsid[] = "$Id$";
 
 static struct sprotocol asProtocols[] =
 {
-  { 'g', FALSE, asGproto_params, fgstart, fgshutdown, fgsendcmd,
-      zggetspace, fgsenddata, fgprocess, fgwait, NULL },
-  { 'f', FALSE, asFproto_params, ffstart, ffshutdown, ffsendcmd,
-      zfgetspace, ffsenddata, ffprocess, ffwait, fffile },
-  { 't', FALSE, asTproto_params, ftstart, ftshutdown, ftsendcmd,
-      ztgetspace, ftsenddata, ftprocess, ftwait, ftfile }
+  { 't', FALSE, RELIABLE_ENDTOEND | RELIABLE_RELIABLE | RELIABLE_EIGHT,
+      asTproto_params, ftstart, ftshutdown, ftsendcmd, ztgetspace,
+      ftsenddata, ftprocess, ftwait, ftfile },
+  { 'f', FALSE, RELIABLE_RELIABLE,
+      asFproto_params, ffstart, ffshutdown, ffsendcmd, zfgetspace,
+      ffsenddata, ffprocess, ffwait, fffile },
+  { 'g', FALSE, RELIABLE_EIGHT,
+      asGproto_params, fgstart, fgshutdown, fgsendcmd, zggetspace,
+      fgsenddata, fgprocess, fgwait, NULL },
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
@@ -627,6 +633,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   boolean fnew;
   int cdial_proto_params;
   struct sproto_param *qdial_proto_params;
+  int idial_reliable;
 
   *pfcalled = FALSE;
 
@@ -668,7 +675,8 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
   cdial_proto_params = 0;
   qdial_proto_params = NULL;
-  if (! fport_dial (qsys, &cdial_proto_params, &qdial_proto_params))
+  if (! fport_dial (qsys, &cdial_proto_params, &qdial_proto_params,
+		    &idial_reliable))
     {
       (void) fcall_failed (qsys, STATUS_DIAL_FAILED, qstat, cretry);
       return FALSE;
@@ -881,9 +889,36 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       }
     else
       {
+	int ir;
+
+	/* If the system did not specify a list of protocols, we want
+	   only protocols that match the known reliability of the
+	   dialer and the port.  If we have no information, we default
+	   to a reliable eight bit connection.  */
+
+	ir = 0;
+	if ((qPort->ireliable & RELIABLE_SPECIFIED) != 0)
+	  ir = qPort->ireliable;
+	if ((idial_reliable & RELIABLE_SPECIFIED) != 0)
+	  {
+	    if (ir != 0)
+	      ir &= idial_reliable;
+	    else
+	      ir = idial_reliable;
+	  }
+	if (ir == 0)
+	  ir = RELIABLE_RELIABLE | RELIABLE_EIGHT | RELIABLE_SPECIFIED;
+
 	for (i = 0; i < CPROTOCOLS; i++)
-	  if (strchr (zstr + 1, asProtocols[i].bname) != NULL)
-	    break;
+	  {
+	    int ipr;
+
+	    ipr = asProtocols[i].ireliable;
+	    if ((ipr & ir) != ipr)
+	      continue;
+	    if (strchr (zstr + 1, asProtocols[i].bname) != NULL)
+	      break;
+	  }
       }
 
     if (i >= CPROTOCOLS)
@@ -1080,6 +1115,7 @@ static boolean faccept_call (zlogin, qport)
 {
   int cport_proto_params, cdial_proto_params;
   struct sproto_param *qport_proto_params, *qdial_proto_params;
+  int iport_reliable, idial_reliable;
   struct sport sportinfo;
   char *zsend, *zspace;
   const char *zstr;
@@ -1102,6 +1138,7 @@ static boolean faccept_call (zlogin, qport)
     {
       cport_proto_params = qport->cproto_params;
       qport_proto_params = qport->qproto_params;
+      iport_reliable = qport->ireliable;
     }
   else
     {
@@ -1115,11 +1152,13 @@ static boolean faccept_call (zlogin, qport)
 	{
 	  cport_proto_params = 0;
 	  qport_proto_params = NULL;
+	  iport_reliable = 0;
 	}
       else
 	{
 	  cport_proto_params = sportinfo.cproto_params;
 	  qport_proto_params = sportinfo.qproto_params;
+	  iport_reliable = sportinfo.ireliable;
 	  qport = &sportinfo;
 	}
     }
@@ -1129,32 +1168,43 @@ static boolean faccept_call (zlogin, qport)
 
   cdial_proto_params = 0;
   qdial_proto_params = NULL;
-  if (qport != NULL
-      && qport->ttype == PORTTYPE_MODEM)
+  idial_reliable = 0;
+  if (qport != NULL)
     {
-      if (qport->u.smodem.zdialer != NULL)
+      if (qport->ttype == PORTTYPE_MODEM)
 	{
-	  char *zcopy;
-	  char *zdial;
-	  struct sdialer sdialerinfo;
-
-	  /* We use the first dialer in the sequence.  */
-	  zcopy = (char *) alloca (strlen (qport->u.smodem.zdialer) + 1);
-	  strcpy (zcopy, qport->u.smodem.zdialer);
-
-	  zdial = strtok (zcopy, " \t");
-	  if (fread_dialer_info (zdial, &sdialerinfo))
+	  if (qport->u.smodem.zdialer != NULL)
 	    {
-	      cdial_proto_params = sdialerinfo.cproto_params;
-	      qdial_proto_params = sdialerinfo.qproto_params;
+	      char *zcopy;
+	      char *zdial;
+	      struct sdialer sdialerinfo;
+
+	      /* We use the first dialer in the sequence.  */
+	      zcopy = (char *) alloca (strlen (qport->u.smodem.zdialer)
+				       + 1);
+	      strcpy (zcopy, qport->u.smodem.zdialer);
+
+	      zdial = strtok (zcopy, " \t");
+	      if (fread_dialer_info (zdial, &sdialerinfo))
+		{
+		  cdial_proto_params = sdialerinfo.cproto_params;
+		  qdial_proto_params = sdialerinfo.qproto_params;
+		  idial_reliable = sdialerinfo.ireliable;
+		}
 	    }
-	}
-      else if (qport->u.smodem.qdialer != NULL)
-	{
-	  cdial_proto_params = qport->u.smodem.qdialer->cproto_params;
-	  qdial_proto_params = qport->u.smodem.qdialer->qproto_params;
-	}
-    }	  
+	  else if (qport->u.smodem.qdialer != NULL)
+	    {
+	      cdial_proto_params = qport->u.smodem.qdialer->cproto_params;
+	      qdial_proto_params = qport->u.smodem.qdialer->qproto_params;
+	      idial_reliable = qport->u.smodem.qdialer->ireliable;
+	    }
+	}	  
+#if HAVE_TCP
+      else if (qport->ttype == PORTTYPE_TCP)
+	idial_reliable = (RELIABLE_SPECIFIED | RELIABLE_ENDTOEND
+			  | RELIABLE_RELIABLE | RELIABLE_EIGHT);
+#endif
+    }
 
   /* We have to check to see whether some system uses this login name
      to indicate a different local name.  Obviously, this means that
@@ -1431,12 +1481,39 @@ static boolean faccept_call (zlogin, qport)
     else
       {
 	char *zset;
+	int ir;
 
 	zsend = (char *) alloca (CPROTOCOLS + 2);
 	zset = zsend;
 	*zset++ = 'P';
+
+	/* If the system did not specify a list of protocols, we want
+	   only protocols that match the known reliability of the
+	   dialer and the port.  If we have no information, we default
+	   to a reliable eight bit connection.  */
+
+	ir = 0;
+	if ((iport_reliable & RELIABLE_SPECIFIED) != 0)
+	  ir = iport_reliable;
+	if ((idial_reliable & RELIABLE_SPECIFIED) != 0)
+	  {
+	    if (ir != 0)
+	      ir &= idial_reliable;
+	    else
+	      ir = idial_reliable;
+	  }
+	if (ir == 0)
+	  ir = RELIABLE_RELIABLE | RELIABLE_EIGHT | RELIABLE_SPECIFIED;
+
 	for (i = 0; i < CPROTOCOLS; i++)
-	  *zset++ = asProtocols[i].bname;
+	  {
+	    int ipr;
+
+	    ipr = asProtocols[i].ireliable;
+	    if ((ipr & ir) != ipr)
+	      continue;
+	    *zset++ = asProtocols[i].bname;
+	  }
 	*zset = '\0';
       }
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/12  18:25:33  ian
+   Added 't' protocol
+
    Revision 1.4  1991/11/11  04:21:16  ian
    Added 'f' protocol
 
@@ -55,6 +58,9 @@ struct sprotocol
   /* Whether the protocol is full-duplex or not; a full-duplex protocol
      can transfer files in both directions at once.  */
   boolean ffullduplex;
+  /* Reliability requirements, an or of RELIABLE_xxx defines from
+     port.h.  */
+  int ireliable;
   /* Protocol parameter commands.  */
   struct scmdtab *qcmds;
   /* A routine to start the protocol; the argument is whether the caller
