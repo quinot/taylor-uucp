@@ -147,9 +147,9 @@ main (argc, argv)
 	printf ("%s\n", *pz);
     }
 
-  usysdep_exit (EXIT_SUCCESS);
+  usysdep_exit (TRUE);
 
-  /* Avoid errors about not returning a value.  */
+  /* Avoid warnings about not returning a value.  */
   return 0;
 }
 
