@@ -543,6 +543,7 @@ ikshow_port (qport, pinfo)
   struct sinfo *qi = (struct sinfo *) pinfo;
   char **pz;
   struct uuconf_modem_port *qmodem;
+  struct uuconf_tcp_port *qtcp;
   struct uuconf_tli_port *qtli;
   struct uuconf_pipe_port *qpipe;
 
@@ -645,14 +646,14 @@ ikshow_port (qport, pinfo)
 	printf ("   *** No dialer information\n");
       break;
     case UUCONF_PORTTYPE_TCP:
+      qtcp = &qport->uuconf_u.uuconf_stcp;
       printf ("   Port type tcp\n");
-      printf ("   TCP service %s\n",
-	      qport->uuconf_u.uuconf_stcp.uuconf_zport);
-      if (qtli->uuconf_pzdialer != NULL
-	  && qtli->uuconf_pzdialer[0] != NULL)
+      printf ("   TCP service %s\n", qtcp->uuconf_zport);
+      if (qtcp->uuconf_pzdialer != NULL
+	  && qtcp->uuconf_pzdialer[0] != NULL)
 	{
 	  printf ("   Dialer sequence");
-	  for (pz = qtli->uuconf_pzdialer; *pz != NULL; pz++)
+	  for (pz = qtcp->uuconf_pzdialer; *pz != NULL; pz++)
 	    printf (" %s", *pz);
 	  printf ("\n");
 	}
