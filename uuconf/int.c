@@ -46,7 +46,7 @@ _uuconf_iint (qglobal, zval, p, fint)
   long i;
   char *zend;
 
-  i = strtol (zval, &zend, 10);
+  i = strtol ((char *) zval, &zend, 10);
   if (*zend != '\0')
     return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 

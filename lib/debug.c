@@ -46,7 +46,7 @@ idebug_parse (z)
   int i, iret;
   char *zcopy, *ztok;
 
-  i = (int) strtol (z, &zend, 0);
+  i = (int) strtol ((char *) z, &zend, 0);
   if (*zend == '\0')
     {
       if (i > 15)

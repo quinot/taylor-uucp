@@ -25,6 +25,8 @@
 
 #include "uucp.h"
 
+#include "sysdep.h"
+
 #include <errno.h>
 
 #if HAVE_TIME_H
@@ -83,7 +85,6 @@
 
 #include "uudefs.h"
 #include "uuconf.h"
-#include "sysdep.h"
 #include "system.h"
 
 #ifndef time

@@ -56,7 +56,7 @@ uuconf_login_localname (pglobal, zlogin, pzname)
 
   if (qglobal->qprocess->zlocalname != NULL)
     {
-      *pzname = strdup (qglobal->qprocess->zlocalname);
+      *pzname = strdup ((char *) qglobal->qprocess->zlocalname);
       if (*pzname == NULL)
 	{
 	  qglobal->ierrno = errno;

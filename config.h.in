@@ -37,6 +37,7 @@
 #define HAVE_FTW_H 0 /* <ftw.h> */
 #define HAVE_GLOB_H 0 /* <glob.h> */
 #define HAVE_SYS_SELECT_H 0 /* <sys/select.h> */
+#define HAVE_SYS_TYPES_TCP_H 0 /* <sys/types.tcp.h> */
 
 /* If major and minor are not defined in <sys/types.h>, but are in
    <sys/mkdev.h>, set MAJOR_IN_MKDEV to 1.  If they are in

@@ -6,6 +6,9 @@
 #include "system.h"
 
 #if HAVE_TCP
+#if HAVE_SYS_TCP_TYPES_H
+#include <sys/tcp.types.h>
+#endif
 #include <sys/socket.h>
 #endif
 

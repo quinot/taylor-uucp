@@ -173,11 +173,11 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
 	{
 	  char *zendnum;
 
-	  istart = (int) strtol (z, &zendnum, 10);
+	  istart = (int) strtol ((char *) z, &zendnum, 10);
 	  if (*zendnum != '-' || ! isdigit (BUCHAR (zendnum[1])))
 	    return UUCONF_SYNTAX_ERROR;
 	  z = zendnum + 1;
-	  iend = (int) strtol (z, &zendnum, 10);
+	  iend = (int) strtol ((char *) z, &zendnum, 10);
 	  z = zendnum;
 
 	  istart = (istart / 100) * 60 + istart % 100;
