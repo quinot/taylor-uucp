@@ -1121,6 +1121,10 @@ fsend_exec_file_init (qtrans, qdaemon)
   qtrans->psendfn = flocal_send_request;
   qtrans->precfn = NULL;
   qtrans->ipos = 0;
+  qtrans->cbytes = 0;
+  qtrans->isecs = 0;
+  qtrans->imicros = 0;
+  qinfo->fsent = FALSE;
 
   uqueue_send (qtrans);
 
@@ -1203,6 +1207,7 @@ fsend_exec_file (qtrans, qdaemon)
       return FALSE;
     }
 
+  qtrans->cbytes += csend;
   qtrans->ipos += csend;
 
   if (csend == 0)
