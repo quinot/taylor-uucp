@@ -12,6 +12,7 @@
 /* The following macros indicate what header files you have.  Set the
    macro to 1 if you have the corresponding header file, or 0 if you
    do not.  */
+#define HAVE_STDDEF_H 0 /* <stddef.h> */
 #define HAVE_STRING_H 0 /* <string.h> */
 #define HAVE_STRINGS_H 0 /* <strings.h> */
 #define HAVE_UNISTD_H 0 /* <unistd.h> */
