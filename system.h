@@ -785,8 +785,9 @@ extern long isysdep_work_time P((const struct uuconf_system *qsys,
    value must use the same epoch as isysdep_time.  */
 extern long isysdep_file_time P((const char *zfile));
 
-/* Get the size in bytes of a file.  There is no way to indicate
-   error.  This is only used by uustat.  */
+/* Get the size in bytes of a file.  If this file does not exist, this
+   should not give an error message, but should return -1.  If some
+   other error occurs, this should return -2.  */
 extern long csysdep_size P((const char *zfile));
 
 /* Start getting status information for all systems with available

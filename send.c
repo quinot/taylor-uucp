@@ -215,11 +215,6 @@ flocal_send_file_init (qdaemon, qcmd)
 				TRUE, qcmd->zuser))
 	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
 				 "not permitted to send");
-
-      if (! fsysdep_file_exists (qcmd->zfrom))
-	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
-				 "does not exist");
-
       zfile = zbufcpy (qcmd->zfrom);
     }
   else
@@ -228,24 +223,32 @@ flocal_send_file_init (qdaemon, qcmd)
       zfile = zsysdep_spool_file_name (qsys, qcmd->ztemp, TRUE);
       if (zfile == NULL)
 	return FALSE;
-
-      /* If the file does not exist, we obviously can't send it.  This
-	 can happen legitimately if it has already been sent.  */
-      if (! fsysdep_file_exists (zfile))
-	{
-	  (void) fsysdep_did_work (qcmd->pseq);
-	  return TRUE;
-	}
     }
 
   /* Make sure we meet any local size restrictions.  The connection
      may not have been opened at this point, so we can't check remote
      size restrictions.  */
   cbytes = csysdep_size (zfile);
-  if (cbytes != -1
-      && qdaemon->clocal_size != -1
+  if (cbytes < 0)
+    {
+      ubuffree (zfile);
+      if (cbytes != -1)
+	return FALSE;
+      /* A cbytes value of -1 means that the file does not exist.
+	 This can happen legitimately if it has already been sent from
+	 the spool directory.  */
+      if (! fspool)
+	return flocal_send_fail ((struct stransfer *) NULL, qcmd, qsys,
+				 "does not exist");
+      (void) fsysdep_did_work (qcmd->pseq);
+      return TRUE;
+    }
+
+  if (qdaemon->clocal_size != -1
       && qdaemon->clocal_size < cbytes)
     {
+      ubuffree (zfile);
+
       if (qdaemon->cmax_ever == -2)
 	{
 	  long c1, c2;

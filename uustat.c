@@ -1035,6 +1035,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 		  for (qshow = qlist; qshow != NULL; qshow = qshow->qnext)
 		    {
 		      char *zfile;
+		      long cbytes;
 
 		      usworkfile_header (qsys, &qshow->s, zlistid,
 					 qshow->itime, qshow == qlist);
@@ -1049,10 +1050,16 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 							     TRUE);
 			  else
 			    zfile = zbufcpy (qshow->s.zfrom);
+			  if (zfile == NULL)
+			    cbytes = 0;
+			  else
+			    {
+			      cbytes = csysdep_size (zfile);
+			      if (cbytes < 0)
+				cbytes = 0;
+			    }
 			  printf ("Sending %s (%ld bytes) to %s",
-				  qshow->s.zfrom,
-				  zfile == NULL ? 0L : csysdep_size (zfile),
-				  qshow->s.zto);
+				  qshow->s.zfrom, cbytes, qshow->s.zto);
 			  ubuffree (zfile);
 			  break;
 			case 'R':
@@ -1129,7 +1136,11 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 		    zfile = zbufcpy (qsize->s.zfrom);
 		  if (zfile != NULL)
 		    {
-		      csize += csysdep_size (zfile);
+		      long cbytes;
+
+		      cbytes = csysdep_size (zfile);
+		      if (cbytes > 0)
+			csize += cbytes;
 		      ubuffree (zfile);
 		    }
 		}
