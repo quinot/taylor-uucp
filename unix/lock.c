@@ -308,17 +308,23 @@ fsdo_lock (zlock, fspooldir, pferr)
 	    }
 	}
 
+      /* If the lock file is empty (cgot == 0), we assume that it is
+         stale.  This can happen if the system crashed after the lock
+         file was created but before the process ID was written out.  */
+      if (cgot > 0)
+	{
 #if HAVE_QNX_LOCKFILES
-      if (! fsqnx_stale ((unsigned long) ipid, (unsigned long) inme,
-			 (unsigned long) inid, pferr))
-	break;
+	  if (! fsqnx_stale ((unsigned long) ipid, (unsigned long) inme,
+			     (unsigned long) inid, pferr))
+	    break;
 #else
-      /* If the process still exists, we will get EPERM rather than
-	 ESRCH.  We then return FALSE to indicate that we cannot make
-	 the lock.  */
-      if (kill (ipid, 0) == 0 || errno == EPERM)
-	break;
+	  /* If the process still exists, we will get EPERM rather
+	     than ESRCH.  We then return FALSE to indicate that we
+	     cannot make the lock.  */
+	  if (kill (ipid, 0) == 0 || errno == EPERM)
+	    break;
 #endif
+	}
 
       if (fstat (o, &st) < 0)
 	strcpy (abtime, "unknown");
