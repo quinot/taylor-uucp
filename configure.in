@@ -3,7 +3,6 @@ dnl This should be processed with autoconf to produce a configure script.
 dnl Copyright (c) 1992 Ian Lance Taylor
 dnl
 AC_INIT(policy.h)
-AC_PREFIX(gcc)
 AC_CONFIG_HEADER(conf.h)
 AC_PROG_CC
 AC_PROG_CPP
@@ -21,6 +20,8 @@ if test -s /usr/ucb/mail; then
  AC_DEFINE([MAIL_PROGRAM], `echo '"/usr/ucb/mail"'`)
 elif test -s /bin/mail; then
  AC_DEFINE([MAIL_PROGRAM], `echo '"/bin/mail"'`)
+elif test -s /usr/bin/mail; then
+ AC_DEFINE([MAIL_PROGRAM], `echo '"/usr/bin/mail"'`)
 fi
 echo checking for echo program
 if test -s /bin/echo; then
