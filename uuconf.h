@@ -282,12 +282,12 @@ struct uuconf_system
   /* Maximum remote debugging level this system may request.  May be
      NULL.  */
   char *uuconf_zmax_remote_debug;
-  /* Non-zero if remote requests are permitted when calling this
-     system.  */
-  int uuconf_fcall_request;
-  /* Non-zero if remote requests are permitted when this system calls
-     in.  */
-  int uuconf_fcalled_request;
+  /* Non-zero if the remote system may request us to send files from
+     the local system to the remote.  */
+  int uuconf_fsend_request;
+  /* Non-zero if the remote system may request us to receive files
+     from the remote system to the local.  */
+  int uuconf_frec_request;
   /* Non-zero if local requests are permitted when calling this
      system.  */
   int uuconf_fcall_transfer;

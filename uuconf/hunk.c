@@ -109,7 +109,10 @@ uuconf_hdb_system_unknown (pglobal, qsys)
 	    qalt->uuconf_zcalled_login = *pz;
 	  qalt->uuconf_fcall = FALSE;
 	  qsys->uuconf_fcalled = TRUE;
-	  qsys->uuconf_fcalled_request = qperm->frequest;
+	  if (qperm->frequest >= 0)
+	    qsys->uuconf_fsend_request = qperm->frequest;
+	  else
+	    qsys->uuconf_fsend_request = FALSE;
 	  qsys->uuconf_fcalled_transfer = qperm->fsendfiles;
 	  qsys->uuconf_pzremote_send = qperm->pzread;
 	  qsys->uuconf_pzremote_receive = qperm->pzwrite;

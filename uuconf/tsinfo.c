@@ -140,10 +140,10 @@ static const struct cmdtab_offset asIcmds[] =
       offsetof (struct uuconf_system, uuconf_zdebug), NULL },
   { "max-remote-debug", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_system, uuconf_zmax_remote_debug), NULL },
-  { "call-request", UUCONF_CMDTABTYPE_BOOLEAN,
-      offsetof (struct uuconf_system, uuconf_fcall_request), NULL },
-  { "called-request", UUCONF_CMDTABTYPE_BOOLEAN,
-      offsetof (struct uuconf_system, uuconf_fcalled_request), NULL },
+  { "send-request", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct uuconf_system, uuconf_fsend_request), NULL },
+  { "receive-request", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct uuconf_system, uuconf_frec_request), NULL },
   { "request", UUCONF_CMDTABTYPE_FN | 2, (size_t) -1, iirequest },
   { "call-transfer", UUCONF_CMDTABTYPE_BOOLEAN,
       offsetof (struct uuconf_system, uuconf_fcall_transfer), NULL },
@@ -769,9 +769,9 @@ iirequest (pglobal, argc, argv, pvar, pinfo)
   int iret;
 
   iret = _uuconf_iboolean (qglobal, argv[1],
-			   &qinfo->qsys->uuconf_fcall_request);
+			   &qinfo->qsys->uuconf_fsend_request);
   if (UUCONF_ERROR_VALUE (iret) == UUCONF_SUCCESS)
-    qinfo->qsys->uuconf_fcalled_request = qinfo->qsys->uuconf_fcall_request;
+    qinfo->qsys->uuconf_frec_request = qinfo->qsys->uuconf_fsend_request;
 
   return iret;
 }

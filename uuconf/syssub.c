@@ -96,8 +96,8 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
       OP (uuconf_fcalled); \
       OP (uuconf_fcallback); \
       OP (uuconf_fsequence); \
-      OP (uuconf_fcall_request); \
-      OP (uuconf_fcalled_request); \
+      OP (uuconf_fsend_request); \
+      OP (uuconf_frec_request); \
       OP (uuconf_fcall_transfer); \
       OP (uuconf_fcalled_transfer); \
       OP (uuconf_schat.uuconf_fstrip); \
@@ -334,10 +334,10 @@ _uuconf_isystem_basic_default (qglobal, q)
 	q->uuconf_scalled_chat.uuconf_ctimeout = 60;
       if (q->uuconf_scalled_chat.uuconf_fstrip < 0)
 	q->uuconf_scalled_chat.uuconf_fstrip = TRUE;
-      if (q->uuconf_fcall_request < 0)
-	q->uuconf_fcall_request = TRUE;
-      if (q->uuconf_fcalled_request < 0)
-	q->uuconf_fcalled_request = TRUE;
+      if (q->uuconf_fsend_request < 0)
+	q->uuconf_fsend_request = TRUE;
+      if (q->uuconf_frec_request < 0)
+	q->uuconf_frec_request = TRUE;
       if (q->uuconf_fcall_transfer < 0)
 	q->uuconf_fcall_transfer = TRUE;
       if (q->uuconf_fcalled_transfer < 0)

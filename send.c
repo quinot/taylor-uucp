@@ -737,9 +737,9 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
 
   qsys = qdaemon->qsys;
 
-  if (! qsys->uuconf_fcall_request)
+  if (! qsys->uuconf_fsend_request)
     {
-      ulog (LOG_ERROR, "%s: remote system not permitted to request files",
+      ulog (LOG_ERROR, "%s: not permitted to send files to remote",
 	    qcmd->zfrom);
       return fremote_rec_fail (FAILURE_PERM, iremote);
     }

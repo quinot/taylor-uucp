@@ -586,7 +586,10 @@ ihadd_machine_perm (qglobal, qsys, qperm)
      struct uuconf_system *qsys;
      struct shpermissions *qperm;
 {
-  qsys->uuconf_fcall_request = qperm->frequest;
+  if (qperm->frequest >= 0)
+    qsys->uuconf_fsend_request = qperm->frequest;
+  else
+    qsys->uuconf_fsend_request = FALSE;
   qsys->uuconf_pzremote_send = qperm->pzread;
   qsys->uuconf_pzremote_receive = qperm->pzwrite;
   qsys->uuconf_pzcmds = qperm->pzcommands;
@@ -607,7 +610,10 @@ ihadd_logname_perm (qglobal, qsys, qperm)
      struct shpermissions *qperm;
 {
   qsys->uuconf_fcalled = TRUE;
-  qsys->uuconf_fcalled_request = qperm->frequest;
+  if (qperm->frequest >= 0)
+    qsys->uuconf_fsend_request = qperm->frequest;
+  else
+    qsys->uuconf_fsend_request = FALSE;
   qsys->uuconf_fcalled_transfer = qperm->fsendfiles;
   qsys->uuconf_pzremote_send = qperm->pzread;
   qsys->uuconf_pzremote_receive = qperm->pzwrite;

@@ -888,21 +888,21 @@ uvwrite_taylor_system (e, q)
       if (CHANGED (uuconf_zmax_remote_debug))
 	uvwrite_string (e, q->uuconf_zmax_remote_debug, "max-remote-debug");
 
-      if ((CHANGED (uuconf_fcall_request)
-	   || CHANGED (uuconf_fcalled_request))
-	  && (q->uuconf_fcall_request >= 0
-	      || q->uuconf_fcalled_request >= 0))
+      if ((CHANGED (uuconf_fsend_request)
+	   || CHANGED (uuconf_frec_request))
+	  && (q->uuconf_fsend_request >= 0
+	      || q->uuconf_frec_request >= 0))
 	{
-	  if (q->uuconf_fcall_request >= 0
-	      && (q->uuconf_fcall_request > 0
-		  ? q->uuconf_fcalled_request > 0
-		  : q->uuconf_fcalled_request == 0))
-	    uvwrite_boolean (e, q->uuconf_fcall_request, "request");
+	  if (q->uuconf_fsend_request >= 0
+	      && (q->uuconf_fsend_request > 0
+		  ? q->uuconf_frec_request > 0
+		  : q->uuconf_frec_request == 0))
+	    uvwrite_boolean (e, q->uuconf_fsend_request, "request");
 	  else
 	    {
-	      uvwrite_boolean (e, q->uuconf_fcall_request, "call-request");
-	      uvwrite_boolean (e, q->uuconf_fcalled_request,
-			       "called-request");
+	      uvwrite_boolean (e, q->uuconf_fsend_request, "send-request");
+	      uvwrite_boolean (e, q->uuconf_frec_request,
+			       "receive-request");
 	    }
 	}
 
@@ -1137,8 +1137,8 @@ uvwrite_hdb_system (e, qsys)
       azmachine[0] = q->uuconf_zname;
       azmachine[1] = NULL;
       sperm.pzmachine = azmachine;
-      if (q->uuconf_fcall_request >= 0)
-	sperm.frequest = q->uuconf_fcall_request;
+      if (q->uuconf_fsend_request >= 0)
+	sperm.frequest = q->uuconf_fsend_request;
       if (q->uuconf_pzremote_send != (char **) &_uuconf_unset
 	  && q->uuconf_pzremote_send != NULL)
 	sperm.pzread = q->uuconf_pzremote_send;
@@ -1204,8 +1204,8 @@ uvwrite_hdb_system (e, qsys)
       azlogname[1] = NULL;
       sperm.pzlogname = azlogname;
 
-      if (q->uuconf_fcalled_request >= 0)
-	sperm.frequest = q->uuconf_fcalled_request;
+      if (q->uuconf_fsend_request >= 0)
+	sperm.frequest = q->uuconf_fsend_request;
       if (q->uuconf_fcalled_transfer >= 0)
 	sperm.fsendfiles = q->uuconf_fcalled_transfer;
       if (q->uuconf_pzremote_send != (char **) &_uuconf_unset

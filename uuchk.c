@@ -405,20 +405,12 @@ ukshow (qsys, puuconf)
 	}
 
       if (fcall)
-	{
-	  printf (" %sllow remote requests when calling\n",
-		  qsys->uuconf_fcall_request ? "A" : "Do not a");
-	  printf (" May %smake local requests when calling\n",
-		  qsys->uuconf_fcall_transfer ? "" : "not ");
-	}
+	printf (" May %smake local requests when calling\n",
+		qsys->uuconf_fcall_transfer ? "" : "not ");
 
       if (fcalled)
-	{
-	  printf (" %sllow remote requests when called\n",
-		  qsys->uuconf_fcalled_request ? "A" : "Do not a");
-	  printf (" May %smake local requests when called\n",
-		  qsys->uuconf_fcalled_transfer ? "" : "not ");
-	}
+	printf (" May %smake local requests when called\n",
+		qsys->uuconf_fcalled_transfer ? "" : "not ");
 
       if (qsys->uuconf_fcall_transfer || qsys->uuconf_fcalled_transfer)
 	{
@@ -427,7 +419,9 @@ ukshow (qsys, puuconf)
 	    printf (" %s", *pz);
 	  printf ("\n");
 	}
-      if (qsys->uuconf_fcall_request || qsys->uuconf_fcalled_request)
+      if (! qsys->uuconf_fsend_request)
+	printf (" May not send files by remote request\n");
+      else
 	{
 	  printf (" May send by remote request:");
 	  for (pz = qsys->uuconf_pzremote_send; *pz != NULL; pz++)
@@ -441,9 +435,11 @@ ukshow (qsys, puuconf)
 	    printf (" %s", *pz);
 	  printf ("\n");
 	}
-      if (qsys->uuconf_fcall_request || qsys->uuconf_fcalled_request)
+      if (! qsys->uuconf_frec_request)
+	printf (" May not receive files by remote request\n");
+      else
 	{
-	  printf (" May accept by remote request:");
+	  printf (" May receive by remote request:");
 	  for (pz = qsys->uuconf_pzremote_receive; *pz != NULL; pz++)
 	    printf (" %s", *pz);
 	  printf ("\n");
