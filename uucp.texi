@@ -1940,6 +1940,21 @@ appeared in the system defaults are ignored.
 If this command does not appear, there are no restrictions on what grade
 of work may be done at what time.
 
+@item max-retries @var{number}
+@findex max-retries
+
+Gives the maximum number of times this system may be retried.  If this
+many calls to the system fail, it will be called at most once a day
+whatever the retry time is.  The default is 26.
+
+@item success-wait @var{number}
+
+A retry time, in seconds, which applies after a successful call.  This
+can be used to put a limit on how frequently the system is called.  For
+example, an argument of 1800 means that the system will not be called
+more than once every half hour.  The default is 0, which means that
+there is no limit.
+
 @item call-timegrade @var{character} @var{string}
 @findex call-timegrade
 
@@ -2213,7 +2228,20 @@ some other communication path with end to end reliability, as they do no
 checking of the data at all.  They will only be considered on a TCP port
 which is both reliable and eight bit.
 
+The @samp{i} protocol is a bidirectional protocol.  It requires an
+eight-bit connection.  It will run over a half-duplex link, such as
+Telebit modems in PEP mode, but for efficient use of such a connection
+you must use the @code{half-duplex} command (@pxref {port File}).
+
 The @samp{g} protocol is robust, but requires an eight-bit connection.
+
+The @samp{G} protocol is the System V Release 4 version of the @samp{g}
+protocol.
+
+The @samp{a} protocol is a Zmodem like protocol, contributed by Doug
+Evans.  It requires an eight-bit connection, but unlike the @samp{g} or
+@samp{i} protocol it will work if certain control characters may not be
+transmitted.
 
 The @samp{f} protocol is intended for use with X.25 connections; it
 checksums each file as a whole, so any error causes the entire file to
@@ -2225,7 +2253,7 @@ controlled; many aren't.
 The protocols will be considered in the order shown above.  This means
 that if neither the @code{seven-bit} nor the @code{reliable} command are
 used, the @samp{t} protocol will be used over a TCP connection and the
-@samp{g} protocol will be used over any other type of connection
+@samp{i} protocol will be used over any other type of connection
 (subject, of course, to what is supported by the remote system; it may
 be assumed that all systems support the @samp{g} protocol).
 
@@ -2246,8 +2274,52 @@ remaining strings are a command specific to that protocol which will be
 executed if that protocol is used.  A typical command is something like
 @samp{window 7}.  The particular commands are protocol specific.
 
-The @samp{g} protocol supports the following commands, all of which take
+The @samp{i} protocol supports the following commands, all of which take
 numeric arguments:
+
+@table @code
+@item window
+The window size to request the remote system to use.  This must be
+between 1 and 31 inclusive.  The default is 16.
+@item packet-size
+The packet size to request the remote system to use.  This must be
+between 1 and 4095 inclusive.  The default is 1024.
+@item remote-window
+If this is between 1 and 31 inclusive, the window size requested by the
+remote system is ignored and this is used instead.  The default is 0,
+which means that the remote system's request is honored.
+@item remote-packet-size
+If this is between 1 and 4095 inclusive, the packet size requested by
+the remote system is ignored and this is used instead.  The default is
+0, which means that the remote system's request is honored.
+@item sync-timeout
+The length of time, in seconds, to wait for a SYNC packet from the remote
+system.  SYNC packets are exchanged when the protocol is started.  The
+default is 10.
+@item sync-retries
+The number of times to retry sending a SYNC packet before giving up.
+The default is 6.
+@item timeout
+The length of time, in seconds, to wait for an incoming packet before
+sending a negative acknowledgement.  The default is 10.
+@item retries
+The number of times to retry sending a packet or a negative
+acknowledgement before giving up and closing the connection.  The
+default is 6.
+@item errors
+The maximum number of errors to permit before closing the connection.
+The default is 100.
+@item error-decay
+@item error-decay
+The rate at which to ignore errors.  Each time this many packets are
+received, the error count is decreased by one, so that a long connection
+with an occasional error will not exceed the limit set by @code{errors}.
+The default is 10.
+@end table
+
+The @samp{g} and @samp{G} protocols support the following commands, all
+of which take numeric arguments, except @code{short-packets} which takes
+a boolean argument:
 
 @table @code
 @item window
@@ -2281,6 +2353,11 @@ connection.  This must be larger than the packet size.  The default is
 The number of errors (malformed packets, out of order packets, bad
 checksums, or packets rejected by the remote system) to permit before
 dropping the connection.  The default is 100.
+@item error-decay
+The rate at which to ignore errors.  Each time this many packets are
+received, the error count is decreased by one, so that a long connection
+with an occasional error will not exceed the limit set by @code{errors}.
+The default is 10.
 @item remote-window
 If this is between 1 and 7 inclusive, the window size requested by the
 remote system is ignored and this is used instead.  This can be useful
@@ -2291,7 +2368,40 @@ If this is between 32 and 4096 inclusive the packet size requested by
 the remote system is ignored and this is used instead.  There is
 probably no good reason to use this.  The default is 0, which means that
 the remote system's request is honored.
+@item short-packets
+If this is true, then the code will optimize by sending shorter packets
+when there is less data to send.  This confuses some UUCP packages, such
+as System V Release 4 (when using the @samp{G} protocol) and Waffle;
+when connecting to such a package, this parameter must be set to false.
+The default is true for the @samp{g} protocol and false for the @samp{G}
+protocol.
 @end table
+
+The @samp{a} protocol is a Zmodem like protocol contributed by Doug
+Evans.  It supports the following commands, all of which take numeric
+arguments except for @code{escape-control}, which takes a boolean
+argument:
+
+@table @code
+@item timeout
+Number of seconds to wait for a packet to arrive.  The default is 10.
+@item retries
+The number of times to retry sending a packet.  The default is 10.
+@item startup-retries
+The number of times to retry sending the initialization packet.  The
+default is 4.
+@item garbage
+The number of garbage characters to accept before closing the
+connection.  The default is 2400.
+@item send-window
+The number of characters that may be sent before waiting for an
+acknowledgement.  The default is 1024.
+@item escape-control
+Whether to escape control characters.  If this is true, the protocol may
+be used over a connection which does not transmit certain control
+characters, such as @code{XON} or @code{XOFF}.  The connection must
+still transmit eight bit characters other than control characters.  The
+default is false.
 
 The @samp{f} protocol is intended for use with error-correcting modems
 only; it checksums each file as a whole, so any error causes the entire
@@ -2325,25 +2435,23 @@ call.
 
 @table @code
 
-@item call-request @var{boolean}
-@findex call-request
+@item send-request @var{boolean}
+@findex send-request
 
-The @var{boolean} is checked when the local system places the call.  It
-determines whether the remote system may request any file transfers.
-The default is yes.
+The @var{boolean} determines whether the remote system is permitted to
+request files from the local system.  The default is yes.
 
-@item called-request @var{boolean}
-@findex called-request
+@item receive-request @var{boolean}
+@findex receive-request
 
-The @var{boolean} is checked when the remote system calls in.  It
-determines whether the remote system may request any file transfers.
-The default is yes.
+The @var{boolean} determines whether the remote system is permitted to
+send files to the local system.  The default is yes.
 
 @item request @var{boolean}
 @findex request
 
-Equivalent to specifying both @samp{call-request @var{boolean}} and
-@samp{called-request @var{boolean}}.
+Equivalent to specifying both @samp{send-request @var{boolean}} and
+@samp{receive-request @var{boolean}}.
 
 @item call-transfer @var{boolean}
 @findex call-transfer
@@ -2658,6 +2766,13 @@ This is only used during protocol negotiation; if the argument is
 an unreliable communication link.  The default is @samp{true}.  It would
 be more common to specify this for a dialer rather than a port.
 
+@item half-duplex @var{boolean} [ any type ]
+@findex half-duplex in port file
+
+If the argument is @samp{true}, it means that the port only supports
+half-duplex connections.  This only affects bidirectional protocols, and
+causes them to not do bidirectional transfers.
+
 @item device @var{string} [ modem and direct only ]
 @findex device
 
@@ -2947,6 +3062,13 @@ port than for a dialer.
 This is only used during protocol negotiation; if it is @samp{false}, it
 forces selection of a protocol which works across an unreliable
 communication link.  The default is @samp{true}.
+
+@item half-duplex @var{boolean} [ any type ]
+@findex half-duplex in dial file
+
+If the argument is @samp{true}, it means that the dialer only supports
+half-duplex connections.  This only affects bidirectional protocols, and
+causes them to not do bidirectional transfers.
 
 @end table
 
