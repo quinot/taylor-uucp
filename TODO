@@ -181,12 +181,6 @@ be done in my system by adding an alternate and repeating the phone
 number.  Should there be a configuration parameter to do it in a
 simpler way?
 
-36.
-
-David Nugent: add an option to uuxqt to allow a nice value to be
-specified.  It's hard to do from a shell script because some systems
-don't permit shell scripts to be executed via execl.
-
 43.
 
 David Nugent: it would be nice to be able to set debugging, log, and
@@ -214,10 +208,6 @@ permit shell execution.
 Mike Park: we should accept an Shere=foo message with an alias of the
 system we are calling.
 
-79.
-
-Support Internet addressing when mailing uuxqt messages.
-
 81.
 
 Marty Shannon: log reason for dial failure (chat-fail string) in
@@ -244,7 +234,8 @@ communications with a particular system.
 105.
 
 T. William Wells: close and open the Debug file after each file
-transfer.
+transfer.  Alternatively, cycle through a series of Debug file names
+every 1000 lines or so.
 
 106.
 
@@ -284,12 +275,6 @@ Jarmo Raiha: uucp and uux fail to copy a file that is not world
 readable, because they are running under the wrong euid.  They should
 switch back and forth as necessary.
 
-122.
-
-Include Michael Richardson's debugging information somewhere in the
-documentation.  Or implement a better debugging scheme which allows
-individual control over each type of debugging command.
-
 124.
 
 Peter da Silva: perhaps there should be a ``chat-end-program'' command
@@ -315,3 +300,36 @@ expect string by using a trailing ~.  Some such feature would be
 desirable someday.
 
 131.
+
+Karl Lehenbauer: the default chat script does not work very well over
+a TCP connection; it should not output the first carriage return.
+
+132.
+
+Franc,ois Pinard: cut the total number of 'g' protocl errors by some
+fraction every X bytes.  T. William Wells: only abort if you get a
+certain percentage of errors out of a certain number of packets.
+
+133.
+
+T. William Wells: put informative headers in 'g' protocol log messages
+rather than just plain data.
+
+134.
+
+Chip Salzenberg: give .XQTDIR a mode of 0700 and the files put into it
+a mode of 0444.
+
+135.
+
+Gerben: document how to make UUCP secure, to the extent that it is
+possible at all.
+
+136.
+
+Thomas Fischer: every so often (1/2 hour) check to see whether there
+is any high grade work to be done and process it.  This should happen
+even on the slave, which means the slave needs some way to ask the
+master to hang up.  I think some uucico's do this by sending CYM.
+
+137.
