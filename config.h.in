@@ -423,10 +423,20 @@
 #define HAVE_RESTARTABLE_SYSCALLS 0
 
 /* Some systems supposedly need the following macros to be defined.
-   These are handled by the configure script.  If you are configuring
-   by hand, you may add appropriate definitions here, or just add them
-   to CFLAGS when running make.  */
+   These are handled by the configure script (it will turn #undef into
+   #define when appropriate, which is why the peculiar #ifndef #undef
+   construction is used).  If you are configuring by hand, you may add
+   appropriate definitions here, or just add them to CFLAGS when
+   running make.  */
+#ifndef _ALL_SOURCE
 #undef _ALL_SOURCE
+#endif
+#ifndef _POSIX_SOURCE
 #undef _POSIX_SOURCE
+#endif
+#ifndef _MINIX
 #undef _MINIX
+#endif
+#ifndef _POSIX_1_SOURCE
 #undef _POSIX_1_SOURCE
+#endif
