@@ -98,6 +98,13 @@ fcopy_open_file (efrom, zto, fpublic, fmkdirs, fsignals)
 	}
     }
 
+  if (! fsysdep_sync (eto, zto))
+    {
+      (void) fclose (eto);
+      (void) remove (zto);
+      return FALSE;
+    }
+
   if (fclose (eto) != 0)
     {
       ulog (LOG_ERROR, "fclose: %s", strerror (errno));
@@ -200,6 +207,13 @@ fcopy_open_file (ofrom, zto, fpublic, fmkdirs, fsignals)
 	  (void) remove (zto);
 	  return FALSE;
 	}
+    }
+
+  if (! fsysdep_sync (oto, zto))
+    {
+      (void) close (oto);
+      (void) remove (zto);
+      return FALSE;
     }
 
   if (close (oto) < 0)

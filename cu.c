@@ -1848,8 +1848,6 @@ icutake (puuconf, argc, argv, pvar, pinfo)
       return UUCONF_CMDTABRET_CONTINUE;
     }
 
-  ubuffree (zto);
-
   if (! fsysdep_cu_copy (FALSE)
       || ! fsysdep_terminal_signals (TRUE))
     ucuabort ();
@@ -1881,6 +1879,7 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 	    {
 	      ucuputs ("[timed out waiting for newline]");
 	      ucuputs (abCuconnected);
+	      ubuffree (zto);
 	      return UUCONF_CMDTABRET_CONTINUE;
 	    }
 	}
@@ -1962,8 +1961,16 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 
   ubuffree (zlook);
 
-  if (! ffileclose (e))
-    ferr = TRUE;
+  if (! fsysdep_sync (e, zto))
+    {
+      (void) ffileclose (e);
+      ferr = TRUE;
+    }
+  else
+    {
+      if (! ffileclose (e))
+	ferr = TRUE;
+    }
   if (ferr)
     ucuputs ("[file write error]");
 
@@ -1972,6 +1979,8 @@ icutake (puuconf, argc, argv, pvar, pinfo)
     ucuabort ();
 
   ucuputs (abCuconnected);
+
+  ubuffree (zto);
 
   return UUCONF_CMDTABRET_CONTINUE;
 }
