@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.36  1992/05/20  18:21:49  ian
+   Added -R option to uucp to recursively copy directories
+
    Revision 1.35  1992/05/18  18:50:44  ian
    Added -t option to uucp for uuto compatibility
 
@@ -497,18 +500,23 @@ extern openfile_t esysdep_open_receive P((const struct ssysteminfo *qsys,
 /* Move a file.  This is used to move a received file to its final
    location.  It is also used by uuxqt to move files in and out of the
    execute directory.  The zto argument is the file to create.  The
-   zorig argument is the name of the file to move.  The imode argument
-   is the Unix file mode to use for the final file; if it is zero, it
-   should be ignored and the file should be kept private to the UUCP
-   system.  If fcheck is TRUE, this should make sure the directory is
-   writeable by the user zuser (if zuser is NULL, then it must be
-   writeable by any user); this is to avoid a window of vulnerability
-   between fsysdep_in_directory and fsysdep_move_file.  This function
-   should return FALSE on error; the zorig file should be removed even
-   if an error occurs.  */
+   zorig argument is the name of the file to move.  If fmkdirs is
+   TRUE, then any necessary directories are created; fpublic indicates
+   whether they should be publically writeable or not.  If fcheck is
+   TRUE, this should make sure the directory is writeable by the user
+   zuser (if zuser is NULL, then it must be writeable by any user);
+   this is to avoid a window of vulnerability between
+   fsysdep_in_directory and fsysdep_move_file.  This function should
+   return FALSE on error; the zorig file should be removed even if an
+   error occurs.  */
 extern boolean fsysdep_move_file P((const char *zorig, const char *zto,
-				    unsigned int imode, boolean fcheck,
-				    const char *zuser));
+				    boolean fmkdirs, boolean fpublic,
+				    boolean fcheck, const char *zuser));
+
+/* Change the mode of a file.  The imode argument is a Unix mode.
+   This should return FALSE on error.  */
+extern boolean fsysdep_change_mode P((const char *zfile,
+				      unsigned int imode));
 
 /* Truncate a file which we are receiving into.  This may be done by
    closing the original file, removing it and reopening it.  This
@@ -907,5 +915,25 @@ extern boolean fsysdep_chdir P((const char *zdir));
    versions that support SIGTSTP.  In general, people can just shell
    out.  */
 extern boolean fsysdep_suspend P((void));
+
+/* Start getting files for uupick.  The zsystem argument may be NULL
+   to get files from all systems, or it may specify a particular
+   system.  This returns FALSE on error.  */
+extern boolean fsysdep_uupick_init P((const char *zsystem));
+
+/* Get the next file for uupick.  This returns the basic file name.
+   It sets *pzfull to the full name, and *pzfrom to the name of the
+   system which sent this file over.  The zsystem argument should be
+   the same as the argument to fsysdep_uupick_init.  This returns NULL
+   when all files been returned.  */
+extern const char *zsysdep_uupick P((const char *zsystem,
+				     const char **pzfrom,
+				     const char **pzfull));
+
+/* Clean up after getting files for uupick.  */
+extern boolean fsysdep_uupick_free P((const char *zsystem));
+
+/* Remove a directory and all the files in it.  */
+extern boolean fsysdep_rmdir P((const char *zdir));
 
 #endif /* ! defined (SYSTEM_H) */
