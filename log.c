@@ -697,18 +697,16 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
        probably correspond to the sequence number in the log file, but
        that is currently always 0; using this fake sequence number
        will still at least reveal which transfers are from different
-       calls.  We don't report a failed data transfer with this
-       format.  */
-    if (! fsucceeded)
-      return;
+       calls.  */
     ++iseq;
     fprintf (eLstats,
-	     "%s!%s %c (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld %s\n",
+	     "%s!%s %c (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld%s%s\n",
 	     zsystem, zuser, fmaster ? 'M' : 'S', zldate_and_time (),
 	     iLid, iseq, zLdevice == NULL ? "unknown" : zLdevice,
 	     fsent ? "->" : "<-",
 	     cbytes, csecs, cmicros / 1000, cbps,
-	     "bytes/sec");
+	     " bytes/sec",
+	     fsucceeded ? "" : " [PARTIAL FILE]");
   }
 #endif /* HAVE_HDB_LOGGING */
 
