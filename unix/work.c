@@ -741,6 +741,7 @@ zsysdep_save_temp_file (pseq)
   if (! fsysdep_move_file (qline->ztemp, zto, TRUE, FALSE, FALSE,
 			   (const char *) NULL))
     {
+      /* Leave the file where it was, not that is much help.  */
       ubuffree (zto);
       return "Could not move file to preservation directory";
     }

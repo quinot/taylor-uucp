@@ -932,6 +932,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
      size_t cdata;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+  char *zalc;
   const char *zerr;
   boolean fnever;
 
@@ -959,10 +960,13 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 
   fnever = FALSE;
 
+  zalc = NULL;
+
   if (! ffileclose (qtrans->e))
     {
       zerr = strerror (errno);
       ulog (LOG_ERROR, "%s: close: %s", qtrans->s.zto, zerr);
+      (void) remove (qinfo->ztemp);
     }
   else if (! fsysdep_move_file (qinfo->ztemp, qinfo->zfile, qinfo->fspool,
 				FALSE, ! qinfo->fspool,
@@ -970,7 +974,48 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 				 ? qtrans->s.zuser
 				 : (const char *) NULL)))
     {
-      zerr = "could not move to final location";
+      long cspace;
+
+      /* Keep the temporary file if there is 1.5 times the amount of
+	 required free space.  This is just a random guess, to make an
+	 unusual situtation potentially less painful.  */
+      cspace = csysdep_bytes_free (qinfo->ztemp);
+      if (cspace == -1)
+	cspace = FREE_SPACE_DELTA;
+      cspace -= (qdaemon->qsys->uuconf_cfree_space
+		 + qdaemon->qsys->uuconf_cfree_space / 2);
+      if (cspace < 0)
+	{
+	  (void) remove (qinfo->ztemp);
+	  zerr = "could not move to final location";
+	}
+      else
+	{
+	  const char *az[20];
+	  int i;
+
+	  zalc = zbufalc (sizeof "could not move to final location (left as )"
+			  + strlen (qinfo->ztemp));
+	  sprintf (zalc, "could not move to final location (left as %s)",
+		   qinfo->ztemp);
+	  zerr = zalc;
+
+	  i = 0;
+	  az[i++] = "The file\n\t";
+	  az[i++] = qinfo->ztemp;
+	  az[i++] =
+	    "\nwas saved because the move to the final location failed.\n";
+	  az[i++] = "See the UUCP logs for more details.\n";
+	  az[i++] = "The file transfer was from\n\t";
+	  az[i++] = qdaemon->qsys->uuconf_zname;
+	  az[i++] = "!";
+	  az[i++] = qtrans->s.zfrom;
+	  az[i++] = "\nto\n\t";
+	  az[i++] = qtrans->s.zto;
+	  az[i++] = "\nand was requested by\n\t";
+	  az[i++] = qtrans->s.zuser;
+	  (void) fsysdep_mail (OWNER, "UUCP temporary file saved", i, az);
+	}
       ulog (LOG_ERROR, "%s: %s", qinfo->zfile, zerr);
       fnever = TRUE;
     }
@@ -992,9 +1037,6 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
   
       zerr = NULL;
     }
-
-  if (zerr != NULL)
-    (void) remove (qinfo->ztemp);
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  FALSE, qtrans->cbytes, qtrans->isecs, qtrans->imicros,
@@ -1041,6 +1083,8 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	  (void) fsysdep_did_work (qtrans->s.pseq);
 	}
     }
+
+  ubuffree (zalc);
 
   /* If this is an execution request, we must create the execution
      file itself.  */
@@ -1111,7 +1155,10 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	{
 	  if (! fsysdep_move_file (ztemp, zxqtfile, TRUE, FALSE, FALSE,
 				   (const char *) NULL))
-	    fbad = TRUE;
+	    {
+	      (void) remove (ztemp);
+	      fbad = TRUE;
+	    }
 	}
 
       ubuffree (zxqtfile);

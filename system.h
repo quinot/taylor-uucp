@@ -436,8 +436,8 @@ extern openfile_t esysdep_open_receive P((const struct uuconf_system *qsys,
    this should make sure the directory is writeable by the user zuser
    (if zuser is NULL, then it must be writeable by any user); this is
    to avoid a window of vulnerability between fsysdep_in_directory and
-   fsysdep_move_file.  This function should return FALSE on error; the
-   zorig file should be removed even if an error occurs.  */
+   fsysdep_move_file.  This function should return FALSE on error, in
+   which case the zorig file should still exist.  */
 extern boolean fsysdep_move_file P((const char *zorig, const char *zto,
 				    boolean fmkdirs, boolean fpublic,
 				    boolean fcheck, const char *zuser));

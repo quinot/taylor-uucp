@@ -77,14 +77,12 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
       if (stat (zcopy, &s) != 0)
 	{
 	  ulog (LOG_ERROR, "stat (%s): %s", zcopy, strerror (errno));
-	  (void) remove (zorig);
 	  ubuffree (zcopy);
 	  return FALSE;
 	}
       if (! fsuser_access (&s, W_OK, zuser))
 	{
 	  ulog (LOG_ERROR, "%s: %s", zcopy, strerror (EACCES));
-	  (void) remove (zorig);
 	  ubuffree (zcopy);
 	  return FALSE;
 	}
@@ -107,10 +105,7 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
   if (fmkdirs && errno == ENOENT)
     {
       if (! fsysdep_make_dirs (zto, fpublic))
-	{
-	  (void) remove (zorig);
-	  return FALSE;
-	}
+	return FALSE;
       if (rename (zorig, zto) == 0)
 	return TRUE;
     }
@@ -127,7 +122,6 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
     {
       ulog (LOG_ERROR, "rename (%s, %s): %s", zorig, zto,
 	    strerror (errno));
-      (void) remove (zorig);
       return FALSE;
     }
 
@@ -135,7 +129,6 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
   if (stat ((char *) zorig, &s) < 0)
     {
       ulog (LOG_ERROR, "stat (%s): %s", zorig, strerror (errno));
-      (void) remove (zorig);
       return FALSE;
     }
 
@@ -148,26 +141,19 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
       if (fmkdirs && errno == ENOENT)
 	{
 	  if (! fsysdep_make_dirs (zto, fpublic))
-	    {
-	      (void) remove (zorig);
-	      return FALSE;
-	    }
+	    return FALSE;
 	  o = creat ((char *) zto, s.st_mode);
 	}
       if (o < 0)
 	{
 	  ulog (LOG_ERROR, "creat (%s): %s", zto, strerror (errno));
-	  (void) remove (zorig);
 	  return FALSE;
 	}
     }
   (void) close (o);
 
   if (! fcopy_file (zorig, zto, fpublic, fmkdirs))
-    {
-      (void) remove (zorig);
-      return FALSE;
-    }
+    return FALSE;
 
   if (remove (zorig) != 0)
     ulog (LOG_ERROR, "remove (%s): %s", zorig, strerror (errno));

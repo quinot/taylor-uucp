@@ -123,6 +123,7 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
   if (! fsysdep_move_file (ztemp, z, FALSE, FALSE, FALSE,
 			   (const char *) NULL))
     {
+      (void) remove (ztemp);
       ubuffree (ztemp);
       ubuffree (z);
       return NULL;
