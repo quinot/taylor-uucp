@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/01/15  20:48:41  ian
+   Mike Park: removed prototype for times
+
    Revision 1.34  1992/01/15  20:02:05  ian
    Mike Park: sh on NeXT interprets leading ~ (incredible, isn't it)
 
@@ -138,7 +141,6 @@ char tstuu_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
-#include <time.h>
 
 #if USE_STDIO && HAVE_UNISTD_H
 #include <unistd.h>
@@ -150,6 +152,10 @@ char tstuu_rcsid[] = "$Id$";
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/times.h>
+
+#if HAVE_TIME_H && HAVE_SYS_TIME_AND_TIME_H
+#include <time.h>
+#endif
 
 #include "getopt.h"
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/01/15  19:40:35  ian
+   Mike Park: handle HAVE_UNION_WAIT correctly and completely
+
    Revision 1.27  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -255,6 +258,12 @@
    or any system which does not use HAVE_POSIX_TERMIOS, do not change
    this line.  */
 #define HAVE_SYSIOCTL_H 1
+
+/* On Sun3/280 OS 3.2, and possibly other systems, <sys/time.h>
+   includes <time.h> and <time.h> does not permit multiple inclusion.
+   On such a system, set the following macro to 0.  This does not
+   override the value of HAVE_TIME_H.  */
+#define HAVE_SYS_TIME_AND_TIME_H 1
 
 /* On HPUX 8.0, and possibly other systems, fcntl returns an error if
    you try to specify both O_NONBLOCK and O_NDELAY.  If you get an
