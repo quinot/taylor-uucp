@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.9  1991/12/17  04:55:01  ian
    David Nugent: ignore SIGHUP in uucico and uuxqt
 
@@ -84,7 +87,7 @@ static void uqusage P((void));
 static sigret_t uqcatch P((int isig));
 static void uqdo_xqt_file P((const char *zfile,
 			     const struct ssysteminfo *qsys,
-			     const char *zcmd));
+			     const char *zcmd, boolean *pfprocessed));
 static void uqcleanup P((const char *zfile, int iflags));
 
 /* Long getopt options.  */
@@ -108,6 +111,7 @@ main (argc, argv)
   const char *zdosys = NULL;
   /* The command argument debugging level.  */
   int idebug = -1;
+  boolean fany;
   const char *z;
   const char *zgetsys;
   boolean ferr;
@@ -194,54 +198,67 @@ main (argc, argv)
       zQunlock_cmd = zcmd;
     }
 
-  /* Look for each execute file, and run it.  */
+  /* Keep scanning the execute files until we don't process any of
+     them.  */
 
-  if (! fsysdep_get_xqt_init ())
+  do
     {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
+      fany = FALSE;
 
-  qreadsys = NULL;
+      /* Look for each execute file, and run it.  */
 
-  while ((z = zsysdep_get_xqt (&zgetsys, &ferr)) != NULL)
-    {
-      char *zcopy;
-
-#if ! HAVE_ALLOCA
-      uclear_alloca ();
-#endif
-
-      /* It would be more efficient to pass zdosys down to the routines
-	 which retrieve execute files.  */
-      if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
-	continue;
-
-      if (qreadsys == NULL || strcmp (qreadsys->zname, zgetsys) != 0)
+      if (! fsysdep_get_xqt_init ())
 	{
-	  if (fread_system_info (zgetsys, &sreadsys))
-	    qreadsys = &sreadsys;
-	  else
-	    {
-	      qreadsys = &sUnknown;
-	      sUnknown.zname = xstrdup (zgetsys);
-	    }
-
-	  if (! fsysdep_make_spool_dir (qreadsys))
-	    continue;
+	  ulog_close ();
+	  usysdep_exit (FALSE);
 	}
 
-      zcopy = xstrdup (z);
+      qreadsys = NULL;
 
-      ulog_system (qreadsys->zname);
-      uqdo_xqt_file (zcopy, qreadsys, zcmd);
-      ulog_system (NULL);
-      ulog_user (NULL);
+      while ((z = zsysdep_get_xqt (&zgetsys, &ferr)) != NULL)
+	{
+	  char *zcopy;
+	  boolean fprocessed;
 
-      xfree ((pointer) zcopy);
+#if ! HAVE_ALLOCA
+	  uclear_alloca ();
+#endif
+
+	  /* It would be more efficient to pass zdosys down to the
+	     routines which retrieve execute files.  */
+	  if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
+	    continue;
+
+	  if (qreadsys == NULL
+	      || strcmp (qreadsys->zname, zgetsys) != 0)
+	    {
+	      if (fread_system_info (zgetsys, &sreadsys))
+		qreadsys = &sreadsys;
+	      else
+		{
+		  qreadsys = &sUnknown;
+		  sUnknown.zname = xstrdup (zgetsys);
+		}
+
+	      if (! fsysdep_make_spool_dir (qreadsys))
+		continue;
+	    }
+
+	  zcopy = xstrdup (z);
+
+	  ulog_system (qreadsys->zname);
+	  uqdo_xqt_file (zcopy, qreadsys, zcmd, &fprocessed);
+	  ulog_system (NULL);
+	  ulog_user (NULL);
+
+	  if (fprocessed)
+	    fany = TRUE;
+	  xfree ((pointer) zcopy);
+	}
+
+      usysdep_get_xqt_free ();
     }
-
-  usysdep_get_xqt_free ();
+  while (fany);
 
   if (zcmd != NULL)
     {
@@ -546,13 +563,15 @@ tqset (argc, argv, pvar, zerr)
 /* Process an execute file.  The zfile argument is the name of the
    execute file.  The qsys argument describes the system it came from.
    The zcmd argument is the name of the command we are executing (from
-   the -c option) or NULL if any command is OK.  */
+   the -c option) or NULL if any command is OK.  This sets
+   *pfprocessed to TRUE if the file is ready to be executed.  */
 
 static void
-uqdo_xqt_file (zfile, qsys, zcmd)
+uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
      const char *zfile;
      const struct ssysteminfo *qsys;
      const char *zcmd;
+     boolean *pfprocessed;
 {
   char bgrade;
   const char *zcmds;
@@ -569,6 +588,8 @@ uqdo_xqt_file (zfile, qsys, zcmd)
   struct ssysteminfo soutsys;
   const struct ssysteminfo *qoutsys;
   boolean fshell;
+
+  *pfprocessed = FALSE;
 
   bgrade = zfile[strlen (zfile) - 5];
 
@@ -713,6 +734,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
     }
 
   iclean |= REMOVE_FILE | REMOVE_NEEDED;
+  *pfprocessed = TRUE;
 
   /* Get the address to mail results to.  Prepend the system from
      which the execute file originated, since mail addresses are
@@ -744,7 +766,9 @@ uqdo_xqt_file (zfile, qsys, zcmd)
     {
       if (ferr)
 	{
-	  uqcleanup (zfile, iclean);
+	  /* If we get an error, try again later.  */
+	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	  *pfprocessed = FALSE;
 	  return;
 	}
 
@@ -792,7 +816,9 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 					  (const char *) NULL);
       if (zQinput == NULL)
 	{
-	  uqcleanup (zfile, iclean);
+	  /* If we get an error, try again later.  */
+	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	  *pfprocessed = FALSE;
 	  return;
 	}
       zQinput = xstrdup (zQinput);
@@ -824,6 +850,7 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 		  ulog (LOG_ERROR,
 			"Can't send standard output to unknown system %s",
 			zQoutsys);
+		  /* We should probably send mail here.  */
 		  uqcleanup (zfile, iclean);
 		  return;
 		}
@@ -835,7 +862,9 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 	 
 	  if (! fsysdep_make_spool_dir (qoutsys))
 	    {
-	      uqcleanup (zfile, iclean);
+	      /* If we get an error, try again later.  */
+	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	      *pfprocessed = FALSE;
 	      return;
 	    }
 	}
@@ -844,7 +873,9 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 				      (char *) NULL);
       if (zdata == NULL)
 	{
-	  uqcleanup (zfile, iclean);
+	  /* If we get an error, try again later.  */
+	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	  *pfprocessed = FALSE;
 	  return;
 	}
 	 
@@ -870,7 +901,9 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 					      (const char *) NULL);
 	  if (zQoutfile == NULL)
 	    {
-	      uqcleanup (zfile, iclean);
+	      /* If we get an error, try again later.  */
+	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	      *pfprocessed = FALSE;
 	      return;
 	    }
 
@@ -928,12 +961,17 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 	  zname = zsysdep_in_dir (XQTDIR, azQfiles_to[i]);
 	  if (zname == NULL)
 	    {
-	      uqcleanup (zfile, iclean);
+	      /* If we get an error, try again later.  */
+	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	      *pfprocessed = FALSE;
 	      return;
 	    }
 	  if (! fsysdep_move_file (azQfiles[i], zname, 0))
 	    {
-	      uqcleanup (zfile, iclean);
+	      /* If we get an error, try again later.  This may not be
+		 correct, depending on what kind of error we get.  */
+	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	      *pfprocessed = FALSE;
 	      return;
 	    }
 
