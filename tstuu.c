@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.38  1992/01/19  02:53:05  ian
+   Mike Park: don't sleep when buffer is full; it's too slow
+
    Revision 1.37  1992/01/16  16:32:44  ian
    Mike Park: ioctl is sometimes declared varadic, so we can't declare it
 
@@ -218,14 +221,10 @@ char tstuu_rcsid[] = "$Id$";
 /* External functions.  */
 
 extern int select (), close (), dup2 (), access ();
-extern int read (), write (), unlink (), kill (), mkdir ();
+extern int read (), write (), unlink ();
 extern int fclose (), fflush (), rand (), system ();
 extern unsigned int sleep ();
 extern pid_t fork ();
-
-#if HAVE_WAITPID
-extern pid_t waitpid ();
-#endif
 
 #if HAVE_WAIT4
 extern pid_t wait4 ();
