@@ -114,21 +114,21 @@ _uuconf_iinit_global (pqglobal)
   azargs[2] = (char *) "Wk1705-0755,Sa,Su";
   iret = _uuconf_itimetable ((pointer) *pqglobal, 3, azargs,
 			     (pointer) NULL, (pointer) NULL);
-  if (iret == UUCONF_SUCCESS)
+  if (UUCONF_ERROR_VALUE (iret) == UUCONF_SUCCESS)
     {
       azargs[1] = (char *) "Night";
       azargs[2] = (char *) "Wk2305-0755,Sa,Su2305-1655";
       iret = _uuconf_itimetable ((pointer) *pqglobal, 3, azargs,
 				 (pointer) NULL, (pointer) NULL);
     }
-  if (iret == UUCONF_SUCCESS)
+  if (UUCONF_ERROR_VALUE (iret) == UUCONF_SUCCESS)
     {
       azargs[1] = (char *) "NonPeak";
       azargs[2] = (char *) "Wk1805-0655,Sa,Su";
       iret = _uuconf_itimetable ((pointer) *pqglobal, 3, azargs,
 				 (pointer) NULL, (pointer) NULL);
     }
-  if (iret != UUCONF_SUCCESS)
+  if (UUCONF_ERROR_VALUE (iret) != UUCONF_SUCCESS)
     {
       uuconf_free_block (pblock);
       *pqglobal = NULL;
@@ -173,5 +173,5 @@ _uuconf_itimetable (pglobal, argc, argv, pvar, pinfo)
   if (iret != UUCONF_SUCCESS)
     return iret | UUCONF_CMDTABRET_EXIT;
 
-  return iret;
+  return UUCONF_CMDTABRET_KEEP;
 }
