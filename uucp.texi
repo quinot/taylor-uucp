@@ -4444,6 +4444,7 @@ Matthew Lyle @file{<matt@@mips.mitek.com>}
 @file{djm@@eng.umd.edu} (David J. MacKenzie)
 John R MacMillan @file{<chance!john@@sq.sq.com>}
 @file{mem@@mv.MV.COM} (Mark E. Mallett)
+@file{pepe@@dit.upm.es} (Jose A. Manas)
 @file{martelli@@cadlab.sublink.org} (Alex Martelli)
 Yanek Martinson @file{<yanek@@mthvax.cs.miami.edu>}
 @file{les@@chinet.chi.il.us} (Leslie Mikesell)
