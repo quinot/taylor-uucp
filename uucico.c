@@ -2202,10 +2202,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   if (qdialer == &sdialer)
     (void) uuconf_dialer_free (puuconf, &sdialer);
 
-  /* Get any jobs queued for the system, and turn on the selected
-     protocol.  */
-  if (! fqueue (&sDaemon, (boolean *) NULL)
-      || ! (*sDaemon.qproto->pfstart) (&sDaemon, &zlog))
+  /* Turn on the selected protocol and get any jobs queued for the
+     system.  */
+  if (! (*sDaemon.qproto->pfstart) (&sDaemon, &zlog)
+      || ! fqueue (&sDaemon, (boolean *) NULL))
     {
       uclear_queue (&sDaemon);
       sstat.ttype = STATUS_FAILED;
