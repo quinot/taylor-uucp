@@ -195,7 +195,7 @@ ukhelp ()
   fprintf (stderr,
 	   " -v,--version: Print version and exit\n");
   fprintf (stderr,
-	   " --help: Print help\n");
+	   " --help: Print help and exit\n");
 }
 
 /* Dump out the information for a system.  */
