@@ -44,7 +44,7 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
      int ccmds;
      const struct scmd *pascmds;
 {
-  char abtempfile[sizeof "C..1234567890"];
+  char abtempfile[sizeof "TMP1234567890"];
   char *ztemp;
   FILE *e;
   int i;
