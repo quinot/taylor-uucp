@@ -70,6 +70,7 @@ main (argc, argv)
   char *zfile, *zfrom, *zfull;
   char *zallsys;
   char ab[1000];
+  boolean fquit;
 
   while ((iopt = getopt_long (argc, argv, "I:s:x:", asPlongopts,
 			      (int *) NULL)) != EOF)
@@ -111,7 +112,7 @@ main (argc, argv)
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
-  usysdep_initialize (puuconf, INIT_NOCHDIR);
+  usysdep_initialize (puuconf, INIT_GETCWD | INIT_NOCHDIR);
 
   zpubdir = NULL;
   if (zsystem != NULL)
@@ -136,8 +137,11 @@ main (argc, argv)
     usysdep_exit (FALSE);
 
   zallsys = NULL;
+  fquit = FALSE;
 
-  while ((zfile = zsysdep_uupick (zsystem, zpubdir, &zfrom, &zfull)) != NULL)
+  while (! fquit
+	 && ((zfile = zsysdep_uupick (zsystem, zpubdir, &zfrom, &zfull))
+	     != NULL))
     {
       boolean fdir;
       char *zto, *zlocal;
@@ -167,7 +171,10 @@ main (argc, argv)
 	    }
 
 	  if (ab[0] == 'q')
-	    break;
+	    {
+	      fquit = TRUE;
+	      break;
+	    }
 
 	  switch (ab[0])
 	    {
