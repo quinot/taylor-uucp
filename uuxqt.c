@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1992/03/11  02:09:19  ian
+   Correct bug in previous change
+
    Revision 1.32  1992/03/04  02:32:26  ian
    Handle executions on local system
 
@@ -666,6 +669,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   const struct ssysteminfo *qoutsys;
   boolean fshell;
   char *zfullcmd;
+  boolean ftemp;
 
   *pfprocessed = FALSE;
 
@@ -1151,8 +1155,19 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
 			 zabsolute, azQargs, zfullcmd, zQinput, zoutput,
-			 fshell, &zerror))
+			 fshell, &zerror, &ftemp))
     {
+      if (ftemp)
+	{
+	  ulog (LOG_NORMAL, "Will retry later (%s)", zfile);
+	  if (zoutput != NULL)
+	    (void) remove (zoutput);
+	  (void) remove (zerror);
+	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+	  *pfprocessed = FALSE;
+	  return;
+	}
+
       ulog (LOG_NORMAL, "Execution failed (%s)", zfile);
 
       if (zmail != NULL && ! fQno_ack)

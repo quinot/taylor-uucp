@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/03/11  00:18:50  ian
+   Save temporary file if file send fails
+
    Revision 1.27  1992/03/09  19:42:43  ian
    Ted Lindgreen: don't send mail for nonexistent file
 
@@ -584,10 +587,12 @@ extern boolean fsysdep_xqt_check_file P((const struct ssysteminfo *qsys,
    zoutput -- file name for standard output (may be NULL)
    fshell -- if TRUE, use /bin/sh to execute file
    pzerror -- set to name of standard error file
+   pftemp -- set to TRUE if error is temporary, FALSE otherwise
 
    If fshell is TRUE, the command should be executed with /bin/sh
-   (obviously, this can only really be done on Unix systems).  This
-   should return FALSE if an error occurrs.  */
+   (obviously, this can only really be done on Unix systems).  If an
+   error occurs this should return FALSE and set *pftemp
+   appropriately.  */
 extern boolean fsysdep_execute P((const struct ssysteminfo *qsys,
 				  const char *zuser,
 				  const char *zcmd,
@@ -596,7 +601,8 @@ extern boolean fsysdep_execute P((const struct ssysteminfo *qsys,
 				  const char *zinput,
 				  const char *zoutput,
 				  boolean fshell,
-				  const char **pzerror));
+				  const char **pzerror,
+				  boolean *pftemp));
 
 /* Lock a particular uuxqt command (e.g. rmail).  This should return
    FALSE if the command is already locked.  This is used to make sure
