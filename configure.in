@@ -12,6 +12,7 @@ M_PROG_INSTALL
 M_PROG_GCC
 CFLAGS=${CFLAGS--g}
 M_SUBST(CFLAGS)dnl
+M_SUBST(LDFLAGS)dnl
 dnl
 echo checking for mail program
 M_DEFINE([MAIL_PROGRAM],
@@ -24,6 +25,15 @@ M_DEFINE([ECHO_PROGRAM],
 [
 /* Set ECHO_PROGRAM to a program which echoes its arguments; if echo
    is a shell builtin you can just use \"echo\".  */])
+dnl this is just used to set LN_S in the Makefile
+echo checking for symbolic links
+if ln -s X NoSucHFile 2>/dev/null; then
+  LN_S='ln -s'
+else
+  LN_S='ln'
+fi
+rm -f NoSucHFile
+M_SUBST(LN_S)dnl
 
 ILT_HEADER_COMMENT([
 /* The following macros indicate what header files you have.  Set the
