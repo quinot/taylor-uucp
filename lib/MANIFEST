@@ -1,3 +1,5 @@
+Makefile.in
+MANIFEST
 bsrch.c
 bzero.c
 getlin.c
