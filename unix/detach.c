@@ -100,11 +100,15 @@ usysdep_detach ()
       while (getppid () != 1)
 	sleep (1);
 
-      ulog_id (getpid ());
+      ipid = getpid ();
+      ulog_id (ipid);
 
       /* Restore SIGHUP catcher if it wasn't being ignored.  */
       if (! fignored)
 	usset_signal (SIGHUP, ussignal, TRUE, (boolean *) NULL);
+
+      DEBUG_MESSAGE2 (DEBUG_PORT, "Forked; old PID %ld, new pid %ld",
+		      (long) igrp, (long) ipid);
     }
 
 #if ! HAVE_SETSID && HAVE_TIOCNOTTY
