@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/04/27  23:04:15  ian
+   Added several routines for cu support
+
    Revision 1.33  1992/04/14  19:03:17  ian
    Marty Shannon: uustat would remove empty command files
 
@@ -720,6 +723,13 @@ extern boolean fsysdep_access P((const char *zfile));
    it tried the transfer.  If access would be denied, this should log
    an error message and return FALSE.  */
 extern boolean fsysdep_daemon_access P((const char *zfile));
+
+/* Translate a destination from system!user to a place in the public
+   directory where uupick will get the file.  On Unix this produces
+   system!~/receive/user/localname, and that's probably what it has to
+   produce on any other system as well.  Returns NULL on a usage
+   error, or otherwise returns an allocated string.  */
+extern char *zsysdep_uuto P((const char *zdest));
 
 /* Return the jobid of a work file, given the sequence value.  On
    error this should log an error and return NULL.  The jobid is a

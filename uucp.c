@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/04/22  23:29:24  ian
+   Changed arguments to usysdep_initialize
+
    Revision 1.25  1992/03/15  04:51:17  ian
    Keep an array of signals we've received rather than a single variable
 
@@ -157,6 +160,8 @@ main (argc, argv)
   boolean fuucico = TRUE;
   /* -s: report status to named file.  */
   const char *zstatus_file = NULL;
+  /* -t: emulate uuto.  */
+  boolean fuuto = FALSE;
   /* -W: expand local file names only.  */
   boolean fexpand = TRUE;
   int i;
@@ -173,7 +178,7 @@ main (argc, argv)
   char *zoptions;
   boolean fexit;
 
-  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:rs:Wx:")) != EOF)
+  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:prs:tWx:")) != EOF)
     {
       switch (iopt)
 	{
@@ -182,6 +187,7 @@ main (argc, argv)
 	  fcopy = FALSE;
 	  break;
 
+	case 'p':
 	case 'C':
 	  /* Copy local files to spool directory.  */
 	  fcopy = TRUE;
@@ -232,6 +238,11 @@ main (argc, argv)
 	  zstatus_file = optarg;
 	  break;
 
+	case 't':
+	  /* Emulate uuto.  */
+	  fuuto = TRUE;
+	  break;
+
 	case 'W':
 	  /* Expand only local file names.  */
 	  fexpand = FALSE;
@@ -267,6 +278,23 @@ main (argc, argv)
     ucusage ();
 
   uread_config (zconfig);
+
+  /* If we are emulating uuto, translate the destination argument, and
+     notify the destination user.  */
+
+  if (fuuto)
+    {
+      if (*znotify == '\0')
+	{
+	  zexclam = strrchr (argv[argc - 1], '!');
+	  if (zexclam == NULL)
+	    ucusage ();
+	  znotify = zexclam + 1;
+	}
+      argv[argc - 1] = zsysdep_uuto (argv[argc - 1]);
+      if (argv[argc - 1] == NULL)
+	ucusage ();
+    }
 
   /* See if we are going to need to know the current directory.  We
      just check each argument to see whether it's an absolute
