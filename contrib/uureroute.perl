@@ -1,5 +1,5 @@
-#!/usr/local/bin/perl
-eval ' exec /usr/local/bin/perl $0 "$@" '
+#!/usr/bin/perl
+eval ' exec /usr/bin/perl $0 "$@" '
 	if $running_under_some_shell;
 
 # From a script by <Bill.Campbell@celestial.com>
@@ -34,7 +34,7 @@ $USAGE = "
 #
 ";
 
-$UUSTAT = "/usr/local/bin/uustat";
+$UUSTAT = "uustat";
 $SHELL = "/bin/sh";
 $SMAIL = "/bin/smail";
 
