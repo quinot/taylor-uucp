@@ -3,7 +3,7 @@
 # Prefix directory for installation directories.
 prefix = /usr/local
 
-# Where to installt uucico and uuxqt, and where to read configuration files
+# Where to install uucico and uuxqt, and where to read configuration files
 # from by default.  If you use this definition, $(prefix)/lib must exist.
 libdir = $(prefix)/lib/uucp
 
