@@ -2591,8 +2591,14 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
     case PARITYSETTING_DEFAULT:
       break;
     case PARITYSETTING_NONE:
+#if HAVE_PARITY_BUG
+      /* The Sony NEWS mishandles this for some reason.  */
+      iset = 0;
+      iclear = ANYP;
+#else
       iset = ANYP;
       iclear = 0;
+#endif
       fdo = TRUE;
       break;
     case PARITYSETTING_EVEN:
@@ -2667,8 +2673,23 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 
 #if HAVE_BSD_TTY
 
-  /* Input character stripping can not be controlled independently of
-     output parity generation, so we don't do it.  */
+#ifdef LPASS8
+  {
+    int i;
+
+    i = LPASS8;
+    if (tstrip == STRIPSETTING_EIGHTBITS)
+      {
+	i = LPASS8;
+	(void) ioctl (q->o, TIOCLBIS, &i);
+      }
+    else if (tstrip == STRIPSETTING_SEVENBITS)
+      {
+	i = LPASS8;
+	(void) ioctl (q->o, TIOCLBIC, &i);
+      }
+  }
+#endif
 
 #else /* ! HAVE_BSD_TTY */      
 

@@ -133,6 +133,20 @@
    DTR will not be reset when a serial port is closed.  */
 #define HAVE_RESET_BUG 0
 
+/* The Sony NEWS reportedly handles no parity by clearing both the odd
+   and even parity bits in the sgtty structure, unlike most BSD based
+   systems in which no parity is indicated by setting both the odd and
+   even parity bits.  Setting HAVE_PARITY_BUG to 1 will handle this
+   correctly.  */
+#define HAVE_PARITY_BUG 0
+
+#if HAVE_BSD_TTY
+#ifdef sony
+#undef HAVE_PARITY_BUG
+#define HAVE_PARITY_BUG 1
+#endif
+#endif
+
 /* On Ultrix 4.0, at least, setting CBREAK causes input characters to
    be stripped, regardless of the setting of LPASS8 and LLITOUT.  This
    can be worked around by using the termio call to reset ISTRIP.
