@@ -421,8 +421,13 @@ utransfree (q)
       q->iremote = 0;
     }
 
+  if (ffileisopen (q->e))
+    {
+      (void) ffileclose (q->e);
+      q->e = EFILECLOSED;
+    }
+
 #if DEBUG > 0
-  q->e = EFILECLOSED;
   q->zcmd = NULL;
   q->s.zfrom = NULL;
   q->s.zto = NULL;

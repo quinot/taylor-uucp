@@ -982,6 +982,7 @@ fremote_rec_reply (qtrans, qdaemon)
 				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
+      qtrans->e = EFILECLOSED;
       /* Should probably free qtrans here, but see the comment at the
          end of flocal_rec_send_request.  */
       return FALSE;
@@ -1127,7 +1128,10 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
     }
 
   if (qinfo->zexec == NULL)
-    (void) ffileclose (qtrans->e);
+    {
+      (void) ffileclose (qtrans->e);
+      qtrans->e = EFILECLOSED;
+    }
 
   fnever = FALSE;
   if (zdata[0] != 'C'

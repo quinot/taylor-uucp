@@ -481,11 +481,8 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
 
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, TRUE, FALSE,
 					(long) -1, &fhandled))
-	{
-	  (void) ffileclose (qtrans->e);
-	  return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
-				  (const char *) NULL);
-	}
+	return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
+				(const char *) NULL);
       if (fhandled)
 	return TRUE;
     }
@@ -805,6 +802,7 @@ fremote_send_reply (qtrans, qdaemon)
 				       qtrans->iremote))
     {
       (void) ffileclose (qtrans->e);
+      qtrans->e = EFILECLOSED;
       (void) remove (qinfo->ztemp);
       /* Should probably free qtrans here, but see the comment at the
          end of flocal_rec_send_request.  */
@@ -818,7 +816,6 @@ fremote_send_reply (qtrans, qdaemon)
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, TRUE, FALSE,
 					(long) -1, &fhandled))
 	{
-	  (void) ffileclose (qtrans->e);
 	  (void) remove (qinfo->ztemp);
 	  urrec_free (qtrans);
 	  return FALSE;
@@ -979,7 +976,6 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, FALSE, FALSE,
 					(long) -1, &fhandled))
 	{
-	  (void) ffileclose (qtrans->e);
 	  (void) remove (qinfo->ztemp);
 	  urrec_free (qtrans);
 	  return FALSE;
@@ -998,6 +994,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
     {
       zerr = strerror (errno);
       (void) ffileclose (qtrans->e);
+      qtrans->e = EFILECLOSED;
       (void) remove (qinfo->ztemp);
     }
   else if (! ffileclose (qtrans->e))
@@ -1005,76 +1002,81 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
       zerr = strerror (errno);
       ulog (LOG_ERROR, "%s: close: %s", qtrans->s.zto, zerr);
       (void) remove (qinfo->ztemp);
-    }
-  else if (! fsysdep_move_file (qinfo->ztemp, qinfo->zfile, qinfo->fspool,
-				FALSE, ! qinfo->fspool,
-				(qinfo->flocal
-				 ? qtrans->s.zuser
-				 : (const char *) NULL)))
-    {
-      long cspace;
-
-      /* Keep the temporary file if there is 1.5 times the amount of
-	 required free space.  This is just a random guess, to make an
-	 unusual situtation potentially less painful.  */
-      cspace = csysdep_bytes_free (qinfo->ztemp);
-      if (cspace == -1)
-	cspace = FREE_SPACE_DELTA;
-      cspace -= (qdaemon->qsys->uuconf_cfree_space
-		 + qdaemon->qsys->uuconf_cfree_space / 2);
-      if (cspace < 0)
-	{
-	  (void) remove (qinfo->ztemp);
-	  zerr = "could not move to final location";
-	}
-      else
-	{
-	  const char *az[20];
-	  int i;
-
-	  zalc = zbufalc (sizeof "could not move to final location (left as )"
-			  + strlen (qinfo->ztemp));
-	  sprintf (zalc, "could not move to final location (left as %s)",
-		   qinfo->ztemp);
-	  zerr = zalc;
-
-	  i = 0;
-	  az[i++] = "The file\n\t";
-	  az[i++] = qinfo->ztemp;
-	  az[i++] =
-	    "\nwas saved because the move to the final location failed.\n";
-	  az[i++] = "See the UUCP logs for more details.\n";
-	  az[i++] = "The file transfer was from\n\t";
-	  az[i++] = qdaemon->qsys->uuconf_zname;
-	  az[i++] = "!";
-	  az[i++] = qtrans->s.zfrom;
-	  az[i++] = "\nto\n\t";
-	  az[i++] = qtrans->s.zto;
-	  az[i++] = "\nand was requested by\n\t";
-	  az[i++] = qtrans->s.zuser;
-	  az[i++] = "\n";
-	  (void) fsysdep_mail (OWNER, "UUCP temporary file saved", i, az);
-	}
-      ulog (LOG_ERROR, "%s: %s", qinfo->zfile, zerr);
-      fnever = TRUE;
+      qtrans->e = EFILECLOSED;
     }
   else
     {
-      if (! qinfo->fspool)
+      qtrans->e = EFILECLOSED;
+      if (! fsysdep_move_file (qinfo->ztemp, qinfo->zfile, qinfo->fspool,
+			       FALSE, ! qinfo->fspool,
+			       (qinfo->flocal
+				? qtrans->s.zuser
+				: (const char *) NULL)))
 	{
-	  unsigned int imode;
+	  long cspace;
 
-	  /* Unless we can change the ownership of the file, the only
-	     choice to make about these bits is whether to set the
-	     execute bit or not.  */
-	  if ((qtrans->s.imode & 0111) != 0)
-	    imode = 0777;
+	  /* Keep the temporary file if there is 1.5 times the amount
+	     of required free space.  This is just a random guess, to
+	     make an unusual situtation potentially less painful.  */
+	  cspace = csysdep_bytes_free (qinfo->ztemp);
+	  if (cspace == -1)
+	    cspace = FREE_SPACE_DELTA;
+	  cspace -= (qdaemon->qsys->uuconf_cfree_space
+		     + qdaemon->qsys->uuconf_cfree_space / 2);
+	  if (cspace < 0)
+	    {
+	      (void) remove (qinfo->ztemp);
+	      zerr = "could not move to final location";
+	    }
 	  else
-	    imode = 0666;
-	  (void) fsysdep_change_mode (qinfo->zfile, imode);
+	    {
+	      const char *az[20];
+	      int i;
+
+	      zalc = zbufalc (sizeof "could not move to final location (left as )"
+			      + strlen (qinfo->ztemp));
+	      sprintf (zalc, "could not move to final location (left as %s)",
+		       qinfo->ztemp);
+	      zerr = zalc;
+
+	      i = 0;
+	      az[i++] = "The file\n\t";
+	      az[i++] = qinfo->ztemp;
+	      az[i++] =
+		"\nwas saved because the move to the final location failed.\n";
+	      az[i++] = "See the UUCP logs for more details.\n";
+	      az[i++] = "The file transfer was from\n\t";
+	      az[i++] = qdaemon->qsys->uuconf_zname;
+	      az[i++] = "!";
+	      az[i++] = qtrans->s.zfrom;
+	      az[i++] = "\nto\n\t";
+	      az[i++] = qtrans->s.zto;
+	      az[i++] = "\nand was requested by\n\t";
+	      az[i++] = qtrans->s.zuser;
+	      az[i++] = "\n";
+	      (void) fsysdep_mail (OWNER, "UUCP temporary file saved", i, az);
+	    }
+	  ulog (LOG_ERROR, "%s: %s", qinfo->zfile, zerr);
+	  fnever = TRUE;
 	}
+      else
+	{
+	  if (! qinfo->fspool)
+	    {
+	      unsigned int imode;
+
+	      /* Unless we can change the ownership of the file, the
+		 only choice to make about these bits is whether to
+		 set the execute bit or not.  */
+	      if ((qtrans->s.imode & 0111) != 0)
+		imode = 0777;
+	      else
+		imode = 0666;
+	      (void) fsysdep_change_mode (qinfo->zfile, imode);
+	    }
   
-      zerr = NULL;
+	  zerr = NULL;
+	}
     }
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,

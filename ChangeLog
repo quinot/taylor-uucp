@@ -1,5 +1,15 @@
 2002-02-14  Ian Lance Taylor  <ian@airs.com>
 
+	* trans.c (utransfree): If the file is open, close it.
+	* rec.c (flocal_rec_await_reply): Don't bother closing the file on
+	error.
+	(fremote_send_reply): Likewise.  Set the e field to EFILECLOSED
+	after closing it.
+	(frec_file_end): Likewise.
+	* send.c (fremote_rec_reply): Set the e field to EFILECLOSED after
+	closing it.
+	(fsend_await_confirm): Likewise.
+
 	* John Hughes: trans.c (struct sreceive_ack): Move definition
 	before local function prototypes.
 	(utfree_queue): New static function.
