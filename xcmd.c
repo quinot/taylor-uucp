@@ -97,8 +97,8 @@ flocal_xcmd_request (qtrans, qdaemon)
 					qtrans->iremote);
   ubuffree (zsend);
 
-  if (! fret)
-    utransfree (qtrans);
+  /* If fret is FALSE, we should free qtrans here, but see the comment
+     at the end of flocal_rec_send_request.  */
 
   return fret;
 }

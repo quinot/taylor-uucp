@@ -365,8 +365,13 @@ flocal_rec_send_request (qtrans, qdaemon)
 					qtrans->iremote);
   ubuffree (zsend);
 
-  if (! fret)
-    urrec_free (qtrans);
+  /* There is a potential space leak here: if pfsendcmd fails, we
+     might need to free qtrans.  However, it is possible that by the
+     time pfsendcmd returns, a response will have been received which
+     led to the freeing of qtrans anyhow.  One way to fix this would
+     be some sort of counter in qtrans to track allocations, but since
+     the space leak is small, and the conversation has failed anyhow,
+     it doesn't seem worth it.  */
 
   return fret;
 }
@@ -801,7 +806,8 @@ fremote_send_reply (qtrans, qdaemon)
     {
       (void) ffileclose (qtrans->e);
       (void) remove (qinfo->ztemp);
-      urrec_free (qtrans);
+      /* Should probably free qtrans here, but see the comment at the
+         end of flocal_rec_send_request.  */
       return FALSE;
     }
 
@@ -862,14 +868,7 @@ fremote_send_fail_send (qtrans, qdaemon)
 {
   struct srecfailinfo *qinfo = (struct srecfailinfo *) qtrans->pinfo;
   char ab[4];
-  boolean fret;
-
-  /* Wait for the end of file marker if we haven't gotten it yet.  */
-  if (! qinfo->freceived)
-    {
-      if (! fqueue_receive (qdaemon, qtrans))
-	return FALSE;
-    }
+  int ilocal, iremote;
 
   ab[0] = qtrans->s.bcmd;
   ab[1] = 'N';
@@ -899,18 +898,23 @@ fremote_send_fail_send (qtrans, qdaemon)
   
   ab[3] = '\0';
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, ab, qtrans->ilocal,
-					qtrans->iremote);
+  ilocal = qtrans->ilocal;
+  iremote = qtrans->iremote;
 
-  qinfo->fsent = TRUE;
-
-  if (qinfo->freceived)
+  /* Wait for the end of file marker if we haven't gotten it yet.  */
+  if (! qinfo->freceived)
+    {
+      qinfo->fsent = TRUE;
+      if (! fqueue_receive (qdaemon, qtrans))
+	return FALSE;
+    }
+  else
     {
       xfree (qtrans->pinfo);
       utransfree (qtrans);
     }
 
-  return fret;
+  return (*qdaemon->qproto->pfsendcmd) (qdaemon, ab, ilocal, iremote);
 }
 
 /* Discard data until we reach the end of the file.  This is used for
@@ -1235,7 +1239,7 @@ frec_file_send_confirm (qtrans, qdaemon)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   const char *zsend;
-  boolean fret;
+  int ilocal, iremote;
 
   if (! qinfo->fmoved)
     zsend = "CN5";
@@ -1253,17 +1257,18 @@ frec_file_send_confirm (qtrans, qdaemon)
       zsend = "CYM";
     }
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend,
-					qtrans->ilocal, qtrans->iremote);
-
-  /* Now, if that was a remote command, then when the confirmation
-     message is acked we no longer have to remember that we received
-     that file.  */
+  /* If that was a remote command, then, when the confirmation message
+     is acked, we no longer have to remember that we received that
+     file.  */
   if (! qinfo->flocal && qinfo->fmoved)
     usent_receive_ack (qdaemon, qtrans);
 
+  ilocal = qtrans->ilocal;
+  iremote = qtrans->iremote;
+
   urrec_free (qtrans);
-  return fret;
+
+  return (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, ilocal, iremote);
 }
 
 /* Discard a temporary file if it is not useful.  A temporary file is
