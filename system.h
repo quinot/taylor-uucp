@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1992/04/14  19:03:17  ian
+   Marty Shannon: uustat would remove empty command files
+
    Revision 1.32  1992/03/17  03:15:40  ian
    Pass command to fsysdep_execute as first element of argument array
 
@@ -136,18 +139,30 @@
 extern int cSysdep_max_name_len;
 
 /* Initialize.  If something goes wrong, this routine should just
-   exit.  The fdaemon argument is TRUE if called from uucico or uuxqt.
-   The fgetcwd argument is TRUE if the current working directory is
-   needed.  This is used because on Unix it can be expensive to
-   determine the current working directory (some versions of getcwd
-   fork a process), but in most cases we don't need to know it.
-   However, we are going to chdir to the spool directory, so we have
+   exit.  The argument is 0, or a combination of any of the following
+   flags.  */
+
+/* This is a daemon program.  This is TRUE when called from uucico or
+   uuxqt.  */
+#define INIT_DAEMON (01)
+
+/* This program needs to know the current working directory.  This is
+   used because on Unix it can be expensive to determine the current
+   working directory (some versions of getcwd fork a process), but in
+   most cases we don't need to know it.  However, we are going to
+   chdir to the spool directory (unless INIT_CHDIR is set), so we have
    to get the cwd now if we are ever going to get it.  Both uucp and
    uux use the function fsysdep_needs_cwd to determine whether they
    will need the current working directory, and pass the argument to
    usysdep_initialize appropriately.  There's probably a cleaner way
    to handle this, but this will suffice for now.  */
-extern void usysdep_initialize P((boolean fdaemon, boolean fgetcwd));
+#define INIT_GETCWD (02)
+
+/* This program should not chdir to the spool directory.  This may
+   only make sense on Unix.  It is set by cu.  */
+#define INIT_NOCHDIR (04)
+
+extern void usysdep_initialize P((int iflags));
 
 /* Exit the program.  The fsuccess argument indicates whether to
    return an indication of success or failure to the outer
@@ -764,5 +779,107 @@ extern void usysdep_all_status_free P((pointer phold));
 /* Display the process status of all processes holding lock files.
    This is uustat -p.  The return value is passed to usysdep_exit.  */
 extern boolean fsysdep_lock_status P((void));
+
+/* Return TRUE if the user has legitimate access to the port.  This is
+   used by cu to control whether the user can open a port directly,
+   rather than merely being able to dial out on it.  Opening a port
+   directly allows the modem to be reprogrammed.  */
+extern boolean fsysdep_port_access P((struct sport *));
+
+/* Return whether the given port could be named by the given line.  On
+   Unix, the line argument would be something like "ttyd0", and this
+   function should return TRUE if the named port is "/dev/ttyd0".  */
+extern boolean fsysdep_port_is_line P((struct sport *qport,
+				       const char *zline));
+
+/* Set the terminal into raw mode.  In this mode no input characters
+   should be treated specially, and characters should be made
+   available as they are typed.  The original terminal mode should be
+   saved, so that it can be restored by fsysdep_terminal_restore.  If
+   flocalecho is TRUE, then local echoing should still be done;
+   otherwise echoing should be disabled.  This function returns FALSE
+   on error.  */
+extern boolean fsysdep_terminal_raw P((boolean flocalecho));
+
+/* Restore the terminal back to the original setting, before
+   fsysdep_terminal_raw was called.  Returns FALSE on error.  */
+extern boolean fsysdep_terminal_restore P((void));
+
+/* Read a line from the terminal.  The fsysdep_terminal_raw function
+   will have been called.  This should print the zprompt argument
+   (unless it is NULL) and return the line, possibly in a common
+   static buffer, or NULL on error.  */
+extern const char *zsysdep_terminal_line P((const char *zprompt));
+
+/* Write a line to the terminal, ending with a newline.  This is
+   basically just puts (zline, stdout), except that the terminal will
+   be in raw mode, so on ASCII Unix systems the line needs to end with
+   \r\n.  */
+extern boolean fsysdep_terminal_puts P((const char *zline));
+
+/* If faccept is TRUE, permit the user to generate signals from the
+   terminal.  If faccept is FALSE, turn signals off again.  After
+   fsysdep_terminal_raw is called, signals should be off.  Return
+   FALSE on error.  */
+extern boolean fsysdep_terminal_signals P((boolean faccept));
+
+/* The cu program expects the system dependent code to handle the
+   details of copying data from the communications port to the
+   terminal.  This should be set up by fsysdep_cu_init, and done while
+   fsysdep_cu is called.  It is permissible to do it on a continual
+   basis (on Unix a subprocess handles it) so long as the copying can
+   be stopped by the fsysdep_cu_copy function.
+
+   The fsysdep_cu_init function does any system dependent
+   initialization needed for this.  */
+extern boolean fsysdep_cu_init P((void));
+
+/* Copy all data from the communications port to the terminal, and all
+   data from the terminal to the communications port.  Keep this up
+   until the escape character *zCuvar_escape is seen.  Set *pbcmd to
+   the character following the escape character; after the escape
+   character, the hostname should be printed, possibly after a delay.
+   If two escape characters are entered in sequence, this function
+   should send a single escape character to the port, and not return.
+   Returns FALSE on error.  */
+extern boolean fsysdep_cu P((char *pbcmd));
+
+/* If fcopy is TRUE, start copying data from the communications port
+   to the terminal.  If fcopy is FALSE, stop copying data.  This
+   function may be called several times during a cu session.  It
+   should return FALSE on error.  */
+extern boolean fsysdep_cu_copy P((boolean fcopy));
+
+/* Stop copying data from the communications port to the terminal, and
+   generally clean up after fsysdep_cu_init and fsysdep_cu.  Returns
+   FALSE on error.  */
+extern boolean fsysdep_cu_finish P((void));
+
+/* Run a shell command.  If zcmd is NULL, or *zcmd == '\0', just
+   start up a shell.  The second argument is one of the following
+   values.  This should return FALSE on error.  */
+enum tshell_cmd
+{
+  /* Attach stdin and stdout to the terminal.  */
+  SHELL_NORMAL,
+  /* Attach stdout to the communications port, stdin to the terminal.  */
+  SHELL_STDOUT_TO_PORT,
+  /* Attach stdin to the communications port, stdout to the terminal.  */
+  SHELL_STDIN_FROM_PORT,
+  /* Attach both stdin and stdout to the communications port.  */
+  SHELL_STDIO_ON_PORT
+};
+
+extern boolean fsysdep_shell P((const char *zcmd,
+				enum tshell_cmd tcmd));
+
+/* Change directory.  If zdir is NULL, or *zdir == '\0', change to the
+   user's home directory.  Return FALSE on error.  */
+extern boolean fsysdep_chdir P((const char *zdir));
+
+/* Suspend the current process.  This is only expected to work on Unix
+   versions that support SIGTSTP.  In general, people can just shell
+   out.  */
+extern boolean fsysdep_suspend P((void));
 
 #endif /* ! defined (SYSTEM_H) */
