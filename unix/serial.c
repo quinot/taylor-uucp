@@ -936,7 +936,13 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
   q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (q->zdevice != NULL)
-    ulog_device (strrchr (q->zdevice, '/') + 1);
+    {
+#if LOG_DEVICE_PREFIX
+      ulog_device (q->zdevice);
+#else
+      ulog_device (strrchr (q->zdevice, '/') + 1);
+#endif
+    }
   else
     {
       const char *zport;
