@@ -251,11 +251,10 @@ struct uuconf_system
      NULL, in which case the login script may not use \P.  */
   char *uuconf_zcall_password;
   /* The login name this system must use when calling in.  This may be
-     different for different alternates.  If this is NULL or "ANY" or
-     ": DUMMY :" then uuconf_validate must be called to make sure that
-     whatever login name was used is permitted for this machine.  The
-     string ": DUMMY :" is used when reading HDB files, for an entry
-     that must not used for accepting incoming calls.  */
+     different for different alternates.  This should only be examined
+     if uuconf_fcalled is TRUE.  If this is NULL or "ANY" then
+     uuconf_validate must be called to make sure that whatever login
+     name was used is permitted for this machine.  */
   char *uuconf_zcalled_login;
   /* If non-zero, then when this system calls in the call should not
      be allowed to proceed and the system should be called back.  */
@@ -733,15 +732,6 @@ extern int uuconf_dialer_free (void *uuconf_pglobal,
   (uuconf_free_block ((q)->uuconf_palloc), UUCONF_SUCCESS)
 #endif
 
-/* Get the callout login name and password for a system.  This will
-   set both *pzlog and *pzpass to a string allocated by malloc, or to
-   NULL if the value is not found.  If neither value is found, the
-   function will return UUCONF_NOT_FOUND.  */
-extern int uuconf_callout (void *uuconf_pglobal,
-			   const struct uuconf_system *uuconf_qsys,
-			   char **uuconf_pzlog,
-			   char **uuconf_pzpass);
-
 /* Get the local node name that should be used, given a login name.
    The login name may be NULL.  If it is not, this function will check
    for any special local name that may be associated with the login
@@ -755,6 +745,23 @@ extern int uuconf_callout (void *uuconf_pglobal,
 extern int uuconf_localname (void *uuconf_pglobal,
 			     const char *uuconf_zlogin,
 			     char **pzname);
+
+/* Get the callout login name and password for a system.  This will
+   set both *pzlog and *pzpass to a string allocated by malloc, or to
+   NULL if the value is not found.  If neither value is found, the
+   function will return UUCONF_NOT_FOUND.  */
+extern int uuconf_callout (void *uuconf_pglobal,
+			   const struct uuconf_system *uuconf_qsys,
+			   char **uuconf_pzlog,
+			   char **uuconf_pzpass);
+
+/* See if a login name is permitted for a system.  This will return
+   UUCONF_SUCCESS if it is permitted or UUCONF_NOT_FOUND if it is
+   invalid.  This simply calls uuconf_taylor_validate or returns
+   UUCONF_SUCCESS, depending on the value of HAVE_TAYLOR_CONFIG.  */
+extern int uuconf_validate (void *uuconf_pglobal,
+			    const struct uuconf_system *uuconf_qsys,
+			    const char *uuconf_zlogin);
 
 /* Compare two grades, returning < 0 if b1 should be executed before
    b2, == 0 if they are the same, or > 0 if b1 should be executed
@@ -776,8 +783,9 @@ extern int uuconf_port_free ();
 extern int uuconf_dialer_names ();
 extern int uuconf_dialer_info ();
 extern int uuconf_dialer_free ();
-extern int uuconf_callout ();
 extern int uuconf_localname ();
+extern int uuconf_callout ();
+extern int uuconf_validate ();
 extern int uuconf_grade_cmp ();
 
 #ifdef __OPTIMIZE__
@@ -861,6 +869,15 @@ extern int uuconf_taylor_dialer_info (void *uuconf_pglobal,
 				      const char *uuconf_zdialer,
 				      struct uuconf_dialer *uuconf_qdialer);
 
+/* Get the local node name that should be used, given a login name,
+   considering only the ``myname'' command in the Taylor UUCP
+   configuration files.  Unlike uuconf_localname, the zlogin argument
+   must not be NULL.  If the function returns UUCONF_SUCCESS, *pzname
+   will point to an malloced buffer.  */
+extern int uuconf_taylor_localname (void *uuconf_pglobal,
+				    const char *uuconf_zlogin,
+				    char **pzname);
+
 /* Get the callout login name and password for a system from the
    Taylor UUCP configuration files.  This will set both *pzlog and
    *pzpass to a string allocated by malloc, or to NULL if the value is
@@ -871,14 +888,14 @@ extern int uuconf_taylor_callout (void *uuconf_pglobal,
 				  char **uuconf_pzlog,
 				  char **uuconf_pzpass);
 
-/* Get the local node name that should be used, given a login name,
-   considering only the ``myname'' command in the Taylor UUCP
-   configuration files.  Unlike uuconf_localname, the zlogin argument
-   must not be NULL.  If the function returns UUCONF_SUCCESS, *pzname
-   will point to an malloced buffer.  */
-extern int uuconf_taylor_localname (void *uuconf_pglobal,
-				    const char *uuconf_zlogin,
-				    char **pzname);
+/* See if a login name is permitted for a system.  This will return
+   UUCONF_SUCCESS if it is permitted or UUCONF_NOT_FOUND if it is
+   invalid.  This checks whether the login name appears in a
+   called-login command with a list of system which does not include
+   the system qsys.  */
+extern int uuconf_taylor_validate (void *uuconf_pglobal,
+				   const struct uuconf_system *uuconf_qsys,
+				   const char *uuconf_zlogin);
 
 #else /* ! UUCONF_ANSI_C */
 
@@ -889,8 +906,9 @@ extern int uuconf_taylor_system_unknown ();
 extern int uuconf_taylor_find_port ();
 extern int uuconf_taylor_dialer_names ();
 extern int uuconf_taylor_dialer_info ();
-extern int uuconf_taylor_callout ();
 extern int uuconf_taylor_localname ();
+extern int uuconf_taylor_callout ();
+extern int uuconf_taylor_validate ();
 
 #endif /* ! UUCONF_ANSI_C */
 

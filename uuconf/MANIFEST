@@ -81,10 +81,12 @@ tportc.c
 tsinfo.c
 tsnams.c
 tsys.c
+tval.c
 ugtlin.c
 unk.c
 uuchk.c
 uuconv.c
+val.c
 vinit.c
 vport.c
 vsinfo.c
