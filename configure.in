@@ -1,8 +1,6 @@
 dnl Taylor UUCP configuration file
 dnl This should be processed with autoconf to produce a configure script.
 dnl Copyright (c) 1992 Ian Lance Taylor
-dnl This file is not part of the Taylor UUCP package; the file that is
-dnl generated from it is.
 dnl
 M_INIT(uucico.c)
 M_HEADER_FILE(conf.h)
@@ -60,6 +58,10 @@ ILT_HEADER_COMMENT([/* If pid_t is not defined in <sys/types.h>, give it a defin
 M_PID_T
 ILT_HEADER_COMMENT([/* If uid_t is not defined in <sys/types.h>, give it a definition here.  */])dnl
 M_UID_T
+ILT_HEADER_COMMENT([/* If gid_t is not defined in <sys/types.h>, give it a definition here.  */])
+M_LIBTHING_MISSING([gid_t in sys/types.h],
+[#include <sys/types.h>], [gid_t x;],
+M_DEFINE(gid_t, int))dnl
 ILT_HEADER_COMMENT([/* If off_t is not defined in <sys/types.h>, give it a definition here.  */])
 M_LIBTHING_MISSING([off_t in sys/types.h],
 [#include <sys/types.h>], [off_t x;],
@@ -143,7 +145,7 @@ M_ALLOCA
 ILT_FUNC_CHECK(vfprintf remove strdup strstr strcasecmp stricmp)
 ILT_FUNC_CHECK(strerror memset memcmp memchr memcpy memmove bcopy bcmp bzero)
 undefine([index])
-ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch)
+ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch getgrent)
 ILT_FUNC_CHECK(gethostname uname setitimer napms nap usleep poll select)
 ILT_FUNC_CHECK(sigsetjmp setret getcwd getwd waitpid wait4 socket)
 ILT_FUNC_CHECK(getdtablesize sysconf setsid setpgrp sigaction sigvec)
