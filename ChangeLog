@@ -1,5 +1,7 @@
 2003-05-29  Ian Lance Taylor  <ian@airs.com>
 
+	* Released version 1.07.
+
 	* Makefile.am (dist-hook): New target.
 	* Makefile.in: Rebuild.
 
