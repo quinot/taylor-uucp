@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.8  1991/11/15  19:17:32  ian
    Hannu Strang: copy stdin using fread/fwrite, not fgets/fputs
 
@@ -65,6 +68,22 @@ char uux_rcsid[] = "$Id$";
 
 #include "system.h"
 #include "sysdep.h"
+
+/* These character lists should, perhaps, be in sysdep.h.  */
+
+/* This is the list of shell metacharacters that we check for.  If one
+   of these is present, we request uuxqt to execute the command with
+   /bin/sh.  Otherwise we let it execute using execve.  */
+
+#define ZSHELLCHARS "\"'`*?[;&()|<>\\$"
+
+/* This is the list of word separators.  We break filename arguments
+   at these characters.  */
+#define ZSHELLSEPS ";&*()|<>"
+
+/* This is the list of word separators without the redirection
+   operators.  */
+#define ZSHELLNONREDIRSEPS ";&*()|"
 
 /* Long getopt options.  */
 
@@ -137,6 +156,7 @@ main (argc, argv)
   const char *zxqtname;
   char abxqt_tname[CFILE_NAME_LEN];
   char abxqt_xname[CFILE_NAME_LEN];
+  boolean fneedshell;
   char *zprint;
 
   /* We need to be able to read a single - as an option, which getopt
@@ -304,41 +324,27 @@ main (argc, argv)
     zuser = "unknown";
 
   /* The command and files arguments could be quoted in any number of
-     ways, so we split them apart ourselves.  We force a space after
-     a leading > or < to make them easier to handle below.  */
+     ways, so we split them apart ourselves.  */
   clen = 1;
   for (i = optind; i < argc; i++)
-    clen += strlen (argv[i]) + 2;
+    clen += strlen (argv[i]) + 1;
 
   zargs = (char *) alloca (clen);
   *zargs = '\0';
   for (i = optind; i < argc; i++)
     {
-      const char *zcat;
-      
-      if (argv[i][0] == '>')
-	{
-	  strcat (zargs, "> ");
-	  zcat = argv[i] + 1;
-	}
-      else if (argv[i][0] == '<')
-	{
-	  strcat (zargs, "< ");
-	  zcat = argv[i] + 1;
-	}
-      else
-	zcat = argv[i];
-
-      strcat (zargs, zcat);
+      strcat (zargs, argv[i]);
       strcat (zargs, " ");
     }
 
-  /* The first argument is the command to execute.  Figure out which
-     system the command is to be executed on.  */
-  zcmd = zargs;
-  zargs += strcspn (zargs, " \t");
-  if (*zargs != '\0')
-    *zargs++ = '\0';
+  /* The first argument is the command to execute.  */
+  clen = strcspn (zargs, ZSHELLSEPS);
+  zcmd = (char *) alloca (clen + 1);
+  strncpy (zcmd, zargs, clen);
+  zcmd[clen] = '\0';
+  zargs += clen;
+
+  /* Figure out which system the command is to be executed on.  */
   zexclam = strchr (zcmd, '!');
   if (zexclam == NULL)
     {
@@ -380,6 +386,12 @@ main (argc, argv)
       usysdep_exit (FALSE);
     }
 
+  /* Split the arguments out into an array.  We break the arguments
+     into alternating sequences of characters not in ZSHELLSEPS
+     and characters in ZSHELLSEPS.  We remove whitespace.  We
+     separate the redirection characters '>' and '<' into their
+     own arguments to make them easier to process below.  */
+
   calloc_args = 10;
   pzargs = (char **) xmalloc (calloc_args * sizeof (char *));
   cargs = 0;
@@ -388,14 +400,38 @@ main (argc, argv)
        zarg != NULL;
        zarg = strtok ((char *) NULL, " \t"))
     {
-      if (cargs >= calloc_args)
+      while (*zarg != '\0')
 	{
-	  calloc_args += 10;
-	  pzargs = (char **) xrealloc (pzargs,
-				       calloc_args * sizeof (char *));
+	  if (cargs >= calloc_args + 1)
+	    {
+	      calloc_args += 10;
+	      pzargs = (char **) xrealloc ((pointer) pzargs,
+					   calloc_args * sizeof (char *));
+	    }
+
+	  clen = strcspn (zarg, ZSHELLSEPS);
+	  if (clen > 0)
+	    {
+	      pzargs[cargs] = (char *) xmalloc (clen + 1);
+	      strncpy (pzargs[cargs], zarg, clen);
+	      pzargs[cargs][clen] = '\0';
+	      ++cargs;
+	      zarg += clen;
+	    }
+
+	  /* We deliberately separate '>' and '<' out.  */
+	  if (*zarg != '\0')
+	    {
+	      clen = strspn (zarg, ZSHELLNONREDIRSEPS);
+	      if (clen == 0)
+		clen = 1;
+	      pzargs[cargs] = (char *) xmalloc (clen + 1);
+	      strncpy (pzargs[cargs], zarg, clen);
+	      pzargs[cargs][clen] = '\0';
+	      ++cargs;
+	      zarg += clen;
+	    }
 	}
-      pzargs[cargs] = zarg;
-      ++cargs;
     }
 
   /* Name and open the execute file.  If the execution is to occur on
@@ -835,14 +871,28 @@ main (argc, argv)
 	}
     }
 
-  /* Here all the arguments have been determined, so the command
-     can be written out.  */
+  /* Here all the arguments have been determined, so the command can
+     be written out.  If any of the arguments contain shell
+     metacharacters, we request remote execution with /bin/sh (this is
+     the 'e' command in the execute file).  The default is assumed to
+     be remote execution with execve.  */
 
   fprintf (eXxqt_file, "C %s", zcmd);
 
+  fneedshell = FALSE;
+
+  if (zcmd[strcspn (zcmd, ZSHELLCHARS)] != '\0')
+    fneedshell = TRUE;
+
   for (i = 0; i < cargs; i++)
-    if (pzargs[i] != NULL)
-      fprintf (eXxqt_file, " %s", pzargs[i]);
+    {
+      if (pzargs[i] != NULL)
+	{
+	  fprintf (eXxqt_file, " %s", pzargs[i]);
+	  if (pzargs[i][strcspn (pzargs[i], ZSHELLCHARS)] != '\0')
+	    fneedshell = TRUE;
+	}
+    }
 
   fprintf (eXxqt_file, "\n");
 
@@ -862,6 +912,9 @@ main (argc, argv)
 
   if (zstatus_file != NULL)
     uxadd_xqt_line ('M', zstatus_file, (const char *) NULL);
+
+  if (fneedshell)
+    uxadd_xqt_line ('e', (const char *) NULL, (const char *) NULL);
 
   if (fclose (eXxqt_file) != 0)
     ulog (LOG_FATAL, "fclose: %s", strerror (errno));
