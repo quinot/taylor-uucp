@@ -650,7 +650,7 @@ fsserial_lockfile (flok, qconn)
 		  strerror (errno));
 	    return FALSE;
 	  }
-	zalc = zbufalc (sizeof "LK.123.123.123");
+	zalc = zbufalc (sizeof "LK.1234567890.1234567890.1234567890");
 	sprintf (zalc, "LK.%03d.%03d.%03d", major (s.st_dev),
 		 major (s.st_rdev), minor (s.st_rdev));
 	z = zalc;
