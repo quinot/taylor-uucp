@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.2  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -73,8 +76,6 @@ main (argc, argv)
   const char *zuser = NULL;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
-  /* -X: set debugging level.  */
-  int idebug = -1;
   /* -x: display uuxqt log file.  */
   boolean fuuxqt = FALSE;
   const char *zfile;
@@ -108,8 +109,10 @@ main (argc, argv)
 	  break;
 
 	case 'X':
+#if DEBUG > 1
 	  /* Set debugging level.  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 0:
@@ -126,9 +129,6 @@ main (argc, argv)
     ulusage ();
 
   uread_config (zconfig);
-
-  if (idebug != -1)
-    iDebug = idebug;
 
   usysdep_initialize (FALSE, FALSE);
 

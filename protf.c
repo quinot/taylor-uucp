@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.10  1992/01/16  18:16:58  ian
    Niels Baggesen: add some debugging messages
 
@@ -193,10 +196,7 @@ ffsendcmd (z)
   int clen;
   char *zalc;
 
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "ffsendcmd: Sending command \"%s\"", z);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "ffsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
   zalc = (char *) alloca (clen + 2);
@@ -467,11 +467,10 @@ ffprocess_data (pfexit, pcneed)
 
       if (zto != zstart)
 	{
-#if DEBUG > 8
-	  if (iDebug > 8)
-	    ulog (LOG_DEBUG, "ffprocess: Calling fgot_data with %d bytes",
-		  zto - zstart);
-#endif
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "ffprocess: Calling fgot_data with %d bytes",
+			  zto - zstart);
+
 	  cFrec_data += zto - zstart;
 	  if (! fgot_data (zstart, zto - zstart, FALSE, TRUE, pfexit))
 	    return FALSE;
@@ -597,10 +596,7 @@ fffile (fstart, fsend, pfredo, cbytes)
 	  if (*z == 'G')
 	    return TRUE;
 
-#if DEBUG > 4
-	  if (iDebug > 4)
-	    ulog (LOG_DEBUG, "fffile: Got \"%s\"", z);
-#endif
+	  DEBUG_MESSAGE1 (DEBUG_PROTO, "fffile: Got \"%s\"", z);
 
 	  ulog (LOG_ERROR, "File send failed");
 	  return FALSE;
@@ -631,11 +627,10 @@ fffile (fstart, fsend, pfredo, cbytes)
 
 	  if (icheck != (iFcheck & 0xffff))
 	    {
-#if DEBUG > 4
-	      if (iDebug > 4)
-		ulog (LOG_DEBUG, "Checksum failed; calculated 0x%x, got 0x%x",
-		      iFcheck & 0xffff, icheck);
-#endif
+	      DEBUG_MESSAGE2 (DEBUG_PROTO,
+			      "Checksum failed; calculated 0x%x, got 0x%x",
+			      iFcheck & 0xffff, icheck);
+
 	      ++cFretries;
 	      if (cFretries > cFmaxretries)
 		{

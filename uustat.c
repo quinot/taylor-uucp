@@ -23,18 +23,21 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1992/03/03  21:34:55  ian
+   Handle local execution files
+
    Revision 1.4  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
    Revision 1.3  1992/02/24  20:36:27  ian
    Roberto Biancardi: skip spaces after strtok (NULL, "")
 
- * Revision 1.2  1992/02/23  03:26:51  ian
- * Overhaul to use automatic configure shell script
- *
- * Revision 1.1  1992/02/20  04:18:59  ian
- * Initial revision
- *
+   Revision 1.2  1992/02/23  03:26:51  ian
+   Overhaul to use automatic configure shell script
+
+   Revision 1.1  1992/02/20  04:18:59  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -128,8 +131,6 @@ main (argc, argv)
   int iyounghours = -1;
   /* -I file: set configuration file.  */
   const char *zconfig = NULL;
-  /* -x number: set debugging level.  */
-  int idebug = -1;
   int ccmds;
   long iold;
   long iyoung;
@@ -190,8 +191,10 @@ main (argc, argv)
 	  break;
 
 	case 'x':
+#if DEBUG > 1
 	  /* Set debugging level.  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 'y':
@@ -247,9 +250,6 @@ main (argc, argv)
 
   uread_config (zconfig);
 
-  if (idebug != -1)
-    iDebug = idebug;
-
   usysdep_initialize (FALSE, FALSE);
 
   /* If no commands were specified, we list all commands for the given
@@ -292,13 +292,13 @@ main (argc, argv)
     fret = fsysdep_rejuvenate_job (zrejuvenate);
   else if (fps)
     fret = fsysdep_lock_status ();
-#if DEBUG > 0
   else
     {
+#if DEBUG > 0
       ulog (LOG_FATAL, "Can't happen");
+#endif
       fret = FALSE;
     }
-#endif
 
   ulog_close ();
 
@@ -1014,5 +1014,5 @@ fsmachines ()
 
   usysdep_all_status_free (phold);
 
-  return ferr;
+  return ! ferr;
 }

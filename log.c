@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/03/08  16:42:41  ian
+   Ted Lindgreen: report port and login name in log file
+
    Revision 1.24  1992/03/04  00:36:44  ian
    Michael Richardson: better chat script debugging
 
@@ -158,7 +161,7 @@ static FILE *eLlog;
    may have to write to various different log files.  */
 static boolean fLlog_tried;
 
-#if DEBUG > 0
+#if DEBUG > 1
 /* The open debugging file.  */
 static FILE *eLdebug;
 
@@ -316,7 +319,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 
   if (! fLfile)
     e = stderr;
-#if DEBUG > 0
+#if DEBUG > 1
   else if ((int) ttype >= (int) LOG_DEBUG)
     {
       if (eLdebug == NULL && ! fLdebug_tried)
@@ -331,7 +334,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       if (e == NULL)
 	return;
     }
-#endif /* DEBUG > 0 */
+#endif /* DEBUG > 1 */
   else
     {
       if (eLlog == NULL && ! fLlog_tried)
@@ -383,7 +386,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     }
 
   edebug = NULL;
-#if DEBUG > 0
+#if DEBUG > 1
   if ((int) ttype < (int) LOG_DEBUG)
     edebug = eLdebug;
 #endif
@@ -402,7 +405,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     case LOG_FATAL:
       zhdr = "FATAL: ";
       break;
-#if DEBUG > 0
+#if DEBUG > 1
     case LOG_DEBUG:
       zhdr = "DEBUG: ";
       break;
@@ -548,7 +551,7 @@ ulog_close ()
       fLlog_tried = FALSE;
     }
 
-#if DEBUG > 0
+#if DEBUG > 1
   if (eLdebug != NULL)
     {
       (void) fclose (eLdebug);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.79  1992/03/11  19:53:55  ian
+   Improved chat script debugging
+
    Revision 1.78  1992/03/11  00:18:50  ian
    Save temporary file if file send fails
 
@@ -375,8 +378,6 @@ main (argc, argv)
   boolean fforce = FALSE;
   /* Whether we are the master  */
   boolean fmaster = FALSE;
-  /* Command line debugging level  */
-  int idebug = -1;
   /* Whether to give a single login prompt.  */
   boolean flogin = FALSE;
   /* Whether to do an endless loop of accepting calls  */
@@ -384,7 +385,9 @@ main (argc, argv)
   /* Whether to wait for an inbound call after doing an outbound call  */
   boolean fwait = FALSE;
   boolean fret = TRUE;
+#if DEBUG > 1
   int iholddebug;
+#endif
 
   while ((iopt = getopt (argc, argv,
 			 "DefI:lp:qr:s:S:u:x:X:w")) != EOF)
@@ -459,8 +462,10 @@ main (argc, argv)
 
 	case 'x':
 	case 'X':
+#if DEBUG > 1
 	  /* Set debugging level  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 'w':
@@ -488,11 +493,6 @@ main (argc, argv)
     }
 
   uread_config (zconfig);
-
-  /* Now set debugging level from command line arguments (overriding
-     configuration file).  */
-  if (idebug != -1)
-    iDebug = idebug;
 
 #ifdef SIGINT
   usysdep_signal (SIGINT);
@@ -549,9 +549,10 @@ main (argc, argv)
 
 	  ulog_system (sLocked_system.zname);
 
+#if DEBUG > 1
 	  iholddebug = iDebug;
-	  if (sLocked_system.idebug != -1)
-	    iDebug = sLocked_system.idebug;
+	  iDebug |= sLocked_system.idebug;
+#endif
 
 	  if (! fsysdep_lock_system (&sLocked_system))
 	    {
@@ -566,7 +567,9 @@ main (argc, argv)
 	      fLocked_system = FALSE;
 	    }
 
+#if DEBUG > 1
 	  iDebug = iholddebug;
+#endif
 
 	  ulog_system ((const char *) NULL);
 	}
@@ -597,9 +600,10 @@ main (argc, argv)
 
 		  ulog_system (pas[i].zname);
 
+#if DEBUG > 1
 		  iholddebug = iDebug;
-		  if (pas[i].idebug != -1)
-		    iDebug = pas[i].idebug;
+		  iDebug |= pas[i].idebug;
+#endif
 
 		  if (! fsysdep_lock_system (&pas[i]))
 		    {
@@ -621,7 +625,9 @@ main (argc, argv)
 		      fLocked_system = FALSE;
 		    }
 
+#if DEBUG > 1
 		  iDebug = iholddebug;
+#endif
 
 		  ulog_system ((const char *) NULL);
 		}
@@ -701,12 +707,16 @@ main (argc, argv)
 		{
 		  const struct ssysteminfo *qsys;
 
+#if DEBUG > 1
 		  iholddebug = iDebug;
+#endif
 		  fret = faccept_call (zsysdep_login_name (), qport,
 				       &qsys);
 		  if (qsys != NULL)
 		    zsystem = qsys->zname;
+#if DEBUG > 1
 		  iDebug = iholddebug;
+#endif
 		}
 	    }
 
@@ -1067,41 +1077,34 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 	  return FALSE;
 	}
     }
-#if DEBUG > 0
+#if DEBUG > 1
   else if (zstr[5] != '\0')
-      ulog (LOG_DEBUG, "fdo_call: Strange Shere: %s", zstr);
+    DEBUG_MESSAGE1 (DEBUG_HANDSHAKE,
+		    "fdo_call: Strange Shere: %s", zstr);
 #endif
 
-  /* We now send "S" name switches, where name is our UUCP name.  We
-     send a -x switch if we are debugging.  If we are using sequence
-     numbers with this system, we send a -Q argument with the sequence
-     number.  If the call-timegrade command was used, we send a -p
-     argument and a -vgrade= argument with the grade to send us (we
-     send both argument to make it more likely that one is
-     recognized).  We always send a -N (for new) switch to indicate
-     that we are prepared to accept file sizes.  */
+  /* We now send "S" name switches, where name is our UUCP name.  If
+     we are using sequence numbers with this system, we send a -Q
+     argument with the sequence number.  If the call-timegrade command
+     was used, we send a -p argument and a -vgrade= argument with the
+     grade to send us (we send both argument to make it more likely
+     that one is recognized).  We always send a -N (for new) switch to
+     indicate that we are prepared to accept file sizes.  */
   {
     char bgrade;
     const char *zuse_local;
     char *zsend;
 
-    /* If the call-timegrade command used, determine the grade we
-       should request of the other system.  */
-    if (qsys->zcalltimegrade == NULL)
-      bgrade = '\0';
-    else
-      {
-	bgrade = btimegrade (qsys->zcalltimegrade);
-	/* A \0 in this case means that no restrictions have been
-	   made.  */
-      }
+    /* Determine the grade we should request of the other system.  A
+       '\0' means that no restrictions have been made.  */
+    bgrade = btimegrade (qsys->zcalltimegrade);
 
     if (qsys->zlocalname != NULL)
       zuse_local = qsys->zlocalname;
     else
       zuse_local = zLocalname;
 
-    zsend = (char *) alloca (strlen (zuse_local) + 50);
+    zsend = (char *) alloca (strlen (zuse_local) + 70);
     if (! qsys->fsequence)
       {
 	if (bgrade == '\0')
@@ -1319,8 +1322,8 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       {
 	/* We don't even look for the hangup string from the other
 	   side unless we're in debugging mode.  */
-#if DEBUG > 2
-	if (iDebug > 2 && fret)
+#if DEBUG > 1
+	if (fret && FDEBUGGING (DEBUG_HANDSHAKE))
 	  {
 	    zstr = zget_uucp_cmd (FALSE);
 	    if (zstr != NULL)
@@ -1362,11 +1365,10 @@ fcall_failed (qsys, twhy, qstat, cretry)
      struct sstatus *qstat;
      int cretry;
 {
-#if DEBUG > 2
-  if (iDebug > 2)
-    ulog (LOG_DEBUG, "fcall_failed: Cause %d (%s)", twhy,
-	  azStatus[(int) twhy]);
-#endif
+  DEBUG_MESSAGE2 (DEBUG_HANDSHAKE,
+		  "fcall_failed: Cause %d (%s)", (int) twhy,
+		  azStatus[(int) twhy]);
+
   qstat->ttype = twhy;
   qstat->cretries++;
   qstat->ilast = isysdep_time ((long *) NULL);
@@ -1384,10 +1386,7 @@ static boolean flogin_prompt (qport)
 {
   const char *zuser, *zpass;
 
-#if DEBUG > 0
-  if (iDebug > 0)
-    ulog (LOG_DEBUG, "flogin_prompt: Waiting for login");
-#endif
+  DEBUG_MESSAGE0 (DEBUG_HANDSHAKE, "flogin_prompt: Waiting for login");
 
   do
     {
@@ -1412,15 +1411,21 @@ static boolean flogin_prompt (qport)
 	{
 	  if (fcheck_login (zhold, zpass))
 	    {
+#if DEBUG > 1
 	      int iholddebug;
+#endif
 
 	      /* We ignore the return value of faccept_call because we
 		 really don't care whether the call succeeded or not.
 		 We are going to reset the port anyhow.  */
+#if DEBUG > 1
 	      iholddebug = iDebug;
+#endif
 	      (void) faccept_call (zhold, qport,
 				   (const struct ssysteminfo **) NULL);
+#if DEBUG > 1
 	      iDebug = iholddebug;
+#endif
 	    }
 	}
     }
@@ -1678,8 +1683,9 @@ faccept_call (zlogin, qport, pqsys)
 
   ulog_system (qsys->zname);
 
-  if (qsys->idebug != -1)
-    iDebug = qsys->idebug;
+#if DEBUG > 1
+  iDebug |= qsys->idebug;
+#endif
 
   /* See if we are supposed to call the system back.  This will queue
      up an empty command.  It would be better to actually call back
@@ -1718,7 +1724,7 @@ faccept_call (zlogin, qport, pqsys)
   (void) fsysdep_set_status (qsys, &sstat);
 
   /* Check the arguments of the remote system.  We accept -x# to set
-     out debugging level and -Q# for a sequence number.  We may insist
+     our debugging level and -Q# for a sequence number.  We may insist
      on a sequence number.  The -p and -vgrade= arguments are taken to
      specify the lowest job grade that we should transfer; I think
      this is the traditional meaning, but I don't know.  The -N switch
@@ -1748,7 +1754,6 @@ faccept_call (zlogin, qport, pqsys)
 	{
 	  boolean frecognized;
 	  char *znext;
-	  int iwant;
 	  
 	  frecognized = FALSE;
 	  if (*zspace == '-')
@@ -1757,15 +1762,22 @@ faccept_call (zlogin, qport, pqsys)
 		{
 		case 'x':
 		  frecognized = TRUE;
-		  iwant = atoi (zspace + 2);
-		  if (iwant > qsys->imax_remote_debug)
-		    iwant = qsys->imax_remote_debug;
-		  if (iwant > iDebug)
-		    {
-		      ulog (LOG_NORMAL, "Setting debugging mode to %d",
-			    iwant);
-		      iDebug = iwant;
-		    }
+#if DEBUG > 1
+		  {
+		    int iwant;
+
+		    iwant = atoi (zspace + 2);
+		    if (! fnew)
+		      iwant = (1 << iwant) - 1;
+		    iwant &= qsys->imax_remote_debug;
+		    if ((iDebug | iwant) != iDebug)
+		      {
+			iDebug |= iwant;
+			ulog (LOG_NORMAL, "Setting debugging mode to 0%o",
+			      iDebug);
+		      }
+		  }
+#endif
 		  break;
 		case 'Q':
 		  frecognized = TRUE;
@@ -2026,8 +2038,8 @@ faccept_call (zlogin, qport, pqsys)
       {
 	/* We don't even look for the hangup string from the other
 	   side unless we're in debugging mode.  */
-#if DEBUG > 2
-	if (iDebug > 2 && fret)
+#if DEBUG > 1
+	if (fret && FDEBUGGING (DEBUG_HANDSHAKE))
 	  {
 	    zstr = zget_uucp_cmd (FALSE);
 	    if (zstr != NULL)
@@ -3126,8 +3138,9 @@ zget_uucp_cmd (frequired)
   int cgot;
   long iendtime;
   int ctimeout;
-#if DEBUG > 5
+#if DEBUG > 1
   int cchars;
+  int iolddebug;
 #endif
 
   iendtime = isysdep_time ((long *) NULL);
@@ -3136,12 +3149,13 @@ zget_uucp_cmd (frequired)
   else
     iendtime += CSHORTTIMEOUT;
 
-#if DEBUG > 5
+#if DEBUG > 1
   cchars = 0;
-  if (iDebug > 5)
+  iolddebug = iDebug;
+  if (FDEBUGGING (DEBUG_HANDSHAKE))
     {
       ulog (LOG_DEBUG_START, "zget_uucp_cmd: Got \"");
-      fPort_debug = FALSE;
+      iDebug &=~ DEBUG_INCOMING;
     }
 #endif
 
@@ -3154,12 +3168,12 @@ zget_uucp_cmd (frequired)
       /* Now b == -1 on timeout, -2 on error.  */
       if (b < 0)
 	{
-#if DEBUG > 5
-	  if (iDebug > 5)
+#if DEBUG > 1
+	  if (FDEBUGGING (DEBUG_HANDSHAKE))
 	    {
 	      ulog (LOG_DEBUG_END, "\" (%s)",
 		    b == -1 ? "timeout" : "error");
-	      fPort_debug = TRUE;
+	      iDebug = iolddebug;
 	    }
 #endif
 	  if (b == -1 && frequired)
@@ -3174,8 +3188,8 @@ zget_uucp_cmd (frequired)
       if (! isprint (b))
 	b &= 0x7f;
 
-#if DEBUG > 5
-      if (iDebug > 5)
+#if DEBUG > 1
+      if (FDEBUGGING (DEBUG_HANDSHAKE))
 	{
 	  char ab[5];
 
@@ -3224,22 +3238,22 @@ zget_uucp_cmd (frequired)
 
       if (b == '\0')
 	{
-#if DEBUG > 5
-	  if (iDebug > 5)
+#if DEBUG > 1
+	  if (FDEBUGGING (DEBUG_HANDSHAKE))
 	    {
 	      ulog (LOG_DEBUG_END, "\"");
-	      fPort_debug = TRUE;
+	      iDebug = iolddebug;
 	    }
 #endif
 	  return zalc;
 	}
     }
 
-#if DEBUG > 5
-  if (iDebug > 5)
+#if DEBUG > 1
+  if (FDEBUGGING (DEBUG_HANDSHAKE))
     {
       ulog (LOG_DEBUG_END, "\" (timeout)");
-      fPort_debug = TRUE;
+      iDebug = iolddebug;
     }
 #endif
 
@@ -3258,14 +3272,16 @@ zget_typed_line ()
   static int calc;
   int cgot;
 
-#if DEBUG > 5
+#if DEBUG > 1
   int cchars;
+  int iolddebug;
 
   cchars = 0;
-  if (iDebug > 5)
+  iolddebug = iDebug;
+  if (FDEBUGGING (DEBUG_CHAT))
     {
       ulog (LOG_DEBUG_START, "zget_typed_line: Got \"");
-      fPort_debug = FALSE;
+      iDebug &=~ DEBUG_INCOMING;
     }
 #endif
 
@@ -3280,11 +3296,11 @@ zget_typed_line ()
 
       if (b == -2 || iSignal != 0)
 	{
-#if DEBUG > 5
-	  if (iDebug > 5)
+#if DEBUG > 1
+	  if (FDEBUGGING (DEBUG_CHAT))
 	    {
 	      ulog (LOG_DEBUG_END, "\" (error)");
-	      fPort_debug = TRUE;
+	      iDebug = iolddebug;
 	    }
 #endif
 	  return NULL;
@@ -3293,8 +3309,8 @@ zget_typed_line ()
       if (b == -1)
 	continue;
 
-#if DEBUG > 5
-      if (iDebug > 5)
+#if DEBUG > 1
+      if (FDEBUGGING (DEBUG_CHAT))
 	{
 	  char ab[5];
 
@@ -3324,11 +3340,11 @@ zget_typed_line ()
 
       if (b == '\0')
 	{
-#if DEBUG > 5
-	  if (iDebug > 5)
+#if DEBUG > 1
+	  if (FDEBUGGING (DEBUG_CHAT))
 	    {
 	      ulog (LOG_DEBUG_END, "\"");
-	      fPort_debug = TRUE;
+	      iDebug = iolddebug;
 	    }
 #endif
 	  return zalc;

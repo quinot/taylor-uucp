@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/03/10  21:47:39  ian
+   Added protocol command for ports
+
    Revision 1.25  1992/03/09  18:10:26  ian
    Zacharias Beckman: put acceptable commands and path on different lines
 
@@ -150,8 +153,6 @@ main (argc, argv)
   int iopt;
   /* The configuration file name.  */
   const char *zconfig = NULL;
-  /* The command argument debugging level.  */
-  int idebug = -1;
   int c;
   struct ssysteminfo *pas;
   int i;
@@ -166,8 +167,10 @@ main (argc, argv)
 	  break;
 
 	case 'x':
+#if DEBUG > 1
 	  /* Set the debugging level.  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 0:
@@ -184,10 +187,6 @@ main (argc, argv)
     ukusage ();
 
   uread_config (zconfig);
-
-  /* Let the command line arguments override the configuration file.  */
-  if (idebug != -1)
-    iDebug = idebug;
 
   usysdep_initialize (FALSE, FALSE);
 
@@ -479,8 +478,13 @@ ukshow (qsys)
       if (fcalled)
 	ukshow_chat (&qsys->scalled_chat, " When called, chat");
 
-      if (qsys->idebug != -1)
-	printf (" Debugging level %d\n", qsys->idebug);
+#if DEBUG > 1
+      if (qsys->idebug != 0)
+	printf (" Debugging level 0%o\n", (unsigned int) qsys->idebug);
+      if (qsys->imax_remote_debug != 0)
+	printf (" Max remote debugging level 0%o\n",
+		(unsigned int) qsys->imax_remote_debug);
+#endif
 
       if (fcall)
 	{

@@ -365,9 +365,11 @@ fairly normal.  You can test @code{uuxqt} by typing @samp{./uuxqt -I
 @file{/usr/tmp/tstuu/spool1} or in subdirectories.  Again, there should
 be no errors in the log file @file{/usr/tmp/tstuu/Log1}.
 
-The @samp{-x} switch will put @code{tstuu} in debugging mode, and
-generate far more output than you will ever want to see.  The
-@code{uucico} daemons will put debugging output in
+Assuming you compiled the code with debugging enabled, the @samp{-x}
+switch can be used to set debugging modes; see the @code{debug} command
+for details (@pxref{config file}).  Use @samp{-x all} to turn on all
+debugging and generate far more output than you will ever want to see.
+The @code{uucico} daemons will put debugging output in
 @file{/usr/tmp/tstuu/Debug1} and @file{/usr/tmp/tstuu/Debug2}.  At this
 point you're pretty much on your own.
 
@@ -397,16 +399,23 @@ move on to testing with some other system.  Set up the configuration
 files (@pxref{Configuration files}), or use an existing configuration.
 Tell @code{uucico} to dial out to the system by using the @samp{-s}
 system switch (e.g.  @samp{uucico -s uunet}).  The log file should tell
-you what happens.  You can use debugging mode to get a great deal of
-information about what sort of data is flowing back and forth; use
-@samp{-x @var{number}} (e.g. @samp{uucico -s uunet -x 9}), giving a
-number from 1 to 9.  The higher the number, the more debugging
-information you will get.  The debugging information is written to a
-file, normally @file{/usr/spool/uucp/Debug} although the default can be
-changed in @file{sysdep.h} and the configuration file can override the
-name with the @code{debugfile} command.  The debugging file will contain
-passwords and some file contents as they are transmitted over the line,
-so the debugging file is only readable by the @code{uucp} user.
+you what happens.
+
+If you compiled the code with debugging enabled, you can use debugging
+mode to get a great deal of information about what sort of data is
+flowing back and forth; the various possibilities are described under
+the @code{debug} command (@pxref{sys file}).  When initially setting up
+a connection @samp{-x chat} is probably the most useful (e.g.
+@samp{uucico -s uunet -x chat}); you may also want to use @samp{-x
+handshake,incoming,outgoing}.  You can use @samp{-x} multiple times on
+one command line, or you can give it comma separated arguments as in the
+last example.  Use @samp{-x all} to turn on all possible debugging
+information.  The debugging information is written to a file, normally
+@file{/usr/spool/uucp/Debug} although the default can be changed in
+@file{policy.h} and the configuration file can override the name with
+the @code{debugfile} command.  The debugging file may contain passwords
+and some file contents as they are transmitted over the line, so the
+debugging file is only readable by the @code{uucp} user.
 
 You can use the @samp{-f} switch to force @code{uucico} to call out even
 if the last call failed recently; using @samp{-S} when naming a system
@@ -732,24 +741,69 @@ Statistical information about file transfers is written to this file.
 @findex debugfile
 @cindex debugging file
 
-Name the debugging file.  The default is from @file{sysdep.h}.
-Debugging information is written to this file when the debugging level
-is greater than zero and the code has been compiled to include it.
-After the first debugging message has been written, messages written to
-the log file are also written to the debugging file to make it easier to
-keep the order of things straight.  The debugging file is different from
-the log file because information such as passwords can appear in it, so
-it must be not be publically readable.
+Name the file to which debugging information is written.  The default is
+from @file{policy.h}.  This command is only effective if the code has
+been compiled to include debugging (this is controlled by the
+@code{DEBUG} variable in @file{policy.h}).  After the first debugging
+message has been written, messages written to the log file are also
+written to the debugging file to make it easier to keep the order of
+things straight.  The debugging file is different from the log file
+because information such as passwords can appear in it, so it must be
+not be publically readable.
 
-@item debug @var{number}
+@item debug @var{string} @dots{}
 @findex debug in config file
 
-Set the debugging level.  The default is 0.  Numbers between 0 and 9 are
-relevant; the larger the number, the more debugging information is
-output.  This may be overridden by the @samp{-x} switch to @code{uucico}
-(and all the other programs as well).  The debugging level may also be
-set specifically for calls to or from a specific system with the
-@code{debug} command in the system file.
+Set the debugging level.  This command is only effective if the code has
+been compiled to include debugging.  The default is to have no
+debugging.  The arguments are strings which name the types of debugging
+to be turned on.  The following types of debugging are defined:
+
+@table @samp
+@item chat
+Output debugging messages for chat scripts.
+@item handshake
+Output debugging messages for the initial handshake.
+@item proto
+Output debugging messages for protocols.
+@item port
+Output debugging messages for actions on the communication port.
+@item config
+Output debugging messages while reading the configuration files.
+@item spooldir
+Output debugging messages for actions in the spool directory.
+@item execute
+Output debugging messages whenever another program is executed.
+@item incoming
+List all incoming data in the debugging file.
+@item outgoing
+List all outgoing data in the debugging file.
+@item all
+All of the above.
+@end table
+
+The debugging level may also be specified as a number.  A 1 will set
+@samp{chat} debugging, a 2 will set both @samp{chat} and
+@samp{handshake} debugging, and so on down the possibilities.  Currently
+a 9 will turn on all possible debugging, since there are 9 types of
+debugging messages listed above; more debugging types may be added in
+the future.  The @code{debug} command may be used several times in the
+configuration file; every debugging type named will be turned on.  When
+running any of the programs, the @samp{-x} switch (actually, for
+@code{uulog} it's the @samp{-X} switch) may be used to turn on
+debugging.  The argument to the @samp{-x} switch is one of the strings
+listed above, or a number as described above, or a comma separated list
+of strings (e.g.  @samp{-x chat,handshake}).  The @samp{-x} switch may
+also appear several times on the command line, in which case all named
+debugging types will be turned on.  The @samp{-x} debugging is in
+addition to any debugging specified by the @code{debug} command; there
+is no way to cancel debugging information.  The debugging level may also
+be set specifically for calls to or from a specific system with the
+@code{debug} command in the system file (@pxref{sys file}).
+
+The debugging messages are somewhat idiosyncratic, and it may be
+necessary to refer to the source code for additional information in some
+cases.
 
 @item unknown @var{string} @dots{}
 @findex unknown
@@ -875,24 +929,29 @@ used.  The default is true.
 Specify an alias for the current system.  The alias may be used by local
 @code{uucp} and @code{uux} commands.  The default is to have no aliases.
 
-@item debug @var{number}
+@item debug @var{string} @dots{}
 @findex debug in sys file
 
-Set the debugging level used for calls to or from the system.  This may
-be used to debug a connection with a specific system.  It is
-particularly useful when debugging incoming calls, since debugging
-information will be generated whenever the call comes in.  See the
-@code{debug} command in the main configuration file (@pxref{config
-file}) for more details.
+Set additional debugging for calls to or from the system.  This may be
+used to debug a connection with a specific system.  It is particularly
+useful when debugging incoming calls, since debugging information will
+be generated whenever the call comes in.  See the @code{debug} command
+in the main configuration file (@pxref{config file}) for more details.
+The debugging information specified here is in addition to that
+specified in the main configuration file or on the command line.
 
-@item max-remote-debug @var{number}
+@item max-remote-debug @var{string} @dots{}
 @findex max-remote-debug
 
 When the system calls in, it may request that the debugging level be set
 to a certain value.  This command may be used to put a limit on the
 debugging level which the system may request, to avoid filling up the
-disk with debugging information.  The default value is 5 (debugging
-levels range from 0 for no debugging to 9 for full debugging).
+disk with debugging information.  Only the debugging types named in the
+@code{max-remote-debug} command may be turned on by the remote system.
+To prohibit any debugging, use @samp{max-remote-debug none}.  The
+default is @samp{chat,handshake}; to turn off these default entries, you
+must use @samp{max-remote-debug none} followed by other
+@code{max-remote-debug} commands specifying the settings you want.
 
 @item time @var{string}
 @findex time

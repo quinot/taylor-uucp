@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/03/11  19:53:55  ian
+   Improved chat script debugging
+
    Revision 1.17  1992/03/04  00:36:44  ian
    Michael Richardson: better chat script debugging
 
@@ -394,8 +397,9 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
   char *zhave;
   int chave;
   long iendtime;
-#if DEBUG > 4
+#if DEBUG > 1
   int cchars;
+  int iolddebug;
 #endif
 
   cmax = cmin = aclens[0];
@@ -412,14 +416,15 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 
   iendtime = isysdep_time ((long *) NULL) + ctimeout;
 
-#if DEBUG > 4
+#if DEBUG > 1
   cchars = 0;
-  if (iDebug > 4)
+  iolddebug = iDebug;
+  if (FDEBUGGING (DEBUG_CHAT))
     {
       udebug_buffer ("icexpect: Looking for", azstrings[0],
 		     aclens[0]);
       ulog (LOG_DEBUG_START, "icexpect: Got \"");
-      fPort_debug = FALSE;
+      iDebug &=~ DEBUG_INCOMING;
     }
 #endif
 
@@ -430,11 +435,11 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
       /* If we have no more time, get out.  */
       if (ctimeout <= 0)
 	{
-#if DEBUG > 4
-	  if (iDebug > 4)
+#if DEBUG > 1
+	  if (FDEBUGGING (DEBUG_CHAT))
 	    {
 	      ulog (LOG_DEBUG_END, "\" (timed out)");
-	      fPort_debug = TRUE;
+	      iDebug = iolddebug;
 	    }
 #endif
 	  return -1;
@@ -456,15 +461,15 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
       bchar = breceive_char (ctimeout, TRUE);
       if (bchar < 0)
 	{
-#if DEBUG > 4
-	  if (iDebug > 4)
+#if DEBUG > 1
+	  if (FDEBUGGING (DEBUG_CHAT))
 	    {
 	      /* If there was an error, it will probably be logged in
 		 the middle of our string, but this is only debugging
 		 so it's not a big deal.  */
 	      ulog (LOG_DEBUG_END, "\" (%s)",
 		    bchar == -1 ? "timed out" : "error");
-	      fPort_debug = TRUE;
+	      iDebug = iolddebug;
 	    }
 #endif
 	  return bchar;
@@ -477,8 +482,8 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
       zhave[chave] = bchar;
       ++chave;
 
-#if DEBUG > 4
-      if (iDebug > 4)
+#if DEBUG > 1
+      if (FDEBUGGING (DEBUG_CHAT))
 	{
 	  char ab[5];
 
@@ -503,8 +508,8 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 	      && memcmp (zhave + chave - aclens[i], azstrings[i],
 			 aclens[i]) == 0)
 	    {
-#if DEBUG > 4
-	      if (iDebug > 4)
+#if DEBUG > 1
+	      if (FDEBUGGING (DEBUG_CHAT))
 		{
 		  if (i == 0)
 		    ulog (LOG_DEBUG_END, "\" (found it)");
@@ -514,7 +519,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 		      udebug_buffer ("icexpect: Found", azstrings[i],
 				     aclens[i]);
 		    }
-		  fPort_debug = TRUE;
+		  iDebug = iolddebug;
 		}
 #endif
 	      return i;
@@ -525,7 +530,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
     }
 }
 
-#if DEBUG > 4
+#if DEBUG > 1
 
 /* Debugging function for fcsend.  This takes the fquote variable, the
    length of the string (0 if this an informational string which can
@@ -534,6 +539,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
    output is in the middle of a quoted string.  */
 
 static int cCsend_chars;
+static int iColddebug;
 
 static boolean
 fcsend_debug (fquote, clen, zbuf)
@@ -543,7 +549,7 @@ fcsend_debug (fquote, clen, zbuf)
 {
   int cwas;
 
-  if (iDebug <= 4)
+  if (! FDEBUGGING (DEBUG_CHAT))
     return TRUE;
 
   cwas = cCsend_chars;
@@ -589,7 +595,7 @@ ucsend_debug_end (fquote, ferr)
      boolean fquote;
      boolean ferr;
 {
-  if (iDebug <= 4)
+  if (! FDEBUGGING (DEBUG_CHAT))
     return;
 
   if (fquote)
@@ -600,10 +606,10 @@ ucsend_debug_end (fquote, ferr)
 
   ulog (LOG_DEBUG_END, "");
 
-  fPort_debug = TRUE;
+  iDebug = iColddebug;
 }
 
-#else /* DEBUG <= 4 */
+#else /* DEBUG <= 1 */
 
 /* Use macro definitions to make fcsend look neater.  */
 
@@ -611,7 +617,7 @@ ucsend_debug_end (fquote, ferr)
 
 #define ucsend_debug_end(fquote, ferror)
 
-#endif /* DEBUG <= 4 */
+#endif /* DEBUG <= 1 */
 
 /* Send a string out.  This has to parse escape sequences as it goes.
    Note that it handles the dialer escape sequences (\e, \E, \D, \T)
@@ -639,13 +645,14 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
   zcallout_login = NULL;
   zcallout_pass = NULL;
 
-#if DEBUG > 4
-  if (iDebug > 4)
+#if DEBUG > 1
+  if (FDEBUGGING (DEBUG_CHAT))
     {
       ulog (LOG_DEBUG_START, "fcsend: Writing");
-      fPort_debug = FALSE;
       fquote = FALSE;
       cCsend_chars = 0;
+      iColddebug = iDebug;
+      iDebug &=~ DEBUG_OUTGOING;
     }
 #endif
 
@@ -933,7 +940,7 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 	default:
 	  ulog (LOG_FATAL, "fcsend: Can't happen");
 	  break;
-#endif /* DEBUG */
+#endif
 	}
       
       if (fsend)

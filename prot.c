@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/03/11  01:18:15  ian
+   Niels Baggesen: drop the connection on a write failure
+
    Revision 1.15  1992/03/11  00:18:50  ian
    Save temporary file if file send fails
 
@@ -668,10 +671,11 @@ fgetcmd (fmaster, qcmd)
 	  fPerror_ok = FALSE;
 	  if (zcmd == NULL)
 	    return TRUE;
-#if DEBUG > 0
+#if DEBUG > 1
 	  if (strcmp (zcmd, "HY") != 0)
-	    ulog (LOG_DEBUG, "fgetcmd: Got \"%s\" when expecting \"HY\"",
-		  zcmd);
+	    DEBUG_MESSAGE1 (DEBUG_PROTO,
+			    "fgetcmd: Got \"%s\" when expecting \"HY\"",
+			    zcmd);
 #endif
 	  (void) (qProto->pfshutdown) ();
 	  return TRUE;
@@ -736,10 +740,7 @@ fploop ()
 {
   boolean fexit;
 
-#if DEBUG > 7
-  if (iDebug > 7)
-    ulog (LOG_DEBUG, "fploop: Main protocol loop");
-#endif
+  DEBUG_MESSAGE0 (DEBUG_PROTO, "fploop: Main protocol loop");
 
   if (ffileisopen (eSendfile))
     {
@@ -1042,10 +1043,7 @@ zgetcmd ()
   /* Wait until a command comes in.  */
   while (qPcmd_queue == NULL)
     {
-#if DEBUG > 4
-      if (iDebug > 4)
-	ulog (LOG_DEBUG, "zgetcmd: Waiting for packet");
-#endif
+      DEBUG_MESSAGE0 (DEBUG_PROTO, "zgetcmd: Waiting for packet");
 
       if (! (qProto->pfwait) ())
 	return NULL;
@@ -1069,10 +1067,7 @@ zgetcmd ()
       qPcmd_free->qnext = q;
     }
 
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "zgetcmd: Got command \"%s\"", q->z);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "zgetcmd: Got command \"%s\"", q->z);
 
   return q->z;
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/03/02  15:20:43  ian
+   Check iSignal before entering fread
+
    Revision 1.29  1992/02/29  04:07:08  ian
    Added -j option to uucp and uux
 
@@ -210,8 +213,6 @@ main (argc, argv)
   const char *zstatus_file = NULL;
   /* -W: only expand local file names.  */
   boolean fexpand = TRUE;
-  /* -x: set debugging level.  */
-  int idebug = -1;
   /* -z: report status only on error.  */
   boolean ferror_ack = FALSE;
   int i;
@@ -342,8 +343,10 @@ main (argc, argv)
 	  break;
 
 	case 'x':
+#if DEBUG > 1
 	  /* Set debugging level.  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 'z':
@@ -371,10 +374,6 @@ main (argc, argv)
     uxusage ();
 
   uread_config (zconfig);
-
-  /* Let command line override configuration file.  */
-  if (idebug != -1)
-    iDebug = idebug;
 
   /* The command and files arguments could be quoted in any number of
      ways, so we split them apart ourselves.  We do this before

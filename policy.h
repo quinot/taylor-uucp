@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1992/03/11  22:34:25  ian
+   Chip Salzenberg: support Internet mail addresses in uuxqt replies
+
    Revision 1.2  1992/03/02  04:53:07  ian
    Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
 
@@ -156,12 +159,15 @@
    version you are running.  */
 #define USE_RCS_ID 1
 
-/* Set DEBUG if you want to compile debugging information into the
-   executable.  Defining it as 0 will not compile any debugging
-   messages or checks.  Increasing numbers add more messages, up to 9.
-   Unless you want the smallest possible executable file, you should
-   leave this as 9.  */
-#define DEBUG 9
+/* DEBUG controls how much debugging information is compiled into the
+   code.  If DEBUG is defined as 0, no sanity checks will be done and
+   no debugging messages will be compiled in.  If DEBUG is defined as
+   1 sanity checks will be done but there will still be no debugging
+   messages.  If DEBUG is 2 than debugging messages will be compiled
+   in.  When initially testing, DEBUG should be 2, and you should
+   probably leave it at 2 unless a small reduction in the executable
+   file size will be very helpful.  */
+#define DEBUG 2
 
 /* Set the default grade to use for a uucp command if the -g option is
    not used.  The grades, from highest to lowest, are 0 to 9, A to Z,

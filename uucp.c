@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/29  04:07:08  ian
+   Added -j option to uucp and uux
+
    Revision 1.21  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -147,8 +150,6 @@ main (argc, argv)
   const char *zstatus_file = NULL;
   /* -W: expand local file names only.  */
   boolean fexpand = TRUE;
-  /* -x: set debugging level.  */
-  int idebug = -1;
   int i;
   boolean fgetcwd;
   char *zexclam;
@@ -228,8 +229,10 @@ main (argc, argv)
 	  break;
 
 	case 'x':
+#if DEBUG > 1
 	  /* Set debugging level.  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 0:
@@ -255,10 +258,6 @@ main (argc, argv)
     ucusage ();
 
   uread_config (zconfig);
-
-  /* Let command line override configuration file.  */
-  if (idebug != -1)
-    iDebug = idebug;
 
   /* See if we are going to need to know the current directory.  We
      just check each argument to see whether it's an absolute

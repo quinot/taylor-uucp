@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.54  1992/03/11  22:06:37  ian
+   Marty Shannon: added max-uuxqts command
+
    Revision 1.53  1992/03/11  01:18:15  ian
    Niels Baggesen: drop the connection on a write failure
 
@@ -552,10 +555,12 @@ struct ssysteminfo
   struct sproto_param *qproto_params;
   /* Chat to run when called.  */
   struct schat_info scalled_chat;
+#if DEBUG > 1
   /* Debugging level to set during a call.  */
   int idebug;
   /* Maximum remote debugging level.  */
   int imax_remote_debug;
+#endif
   /* Whether the other system may request things when we call them.  */
   boolean fcall_request;
   /* Whether the other system may request things when they call us.  */
@@ -629,7 +634,7 @@ enum tlog
   LOG_ERROR,
   /* Fatal log entry.  */
   LOG_FATAL
-#if DEBUG > 0
+#if DEBUG > 1
     ,
   /* Debugging log entry.  */
   LOG_DEBUG,
@@ -727,21 +732,80 @@ struct scmd
 /* Whether a character is a legal grade.  */
 #define FGRADE_LEGAL(b) (isalnum (BUCHAR (b)))
 
-/* The texecute_mail enumeration tells whether to mail the completation
-   status of a command executed by uux.  */
+#if DEBUG > 1
 
-enum texecute_mail
-{
-  /* Never mail completion status.  */
-  EXECUTE_MAIL_NEVER,
-  /* Mail completion status if an error occurrs.  */
-  EXECUTE_MAIL_ERROR,
-  /* Mail completion status if the command succeeds.  */
-  EXECUTE_MAIL_SUCCESS,
-  /* Always mail completion status.  */
-  EXECUTE_MAIL_ALWAYS
-};
+/* We allow independent control over several different types of
+   debugging output, using a bit string with individual bits dedicated
+   to particular debugging types.  */
 
+/* The bit string is stored in iDebug.  */
+extern int iDebug;
+
+/* Debug chat scripts.  */
+#define DEBUG_CHAT (01)
+/* Debug initial handshake.  */
+#define DEBUG_HANDSHAKE (02)
+/* Debug protocols.  */
+#define DEBUG_PROTO (04)
+/* Debug port actions.  */
+#define DEBUG_PORT (010)
+/* Debug configuration files.  */
+#define DEBUG_CONFIG (020)
+/* Debug spool directory actions.  */
+#define DEBUG_SPOOLDIR (040)
+/* Debug executions.  */
+#define DEBUG_EXECUTE (0100)
+/* Debug incoming data.  */
+#define DEBUG_INCOMING (0200)
+/* Debug outgoing data.  */
+#define DEBUG_OUTGOING (0400)
+
+/* Maximum possible value for iDebug.  */
+#define DEBUG_MAX (0777)
+
+/* Intializer for array of debug names.  The index of the name in the
+   array is the corresponding bit position in iDebug.  We only check
+   for prefixes, so these names only need to be long enough to
+   distinguish each name from every other.  The last entry must be
+   NULL.  The string "all" is also recognized to turn on all
+   debugging.  */
+#define DEBUG_NAMES \
+  { "ch", "h", "pr", "po", "co", "s", "e", "i", "o", NULL }
+
+/* The prefix to use to turn off all debugging.  */
+#define DEBUG_NONE "n"
+
+/* Check whether a particular type of debugging is being done.  */
+#define FDEBUGGING(i) ((iDebug & (i)) != 0)
+
+/* These macros are used to output debugging information.  I use
+   several different macros depending on the number of arguments
+   because no macro can take a variable number of arguments and I
+   don't want to use double parentheses.  */
+#define DEBUG_MESSAGE0(i, z) \
+  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z)), 1)))
+#define DEBUG_MESSAGE1(i, z, a1) \
+  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z), (a1)), 1)))
+#define DEBUG_MESSAGE2(i, z, a1, a2) \
+  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z), (a1), (a2)), 1)))
+#define DEBUG_MESSAGE3(i, z, a1, a2, a3) \
+  ((void) (FDEBUGGING (i) && (ulog (LOG_DEBUG, (z), (a1), (a2), (a3)), 1)))
+#define DEBUG_MESSAGE4(i, z, a1, a2, a3, a4) \
+  ((void) (FDEBUGGING (i) \
+	   && (ulog (LOG_DEBUG, (z), (a1), (a2), (a3), (a4)), 1)))
+
+#else /* DEBUG <= 1 */
+
+/* If debugging information is not being compiled, provide versions of
+   the debugging macros which just disappear.  */
+#define DEBUG_MESSAGE0(i, z)
+#define DEBUG_MESSAGE1(i, z, a1)
+#define DEBUG_MESSAGE2(i, z, a1, a2)
+#define DEBUG_MESSAGE3(i, z, a1, a2, a3)
+#define DEBUG_MESSAGE4(i, z, a1, a2, a3, a4)
+
+#endif /* DEBUG <= 1 */
+
 /* Functions.  */
 
 /* Read the configuration file.  */
@@ -946,7 +1010,7 @@ extern void ustats_failed P((void));
 /* Close the statistics file.  */
 extern void ustats_close P((void));
 
-#if DEBUG > 0
+#if DEBUG > 1
 /* A debugging routine to output a buffer.  This outputs zhdr, the
    buffer length clen, and the contents of the buffer in quotation
    marks.  */
@@ -957,7 +1021,26 @@ extern void udebug_buffer P((const char *zhdr, const char *zbuf,
    This takes a buffer at least 5 bytes long, and returns the length
    of the string it put into it (not counting the null byte).  */
 extern int cdebug_char P((char *z, int ichar));
-#endif
+
+/* Parse a debugging option string.  This can either be a number or a
+   comma separated list of debugging names.  If the code is compiled
+   without debugging this is a dummy function.  This returns a value
+   for iDebug.  */
+extern int idebug_parse P((const char *));
+
+/* Parse a debugging option in a configuration file.  This is used for
+   the ``debug'' command.  */
+extern enum tcmdtabret tidebug_parse P((int argc, char **argv,
+					pointer pvar, const char *zerr));
+
+#else /* DEBUG <= 1 */
+
+/* Dummy version of idebug_parse.  This makes the option processing
+   look a little neater.  */
+
+#define idebug_parse(z) 0
+
+#endif /* DEBUG <= 1 */
 
 /* Copy one file to another.  */
 extern boolean fcopy_file P((const char *zfrom, const char *zto,
@@ -1113,9 +1196,6 @@ extern char abProgram[];
 /* Version number string.  */
 extern char abVersion[];
 
-/* Level of debugging.  */
-extern int iDebug;
-
 /* Local UUCP name.  */
 extern const char *zLocalname;
 
@@ -1140,8 +1220,10 @@ extern const char *zLogfile;
 /* Statistics file name.  */
 extern const char *zStatfile;
 
+#if DEBUG > 1
 /* Debugging file name.  */
 extern const char *zDebugfile;
+#endif
 
 /* Files containing login names and passwords to use when calling out.  */
 extern char *zCallfile;

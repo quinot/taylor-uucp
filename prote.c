@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.2  1992/01/16  18:16:58  ian
    Niels Baggesen: add some debugging messages
 
@@ -112,10 +115,7 @@ boolean
 fesendcmd (z)
      const char *z;
 {
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "fesendcmd: Sending command \"%s\"", z);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "fesendcmd: Sending command \"%s\"", z);
 
   return fsend_data (z, strlen (z) + 1, TRUE);
 }
@@ -196,12 +196,9 @@ feprocess_data (pfexit, pcneed)
 	  if (pnull != NULL)
 	    cfirst = pnull - (abPrecbuf + iPrecstart) + 1;
 
-#if DEBUG > 8
-	  if (iDebug > 8)
-	    ulog (LOG_DEBUG,
-		  "feprocess_data: Calling fgot_data with %d command bytes",
-		  cfirst);
-#endif
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "feprocess_data: Got %d command bytes",
+			  cfirst);
 
 	  if (! fgot_data (abPrecbuf + iPrecstart, cfirst, TRUE, FALSE,
 			   pfexit))
@@ -268,11 +265,9 @@ feprocess_data (pfexit, pcneed)
       if (cfirst > clen)
 	cfirst = clen;
 
-#if DEBUG > 8
-      if (iDebug > 8)
-	ulog (LOG_DEBUG, "feprocess_data: Calling fgot_data with %d bytes",
-	      cfirst);
-#endif
+      DEBUG_MESSAGE1 (DEBUG_PROTO,
+		      "feprocess_data: Got %d data bytes",
+		      cfirst);
 
       if (! fgot_data (abPrecbuf + iPrecstart, cfirst, FALSE, TRUE,
 		       pfexit))
@@ -355,11 +350,9 @@ fefile (fstart, fsend, pfredo, cbytes)
 	{
 	  char ab[CEFRAMELEN];
 
-#if DEBUG > 8
-	  if (iDebug > 8)
-	    ulog (LOG_DEBUG, "Protocol 'e' starting to send %ld bytes",
-		  cbytes);
-#endif
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "Protocol 'e' starting to send %ld bytes",
+			  cbytes);
 
 	  bzero (ab, CEFRAMELEN);
 	  sprintf (ab, "%ld", cbytes);
@@ -373,9 +366,11 @@ fefile (fstart, fsend, pfredo, cbytes)
 	  fEfile = TRUE;
 	}
     }
-#if DEBUG > 0
   else
     {
+      if (! fsend)
+	fEfile = FALSE;
+#if DEBUG > 0
       if (cEbytes != 0)
 	{
 	  ulog (LOG_ERROR,
@@ -383,10 +378,8 @@ fefile (fstart, fsend, pfredo, cbytes)
 		cEbytes);
 	  return FALSE;
 	}
-      if (! fsend)
-	fEfile = FALSE;
-    }
 #endif
+    }
 
   return TRUE;
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.36  1992/03/11  22:34:25  ian
+   Chip Salzenberg: support Internet mail addresses in uuxqt replies
+
    Revision 1.35  1992/03/11  22:06:37  ian
    Marty Shannon: added max-uuxqts command
 
@@ -184,8 +187,6 @@ main (argc, argv)
   const char *zconfig = NULL;
   /* The system to execute commands for.  */
   const char *zdosys = NULL;
-  /* The command argument debugging level.  */
-  int idebug = -1;
   boolean fany;
   const char *z;
   const char *zgetsys;
@@ -212,8 +213,10 @@ main (argc, argv)
 	  break;
 
 	case 'x':
+#if DEBUG > 1
 	  /* Set the debugging level.  */
-	  idebug = atoi (optarg);
+	  iDebug |= idebug_parse (optarg);
+#endif
 	  break;
 
 	case 0:
@@ -230,10 +233,6 @@ main (argc, argv)
     uqusage ();
 
   uread_config (zconfig);
-
-  /* Let the command line arguments override the configuration file.  */
-  if (idebug != -1)
-    iDebug = idebug;
 
 #ifdef SIGINT
   usysdep_signal (SIGINT);
@@ -1289,10 +1288,8 @@ uqcleanup (zfile, iflags)
 {
   int i;
 
-#if DEBUG > 8
-  if (iDebug > 8)
-    ulog (LOG_DEBUG, "uqcleanup: %s, %d", zfile, iflags);
-#endif
+  DEBUG_MESSAGE2 (DEBUG_SPOOLDIR,
+		  "uqcleanup: %s, %d", zfile, iflags);
 
   if (zQunlock_file != NULL)
     {

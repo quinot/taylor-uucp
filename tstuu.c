@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.47  1992/03/08  17:02:24  ian
+   Ted Lindgreen: don't include <sys/ioctl.h> if it's not there
+
    Revision 1.46  1992/03/04  15:38:19  ian
    Roberto Biancardi: use poll if we haven't got select
 
@@ -317,7 +320,7 @@ static void uchoose P((int *po1, int *po2));
 static boolean fwritable P((int o));
 static void xsystem P((const char *zcmd));
 
-static int cDebug;
+static char *zDebug;
 static int iTest;
 static boolean fCall_uucico;
 static int iPercent;
@@ -345,7 +348,7 @@ main (argc, argv)
   zcmd2 = NULL;
   zsys = "test2";
 
-  while ((iopt = getopt (argc, argv, "c:p:s:t:ux1:2:")) != EOF)
+  while ((iopt = getopt (argc, argv, "c:p:s:t:ux:1:2:")) != EOF)
     {
       switch (iopt)
 	{
@@ -365,7 +368,7 @@ main (argc, argv)
 	  fCall_uucico = TRUE;
 	  break;
 	case 'x':
-	  ++cDebug;
+	  zDebug = optarg;
 	  break;
 	case '1':
 	  zcmd1 = optarg;
@@ -516,7 +519,7 @@ main (argc, argv)
       if (close (oslave1) < 0)
 	perror ("close");
 
-      if (cDebug > 0)
+      if (zDebug != NULL)
 	fprintf (stderr, "About to exec first process\n");
 
       if (zcmd1 != NULL)
@@ -553,7 +556,7 @@ main (argc, argv)
       if (close (oslave2) < 0)
 	perror ("close");
 
-      if (cDebug > 0)
+      if (zDebug != NULL)
 	fprintf (stderr, "About to exec second process\n");
 
       if (fCall_uucico)
@@ -588,7 +591,7 @@ main (argc, argv)
 
       if (o1 == -1 && o2 == -1)
 	{
-	  if (cDebug > 0)
+	  if (zDebug != NULL)
 	    fprintf (stderr, "Five second pause\n");
 	  continue;
 	}
@@ -660,13 +663,13 @@ uchild (isig)
 
   if (abLogout1[0] != '\0')
     {
-      if (cDebug > 0)
+      if (zDebug != NULL)
 	fprintf (stderr, "Executing %s\n", abLogout1);
       (void) system (abLogout1);
     }
   if (abLogout2[0] != '\0')
     {
-      if (cDebug > 0)
+      if (zDebug != NULL)
 	fprintf (stderr, "Executing %s\n", abLogout2);
       (void) system (abLogout2);
     }
@@ -872,8 +875,8 @@ uprepare_test (itest, fcall_uucico, zsys)
 #if HAVE_BNU_CONFIG
   fprintf (e, "bnu-files no\n");
 #endif
-  if (cDebug > 0)
-    fprintf (e, "debug 9\n");
+  if (zDebug != NULL)
+    fprintf (e, "debug %s\n", zDebug);
 
   xfclose (e);
 
@@ -968,8 +971,8 @@ uprepare_test (itest, fcall_uucico, zsys)
 #if HAVE_BNU_CONFIG
       fprintf (e, "bnu-files no\n");
 #endif
-      if (cDebug > 0)
-	fprintf (e, "debug 9\n");
+      if (zDebug != NULL)
+	fprintf (e, "debug %s\n", zDebug);
 
       xfclose (e);
 
@@ -1003,16 +1006,8 @@ uprepare_test (itest, fcall_uucico, zsys)
       xfclose (e);
     }
 
-  if (cDebug == 0)
-    {
-      zuucp1 = "./uucp -I /usr/tmp/tstuu/Config1 -r";
-      zuux1 = "./uux -I /usr/tmp/tstuu/Config1 -r";
-    }
-  else
-    {
-      zuucp1 = "./uucp -I /usr/tmp/tstuu/Config1 -r -x 9";
-      zuux1 = "./uux -I /usr/tmp/tstuu/Config1 -r -x 9";
-    }
+  zuucp1 = "./uucp -I /usr/tmp/tstuu/Config1 -r";
+  zuux1 = "./uux -I /usr/tmp/tstuu/Config1 -r";
 
   if (fcall_uucico)
     {
@@ -1021,16 +1016,8 @@ uprepare_test (itest, fcall_uucico, zsys)
     }
   else
     {
-      if (cDebug == 0)
-	{
-	  zuucp2 = "./uucp -I /usr/tmp/tstuu/Config2 -r";
-	  zuux2 = "./uux -I /usr/tmp/tstuu/Config2 -r";
-	}
-      else
-	{
-	  zuucp2 = "./uucp -I /usr/tmp/tstuu/Config2 -r -x 9";
-	  zuux2 = "./uux -I /usr/tmp/tstuu/Config2 -r -x 9";
-	}
+      zuucp2 = "./uucp -I /usr/tmp/tstuu/Config2 -r";
+      zuux2 = "./uux -I /usr/tmp/tstuu/Config2 -r";
     }
 
   /* Test transferring a file from the first system to the second.  */
@@ -1292,7 +1279,7 @@ utransfer (ofrom, oto, otoslave, pc)
 	}
     }
 
-  if (cDebug > 0)
+  if (zDebug != NULL)
     {
       char abshow[325];
       char *zshow;
@@ -1326,7 +1313,7 @@ utransfer (ofrom, oto, otoslave, pc)
 	      ++c;
 	    }
 	}
-      if (cDebug > 0 && c > 0)
+      if (zDebug != NULL && c > 0)
 	fprintf (stderr, "Clobbered %d bytes\n", c);
     }
 
@@ -1343,7 +1330,7 @@ utransfer (ofrom, oto, otoslave, pc)
 	  perror ("FIONREAD");
 	  uchild (SIGCHLD);
 	}
-      if (cDebug > 0)
+      if (zDebug != NULL)
 	fprintf (stderr, "%ld unread\n", cunread);
 #else /* ! FIONREAD */
       cunread = 0;

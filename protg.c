@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/03/03  21:18:31  ian
+   Aleksey P. Rudnev: added remote-window and packsize 'g' protocol parameters
+
    Revision 1.25  1992/02/25  18:47:38  ian
    Bob Denny: reset timeouts only when data is recognized
 
@@ -542,19 +545,14 @@ fgstart (fmaster)
       if (! fginit_sendbuffers (TRUE))
 	return FALSE;
 
-#if DEBUG > 2
-      if (iDebug > 2)
-	ulog (LOG_DEBUG, "fgstart: Protocol started; packsize %d, winsize %d",
-	      iGremote_packsize, iGremote_winsize);
-#endif
+      DEBUG_MESSAGE2 (DEBUG_PROTO,
+		      "fgstart: Protocol started; packsize %d, winsize %d",
+		      iGremote_packsize, iGremote_winsize);
 
       return TRUE;
     }
 
-#if DEBUG > 2
-  if (iDebug > 2)
-    ulog (LOG_DEBUG, "fgstart: Protocol startup failed");
-#endif
+  DEBUG_MESSAGE0 (DEBUG_PROTO, "fgstart: Protocol startup failed");
 
   return FALSE;
 }
@@ -728,10 +726,7 @@ fgsendcmd (z)
   int clen;
   boolean fagain;
 
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgsendcmd: Sending command \"%s\"", z);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "fgsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
 
@@ -845,10 +840,7 @@ fgsenddata (zdata, cdata)
   int itt, iseg, csize;
   unsigned short icheck;
 
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgsenddata: Sending %d bytes", cdata);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "fgsenddata: Sending %d bytes", cdata);
 
   /* Set the initial length bytes.  See the description at the definition
      of SHORTDATA, above.  */
@@ -1024,11 +1016,9 @@ fgsend_control (ixxx, iyyy)
   int ictl;
   unsigned short icheck;
 
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "fgsend_control: Sending control %d, %d",
-	  ixxx, iyyy);
-#endif
+  DEBUG_MESSAGE2 (DEBUG_PROTO,
+		  "fgsend_control: Sending control %d, %d",
+		  ixxx, iyyy);
 
   ab[IFRAME_DLE] = DLE;
   ab[IFRAME_K] = KCONTROL;
@@ -1107,10 +1097,8 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
       if (fexit)
 	return TRUE;
 
-#if DEBUG > 8
-      if (iDebug > 8)
-	ulog (LOG_DEBUG, "fgwait_for_packet: Need %d bytes", cneed);
-#endif
+      DEBUG_MESSAGE1 (DEBUG_PROTO,
+		      "fgwait_for_packet: Need %d bytes", cneed);
 
       if (ffound)
 	{
@@ -1454,12 +1442,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       if (ihdrcheck != idatcheck)
 	{
-#if DEBUG > 4
-	  if (iDebug > 4)
-	    ulog (LOG_DEBUG,
-		  "fgprocess_data: Checksum failed; expected 0x%x, got 0x%x",
-		  ihdrcheck, idatcheck);
-#endif
+	  DEBUG_MESSAGE2
+	    (DEBUG_PROTO,
+	     "fgprocess_data: Bad checksum: header 0x%x, data 0x%x",
+	     ihdrcheck, idatcheck);
 
 	  ++cGbad_checksum;
 	  if (! fgcheck_errors ())
@@ -1527,12 +1513,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_XXX (ab[IFRAME_CONTROL]) != INEXTSEQ (iGrecseq))
 	    {
 	      /* We got the wrong packet number.  */
-#if DEBUG > 7
-	      if (iDebug > 7)
-		ulog (LOG_DEBUG, "fgprocess_data: Got packet %d; expected %d",
-		      CONTROL_XXX (ab[IFRAME_CONTROL]),
-		      INEXTSEQ (iGrecseq));
-#endif
+	      DEBUG_MESSAGE2 (DEBUG_PROTO,
+			      "fgprocess_data: Got packet %d; expected %d",
+			      CONTROL_XXX (ab[IFRAME_CONTROL]),
+			      INEXTSEQ (iGrecseq));
 
 	      ++cGbad_order;
 	      if (! fgcheck_errors ())
@@ -1594,12 +1578,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		  cmove = 2;
 		}
 
-#if DEBUG > 8
-	      if (iDebug > 8)
-		ulog (LOG_DEBUG,
-		      "fgprocess_data: Short by %d (first %d, second %d)",
-		      cshort, cfirst, csecond);
-#endif
+	      DEBUG_MESSAGE3
+		(DEBUG_PROTO,
+		 "fgprocess_data: Short by %d (first %d, second %d)",
+		 cshort, cfirst, csecond);
 
 	      /* Adjust the start of the buffer for the bytes used
 		 by the count.  */
@@ -1791,10 +1773,8 @@ igchecksum (z, c)
     }
   while (--c > 0);
 
-#if DEBUG > 8
-  if (iDebug > 8)
-    ulog (LOG_DEBUG, "igchecksum: Returning 0x%x", ichk1 & 0xffff);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO,
+		  "igchecksum: Returning 0x%x", ichk1 & 0xffff);
 
   return ichk1 & 0xffff;
 }
@@ -1855,10 +1835,8 @@ igchecksum2 (zfirst, cfirst, zsecond, csecond)
     }
   while (--c > 0);
 
-#if DEBUG > 8
-  if (iDebug > 8)
-    ulog (LOG_DEBUG, "igchecksum: Returning 0x%x", ichk1 & 0xffff);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO,
+		  "igchecksum2: Returning 0x%x", ichk1 & 0xffff);
 
   return ichk1 & 0xffff;
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/02/08  19:55:32  ian
+   Shifts of integers by more than 15 are not portable
+
    Revision 1.11  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -143,10 +146,7 @@ ftsendcmd (z)
   int clen;
   char *zalc;
 
-#if DEBUG > 4
-  if (iDebug > 4)
-    ulog (LOG_DEBUG, "ftsendcmd: Sending command \"%s\"", z);
-#endif
+  DEBUG_MESSAGE1 (DEBUG_PROTO, "ftsendcmd: Sending command \"%s\"", z);
 
   clen = strlen (z);
 
@@ -230,12 +230,9 @@ ftprocess_data (pfexit, pcneed)
 	  if (cfirst > CTPACKSIZE)
 	    cfirst = CTPACKSIZE;
 
-#if DEBUG > 8
-	  if (iDebug > 8)
-	    ulog (LOG_DEBUG,
-		  "ftprocess_data: Calling fgot_data with %d command bytes",
-		  cfirst);
-#endif
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "ftprocess_data: Got %d command bytes",
+			  cfirst);
 
 	  if (! fgot_data (abPrecbuf + iPrecstart, cfirst, TRUE, FALSE,
 			   pfexit))
@@ -287,11 +284,9 @@ ftprocess_data (pfexit, pcneed)
       if (cfirst > clen)
 	cfirst = clen;
 
-#if DEBUG > 8
-      if (iDebug > 8)
-	ulog (LOG_DEBUG, "ftprocess_data: Calling fgot_data with %d bytes",
-	      cfirst);
-#endif
+      DEBUG_MESSAGE1 (DEBUG_PROTO,
+		      "ftprocess_data: Got %d data bytes",
+		      cfirst);
 
       if (! fgot_data (abPrecbuf + iPrecstart, cfirst, FALSE, TRUE,
 		       pfexit))
