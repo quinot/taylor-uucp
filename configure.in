@@ -252,7 +252,8 @@ AC_HAVE_FUNCS(getcwd getwd)
 case $DEFS in
 *HAVE_GETCWD*) ;;
 *HAVE_GETCD*) ;;
-*) if test -s /bin/pwd; then
+*) UNIXOBJS="$UNIXOBJS getcwd.o"
+   if test -s /bin/pwd; then
      AC_DEFINE([PWD_PROGRAM], `echo '"/bin/pwd"'`)
    fi ;;
 esac
@@ -261,6 +262,7 @@ AC_HAVE_FUNCS(mkdir)
 case $DEFS in
 *HAVE_MKDIR*) UUDIR='# ' ;;
 *) UUDIR=
+   UNIXOBJS="$UNIXOBJS mkdir.o"
    if test -s /bin/mkdir; then
      AC_DEFINE([MKDIR_PROGRAM], `echo '"/bin/mkdir"'`)
    fi ;;
@@ -270,12 +272,13 @@ dnl
 AC_HAVE_FUNCS(rmdir)
 case $DEFS in
 *HAVE_RMDIR*) ;;
-*) if test -s /bin/rmdir; then
+*) UNIXOBJS="$UNIXOBJS rmdir.o"
+   if test -s /bin/rmdir; then
      AC_DEFINE([RMDIR_PROGRAM], `echo '"/bin/rmdir"'`)
    fi ;;
 esac
 dnl
-dnl Figure out which functions we need from lib
+dnl Figure out which functions we need from lib subdirectory
 case $DEFS in
 *HAVE_BSEARCH*) ;;
 *) LIBOBJS="$LIBOBJS bsrch.o" ;;
@@ -294,12 +297,22 @@ case $DEFS in
 *) LIBOBJS="$LIBOBJS memchr.o" ;;
 esac
 case $DEFS in
+*HAVE_MEMCMP*) ;;
+*HAVE_BCMP*) ;;
+*) LIBOBJS="$LIBOBJS memcmp.o" ;;
+esac
+case $DEFS in
 *HAVE_MEMCPY*) ;;
 *HAVE_BCOPY*) ;;
 *) LIBOBJS="$LIBOBJS memcpy.o" ;;
 esac
 case $DEFS in
+*HAVE_MEMMOVE*) ;;
+*) LIBOBJS="$LIBOBJS memmov.o" ;;
+esac
+case $DEFS in
 *HAVE_STRCASECMP*) ;;
+*HAVE_STRICMP*) ;;
 *) LIBOBJS="$LIBOBJS strcas.o" ;;
 esac
 case $DEFS in
@@ -317,6 +330,7 @@ case $DEFS in
 esac
 case $DEFS in
 *HAVE_STRNCASECMP*) ;;
+*HAVE_STRNICMP*) ;;
 *) LIBOBJS="$LIBOBJS strncs.o" ;;
 esac
 case $DEFS in
@@ -333,6 +347,32 @@ case $DEFS in
 *) LIBOBJS="$LIBOBJS strtol.o" ;;
 esac
 AC_SUBST(LIBOBJS)dnl
+dnl Figure out which functions we need from unix subdirectory
+case $DEFS in
+*HAVE_OPENDIR*) ;;
+*) UNIXOBJS="$UNIXOBJS dirent.o" ;;
+esac
+case $DEFS in
+*HAVE_DUP2*) ;;
+*) UNIXOBJS="$UNIXOBJS dup2.o" ;;
+esac
+case $DEFS in
+*HAVE_FTW*) ;;
+*) UNIXOBJS="$UNIXOBJS ftw.o" ;;
+esac
+case $DEFS in
+*HAVE_REMOVE*) ;;
+*) UNIXOBJS="$UNIXOBJS remove.o" ;;
+esac
+case $DEFS in
+*HAVE_RENAME*) ;;
+*) UNIXOBJS="$UNIXOBJS rename.o" ;;
+esac
+case $DEFS in
+*HAVE_STRERROR*) ;;
+*) UNIXOBJS="$UNIXOBJS strerr.o" ;;
+esac
+AC_SUBST(UNIXOBJS)
 dnl
 case $DEFS in
 *HAVE_SIGVEC*)
@@ -371,8 +411,7 @@ AC_COMPILE_CHECK([union wait],
 AC_DEFINE([HAVE_UNION_WAIT]),
 :)
 dnl
-AC_UTIME_NULL
 AC_LONG_FILENAMES
 AC_RESTARTABLE_SYSCALLS
 dnl
-AC_OUTPUT(Makefile lib/Makefile uuconf/Makefile)
+AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)

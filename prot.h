@@ -20,45 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.12  1992/03/13  22:59:25  ian
-   Have breceive_char go through freceive_data
-
-   Revision 1.11  1992/03/07  15:00:28  ian
-   prot.h is never included more than once
-
-   Revision 1.10  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.9  1992/01/18  22:48:53  ian
-   Reworked sending of mail and general handling of failed transfers
-
-   Revision 1.8  1991/12/31  19:43:13  ian
-   Added 'e' protocol
-
-   Revision 1.7  1991/11/15  21:00:59  ian
-   Efficiency hacks for 'f' and 't' protocols
-
-   Revision 1.6  1991/11/14  03:20:13  ian
-   Added seven-bit and reliable commands to help when selecting protocols
-
-   Revision 1.5  1991/11/12  18:25:33  ian
-   Added 't' protocol
-
-   Revision 1.4  1991/11/11  04:21:16  ian
-   Added 'f' protocol
-
-   Revision 1.3  1991/11/10  19:24:22  ian
-   Added pffile protocol entry point for file level control
-
-   Revision 1.2  1991/11/09  18:53:07  ian
-   Reworked protocol interface
-
-   Revision 1.1  1991/09/10  19:47:55  ian
-   Initial revision
-
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
 /* The sprotocol structure holds information and functions for a specific
@@ -75,35 +37,37 @@ struct sprotocol
      port.h.  */
   int ireliable;
   /* Protocol parameter commands.  */
-  struct scmdtab *qcmds;
+  struct uuconf_cmdtab *qcmds;
   /* A routine to start the protocol; the argument is whether the caller
      is the master or the slave.  Returns TRUE if the protocol has been
      succesfully started, FALSE otherwise.  */
-  boolean (*pfstart) P((boolean fmaster));
+  boolean (*pfstart) P((struct sconnection *qconn, boolean fmaster));
   /* Shutdown the protocol.  */
-  boolean (*pfshutdown) P((void));
+  boolean (*pfshutdown) P((struct sconnection *qconn));
   /* Send a command to the other side.  */
-  boolean (*pfsendcmd) P((const char *z));
+  boolean (*pfsendcmd) P((struct sconnection *qconn, const char *z));
   /* Get buffer to space to fill with data.  This should set *pcdata
      to the amount of data desired.  */
-  char *(*pzgetspace) P((int *pcdata));
+  char *(*pzgetspace) P((struct sconnection *qconn, size_t *pcdata));
   /* Send data to the other side.  The first argument must be a return
      value of pzgetspace.  */
-  boolean (*pfsenddata) P((char *z, int c));
+  boolean (*pfsenddata) P((struct sconnection *qconn, char *z,
+			   size_t c));
   /* Process received data in abPrecbuf, calling fgot_data as
      necessary.  If fgot_data sets *pfexit, it should get passed back
      out.  */
-  boolean (*pfprocess) P((boolean *pfexit));
+  boolean (*pfprocess) P((struct sconnection *qconn,
+			  boolean *pfexit));
   /* Wait for data to come in and call fgot_data with it until
      fgot_data sets *pfexit.  */
-  boolean (*pfwait) P((void));
+  boolean (*pfwait) P((struct sconnection *qconn));
   /* Handle any file level actions that need to be taken.  If fstart
      is TRUE, a file transfer is beginning.  If fstart is FALSE a file
      transfer is ending, and *pfredo should be set to TRUE if the file
      transfer needs to be redone.  If fstart and fsend are both TRUE,
      cbytes holds the size of the file or -1 if it is unknown.  */
-  boolean (*pffile) P((boolean fstart, boolean fsend, boolean *pfredo,
-		       long cbytes));
+  boolean (*pffile) P((struct sconnection *qconn, boolean fstart,
+		       boolean fsend, boolean *pfredo, long cbytes));
 };
 
 /* Send a file.
@@ -125,7 +89,9 @@ struct sprotocol
    fsysdep_did_work (pseq).  Most of the latter stuff is handled by
    fsent_file.  */
 extern boolean fsend_file P((boolean fmaster, openfile_t e,
-			     const struct scmd *qcmd, const char *zmail,
+			     const struct scmd *qcmd,
+			     struct sconnection *qconn,
+			     const char *zmail,
 			     const char *ztosys, boolean fnew));
 
 /* Receive a file.
@@ -148,7 +114,9 @@ extern boolean fsend_file P((boolean fmaster, openfile_t e,
    fsysdep_did_work (pseq).  Most of the latter work is done by
    freceived_file.  */
 extern boolean freceive_file P((boolean fmaster, openfile_t e,
-				const struct scmd *qcmd, const char *zmail,
+				const struct scmd *qcmd,
+				struct sconnection *qconn,
+				const char *zmail,
 				const char *zfromsys, boolean fspool,
 				boolean fnew));
 
@@ -160,32 +128,36 @@ extern boolean freceive_file P((boolean fmaster, openfile_t e,
    value is FALSE if some error occurred.  This always does its work
    immediately, so it does not use qcmd->pseq.  It sets *pfnever to
    TRUE if the request was denied.  */
-extern boolean fxcmd P((const struct scmd *qcmd, boolean *pfnever));
+extern boolean fxcmd P((const struct scmd *qcmd,
+			struct sconnection *qconn,
+			boolean *pfnever));
 
 /* Confirm a transfer.  This is only called by the slave.  This is
    called after a transfer request has been received to confirm that
    it was successful.  If it was not successful, pffail will be
    called with a first argument of 'X'.  */
-extern boolean fxcmd_confirm P((void));
+extern boolean fxcmd_confirm P((struct sconnection *qconn));
 
 /* Fail.  This is called by the slave if it is unable to execute some
    request by the master.  The argument bcmd is the request which
    failed ('S' or 'R').  The argument twhy indicates the reason.  The
    return value is FALSE if some error occurred.  */
-extern boolean ftransfer_fail P((int bcmd, enum tfailure twhy));
+extern boolean ftransfer_fail P((int bcmd, enum tfailure twhy,
+				 struct sconnection *qconn));
 
 /* Get a command from the master.  The strings in the command argument
    are set to point into a static buffer.  If fmaster is TRUE, this
    should not wait if there is no command pending; if fmaster is FALSE
    it should wait until a command is received.  The field qcmd->pseq
    will be set to NULL.  */
-extern boolean fgetcmd P((boolean fmaster, struct scmd *qcmd));
+extern boolean fgetcmd P((boolean fmaster, struct scmd *qcmd,
+			  struct sconnection *qconn));
 
 /* Get a command string from the other system, where the nature of a
    command string is defined by the protocol.  The return value is
    fragile, and must be saved if any other protocol related calls are
    made.  */
-extern const char *zgetcmd P((void));
+extern const char *zgetcmd P((struct sconnection *qconn));
 
 /* Hangup.  This is only called by the master, and indicates that the
    master is ready to relinquish control; after calling it, the master
@@ -195,14 +167,15 @@ extern const char *zgetcmd P((void));
    it becomes the master (it also denies the hangup, but this is not
    seen outside the protocol code).  The return value of fhangup is
    FALSE if some error occurred.  */
-extern boolean fhangup_request P((void));
+extern boolean fhangup_request P((struct sconnection *qconn));
 
 /* Hangup reply.  This is only called by the slave if the master has
    sent a hangup request.  If fconfirm is TRUE, the slave is
    confirming the hangup, in which case the protocol should be shut
    down.  If fconfirm is FALSE, the slave will become the master.  The
    return value is FALSE if some error occurred.  */
-extern boolean fhangup_reply P((boolean fconfirm));
+extern boolean fhangup_reply P((boolean fconfirm,
+				struct sconnection *qconn));
 
 /* Handle data received by a protocol.  This is called by the protocol
    specific routines as data comes in.  The protocol specific routines
@@ -214,16 +187,18 @@ extern boolean fhangup_reply P((boolean fconfirm));
    is finished.  A file is finished when a zero length buffer is
    passed.  A command is finished when a string containing a null byte
    is passed.  This will return FALSE on error.  */
-extern boolean fgot_data P((const char *zdata, int cdata,
+extern boolean fgot_data P((const char *zdata, size_t cdata,
 			    boolean fcmd, boolean ffile,
-			    boolean *pfexit));
+			    boolean *pfexit,
+			    struct sconnection *qconn));
 
 /* Send data to the other system.  If the fread argument is TRUE, this
    will also receive data into the receive buffer abPrecbuf; fread is
    passed as TRUE if the protocol expects data to be coming back, to
    make sure the input buffer does not fill up.  Returns FALSE on
    error.  */
-extern boolean fsend_data P((const char *zsend, int csend,
+extern boolean fsend_data P((struct sconnection *qconn,
+			     const char *zsend, size_t csend,
 			     boolean fdoread));
 
 /* Receive data from the other system when there is no data to send.
@@ -231,8 +206,18 @@ extern boolean fsend_data P((const char *zsend, int csend,
    argument is the timeout in seconds.  This will set *pcrec to the
    amount of data received.  It will return FALSE on error.  If a
    timeout occurs, it will return TRUE with *pcrec set to zero.  */
-extern boolean freceive_data P((int cneed, int *pcrec, int ctimeout,
+extern boolean freceive_data P((struct sconnection *qconn, size_t cneed,
+				size_t *pcrec, int ctimeout,
 				boolean freport));
+
+/* Get one character from the remote system, going through the
+   procotol buffering.  The ctimeout argument is the timeout in
+   seconds, and the freport argument is TRUE if errors should be
+   reported (when closing a connection it is pointless to report
+   errors).  This returns a character or -1 on a timeout or -2 on an
+   error.  */
+extern int breceive_char P((struct sconnection *qconnection,
+			    int ctimeout, boolean freport));
 
 /* Protocol in use.  */
 extern const struct sprotocol *qProto;
@@ -255,50 +240,52 @@ extern boolean fPerror_ok;
 
 /* Prototypes for 'g' protocol functions.  */
 
-extern struct scmdtab asGproto_params[];
-extern boolean fgstart P((boolean fmaster));
-extern boolean fgshutdown P((void));
-extern boolean fgsendcmd P((const char *z));
-extern char *zggetspace P((int *pcdata));
-extern boolean fgsenddata P((char *z, int c));
-extern boolean fgprocess P((boolean *pfexit));
-extern boolean fgwait P((void));
+extern struct uuconf_cmdtab asGproto_params[];
+extern boolean fgstart P((struct sconnection *qconn,
+			  boolean fmaster));
+extern boolean fgshutdown P((struct sconnection *qconn));
+extern boolean fgsendcmd P((struct sconnection *qconn, const char *z));
+extern char *zggetspace P((struct sconnection *qconn, size_t *pcdata));
+extern boolean fgsenddata P((struct sconnection *qconn,
+			     char *z, size_t c));
+extern boolean fgprocess P((struct sconnection *qconn, boolean *pfexit));
+extern boolean fgwait P((struct sconnection *qconn));
 
 /* Prototypes for 'f' protocol functions.  */
 
-extern struct scmdtab asFproto_params[];
-extern boolean ffstart P((boolean fmaster));
-extern boolean ffshutdown P((void));
-extern boolean ffsendcmd P((const char *z));
-extern char *zfgetspace P((int *pcdata));
-extern boolean ffsenddata P((char *z, int c));
-extern boolean ffprocess P((boolean *pfexit));
-extern boolean ffwait P((void));
-extern boolean fffile P((boolean fstart, boolean fsend, boolean *pfredo,
-			 long cbytes));
+extern struct uuconf_cmdtab asFproto_params[];
+extern boolean ffstart P((struct sconnection *qconn, boolean fmaster));
+extern boolean ffshutdown P((struct sconnection *qconn));
+extern boolean ffsendcmd P((struct sconnection *qconn, const char *z));
+extern char *zfgetspace P((struct sconnection *qconn, size_t *pcdata));
+extern boolean ffsenddata P((struct sconnection *qconn, char *z, size_t c));
+extern boolean ffprocess P((struct sconnection *qconn, boolean *pfexit));
+extern boolean ffwait P((struct sconnection *qconn));
+extern boolean fffile P((struct sconnection *qconn, boolean fstart,
+			 boolean fsend, boolean *pfredo, long cbytes));
 
 /* Prototypes for 't' protocol functions.  */
 
-extern struct scmdtab asTproto_params[];
-extern boolean ftstart P((boolean fmaster));
-extern boolean ftshutdown P((void));
-extern boolean ftsendcmd P((const char *z));
-extern char *ztgetspace P((int *pcdata));
-extern boolean ftsenddata P((char *z, int c));
-extern boolean ftprocess P((boolean *pfexit));
-extern boolean ftwait P((void));
-extern boolean ftfile P((boolean fstart, boolean fsend, boolean *pfredo,
-			 long cbytes));
+extern struct uuconf_cmdtab asTproto_params[];
+extern boolean ftstart P((struct sconnection *qconn, boolean fmaster));
+extern boolean ftshutdown P((struct sconnection *qconn));
+extern boolean ftsendcmd P((struct sconnection *qconn, const char *z));
+extern char *ztgetspace P((struct sconnection *qconn, size_t *pcdata));
+extern boolean ftsenddata P((struct sconnection *qconn, char *z, size_t c));
+extern boolean ftprocess P((struct sconnection *qconn, boolean *pfexit));
+extern boolean ftwait P((struct sconnection *qconn));
+extern boolean ftfile P((struct sconnection *qconn, boolean fstart,
+			 boolean fsend, boolean *pfredo, long cbytes));
 
 /* Prototypes for 'e' protocol functions.  */
 
-extern struct scmdtab asEproto_params[];
-extern boolean festart P((boolean fmaster));
-extern boolean feshutdown P((void));
-extern boolean fesendcmd P((const char *z));
-extern char *zegetspace P((int *pcdata));
-extern boolean fesenddata P((char *z, int c));
-extern boolean feprocess P((boolean *pfexit));
-extern boolean fewait P((void));
-extern boolean fefile P((boolean fstart, boolean fsend, boolean *pfredo,
-			 long cbytes));
+extern struct uuconf_cmdtab asEproto_params[];
+extern boolean festart P((struct sconnection *qconn, boolean fmaster));
+extern boolean feshutdown P((struct sconnection *qconn));
+extern boolean fesendcmd P((struct sconnection *qconn, const char *z));
+extern char *zegetspace P((struct sconnection *qconn, size_t *pcdata));
+extern boolean fesenddata P((struct sconnection *qconn, char *z, size_t c));
+extern boolean feprocess P((struct sconnection *qconn, boolean *pfexit));
+extern boolean fewait P((struct sconnection *qconn));
+extern boolean fefile P((struct sconnection *qconn, boolean fstart,
+			 boolean fsend, boolean *pfredo, long cbytes));

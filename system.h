@@ -21,24 +21,26 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #ifndef SYSTEM_H
 
 #define SYSTEM_H
 
 /* Any function which returns an error should also report an error
-   message.
+   message, unless otherwise indicated.
 
-   Many of the function may share a common static buffer; this is
-   noted in the description of the function.  */
+   Any function that returns a char *, rather than a const char *, is
+   returning a pointer to a buffer allocated by zbufalc which must be
+   freed using ubuffree, unless otherwise indicated.  */
 
 /* The maximum length of a remote system name.  */
 extern int cSysdep_max_name_len;
 
 /* Initialize.  If something goes wrong, this routine should just
-   exit.  The argument is 0, or a combination of any of the following
-   flags.  */
+   exit.  The flag argument is 0, or a combination of any of the
+   following flags.  */
 
 /* This is a daemon program.  This is TRUE when called from uucico or
    uuxqt.  */
@@ -60,7 +62,7 @@ extern int cSysdep_max_name_len;
    only make sense on Unix.  It is set by cu.  */
 #define INIT_NOCHDIR (04)
 
-extern void usysdep_initialize P((int iflags));
+extern void usysdep_initialize P((pointer puuconf, int iflags));
 
 /* Exit the program.  The fsuccess argument indicates whether to
    return an indication of success or failure to the outer
@@ -68,9 +70,9 @@ extern void usysdep_initialize P((int iflags));
 extern void usysdep_exit P((boolean fsuccess));
 
 /* Called when a non-standard configuration file is being used, to
-   avoid handing out privileged access.  If it returns FALSE, the
-   default configuration file will be used.  This is called before
-   the usysdep_initialize function is called.  */
+   avoid handing out privileged access.  If it returns FALSE, default
+   configuration file will be used.  This is called before the
+   usysdep_initialize function is called.  */
 extern boolean fsysdep_other_config P((const char *));
 
 /* Detach from the controlling terminal.  This probably only makes
@@ -80,9 +82,9 @@ extern boolean fsysdep_other_config P((const char *));
 extern void usysdep_detach P((void));
 
 /* Get the local node name if it is not specified in the configuration
-   files.  This should return an malloced buffer.  It may not return
-   NULL.  */
-extern char *zsysdep_localname P((void));
+   files.  Returns NULL on error; otherwise the return value should
+   point to a static buffer.  */
+extern const char *zsysdep_localname P((void));
 
 /* Get the login name.  This is used when uucico is started up with no
    arguments in slave mode, which causes it to assume that somebody
@@ -94,8 +96,8 @@ extern const char *zsysdep_login_name P((void));
 /* Set a signal handler for a signal.  If the signal occurs, the
    appropriate element of afSignal should be set to the signal number
    (see the declaration of afSignal in uucp.h).  This routine might be
-   able to just use signal, but 4.3 BSD requires more complex
-   handling.  This is called before usysdep_initialize.  */
+   able to just use signal, but Unix requires more complex handling.
+   This is called before usysdep_initialize.  */
 extern void usysdep_signal P((int isig));
 
 /* Catch a signal.  This is actually defined as a macro in the system
@@ -107,7 +109,7 @@ extern void usysdep_signal P((int isig));
    This is needed to handle 4.2 BSD restartable system calls, which
    require a longjmp.  On systems which don't need to do
    setjmp/longjmp around system calls, this can be redefined in
-   <sysdep.h> to TRUE.  It should return TRUE if the routine should
+   sysdep.h to TRUE.  It should return TRUE if the routine should
    proceed, or FALSE if a signal occurred.  After having this return
    TRUE, usysdep_start_catch should be used to start catching the
    signal; this basically tells the signal handler that it's OK to do
@@ -126,7 +128,7 @@ extern void usysdep_end_catch P((void));
    succeeds it should return TRUE with *pfworked set to TRUE.  If the
    link fails because it must go across a device, it should return
    TRUE with *pfworked set to FALSE.  If the link fails for some other
-   reason, it should print an error message and return FALSE.  On a
+   reason, it should log an error message and return FALSE.  On a
    system which does not support links to files, this should just
    return TRUE with *pfworked set to FALSE.  */
 extern boolean fsysdep_link P((const char *zfrom, const char *zto,
@@ -139,12 +141,21 @@ extern boolean fsysdep_link P((const char *zfrom, const char *zto,
    protocol parameters are applied.  The name returned should be the
    sort of name that would appear in the port file.  This should set
    *pftcp_port to TRUE if it can determine that the port is a TCP
-   connection rather than a normal serial port.  */
+   connection rather than a normal serial port.  The return value (if
+   not NULL) should point to a static buffer.  */
 extern const char *zsysdep_port_name P((boolean *pftcp_port));
 
-/* Make a spool directory for a system.  This will be called each time
-   the system might be accessed.  It should return FALSE on error.  */
-extern boolean fsysdep_make_spool_dir P((const struct uuconf_system *qsys));
+/* Expand a file name on the local system.  On Unix, if the zfile
+   argument begins with ~user/ it goes in that users home directory,
+   and if it begins with ~/ it goes in the public directory (the
+   public directory is passed to this routine, since each system may
+   have its own public directory).  Similar conventions may be
+   desirable on other systems.  This should always return an absolute
+   path name, probably in the public directory.  It should return NULL
+   on error; otherwise the return value should be allocated using
+   zbufcpy or zbufalc.  */
+extern char *zsysdep_local_file P((const char *zname,
+				   const char *zpubdir));
 
 /* Return whether a file name is in a directory, and check for read or
    write access.  This should check whether zfile is within zdir (or
@@ -160,10 +171,8 @@ extern boolean fsysdep_make_spool_dir P((const struct uuconf_system *qsys));
    access on zfile (which may be a directory, or may not actually
    exist, which is acceptable).  The zuser argument may be NULL, in
    which case the check should be made for any user, not just zuser.
-   There is no way for this function to return error.  The qsys
-   argument should be used to expand ~ into the public directory.  */
-extern boolean fsysdep_in_directory P((const struct uuconf_system *qsys,
-				       const char *zfile,
+   There is no way for this function to return error.  */
+extern boolean fsysdep_in_directory P((const char *zfile,
 				       const char *zdir,
 				       boolean fcheck,
 				       boolean freadable,
@@ -195,12 +204,12 @@ extern boolean fsysdep_mail P((const char *zto, const char *zsubject,
 			       int cstrs, const char **paz));
 
 /* Get the time in seconds since some epoch.  The actual epoch is
-   unimportant, so long as the time values are consistent across calls
-   to the program, and the value is never negative.  If the pimicros
-   argument is not NULL, it should be set to the number of
+   unimportant, so long as the time values are consistent across
+   program executions and the value is never negative.  If the
+   pimicros argument is not NULL, it should be set to the number of
    microseconds (if this is not available, *pimicros should be set to
    zero).  */
- extern long isysdep_time P((long *pimicros));
+extern long isysdep_time P((long *pimicros));
 
 /* Get the time in seconds and microseconds (millionths of a second)
    since some epoch.  The actual epoch is not important, and it may
@@ -222,7 +231,8 @@ extern void usysdep_localtime P((long itime, tm_ptr q));
 /* Sleep for a number of seconds.  */
 extern void usysdep_sleep P((int cseconds));
 
-/* Pause for half a second.  */
+/* Pause for half a second, or 1 second if subsecond sleeps are not
+   possible.  */
 extern void usysdep_pause P((void));
 
 /* Lock a remote system.  This should return FALSE if the system is
@@ -304,26 +314,17 @@ extern const char *zsysdep_save_temp_file P((pointer pseq));
    fsysdep_get_work_init has not been.  */
 extern void usysdep_get_work_free P((const struct uuconf_system *qsys));
 
-/* Get the real file name for a file.  The file may or may not exist
-   on the system.  If the zname argument is not NULL, then the zfile
-   argument may be a directory; if it is, zname should be used for the
-   name of the file within the directory.  The zname argument may not
-   be simple (it may be in the format of another OS) so care should be
-   taken with it.  On Unix, if the zfile argument begins with ~user/
-   it goes in that users home directory, and if it begins with ~/
-   (~uucp/) it goes in the public directory (note that each system may
-   have its own public directory); similar conventions may be
-   desirable on other systems.  The return value may point to a common
-   static buffer.  This should return NULL on error.  */
-extern const char *zsysdep_real_file_name P((const struct uuconf_system *,
-					     const char *zfile,
-					     const char *zname));
+/* Add a base name to a file if it is a directory.  If zfile names a
+   directory, then return a string naming a file within the directory
+   with the base file name of zname.  This should return NULL on
+   error.  */
+extern char *zsysdep_add_base P((const char *zfile,
+				 const char *zname));
 
 /* Get a file name from the spool directory.  This should return
-   NULL on error.  The return value may point to a common static
-   buffer.  */
-extern const char *zsysdep_spool_file_name P((const struct uuconf_system *,
-					      const char *zfile));
+   NULL on error.  */
+extern char *zsysdep_spool_file_name P((const struct uuconf_system *qsys,
+					const char *zfile));
 
 /* Make necessary directories.  This should create all non-existent
    directories for a file.  If the fpublic argument is TRUE, anybody
@@ -336,11 +337,11 @@ extern boolean fsysdep_make_dirs P((const char *zfile, boolean fpublic));
    fpublic argument is TRUE, the file is made publically accessible;
    otherwise it is treated as a private data file.  If the fappend
    argument is TRUE, the file is opened in append mode; otherwise any
-   previously existing file of the same name is removed, and the file
-   is kept private to the UUCP system.  If the fmkdirs argument is
-   TRUE, then any necessary directories should also be created.  On a
-   system in which file protections are unimportant (and the necessary
-   directories exist), this may be implemented as
+   previously existing file of the same name is removed.  If the
+   fmkdirs argument is TRUE, then any necessary directories should
+   also be created.  On a system in which file protections are
+   unimportant and the necessary directories exist, this may be
+   implemented as
 
    fopen (zfile, fappend ? "a" : "w");
 
@@ -373,8 +374,8 @@ extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
    It may ignore qsys (the system the file is coming from) and zto
    (the file to be created) although they are passed in case they are
    useful.  The file mode is not available at this point.  The *pztemp
-   return value may point to a common static buffer.  The amount of
-   free space should be returned in *pcbytes; ideally it should be the
+   return value must be freed using ubuffree.  The amount of free
+   space should be returned in *pcbytes; ideally it should be the
    lesser of the amount of free space on the file system of the
    temporary file and the amount of free space on the file system of
    the final destination.  If the amount of free space is not
@@ -386,21 +387,19 @@ extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
    mode.  */
 extern openfile_t esysdep_open_receive P((const struct uuconf_system *qsys,
 					  const char *zto,
-					  const char **pztemp,
+					  char **pztemp,
 					  long *pcbytes));
 
 /* Move a file.  This is used to move a received file to its final
-   location.  It is also used by uuxqt to move files in and out of the
-   execute directory.  The zto argument is the file to create.  The
-   zorig argument is the name of the file to move.  If fmkdirs is
-   TRUE, then any necessary directories are created; fpublic indicates
-   whether they should be publically writeable or not.  If fcheck is
-   TRUE, this should make sure the directory is writeable by the user
-   zuser (if zuser is NULL, then it must be writeable by any user);
-   this is to avoid a window of vulnerability between
-   fsysdep_in_directory and fsysdep_move_file.  This function should
-   return FALSE on error; the zorig file should be removed even if an
-   error occurs.  */
+   location.  The zto argument is the file to create.  The zorig
+   argument is the name of the file to move.  If fmkdirs is TRUE, then
+   any necessary directories are created; fpublic indicates whether
+   they should be publically writeable or not.  If fcheck is TRUE,
+   this should make sure the directory is writeable by the user zuser
+   (if zuser is NULL, then it must be writeable by any user); this is
+   to avoid a window of vulnerability between fsysdep_in_directory and
+   fsysdep_move_file.  This function should return FALSE on error; the
+   zorig file should be removed even if an error occurs.  */
 extern boolean fsysdep_move_file P((const char *zorig, const char *zto,
 				    boolean fmkdirs, boolean fpublic,
 				    boolean fcheck, const char *zuser));
@@ -417,16 +416,14 @@ extern openfile_t esysdep_truncate P((openfile_t e, const char *zname));
 
 /* Start expanding a wildcarded file name.  This should return FALSE
    on error; otherwise subsequent calls to zsysdep_wildcard should
-   return file names.  The argument may have leading ~ characters.  */
-extern boolean fsysdep_wildcard_start P((const struct uuconf_system *qsys,
-					 const char *zfile));
+   return file names.  */
+extern boolean fsysdep_wildcard_start P((const char *zfile));
 
 /* Get the next wildcard name.  This should return NULL when there are
-   no more names to return.  The return value may point to a common
-   static buffer.  The argument should be the same as that to
+   no more names to return.  The return value should be freed using
+   ubuffree.  The argument should be the same as that to
    fsysdep_wildcard_start.  There is no way to return error.  */
-extern const char *zsysdep_wildcard P((const struct uuconf_system *qsys,
-				       const char *zfile));
+extern char *zsysdep_wildcard P((const char *zfile));
 
 /* Finish getting wildcard names.  This may be called before or after
    zsysdep_wildcard has returned NULL.  It should return FALSE on
@@ -441,9 +438,9 @@ extern boolean fsysdep_wildcard_end P((void));
    return NULL on error, or the jobid on success.  The jobid is a
    string that may be printed or passed to fsysdep_kill_job and
    related functions, but is otherwise uninterpreted.  */
- extern const char *zsysdep_spool_commands P((const struct uuconf_system *qsys,
-					      int bgrade, int ccmds,
-					      const struct scmd *pascmds));
+extern char *zsysdep_spool_commands P((const struct uuconf_system *qsys,
+				       int bgrade, int ccmds,
+				       const struct scmd *pascmds));
 
 /* Get a file name to use for a data file to be copied to another
    system.  A file which will become an execute file will use a grade
@@ -459,19 +456,19 @@ extern boolean fsysdep_wildcard_end P((void));
    will be appropriate for the name of the destination file in a send
    request of a data file for an execution of some sort.  The zxname
    array should be set to an execute file name that is appropriate for
-   the other system.  This should return NULL on error.  The return
-   value may point to a common static buffer.  */
-
+   the other system.  The zlocalname argument is the name of the local
+   system as seen by the remote system.  This should return NULL on
+   error.  */
 #define CFILE_NAME_LEN (15)
 
-extern const char *zsysdep_data_file_name P((const struct uuconf_system *qsys,
-					     int bgrade, char *ztname,
-					     char *zdname, char *zxname));
+extern char *zsysdep_data_file_name P((const struct uuconf_system *qsys,
+				       const char *zlocalname,
+				       int bgrade, char *ztname,
+				       char *zdname, char *zxname));
 
 /* Get a name for a local execute file.  This is used by uux for a
-   local command with remote files.  It should return NULL on error.
-   The return value may point to a common static buffer.  */
-extern const char *zsysdep_xqt_file_name P((void));
+   local command with remote files.  Returns NULL on error.  */
+extern char *zsysdep_xqt_file_name P((void));
 
 /* Beginning getting execute files.  To get a list of execute files,
    first fsysdep_get_xqt_init is called, then zsysdep_get_xqt is
@@ -482,9 +479,10 @@ extern boolean fsysdep_get_xqt_init P((void));
 /* Get the next execute file.  This should return NULL when finished
    (with *pferr set to FALSE).  On an error this should return NULL
    with *pferr set to TRUE.  This should set *pzsystem to the name of
-   the system for which the execute file was created.  */
-extern const char *zsysdep_get_xqt P((const char **pzsystem,
-				      boolean *pferr));
+   the system for which the execute file was created.  Both the return
+   value and *pzsystem should be freed using ubuffree.  */
+extern char *zsysdep_get_xqt P((char **pzsystem,
+				boolean *pferr));
 
 /* Clean up after getting execute files.  */
 extern void usysdep_get_xqt_free P((void));
@@ -494,12 +492,9 @@ extern void usysdep_get_xqt_free P((void));
    and the path.  It must return an absolute pathname to the command.
    If it gets an error it should set *pferr to TRUE and return NULL;
    if the command is not found it should set *pferr to FALSE and
-   return NULL.  Otherwise, the return value may point to a common
-   static buffer.  */
-extern const char *zsysdep_find_command P((const char *zcmd,
-					   const char *zcmds,
-					   const char *zpath,
-					   boolean *pferr));
+   return NULL.  */
+extern char *zsysdep_find_command P((const char *zcmd, char **pzcmds,
+				     char **pzpath, boolean *pferr));
 
 #if ! ALLOW_FILENAME_ARGUMENTS
 /* Check an argument to an execution command to make sure that it
@@ -522,13 +517,14 @@ extern boolean fsysdep_xqt_check_file P((const struct uuconf_system *qsys,
    zinput -- file name for standard input (may be NULL)
    zoutput -- file name for standard output (may be NULL)
    fshell -- if TRUE, use /bin/sh to execute file
+   ilock -- return value of isysdep_lock_uuxqt
    pzerror -- set to name of standard error file
    pftemp -- set to TRUE if error is temporary, FALSE otherwise
 
    If fshell is TRUE, the command should be executed with /bin/sh
    (obviously, this can only really be done on Unix systems).  If an
    error occurs this should return FALSE and set *pftemp
-   appropriately.  */
+   appropriately.  *pzerror should be freed using ubuffree.  */
 extern boolean fsysdep_execute P((const struct uuconf_system *qsys,
 				  const char *zuser,
 				  const char **pazargs,
@@ -536,28 +532,26 @@ extern boolean fsysdep_execute P((const struct uuconf_system *qsys,
 				  const char *zinput,
 				  const char *zoutput,
 				  boolean fshell,
-				  const char **pzerror,
+				  int ilock,
+				  char **pzerror,
 				  boolean *pftemp));
 
-/* Lock a particular uuxqt command (e.g. rmail).  This should return
-   FALSE if the command is already locked.  This is used to make sure
-   only one uuxqt process is handling a particular command.  There is
-   no way to return error.  */
-
-/* Lock for uuxqt execution.  If the global variable cMaxuuxqts is not
-   zero, this should make sure that no more than cMaxuuxqts uuxqt
-   processes are running at once.  Also, only one uuxqt may execute a
-   particular command (specified by the -c option) at a time.  If zcmd
-   is not NULL, it is a command that must be locked.  This should
-   return a nonegative number which will be passed to
-   fsysdep_unlock_uuxqt, or -1 on error.  */
-extern int isysdep_lock_uuxqt P((const char *zcmd));
+/* Lock for uuxqt execution.  If the cmaxuuxqts argument is not zero,
+   this should make sure that no more than cmaxuuxqts uuxqt processes
+   are running at once.  Also, only one uuxqt may execute a particular
+   command (specified by the -c option) at a time.  If zcmd is not
+   NULL, it is a command that must be locked.  This should return a
+   nonnegative number which will be passed to other routines,
+   including fsysdep_unlock_uuxqt, or -1 on error.  */
+extern int isysdep_lock_uuxqt P((const char *zcmd,
+				 int cmaxuuxqts));
 
 /* Unlock a uuxqt process.  This is passed the return value of
-   isysdep_lock_uuxqt, as well as the zcmd argument passed to
+   isysdep_lock_uuxqt, as well as the arguments passed to
    isysdep_lock_uuxqt.  It may return FALSE on error, but at present
    the return value is ignored.  */
-extern boolean fsysdep_unlock_uuxqt P((int iseq, const char *zcmd));
+extern boolean fsysdep_unlock_uuxqt P((int iseq, const char *zcmd,
+				       int cmaxuuxqts));
 
 /* See whether a particular uuxqt command is locked.  This should
    return TRUE if the command is locked (because isysdep_lock_uuxqt
@@ -573,38 +567,62 @@ extern boolean fsysdep_lock_uuxqt_file P((const char *zfile));
 /* Unlock an execute file.  This should return FALSE on error.  */
 extern boolean fsysdep_unlock_uuxqt_file P((const char *zfile));
 
-/* Lock the execution directory.  This should return FALSE if the
+/* Lock the execution directory.  The ilock argument is the return
+   value of isysdep_lock_uuxqt.  This should return FALSE if the
    directory is already locked.  There is no way to return error.  */
-extern boolean fsysdep_lock_uuxqt_dir P((void));
+extern boolean fsysdep_lock_uuxqt_dir P((int ilock));
 
 /* Remove all files in the execution directory, and unlock it.  This
    should return FALSE on error.  */
-extern boolean fsysdep_unlock_uuxqt_dir P((void));
+extern boolean fsysdep_unlock_uuxqt_dir P((int ilock));
+
+/* Move files into or out of the execution directory.  The code will
+   already have checked that all the files exist.  The elements in the
+   pzfrom array will be complete filenames, and the elements in the
+   pzto array will be either NULL (in which case the file should not
+   be moved) or simple base names.  If fto is TRUE, the files in
+   pzfrom should be moved to pzto; otherwise, the files in pzto should
+   be moved to pzfrom (this is used if a temporary failure occurs, in
+   which case the execution will be retried later).  If pzinput and
+   *pzinput are not NULL, then it is the name of the standard input
+   file; if it is the same as any element of pzfrom, then *pzinput
+   should be set to the zbufcpy of the corresponding pzto value, if
+   any.  */
+extern boolean fsysdep_move_uuxqt_files P((int cfiles,
+					   const char *const *pzfrom,
+					   const char *const *pzto,
+					   boolean fto, int ilock,
+					   char **pzinput));
 
-/* Add the working directory to a file name.  If the file already has
-   a directory, it should not be changed.  The return value may point
-   to a common static buffer.  If the flocal argument is TRUE, then
-   this is a local file (so, for example, a leading ~ should be
-   expanded as appropriate); otherwise the file is on a remote system.
-   This should return NULL on error.  */
-extern const char *zsysdep_add_cwd P((const char *zfile,
-				      boolean flocal));
+/* Expand a file name on the local system, defaulting to the current
+   directory.  This is just like zsysdep_local_file, except that
+   relative files are placed in the working directory the program
+   started in rather than in the public directory.  This should return
+   NULL on error.  */
+extern char *zsysdep_local_file_cwd P((const char *zname,
+				       const char *zpubdir));
+
+/* Add the working directory to a file name.  The named file is
+   actually on a remote system.  If the file already has a directory,
+   it should not be changed.  This should return NULL on error.  */
+extern char *zsysdep_add_cwd P((const char *zfile));
 
 /* See whether a file name will need the current working directory
-   when zsysdep_add_cwd is called on it.  This will be called before
-   usysdep_initialize.  It should just check whether the argument is
-   an absolute path.  See the comment above usysdep_initialize in this
-   file for an explanation of why things are done this way.  */
+   when zsysdep_local_file_cwd or zsysdep_add_cwd is called on it.
+   This will be called before usysdep_initialize.  It should just
+   check whether the argument is an absolute path.  See the comment
+   above usysdep_initialize in this file for an explanation of why
+   things are done this way.  */
 extern boolean fsysdep_needs_cwd P((const char *zfile));
 
 /* Get the base name of a file.  The file will be a local file name,
    and this function should return the base file name, ideally in a
    form which will make sense on most systems; it will be used if the
    destination of a uucp is a directory.  */
-extern const char *zsysdep_base_name P((const char *zfile));
+extern char *zsysdep_base_name P((const char *zfile));
 
 /* Return a filename within a directory.  */
-extern const char *zsysdep_in_dir P((const char *zdir, const char *zfile));
+extern char *zsysdep_in_dir P((const char *zdir, const char *zfile));
 
 /* Get the mode of a file.  This should return a Unix style file mode.
    It should return 0 on error.  */
@@ -628,8 +646,9 @@ extern boolean fsysdep_daemon_access P((const char *zfile));
    directory where uupick will get the file.  On Unix this produces
    system!~/receive/user/localname, and that's probably what it has to
    produce on any other system as well.  Returns NULL on a usage
-   error, or otherwise returns an allocated string.  */
-extern char *zsysdep_uuto P((const char *zdest));
+   error, or otherwise returns string allocated by zbufcpy.  */
+extern char *zsysdep_uuto P((const char *zdest,
+			     const char *zlocalname));
 
 /* Return TRUE if a pathname exists and is a directory.  */
 extern boolean fsysdep_directory P((const char *zpath));
@@ -650,10 +669,9 @@ extern boolean usysdep_walk_tree P((const char *zdir,
 /* Return the jobid of a work file, given the sequence value.  On
    error this should log an error and return NULL.  The jobid is a
    string which may be printed out and read in and passed to
-   fsysdep_kill_job, etc., but is not otherwise interpreted.  The
-   return value may point to a common statis buffer.  */
-extern const char *zsysdep_jobid P((const struct uuconf_system *qsys,
-				    pointer pseq));
+   fsysdep_kill_job, etc., but is not otherwise interpreted.  */
+extern char *zsysdep_jobid P((const struct uuconf_system *qsys,
+			      pointer pseq));
 
 /* See whether the current user is permitted to kill jobs submitted by
    another user.  This should return TRUE if permission is granted,
@@ -663,14 +681,16 @@ extern boolean fsysdep_privileged P((void));
 /* Kill a job, given the jobid.  This should remove all associated
    files and in general eliminate the job completely.  On error it
    should log an error message and return FALSE.  */
-extern boolean fsysdep_kill_job P((const char *zjobid));
+extern boolean fsysdep_kill_job P((pointer puuconf,
+				   const char *zjobid));
 
 /* Rejuvenate a job, given the jobid.  If possible, this should update
    the time associated with the job such that it will not be
-   eliminated by uuclean or similar programs that check the creation
+   eliminated by uustat -K or similar programs that check the creation
    time.  This should affect the return value of isysdep_work_time.
    On error it should log an error message and return FALSE.  */
-extern boolean fsysdep_rejuvenate_job P((const char *zjobid));
+extern boolean fsysdep_rejuvenate_job P((pointer puuconf,
+					 const char *zjobid));
 
 /* Get the time a job was queued, given the sequence number.  There is
    no way to indicate error.  The return value must use the same epoch
@@ -699,8 +719,8 @@ extern boolean fsysdep_all_status_init P((pointer *phold));
    system name and fill in the qstat argument.  The phold argument
    will be that set by fsysdep_all_status_init.  On error this should
    log an error, set *pferr to TRUE, and return NULL.  */
-extern const char *zsysdep_all_status P((pointer phold, boolean *pferr,
-					 struct sstatus *qstat));
+extern char *zsysdep_all_status P((pointer phold, boolean *pferr,
+				   struct sstatus *qstat));
 
 /* Free up anything allocated by fsysdep_all_status_init and
    zsysdep_all_status.  The phold argument is that set by
@@ -738,9 +758,9 @@ extern boolean fsysdep_terminal_restore P((void));
 
 /* Read a line from the terminal.  The fsysdep_terminal_raw function
    will have been called.  This should print the zprompt argument
-   (unless it is NULL) and return the line, possibly in a common
-   static buffer, or NULL on error.  */
-extern const char *zsysdep_terminal_line P((const char *zprompt));
+   (unless it is NULL) and return the line, allocated by zbufcpy, or
+   NULL on error.  */
+extern char *zsysdep_terminal_line P((const char *zprompt));
 
 /* Write a line to the terminal, ending with a newline.  This is
    basically just puts (zline, stdout), except that the terminal will
@@ -763,17 +783,19 @@ extern boolean fsysdep_terminal_signals P((boolean faccept));
 
    The fsysdep_cu_init function does any system dependent
    initialization needed for this.  */
-extern boolean fsysdep_cu_init P((void));
+extern boolean fsysdep_cu_init P((struct sconnection *qconn));
 
 /* Copy all data from the communications port to the terminal, and all
    data from the terminal to the communications port.  Keep this up
    until the escape character *zCuvar_escape is seen.  Set *pbcmd to
    the character following the escape character; after the escape
-   character, the hostname should be printed, possibly after a delay.
+   character, zlocalname should be printed, possibly after a delay.
    If two escape characters are entered in sequence, this function
    should send a single escape character to the port, and not return.
    Returns FALSE on error.  */
-extern boolean fsysdep_cu P((char *pbcmd));
+extern boolean fsysdep_cu P((struct sconnection *qconn,
+			     char *pbcmd,
+			     const char *zlocalname));
 
 /* If fcopy is TRUE, start copying data from the communications port
    to the terminal.  If fcopy is FALSE, stop copying data.  This
@@ -801,7 +823,8 @@ enum tshell_cmd
   SHELL_STDIO_ON_PORT
 };
 
-extern boolean fsysdep_shell P((const char *zcmd,
+extern boolean fsysdep_shell P((struct sconnection *qconn,
+				const char *zcmd,
 				enum tshell_cmd tcmd));
 
 /* Change directory.  If zdir is NULL, or *zdir == '\0', change to the
@@ -815,20 +838,30 @@ extern boolean fsysdep_suspend P((void));
 
 /* Start getting files for uupick.  The zsystem argument may be NULL
    to get files from all systems, or it may specify a particular
-   system.  This returns FALSE on error.  */
-extern boolean fsysdep_uupick_init P((const char *zsystem));
+   system.  The zpubdir argument is the public directory to use.  This
+   returns FALSE on error.  */
+extern boolean fsysdep_uupick_init P((const char *zsystem,
+				      const char *zpubdir));
 
 /* Get the next file for uupick.  This returns the basic file name.
    It sets *pzfull to the full name, and *pzfrom to the name of the
-   system which sent this file over.  The zsystem argument should be
-   the same as the argument to fsysdep_uupick_init.  This returns NULL
+   system which sent this file over; both should be freed using
+   ubuffree.  *pzfull should be passed to ubuffree after it is no
+   longer needed.  The zsystem and zpubdir arguments should be the
+   same as the arguments to fsysdep_uupick_init.  This returns NULL
    when all files been returned.  */
-extern const char *zsysdep_uupick P((const char *zsystem,
-				     const char **pzfrom,
-				     const char **pzfull));
+extern char *zsysdep_uupick P((const char *zsystem, const char *zpubdir,
+			       char **pzfrom, char **pzfull));
 
 /* Clean up after getting files for uupick.  */
-extern boolean fsysdep_uupick_free P((const char *zsystem));
+extern boolean fsysdep_uupick_free P((const char *zsystem,
+				      const char *zpubdir));
+
+/* Translate a local file name for uupick.  On Unix this is just like
+   zsysdep_local_file_cwd except that a file beginning with ~/ is
+   placed in the user's home directory rather than in the public
+   directory.  */
+extern char *zsysdep_uupick_local_file P((const char *zfile));
 
 /* Remove a directory and all the files in it.  */
 extern boolean fsysdep_rmdir P((const char *zdir));

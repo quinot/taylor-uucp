@@ -20,7 +20,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 /* This header file contains macro definitions which must be set by
    each site before compilation.  The first few are system
@@ -159,7 +160,7 @@
    specific directory; the lock files are generally named
    LCK..something or LK.something.  If the LOCKDIR macro is defined,
    these lock files will be placed in the named directory; otherwise
-   they will be placed in the default spool directory.  On some BNU
+   they will be placed in the default spool directory.  On some HDB
    systems the lock files are placed in /etc/locks.  On some they are
    placed in /usr/spool/locks.  On the NeXT they are placed in
    /usr/spool/uucp/LCK.  */
@@ -171,25 +172,25 @@
    exactly one of the following macros to 1.  Check an existing lock
    file to decide which of these choices is more appropriate.
 
-   The BNU style is to write the locking process ID in ASCII, passed
+   The HDB style is to write the locking process ID in ASCII, passed
    to ten characters, followed by a newline.
 
    The V2 style is to write the locking process ID as four binary
    bytes in the host byte order.
 
-   SCO lock files are similar to BNU lock files, but always lock the
+   SCO lock files are similar to HDB lock files, but always lock the
    lowercase version of the tty (i.e., LCK..tty2a is created if you
    are locking tty2A).  They are appropriate if you are using Taylor
    UUCP on an SCO Unix, SCO Xenix, or SCO Open Desktop system.
 
-   SVR4 lock files are also similar to BNU lock files, but they use a
+   SVR4 lock files are also similar to HDB lock files, but they use a
    different naming convention.  The filenames are LK.xxx.yyy.zzz,
    where xxx is the major device number of the device holding the
    special device file, yyy is the major device number of the port
    device itself, and zzz is the minor device number of the port
    device.  */
 #define HAVE_V2_LOCKFILES 0
-#define HAVE_BNU_LOCKFILES 1
+#define HAVE_HDB_LOCKFILES 1
 #define HAVE_SCO_LOCKFILES 0
 #define HAVE_SVR4_LOCKFILES 0
 
@@ -240,18 +241,18 @@
 #define HAVE_TAYLOR_CONFIG 1
 
 /* To compile in use of V2 style configuration files (L.sys, L-devices
-   and so on), set HAVE_V2_CONFIG to 1.  To compile in use of BNU
+   and so on), set HAVE_V2_CONFIG to 1.  To compile in use of HDB
    style configuration files (Systems, Devices and so on) set
-   HAVE_BNU_CONFIG to 1.  The files will be looked up in the
+   HAVE_HDB_CONFIG to 1.  The files will be looked up in the
    oldconfigdir directory as defined in the Makefile.
 
    You may set any or all of HAVE_TAYLOR_CONFIG, HAVE_V2_CONFIG and
-   HAVE_BNU_CONFIG to 1 (you must set at least one of the macros).
+   HAVE_HDB_CONFIG to 1 (you must set at least one of the macros).
    When looking something up (a system, a port, etc.) the new style
    configuration files will be read first, followed by the V2
-   configuration files, followed by the BNU configuration files.  */
+   configuration files, followed by the HDB configuration files.  */
 #define HAVE_V2_CONFIG 0
-#define HAVE_BNU_CONFIG 0
+#define HAVE_HDB_CONFIG 0
 
 /* Exactly one of the following macros must be set to 1.  The exact
    format of the spool directories is explained in sys3.unx.
@@ -259,7 +260,7 @@
    SPOOLDIR_V2 -- Use a Version 2 (original UUCP) style spool directory
    SPOOLDIR_BSD42 -- Use a BSD 4.2 style spool directory
    SPOOLDIR_BSD43 -- Use a BSD 4.3 style spool directory
-   SPOOLDIR_BNU -- Use a BNU (HDB) style spool directory
+   SPOOLDIR_HDB -- Use a HDB (BNU) style spool directory
    SPOOLDIR_ULTRIX -- Use an Ultrix style spool directory
    SPOOLDIR_TAYLOR -- Use a new style spool directory
 
@@ -268,7 +269,7 @@
 #define SPOOLDIR_V2 0
 #define SPOOLDIR_BSD42 0
 #define SPOOLDIR_BSD43 0
-#define SPOOLDIR_BNU 0
+#define SPOOLDIR_HDB 0
 #define SPOOLDIR_ULTRIX 0
 #define SPOOLDIR_TAYLOR 1
 
@@ -294,7 +295,7 @@
 
    uucp uunet (12/10-09:04 16390) (692373862) received data 2371 bytes 5 seconds
 
-   If you define HAVE_BNU_LOGGING, each program will by default use a
+   If you define HAVE_HDB_LOGGING, each program will by default use a
    separate log file.  For uucico talking to uunet, for example, it
    will be /usr/spool/uucp/.Log/uucico/uunet.  Each line will look
    something like this:
@@ -311,7 +312,7 @@
    appealing.  */
 #define HAVE_TAYLOR_LOGGING 1
 #define HAVE_V2_LOGGING 0
-#define HAVE_BNU_LOGGING 0
+#define HAVE_HDB_LOGGING 0
 
 /* If you would like the log, debugging and statistics files to be
    closed after each message, set CLOSE_LOGFILES to 1.  This will
@@ -406,9 +407,9 @@
 
 #endif /* HAVE_V2_LOGGING */
 
-#if HAVE_BNU_LOGGING
+#if HAVE_HDB_LOGGING
 
-/* The default log file when using HAVE_BNU_LOGGING.  When using
+/* The default log file when using HAVE_HDB_LOGGING.  When using
    HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
    command in the configuration file.  The first %s in the string will
    be replaced by the program name (e.g. uucico); the second %s will
@@ -417,14 +418,14 @@
    string.  */
 #define LOGFILE "/usr/spool/uucp/.Log/%s/%s"
 
-/* The default statistics file when using HAVE_BNU_LOGGING.  When using
+/* The default statistics file when using HAVE_HDB_LOGGING.  When using
    HAVE_TAYLOR_CONFIG, this may be overridden by the ``statfile''
    command in the configuration file.  */
 #define STATFILE "/usr/spool/uucp/.Admin/xferstats"
 
-/* The default debugging file when using HAVE_BNU_LOGGING.  When using
+/* The default debugging file when using HAVE_HDB_LOGGING.  When using
    HAVE_TAYLOR_CONFIG, this may be overridden by the ``debugfile''
    command in the configuration file.  */
 #define DEBUGFILE "/usr/spool/uucp/.Admin/audit.local"
 
-#endif /* HAVE_BNU_LOGGING */
+#endif /* HAVE_HDB_LOGGING */

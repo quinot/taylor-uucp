@@ -186,43 +186,120 @@
    to.  */
 #define COMBINED_UNBLOCK 0
 
-/* There are now a number of functions to check for.  For each of these,
-   the macro HAVE_FUNC should be set to 1 if your system has FUNC.  For
-   example, HAVE_STRERROR should be set to 1 if your system has strerror,
-   0 otherwise.  */
+/* There are now a number of functions to check for.  For each of
+   these, the macro HAVE_FUNC should be set to 1 if your system has
+   FUNC.  For example, HAVE_VFPRINTF should be set to 1 if your system
+   has vfprintf, 0 otherwise.  */
 
-/* Taylor UUCP provides its own versions of the following functions,
-   or knows how to work around their absence.  */
-#define HAVE_MEMSET 0
-#define HAVE_MEMCMP 0
-#define HAVE_MEMCHR 0
-#define HAVE_MEMCPY 0
-#define HAVE_BCOPY 0
-#define HAVE_BCMP 0
-#define HAVE_BZERO 0
-#define HAVE_MEMMOVE 0
-#define HAVE_STRCHR 0
-#define HAVE_STRRCHR 0
-#define HAVE_INDEX 0
-#define HAVE_RINDEX 0
-#define HAVE_STRERROR 0
-#define HAVE_STRTOL 0
-#define HAVE_STRSTR 0
-#define HAVE_STRDUP 0
-#define HAVE_STRCASECMP 0
-#define HAVE_STRICMP 0
-#define HAVE_STRLWR 0
-#define HAVE_BSEARCH 0
+/* Taylor UUCP will take advantage of the following functions if they
+   are available, but knows how to deal with their absence.  */
 #define HAVE_VFPRINTF 0
-#define HAVE_REMOVE 0
 #define HAVE_FTRUNCATE 0
 #define HAVE_LTRUNC 0
-#define HAVE_RENAME 0
-#define HAVE_OPENDIR 0
-#define HAVE_DUP2 0
 #define HAVE_WAITPID 0
 #define HAVE_WAIT4 0
-#define HAVE_FTW 0
+
+/* There are several functions which are replaced in the subdirectory
+   lib.  If they are missing, the configure script will automatically
+   add them to lib/Makefile to force them to be recompiled.  If you
+   are configuring by hand, you will have to do this yourself.  The
+   string @LIBOBJS@ in lib/Makefile.in should be replaced by a list of
+   object files in lib/Makefile.  The following comments tell you
+   which object file names to add (they are generally fairly obvious,
+   given that the file names have no more than six characters before
+   the period).  */
+
+/* For each of these functions, if it does not exist, the indicated
+   object file should be added to lib/Makefile.  */
+#define HAVE_BSEARCH 0 /* bsrch.o */
+#define HAVE_GETLINE 0 /* getlin.o */
+#define HAVE_MEMCHR 0 /* memchr.o */
+#define HAVE_MEMMOVE 0 /* memmov.o */
+#define HAVE_STRDUP 0 /* strdup.o */
+#define HAVE_STRLWR 0 /* strlwr.o */
+#define HAVE_STRSTR 0 /* strstr.o */
+#define HAVE_STRTOL 0 /* strtol.o */
+
+/* If neither of these functions exists, you should add bzero.o to
+   lib/Makefile.  */
+#define HAVE_BZERO 0
+#define HAVE_MEMSET 0
+
+/* If neither of these functions exists, you should add memcmp.o to
+   lib/Makefile.  */
+#define HAVE_MEMCMP 0
+#define HAVE_BCMP 0
+
+/* If neither of these functions exists, you should add memcpy.o to
+   lib/Makefile.  */
+#define HAVE_MEMCPY 0
+#define HAVE_BCOPY 0
+
+/* If neither of these functions exists, you should add strcas.o to
+   lib/Makefile.  */
+#define HAVE_STRCASECMP 0
+#define HAVE_STRICMP 0
+
+/* If neither of these functions exists, you should add strncs.o to
+   lib/Makefile.  */
+#define HAVE_STRNCASECMP 0
+#define HAVE_STRNICMP 0
+
+/* If neither of these functions exists, you should add strchr.o to
+   lib/Makefile.  */
+#define HAVE_STRCHR 0
+#define HAVE_INDEX 0
+
+/* If neither of these functions exists, you should add strrch.o to
+   lib/Makefile.  */
+#define HAVE_STRRCHR 0
+#define HAVE_RINDEX 0
+
+/* There are also Unix specific functions which are replaced in the
+   subdirectory unix.  If they are missing, the configure script will
+   automatically add them to unix/Makefile to force them to be
+   recompiled.  If you are configuring by hand, you will have to do
+   this yourself.  The string @UNIXOBJS@ in unix/Makefile.in should be
+   replaced by a list of object files in unix/Makefile.  The following
+   comments tell you which object file names to add.  */
+
+/* For each of these functions, if it does not exist, the indicated
+   object file should be added to unix/Makefile.  */
+#define HAVE_OPENDIR 0 /* dirent.o */
+#define HAVE_DUP2 0 /* dup2.o */
+#define HAVE_FTW 0 /* ftw.o */
+#define HAVE_REMOVE 0 /* remove.o */
+#define HAVE_RENAME 0 /* rename.o */
+#define HAVE_STRERROR 0 /* strerr.o */
+
+/* The code needs to know how to create directories.  If you have the
+   mkdir function, set HAVE_MKDIR to 1 and replace @UUDIR@ in
+   Makefile.in with '# ' (the configure script will set @UUDIR@
+   according to the variable UUDIR).  Otherwise, set HAVE_MKDIR to 0,
+   remove @UUDIR@ from Makefile.in, set MKDIR_PROGRAM to the name of
+   the program which will create a directory named on the command line
+   (e.g., "/bin/mkdir"), and add mkdir.o to the @UNIXOBJS@ string in
+   unix/Makefile.in.  */
+#define HAVE_MKDIR 0
+#define MKDIR_PROGRAM unused
+
+/* The code also needs to know how to remove directories.  If you have
+   the rmdir function, set HAVE_RMDIR to 1.  Otherwise, set
+   RMDIR_PROGRAM to the name of the program which will remove a
+   directory named on the command line (e.g., "/bin/rmdir") and add
+   rmdir.o to the @UNIXOBJS@ string in unix/Makefile.in.  */
+#define HAVE_RMDIR 0
+#define RMDIR_PROGRAM unused
+
+/* The code needs to know to how to get the name of the current
+   directory.  If getcwd is available it will be used, otherwise if
+   getwd is available it will be used.  Otherwise, set PWD_PROGRAM to
+   the name of the program which will print the name of the current
+   working directory (e.g., "/bin/pwd") and add getcwd.o to the
+   @UNIXOBJS@ string in unix/Makefile.in.  */
+#define HAVE_GETCWD 0
+#define HAVE_GETWD 0
+#define PWD_PROGRAM unused
 
 /* If you have either sigsetjmp or setret, it will be used instead of
    setjmp.  These functions will only be used if your system restarts
@@ -303,32 +380,6 @@
    compiled in.  */
 #define HAVE_SOCKET 0
 
-/* The code needs to know to how to get the name of the current
-   directory.  If getcwd is available it will be used, otherwise if
-   getwd is available it will be used.  Otherwise, set PWD_PROGRAM to
-   the name of the program which will print the name of the current
-   working directory (e.g., "/bin/pwd").  */
-#define HAVE_GETCWD 0
-#define HAVE_GETWD 0
-#define PWD_PROGRAM unused
-
-/* The code needs to know how to create directories.  If you have the
-   mkdir function, set HAVE_MKDIR to 1 and replace @UUDIR@ in
-   Makefile.in with '# ' (the configure script will set @UUDIR@
-   according to the variable UUDIR).  Otherwise, set HAVE_MKDIR to 0,
-   remove @UUDIR@ from Makefile.in, and set MKDIR_PROGRAM to the name
-   of the program which will create a directory named on the command
-   line (e.g., "/bin/mkdir").  */
-#define HAVE_MKDIR 0
-#define MKDIR_PROGRAM unused
-
-/* The code also needs to know how to remove directories.  If you have
-   the rmdir function, set HAVE_RMDIR to 1.  Otherwise, set
-   RMDIR_PROGRAM to the name of the program which will remove a
-   directory named on the command line (e.g., "/bin/rmdir").  */
-#define HAVE_RMDIR 0
-#define RMDIR_PROGRAM unused
-
 /* That's the end of the list of the functions.  Now there are a few
    last miscellaneous items.  */
 
@@ -341,7 +392,7 @@
 #define TIMES_DECLARATION_OK 0
 
 /* Set HAVE_BSD_PGRP to 1 if your getpgrp call takes 1 argument and
-   your setpgrp calls takes 2 argument (on System V they generally
+   your setpgrp calls takes 2 arguments (on System V they generally
    take no arguments).  You can safely set this to 1 on System V,
    provided the call will compile without any errors.  */
 #define HAVE_BSD_PGRP 0
@@ -349,10 +400,6 @@
 /* Set HAVE_UNION_WAIT to 1 if union wait is defined in the header
    file <sys/wait.h>.  */
 #define HAVE_UNION_WAIT 0
-
-/* Set UTIME_NULL_MISSING to 1 if utime with a NULL second argument
-   does not set the file times to the current time.  */
-#define UTIME_NULL_MISSING 0
 
 /* Set HAVE_LONG_FILENAMES to 1 if the system supports file names
    longer than 14 characters.  */
