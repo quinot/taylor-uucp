@@ -254,6 +254,16 @@ feprocess_data (qdaemon, pfexit, pcneed)
       cinbuf = iPrecend - iPrecstart;
       if (cinbuf < 0)
 	cinbuf += CRECBUFLEN;
+
+      if (cEbytes == 0)
+	{
+	  if (! fgot_data (qdaemon, abPrecbuf, (size_t) 0,
+			   (const char *) NULL, (size_t) 0,
+			   -1, -1, (long) -1, TRUE, pfexit))
+	    return FALSE;
+	  if (*pfexit)
+	    return TRUE;
+	}
     }
 
   /* Here we can read real data for the file.  */
