@@ -77,6 +77,9 @@ fsend_data (qconn, zsend, csend, fdoread)
 	    --crec;
 	}
 
+      if (crec == 0)
+	return fconn_write (qconn, zsend, csend);
+
       csent = csend;
 
       if (! fconn_io (qconn, zsend, &csent, abPrecbuf + iPrecend, &crec))
