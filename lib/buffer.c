@@ -27,6 +27,11 @@
 
 #include "uudefs.h"
 
+/* Define MALLOC_BUFFERS when compiling this file in order to more
+   effectively use a debugging malloc library.  */
+
+#ifndef MALLOC_BUFFERS
+
 /* We keep a linked list of buffers.  The union is a hack because the
    default definition of offsetof, in uucp.h, takes the address of the
    field, and some C compilers will not let you take the address of an
@@ -74,23 +79,6 @@ zbufalc (c)
   return q->u.ab;
 }
 
-/* Get a buffer holding a given string.  */
-
-char *
-zbufcpy (z)
-     const char *z;
-{
-  size_t csize;
-  char *zret;
-
-  if (z == NULL)
-    return NULL;
-  csize = strlen (z) + 1;
-  zret = zbufalc (csize);
-  memcpy (zret, z, csize);
-  return zret;
-}
-
 /* Free up a buffer back onto the linked list.  */
 
 void
@@ -124,4 +112,41 @@ ubuffree (z)
 
   q->qnext = qBlist;
   qBlist = q;
+}
+
+#else /* MALLOC_BUFFERS */
+
+char *
+zbufalc (c)
+     size_t c;
+{
+  return (char *) xmalloc (c);
+}
+
+/* Free up a buffer back onto the linked list.  */
+
+void
+ubuffree (z)
+     char *z;
+{
+  free (z);
+}
+
+#endif /* MALLOC_BUFFERS */
+
+/* Get a buffer holding a given string.  */
+
+char *
+zbufcpy (z)
+     const char *z;
+{
+  size_t csize;
+  char *zret;
+
+  if (z == NULL)
+    return NULL;
+  csize = strlen (z) + 1;
+  zret = zbufalc (csize);
+  memcpy (zret, z, csize);
+  return zret;
 }
