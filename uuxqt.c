@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.42  1992/03/17  03:15:40  ian
+   Pass command to fsysdep_execute as first element of argument array
+
    Revision 1.41  1992/03/17  01:07:15  ian
    Miscellaneous cleanup
 
@@ -1165,6 +1168,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   /* Get a shell command which uses the full path of the command to
      execute.  */
   zfullcmd = (char *) alloca (strlen (zQcmd) + strlen (azQargs[0]) + 2);
+  *zfullcmd = '\0';
   for (i = 0; azQargs[i] != NULL; i++)
     {
       strcat (zfullcmd, azQargs[i]);
