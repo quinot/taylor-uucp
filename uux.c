@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/11  03:59:19  ian
+   Create directories when necessary; don't just assume they exist
+
    Revision 1.10  1991/12/07  03:03:12  ian
    Split arguments like sh; request sh execution if any metachars appear
 
@@ -121,14 +124,19 @@ main (argc, argv)
   const char *zrequestor = NULL;
   /* -b: if true, return standard input on error.  */
   boolean fretstdin = FALSE;
-  /* -c,-l,-C: if true, copy to spool directory.  */
+  /* -c,-C: if true, copy to spool directory.  */
   boolean fcopy = FALSE;
+  /* -c: set if -c appears explicitly; if it and -l appear, then if the
+     link fails we don't copy the file.  */
+  boolean fdontcopy = FALSE;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
   /* -j: output job id.  */
   boolean fjobid = FALSE;
   /* -g: job grade.  */
   char bgrade = BDEFAULT_UUX_GRADE;
+  /* -l: link file to spool directory.  */
+  boolean flink = FALSE;
   /* -n: do not notify upon command completion.  */
   boolean fno_ack = FALSE;
   /* -p: read standard input for command standard input.  */
@@ -211,9 +219,9 @@ main (argc, argv)
 	  break;
 
 	case 'c':
-	case 'l':
-	  /* Do not copy local files to spool directory (default).  */
+	  /* Do not copy local files to spool directory.  */
 	  fcopy = FALSE;
+	  fdontcopy = TRUE;
 	  break;
 
 	case 'C':
@@ -234,6 +242,11 @@ main (argc, argv)
 	case 'g':
 	  /* Set job grade.  */
 	  bgrade = optarg[0];
+	  break;
+
+	case 'l':
+	  /* Link file to spool directory.  */
+	  flink = TRUE;
 	  break;
 
 	case 'n':
@@ -575,12 +588,16 @@ main (argc, argv)
 	  char abdname[CFILE_NAME_LEN];
 
 	  /* It's a local file.  If requested by -C, copy the file to
-	     the spool directory.  If the file is being shipped to
-	     another system, we must set up a transfer request.  */
+	     the spool directory.  If requested by -l, link the file
+	     to the spool directory; if the link fails, we copy the
+	     file, unless -c was explictly used.  If the file is being
+	     shipped to another system, we must set up a transfer
+	     request.  */
 
-	  if (fcopy)
+	  if (fcopy || flink)
 	    {
 	      char *zdup;
+	      boolean fdid;
 
 	      zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname,
 					      abdname, (char *) NULL);
@@ -592,10 +609,31 @@ main (argc, argv)
 
 	      zdup = xstrdup (zdata);
 
-	      if (! fcopy_file (zfile, zdup, FALSE, TRUE))
+	      fdid = FALSE;
+	      if (flink)
 		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
+		  boolean fworked;
+
+		  if (! fsysdep_link (zfile, zdup, &fworked))
+		    {
+		      ulog_close ();
+		      usysdep_exit (FALSE);
+		    }
+
+		  if (fworked)
+		    fdid = TRUE;
+		  else if (fdontcopy)
+		    ulog (LOG_FATAL, "%s: Can't link to spool directory",
+			  zfile);
+		}
+
+	      if (! fdid)
+		{
+		  if (! fcopy_file (zfile, zdup, FALSE, TRUE))
+		    {
+		      ulog_close ();
+		      usysdep_exit (FALSE);
+		    }
 		}
 
 	      xfree ((pointer) zdup);
@@ -630,7 +668,7 @@ main (argc, argv)
 	  else
 	    {
 	      uxadd_send_file (zuse, abdname,
-			       fcopy ? "C" : "c",
+			       fcopy || flink ? "C" : "c",
 			       abtname);
 
 	      if (finput)
@@ -989,9 +1027,11 @@ uxusage ()
   fprintf (stderr,
 	   " -,-p: Read standard input for standard input of command\n");
   fprintf (stderr,
-	   " -c,-l: Do not copy local files to spool directory (default)\n");
+	   " -c: Do not copy local files to spool directory (default)\n");
   fprintf (stderr,
 	   " -C: Copy local files to spool directory\n");
+  fprintf (stderr,
+	   " -l: link local files to spool directory\n");
   fprintf (stderr,
 	   " -g grade: Set job grade (must be alphabetic)\n");
   fprintf (stderr,

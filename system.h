@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/11  03:59:19  ian
+   Create directories when necessary; don't just assume they exist
+
    Revision 1.9  1991/11/14  03:40:10  ian
    Try to figure out whether stdin is a TCP port
 
@@ -97,6 +100,16 @@ extern const char *zsysdep_local_name P((void));
    name.  It should return NULL on error.  The return value should
    point to a static buffer.  */
 extern const char *zsysdep_login_name P((void));
+
+/* Link two files.  On Unix this should attempt the link.  If it
+   succeeds it should return TRUE with *pfworked set to TRUE.  If the
+   link fails because it must go across a device, it should return
+   TRUE with *pfworked set to FALSE.  If the link fails for some other
+   reason, it should print an error message and return FALSE.  On a
+   system which does not support links to files, this should just
+   return TRUE with *pfworked set to FALSE.  */
+extern boolean fsysdep_link P((const char *zfrom, const char *zto,
+			       boolean *pfworked));
 
 /* Get the port name.  This is used when uucico is started up in slave
    mode to figure out which port was used to call in so that it can
