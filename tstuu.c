@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/01  02:23:12  ian
+   Niels Baggesen: don't multiply include <unistd.h>
+
    Revision 1.9  1991/12/01  02:12:02  ian
    David Nugent: some systems don't define O_NDELAY
 
@@ -98,6 +101,21 @@ char tstuu_rcsid[] = "$Id$";
 #define O_NONBLOCK 0
 #endif /* ! defined (FNBLOCK) */
 #endif /* ! defined (O_NONBLOCK) */
+
+/* Get definitions for both EAGAIN and EWOULDBLOCK.  */
+
+#ifndef EAGAIN
+#ifndef EWOULDBLOCK
+#define EAGAIN (-1)
+#define EWOULDBLOCK (-1)
+#else /* defined (EWOULDBLOCK) */
+#define EAGAIN EWOULDBLOCK
+#endif /* defined (EWOULDBLOCK) */
+#else /* defined (EAGAIN) */
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK EAGAIN
+#endif /* ! defined (EWOULDBLOCK) */
+#endif /* defined (EAGAIN) */
 
 /* Apparently some systems support fd_set but not FD_SET, although
    this is hard to imagine.  This implementation assumes that no file
