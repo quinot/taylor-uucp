@@ -4429,6 +4429,7 @@ Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
 @file{guy@@auspex.auspex.com} (Guy Harris)
 Petri Helenius @file{<pete@@fidata.fi>}
 Peter Honeyman @file{<honey@@citi.umich.edu>}
+@file{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
 @file{bei@@dogface.austin.tx.us} (Bob Izenberg)
 Rob Janssen @file{<cmgit!rob@@relay.nluug.nl>}
 @file{harvee!esj} (Eric S Johansson)
@@ -4449,6 +4450,7 @@ Ted Lindgreen @file{<tlindgreen@@encore.nl>}
 Matthew Lyle @file{<matt@@mips.mitek.com>}
 @file{djm@@eng.umd.edu} (David J. MacKenzie)
 John R MacMillan @file{<chance!john@@sq.sq.com>}
+Giles D Malet @file{<shrdlu!gdm@@provar.kwnet.on.ca>}
 @file{mem@@mv.MV.COM} (Mark E. Mallett)
 @file{pepe@@dit.upm.es} (Jose A. Manas)
 @file{martelli@@cadlab.sublink.org} (Alex Martelli)
@@ -4471,6 +4473,7 @@ david nugent @file{<david@@csource.oz.au>}
 Jarmo Raiha @file{<jarmo@@ksvltd.FI>}
 Scott Reynolds @file{<scott@@clmqt.marquette.Mi.US>}
 @file{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
+@file{arnold@@cc.gatech.edu} (Arnold Robbins)
 @file{ross@@sun490.fdu.edu} (Jeff Ross)
 Aleksey P. Rudnev @file{<alex@@kiae.su>}
 "Heiko W.Rupp" @file{<hwr@@pilhuhn.ka.sub.org>}
