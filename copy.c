@@ -112,6 +112,13 @@ fcopy_open_file (efrom, zto, fpublic, fmkdirs, fsignals)
       return FALSE;
     }
 
+  if (ferror (efrom))
+    {
+      ulog (LOG_ERROR, "fread: %s", strerror (errno));
+      (void) remove (zto);
+      return FALSE;
+    }
+
   return TRUE;
 }
 
