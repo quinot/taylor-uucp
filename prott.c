@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/13  20:44:20  ian
+   Learned author
+
    Revision 1.1  1991/11/12  18:26:03  ian
    Initial revision
 
@@ -39,8 +42,7 @@ char prott_rcsid[] = "$Id$";
 #include "prot.h"
 #include "port.h"
 
-/* This implementation is based on code provided to me by Earle Ake;
-   it was written by Rick Adams.
+/* This implementation is based on code written by Rick Adams.
 
    This code implements the 't' protocol, which does no error checking
    whatsoever and thus requires an end-to-end verified eight bit
@@ -123,7 +125,7 @@ ftsendcmd (z)
 
   zalc[clen - 1] = '\0';
 
-  return fsend_data (zalc, clen);
+  return fsend_data (zalc, clen, TRUE);
 }
 
 /* Get space to be filled with data.  We provide a buffer which has
@@ -152,7 +154,9 @@ ftsenddata (zdata, cdata)
   zdata[-2] = (cdata >>  8) & 0xff;
   zdata[-1] =  cdata        & 0xff;
 
-  return fsend_data (zdata - CTFRAMELEN, cdata + CTFRAMELEN);
+  /* We pass FALSE to fsend_data since we don't expect the other side
+     to be sending us anything just now.  */
+  return fsend_data (zdata - CTFRAMELEN, cdata + CTFRAMELEN, FALSE);
 }
 
 /* Process any data in the receive buffer.  */

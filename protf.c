@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/11/11  04:21:16  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -130,7 +133,7 @@ ffsendcmd (z)
   clen = strlen (z);
   zalc = (char *) alloca (clen + 2);
   sprintf (zalc, "%s\r", z);
-  return fsend_data (zalc, clen + 1);
+  return fsend_data (zalc, clen + 1, TRUE);
 }
 
 /* Get space to be filled with data.  We allocate the space from the
@@ -215,7 +218,9 @@ ffsenddata (zdata, cdata)
 
   iFcheck = itmpchk;
 
-  return fsend_data (ab, ze - ab);
+  /* Passing FALSE tells fsend_data not to bother looking for incoming
+     information, since we really don't expect any.  */
+  return fsend_data (ab, ze - ab, FALSE);
 }
 
 /* Process any data in the receive buffer.  */
@@ -265,14 +270,20 @@ ffprocess (pfexit)
 
   while (iPrecstart != iPrecend)
     {
-      int ito;
+      char *zstart, *zto, *zfrom;
+      int c;
 
-      ito = iPrecstart;
-      for (i = iPrecstart; i < CRECBUFLEN && i != iPrecend; i++)
+      zto = zfrom = zstart = abPrecbuf + iPrecstart;
+
+      c = iPrecend - iPrecstart;
+      if (c < 0)
+	c = CRECBUFLEN - iPrecstart;
+
+      while (c-- != 0)
 	{
 	  int b;
 
-	  b = abPrecbuf[i] & 0xff;
+	  b = *zfrom++ & 0xff;
 	  if (b < 040 || b > 0176)
 	    {
 	      ulog (LOG_ERROR, "Illegal byte %d", b);
@@ -296,17 +307,16 @@ ffprocess (pfexit)
 		    }
 
 		  /* Pass any initial data.  */
-		  if (ito > iPrecstart)
+		  if (zto != zstart)
 		    {
-		      if (! fgot_data (abPrecbuf + iPrecstart,
-				       ito - iPrecstart, FALSE, TRUE,
-				       pfexit))
+		      if (! fgot_data (zstart, zto - zstart, FALSE,
+				       TRUE, pfexit))
 			return FALSE;
 		    }
 
 		  /* The next characters we want to read are the
 		     checksum, so skip the second 0176.  */
-		  iPrecstart = (i + 1) % CRECBUFLEN;
+		  iPrecstart = (iPrecstart + zfrom - zstart) % CRECBUFLEN;
 
 		  iFcheck = itmpchk;
 
@@ -326,27 +336,29 @@ ffprocess (pfexit)
 
 	      /* Here we have encountered a nonspecial character.  */
 
-	      switch (bFspecial)
+	      if (bFspecial == 0)
+		bnext = b;
+	      else
 		{
-		case 0:
-		  bnext = b;
-		  break;
-		case 0172:
-		  bnext = b - 0100;
-		  break;
-		case 0173:
-		case 0174:
-		  bnext = b + 0100;
-		  break;
-		case 0175:
-		  bnext = b + 0200;
-		  break;
-		case 0176:
-		  bnext = b + 0300;
-		  break;
+		  switch (bFspecial)
+		    {
+		    case 0172:
+		      bnext = b - 0100;
+		      break;
+		    case 0173:
+		    case 0174:
+		      bnext = b + 0100;
+		      break;
+		    case 0175:
+		      bnext = b + 0200;
+		      break;
+		    case 0176:
+		      bnext = b + 0300;
+		      break;
+		    }
 		}
 
-	      abPrecbuf[ito++] = bnext;
+	      *zto++ = bnext;
 	      bFspecial = 0;
 
 	      /* Rotate the checksum left.  */
@@ -363,19 +375,18 @@ ffprocess (pfexit)
 	    }
 	}
 
-      if (ito != iPrecstart)
+      if (zto != zstart)
 	{
 #if DEBUG > 8
 	  if (iDebug > 8)
 	    ulog (LOG_DEBUG, "ffprocess: Calling fgot_data with %d bytes",
-		  ito - iPrecstart);
+		  zto - zstart);
 #endif
-	  if (! fgot_data (abPrecbuf + iPrecstart, ito - iPrecstart,
-			   FALSE, TRUE, pfexit))
+	  if (! fgot_data (zstart, zto - zstart, FALSE, TRUE, pfexit))
 	    return FALSE;
 	}
 
-      iPrecstart = i % CRECBUFLEN;
+      iPrecstart = (iPrecstart + zfrom - zstart) % CRECBUFLEN;
     }
 
   iFcheck = itmpchk;
@@ -413,7 +424,7 @@ ffwait ()
 	crec = 0;
       else
 	{
-	  if (! freceive_data (256, &crec, 1))
+	  if (! freceive_data (128, &crec, 1))
 	    return FALSE;
 	}
 
@@ -465,7 +476,7 @@ fffile (fstart, fsend, pfredo)
 	  /* Send the final checksum.  */
 
 	  sprintf (ab, "\176\176%04x\r", iFcheck & 0xffff);
-	  if (! fsend_data (ab, 7))
+	  if (! fsend_data (ab, 7, TRUE))
 	    return FALSE;
 
 	  /* Now look for the acknowledgement.  */

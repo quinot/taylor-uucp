@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/11  19:32:03  ian
+   Added breceive_char to read characters through protocol buffering
+
    Revision 1.3  1991/11/11  04:21:16  ian
    Added 'f' protocol
 
@@ -971,10 +974,14 @@ zgetcmd ()
    can send it, we may run out of buffer space.  */
 
 boolean
-fsend_data (zsend, csend)
+fsend_data (zsend, csend, fdoread)
      const char *zsend;
      int csend;
+     boolean fdoread;
 {
+  if (! fdoread)
+    return fport_write (zsend, csend);
+
   while (csend > 0)
     {
       char *zrec;

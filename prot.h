@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/14  03:20:13  ian
+   Added seven-bit and reliable commands to help when selecting protocols
+
    Revision 1.5  1991/11/12  18:25:33  ian
    Added 't' protocol
 
@@ -200,9 +203,13 @@ extern boolean fgot_data P((const char *zdata, int cdata,
 			    boolean fcmd, boolean ffile,
 			    boolean *pfexit));
 
-/* Send data to the other system, while also receiving data into the
-   receive buffer abPrecbuf.  Returns FALSE on error.  */
-extern boolean fsend_data P((const char *zsend, int csend));
+/* Send data to the other system.  If the fread argument is TRUE, this
+   will also receive data into the receive buffer abPrecbuf; fread is
+   passed as TRUE if the protocol expects data to be coming back, to
+   make sure the input buffer does not fill up.  Returns FALSE on
+   error.  */
+extern boolean fsend_data P((const char *zsend, int csend,
+			     boolean fdoread));
 
 /* Receive data from the other system when there is no data to send.
    The cneed argument is the amount of data desired and the ctimeout

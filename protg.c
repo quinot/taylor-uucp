@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/11  00:39:45  ian
+   Open port in seven bit mode, added fport_set to change to eight bit
+
    Revision 1.3  1991/11/09  18:53:07  ian
    Reworked protocol interface
 
@@ -637,7 +640,7 @@ fgsenddata (zdata, cdata)
       && INEXTSEQ (INEXTSEQ (iGretransmit_seq)) != iGsendseq)
     return TRUE;
 
-  return fsend_data (z, CFRAMELEN + iGremote_packsize);
+  return fsend_data (z, CFRAMELEN + iGremote_packsize, TRUE);
 }
 
 /* Recompute the control byte and checksum of a packet so that it
@@ -713,7 +716,7 @@ fgsend_control (ixxx, iyyy)
   ab[IFRAME_XOR] = (char) (ab[IFRAME_K] ^ ab[IFRAME_CHECKLOW]
 			   ^ ab[IFRAME_CHECKHIGH] ^ ab[IFRAME_CONTROL]);
 
-  return fsend_data (ab, CFRAMELEN);
+  return fsend_data (ab, CFRAMELEN, TRUE);
 }
 
 /* Process existing data.  Set *pfexit to TRUE if a file or a command
@@ -843,7 +846,8 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	      inext = INEXTSEQ (iGremote_ack);
 	      ugadjust_ack (inext);
 	      if (! fsend_data (azGsendbuffers[inext],
-				CFRAMELEN + iGremote_packsize))
+				CFRAMELEN + iGremote_packsize,
+				TRUE))
 		return FALSE;
 	      iGretransmit_seq = inext;
 	    }
@@ -904,7 +908,8 @@ fggot_ack (iack)
     {
       ugadjust_ack (inext);
       if (! fsend_data (azGsendbuffers[inext],
-			CFRAMELEN + iGremote_packsize))
+			CFRAMELEN + iGremote_packsize,
+			TRUE))
 	return FALSE;
       inext = INEXTSEQ (inext);
       if (inext == iGsendseq)
@@ -913,7 +918,8 @@ fggot_ack (iack)
 	{
 	  ugadjust_ack (inext);
 	  if (! fsend_data (azGsendbuffers[inext],
-			    CFRAMELEN + iGremote_packsize))
+			    CFRAMELEN + iGremote_packsize,
+			    TRUE))
 	    return FALSE;
 	  iGretransmit_seq = inext;
 	}
@@ -1307,7 +1313,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      ugadjust_ack (iGretransmit_seq);
 	      if (! fsend_data (azGsendbuffers[iGretransmit_seq],
-				CFRAMELEN + iGremote_packsize))
+				CFRAMELEN + iGremote_packsize,
+				TRUE))
 		return FALSE;
 	    }
 	  break;
@@ -1316,7 +1323,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	     by UUCP, but it's easy to support.  */
 	  ugadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
 	  if (! fsend_data (azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])],
-			    CFRAMELEN + iGremote_packsize))
+			    CFRAMELEN + iGremote_packsize,
+			    TRUE))
 	    return FALSE;
 	  break;
 	case RR:
