@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.2  1991/09/11  16:59:00  ian
+ * fcheck_time and btime_low_grade looped endlessly on unusual grades
+ *
  * Revision 1.1  1991/09/10  19:40:31  ian
  * Initial revision
  *
@@ -295,7 +298,7 @@ btime_low_grade (ztimegrade)
   while (TRUE)
     {
       if ((bgrade == '\0'
-	   || igradecmp (bgrade, *ztimegrade) > 0)
+	   || igradecmp (bgrade, *ztimegrade) < 0)
 	  && fttime_ok (q, ztimegrade + 1))
 	bgrade = *ztimegrade;
 
