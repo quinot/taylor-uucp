@@ -4401,6 +4401,7 @@ Brian W. Antoine @file{<briana@@tau-ceti.isc-br.com>}
 @file{magus!dolphin!zack} (Zacharias Beckman)
 @file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
 @file{bob@@usixth.sublink.org} (Roberto Biancardi)
+@file{statsci!scott@@coco.ms.washington.edu} (Scott Blachowicz)
 Marc Boucher @file{<marc@@CAM.ORG>}
 @file{dean@@coplex.com} (Dean Brooks)
 @file{dave@@dlb.com} (Dave Buck)
@@ -4461,7 +4462,7 @@ david nugent @file{<david@@csource.oz.au>}
 @file{pozar@@kumr.lns.com} (Tim Pozar)
 @file{putsch@@uicc.com} (Jeff Putsch)
 Jarmo Raiha @file{<jarmo@@ksvltd.FI>}
-Scott Reynolds @file{<scott@clmqt.marquette.Mi.US>}
+Scott Reynolds @file{<scott@@clmqt.marquette.Mi.US>}
 @file{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
 @file{ross@@sun490.fdu.edu} (Jeff Ross)
 Aleksey P. Rudnev @file{<alex@@kiae.su>}
