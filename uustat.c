@@ -139,7 +139,7 @@ static boolean fsexecutions P((pointer puuconf, int icmd, int csystems,
 static boolean fsnotify P((pointer puuconf, int icmd, const char *zcomment,
 			   int cstdin, boolean fkilled, const char *zcmd,
 			   struct scmdlist *qcmd, const char *zid,
-			   const char *zuser,
+			   long itime, const char *zuser,
 			   const struct uuconf_system *qsys,
 			   const char *zstdin, pointer pstdinseq,
 			   const char *zrequestor));
@@ -1273,8 +1273,9 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	      if ((icmd & (JOB_MAIL | JOB_NOTIFY)) != 0)
 		{
 		  if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
-				  zcmd, qlist, zlistid, qlist->s.zuser,
-				  qsys, zstdin, qlist->s.pseq, zrequestor))
+				  zcmd, qlist, zlistid, qlist->itime,
+				  qlist->s.zuser, qsys, zstdin,
+				  qlist->s.pseq, zrequestor))
 		    return FALSE;
 		}
 
@@ -1554,7 +1555,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 	    {
 	      if (! fsnotify (puuconf, icmd, zcomment, cstdin, fkill,
 			      zSxqt_cmd, (struct scmdlist *) NULL,
-			      (const char *) NULL, zSxqt_user, &ssys,
+			      (const char *) NULL, itime, zSxqt_user, &ssys,
 			      zSxqt_stdin, (pointer) NULL, zSxqt_requestor))
 		{
 		  ferr = TRUE;
@@ -1601,8 +1602,8 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 /* When a job is killed, send mail to the appropriate people.  */
 
 static boolean
-fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
-	  qsys, zstdin, pstdinseq, zrequestor)
+fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, itime,
+	  zuser, qsys, zstdin, pstdinseq, zrequestor)
      pointer puuconf;
      int icmd;
      const char *zcomment;
@@ -1611,6 +1612,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
      const char *zcmd;
      struct scmdlist *qcmd;
      const char *zid;
+     long itime;
      const char *zuser;
      const struct uuconf_system *qsys;
      const char *zstdin;
@@ -1620,6 +1622,8 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
   const char **pz;
   int cgot;
   int i, istdin;
+  struct tm stime;
+  char ab[sizeof "1991-12-31 12:00:00"];
   const char *zsubject;
   boolean fret;
 
@@ -1654,7 +1658,14 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       pz[i++] = "\n";
     }
 
-  pz[i++] = "The job ";
+  pz[i++] = "The job was queued at ";
+  usysdep_localtime (itime, &stime);
+  sprintf (ab, "%04d-%02d-%02d %02d:%02d:%02d",
+	   stime.tm_year + 1900, stime.tm_mon + 1, stime.tm_mday,
+	   stime.tm_hour, stime.tm_min, stime.tm_sec);
+  pz[i++] = ab;
+  pz[i++] = ".\nIt ";
+
   if (fkilled)
     pz[i++] = "was\n";
   else
