@@ -122,3 +122,20 @@ Should there be some way to specify the retry time and the maximum
 number of retries using the new configuration scheme?  The retry time
 can currently be specified by using a semicolon at the end of a time
 string.
+
+20.
+
+Write some protocols that support bidirectional transfers.
+
+21.
+
+Support transfers through systems using uucp and uux.  Implement the
+``forward-to'' command to allow control of these transfers.
+
+22.
+
+Add an ftp port type which uses anonymous ftp rather than any of the
+UUCP protocols to do file transfers.  This would allow ftp work to be
+done late at night.
+
+23.
