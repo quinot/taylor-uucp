@@ -40,10 +40,10 @@ file to a command being executed on a remote system.  If the path is
 not absolute, it will be appended to the current working directory on
 the local system; the result may not be meaningful on the remote
 system.  A pathname may begin with ~/, in which case it is relative to
-the UUCP public directory (usually /usr/spool/uucppublic) on the
-appropriate system.  A pathname may begin with ~name/, in which case
-it is relative to the home directory of the named user on the
-appropriate system.
+the UUCP public directory (usually /usr/spool/uucppublic or
+/var/spool/uucppublic) on the appropriate system.  A pathname may
+begin with ~name/, in which case it is relative to the home directory
+of the named user on the appropriate system.
 
 Standard input and output may be redirected as usual; the pathnames
 used may contain exclamation points to indicate that they are on

@@ -2,6 +2,12 @@
 
 	* uucp.texi: Update version number to 1.07.
 
+	* uucico.8: Don't specify debugging file location, just mention
+	uulog -D.
+	* uuxqt.8: Likewise.
+	* uux.1: Mention /var/spool/uucppublic as possible public
+	directory location.
+
 	* cu.1: Remove FILES section.  Update version number to 1.07.
 	* uucp.1: Likewise.
 	* uustat.1: Likewise.
