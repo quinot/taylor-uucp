@@ -186,14 +186,13 @@ than, say, once an hour.
 
 Bob Izenberg: HDB UUCP will retry a call once if it fails.  I might
 want some sort of configuration parameter to allow calls to be
-retried.
+retried.  This can be done by adding an alternate and repeating the
+phone number, though.
 
 35.
 
 Terry Gardner: there's no way to embed a # character in a phone
-number.  Also, it's possible that the BNU configuration reading may be
-wrong, because BNU may only recognize comment characters at the start
-of a line.  Is this true?
+number.
 
 36.
 
@@ -203,8 +202,8 @@ don't permit shell scripts to be executed via execl.
 
 43.
 
-David Nugent: it would be nice to be able to set debugging levels, as
-well as debugging, log, and statistics files, on a site by site basis.
+David Nugent: it would be nice to be able to set debugging, log, and
+statistics files on a site by site basis.
 
 58.
 
