@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.26  1991/12/28  06:10:50  ian
    Added HAVE_STRCHR and HAVE_INDEX to conf.h
 
@@ -204,6 +207,7 @@ typedef int boolean;
 typedef FILE *openfile_t;
 #define EFILECLOSED ((FILE *) NULL)
 #define ffileisopen(e) ((e) != NULL)
+#define ffileeof(e) feof (e)
 #define cfileread(e, z, c) fread ((z), 1, (c), (e))
 #define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
@@ -214,9 +218,9 @@ typedef FILE *openfile_t;
 #define ffileclose(e) (fclose (e) == 0)
 
 extern int fclose (), fseek ();
-/* The ferror function is often a macro, so we can't safely define it.
-   The fread and fwrite functions may return int or may return size_t,
-   so we can't safely define them.  */
+/* The ferror and feof functions are often macros, so we can't safely
+   define them.  The fread and fwrite functions may return int or may
+   return size_t, so we can't safely define them.  */
 
 #else /* ! USE_STDIO */
 
@@ -231,6 +235,7 @@ extern int close ();
 typedef int openfile_t;
 #define EFILECLOSED (-1)
 #define ffileisopen(e) ((e) >= 0)
+#define ffileeof(e) (FALSE)
 #define cfileread(e, z, c) read ((e), (z), (c))
 #define ffilereaderror(e, c) ((c) < 0)
 #define cfilewrite(e, z, c) write ((e), (z), (c))

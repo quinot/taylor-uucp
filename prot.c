@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/21  23:10:43  ian
+   Terry Gardner: record failed file transfers in statistics file
+
    Revision 1.6  1991/12/13  04:33:38  ian
    Franc,ois Pinard: don't bother to warn if the final HY doesn't come in
 
@@ -698,15 +701,20 @@ fploop ()
 	      if (zdata == NULL)
 		return FALSE;
 
-	      cdata = cfileread (eSendfile, zdata, cdata);
-	      if (ffilereaderror (eSendfile, cdata))
+	      if (ffileeof (eSendfile))
+		cdata = 0;
+	      else
 		{
-		  /* The protocol gives us no way to report a file
-		     sending error, so we just drop the connection.
-		     What else can we do?  */
-		  ulog (LOG_ERROR, "read: %s", strerror (errno));
-		  usendfile_error ();
-		  return FALSE;
+		  cdata = cfileread (eSendfile, zdata, cdata);
+		  if (ffilereaderror (eSendfile, cdata))
+		    {
+		      /* The protocol gives us no way to report a file
+			 sending error, so we just drop the connection.
+			 What else can we do?  */
+		      ulog (LOG_ERROR, "read: %s", strerror (errno));
+		      usendfile_error ();
+		      return FALSE;
+		    }
 		}
 
 	      if (! (qProto->pfsenddata) (zdata, cdata))
