@@ -116,7 +116,7 @@ srmdir.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 statsb.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 status.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 time.o: $(srcdir)/../system.h
-tmpfil.o: $(srcdir)/../uuconf.h $(srcdir)/../system.h
+tmpfil.o: $(srcdir)/../uudefs.h $(srcdir)/../uuconf.h $(srcdir)/../system.h
 trunc.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uacces.o: $(srcdir)/../uudefs.h
 ufopen.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
