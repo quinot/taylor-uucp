@@ -160,6 +160,7 @@ ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch getgrent)
 ILT_FUNC_CHECK(gethostname uname napms nap usleep poll select)
 ILT_FUNC_CHECK(sigsetjmp setret getcwd getwd waitpid wait4 socket)
 ILT_FUNC_CHECK(getdtablesize sysconf setsid setpgrp sigaction sigvec)
+ILT_FUNC_CHECK(sigset sighold sigprocmask sigblock)
 ILT_FUNC_CHECK(ftruncate ltrunc rename opendir dup2 gettimeofday ftime times)
 echo checking whether times can be declared as returning long
 echo "#include <sys/times.h>
