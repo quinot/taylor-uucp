@@ -197,7 +197,10 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
 	  if (fmatch)
 	    {
 	      if (uuconf_add_block (pblock, zfree) == 0)
-		zfree = NULL;
+		{
+		  zfree = NULL;
+		  iret = UUCONF_SUCCESS;
+		}
 	      else
 		{
 		  qglobal->ierrno = errno;
