@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.50  1992/03/16  22:22:35  ian
+   Adjusted external declarations
+
    Revision 1.49  1992/03/15  01:54:46  ian
    All execs are now done in isspawn, all waits are done in iswait
 
@@ -290,6 +293,10 @@ typedef int wait_status;
 #if TIMES_TICK == 0
 #undef TIMES_TICK
 #define TIMES_TICK CLK_TCK
+#endif
+
+#ifndef SIGCHLD
+#define SIGCHLD SIGCLD
 #endif
 
 #define ZUUCICO_CMD "login uucp"
