@@ -2164,6 +2164,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		    iwant = (1 << iwant) - 1;
 		  if (qsys->uuconf_zmax_remote_debug != NULL)
 		    iwant &= idebug_parse (qsys->uuconf_zmax_remote_debug);
+		  else
+		    iwant &= DEBUG_ABNORMAL | DEBUG_CHAT | DEBUG_HANDSHAKE;
 		  if ((iDebug | iwant) != iDebug)
 		    {
 		      iDebug |= iwant;
