@@ -75,7 +75,7 @@ uuxqt.o: uucp.h conf.h system.h getopt.h sysdep.h
 uux.o: uucp.h conf.h system.h getopt.h sysdep.h
 uucp.o: uucp.h conf.h system.h getopt.h sysdep.h
 uuchk.o: uucp.h conf.h port.h sysdep.h system.h getopt.h
-tstuu.o: uucp.h conf.h getopt.h
+tstuu.o: uucp.h conf.h sysdep.h getopt.h
 prot.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protg.o: uucp.h conf.h system.h prot.h port.h sysdep.h
 protf.o: uucp.h conf.h prot.h port.h sysdep.h system.h

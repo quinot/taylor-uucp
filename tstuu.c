@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.5  1991/11/14  21:07:15  ian
    Create port file and add protocol command for second system
 
@@ -56,10 +59,15 @@ char tstuu_rcsid[] = "$Id$";
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/times.h>
+
+#include "sysdep.h"
+
+#if HAVE_SYSWAIT_H
+#include <sys/wait.h>
+#endif
 
 #include "getopt.h"
 
