@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/02/02  20:34:36  ian
+   Niels Baggesen: must check user permissions on access to local files
+
    Revision 1.11  1992/01/21  19:39:12  ian
    Chip Salzenberg: uucp and uux start uucico for right system, not any
 
@@ -389,7 +392,8 @@ main (argc, argv)
 					sLocalsys.zremote_receive))
 		ulog (LOG_FATAL, "Permission denied for %s", zdestfile);
 
-	      zconst = zsysdep_in_dir (zdestfile, argv[i]);
+	      zconst = zsysdep_real_file_name (&sLocalsys, zdestfile,
+					       argv[i]);
 	      if (zconst == NULL)
 		{
 		  ulog_close ();
