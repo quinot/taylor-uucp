@@ -98,6 +98,12 @@ extern boolean freceive_data P((struct sconnection *qconn, size_t cneed,
 extern int breceive_char P((struct sconnection *qconn,
 			    int ctimeout, boolean freport));
 
+/* Compute a 32 bit CRC of a data buffer, given an initial CRC.  */
+extern unsigned long icrc P((const char *z, size_t c, unsigned long ick));
+
+/* The initial CRC value to use for a new buffer.  */
+#define ICRCINIT (0xffffffffL)
+
 /* The size of the receive buffer.  */
 #define CRECBUFLEN (16384)
 
