@@ -303,7 +303,7 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 	}	
     }
 
-  if (iseq == 1)
+  if (iseq == 0)
     zxqtdir = XQTDIR;
   else
     {
@@ -524,7 +524,7 @@ fsysdep_lock_uuxqt_dir (iseq)
   const char *zxqtdir;
   char abxqtdir[sizeof XQTDIR + 4];
 
-  if (iseq == 1)
+  if (iseq == 0)
     zxqtdir = XQTDIR;
   else
     {
@@ -554,7 +554,7 @@ fsysdep_unlock_uuxqt_dir (iseq)
   char abxqtdir[sizeof XQTDIR + 4];
   DIR *qdir;
 
-  if (iseq == 1)
+  if (iseq == 0)
     zxqtdir = XQTDIR;
   else
     {
@@ -616,7 +616,7 @@ fsysdep_move_uuxqt_files (cfiles, pzfrom, pzto, fto, iseq, pzinput)
   else
     zinput = *pzinput;
 
-  if (iseq == 1)
+  if (iseq == 0)
     zxqtdir = XQTDIR;
   else
     {
