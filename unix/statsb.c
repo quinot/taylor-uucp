@@ -313,24 +313,6 @@ isysdep_file_time (zfile)
   return (long) s.st_mtime;
 }
 
-/* Get the size in bytes of a file.  */
-
-long
-csysdep_size (zfile)
-     const char *zfile;
-{
-  struct stat s;
-
-  if (stat ((char *) zfile, &s) < 0)
-    {
-      if (errno != ENOENT)
-	ulog (LOG_ERROR, "stat (%s): %s", zfile, strerror (errno));
-      return 0;
-    }
-
-  return s.st_size;
-}
-
 /* Start getting the status files.  */
 
 boolean

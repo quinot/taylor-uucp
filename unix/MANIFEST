@@ -47,6 +47,7 @@ seq.c
 serial.c
 signal.c
 sindir.c
+size.c
 sleep.c
 splcmd.c
 splnam.c
