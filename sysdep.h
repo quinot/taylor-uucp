@@ -1,4 +1,4 @@
-/* sysh.unx -*- C -*-
+/* sysdep.h -*- C -*-
    The header file for the UNIX system dependent routines.
 
    Copyright (C) 1991, 1992, 1993, 1995 Ian Lance Taylor
@@ -23,9 +23,9 @@
    c/o Cygnus Support, 48 Grove Street, Somerville, MA 02144.
    */
 
-#ifndef SYSH_UNX_H
+#ifndef SYSDEP_H
 
-#define SYSH_UNX_H
+#define SYSDEP_H
 
 #if ANSI_C
 /* These structures are used in prototypes but are not defined in this
@@ -560,4 +560,4 @@ extern const char *zSlockdir;
 /* The local UUCP name (needed for some spool directory stuff).  */
 extern const char *zSlocalname;
 
-#endif /* ! defined (SYSH_UNX_H) */
+#endif /* ! defined (SYSDEP_H) */

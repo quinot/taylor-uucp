@@ -1,4 +1,4 @@
-/* syshdr.unx -*- C -*-
+/* syshdr.h -*- C -*-
    Unix system header for the uuconf library.
 
    Copyright (C) 1992, 1993 Ian Lance Taylor
