@@ -142,14 +142,16 @@ AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strstr)
 AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp)
 AC_HAVE_FUNCS(bsearch vfprintf)
 AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
-AC_HAVE_FUNCS(sigsetjmp setret)
-AC_HAVE_FUNCS(sigaction sigvec sigset)
-AC_HAVE_FUNCS(sigprocmask sigblock sighold)
-AC_HAVE_FUNCS(getdtablesize sysconf)
-AC_HAVE_FUNCS(setpgrp setsid setreuid)
-AC_HAVE_FUNCS(gethostname uname)
-AC_HAVE_FUNCS(gettimeofday)
-AC_HAVE_FUNCS(ftw getline glob)
+AC_HAVE_FUNCS(sigsetjmp setret sigaction sigvec sigset)
+AC_HAVE_FUNCS(sigprocmask sigblock sighold getdtablesize sysconf)
+AC_HAVE_FUNCS(setpgrp setsid setreuid gethostname uname)
+AC_HAVE_FUNCS(gettimeofday ftw glob)
+dnl Check for getline, but not in -linet, since ISC has an
+dnl incompatible version there.
+SAVELIBS="$LIBS"
+LIBS=`echo $LIBS | sed 's/-linet//'`
+AC_HAVE_FUNCS(getline)
+LIBS="$SAVELIBS"
 dnl Check for the SCO buggy ftime; the code can cope with the bug,
 dnl though it would prefer not to, so if we're cross-configuring we
 dnl accept that ftime exists.
