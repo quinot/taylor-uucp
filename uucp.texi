@@ -6011,9 +6011,9 @@ UUCP lock file which does not contain the process ID at all.
 
 The name of the lock file is traditionally @file{LCK..} followed by the
 base name of the device.  For example, to lock @file{/dev/ttyd0} the
-file @file{LCK..ttyd0} would be created.  On SCO Unix, the lock file
-name is always forced to lower case even if the device name has upper
-case letters.
+file @file{LCK..ttyd0} would be created.  On SCO Unix, the last letter
+of the lock file name is always forced to lower case even if the device
+name ends with an upper case letter.
 
 System V Release 4 UUCP names the lock file using the major and minor
 device numbers rather than the device name.  The file is named

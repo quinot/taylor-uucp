@@ -1,5 +1,9 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/serial.c (fsserial_lockfile): In HAVE_SCO_LOCKFILES case,
+	only lower case the last letter in the lock file name.
+	* uucp.texi (UUCP Lock Files): Document this change.
+
 	* unix/serial.c (fsblock): Test for EINVAL when changing the write
 	descriptor as we do when changing the read descriptor.
 

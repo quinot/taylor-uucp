@@ -637,9 +637,9 @@ fsserial_lockfile (flok, qconn)
 	{
 	  char *zl;
 
-	  for (zl = zalc + sizeof LCK_TEMPLATE - 1; *zl != '\0'; zl++)
-	    if (isupper (*zl))
-	      *zl = tolower (*zl);
+	  zl = zalc + sizeof LCK_TEMPLATE + clen - 2;
+	  if (isupper (*zl))
+	    *zl = tolower (*zl);
 	}
 #endif
 	z = zalc;
