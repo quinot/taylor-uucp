@@ -1,0 +1,180 @@
+# This is the Makefile for the Taylor UUCP uuconf library
+#
+# The file Makefile.in should be processed by configure to generate
+# Makefile.  If you want to generate Makefile by hand, you must find
+# all variables surrounded by @ and replace them with the correct
+# value (e.g. @CC@ must be replaced by something like cc or gcc).
+#
+# Once you have done that, you should check the definitions at the top
+# of this file to make sure that they are reasonable for your system.
+
+# Prefix directory for installation directories.
+prefix = /usr/local
+
+# The directory to look in for new style configuration files (when
+# using HAVE_TAYLOR_CONFIG).
+newconfigdir = $(prefix)/conf/uucp
+
+# The directory to look in for HDB or V2 style configuration files.
+oldconfigdir = /usr/lib/uucp
+
+# Source directory and, if necessary, VPATH
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# Define programs and flags
+CC = @CC@
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+
+LN_S = @LN_S@
+
+#
+# Nothing else to configure
+#
+
+SHELL = /bin/sh
+
+VERSION = 1.00
+
+MORECFLAGS = -I$(srcdir) -I. -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" -DVERSION=\"$(VERSION)\"
+
+OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o calout.o \
+	chatc.o cmdarg.o cmdfil.o cmdlin.o dial.o diasub.o dnams.o \
+	errno.o errstr.o filnam.o freblk.o fredia.o free.o freprt.o \
+	fresys.o getlin.o grdcmp.o hdial.o hdnams.o hinit.o hport.o \
+	hsinfo.o hsnams.o hsys.o iniglb.o init.o int.o lineno.o \
+	memcpy.o mrgblk.o paramc.o port.o prtsub.o rdlocs.o rdperm.o \
+	reliab.o sinfo.o snams.o split.o strcas.o strdup.o strerr.o \
+	strncs.o strtol.o syssub.o tcalou.o tdial.o tdialc.o tdnams.o \
+	tgcmp.o thread.o time.o tinit.o tport.o tportc.o tsinfo.o \
+	tsnams.o tsys.o ugtlin.o vinit.o vport.o vsinfo.o vsnams.o \
+	vsys.o
+
+all: libuuconf.a uuchk uuconv
+
+libuuconf.a: $(OBJS)
+	rm -f libuuconf.a
+	ar rc libuuconf.a $(OBJS)
+	-$(RANLIB) libuuconf.a
+
+uuchk: uuchk.o getopt.o libuuconf.a
+	$(CC) $(LDFLAGS) -o uuchk uuchk.o getopt.o libuuconf.a $(LIBS)
+
+uuconv: uuconv.o getopt.o libuuconf.a
+	$(CC) $(LDFLAGS) -o uuconv uuconv.o getopt.o libuuconf.a $(LIBS)
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+
+syshdr.h: syshdr.unx
+	rm -f syshdr.h
+	$(LN_S) syshdr.unx syshdr.h
+
+clean:
+	rm -f $(OBJS) uuchk.o uuconv.o libuuconf.a uuchk uuconv
+
+distclean: clean
+	rm -f conf.h config.status
+
+# My build targets; not expected to work elsewhere.
+
+dist: MANIFEST configure
+	-rm -rf uuconf-$(VERSION)
+	-rm -f uuconf-$(VERSION).tar uuconf-$(VERSION).tar.Z
+	mkdir uuconf-$(VERSION)
+	ln `cat MANIFEST` uuconf-$(VERSION)
+	rm -f uuconf-$(VERSION)/policy.h uuconf-$(VERSION)/Makefile.in
+	cp policy.h Makefile.in uuconf-$(VERSION)
+	chmod 0644 uuconf-$(VERSION)/policy.h uuconf-$(VERSION)/Makefile.in
+	tar -cvf uuconf-$(VERSION).tar uuconf-$(VERSION)
+	compress uuconf-$(VERSION).tar
+
+conf.h Makefile: configure
+	configure
+
+conf.h: conf.h.in
+Makefile: Makefile.in
+
+configure: configure.in
+	autoconf
+
+# Header file dependencies
+
+uuchk.o: uuconf.h conf.h policy.h getopt.h
+uuconv.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h getopt.h
+getopt.o: getopt.h
+
+addblk.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h alloc.h
+addstr.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+allblk.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h alloc.h
+alloc.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h alloc.h
+base.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+bool.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+calout.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+chatc.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+cmdarg.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+cmdfil.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+cmdlin.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+dial.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+diasub.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+dnams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+errno.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+errstr.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+filnam.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+freblk.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h alloc.h
+fredia.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+free.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h alloc.h
+freprt.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+fresys.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+getlin.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+grdcmp.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hdial.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hdnams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hinit.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hport.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hsinfo.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hsnams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+hsys.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+iniglb.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+init.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+int.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+lineno.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+memcpy.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+mrgblk.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h alloc.h
+paramc.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+port.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+prtsub.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+rdlocs.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+rdperm.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+reliab.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+sinfo.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+snams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+split.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+strcas.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+strdup.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+strerr.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+strncs.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+strtol.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+syssub.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tcalou.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tdial.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tdialc.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tdnams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tgcmp.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+thread.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+time.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tinit.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tport.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tportc.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tsinfo.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tsnams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+tsys.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+ugtlin.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+vinit.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+vport.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+vsinfo.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+vsnams.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
+vsys.o: uucnfi.h uuconf.h conf.h policy.h syshdr.h
