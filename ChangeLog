@@ -1,5 +1,8 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* Tim Pozar: uucp.texi (Acknowledgements): Note that gnuucp was
+	based on uuslave.
+
 	* Michael Ju. Tokarev: unix/serial.c (fsserial_hardflow): Add
 	support for CRTSXOFF used on Solaris.
 

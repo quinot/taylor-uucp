@@ -8087,9 +8087,10 @@ Systems (formerly AIRS, which lives on in the domain name) for
 permitting me to use their computers and @file{uunet} access.  I would
 also like to thank Richard Stallman @code{<rms@@gnu.ai.mit.edu>} for
 founding the Free Software Foundation, and John Gilmore
-@code{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
-was a direct inspiration for this somewhat larger project.  Chip
-Salzenberg @code{<chip@@tct.com>} has contributed many patches.
+@code{<gnu@@cygnus.com>} for writing the initial version of gnuucp
+(based on uuslave) which was a direct inspiration for this somewhat
+larger project.  Chip Salzenberg @code{<chip@@tct.com>} has contributed
+many patches.
 @ifinfo
 Franc,ois
 @end ifinfo
