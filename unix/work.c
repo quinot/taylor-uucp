@@ -57,6 +57,11 @@ static int iswork_cmp P((constpointer pkey, constpointer pdatum));
    This allows the UUCP package to send and receive multiple files at
    the same time.  */
 
+/* To avoid wasting a lot of time scanning the spool directory, which
+   might cause the remote system to time out, we limit each scan to
+   pick up at most a certain number of files.  */
+#define COMMANDS_PER_SCAN (200)
+
 /* The ssfilename structure holds the name of a work file, as well as
    its grade.  */
 
@@ -393,11 +398,15 @@ fsysdep_get_work_init (qsys, bgrade)
 	      asSwork_files[cSwork_files].zfile = zname;
 	      asSwork_files[cSwork_files].bgrade = bfilegrade;
 	      ++cSwork_files;
+	      if (cSwork_files - chad > COMMANDS_PER_SCAN)
+		break;
 	    }
 	}
 
 #if SPOOLDIR_SVR4
       closedir (qdir);
+      if (cSwork_files - chad > COMMANDS_PER_SCAN)
+	break;
     }
   qdir = qgdir;
 #endif
