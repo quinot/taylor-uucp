@@ -842,7 +842,7 @@ uabort ()
   usysdep_exit (FALSE);
 }
 
-/* The number of seconds in one week.  We must cast to long for this
+/* The number of seconds in one day.  We must cast to long for this
    to be calculated correctly on a machine with 16 bit ints.  */
 #define SECS_PER_DAY ((long) 24 * (long) 60 * (long) 60)
 
