@@ -102,6 +102,9 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
   char *azenv[9];
   char **pazenv;
   boolean ferr;
+#if HAVE_FULLDUPLEX_PIPES
+  boolean ffullduplex;
+#endif
   int ierr = 0;
   int onull;
   int aichild_descs[3];
@@ -196,6 +199,11 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
   cpar_close = 0;
   cchild_close = 0;
 
+#if HAVE_FULLDUPLEX_PIPES
+  ffullduplex = (aidescs[0] == SPAWN_WRITE_PIPE
+		 && aidescs[1] == SPAWN_READ_PIPE);
+#endif
+
   for (i = 0; i < 3; i++)
     {
       if (aidescs[i] == SPAWN_NULL)
@@ -223,6 +231,16 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
       else
 	{
 	  int aipipe[2];
+
+#if HAVE_FULLDUPLEX_PIPES
+	  if (ffullduplex && i == 1)
+	    {
+	      /* Just use the fullduplex pipe.  */
+	      aidescs[i] = aidescs[0];
+	      aichild_descs[i] = aichild_descs[0];
+	      continue;
+	    }
+#endif
 
 	  if (pipe (aipipe) < 0)
 	    {
@@ -356,7 +374,6 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 
   /* The exec failed.  If permitted, try using /bin/sh to execute a
      shell script.  */
-
   if (errno == ENOEXEC && fshell)
     {
       char *zto;

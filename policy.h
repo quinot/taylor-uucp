@@ -161,6 +161,12 @@
 #endif
 #endif
 
+/* If your system implements full duplex pipes, set
+   HAVE_FULLDUPLEX_PIPES to 1.  Everything should work fine if you
+   leave it set to 0, but setting it to 1 can be slightly more
+   efficient.  */
+#define HAVE_FULLDUPLEX_PIPES 0
+
 /* TIMES_TICK is the fraction of a second which times(2) returns (for
    example, if times returns 100ths of a second TIMES_TICK should be
    set to 100).  On a true POSIX system (one which has the sysconf
