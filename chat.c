@@ -48,9 +48,13 @@ static boolean fcsend P((struct sconnection *qconn, pointer puuconf,
 			 const struct uuconf_system *qsys,
 			 const struct uuconf_dialer *qdial,
 			 const char *zphone,
-			 boolean ftranslate));
+			 boolean ftranslate, boolean fstrip));
+static boolean fcecho_send_strip P((struct sconnection *qconn,
+				    const char *z, size_t clen));
+static boolean fcecho_send_nostrip P((struct sconnection  *qconn,
+				      const char *z, size_t clen));
 static boolean fcecho_send P((struct sconnection *qconn, const char *z,
-			      size_t clen));
+			      size_t clen, boolean fstrip));
 static boolean fcphone P((struct sconnection *qconn,
 			  pointer puuconf,
 			  const struct uuconf_dialer *qdial,
@@ -220,7 +224,7 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	     carriage return.  */
 	  ++pzchat;
 	  if (! fcsend (qconn, puuconf, *pzchat + 1, qsys, qdial, zphone,
-			ftranslate))
+			ftranslate, qchat->uuconf_fstrip))
 	    {
 	      fret = FALSE;
 	      break;
@@ -251,7 +255,7 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       if (**pzchat != '\0')
 	{
 	  if (! fcsend (qconn, puuconf, *pzchat, qsys, qdial, zphone,
-			ftranslate))
+			ftranslate, qchat->uuconf_fstrip))
 	    {
 	      fret = FALSE;
 	      break;
@@ -521,7 +525,7 @@ ucsend_debug_end (fquote, ferr)
    although they make no sense for chatting with a system.  */
 
 static boolean
-fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
+fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
      struct sconnection *qconn;
      pointer puuconf;
      const char *z;
@@ -529,6 +533,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
      const struct uuconf_dialer *qdial;
      const char *zphone;
      boolean ftranslate;
+     boolean fstrip;
 {
   boolean fnocr;
   boolean (*pfwrite) P((struct sconnection *, const char *, size_t));
@@ -594,6 +599,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
 		  return FALSE;
 		}
 	      z += 5;
+	      fnocr = TRUE;
 	    }
 	  else
 	    {
@@ -607,6 +613,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
 	    {
 	      fsend = TRUE;
 	      bsend = '\004';
+	      fnocr = TRUE;
 	    }
 	  else
 	    {
@@ -640,7 +647,10 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate)
 	      break;
 	    case 'E':
 	      fquote = fcsend_debug (fquote, (size_t) 0, "echo-check-on");
-	      pfwrite = fcecho_send;
+	      if (fstrip)
+		pfwrite = fcecho_send_strip;
+	      else
+		pfwrite = fcecho_send_nostrip;
 	      break;
 	    case 'K':
 	      fquote = fcsend_debug (fquote, (size_t) 0, "break");
@@ -1039,13 +1049,37 @@ fctranslate (puuconf, zphone, pzprefix, pzsuffix)
     }
 }
 
-/* Write out a string making sure the each character is echoed back.  */
+/* Write out a string making sure the each character is echoed back.
+   There are two versions of this function, one which strips the
+   parity bit from the characters and one which does not.  This is so
+   that I can use a single function pointer in fcsend, and to avoid
+   using any static variables so that I can put chat scripts in a
+   library some day.  */
 
 static boolean
-fcecho_send (qconn, zwrite, cwrite)
+fcecho_send_strip (qconn, zwrite, cwrite)
      struct sconnection *qconn;
      const char *zwrite;
      size_t cwrite;
+{
+  return fcecho_send (qconn, zwrite, cwrite, TRUE);
+}
+
+static boolean
+fcecho_send_nostrip (qconn, zwrite, cwrite)
+     struct sconnection *qconn;
+     const char *zwrite;
+     size_t cwrite;
+{
+  return fcecho_send (qconn, zwrite, cwrite, FALSE);
+}
+
+static boolean
+fcecho_send (qconn, zwrite, cwrite, fstrip)
+     struct sconnection *qconn;
+     const char *zwrite;
+     size_t cwrite;
+     boolean fstrip;
 {
   const char *zend;
 
@@ -1054,9 +1088,13 @@ fcecho_send (qconn, zwrite, cwrite)
   for (; zwrite < zend; zwrite++)
     {
       int b;
+      char bwrite;
 
-      if (! fconn_write (qconn, zwrite, (size_t) 1))
+      bwrite = *zwrite;
+      if (! fconn_write (qconn, &bwrite, (size_t) 1))
 	return FALSE;
+      if (fstrip)
+	bwrite &= 0x7f;
       do
 	{
 	  /* We arbitrarily wait five seconds for the echo.  */
@@ -1068,8 +1106,10 @@ fcecho_send (qconn, zwrite, cwrite)
 		ulog (LOG_ERROR, "Character not echoed");
 	      return FALSE;
 	    }
+	  if (fstrip)
+	    b &= 0x7f;
 	}
-      while (b != BUCHAR (*zwrite));
+      while (b != BUCHAR (bwrite));
     }
 
   return TRUE;
