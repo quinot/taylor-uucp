@@ -50,7 +50,7 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-$(OBJS): $(srcdir)/../uucp.h ../conf.h $(srcdir)/../policy.h
+$(OBJS): $(srcdir)/../uucp.h ../config.h $(srcdir)/../policy.h
 
 buffer.o: $(srcdir)/../uudefs.h
 crc.o: $(srcdir)/../prot.h

@@ -55,10 +55,19 @@
    systems this will be void; some older systems use int.  */
 #define RETSIGTYPE void
 
-/* Set HAVE_SYS_TIME_AND_TIME_H to 1 if <time.h> and <sys/time.h> can both
-   be included in a single source file; if you don't have either or both of
-   them, it doesn't matter what you set this to.  */
-#define HAVE_SYS_TIME_AND_TIME_H 0
+/* If the macro S_ISDIR is defined in <sys/stat.h>, but is incorrect,
+   define STAT_MACROS_BROKEN to be 1.  This is said to be the case on
+   Tektronix UTekV, Amdahl UTS and Motorola System V/88.  */
+#define STAT_MACROS_BROKEN 0
+
+/* Set TIME_WITH_SYS_TIME to 1 if <time.h> and <sys/time.h> can both
+   be included in a single source file; if you don't have either or
+   both of them, it doesn't matter what you set this to.  */
+#define TIME_WITH_SYS_TIME 0
+
+/* Set TM_IN_SYS_TIME to 1 if struct tm is defined in <sys/time.h>
+   rather than in <time.h>.  */
+#define TM_IN_SYS_TIME 0
 
 /* Set HAVE_TERMIOS_AND_SYS_IOCTL_H to 1 if <termios.h> and <sys/ioctl.h>
    can both be included in a single source file; if you don't have either
@@ -166,12 +175,16 @@
    STAT_STATFS2_FSIZE    two argument statfs function with f_fsize field
    STAT_STATFS2_FS_DATA  two argument statfs function with fd_req field
    STAT_STATFS4          four argument statfs function
+   STAT_DUSTAT		 dustat function (AIX PS/2)
+   STAT_DISK_SPACE	 disk_space function (QNX)
    STAT_USTAT            the ustat function with 512 byte blocks.  */
 #define STAT_STATVFS 0
 #define STAT_STATFS2_BSIZE 0
 #define STAT_STATFS2_FSIZE 0
 #define STAT_STATFS2_FS_DATA 0
 #define STAT_STATFS4 0
+#define STAT_DUSTAT 0
+#define STAT_DISK_SPACE 0
 #define STAT_USTAT 0
 
 /* Set HAVE_VOID to 1 if the compiler supports declaring functions with
@@ -383,6 +396,11 @@
    compiled in.  This may require adding a library, such as -lnsl or
    -lxti, to the Makefile variables LIBS.  */
 #define HAVE_T_OPEN 0
+
+/* If the dev_info function is available (QNX only), it will be used
+   to determine if any other process has the serial port open, and
+   that will cause uucico and cu to presume the port is locked.  */
+#define HAVE_DEV_INFO 0
 
 /* That's the end of the list of the functions.  Now there are a few
    last miscellaneous items.  */

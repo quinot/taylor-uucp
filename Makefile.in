@@ -60,6 +60,10 @@ TSTUU = tstuu
 @UUDIR@uudirdir = $(sbindir)/util
 @UUDIR@UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(uudirdir)/$(UUDIR)\"
 
+# Set to no if the system does not support #! at the beginning of
+# scripts.
+POUNDBANG = @POUNDBANG@
+
 # Source directory and, if necessary, VPATH
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -220,12 +224,20 @@ uulog: $(UULOGOBJS) $(UULIBS)
 
 uusched: uusched.in Makefile
 	-rm -f uusched
-	sed 's,@SBINDIR@,$(sbindir),' < $(srcdir)/uusched.in > uusched
+	if [ "x$(POUNDBANG)" = "xno" ]; then \
+	  sed -e 's,#!/bin/sh,:' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched \
+	else \
+	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched \
+	fi
 	chmod 0555 uusched
 
 uuto: uuto.in Makefile
 	-rm -f uuto
-	sed 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto
+	if [ "x$(POUNDBANG)" = "xno" ]; then \
+	  sed -e 's,#!/bin/sh,:' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto \
+	else \
+	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto \
+	fi
 	chmod 0555 uuto
 
 uupick: $(UUPICKOBJS) $(UULIBS)
@@ -283,7 +295,7 @@ distclean:
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
 	rm -f uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
-	rm -f Makefile conf.h config.status
+	rm -f Makefile config.h config.status
 
 mostlyclean: clean
 
@@ -348,27 +360,27 @@ ps: uucp.ps
 uucp.ps: uucp.dvi
 	$(DVITPS) -o uucp.ps $<
 
-# Having Makefile depend on conf.h.in insures that conf.h will get
-# rebuilt when conf.h.in changes.  We don't want conf.h to change
+# Having Makefile depend on config.h.in insures that config.h will get
+# rebuilt when config.h.in changes.  We don't want config.h to change
 # unnecessarily, nor do we want to run config.status unnecessarily.
 # This won't work on versions of make that don't check dependencies
-# for Makefile, but I'm the only person likely to change conf.h.in
+# for Makefile, but I'm the only person likely to change config.h.in
 # anyhow.
-Makefile: config.status Makefile.in conf.h.in
+Makefile: config.status Makefile.in config.h.in
 	sh config.status
 
 config.status: configure
-	configure --no-create
+	sh config.status --recheck
 
 configure: configure.in
-	autoconf
+	cd $(srcdir); autoconf
 
 TAGS:
 	etags *.h *.c
 
 # Header file dependencies.  These are maintained by hand.
 
-$(ALLOBJS): uucp.h conf.h policy.h
+$(ALLOBJS): uucp.h config.h policy.h
 
 uucico.o: uudefs.h uuconf.h system.h prot.h conn.h trans.h getopt.h
 uuxqt.o: uudefs.h uuconf.h system.h getopt.h

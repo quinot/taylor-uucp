@@ -48,7 +48,7 @@
 #define HAVE_FTIME 0
 #endif
 
-#if HAVE_TIME_H && (HAVE_SYS_TIME_AND_TIME_H || ! HAVE_GETTIMEOFDAY)
+#if HAVE_TIME_H && (TIME_WITH_SYS_TIME || ! HAVE_GETTIMEOFDAY)
 #include <time.h>
 #endif
 

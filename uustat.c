@@ -32,7 +32,9 @@ const char uustat_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
-#if HAVE_TIME_H
+#if TM_IN_SYS_TIME
+#include <sys/time.h>
+#else
 #include <time.h>
 #endif
 

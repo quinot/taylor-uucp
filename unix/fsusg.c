@@ -50,11 +50,9 @@
 #endif
 #endif
 
-#ifdef _AIX
-#ifdef _I386			/* AIX PS/2.  */
+#if STAT_DUSTAT			/* AIX PS/2.  */
 #include <sys/stat.h>
 #include <sys/dustat.h>
-#endif
 #endif
 
 #if STAT_STATVFS		/* SVR4.  */
@@ -68,9 +66,11 @@
 #if ! STAT_STATFS2_FSIZE
 #if ! STAT_STATFS2_FS_DATA
 #if ! STAT_STATFS4
+#if ! STAT_DUSTAT
 #if ! STAT_USTAT
 #undef STAT_NONE
 #define STAT_NONE 1
+#endif
 #endif
 #endif
 #endif
@@ -128,7 +128,7 @@ get_fs_usage (path, disk, fsp)
   fsp->fsu_ffree = fsd.fd_req.gfree;
 #endif
 
-#if STAT_STATFS2_BSIZE		/* 4.3BSD, SunOS 4, HP-UX, AIX.  */
+#if STAT_STATFS2_BSIZE || STAT_DUSTAT	/* 4.3BSD, SunOS 4, HP-UX, AIX.  */
   struct statfs fsd;
 
   if (statfs (path, &fsd) < 0)
@@ -199,8 +199,7 @@ get_fs_usage (path, disk, fsp)
   return 0;
 }
 
-#ifdef _AIX
-#ifdef _I386
+#if STAT_DUSTAT
 /* AIX PS/2 does not supply statfs.  */
 
 int
@@ -226,5 +225,4 @@ statfs (path, fsb)
   fsb->f_fsid.val[1] = fsd.du_pckno;
   return 0;
 }
-#endif
-#endif /* _AIX && _I386 */
+#endif /* STAT_DUSTAT */

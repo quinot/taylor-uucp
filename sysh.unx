@@ -287,6 +287,10 @@ typedef struct termios sterminal;
 #define S_IXOTH 0001
 #endif
 
+#if STAT_MACROS_BROKEN
+#undef S_ISDIR
+#endif
+
 #ifndef S_ISDIR
 #ifdef S_IFDIR
 #define S_ISDIR(i) (((i) & S_IFMT) == S_IFDIR)

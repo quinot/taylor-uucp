@@ -61,7 +61,7 @@ Makefile: Makefile.in
 
 # Header file dependencies.
 
-$(OBJS): $(srcdir)/../uucp.h ../conf.h $(srcdir)/../policy.h ../sysdep.h
+$(OBJS): $(srcdir)/../uucp.h ../config.h $(srcdir)/../policy.h ../sysdep.h
 
 access.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 addbas.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h

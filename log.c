@@ -35,7 +35,9 @@ const char log_rcsid[] = "$Id$";
 #include <stdarg.h>
 #endif
 
-#if HAVE_TIME_H
+#if TM_IN_SYS_TIME
+#include <sys/time.h>
+#else
 #include <time.h>
 #endif
 

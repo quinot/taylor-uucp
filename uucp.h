@@ -24,7 +24,7 @@
    */
 
 /* Get the system configuration parameters.  */
-#include "conf.h"
+#include "config.h"
 #include "policy.h"
 
 /* Get a definition for ANSI_C if we weren't given one.  */

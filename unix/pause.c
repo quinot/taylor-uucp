@@ -29,7 +29,9 @@
 #endif
 
 #if HAVE_SELECT
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -53,7 +55,7 @@ struct pollfd
 #endif /* HAVE_POLL */
 
 #if HAVE_TIME_H
-#if HAVE_SYS_TIME_AND_TIME_H || ! USE_SELECT_TIMER
+#if ! HAVE_SYS_TIME_H || ! USE_SELECT_TIMER || TIME_WITH_SYS_TIME
 #include <time.h>
 #endif
 #endif

@@ -3,7 +3,7 @@ dnl This should be processed with autoconf to produce a configure script.
 dnl Copyright (c) 1992, 1993 Ian Lance Taylor
 dnl
 AC_INIT(policy.h)
-AC_CONFIG_HEADER(conf.h)
+AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
@@ -24,6 +24,9 @@ dnl
 CFLAGS=${CFLAGS--g}
 AC_SUBST(CFLAGS)dnl
 AC_SUBST(LDFLAGS)dnl
+dnl
+AC_HAVE_POUNDBANG(POUNDBANG=yes, POUNDBANG=no)
+AC_SUBST(POUNDBANG)
 dnl
 echo checking for mail program
 if test -s /usr/ucb/mail; then
@@ -59,11 +62,10 @@ AC_MAJOR_HEADER
 dnl
 AC_RETSIGTYPE
 dnl
-AC_COMPILE_CHECK([time.h and sys/time.h being included together],
-[#include <sys/time.h>
-#include <time.h>],
-[int i;],
-AC_DEFINE([HAVE_SYS_TIME_AND_TIME_H]))
+AC_STAT_MACROS_BROKEN
+dnl
+AC_TIME_WITH_SYS_TIME
+AC_STRUCT_TM
 dnl
 AC_COMPILE_CHECK([termios.h and sys/ioctl.h being included together],
 [#include <termios.h>
@@ -119,41 +121,6 @@ AC_COMPILE_CHECK([time_t in sys/types.h],
 [#include <sys/types.h>], [time_t i;],
 AC_DEFINE([HAVE_TIME_T_IN_TYPES_H]))
 dnl
-dnl The filesystem info code is from David MacKenzie's fileutils 3.4
-dnl package.
-echo checking how to get filesystem space usage
-# SVR4
-AC_TEST_CPP([#include <sys/statvfs.h>],
-  AC_DEFINE(STAT_STATVFS) space=1)
-if test -z "$space"; then
-# AIX
-AC_HEADER_EGREP(f_nlsdirtype, sys/statfs.h, 
-  AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
-fi
-if test -z "$space"; then
-# SVR3
-AC_TEST_CPP([#include <sys/statfs.h>], 
-  AC_DEFINE(STAT_STATFS4) space=1)
-fi
-if test -z "$space"; then
-# 4.3BSD
-AC_TEST_CPP([#include <sys/vfs.h>],
-  AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
-fi
-if test -z "$space"; then
-# 4.4BSD
-AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h,
-  AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
-fi
-if test -z "$space"; then
-# Ultrix
-AC_TEST_CPP([#include <sys/mount.h>],
-  [AC_FUNC_CHECK(statfs, AC_DEFINE(STAT_STATFS2_FS_DATA) space=1)])
-fi
-if test -z "$space"; then
-AC_FUNC_CHECK(ustat, AC_DEFINE(STAT_USTAT))
-fi
-dnl
 AC_COMPILE_CHECK([void],
 [], [extern void foo (); (void) exit (0);],
 AC_DEFINE([HAVE_VOID]))
@@ -175,7 +142,7 @@ AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
 AC_HAVE_FUNCS(sigsetjmp setret sigaction sigvec sigset)
 AC_HAVE_FUNCS(sigprocmask sigblock sighold getdtablesize sysconf)
 AC_HAVE_FUNCS(setpgrp setsid setreuid gethostname uname)
-AC_HAVE_FUNCS(gettimeofday ftw glob)
+AC_HAVE_FUNCS(gettimeofday ftw glob dev_info)
 dnl Check for getline, but not in -linet, since ISC has an
 dnl incompatible version there.
 SAVELIBS="$LIBS"
@@ -351,7 +318,7 @@ case $DEFS in
 *) UNIXOBJS="$UNIXOBJS dup2.o" ;;
 esac
 case $DEFS in
-*HAVE_FTW*) ;;
+*HAVE_FTW=*) ;;
 *) UNIXOBJS="$UNIXOBJS ftw.o" ;;
 esac
 case $DEFS in
@@ -374,6 +341,49 @@ case $DEFS in
   [#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
   AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])) ;;
 esac
+dnl
+dnl The filesystem info code is from David MacKenzie's fileutils 3.4
+dnl package.
+echo checking how to get filesystem space usage
+# SVR4
+AC_HEADER_CHECK(sys/statvfs.h,
+  [AC_FUNC_CHECK(statvfs, AC_DEFINE(STAT_STATVFS) space=1)])
+if test -z "$space"; then
+  AC_FUNC_CHECK(statfs, [dnl
+    # AIX
+    AC_HEADER_EGREP(f_nlsdirtype, sys/statfs.h, 
+      AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
+    if test -z "$space"; then
+      # SVR3
+      AC_HEADER_CHECK(sys/statfs.h, AC_DEFINE(STAT_STATFS4) space=1)
+    fi
+    if test -z "$space"; then
+      # 4.3BSD
+      AC_HEADER_CHECK(sys/vfs.h, AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
+    fi
+    if test -z "$space"; then
+      # 4.4BSD
+      AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h,
+	AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
+    fi
+    if test -z "$space"; then
+      # Ultrix
+      AC_HEADER_CHECK(sys/mount.h, AC_DEFINE(STAT_STATFS2_FS_DATA) space=1)
+    fi
+  ])dnl
+fi
+if test -z "$space"; then
+  # AIX PS/2
+  AC_HEADER_CHECK(sys/dustat.h,
+    [AC_FUNC_CHECK(dustat, AC_DEFINE(STAT_DUSTAT) space=1)])
+fi
+if test -z "$space"; then
+  AC_FUNC_CHECK(ustat, AC_DEFINE(STAT_USTAT) space=1)
+fi
+if test -z "$space"; then
+  # QNX
+  AC_FUNC_CHECK(disk_space, AC_DEFINE(STAT_DISK_SPACE) space=1)
+fi
 dnl
 dnl See whether we can make an extern declaration
 define(ILT_CHECK_DECLARATION,

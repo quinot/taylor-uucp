@@ -46,7 +46,9 @@ const char tstuu_rcsid[] = "$Id$";
 #endif
 
 #if HAVE_SELECT
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -75,8 +77,10 @@ const char tstuu_rcsid[] = "$Id$";
 #define O_RDWR 2
 #endif
 
-#if HAVE_TIME_H && (HAVE_SYS_TIME_AND_TIME_H || ! HAVE_SELECT)
+#if HAVE_TIME_H
+#if ! HAVE_SYS_TIME_H || ! HAVE_SELECT || TIME_WITH_SYS_TIME
 #include <time.h>
+#endif
 #endif
 
 #if HAVE_SYS_WAIT_H
