@@ -676,8 +676,9 @@ iqset (puuconf, argc, argv, pvar, pinfo)
 #define REMOVE_FILE (01)
 #define REMOVE_NEEDED (02)
 #define FREE_QINPUT (04)
-#define FREE_OUTPUT (010)
-#define FREE_MAIL (020)
+#define REMOVE_QINPUT (010)
+#define FREE_OUTPUT (020)
+#define FREE_MAIL (040)
 
 /* Process an execute file.  The zfile argument is the name of the
    execute file.  The zbase argument is the base name of zfile.  The
@@ -1158,6 +1159,8 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	{
 	  zQinput = zreal;
 	  iclean |= FREE_QINPUT;
+	  if (fspool)
+	    iclean |= REMOVE_QINPUT;
 	}
 
       if (zreal == NULL
@@ -1511,6 +1514,7 @@ isave_files (qsys, zmail, zfile, iclean)
   char **pzsave;
   int c;
   int ifile;
+  char *zsaveinput;
   const char **pz;
   int i;
 
@@ -1548,6 +1552,22 @@ isave_files (qsys, zmail, zfile, iclean)
 	}
     }
 
+  zsaveinput = NULL;
+  if ((iclean & REMOVE_QINPUT) != 0
+      && fsysdep_file_exists (zQinput))
+    {
+      zsaveinput = zsysdep_save_failed_file (zQinput);
+      if (zsaveinput == NULL)
+	{
+	  ubuffree (zsavecmd);
+	  for (i = 0; i < cQfiles; i++)
+	    if (azQfiles[i] != NULL)
+	      ubuffree  (pzsave[i]);
+	  xfree ((pointer) pzsave);
+	  return iclean;
+	}
+    }
+
   pz = (const char **) xmalloc ((20 + 2 * cQfiles) * sizeof (char *));
   i = 0;
 
@@ -1563,7 +1583,7 @@ isave_files (qsys, zmail, zfile, iclean)
       pz[i++] = "\nThe request came from system\n\t";
       pz[i++] = qsys->uuconf_zname;
     }
-  if (c == 1)
+  if (c == 1 && zsaveinput == NULL)
     pz[i++] = "\nThe following file has been saved:\n\t";
   else
     pz[i++] = "\nThe following files have been saved:\n\t";
@@ -1575,6 +1595,11 @@ isave_files (qsys, zmail, zfile, iclean)
 	  pz[i++] = "\n\t";
 	  pz[i++] = pzsave[ifile];
 	}
+    }
+  if (zsaveinput != NULL)
+    {
+      pz[i++] = "\n\t";
+      pz[i++] = zsaveinput;
     }
   pz[i++] = "\n";
 
@@ -1589,6 +1614,7 @@ isave_files (qsys, zmail, zfile, iclean)
     if (azQfiles[ifile] != NULL)
       ubuffree (pzsave[ifile]);
   xfree ((pointer) pzsave);
+  ubuffree (zsaveinput);
 
   return iclean &~ (REMOVE_FILE | REMOVE_NEEDED);
 }
@@ -1621,6 +1647,8 @@ uqcleanup (zfile, iflags)
 	  if (azQfiles[i] != NULL)
 	    (void) remove (azQfiles[i]);
 	}
+      if ((iflags & REMOVE_QINPUT) != 0)
+	(void) remove (zQinput);
     }
 
   if ((iflags & FREE_QINPUT) != 0)
