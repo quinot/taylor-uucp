@@ -28,23 +28,52 @@
 #include <ctype.h>
 #include <errno.h>
 
+#if HAVE_GLOB && ! HAVE_GLOB_H
+#undef HAVE_GLOB
+#define HAVE_GLOB 0
+#endif
+
+#if HAVE_GLOB
+#include <glob.h>
+#endif
+
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 
-/* Local variables to hold the expanded wildcard string.  */
+/* Local variables to hold the wildcard in progress.  */
 
+#if HAVE_GLOB
+static glob_t sSglob;
+static int iSglob;
+#else
 static char *zSwildcard_alloc;
 static char *zSwildcard;
+#endif
 
-/* Start getting a wildcarded file spec.  We use the shell to expand
-   the wildcard.  */
+/* Start getting a wildcarded file spec.  Use the glob function if it
+   is available, and otherwise use the shell.  */
 
 boolean
 fsysdep_wildcard_start (zfile)
      const char *zfile;
 {
-  char *zcmd;
+#if HAVE_GLOB
+
+#if DEBUG > 0
+  if (*zfile != '/')
+    ulog (LOG_FATAL, "fsysdep_wildcard: %s: Can't happen", zfile);
+#endif
+
+  if (glob (zfile, 0, (int (*) ()) NULL, &sSglob) != 0)
+    sSglob.gl_pathc = 0;
+  iSglob = 0;
+  return TRUE;
+
+#else /* ! HAVE_GLOB */
+
+  char *zcmd, *zto;
+  const char *zfrom;
   size_t c;
   const char *azargs[4];
   FILE *e;
@@ -58,13 +87,31 @@ fsysdep_wildcard_start (zfile)
   zSwildcard_alloc = NULL;
   zSwildcard = NULL;
 
-  zcmd = (char *) alloca (sizeof ECHO_PROGRAM + sizeof " " + strlen (zfile));
-  sprintf (zcmd, "%s %s", ECHO_PROGRAM, zfile);
+  zcmd = zbufalc (sizeof ECHO_PROGRAM + sizeof " " + 2 * strlen (zfile));
+  memcpy (zcmd, ECHO_PROGRAM, sizeof ECHO_PROGRAM - 1);
+  zto = zcmd + sizeof ECHO_PROGRAM - 1;
+  *zto++ = ' ';
+  zfrom = zfile;
+  while (*zfrom != '\0')
+    {
+      /* Quote unusual characters to avoid shell trickery.  */
+      if (! isalnum (*zfrom)
+	  && *zfrom != '*'
+	  && *zfrom != '?'
+	  && *zfrom != '['
+	  && *zfrom != ']'
+	  && *zfrom != '/'
+	  && *zfrom != '~')
+	*zto++ = '\\';
+      *zto++ = *zfrom++;
+    }
 
   azargs[0] = "/bin/sh";
   azargs[1] = "-c";
   azargs[2] = zcmd;
   azargs[3] = NULL;
+
+  ubuffree (zcmd);
 
   e = espopen (azargs, TRUE, &ipid);
   if (e == NULL)
@@ -97,6 +144,8 @@ fsysdep_wildcard_start (zfile)
   zSwildcard = zSwildcard_alloc;
 
   return TRUE;
+
+#endif /* ! HAVE_GLOB */
 }
 
 /* Get the next wildcard spec.  */
@@ -106,6 +155,18 @@ char *
 zsysdep_wildcard (zfile)
      const char *zfile;
 {
+#if HAVE_GLOB
+
+  char *zret;
+
+  if (iSglob >= sSglob.gl_pathc)
+    return NULL;
+  zret = zbufcpy (sSglob.gl_pathv[iSglob]);
+  ++iSglob;
+  return zret;
+  
+#else /* ! HAVE_GLOB */
+
   char *zret;
 
   if (zSwildcard_alloc == NULL || zSwildcard == NULL)
@@ -116,19 +177,20 @@ zsysdep_wildcard (zfile)
   while (*zSwildcard != '\0' && ! isspace (BUCHAR (*zSwildcard)))
     ++zSwildcard;
 
-  if (*zSwildcard == '\0')
-    zSwildcard = NULL;
-  else
+  if (*zSwildcard != '\0')
     {
       *zSwildcard = '\0';
       ++zSwildcard;
       while (*zSwildcard != '\0' && isspace (BUCHAR (*zSwildcard)))
 	++zSwildcard;
-      if (*zSwildcard == '\0')
-	zSwildcard = NULL;
     }
 
+  if (*zSwildcard == '\0')
+    zSwildcard = NULL;
+
   return zbufcpy (zret);
+
+#endif /* ! HAVE_GLOB */
 }
 
 /* Finish up getting wildcard specs.  */
@@ -136,8 +198,13 @@ zsysdep_wildcard (zfile)
 boolean
 fsysdep_wildcard_end ()
 {
+#if HAVE_GLOB
+  globfree (&sSglob);
+  return TRUE;
+#else /* ! HAVE_GLOB */
   xfree ((pointer) zSwildcard_alloc);
   zSwildcard_alloc = NULL;
   zSwildcard = NULL;
   return TRUE;
+#endif /* ! HAVE_GLOB */
 }
