@@ -132,6 +132,11 @@ static boolean flogin_prompt P((pointer puuconf,
 static boolean faccept_call P((pointer puuconf, const char *zlogin,
 			       struct sconnection *qconn,
 			       const char **pzsystem));
+static void uaccept_call_cleanup P((pointer puuconf,
+				    struct uuconf_system *qfreesys,
+				    struct uuconf_port *qport,
+				    struct uuconf_port *qfreeport,
+				    char *zloc));
 static void uapply_proto_params P((pointer puuconf, int bproto,
 				   struct uuconf_cmdtab *qcmds,
 				   struct uuconf_proto_param *pas));
@@ -562,12 +567,6 @@ main (argc, argv)
 		{
 		  /* Now ignore any SIGHUP that we got.  */
 		  afSignal[INDEXSIG_SIGHUP] = FALSE;
-
-		  if (fLocked_system)
-		    {
-		      (void) fsysdep_unlock_system (&sLocked_system);
-		      fLocked_system = FALSE;
-		    }
 		  if (! fconn_reset (&sconn))
 		    break;
 		}
@@ -601,12 +600,6 @@ main (argc, argv)
 
       if (flocked)
 	(void) fconn_unlock (&sconn);
-
-      if (fLocked_system)
-	{
-	  (void) fsysdep_unlock_system (&sLocked_system);
-	  fLocked_system = FALSE;
-	}
 
       uconn_free (&sconn);
     }
@@ -1635,6 +1628,9 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	  else if (iuuconf != UUCONF_SUCCESS)
 	    {
 	      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+	      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+				    (struct uuconf_port *) NULL,
+				    &sport, (char *) NULL);
 	      return FALSE;
 	    }
 	  else
@@ -1695,11 +1691,17 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       sDaemon.zlocalname = zsysdep_localname ();
       if (sDaemon.zlocalname == NULL)
-	return FALSE;
+	{
+	  uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+				qport, &sport, (char *) NULL);
+	  return FALSE;
+	}
     }
   else
     {
       ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+			    qport, &sport, (char *) NULL);
       return FALSE;
     }
 
@@ -1709,16 +1711,26 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   fret = fsend_uucp_cmd (qconn, zsend);
   ubuffree (zsend);
   if (! fret)
-    return FALSE;
+    {
+      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+			    qport, &sport, zloc);
+      return FALSE;
+    }
 
   zstr = zget_uucp_cmd (qconn, TRUE);
   if (zstr == NULL)
-    return FALSE;
+    {
+      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+			    qport, &sport, zloc);
+      return FALSE;
+    }
 
   if (zstr[0] != 'S')
     {
       ulog (LOG_ERROR, "Bad introduction string");
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+			    qport, &sport, zloc);
       return FALSE;
     }
 
@@ -1740,6 +1752,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	      xfree ((pointer) zscript);
 	      (void) fsend_uucp_cmd (qconn, "RYou are unknown to me");
 	      ubuffree (zstr);
+	      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+				    qport, &sport, zloc);
 	      return FALSE;
 	    }
 	  xfree ((pointer) zscript);
@@ -1748,6 +1762,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	{
 	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 	  ubuffree (zstr);
+	  uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+				qport, &sport, zloc);
 	  return FALSE;
 	}
 
@@ -1756,6 +1772,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	  (void) fsend_uucp_cmd (qconn, "RYou are unknown to me");
 	  ulog (LOG_ERROR, "Call from unknown system %s", zstr + 1);
 	  ubuffree (zstr);
+	  uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+				qport, &sport, zloc);
 	  return FALSE;
 	}
     }
@@ -1763,6 +1781,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+			    qport, &sport, zloc);
       return FALSE;
     }
 
@@ -1791,6 +1811,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	{
 	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 	  ubuffree (zstr);
+	  uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
 	  return FALSE;
 	}
     }
@@ -1801,6 +1822,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       ulog (LOG_ERROR, "System %s used wrong login name %s",
 	    zstr + 1, zlogin);
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -1834,6 +1856,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       ubuffree (zsysdep_spool_commands (qsys, UUCONF_GRADE_HIGH, 0,
 					(const struct scmd *) NULL));
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return TRUE;
     }
 
@@ -1843,6 +1866,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       (void) fsend_uucp_cmd (qconn, "RLCK");
       ulog (LOG_ERROR, "System already locked");
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
   sLocked_system = *qsys;
@@ -1946,6 +1970,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		      (void) fsysdep_set_status (qsys, &sstat);
 		      xfree ((pointer) paz);
 		      ubuffree (zstr);
+		      uaccept_call_cleanup (puuconf, &ssys, qport, &sport,
+					    zloc);
 		      return FALSE;
 		    }
 		  fgotseq = TRUE;
@@ -2009,6 +2035,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       ulog (LOG_ERROR, "No sequence number (call rejected)");
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2047,6 +2074,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       {
 	sstat.ttype = STATUS_FAILED;
 	(void) fsysdep_set_status (qsys, &sstat);
+	uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
 	return FALSE;
       }
   }
@@ -2122,6 +2150,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
     
@@ -2131,6 +2160,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2140,6 +2170,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2149,6 +2180,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
       ubuffree (zstr);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2163,6 +2195,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       ulog (LOG_ERROR, "No supported protocol");
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2176,6 +2209,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = ixsysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2211,6 +2245,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = ixsysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
+      uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
       return FALSE;
     }
 
@@ -2288,13 +2323,32 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     sstat.ilast = iend_time;
     (void) fsysdep_set_status (qsys, &sstat);
 
-    (void) uuconf_system_free (puuconf, &ssys);
-    if (qport == &sport)
-      (void) uuconf_port_free (puuconf, &sport);
-    xfree ((pointer) zloc);
+    uaccept_call_cleanup (puuconf, &ssys, qport, &sport, zloc);
 
     return fret;
   }
+}
+
+/* Clean up after faccept_call.  */
+
+static void
+uaccept_call_cleanup (puuconf, qfreesys, qport, qfreeport, zloc)
+     pointer puuconf;
+     struct uuconf_system *qfreesys;
+     struct uuconf_port *qport;
+     struct uuconf_port *qfreeport;
+     char *zloc;
+{
+  if (fLocked_system)
+    {
+      (void) fsysdep_unlock_system (&sLocked_system);
+      fLocked_system = FALSE;
+    }
+  if (qfreesys != NULL)
+    (void) uuconf_system_free (puuconf, qfreesys);
+  if (qport == qfreeport)
+    (void) uuconf_port_free (puuconf, qfreeport);
+  xfree ((pointer) zloc);
 }
 
 /* Apply protocol parameters, once we know the protocol.  */
