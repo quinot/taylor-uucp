@@ -10,8 +10,8 @@
 /* See whether a file is a spool file.  Spool file names are specially
    crafted to hand around to other UUCP packages.  They always begin
    with 'C', 'D' or 'X', and the second character is always a period.
-   The remaining characters are any character that could appear in a
-   system name.  */
+   The remaining characters may be any printable characters, since
+   they may include a grade set by another system.  */
 
 boolean
 fspool_file (zfile)
@@ -24,7 +24,7 @@ fspool_file (zfile)
   if (zfile[1] != '.')
     return FALSE;
   for (z = zfile + 2; *z != '\0'; z++)
-    if (! isalnum (BUCHAR (*z)) && *z != '_' && *z != '-' && *z != '.')
+    if (*z == '/' || ! isprint (BUCHAR (*z)) || isspace (BUCHAR (*z)))
       return FALSE;
   return TRUE;
 }
