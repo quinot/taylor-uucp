@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/03/03  06:06:48  ian
+   T. William Wells: don't complain about missing configuration files
+
    Revision 1.15  1992/02/19  19:36:07  ian
    Rearranged time functions
 
@@ -96,7 +99,7 @@ static boolean fcecho_send P((const char *z, int clen));
 static boolean fcphone P((const struct sdialer *qdial, const char *zphone,
 			  boolean (*pfwrite) P((const char *zwrite,
 						int cwrite)),
-			  boolean ftranslate));
+			  boolean ftranslate, boolean *pfquote));
 static boolean fctranslate P((const char *zphone, const char **pzprefix,
 			      const char **pzsuffix));
 static boolean fcprogram P((const char *zprogram,
@@ -403,9 +406,14 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 
   iendtime = isysdep_time ((long *) NULL) + ctimeout;
 
-#if DEBUG > 6
-  if (iDebug > 6)
-    ulog (LOG_DEBUG, "icexpect: Looking for \"%s\"", azstrings[0]);
+#if DEBUG > 4
+  if (iDebug > 4)
+    {
+      udebug_buffer ("icexpect: Looking for", azstrings[0],
+		     aclens[0]);
+      ulog (LOG_DEBUG_START, "icexpect: Got \"");
+      fPort_debug = FALSE;
+    }
 #endif
 
   while (TRUE)
@@ -413,8 +421,17 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
       int bchar;
 
       /* If we have no more time, get out.  */
-      if (ctimeout < 0)
-	return -1;
+      if (ctimeout <= 0)
+	{
+#if DEBUG > 4
+	  if (iDebug > 4)
+	    {
+	      ulog (LOG_DEBUG_END, "\" (timed out)");
+	      fPort_debug = TRUE;
+	    }
+#endif
+	  return -1;
+	}
 
       /* Read one character at a time.  We could use a more complex
 	 algorithm to read in larger batches, but it's probably not
@@ -431,7 +448,20 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 	 same as for this function.  */
       bchar = breceive_char (ctimeout, TRUE);
       if (bchar < 0)
-	return bchar;
+	{
+#if DEBUG > 4
+	  if (iDebug > 4)
+	    {
+	      /* If there was an error, it will probably be logged in
+		 the middle of our string, but this is only debugging
+		 so it's not a big deal.  */
+	      ulog (LOG_DEBUG_END, "\" (%s)",
+		    bchar == -1 ? "timed out" : "error");
+	      fPort_debug = TRUE;
+	    }
+#endif
+	  return bchar;
+	}
 
       /* Strip the parity bit if desired.  */
       if (fstrip)
@@ -439,6 +469,16 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 
       zhave[chave] = bchar;
       ++chave;
+
+#if DEBUG > 4
+      if (iDebug > 4)
+	{
+	  char ab[5];
+
+	  (void) cdebug_char (ab, bchar);
+	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
+	}
+#endif
 
       /* See if any of the strings can be found in the buffer.  Since
 	 we read one character at a time, the string can only be found
@@ -448,12 +488,99 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 	  if (aclens[i] <= chave
 	      && memcmp (zhave + chave - aclens[i], azstrings[i],
 			 aclens[i]) == 0)
-	    return i;
+	    {
+#if DEBUG > 4
+	      if (iDebug > 4)
+		{
+		  if (i == 0)
+		    ulog (LOG_DEBUG_END, "\" (found it)");
+		  else
+		    {
+		      ulog (LOG_DEBUG_END, "\"");
+		      udebug_buffer ("icexpect: Found", azstrings[i],
+				     aclens[i]);
+		    }
+		  fPort_debug = TRUE;
+		}
+#endif
+	      return i;
+	    }
 	}
 
       ctimeout = (int) (iendtime - isysdep_time ((long *) NULL));
     }
 }
+
+#if DEBUG > 4
+
+/* Debugging function for fcsend.  This takes the fquote variable, the
+   length of the string (0 if this an informational string which can
+   be printed directly) and the string itself.  It returns the new
+   value for fquote.  The fquote variable is TRUE if the debugging
+   output is in the middle of a quoted string.  */
+
+static boolean
+fcsend_debug (fquote, clen, zbuf)
+     boolean fquote;
+     int clen;
+     const char *zbuf;
+{
+  if (iDebug <= 4)
+    return TRUE;
+
+  if (clen == 0)
+    {
+      ulog (LOG_DEBUG_CONTINUE, "%s %s", fquote ? "\"" : "", zbuf);
+      return FALSE;
+    }
+  else
+    {
+      int i;
+
+      if (! fquote)
+	ulog (LOG_DEBUG_CONTINUE, " \"");
+      for (i = 0; i < clen; i++)
+	{
+	  char ab[5];
+
+	  (void) cdebug_char (ab, zbuf[i]);
+	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
+	}
+
+      return TRUE;
+    }
+}
+
+/* Finish up the debugging information for fcsend.  */
+
+static void
+ucsend_debug_end (fquote, ferr)
+     boolean fquote;
+     boolean ferr;
+{
+  if (iDebug <= 4)
+    return;
+
+  if (fquote)
+    ulog (LOG_DEBUG_CONTINUE, "\"");
+
+  if (ferr)
+    ulog (LOG_DEBUG_CONTINUE, " (error)");
+
+  ulog (LOG_DEBUG_END, "");
+
+  fPort_debug = TRUE;
+}
+
+#else /* DEBUG <= 4 */
+
+/* Use macro definitions to make fcsend look neater.  */
+
+#define fcsend_debug(fquote, clen, zbuf) TRUE
+
+#define ucsend_debug_end(fquote, ferror)
+
+#endif /* DEBUG <= 4 */
 
 /* Send a string out.  This has to parse escape sequences as it goes.
    Note that it handles the dialer escape sequences (\e, \E, \D, \T)
@@ -471,6 +598,7 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
   boolean (*pfwrite) P((const char *, int));
   char *zcallout_login;
   char *zcallout_pass;
+  boolean fquote;
 
   if (strcmp (z, "\"\"") == 0)
     return TRUE;
@@ -479,6 +607,15 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
   pfwrite = fport_write;
   zcallout_login = NULL;
   zcallout_pass = NULL;
+
+#if DEBUG > 4
+  if (iDebug > 4)
+    {
+      ulog (LOG_DEBUG_START, "fcsend: Writing");
+      fPort_debug = FALSE;
+      fquote = FALSE;
+    }
+#endif
 
   while (*z != '\0')
     {
@@ -490,8 +627,12 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 
       if (zlook > z)
 	{
+	  fquote = fcsend_debug (fquote, zlook - z, z);
 	  if (! (*pfwrite) (z, zlook - z))
-	    return FALSE;
+	    {
+	      ucsend_debug_end (fquote, TRUE);
+	      return FALSE;
+	    }
 	}
 
       if (*zlook == '\0')
@@ -505,8 +646,12 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 	case 'B':
 	  if (strncmp (z, "BREAK", 5) == 0)
 	    {
+	      fquote = fcsend_debug (fquote, 0, "break");
 	      if (! fport_break ())
-		return FALSE;
+		{
+		  ucsend_debug_end (fquote, TRUE);
+		  return FALSE;
+		}
 	      z += 5;
 	    }
 	  else
@@ -541,21 +686,24 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 	      fnocr = TRUE;
 	      break;
 	    case 'd':
-#if DEBUG > 5
-	      if (iDebug > 5)
-		ulog (LOG_DEBUG, "fcsend: Sleeping for one second");
-#endif
+	      fquote = fcsend_debug (fquote, 0, "sleep");
 	      usysdep_sleep (1);
 	      break;
 	    case 'e':
+	      fquote = fcsend_debug (fquote, 0, "echo-check-off");
 	      pfwrite = fport_write;
 	      break;
 	    case 'E':
+	      fquote = fcsend_debug (fquote, 0, "echo-check-on");
 	      pfwrite = fcecho_send;
 	      break;
 	    case 'K':
+	      fquote = fcsend_debug (fquote, 0, "break");
 	      if (! fport_break ())
-		return FALSE;
+		{
+		  ucsend_debug_end (fquote, TRUE);
+		  return FALSE;
+		}
 	      break;
 	    case 'n':
 	      fsend = TRUE;
@@ -566,10 +714,7 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 	      bsend = '\0';
 	      break;
 	    case 'p':
-#if DEBUG > 5
-	      if (iDebug > 5)
-		ulog (LOG_DEBUG, "fcsend: Pausing for half second");
-#endif
+	      fquote = fcsend_debug (fquote, 0, "pause");
 	      usysdep_pause ();
 	      break;
 	    case 'r':
@@ -619,12 +764,14 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 
 		if (qsys == NULL)
 		  {
+		    ucsend_debug_end (fquote, TRUE);
 		    ulog (LOG_ERROR, "Illegal use of \\L");
 		    return FALSE;
 		  }
 		zlog = qsys->zcall_login;
 		if (zlog == NULL)
 		  {
+		    ucsend_debug_end (fquote, TRUE);
 		    ulog (LOG_ERROR, "No login defined");
 		    return FALSE;
 		  }
@@ -633,11 +780,19 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 		    if (zcallout_login == NULL
 			&& ! fcallout_login (qsys, &zcallout_login,
 					     &zcallout_pass))
-		      return FALSE;
+		      {
+			ucsend_debug_end (fquote, TRUE);
+			return FALSE;
+		      }
 		    zlog = zcallout_login;
 		  }
+		fquote = fcsend_debug (fquote, 0, "login");
+		fquote = fcsend_debug (fquote, strlen (zlog), zlog);
 		if (! (*pfwrite) (zlog, strlen (zlog)))
-		  return FALSE;
+		  {
+		    ucsend_debug_end (fquote, TRUE);
+		    return FALSE;
+		  }
 	      }
 	      break;
 	    case 'P':
@@ -646,12 +801,14 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 
 		if (qsys == NULL)
 		  {
+		    ucsend_debug_end (fquote, TRUE);
 		    ulog (LOG_ERROR, "Illegal use of \\P");
 		    return FALSE;
 		  }
 		zpass = qsys->zcall_password;
 		if (zpass == NULL)
 		  {
+		    ucsend_debug_end (fquote, TRUE);
 		    ulog (LOG_ERROR, "No password defined");
 		    return FALSE;
 		  }
@@ -660,50 +817,79 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
 		    if (zcallout_pass == NULL
 			&& ! fcallout_login (qsys, &zcallout_login,
 					     &zcallout_pass))
-		      return FALSE;
+		      {
+			ucsend_debug_end (fquote, TRUE);
+			return FALSE;
+		      }
 		    zpass = zcallout_pass;
 		  }
+		fquote = fcsend_debug (fquote, 0, "password");
+		fquote = fcsend_debug (fquote, strlen (zpass), zpass);
 		if (! (*pfwrite) (zpass, strlen (zpass)))
-		  return FALSE;
+		  {
+		    ucsend_debug_end (fquote, TRUE);
+		    return FALSE;
+		  }
 	      }
 	      break;
 	    case 'D':
 	      if (qdial == NULL || zphone == NULL)
 		{
+		  ucsend_debug_end (fquote, TRUE);
 		  ulog (LOG_ERROR, "Illegal use of \\D");
 		  return FALSE;
 		}
-	      if (! fcphone (qdial, zphone, pfwrite, ftranslate))
-		return FALSE;
+	      fquote = fcsend_debug (fquote, 0, "\\D");
+	      if (! fcphone (qdial, zphone, pfwrite, ftranslate, &fquote))
+		{
+		  ucsend_debug_end (fquote, TRUE);
+		  return FALSE;
+		}
 	      break;
 	    case 'T':
 	      if (qdial == NULL || zphone == NULL)
 		{
+		  ucsend_debug_end (fquote, TRUE);
 		  ulog (LOG_ERROR, "Illegal use of \\T");
 		  return FALSE;
 		}
-	      if (! fcphone (qdial, zphone, pfwrite, TRUE))
-		return FALSE;
+	      fquote = fcsend_debug (fquote, 0, "\\T");
+	      if (! fcphone (qdial, zphone, pfwrite, TRUE, &fquote))
+		{
+		  ucsend_debug_end (fquote, TRUE);
+		  return FALSE;
+		}
 	      break;
 	    case 'M':
 	      if (qdial == NULL)
 		{
+		  ucsend_debug_end (fquote, TRUE);
 		  ulog (LOG_ERROR, "Illegal use of \\M");
 		  return FALSE;
 		}
+	      fquote = fcsend_debug (fquote, 0, "ignore-carrier");
 	      if (! fport_no_carrier ())
-		return FALSE;
+		{
+		  ucsend_debug_end (fquote, TRUE);
+		  return FALSE;
+		}
 	      break;
 	    case 'm':
 	      if (qdial == NULL)
 		{
+		  ucsend_debug_end (fquote, TRUE);
 		  ulog (LOG_ERROR, "Illegal use of \\m");
 		  return FALSE;
 		}
+	      fquote = fcsend_debug (fquote, 0, "need-carrier");
 	      if (! fport_need_carrier ())
-		return FALSE;
+		{
+		  ucsend_debug_end (fquote, TRUE);
+		  return FALSE;
+		}
 	      break;
 	    default:
+	      ucsend_debug_end (fquote, TRUE);
 	      ulog (LOG_ERROR,
 		    "Unrecognized escape sequence \\%c in send string",
 		    *z);
@@ -720,8 +906,12 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
       
       if (fsend)
 	{
+	  fquote = fcsend_debug (fquote, 1, &bsend);
 	  if (! (*pfwrite) (&bsend, 1))
-	    return FALSE;
+	    {
+	      ucsend_debug_end (fquote, TRUE);
+	      return FALSE;
+	    }
 	}
     }
 
@@ -747,21 +937,29 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
       char b;
 
       b = '\r';
+      fquote = fcsend_debug (fquote, 1, &b);
       if (! fport_write (&b, 1))
-	return FALSE;
+	{
+	  ucsend_debug_end (fquote, TRUE);
+	  return FALSE;
+	}
     }
+
+  ucsend_debug_end (fquote, FALSE);
 
   return TRUE;
 }
 
-/* Write out a phone number with optional dialcode translation.  */
+/* Write out a phone number with optional dialcode translation.  The
+   pfquote argument is only used for debugging.  */
 
 static boolean
-fcphone (qdial, zphone, pfwrite, ftranslate)
+fcphone (qdial, zphone, pfwrite, ftranslate, pfquote)
      const struct sdialer *qdial;
      const char *zphone;
      boolean (*pfwrite) P((const char *zwrite, int cwrite));
      boolean ftranslate;
+     boolean *pfquote;
 {
   const char *zprefix, *zsuffix;
 
@@ -786,6 +984,7 @@ fcphone (qdial, zphone, pfwrite, ftranslate)
 	  z = zprefix + strcspn (zprefix, "=-");
 	  if (z > zprefix)
 	    {
+	      *pfquote = fcsend_debug (*pfquote, z - zprefix, zprefix);
 	      if (! (*pfwrite) (zprefix, z - zprefix))
 		return FALSE;
 	    }
@@ -799,6 +998,7 @@ fcphone (qdial, zphone, pfwrite, ftranslate)
 
 	  if (zstr != NULL)
 	    {
+	      *pfquote = fcsend_debug (*pfquote, strlen (zstr), zstr);
 	      if (! (*pfwrite) (zstr, strlen (zstr)))
 		return FALSE;
 	    }

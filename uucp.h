@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.44  1992/03/02  04:53:07  ian
+   Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
+
    Revision 1.43  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -584,10 +587,17 @@ enum tlog
   /* Error log entry.  */
   LOG_ERROR,
   /* Fatal log entry.  */
-  LOG_FATAL,
+  LOG_FATAL
 #if DEBUG > 0
+    ,
   /* Debugging log entry.  */
-  LOG_DEBUG
+  LOG_DEBUG,
+  /* Start debugging log entry.  */
+  LOG_DEBUG_START,
+  /* Continue debugging log entry.  */
+  LOG_DEBUG_CONTINUE,
+  /* End debugging log entry.  */
+  LOG_DEBUG_END
 #endif
 };
 
@@ -910,6 +920,19 @@ extern void ustats_failed P((void));
 
 /* Close the statistics file.  */
 extern void ustats_close P((void));
+
+#if DEBUG > 0
+/* A debugging routine to output a buffer.  This outputs zhdr, the
+   buffer length clen, and the contents of the buffer in quotation
+   marks.  */
+extern void udebug_buffer P((const char *zhdr, const char *zbuf,
+			     int clen));
+
+/* A debugging routine to make a readable version of a character.
+   This takes a buffer at least 5 bytes long, and returns the length
+   of the string it put into it (not counting the null byte).  */
+extern int cdebug_char P((char *z, int ichar));
+#endif
 
 /* Copy one file to another.  */
 extern boolean fcopy_file P((const char *zfrom, const char *zto,

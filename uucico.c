@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.63  1992/03/03  21:01:20  ian
+   Use strict timeout in fsserial_read, eliminate all race conditions
+
    Revision 1.62  1992/03/03  06:06:48  ian
    T. William Wells: don't complain about missing configuration files
 
@@ -3079,6 +3082,14 @@ zget_uucp_cmd (frequired)
   else
     iendtime += CSHORTTIMEOUT;
 
+#if DEBUG > 5
+  if (iDebug > 5)
+    {
+      ulog (LOG_DEBUG_START, "zget_uucp_cmd: Got \"");
+      fPort_debug = FALSE;
+    }
+#endif
+
   cgot = -1;
   while ((ctimeout = (int) (iendtime - isysdep_time ((long *) NULL))) > 0)
     {
@@ -3088,10 +3099,28 @@ zget_uucp_cmd (frequired)
       /* Now b == -1 on timeout, -2 on error.  */
       if (b < 0)
 	{
+#if DEBUG > 5
+	  if (iDebug > 5)
+	    {
+	      ulog (LOG_DEBUG_END, "\" (%s)",
+		    b == -1 ? "timeout" : "error");
+	      fPort_debug = TRUE;
+	    }
+#endif
 	  if (b == -1 && frequired)
 	    ulog (LOG_ERROR, "Timeout");
 	  return NULL;
 	}
+
+#if DEBUG > 5
+      if (iDebug > 5)
+	{
+	  char ab[5];
+
+	  (void) cdebug_char (ab, b);
+	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
+	}
+#endif
 
       if (cgot < 0)
 	{
@@ -3119,8 +3148,25 @@ zget_uucp_cmd (frequired)
       ++cgot;
 
       if (b == '\0')
-	return zalc;
+	{
+#if DEBUG > 5
+	  if (iDebug > 5)
+	    {
+	      ulog (LOG_DEBUG_END, "\"");
+	      fPort_debug = TRUE;
+	    }
+#endif
+	  return zalc;
+	}
     }
+
+#if DEBUG > 5
+  if (iDebug > 5)
+    {
+      ulog (LOG_DEBUG_END, "\" (timeout)");
+      fPort_debug = TRUE;
+    }
+#endif
 
   if (frequired)
     ulog (LOG_ERROR, "Timeout");
@@ -3137,17 +3183,47 @@ zget_typed_line ()
   static int calc;
   int cgot;
 
+#if DEBUG > 5
+  if (iDebug > 5)
+    {
+      ulog (LOG_DEBUG_START, "zget_typed_line: Got \"");
+      fPort_debug = FALSE;
+    }
+#endif
+
   cgot = 0;
   while (TRUE)
     {
       int b;
       
       b = breceive_char (CTIMEOUT, FALSE);
+
       /* Now b == -1 on timeout, -2 on error.  */
+
       if (b == -2 || iSignal != 0)
-	return NULL;
+	{
+#if DEBUG > 5
+	  if (iDebug > 5)
+	    {
+	      ulog (LOG_DEBUG_END, "\" (error)");
+	      fPort_debug = TRUE;
+	    }
+#endif
+	  return NULL;
+	}
+
       if (b == -1)
 	continue;
+
+#if DEBUG > 5
+      if (iDebug > 5)
+	{
+	  char ab[5];
+
+	  (void) cdebug_char (ab, b);
+	  ulog (LOG_DEBUG_CONTINUE, "%s", ab);
+	}
+#endif
 
       if (cgot >= calc)
 	{
@@ -3162,6 +3238,15 @@ zget_typed_line ()
       ++cgot;
 
       if (b == '\0')
-	return zalc;
+	{
+#if DEBUG > 5
+	  if (iDebug > 5)
+	    {
+	      ulog (LOG_DEBUG_END, "\"");
+	      fPort_debug = TRUE;
+	    }
+#endif
+	  return zalc;
+	}
     }
 }

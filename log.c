@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.22  1992/02/19  19:36:07  ian
    Rearranged time functions
 
@@ -155,6 +158,9 @@ static boolean fLlog_tried;
 #if DEBUG > 0
 /* The open debugging file.  */
 static FILE *eLdebug;
+
+/* Whether we've tried to open the debugging file.  */
+static boolean fLdebug_tried;
 #endif
 
 /* The open statistics file.  */
@@ -285,6 +291,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   va_list parg;
 #endif
   FILE *e, *edebug;
+  boolean fstart, fend;
   const char *zhdr, *zstr;
 
   /* Log any received signal.  We do it this way to avoid calling ulog
@@ -307,13 +314,11 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (! fLfile)
     e = stderr;
 #if DEBUG > 0
-  else if (ttype == LOG_DEBUG)
+  else if ((int) ttype >= (int) LOG_DEBUG)
     {
-      static boolean ftried;
-
-      if (eLdebug == NULL && ! ftried)
+      if (eLdebug == NULL && ! fLdebug_tried)
 	{
-	  ftried = TRUE;
+	  fLdebug_tried = TRUE;
 	  eLdebug = esysdep_fopen (zDebugfile, FALSE, TRUE, TRUE);
 	}
       e = eLdebug;
@@ -376,9 +381,12 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 
   edebug = NULL;
 #if DEBUG > 0
-  if (ttype != LOG_DEBUG)
+  if ((int) ttype < (int) LOG_DEBUG)
     edebug = eLdebug;
 #endif
+
+  fstart = TRUE;
+  fend = TRUE;
 
   switch (ttype)
     {
@@ -395,77 +403,94 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     case LOG_DEBUG:
       zhdr = "DEBUG: ";
       break;
+    case LOG_DEBUG_START:
+      zhdr = "DEBUG: ";
+      fend = FALSE;
+      break;
+    case LOG_DEBUG_CONTINUE:
+      zhdr = NULL;
+      fstart = FALSE;
+      fend = FALSE;
+      break;
+    case LOG_DEBUG_END:
+      zhdr = NULL;
+      fstart = FALSE;
+      break;
 #endif
     default:
       zhdr = "???: ";
       break;
     }
 
-  if (! fLfile)
+  if (fstart)
     {
-      fprintf (e, "%s: ", abProgram);
-      if (edebug != NULL)
-	fprintf (edebug, "%s: ", abProgram);
-    }
-  else
-    {
-#if HAVE_TAYLOR_LOGGING
-      fprintf (e, "%s ", abProgram);
-      if (edebug != NULL)
-	fprintf (edebug, "%s ", abProgram);
-#else /* ! HAVE_TAYLOR_LOGGING */
-      fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
-      if (edebug != NULL)
-	fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
-#endif /* HAVE_TAYLOR_LOGGING */
-
-      fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
-      if (edebug != NULL)
-	fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
-
-#if HAVE_TAYLOR_LOGGING
-      fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
-      if (edebug != NULL)
-	fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
-#endif /* HAVE_TAYLOR_LOGGING */
-
-      zstr = zldate_and_time ();
-      fprintf (e, "(%s", zstr);
-      if (edebug != NULL)
-	fprintf (edebug, "(%s", zstr); 
-
-      if (iLid != 0)
+      if (! fLfile)
 	{
+	  fprintf (e, "%s: ", abProgram);
+	  if (edebug != NULL)
+	    fprintf (edebug, "%s: ", abProgram);
+	}
+      else
+	{
+#if HAVE_TAYLOR_LOGGING
+	  fprintf (e, "%s ", abProgram);
+	  if (edebug != NULL)
+	    fprintf (edebug, "%s ", abProgram);
+#else /* ! HAVE_TAYLOR_LOGGING */
+	  fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
+	  if (edebug != NULL)
+	    fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
+#endif /* HAVE_TAYLOR_LOGGING */
+
+	  fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
+	  if (edebug != NULL)
+	    fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
+
+#if HAVE_TAYLOR_LOGGING
+	  fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
+	  if (edebug != NULL)
+	    fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
+#endif /* HAVE_TAYLOR_LOGGING */
+
+	  zstr = zldate_and_time ();
+	  fprintf (e, "(%s", zstr);
+	  if (edebug != NULL)
+	    fprintf (edebug, "(%s", zstr); 
+
+	  if (iLid != 0)
+	    {
 #if ! HAVE_BNU_LOGGING
 #if HAVE_TAYLOR_LOGGING
-	  fprintf (e, " %d", iLid);
-	  if (edebug != NULL)
-	    fprintf (edebug, " %d", iLid);
+	      fprintf (e, " %d", iLid);
+	      if (edebug != NULL)
+		fprintf (edebug, " %d", iLid);
 #else /* ! HAVE_TAYLOR_LOGGING */
-	  fprintf (e, "-%d", iLid);
-	  if (edebug != NULL)
-	    fprintf (edebug, "-%d", iLid);
+	      fprintf (e, "-%d", iLid);
+	      if (edebug != NULL)
+		fprintf (edebug, "-%d", iLid);
 #endif /* ! HAVE_TAYLOR_LOGGING */
 #else /* HAVE_BNU_LOGGING */
 
-	  /* I assume that the second number here is meant to be some
-	     sort of file sequence number, and that it should
-	     correspond to the sequence number in the statistics file.
-	     I don't have any really convenient way to do this, so I
-	     won't unless somebody thinks it's very important.  */
-	  fprintf (e, ",%d,%d", iLid, 0);
+	      /* I assume that the second number here is meant to be
+		 some sort of file sequence number, and that it should
+		 correspond to the sequence number in the statistics
+		 file.  I don't have any really convenient way to do
+		 this, so I won't unless somebody thinks it's very
+		 important.  */
+	      fprintf (e, ",%d,%d", iLid, 0);
+	      if (edebug != NULL)
+		fprintf (edebug, ",%d,%d", iLid, 0);
+#endif /* HAVE_BNU_LOGGING */
+	    }
+
+	  fprintf (e, ") ");
 	  if (edebug != NULL)
-	    fprintf (edebug, ",%d,%d", iLid, 0);
-#endif				/* HAVE_BNU_LOGGING */
+	    fprintf (edebug, ") ");
+
+	  fprintf (e, "%s", zhdr);
+	  if (edebug != NULL)
+	    fprintf (edebug, "%s", zhdr);
 	}
-
-      fprintf (e, ") ");
-      if (edebug != NULL)
-	fprintf (edebug, ") ");
-
-      fprintf (e, "%s", zhdr);
-      if (edebug != NULL)
-	fprintf (edebug, "%s", zhdr);
     }
 
 #if HAVE_VFPRINTF
@@ -484,9 +509,12 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     fprintf (edebug, zmsg, a, b, c, d, f, g, h, i, j);
 #endif /* ! HAVE_VFPRINTF */
 
-  fprintf (e, "\n");
-  if (edebug != NULL)
-    fprintf (edebug, "\n");
+  if (fend)
+    {
+      fprintf (e, "\n");
+      if (edebug != NULL)
+	fprintf (edebug, "\n");
+    }
 
   (void) fflush (e);
   if (edebug != NULL)
@@ -522,6 +550,7 @@ ulog_close ()
     {
       (void) fclose (eLdebug);
       eLdebug = NULL;
+      fLdebug_tried = FALSE;
     }
 #endif
 }
