@@ -864,6 +864,8 @@ uccopy (zfile, zdest)
 
 	      ubuffree (zbase);
 
+	      if (! fstdiosync (e, zxqt))
+		ulog (LOG_FATAL, "fsync failed");
 	      if (fclose (e) != 0)
 		ulog (LOG_FATAL, "fclose: %s", strerror (errno));
 
@@ -1073,6 +1075,8 @@ uccopy (zfile, zdest)
 
 	  fprintf (e, " %s\n", zcmd);
 
+	  if (! fstdiosync (e, zxqt))
+	    ulog (LOG_FATAL, "fsync failed");
 	  if (fclose (e) != 0)
 	    ulog (LOG_FATAL, "fclose: %s", strerror (errno));
 

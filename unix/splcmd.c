@@ -104,6 +104,14 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
 	}
     }
 
+  if (! fstdiosync (e, ztemp))
+    {
+      (void) fclose (e);
+      (void) remove (ztemp);
+      ubuffree (ztemp);
+      return NULL;
+    }
+
   if (fclose (e) != 0)
     {
       ulog (LOG_ERROR, "fclose: %s", strerror (errno));

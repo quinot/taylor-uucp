@@ -1031,6 +1031,8 @@ main (argc, argv)
 		    fprintf (e, "%s!", zforward);
 		  fprintf (e, "%s\n", abxtname);
 
+		  if (! fstdiosync (e, zxqt))
+		    ulog (LOG_FATAL, "fsync failed");
 		  if (fclose (e) != 0)
 		    ulog (LOG_FATAL, "fclose: %s", strerror (errno));
 
@@ -1075,6 +1077,8 @@ main (argc, argv)
 
       uxcopy_stdin (e);
 
+      if (! fstdiosync (e, zdata))
+	ulog (LOG_FATAL, "fsync failed");
       eXclose = NULL;
       if (fclose (e) != 0)
 	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
@@ -1203,6 +1207,8 @@ main (argc, argv)
       if (fneedshell)
 	uxadd_xqt_line ('e', (const char *) NULL, (const char *) NULL);
       uxadd_xqt_line ('C', zfullcmd, (const char *) NULL);
+      if (! fstdiosync (eXxqt_file, "execution file"))
+	ulog (LOG_FATAL, "fsync failed");
       if (fclose (eXxqt_file) != 0)
 	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
       eXxqt_file = NULL;
@@ -1440,6 +1446,8 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward)
 
       ubuffree (zbase);
 
+      if (! fstdiosync (e, zxqt))
+	ulog (LOG_FATAL, "fsync failed");
       if (fclose (e) != 0)
 	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
 
