@@ -1039,7 +1039,6 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
       int iseq;
       int csize;
       int iack;
-      boolean fdelayed;
 
       /* If we're closing the connection, ignore any data remaining in
 	 the input buffer.  */
@@ -1320,8 +1319,6 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 			      pfexit))
 	return FALSE;
 
-      fdelayed = FALSE;
-
       if (iseq != -1)
 	{
 	  int inext;
@@ -1334,7 +1331,6 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	      char *z;
 	      int c;
 
-	      fdelayed = TRUE;
 	      z = azIrecbuffers[inext];
 	      c = CHDRCON_GETBYTES (z[IHDR_CONTENTS1], z[IHDR_CONTENTS2]);
 	      iIrecseq = inext;
@@ -1352,38 +1348,27 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	 at a time should significantly cut the acknowledgement
 	 traffic when only one side is sending.  We should normally
 	 not have to send an ACK if we have data to send, since each
-	 packet sent will ACK the most recently received packet.  So
-	 if we have an unacknowledged packet, and we're not sending
-	 this ACK just because we processed a set of delayed packets,
-	 assume that something went wrong and resend the whole packet
-	 rather than just an ACK.  */
+	 packet sent will ACK the most recently received packet.
+	 However, it can happen if we receive a burst of short
+	 packets, such as a set of command acknowledgements.  */
       if (iIrequest_winsize > 0
 	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= iIrequest_winsize / 2)
 	{
-	  if (! fdelayed
-	      && INEXTSEQ (iIremote_ack) != iIsendseq)
-	    {
-	      if (! firesend (qdaemon))
-		return FALSE;
-	    }
-	  else
-	    {
-	      char aback[CHDRLEN];
+	  char aback[CHDRLEN];
 
-	      aback[IHDR_INTRO] = IINTRO;
-	      aback[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
-	      aback[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
-	      iIlocal_ack = iIrecseq;
-	      aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
-	      aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
-	      aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
+	  aback[IHDR_INTRO] = IINTRO;
+	  aback[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
+	  aback[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
+	  iIlocal_ack = iIrecseq;
+	  aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
+	  aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
+	  aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
 
-	      DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_data: Sending ACK %d",
-			      iIrecseq);
+	  DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_data: Sending ACK %d",
+			  iIrecseq);
 
-	      if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
-		return FALSE;
-	    }
+	  if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
+	    return FALSE;
 	}
     }
 
