@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/01/28  03:30:14  ian
+   John Antypas: bad boundary condition for command in small packet
+
    Revision 1.19  1992/01/19  23:01:21  ian
    Dave Platt: send small packets to hold a small amount of data
 
@@ -607,7 +610,7 @@ fgsendcmd (z)
 
       zpacket = zggetspace (&cdummy);
 
-      if (clen + 1 < iGremote_packsize)
+      if (clen < iGremote_packsize)
 	{
 	  int csize;
 
@@ -621,7 +624,7 @@ fgsendcmd (z)
 	  else
 	    {
 	      csize = 32;
-	      while (csize < clen + 1)
+	      while (csize <= clen)
 		csize <<= 1;
 	    }
 
