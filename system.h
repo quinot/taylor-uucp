@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/05/18  18:50:44  ian
+   Added -t option to uucp for uuto compatibility
+
    Revision 1.34  1992/04/27  23:04:15  ian
    Added several routines for cu support
 
@@ -700,10 +703,7 @@ extern boolean fsysdep_needs_cwd P((const char *zfile));
    destination of a uucp is a directory.  */
 extern const char *zsysdep_base_name P((const char *zfile));
 
-/* Return a filename within a directory.  The zdir argument may name a
-   file, in which case it should be returned.  If it names a
-   directory, this function should get the filename from the zfile
-   argument and return that filename within the directory.  */
+/* Return a filename within a directory.  */
 extern const char *zsysdep_in_dir P((const char *zdir, const char *zfile));
 
 /* Get the mode of a file.  This should return a Unix style file mode.
@@ -730,6 +730,22 @@ extern boolean fsysdep_daemon_access P((const char *zfile));
    produce on any other system as well.  Returns NULL on a usage
    error, or otherwise returns an allocated string.  */
 extern char *zsysdep_uuto P((const char *zdest));
+
+/* Return TRUE if a pathname exists and is a directory.  */
+extern boolean fsysdep_directory P((const char *zpath));
+
+/* Walk a directory tree.  The zdir argument is the directory to walk.
+   The pufn argument is a function to call on each regular file in the
+   tree.  The first argument to pufn should be the full filename; the
+   second argument to pufn should be the filename relative to zdir;
+   the third argument to pufn should be the pinfo argument to
+   usysdep_walk_tree.  The usysdep_walk_tree function should return
+   FALSE on error.  */
+extern boolean usysdep_walk_tree P((const char *zdir,
+				    void (*pufn) P((const char *zfull,
+						    const char *zrelative,
+						    pointer pinfo)),
+				    pointer pinfo));
 
 /* Return the jobid of a work file, given the sequence value.  On
    error this should log an error and return NULL.  The jobid is a

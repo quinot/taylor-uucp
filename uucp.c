@@ -20,88 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
-
-   $Log$
-   Revision 1.26  1992/04/22  23:29:24  ian
-   Changed arguments to usysdep_initialize
-
-   Revision 1.25  1992/03/15  04:51:17  ian
-   Keep an array of signals we've received rather than a single variable
-
-   Revision 1.24  1992/03/12  21:55:09  ian
-   Use fake local name when generating an execution request
-
-   Revision 1.23  1992/03/12  19:54:43  ian
-   Debugging based on types rather than number
-
-   Revision 1.22  1992/02/29  04:07:08  ian
-   Added -j option to uucp and uux
-
-   Revision 1.21  1992/02/29  01:06:59  ian
-   Chip Salzenberg: recheck file permissions before sending
-
-   Revision 1.20  1992/02/27  05:40:54  ian
-   T. William Wells: detach from controlling terminal, handle signals safely
-
-   Revision 1.19  1992/02/24  04:58:47  ian
-   Only permit files to be received into directories that are world-writeable
-
-   Revision 1.18  1992/02/23  03:26:51  ian
-   Overhaul to use automatic configure shell script
-
-   Revision 1.17  1992/02/14  05:17:09  ian
-   Niels Baggesen: have to copy abtname into memory
-
-   Revision 1.16  1992/02/08  22:33:32  ian
-   Only get the current working directory if it's going to be needed
-
-   Revision 1.15  1992/02/08  20:33:57  ian
-   Handle all possible signals raised by abort
-
-   Revision 1.14  1992/02/08  03:54:18  ian
-   Include <string.h> only in <uucp.h>, added 1992 copyright
-
-   Revision 1.13  1992/02/02  20:56:25  ian
-   Do local copy to zsysdep_real_file_name, not zsysdep_in_dir
-
-   Revision 1.12  1992/02/02  20:34:36  ian
-   Niels Baggesen: must check user permissions on access to local files
-
-   Revision 1.11  1992/01/21  19:39:12  ian
-   Chip Salzenberg: uucp and uux start uucico for right system, not any
-
-   Revision 1.10  1992/01/15  07:06:29  ian
-   Set configuration directory in Makefile rather than sysdep.h
-
-   Revision 1.9  1992/01/05  03:09:17  ian
-   Changed abProgram and abVersion to non const to avoid compiler bug
-
-   Revision 1.8  1991/12/21  21:09:01  ian
-   Use ulog to report illegal grade error message
-
-   Revision 1.7  1991/12/18  03:54:14  ian
-   Made error messages to terminal appear more normal
-
-   Revision 1.6  1991/12/11  03:59:19  ian
-   Create directories when necessary; don't just assume they exist
-
-   Revision 1.5  1991/11/21  22:17:06  ian
-   Add version string, print version when printing usage
-
-   Revision 1.4  1991/11/13  23:08:40  ian
-   Expand remote pathnames in uucp and uux; fix up uux special cases
-
-   Revision 1.3  1991/09/19  02:30:37  ian
-   From Chip Salzenberg: check whether signal is ignored differently
-
-   Revision 1.2  1991/09/11  02:33:14  ian
-   Added ffork argument to fsysdep_run
-
-   Revision 1.1  1991/09/10  19:40:31  ian
-   Initial revision
-  
-   */
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
 
 #include "uucp.h"
 
@@ -117,6 +36,19 @@ char uucp_rcsid[] = "$Id$";
 #include "system.h"
 #include "sysdep.h"
 
+/* Local functions.  */
+
+static void ucusage P((void));
+static void ucdirfile P((const char *zdir, const char *zfile,
+			 pointer pinfo));
+static void uccopy P((const char *zfile, const char *zdest));
+static void ucadd_cmd P((const struct ssysteminfo *qsys,
+			 const struct scmd *qcmd));
+static void ucspool_cmds P((boolean fjobid));
+static const char *zcone_system P((boolean *pfany));
+static void ucrecord_file P((const char *zfile));
+static void ucabort P((void));
+
 /* The program name.  */
 char abProgram[] = "uucp";
 
@@ -126,15 +58,44 @@ static const struct option asClongopts[] = { { NULL, 0, NULL, 0 } };
 
 const struct option *_getopt_long_options = asClongopts;
 
-/* Local functions.  */
+/* Local variables.  There are a bunch of these, mostly set by the
+   options and the last (the destination) argument.  These have file
+   scope so that they may be easily passed into uccopy; they could for
+   the most part also be wrapped up in a structure and passed in.  */
 
-static void ucusage P((void));
-static void ucadd_cmd P((const struct ssysteminfo *qsys,
-			 const struct scmd *qcmd));
-static void ucspool_cmds P((int bgrade, boolean fjobid));
-static const char *zcone_system P((boolean *pfany));
-static void ucrecord_file P((const char *zfile));
-static void ucabort P((void));
+/* TRUE if source files should be copied to the spool directory.  */
+static boolean fCcopy = TRUE;
+
+/* Grade to use.  */
+static char bCgrade = BDEFAULT_UUCP_GRADE;
+
+/* User to notify on remote system.  */
+static const char *zCnotify = "";
+
+/* TRUE if remote files should be prefixed with the current working
+   directory.  */
+static boolean fCexpand = TRUE;
+
+/* TRUE if necessary directories should be created on the destination
+   system.  */
+static boolean fCmkdirs = TRUE;
+
+/* User name.  */
+static const char *zCuser;
+
+/* TRUE if the destination is this system.  */
+static boolean fClocaldest;
+
+/* Destination system.  */
+static const struct ssysteminfo *qCdestsys;
+
+/* Options to use when sending a file.  */
+static char abCsend_options[20];
+
+/* Options to use when receiving a file.  */
+static char abCrec_options[20];
+
+/* The main program.  */
 
 int
 main (argc, argv)
@@ -142,70 +103,58 @@ main (argc, argv)
      char **argv;
 {
   int iopt;
-  /* -c,-C: if true, copy to spool directory.  */
-  boolean fcopy = TRUE;
-  /* -d,-f: if true, create directories if they don't exist.  */
-  boolean fmkdirs = TRUE;
-  /* -g: job grade.  */
-  char bgrade = BDEFAULT_UUCP_GRADE;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
   /* -j: output job id.  */
   boolean fjobid = FALSE;
   /* -m: mail to requesting user.  */
   boolean fmail = FALSE;
-  /* -n: notify remote user.  */
-  const char *znotify = "";
   /* -r: don't start uucico when finished.  */
   boolean fuucico = TRUE;
+  /* -R: copy directories recursively.  */
+  boolean frecursive = FALSE;
   /* -s: report status to named file.  */
   const char *zstatus_file = NULL;
   /* -t: emulate uuto.  */
   boolean fuuto = FALSE;
-  /* -W: expand local file names only.  */
-  boolean fexpand = TRUE;
   int i;
   boolean fgetcwd;
   char *zexclam;
   char *zdestfile;
   const char *zconst;
+  char *zcopy;
   struct ssysteminfo sdestsys;
-  const struct ssysteminfo *qdestsys;
-  boolean flocaldest;
-  const char *zuser;
-  char absend_options[5];
-  char abrec_options[3];
   char *zoptions;
   boolean fexit;
 
-  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:prs:tWx:")) != EOF)
+  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:prRs:tWx:")) != EOF)
     {
       switch (iopt)
 	{
 	case 'c':
 	  /* Do not copy local files to spool directory.  */
-	  fcopy = FALSE;
+	  fCcopy = FALSE;
 	  break;
 
 	case 'p':
 	case 'C':
 	  /* Copy local files to spool directory.  */
-	  fcopy = TRUE;
+	  fCcopy = TRUE;
 	  break;
 
 	case 'd':
 	  /* Create directories if necessary.  */
-	  fmkdirs = TRUE;
+	  fCmkdirs = TRUE;
 	  break;
 
 	case 'f':
 	  /* Do not create directories if they don't exist.  */
-	  fmkdirs = FALSE;
+	  fCmkdirs = FALSE;
 	  break;
 
 	case 'g':
 	  /* Set job grade.  */
-	  bgrade = optarg[0];
+	  bCgrade = optarg[0];
 	  break;
 
 	case 'I':
@@ -225,12 +174,17 @@ main (argc, argv)
 
 	case 'n':
 	  /* Notify remote user.  */
-	  znotify = optarg;
+	  zCnotify = optarg;
 	  break;
 
 	case 'r':
 	  /* Don't start uucico when finished.  */
 	  fuucico = FALSE;
+	  break;
+
+	case 'R':
+	  /* Copy directories recursively.  */
+	  frecursive = TRUE;
 	  break;
 
 	case 's':
@@ -245,7 +199,7 @@ main (argc, argv)
 
 	case 'W':
 	  /* Expand only local file names.  */
-	  fexpand = FALSE;
+	  fCexpand = FALSE;
 	  break;
 
 	case 'x':
@@ -265,13 +219,10 @@ main (argc, argv)
 	}
     }
 
-  if (! FGRADE_LEGAL (bgrade))
+  if (! FGRADE_LEGAL (bCgrade))
     {
-      /* We use LOG_NORMAL rather than LOG_ERROR because this is going
-	 to stderr rather than to the log file, and we don't need the
-	 ERROR header string.  */
-      ulog (LOG_NORMAL, "Ignoring illegal grade");
-      bgrade = BDEFAULT_UUCP_GRADE;
+      ulog (LOG_ERROR, "Ignoring illegal grade");
+      bCgrade = BDEFAULT_UUCP_GRADE;
     }
 
   if (argc - optind < 2)
@@ -284,12 +235,12 @@ main (argc, argv)
 
   if (fuuto)
     {
-      if (*znotify == '\0')
+      if (*zCnotify == '\0')
 	{
 	  zexclam = strrchr (argv[argc - 1], '!');
 	  if (zexclam == NULL)
 	    ucusage ();
-	  znotify = zexclam + 1;
+	  zCnotify = zexclam + 1;
 	}
       argv[argc - 1] = zsysdep_uuto (argv[argc - 1]);
       if (argv[argc - 1] == NULL)
@@ -298,8 +249,8 @@ main (argc, argv)
 
   /* See if we are going to need to know the current directory.  We
      just check each argument to see whether it's an absolute
-     pathname.  We actually aren't going to need the cwd if fexpand is
-     FALSE and the file is remote, but so what.  */
+     pathname.  We actually aren't going to need the cwd if fCexpand
+     is FALSE and the file is remote, but so what.  */
   fgetcwd = FALSE;
   for (i = optind; i < argc; i++)
     {
@@ -335,27 +286,27 @@ main (argc, argv)
 
   ulog_fatal_fn (ucabort);
 
-  zuser = zsysdep_login_name ();
+  zCuser = zsysdep_login_name ();
 
   /* Set up the options.  */
 
-  zoptions = absend_options;
-  if (fcopy)
+  zoptions = abCsend_options;
+  if (fCcopy)
     *zoptions++ = 'C';
   else
     *zoptions++ = 'c';
-  if (fmkdirs)
+  if (fCmkdirs)
     *zoptions++ = 'd';
   else
     *zoptions++ = 'f';
   if (fmail)
     *zoptions++ = 'm';
-  if (*znotify != '\0')
+  if (*zCnotify != '\0')
     *zoptions++ = 'n';
   *zoptions = '\0';
 
-  zoptions = abrec_options;
-  if (fmkdirs)
+  zoptions = abCrec_options;
+  if (fCmkdirs)
     *zoptions++ = 'd';
   else
     *zoptions++ = 'f';
@@ -367,13 +318,12 @@ main (argc, argv)
   if (zexclam == NULL)
     {
       zdestfile = argv[argc - 1];
-      qdestsys = &sLocalsys;
-      flocaldest = TRUE;
+      qCdestsys = &sLocalsys;
+      fClocaldest = TRUE;
     }
   else
     {
       int clen;
-      char *zcopy;
 
       clen = zexclam - argv[argc - 1];
       zcopy = (char *) alloca (clen + 1);
@@ -384,24 +334,24 @@ main (argc, argv)
 
       if (*zcopy == '\0' || strcmp (zcopy, zLocalname) == 0)
 	{
-	  qdestsys = &sLocalsys;
-	  flocaldest = TRUE;
+	  qCdestsys = &sLocalsys;
+	  fClocaldest = TRUE;
 	}
       else
 	{
 	  if (fread_system_info (zcopy, &sdestsys))
-	    qdestsys = &sdestsys;
+	    qCdestsys = &sdestsys;
 	  else
 	    {
 	      if (! fUnknown_ok)
 		ulog (LOG_FATAL, "System %s unknown", zcopy);
-	      qdestsys = &sUnknown;
+	      qCdestsys = &sUnknown;
 	      sUnknown.zname = zcopy;
 	    }
 
-	  flocaldest = FALSE;
+	  fClocaldest = FALSE;
 
-	  if (! fsysdep_make_spool_dir (qdestsys))
+	  if (! fsysdep_make_spool_dir (qCdestsys))
 	    {
 	      ulog_close ();
 	      usysdep_exit (FALSE);
@@ -411,9 +361,9 @@ main (argc, argv)
 
   /* If the destination file is not an absolute path, expand it
      with the current directory.  */
-  if (fexpand || flocaldest)
+  if (fCexpand || fClocaldest)
     {
-      zconst = zsysdep_add_cwd (zdestfile, flocaldest);
+      zconst = zsysdep_add_cwd (zdestfile, fClocaldest);
       if (zconst == NULL)
 	{
 	  ulog_close ();
@@ -425,210 +375,56 @@ main (argc, argv)
   /* Check that we have permission to receive into the desired
      directory.  If we don't have permission, uucico will fail.  */
 
-  if (flocaldest)
+  if (fClocaldest)
     {
       if (! fin_directory_list (&sLocalsys, zdestfile,
 				sLocalsys.zlocal_receive,
-				TRUE, FALSE, zuser))
+				TRUE, FALSE, zCuser))
 	ulog (LOG_FATAL, "Not permitted to receive to %s", zdestfile);
     }
 
-  /* Process each file.  */
+  /* Process each source argument.  */
 
   for (i = optind; i < argc - 1 && ! FGOT_SIGNAL (); i++)
     {
-      struct scmd s;
+      boolean flocal;
+      char *zfrom;
 
-      zexclam = strchr (argv[i], '!');
-
-      if (zexclam == NULL)
+      if (strchr (argv[i], '!') != NULL)
 	{
-	  char *zfrom;
-
+	  flocal = FALSE;
+	  zfrom = argv[i];
+	}
+      else
+	{
 	  /* This is a local file.  Make sure we get it out of the
-	     original directory.  We don't support local wildcards
-	     yet (if ever).  */
+	     original directory.  We don't support local wildcards yet
+	     (if ever).  */
+	  flocal = TRUE;
 	  zconst = zsysdep_add_cwd (argv[i], TRUE);
 	  if (zconst == NULL)
 	    ucabort ();
 	  zfrom = xstrdup (zconst);
-
-	  /* Make sure the user has access to this file, since we are
-	     running setuid.  */
-	  if (! fsysdep_access (zfrom))
-	    ucabort ();
-
-	  if (flocaldest)
-	    {
-	      char *zto;
-
-	      /* Copy one local file to another.  */
-
-	      zconst = zsysdep_real_file_name (&sLocalsys, zdestfile,
-					       argv[i]);
-	      if (zconst == NULL)
-		ucabort ();
-	      zto = xstrdup (zconst);
-
-	      if (! fcopy_file (zfrom, zto, FALSE, fmkdirs))
-		ucabort ();
-
-	      xfree ((pointer) zto);
-	    }
-	  else
-	    {
-	      char abtname[CFILE_NAME_LEN];
-	      unsigned int imode;
-
-	      /* Copy a local file to a remote file.  We may have to
-		 copy the local file to the spool directory.  */
-
-	      imode = isysdep_file_mode (zfrom);
-	      if (imode == 0)
-		ucabort ();
-
-	      if (! fcopy)
-		{
-		  /* Make sure the daemon will be permitted to send
-		     this file.  */
-		  if (! fsysdep_daemon_access (zfrom))
-		    ucabort ();
-		  if (! fin_directory_list (&sLocalsys, zfrom,
-					    sLocalsys.zlocal_send,
-					    TRUE, TRUE, zuser))
-		    ulog (LOG_FATAL, "Not permitted to send from %s",
-			  zfrom);
-		  strcpy (abtname, "D.0");
-		}
-	      else
-		{
-		  char *zdata;
-
-		  zconst = zsysdep_data_file_name (qdestsys, bgrade,
-						   abtname, (char *) NULL,
-						   (char *) NULL);
-		  if (zconst == NULL)
-		    ucabort ();
-		  zdata = xstrdup (zconst);
-
-		  ucrecord_file (zdata);
-		  if (! fcopy_file (zfrom, zdata, FALSE, TRUE))
-		    ucabort ();
-		  xfree ((pointer) zdata);
-		}
-
-	      s.bcmd = 'S';
-	      s.pseq = NULL;
-	      s.zfrom = zfrom;
-	      s.zto = zdestfile;
-	      s.zuser = zuser;
-	      s.zoptions = absend_options;
-	      s.ztemp = xstrdup (abtname);
-	      s.imode = imode;
-	      s.znotify = znotify;
-	      s.cbytes = -1;
-
-	      ucadd_cmd (qdestsys, &s);
-	    }
 	}
+
+      if (! flocal || ! fsysdep_directory (zfrom))
+	uccopy (zfrom, zdestfile);
       else
 	{
-	  int clen;
-	  char *zcopy;
-	  struct ssysteminfo *qfromsys;
-
-	  /* Add the current directory to the filename if it's not
-	     already there.  */
-	  if (fexpand)
+	  if (! frecursive)
+	    ulog (LOG_ERROR, "%s: directory without -R", zfrom);
+	  else
 	    {
-	      zconst = zsysdep_add_cwd (zexclam + 1, FALSE);
+	      zconst = zsysdep_base_name (zfrom);
 	      if (zconst == NULL)
 		ucabort ();
-	      zconst = xstrdup (zconst);
-	    }
-	  else
-	    zconst = zexclam + 1;
-
-	  /* Read the system information.  */
-	  clen = zexclam - argv[i];
-	  zcopy = (char *) xmalloc (clen + 1);
-	  strncpy (zcopy, argv[i], clen);
-	  zcopy[clen] = '\0';
-
-	  qfromsys = ((struct ssysteminfo *)
-		      xmalloc (sizeof (struct ssysteminfo)));
-	  if (fread_system_info (zcopy, qfromsys))
-	    xfree ((pointer) zcopy);
-	  else
-	    {
-	      *qfromsys = sUnknown;
-	      qfromsys->zname = zcopy;
-	    }
-
-	  if (! fsysdep_make_spool_dir (qfromsys))
-	    ucabort ();
-
-	  if (flocaldest)
-	    {
-	      char *zto;
-
-	      /* Fetch a file from a remote system.  If the remote
-		 filespec is wildcarded, we must generate an 'X'
-		 request.  We currently check for Unix shell
-		 wildcards.  Note that it should do no harm to mistake
-		 a non-wildcard for a wildcard.  */
-
-	      if (strchr (zconst, '*') != NULL
-		  || strchr (zconst, '?') != NULL
-		  || strchr (zconst, '[') != NULL)
-		{
-		  const  char *zuse;
-
-		  if (qfromsys->zlocalname != NULL)
-		    zuse = qfromsys->zlocalname;
-		  else
-		    zuse = zLocalname;
-
-		  s.bcmd = 'X';
-		  zto = (char *) alloca (strlen (zuse)
-					 + strlen (zdestfile)
-					 + sizeof "!");
-		  sprintf (zto, "%s!%s", zuse, zdestfile);
-		  zto = xstrdup (zto);
-		}
-	      else
-		{
-		  s.bcmd = 'R';
-		  zto = zdestfile;
-		}
-	      s.pseq = NULL;
-	      s.zfrom = zconst;
-	      s.zto = zto;
-	      s.zuser = zuser;
-	      s.zoptions = abrec_options;
-	      s.ztemp = "";
-	      s.imode = 0;
-	      s.znotify = "";
-	      s.cbytes = -1;
-
-	      ucadd_cmd (qfromsys, &s);
-	    }
-	  else
-	    {
-	      /* Move a file from one remote system to another.  */
-
-	      s.bcmd = 'X';
-	      s.pseq = NULL;
-	      s.zfrom = zconst;
-	      s.zto = argv[argc - 1];
-	      s.zuser = zuser;
-	      s.zoptions = abrec_options;
-	      s.ztemp = "";
-	      s.imode = 0;
-	      s.znotify = "";
-	      s.cbytes = -1;
-
-	      ucadd_cmd (qfromsys, &s);
+	      zcopy = (char *) alloca (strlen (zconst) + 1);
+	      strcpy (zcopy, zconst);
+	      zconst = zsysdep_in_dir (zdestfile, zcopy);
+	      if (zconst == NULL)
+		ucabort ();
+	      usysdep_walk_tree (zfrom, ucdirfile,
+				 (pointer) xstrdup (zconst));
 	    }
 	}
     }
@@ -639,9 +435,9 @@ main (argc, argv)
 
   /* Now push out the actual commands, making log entries for them.  */
   ulog_to_file (TRUE);
-  ulog_user (zuser);
+  ulog_user (zCuser);
 
-  ucspool_cmds (bgrade, fjobid);
+  ucspool_cmds (fjobid);
 
   ulog_close ();
 
@@ -705,6 +501,224 @@ ucusage ()
   exit (EXIT_FAILURE);
 }
 
+/* This is called for each file in a directory heirarchy.  */
+
+static void
+ucdirfile (zfull, zrelative, pinfo)
+     const char *zfull;
+     const char *zrelative;
+     pointer pinfo;
+{
+  const char *zdestfile = (const char *) pinfo;
+  const char *zto;
+
+  zto = zsysdep_in_dir (zdestfile, zrelative);
+  if (zto == NULL)
+    ucabort ();
+  zto = xstrdup (zto);
+
+  uccopy (xstrdup (zfull), zto);
+}
+
+/* Handle the copying of one regular file.  The zdest argument is the
+   destination file; if we are recursively copying a directory, it
+   will be extended by any subdirectory names.  */
+
+static void
+uccopy (zfile, zdest)
+     const char *zfile;
+     const char *zdest;
+{
+  struct scmd s;
+  char *zexclam;
+  const char *zconst;
+  char *zto;
+
+  zexclam = strchr (zfile, '!');
+
+  if (zexclam == NULL)
+    {
+      /* Make sure the user has access to this file, since we are
+	 running setuid.  */
+      if (! fsysdep_access (zfile))
+	ucabort ();
+
+      if (fClocaldest)
+	{
+	  /* Copy one local file to another.  */
+
+	  zconst = zsysdep_real_file_name (&sLocalsys, zdest, zfile);
+	  if (zconst == NULL)
+	    ucabort ();
+	  zto = xstrdup (zconst);
+
+	  if (! fcopy_file (zfile, zto, FALSE, fCmkdirs))
+	    ucabort ();
+
+	  xfree ((pointer) zto);
+	}
+      else
+	{
+	  char abtname[CFILE_NAME_LEN];
+	  unsigned int imode;
+
+	  /* Copy a local file to a remote file.  We may have to
+	     copy the local file to the spool directory.  */
+
+	  imode = isysdep_file_mode (zfile);
+	  if (imode == 0)
+	    ucabort ();
+
+	  if (! fCcopy)
+	    {
+	      /* Make sure the daemon will be permitted to send
+		 this file.  */
+	      if (! fsysdep_daemon_access (zfile))
+		ucabort ();
+	      if (! fin_directory_list (&sLocalsys, zfile,
+					sLocalsys.zlocal_send,
+					TRUE, TRUE, zCuser))
+		ulog (LOG_FATAL, "Not permitted to send from %s",
+		      zfile);
+	      strcpy (abtname, "D.0");
+	    }
+	  else
+	    {
+	      char *zdata;
+
+	      zconst = zsysdep_data_file_name (qCdestsys, bCgrade,
+					       abtname, (char *) NULL,
+					       (char *) NULL);
+	      if (zconst == NULL)
+		ucabort ();
+	      zdata = xstrdup (zconst);
+
+	      ucrecord_file (zdata);
+	      if (! fcopy_file (zfile, zdata, FALSE, TRUE))
+		ucabort ();
+
+	      xfree ((pointer) zdata);
+	    }
+
+	  s.bcmd = 'S';
+	  s.pseq = NULL;
+	  s.zfrom = zfile;
+	  s.zto = zdest;
+	  s.zuser = zCuser;
+	  s.zoptions = abCsend_options;
+	  s.ztemp = xstrdup (abtname);
+	  s.imode = imode;
+	  s.znotify = zCnotify;
+	  s.cbytes = -1;
+
+	  ucadd_cmd (qCdestsys, &s);
+	}
+    }
+  else
+    {
+      int clen;
+      char *zcopy;
+      struct ssysteminfo *qfromsys;
+
+      if (! fCexpand)
+	zconst = zexclam + 1;
+      else
+	{
+	  /* Add the current directory to the filename if it's not
+	     already there.  */
+	  zconst = zsysdep_add_cwd (zexclam + 1, FALSE);
+	  if (zconst == NULL)
+	    ucabort ();
+	  zconst = xstrdup (zconst);
+	}
+
+      /* Read the system information.  */
+      clen = zexclam - zfile;
+      zcopy = (char *) xmalloc (clen + 1);
+      memcpy ((pointer) zcopy, (pointer) zfile, clen);
+      zcopy[clen] = '\0';
+
+      qfromsys = ((struct ssysteminfo *)
+		  xmalloc (sizeof (struct ssysteminfo)));
+      if (fread_system_info (zcopy, qfromsys))
+	xfree ((pointer) zcopy);
+      else
+	{
+	  *qfromsys = sUnknown;
+	  qfromsys->zname = zcopy;
+	}
+
+      if (! fsysdep_make_spool_dir (qfromsys))
+	ucabort ();
+
+      if (fClocaldest)
+	{
+	  const char *zconst_to;
+
+	  /* Fetch a file from a remote system.  If the remote
+	     filespec is wildcarded, we must generate an 'X'
+	     request.  We currently check for Unix shell
+	     wildcards.  Note that it should do no harm to mistake
+	     a non-wildcard for a wildcard.  */
+	  if (zconst[strcspn (zconst, "*?[")] != '\0')
+	    {
+	      const char *zuse;
+
+	      if (qfromsys->zlocalname != NULL)
+		zuse = qfromsys->zlocalname;
+	      else
+		zuse = zLocalname;
+
+	      s.bcmd = 'X';
+	      zto = (char *) xmalloc (strlen (zuse)
+				      + strlen (zdest)
+				      + sizeof "!");
+	      sprintf (zto, "%s!%s", zuse, zdest);
+	      zconst_to = zto;
+	    }
+	  else
+	    {
+	      s.bcmd = 'R';
+	      zconst_to = zdest;
+	    }
+
+	  s.pseq = NULL;
+	  s.zfrom = zconst;
+	  s.zto = zconst_to;
+	  s.zuser = zCuser;
+	  s.zoptions = abCrec_options;
+	  s.ztemp = "";
+	  s.imode = 0;
+	  s.znotify = "";
+	  s.cbytes = -1;
+
+	  ucadd_cmd (qfromsys, &s);
+	}
+      else
+	{
+	  /* Move a file from one remote system to another.  */
+
+	  zto = (char *) xmalloc (strlen (qCdestsys->zname)
+				  + strlen (zdest)
+				  + sizeof "!");
+	  sprintf (zto, "%s!%s", qCdestsys->zname, zdest);
+
+	  s.bcmd = 'X';
+	  s.pseq = NULL;
+	  s.zfrom = zconst;
+	  s.zto = zdest;
+	  s.zuser = zCuser;
+	  s.zoptions = abCrec_options;
+	  s.ztemp = "";
+	  s.imode = 0;
+	  s.znotify = "";
+	  s.cbytes = -1;
+
+	  ucadd_cmd (qfromsys, &s);
+	}
+    }
+}
+
 /* We keep a list of jobs for each system.  */
 
 struct sjob
@@ -746,8 +760,7 @@ ucadd_cmd (qsys, qcmd)
 }
 
 static void
-ucspool_cmds (bgrade, fjobid)
-     int bgrade;
+ucspool_cmds (fjobid)
      boolean fjobid;
 {
   struct sjob *qjob;
@@ -756,7 +769,7 @@ ucspool_cmds (bgrade, fjobid)
   for (qjob = qCjobs; qjob != NULL; qjob = qjob->qnext)
     {
       ulog_system (qjob->qsys->zname);
-      zjobid = zsysdep_spool_commands (qjob->qsys, bgrade, qjob->ccmds,
+      zjobid = zsysdep_spool_commands (qjob->qsys, bCgrade, qjob->ccmds,
 				       qjob->pascmds);
       if (zjobid != NULL)
 	{
