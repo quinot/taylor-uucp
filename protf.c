@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1992/01/14  04:21:59  ian
+   Chip Salzenberg: avoid use before set warning
+
    Revision 1.7  1991/12/31  19:34:19  ian
    Added number of bytes to pffile protocol entry point
 
@@ -415,27 +418,24 @@ ffprocess_data (pfexit, pcneed)
 
 	      /* Here we have encountered a nonspecial character.  */
 
-	      if (bFspecial == 0)
-		bnext = b;
-	      else
+	      switch (bFspecial)
 		{
-		  switch (bFspecial)
-		    {
-		    default:
-		    case 0172:
-		      bnext = b - 0100;
-		      break;
-		    case 0173:
-		    case 0174:
-		      bnext = b + 0100;
-		      break;
-		    case 0175:
-		      bnext = b + 0200;
-		      break;
-		    case 0176:
-		      bnext = b + 0300;
-		      break;
-		    }
+		default:
+		  bnext = b;
+		  break;
+		case 0172:
+		  bnext = b - 0100;
+		  break;
+		case 0173:
+		case 0174:
+		  bnext = b + 0100;
+		  break;
+		case 0175:
+		  bnext = b + 0200;
+		  break;
+		case 0176:
+		  bnext = b + 0300;
+		  break;
 		}
 
 	      *zto++ = bnext;
