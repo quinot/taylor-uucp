@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.44  1992/03/10  17:39:57  ian
+   Some systems don't permit both <termios.h> and <sys/ioctl.h> to be included
+
    Revision 1.43  1992/03/09  22:07:36  ian
    Wait for terminal output to drain at various points
 
@@ -289,6 +292,10 @@ typedef struct termios sterminal;
 
 /* The name of the execution directory within the spool directory.  */
 #define XQTDIR ".Xqtdir"
+
+/* The name of the directory in which we preserve file transfers that
+   failed.  */
+#define PRESERVEDIR ".Preserve"
 
 #if HAVE_TAYLOR_CONFIG
 

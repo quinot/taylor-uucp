@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.51  1992/03/09  20:14:37  ian
+   Ted Lindgreen: added max-remote-debug command
+
    Revision 1.50  1992/03/09  05:08:16  ian
    Added status for wrong time to call, not used if system can't be called
 
@@ -835,7 +838,8 @@ extern boolean frecfile_rewind P((void));
 extern boolean fmail_transfer P((boolean fok, const char *zuser,
 				 const char *zmail, const char *zwhy,
 				 const char *zfrom, const char *zfromsys,
-				 const char *zto, const char *ztosys));
+				 const char *zto, const char *ztosys,
+				 const char *zsaved));
 
 /* See whether a file is in one of a list of directories.  The qsys
    argument are passed down to allow ~ expansion.  If fcheck is FALSE,

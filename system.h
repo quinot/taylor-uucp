@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/03/09  19:42:43  ian
+   Ted Lindgreen: don't send mail for nonexistent file
+
    Revision 1.26  1992/02/29  04:07:08  ian
    Added -j option to uucp and uux
 
@@ -349,6 +352,17 @@ extern boolean fsysdep_get_work P((const struct ssysteminfo *qsys,
    temporary file used for a send command, if there is one.  It should
    return FALSE on error.  */
 extern boolean fsysdep_did_work P((pointer pseq));
+
+/* Save the temporary file for a send command.  This function should
+   return a string that will be put into a mail message.  On success
+   this string should say something like ``The file has been saved as
+   ...''.  On failure it could say something like ``The file could not
+   be saved because ...''.  If there is no temporary file, or for some
+   reason it's not appropriate to include a message, this function
+   should just return NULL.  This function is used when a file send
+   fails for some reason, to make sure that we don't completely lost
+   the file.  */
+extern const char *zsysdep_save_temp_file P((pointer pseq));
 
 /* Cleanup anything left over by fsysdep_get_work_init and
    fsysdep_get_work.  This may be called even though

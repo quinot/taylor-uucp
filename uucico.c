@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.77  1992/03/10  23:01:20  ian
+   Don't run uuxqt if we got a SIGTERM
+
    Revision 1.76  1992/03/10  21:47:39  ian
    Added protocol command for ports
 
@@ -2238,7 +2241,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, zLocalname,
-					     s.zto, qsys->zname);
+					     s.zto, qsys->zname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2256,7 +2260,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "not permitted to send",
 					     s.zfrom, zLocalname,
-					     s.zto, qsys->zname);
+					     s.zto, qsys->zname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2280,7 +2285,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, zLocalname,
-					     s.zto, qsys->zname);
+					     s.zto, qsys->zname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2302,7 +2308,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					   (const char *) NULL,
 					   "cannot open file",
 					   s.zfrom, zLocalname,
-					   s.zto, qsys->zname);
+					   s.zto, qsys->zname,
+					   (const char *) NULL);
 		  (void) fsysdep_did_work (s.pseq);
 		  break;
 		}
@@ -2327,13 +2334,17 @@ fuucp (fmaster, qsys, bgrade, fnew)
 			      s.zfrom);
 		      else
 			{
+			  const char *zsaved;
+
 			  ulog (LOG_ERROR, "File %s is too large to send",
 				s.zfrom);
+			  zsaved = zsysdep_save_temp_file (s.pseq);
 			  (void) fmail_transfer (FALSE, s.zuser,
 						 (const char *) NULL,
 						 "too large to send",
 						 s.zfrom, zLocalname,
-						 s.zto, qsys->zname);
+						 s.zto, qsys->zname,
+						 zsaved);
 			  (void) fsysdep_did_work (s.pseq);
 			}
 		      (void) ffileclose (e);
@@ -2376,7 +2387,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "not permitted to receive",
 					     s.zfrom, qsys->zname,
-					     s.zto, zLocalname);
+					     s.zto, zLocalname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2388,7 +2400,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, qsys->zname,
-					     s.zto, zLocalname);
+					     s.zto, zLocalname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2402,7 +2415,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, qsys->zname,
-					     s.zto, zLocalname);
+					     s.zto, zLocalname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2416,7 +2430,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					     (const char *) NULL,
 					     "not permitted to receive",
 					     s.zfrom, qsys->zname,
-					     s.zto, zLocalname);
+					     s.zto, zLocalname,
+					     (const char *) NULL);
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
@@ -2431,7 +2446,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 						 (const char *) NULL,
 						 "cannot create directories",
 						 s.zfrom, qsys->zname,
-						 s.zto, zLocalname);
+						 s.zto, zLocalname,
+						 (const char *) NULL);
 			  (void) fsysdep_did_work (s.pseq);
 			  break;
 			}
@@ -2445,7 +2461,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 					 (const char *) NULL,
 					 "cannot open file",
 					 s.zfrom, qsys->zname,
-					 s.zto, zLocalname);
+					 s.zto, zLocalname,
+					 (const char *) NULL);
 		  (void) fsysdep_did_work (s.pseq);
 		  break;
 		}
@@ -2502,7 +2519,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 				       (const char *) NULL,
 				       "wildcard request denied",
 				       s.zfrom, qsys->zname,
-				       s.zto, zLocalname);
+				       s.zto, zLocalname,
+				       (const char *) NULL);
 	      (void) fsysdep_did_work (s.pseq);
 	      break;
 

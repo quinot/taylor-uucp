@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/02/09  05:21:55  ian
+   Bob Denny: call fmail_transfer before fsysdep_did_work
+
    Revision 1.13  1992/02/08  19:41:24  ian
    Simplify pffile calls for ancient stupid compilers
 
@@ -234,7 +237,8 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 	    {
 	      (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
 				     qcmd->zfrom, zLocalname,
-				     qcmd->zto, ztosys);
+				     qcmd->zto, ztosys,
+				     zsysdep_save_temp_file (qcmd->pseq));
 	      (void) fsysdep_did_work (qcmd->pseq);
 	    }
 	  return TRUE;
@@ -422,7 +426,8 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 	  (void) ffileclose (e);
 	  (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
 				 qcmd->zfrom, zfromsys,
-				 qcmd->zto, zLocalname);
+				 qcmd->zto, zLocalname,
+				 (const char *) NULL);
 	  (void) fsysdep_did_work (qcmd->pseq);
 	  return TRUE;
 	}
