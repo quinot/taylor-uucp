@@ -125,7 +125,11 @@ uudir_SOURCES = uudir.c
 uuconv_CFLAGS = -I$(srcdir)/uuconf $(AM_CFLAGS)
 
 CLEANFILES = uusched uuto
-EXTRA_DIST = uusched.in uuto.in
+
+EXTRA_DIST = uusched.in uuto.in \
+	cu.1 uucp.1 uustat.1 uux.1 uucico.8 uuxqt.8 \
+	contrib sample
+
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
