@@ -1,7 +1,7 @@
 /* vsinfo.c
    Get information about a system from the V2 configuration files.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -501,7 +501,26 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	    ++qglobal->ilineno;
 
 	    zline[strcspn (zline, "#\n")] = '\0';
-	    if (strncmp (zline, "PATH=", sizeof "PATH=" - 1) == 0)
+
+	    while (*zline == '\0')
+	      {
+		if (getline (&zline, &cline, e) <= 0)
+		  {
+		    if (zline != NULL)
+		      {
+			free ((pointer) zline);
+			zline = NULL;
+		      }
+		  }
+		else
+		  {
+		    ++qglobal->ilineno;
+		    zline[strcspn (zline, "#\n")] = '\0';
+		  }
+	      }
+
+	    if (zline != NULL
+		&& strncmp (zline, "PATH=", sizeof "PATH=" - 1) == 0)
 	      {
 		int ctoks;
 		char **pznew;
@@ -550,12 +569,15 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	  {
 	    while (TRUE)
 	      {
-		zline[strcspn (zline, "#\n")] = '\0';
-		iret = _uuconf_iadd_string (qglobal, zline, TRUE, FALSE,
-					    &qsys->uuconf_pzcmds,
-					    pblock);
-		if (iret != UUCONF_SUCCESS)
-		  break;
+		zline[strcspn (zline, "#,\n")] = '\0';
+		if (*zline != '\0')
+		  {
+		    iret = _uuconf_iadd_string (qglobal, zline, TRUE, FALSE,
+						&qsys->uuconf_pzcmds,
+						pblock);
+		    if (iret != UUCONF_SUCCESS)
+		      break;
+		  }
 		if (getline (&zline, &cline, e) < 0)
 		  break;
 		++qglobal->ilineno;
