@@ -45,6 +45,7 @@ static void ukshow_chat P((const struct uuconf_chat *qchat,
 			   const char *zhdr));
 static void ukshow_size P((struct uuconf_timespan *q, boolean fcall,
 			   boolean flocal));
+static void ukshow_reliable P ((int i, const char *zhdr));
 static void ukshow_proto_params P((struct uuconf_proto_param *pas,
 				   int cindent));
 static void ukshow_time P((const struct uuconf_timespan *));
@@ -706,6 +707,9 @@ ikshow_port (qport, pinfo)
   if (qport->uuconf_zlockname != NULL)
     printf ("   Will use lockname %s\n", qport->uuconf_zlockname);
 
+  if ((qport->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
+    ukshow_reliable (qport->uuconf_ireliable, "   ");
+
   if (qport->uuconf_qproto_params != NULL)
     ukshow_proto_params (qport->uuconf_qproto_params, 3);
 
@@ -734,6 +738,8 @@ ukshow_dialer (q)
     }
   ukshow_chat (&q->uuconf_scomplete, "    When complete chat");
   ukshow_chat (&q->uuconf_sabort, "    When aborting chat");
+  if ((q->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
+    ukshow_reliable (q->uuconf_ireliable, "   ");
   if (q->uuconf_qproto_params != NULL)
     ukshow_proto_params (q->uuconf_qproto_params, 4);
 }
@@ -820,6 +826,29 @@ ukshow_size (qspan, fcall, flocal)
 
   if (fother)
     printf ("  (At other times may send files of any size)\n");
+}
+
+/* Show reliability information.  */
+
+static void
+ukshow_reliable (i, zhdr)
+     int i;
+     const char *zhdr;
+{
+  printf ("%sCharacteristics:", zhdr);
+  if ((i & UUCONF_RELIABLE_EIGHT) != 0)
+    printf (" eight-bit-clean");
+  else
+    printf (" not-eight-bit-clean");
+  if ((i & UUCONF_RELIABLE_RELIABLE) != 0)
+    printf (" reliable");
+  if ((i & UUCONF_RELIABLE_ENDTOEND) != 0)
+    printf (" end-to-end");
+  if ((i & UUCONF_RELIABLE_FULLDUPLEX) != 0)
+    printf (" fullduplex");
+  else
+    printf (" halfduplex");
+  printf ("\n");
 }
 
 /* Show protocol parameters.  */
