@@ -95,7 +95,10 @@ static const struct sprotocol asProtocols[] =
       ffsenddata, ffwait, fffile },
   { 'v', UUCONF_RELIABLE_EIGHT, 1, TRUE,
       asGproto_params, fvstart, fgshutdown, fgsendcmd, zggetspace,
-      fgsenddata, fgwait, NULL }
+      fgsenddata, fgwait, NULL },
+  { 'y', UUCONF_RELIABLE_RELIABLE | UUCONF_RELIABLE_EIGHT, 1, TRUE,
+      asYproto_params, fystart, fyshutdown, fysendcmd, zygetspace,
+      fysenddata, fywait, fyfile }
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
