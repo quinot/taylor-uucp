@@ -728,9 +728,9 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 		  if (isdigit (BUCHAR (z[1])))
 		    bsend = (char) (16 * bsend + *++z - '0');
 		  else if (isupper (BUCHAR (z[1])))
-		    bsend = (char) (16 * bsend + *++z - 'A');
+		    bsend = (char) (16 * bsend + *++z - 'A' + 10);
 		  else
-		    bsend = (char) (16 * bsend + *++z - 'a');
+		    bsend = (char) (16 * bsend + *++z - 'a' + 10);
 		}
 	      break;
 	    case 'L':
