@@ -81,6 +81,7 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
   struct uuconf_timespan *qlist;
   char bfirst;
   char **pz;
+  const char *z;
 
   qlist = *pqspan;
   if (qlist == (struct uuconf_timespan *) &_uuconf_unset)
@@ -106,25 +107,23 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
 	pz += 2;
     }
 
-  /* Look through the portions of the time string separated by a
-     comma or a vertical bar.  */
-
-  for (; *ztime != '\0'; ztime += strcspn (ztime, ",|"))
+  /* Look through the time string.  */
+  z = ztime;
+  while (*z != '\0')
     {
       int iday;
       boolean afday[7];
-      const char *z;
       int istart, iend;
 
-      if (*ztime == ',' || *ztime == '|')
-	++ztime;
+      if (*z == ',' || *z == '|')
+	++z;
+      if (*z == '\0' || *z == ';')
+	break;
 
       for (iday = 0; iday < 7; iday++)
 	afday[iday] = FALSE;
 
       /* Get the days.  */
-
-      z = ztime;
       do
 	{
 	  bfirst = *z;
@@ -156,7 +155,6 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
       while (isalpha (BUCHAR (*z)));
 
       /* Get the hours.  */
-
       if (! isdigit (BUCHAR (*z)))
 	{
 	  istart = 0;
@@ -171,17 +169,13 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
 	    return UUCONF_SYNTAX_ERROR;
 	  z = zendnum + 1;
 	  iend = (int) strtol (z, &zendnum, 10);
-	  if (*zendnum != '\0'
-	      && *zendnum != ','
-	      && *zendnum != '|')
-	    return UUCONF_SYNTAX_ERROR;
+	  z = zendnum;
 
 	  istart = (istart / 100) * 60 + istart % 100;
 	  iend = (iend / 100) * 60 + iend % 100;
 	}
 
       /* Add the times we've found onto the list.  */
-
       for (iday = 0; iday < 7; iday++)
 	{
 	  if (afday[iday])
