@@ -1,3 +1,7 @@
+2002-02-24  Ian Lance Taylor  <ian@airs.com>
+
+	* unix/walk.c (iswalk_dir): Mark qstat as unused.
+
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
 	* uucp.c (uccopy): When doing a local copy, copy the file mode as

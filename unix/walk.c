@@ -41,7 +41,7 @@ usysdep_walk_tree (zdir, pufn, pinfo)
 static int
 iswalk_dir (zname, qstat, iflag)
      const char *zname;
-     const struct stat *qstat;
+     const struct stat *qstat ATTRIBUTE_UNUSED;
      int iflag;
 {
   char *zcopy;
