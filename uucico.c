@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.37  1992/01/12  19:53:05  ian
+   John Antypas: pass in sportinfo structure for fdo_call to use
+
    Revision 1.36  1992/01/05  03:09:17  ian
    Changed abProgram and abVersion to non const to avoid compiler bug
 
@@ -1212,7 +1215,6 @@ static boolean faccept_call (zlogin, qport)
   int cdial_proto_params;
   struct sproto_param *qdial_proto_params;
   int idial_reliable;
-  struct sport sportinfo;
   boolean ftcp_port;
   const char *zport;
   char *zsend, *zspace;
@@ -1222,6 +1224,9 @@ static boolean faccept_call (zlogin, qport)
   boolean fnew;
   char bgrade;
   const char *zuse_local;
+#if HAVE_TAYLOR_CONFIG
+  struct sport sportinfo;
+#endif
 
   ulog (LOG_NORMAL, "Incoming call");
   istart_time = isysdep_time ();
