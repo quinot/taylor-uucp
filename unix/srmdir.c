@@ -57,7 +57,7 @@ fsysdep_rmdir (zdir)
   qSdirlist = NULL;
 
   fret = TRUE;
-  if (ftw (zdir, isremove_dir, 5) != 0)
+  if (ftw ((char *) zdir, isremove_dir, 5) != 0)
     {
       ulog (LOG_ERROR, "ftw: %s", strerror (errno));
       fret = FALSE;

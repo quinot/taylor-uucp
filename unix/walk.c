@@ -29,7 +29,7 @@ usysdep_walk_tree (zdir, pufn, pinfo)
   cSlen = strlen (zdir) + 1;
   puSfn = pufn;
   pSinfo = pinfo;
-  return ftw (zdir, iswalk_dir, 5) == 0;
+  return ftw ((char *) zdir, iswalk_dir, 5) == 0;
 }
 
 /* Pass a file found in the directory tree to the system independent
