@@ -15,6 +15,16 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+/* Changed slightly by Ian Lance Taylor <ian@airs.com> for use with
+   the Taylor UUCP package.  To make the package fully portable, I
+   want to avoid any conflict with any system getopt.  Therefore, I am
+   redefinining the variables and functions.  Yes, conflicts did arise
+   before I did this.  This was done 8 Feb 1992.  */
+#define getopt gnu_getopt
+#define optarg gnu_optarg
+#define optind gnu_optind
+#define opterr gnu_opterr
+
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
    the argument value is returned here.
