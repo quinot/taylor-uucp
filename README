@@ -11,14 +11,14 @@ joining the list, make sure you include the address at which you want
 to receive mail in the body of your message.  To send a message to the
 list, send it to taylor-uucp@gnu.ai.mit.edu.
 
-Jeff Ross has volunteered to maintain patches for UUCP releases.  They
-may be obtained via anonymous FTP from ftp.fdu.edu, in the directory
-pub/taylor-uucp.
-
 This package is covered by the Gnu Public License.  See the file
 COPYING for details.  If you would like to do something with this
 package that you feel is reasonable but you feel is prohibited by the
 license, contact me to see if we can work it out.
+
+The most recent version may be obtained from any Gnu archive site.
+The canonical site is prep.ai.mit.edu.  There are many mirror sites,
+including ftp.uu.net and wuarchive.wustl.edu.
 
 WHAT IT IS
 
