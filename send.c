@@ -388,6 +388,24 @@ flocal_send_request (qtrans, qdaemon)
       return TRUE;
     }
 
+  /* If we are using a protocol which can make multiple channels, then
+     we can open and send the file whenever we are ready.  This is
+     because we will be able to distinguish the response by the
+     channel it is directed to.  This assumes that every protocol
+     which supports multiple channels also supports sending the file
+     position in mid-stream, since otherwise we would not be able to
+     restart files.  */
+  qtrans->fcmd = TRUE;
+  qtrans->psendfn = flocal_send_open_file;
+  qtrans->precfn = flocal_send_await_reply;
+
+  if (qdaemon->cchans > 1)
+    fret = fqueue_send (qdaemon, qtrans);
+  else
+    fret = fqueue_receive (qdaemon, qtrans);
+  if (! fret)
+    return FALSE;
+
   /* Construct the notify string to send.  If we are going to send a
      size or an execution command, it must be non-empty.  */
   znotify = qtrans->s.znotify;
@@ -484,27 +502,11 @@ flocal_send_request (qtrans, qdaemon)
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 					qtrans->iremote);
   ubuffree (zsend);
+
   if (! fret)
-    {
-      usfree_send (qtrans);
-      return FALSE;
-    }
+    usfree_send (qtrans);
 
-  /* If we are using a protocol which can make multiple channels, then
-     we can open and send the file whenever we are ready.  This is
-     because we will be able to distinguish the response by the
-     channel it is directed to.  This assumes that every protocol
-     which supports multiple channels also supports sending the file
-     position in mid-stream, since otherwise we would not be able to
-     restart files.  */
-  qtrans->fcmd = TRUE;
-  qtrans->psendfn = flocal_send_open_file;
-  qtrans->precfn = flocal_send_await_reply;
-
-  if (qdaemon->cchans > 1)
-    return fqueue_send (qdaemon, qtrans);
-  else
-    return fqueue_receive (qdaemon, qtrans);
+  return fret;
 }
 
 /* This is called when a reply is received for the send request.  As
@@ -948,6 +950,13 @@ fremote_rec_reply (qtrans, qdaemon)
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char absend[50];
 
+  qtrans->fsendfile = TRUE;
+  qtrans->psendfn = fsend_file_end;
+  qtrans->precfn = fsend_await_confirm;
+
+  if (! fqueue_send (qdaemon, qtrans))
+    return FALSE;
+
   /* We send the file size because SVR4 UUCP does.  We don't look for
      it.  We send a trailing M if we want to request a hangup.  We
      send it both after the mode and at the end of the entire string;
@@ -982,16 +991,9 @@ fremote_rec_reply (qtrans, qdaemon)
 	  usfree_send (qtrans);
 	  return FALSE;
 	}
-
-      if (fhandled)
-	return TRUE;
     }
 
-  qtrans->fsendfile = TRUE;
-  qtrans->psendfn = fsend_file_end;
-  qtrans->precfn = fsend_await_confirm;
-
-  return fqueue_send (qdaemon, qtrans);
+  return TRUE;
 }
 
 /* If we can't send a file as requested by the remote system, queue up

@@ -77,6 +77,13 @@ flocal_xcmd_request (qtrans, qdaemon)
   ulog (LOG_NORMAL, "Requesting work: %s to %s", qtrans->s.zfrom,
 	qtrans->s.zto);
 
+
+  qtrans->fcmd = TRUE;
+  qtrans->precfn = flocal_xcmd_await_reply;
+
+  if (! fqueue_receive (qdaemon, qtrans))
+    return FALSE;
+
   /* We send the string
      X from to user options
      We put a dash in front of options.  */
@@ -89,16 +96,11 @@ flocal_xcmd_request (qtrans, qdaemon)
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 					qtrans->iremote);
   ubuffree (zsend);
+
   if (! fret)
-    {
-      utransfree (qtrans);
-      return FALSE;
-    }
+    utransfree (qtrans);
 
-  qtrans->fcmd = TRUE;
-  qtrans->precfn = flocal_xcmd_await_reply;
-
-  return fqueue_receive (qdaemon, qtrans);
+  return fret;
 }
 
 /* Get a reply to an execution request from the remote system.  */

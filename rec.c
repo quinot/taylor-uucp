@@ -318,6 +318,12 @@ flocal_rec_send_request (qtrans, qdaemon)
       return FALSE;
     }
 
+  qtrans->fcmd = TRUE;
+  qtrans->precfn = flocal_rec_await_reply;
+
+  if (! fqueue_receive (qdaemon, qtrans))
+    return FALSE;
+
   /* Check the amount of free space available for both the temporary
      file and the real file.  */
   cbytes = csysdep_bytes_free (qinfo->ztemp);
@@ -357,16 +363,11 @@ flocal_rec_send_request (qtrans, qdaemon)
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend, qtrans->ilocal,
 					qtrans->iremote);
   ubuffree (zsend);
+
   if (! fret)
-    {
-      urrec_free (qtrans);
-      return FALSE;
-    }
+    urrec_free (qtrans);
 
-  qtrans->fcmd = TRUE;
-  qtrans->precfn = flocal_rec_await_reply;
-
-  return fqueue_receive (qdaemon, qtrans);
+  return fret;
 }
 
 /* This is called when a reply is received for the request.  */
@@ -771,7 +772,19 @@ fremote_send_reply (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+  boolean fret;
   char ab[50];
+
+  /* If the file has been completely received, we just want to send
+     the final confirmation.  Otherwise, we must wait for the file
+     first.  */
+  qtrans->psendfn = frec_file_send_confirm;
+  if (qinfo->freceived)
+    fret = fqueue_send (qdaemon, qtrans);
+  else
+    fret = fqueue_receive (qdaemon, qtrans);
+  if (! fret)
+    return FALSE;
 
   ab[0] = qtrans->s.bcmd;
   ab[1] = 'Y';
@@ -803,18 +816,9 @@ fremote_send_reply (qtrans, qdaemon)
 	  urrec_free (qtrans);
 	  return FALSE;
 	}
-      if (fhandled)
-	return TRUE;
     }
 
-  /* If the file has been completely received, we just want to send
-     the final confirmation.  Otherwise, we must wait for the file
-     first.  */
-  qtrans->psendfn = frec_file_send_confirm;
-  if (qinfo->freceived)
-    return fqueue_send (qdaemon, qtrans);
-  else
-    return fqueue_receive (qdaemon, qtrans);
+  return TRUE;
 }
 
 /* If we can't receive a file, queue up a response to the remote
@@ -859,6 +863,13 @@ fremote_send_fail_send (qtrans, qdaemon)
   char ab[4];
   boolean fret;
 
+  /* Wait for the end of file marker if we haven't gotten it yet.  */
+  if (! qinfo->freceived)
+    {
+      if (! fqueue_receive (qdaemon, qtrans))
+	return FALSE;
+    }
+
   ab[0] = qtrans->s.bcmd;
   ab[1] = 'N';
 
@@ -892,13 +903,7 @@ fremote_send_fail_send (qtrans, qdaemon)
 
   qinfo->fsent = TRUE;
 
-  /* Wait for the end of file marker if we haven't gotten it yet.  */
-  if (! qinfo->freceived)
-    {
-      if (! fqueue_receive (qdaemon, qtrans))
-	fret = FALSE;
-    }
-  else
+  if (qinfo->freceived)
     {
       xfree (qtrans->pinfo);
       utransfree (qtrans);
