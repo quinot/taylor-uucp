@@ -7,8 +7,8 @@
 #include "system.h"
 
 #if HAVE_TCP
-#if HAVE_SYS_TCP_TYPES_H
-#include <sys/tcp.types.h>
+#if HAVE_SYS_TYPES_TCP_H
+#include <sys/types.tcp.h>
 #endif
 #include <sys/socket.h>
 #endif
