@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.56  1992/04/25  00:42:53  ian
+   Change standard type definitions for new autoconf
+
    Revision 1.55  1992/04/25  00:36:56  ian
    Changed SIGtype to RETSIGTYPE
 
@@ -476,15 +479,12 @@ struct ssysdep_serial_port
 {
   /* File descriptor to read from.  */
   int oread;
-  /* Whether the read descriptor is blocking.  */
-  boolean fread_blocking;
+  /* File status flags for oread.  */
+  int iread_flags;
   /* File descriptor to write to.  */
   int owrite;
-  /* Whether the write descriptor is blocking.  */
-  boolean fwrite_blocking;
-  /* Whether setting the read descriptor to blocking affects the write
-     descriptor and vice-versa.  */
-  boolean fblock_both;
+  /* File status flags for owrite.  */
+  int iwrite_flags;
   /* Hold the real read descriptor when using a dialer device.  */
   int oholdread;
   /* Hold the real write descriptor when using a dialer device.  */
