@@ -542,7 +542,7 @@ uvwrite_time (e, qtime)
 		   ihourstart, iminutestart);
 	  for (i = idaystart + 1; i < idayend; i++)
 	    fprintf (e, ",%s", zdays + i * 3);
-	  if (ihourend != 0 && iminuteend != 0)
+	  if (ihourend != 0 || iminuteend != 0)
 	    fprintf (e, ",%s0000-%02d%02d", zdays + idayend * 3, ihourend,
 		     iminuteend);
 	}
