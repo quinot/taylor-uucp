@@ -289,7 +289,11 @@ AC_DEFINE([HAVE_BSD_PGRP]),
 :)
 dnl
 AC_LIBTHING_CHECK([union wait],
-[#include <sys/wait.h>], [union wait u; wait (&u);],
+[#include <sys/wait.h>
+#ifndef WIFEXITED
+#define WIFEXITED(u) ((u).w_termsig == 0)
+#endif],
+[union wait u; if (WIFEXITED (u)) wait (&u);],
 AC_DEFINE([HAVE_UNION_WAIT]),
 :)
 dnl
