@@ -392,6 +392,8 @@ main (argc, argv)
   }
 #endif
 
+  usysdep_initialize (puuconf, INIT_NOCHDIR);
+
   iuuconf = uuconf_localname (puuconf, &zlocalname);
   if (iuuconf == UUCONF_NOT_FOUND)
     {
@@ -401,8 +403,6 @@ main (argc, argv)
     }
   else if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-
-  usysdep_initialize (puuconf, INIT_NOCHDIR);
 
   ulog_fatal_fn (ucuabort);
   pfLstart = uculog_start;

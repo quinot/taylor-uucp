@@ -141,16 +141,6 @@ main (argc, argv)
   }
 #endif
 
-  iuuconf = uuconf_localname (puuconf, &zlocalname);
-  if (iuuconf == UUCONF_NOT_FOUND)
-    {
-      zlocalname = zsysdep_localname ();
-      if (zlocalname == NULL)
-	exit (EXIT_FAILURE);
-    }
-  else if (iuuconf != UUCONF_SUCCESS)
-    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-
   iuuconf = uuconf_maxuuxqts (puuconf, &cQmaxuuxqts);
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
@@ -175,6 +165,16 @@ main (argc, argv)
 
   ulog_to_file (puuconf, TRUE);
   ulog_fatal_fn (uqabort);
+
+  iuuconf = uuconf_localname (puuconf, &zlocalname);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      zlocalname = zsysdep_localname ();
+      if (zlocalname == NULL)
+	exit (EXIT_FAILURE);
+    }
+  else if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
   /* Limit the number of uuxqt processes, and make sure we're the only
      uuxqt daemon running for this command.  */

@@ -251,32 +251,6 @@ main (argc, argv)
   }
 #endif
 
-  iuuconf = uuconf_localname (puuconf, &zClocalname);
-  if (iuuconf == UUCONF_NOT_FOUND)
-    {
-      zClocalname = zsysdep_localname ();
-      if (zClocalname == NULL)
-	exit (EXIT_FAILURE);
-    }
-  else if (iuuconf != UUCONF_SUCCESS)
-    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-
-  /* If we are emulating uuto, translate the destination argument, and
-     notify the destination user.  */
-  if (fuuto)
-    {
-      if (*zCnotify == '\0')
-	{
-	  zexclam = strrchr (argv[argc - 1], '!');
-	  if (zexclam == NULL)
-	    ucusage ();
-	  zCnotify = zexclam + 1;
-	}
-      argv[argc - 1] = zsysdep_uuto (argv[argc - 1], zClocalname);
-      if (argv[argc - 1] == NULL)
-	ucusage ();
-    }
-
   /* See if we are going to need to know the current directory.  We
      just check each argument to see whether it's an absolute
      pathname.  We actually aren't going to need the cwd if fCexpand
@@ -317,6 +291,34 @@ main (argc, argv)
   ulog_fatal_fn (ucabort);
 
   zCuser = zsysdep_login_name ();
+
+  iuuconf = uuconf_localname (puuconf, &zClocalname);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      zClocalname = zsysdep_localname ();
+      if (zClocalname == NULL)
+	exit (EXIT_FAILURE);
+    }
+  else if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+  /* If we are emulating uuto, translate the destination argument, and
+     notify the destination user.  This had better not turn into
+     something that requires the current directory, or we may have
+     passed INIT_GETCWD incorrectly.  */
+  if (fuuto)
+    {
+      if (*zCnotify == '\0')
+	{
+	  zexclam = strrchr (argv[argc - 1], '!');
+	  if (zexclam == NULL)
+	    ucusage ();
+	  zCnotify = zexclam + 1;
+	}
+      argv[argc - 1] = zsysdep_uuto (argv[argc - 1], zClocalname);
+      if (argv[argc - 1] == NULL)
+	ucusage ();
+    }
 
   /* Set up the options.  */
 

@@ -295,16 +295,6 @@ main (argc, argv)
   }
 #endif
 
-  iuuconf = uuconf_localname (puuconf, &zlocalname);
-  if (iuuconf == UUCONF_NOT_FOUND)
-    {
-      zlocalname = zsysdep_localname ();
-      if (zlocalname == NULL)
-	exit (EXIT_FAILURE);
-    }
-  else if (iuuconf != UUCONF_SUCCESS)
-    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-
   /* The command and files arguments could be quoted in any number of
      ways, so we split them apart ourselves.  We do this before
      calling usysdep_initialize because we want to set fgetcwd
@@ -422,6 +412,16 @@ main (argc, argv)
   ulog_fatal_fn (uxabort);
 
   zuser = zsysdep_login_name ();
+
+  iuuconf = uuconf_localname (puuconf, &zlocalname);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      zlocalname = zsysdep_localname ();
+      if (zlocalname == NULL)
+	exit (EXIT_FAILURE);
+    }
+  else if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
   /* Figure out which system the command is to be executed on.  */
   zexclam = strchr (zcmd, '!');
