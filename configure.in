@@ -18,7 +18,7 @@ dnl
 AC_ARG_WITH(newconfigdir,
 [  --with-newconfigdir=DIRNAME  new config file directory; default PREFIX/conf/uucp],
 [NEWCONFIGDIR=${withval}],
-[NEWCONFIGDIR="${prefix}/conf/uucp"])
+[NEWCONFIGDIR='${prefix}/conf/uucp'])
 AC_SUBST(NEWCONFIGDIR)
 dnl
 AC_ARG_WITH(oldconfigdir,
