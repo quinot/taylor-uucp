@@ -841,8 +841,9 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
   iIlocal_ack = iIrecseq;
   zhdr[IHDR_CHECK] = IHDRCHECK_VAL (zhdr);
 
-  DEBUG_MESSAGE2 (DEBUG_PROTO, "fisenddata: Sending packet %d (%d bytes)",
-		  iIsendseq, (int) cdata);
+  DEBUG_MESSAGE4 (DEBUG_PROTO,
+		  "fisenddata: Sending packet %d size %d local %d remote %d",
+		  iIsendseq, (int) cdata, ilocal, iremote);		  
 
   iIsendseq = INEXTSEQ (iIsendseq);
   ++cIsent_packets;
@@ -1427,9 +1428,11 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	boolean fret;
 
 	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
-	DEBUG_MESSAGE2 (DEBUG_PROTO,
-			"fiprocess_packet: Got DATA packet %d size %d",
-			iseq, cfirst + csecond);
+	DEBUG_MESSAGE4 (DEBUG_PROTO,
+			"fiprocess_packet: Got DATA packet %d size %d local %d remote %d",
+			iseq, cfirst + csecond,
+			IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]),
+			IHDRWIN_GETCHAN (zhdr[IHDR_LOCAL]));
 	fret = fgot_data (qdaemon, zfirst, (size_t) cfirst,
 			  zsecond, (size_t) csecond,
 			  IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]),
