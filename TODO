@@ -264,3 +264,16 @@ the error message is screwy.  In fact, there should be no error
 message at all.
 
 50.
+
+David Nugent: uucico should check for whether there's more stuff to
+send once it's sent everything it has.  Otherwise if the other side
+has nothing to do, uucico will hang up even though there's work that
+it could do.
+
+51.
+
+David Nugent: uuxqt should keep looping through the directories until
+nothing new appears.  Right now if something is added for a system
+after it has already been examined, uuxqt won't see it.
+
+52.
