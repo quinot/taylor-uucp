@@ -274,3 +274,8 @@ Rupert Mohr: it is possible that cmax_size_ever fails if there are
 some times for which no size restriction is made.
 
 91.
+
+If a file cannot be sent for some reason, save it off somewhere so
+that it can be retrieved and examined later.
+
+92.
