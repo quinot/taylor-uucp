@@ -1795,8 +1795,7 @@ flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin, pzsystem)
 #if DEBUG > 1
       iholddebug = iDebug;
 #endif
-      (void) faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn,
-			   (const char **) NULL, pzsystem);
+      (void) faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem);
 #if DEBUG > 1
       iDebug = iholddebug;
 #endif
