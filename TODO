@@ -384,3 +384,70 @@ specific one, will wipe out the default entry.  Not sure what can be
 done about this.
 
 150.
+
+Jarmo Raiha: should there be some way to specify modem initialization
+strings when uucico is hanging on a port with -l or -e?  This would
+presumably require a new type of chat script associated with a dialer.
+
+151.
+
+Petri Helenius: log complete CONNECT string reported by modem, so that
+the baud rate is recorded in the log file.
+
+152.
+
+Marc Evans: let the protocol selection be based on the CONNECT string,
+so that different protocols could be selected based on what type of
+connection was made.
+
+153.
+
+Chris Lewis: provide a signal to get a core dump even on systems which
+won't do core dumps if the uid is not the euid.  One could catch a
+signal, call setuid (getuid ()), and then raise the signal again.
+Unfortunately the core dump has to wind up in a directory which is
+world writable, so that the process is able to create the core file,
+but is not world readable, since that would permit anybody to read the
+core dump file and extract private information from it.
+
+154.
+
+Les Mikesell: write a new version of dial.o, with provisions for
+running a chat script.
+
+155.
+
+Scott Blachowicz: perhaps there should be some way to telling uucico
+to not log certain errors.  This could get fairly complex, though.
+The particular case at hand was invoking uucico -r1, having work for a
+system, having it not be the right time to place a call, and recording
+an ``ERROR: Wrong time to call'' log message.  Perhaps this message
+should simply not be logged.
+
+156.
+
+Franc,ois Pinard: have uustat -m report the time of the last
+successful conversation when reporting a failure.
+
+157.
+
+Implement remote.unknown.
+
+158.
+
+Thomas Fischer: should there be a way to completely disable an entry
+in the sys, port or dial file?  Such as a ``disable'' command?
+
+159.
+
+Petri Helenius: when uuxqt -s is invoked, lock uuxqt for the system so
+that only one uuxqt is invoked per system.  If the -c option is used,
+don't lock on a per system basis, and ignore any per system locks
+(regardless of -s).  If neither option is used, respect existing
+system and command locks, and do any other type of file.
+
+160.
+
+Bob Izenberg: add -f and -# arguments to uulog.
+
+161.
