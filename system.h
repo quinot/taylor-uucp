@@ -800,6 +800,11 @@ extern long ixsysdep_work_time P((const struct uuconf_system *qsys,
    value must use the same epoch as ixsysdep_time.  */
 extern long ixsysdep_file_time P((const char *zfile));
 
+/* Touch a file to make it appear as though it was created at the
+   current time.  This is called by uustat on execution files.  On
+   error this should log an error message and return FALSE.  */
+extern boolean fsysdep_touch_file P((const char *zfile));
+
 /* Get the size in bytes of a file.  If this file does not exist, this
    should not give an error message, but should return -1.  If some
    other error occurs, this should return -2.  */
