@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1991/12/21  22:07:47  ian
+   John Theus: don't warn if port file does not exist
+
    Revision 1.28  1991/12/20  04:30:24  ian
    Terry Gardner: record conversation time in log file
 
@@ -137,12 +140,12 @@ static struct sprotocol asProtocols[] =
   { 't', FALSE, RELIABLE_ENDTOEND | RELIABLE_RELIABLE | RELIABLE_EIGHT,
       asTproto_params, ftstart, ftshutdown, ftsendcmd, ztgetspace,
       ftsenddata, ftprocess, ftwait, ftfile },
-  { 'f', FALSE, RELIABLE_RELIABLE,
-      asFproto_params, ffstart, ffshutdown, ffsendcmd, zfgetspace,
-      ffsenddata, ffprocess, ffwait, fffile },
   { 'g', FALSE, RELIABLE_EIGHT,
       asGproto_params, fgstart, fgshutdown, fgsendcmd, zggetspace,
       fgsenddata, fgprocess, fgwait, NULL },
+  { 'f', FALSE, RELIABLE_RELIABLE,
+      asFproto_params, ffstart, ffshutdown, ffsendcmd, zfgetspace,
+      ffsenddata, ffprocess, ffwait, fffile },
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
