@@ -99,10 +99,9 @@ rather than merely queuing up an empty command file.
 
 19.
 
-Should there be some way to specify the retry time and the maximum
-number of retries using the new configuration scheme?  The retry time
-can currently be specified by using a semicolon at the end of a time
-string.
+Should there be some way to specify the maximum number of retries for
+each system using the new configuration scheme?  The maximum number of
+retries is currently a compilation parameter.
 
 20.
 
@@ -132,14 +131,15 @@ files we've been given for the command.
 
 24.
 
-Running uucico as a TCP server doesn't work because only root can bind
-a port less than 1024.  This is checked by effective user id, and our
-effective user id is always uucp.  If we have saved set user id we
-could switch the effective user id to root and then back again;
+Running uucico as a TCP server doesn't work right because only root
+can bind a port less than 1024.  This is checked by effective user id,
+and our effective user id is always uucp.  If we have saved set user
+id we could switch the effective user id to root and then back again;
 otherwise we have to not use setuid and start the program as root.
 Actually, we could use another program to start as root, bind the
-port, and invoke uucico.  One could also just use inetd.  Maybe the
-TCP server code should simply be stripped out.
+port, and invoke uucico.  Or we could use a setuid program and pass
+the file descriptor back using a socketpair.  Or we could just use
+inetd.
 
 31.
 
@@ -193,11 +193,6 @@ which one was used when the connection succeeded.  The name could
 simply be an argument to the ``alternate'' command.  Except for the
 first alternate, that is.
 
-72.
-
-Monty Solomon: put corrupted C. and D. files in a special directory
-(.Corrupt?).
-
 74.
 
 Yanek Martinson: allow each system to independently choose whether to
@@ -215,8 +210,7 @@ Marty Shannon: log reason for dial failure (chat-fail string) in
 
 82.
 
-Support restart of failed transfers a la SVR4 UUCP.  Also support SVR4
--U flag.
+Support restart of failed transfers a la SVR4 UUCP.
 
 83.
 
@@ -296,13 +290,7 @@ Use POSIX fcntl locks when possible instead of creating a lock file.
 130.
 
 Chip Salzenberg: BSD lets you override the timeout for a particular
-expect string by using a trailing ~.  Some such feature would be
-desirable someday.
-
-131.
-
-Karl Lehenbauer: the default chat script does not work very well over
-a TCP connection; it should not output the first carriage return.
+expect string by using a trailing ~.
 
 132.
 
