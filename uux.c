@@ -532,7 +532,7 @@ main (argc, argv)
       else
 	{
 	  clen = zexclam - zcmd;
-	  zforward = zbufalc (clen);
+	  zforward = zbufalc (clen + 1);
 	  memcpy (zforward, zcmd, clen);
 	  zforward[clen] = '\0';
 	  zcmd = zexclam + 1;
