@@ -78,10 +78,7 @@
 typedef SIG_ATOMIC_T sig_atomic_t;
 #endif /* ! HAVE_SIG_ATOMIC_T_IN_SIGNAL_H && ! HAVE_SIG_ATOMIC_T_IN_TYPES_H */
 
-/* Make sure we have size_t.  We use int as the default because the
-   main use of this type is to provide an argument to malloc and
-   realloc.  On a system which does not define size_t, int is
-   certainly the correct type to use.  */
+/* Make sure we have size_t.  */
 #if ! HAVE_SIZE_T_IN_STDDEF_H && ! HAVE_SIZE_T_IN_TYPES_H
 #ifndef SIZE_T
 #define SIZE_T unsigned
