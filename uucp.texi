@@ -2118,6 +2118,7 @@ dplatt@@ntg.com (Dave Platt)
 eldorado@@tharr.UUCP (Mark Powell)
 pozar@@kumr.lns.com (Tim Pozar)
 putsch@@uicc.com (Jeff Putsch)
+Jarmo Raiha <jarmo@@ksvltd.FI>
 mcr@@Sandelman.OCUnix.On.Ca (Michael Richardson)
 ross@@sun490.fdu.edu (Jeff Ross)
 Aleksey P. Rudnev <alex@@kiae.su>
