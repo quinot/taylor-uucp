@@ -64,6 +64,10 @@ struct sdaemon
   long cmax_receive;
   /* Features supported by the remote side.  */
   int ifeatures;
+  /* TRUE if we should request the remote side to hang up.  */
+  boolean frequest_hangup;
+  /* TRUE if the remote side requested a hangup.  */
+  boolean fhangup_requested;
   /* TRUE if we are hanging up.  */
   boolean fhangup;
   /* TRUE if the local system is currently the master.  */

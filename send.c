@@ -997,7 +997,19 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
 	}
     }
   else
-    zerr = NULL;
+    {
+      zerr = NULL;
+
+      /* If we receive CYM, it means that the other side wants us to
+	 hang up so that they can send us something.  The
+	 fhangup_requested field is checked in the main loop.  */
+      if (zdata[2] == 'M' && qdaemon->fmaster)
+	{
+	  DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+			  "fsend_await_confirm: Remote has requested transfer of control");
+	  qdaemon->fhangup_requested = TRUE;
+	}
+    }
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
 	  TRUE, qtrans->cbytes, qtrans->isecs, qtrans->imicros);

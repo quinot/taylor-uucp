@@ -1034,10 +1034,26 @@ frec_file_send_confirm (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+  const char *zsend;
   boolean fret;
 
-  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon,
-					qinfo->fmoved ? "CY" : "CN5",
+  if (! qinfo->fmoved)
+    zsend = "CN5";
+  else if (! qdaemon->frequest_hangup)
+    zsend = "CY";
+  else
+    {
+#if DEBUG > 0
+      if (qdaemon->fmaster)
+	ulog (LOG_FATAL, "frec_file_send_confirm: Can't happen");
+#endif
+
+      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+		      "frec_send_file_confirm: Requesting remote to transfer control");
+      zsend = "CYM";
+    }
+
+  fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend,
 					qtrans->ilocal, qtrans->iremote);
 
   /* Now, if that was a remote command, remember that we received that

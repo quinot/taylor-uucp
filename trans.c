@@ -89,6 +89,18 @@ static int iTchan;
    This is maintained for remote jobs.  */
 static struct stransfer *aqTremote[IMAX_CHAN + 1];
 
+/* The minimum amount of time, in seconds, to wait between times we
+   check the spool directory, if we are busy transferring data.  If we
+   have nothing to do, we will check the spool directory regardless of
+   how long ago the last check was.  This should probably be
+   configurable.  */
+#define CCHECKWAIT (600)
+
+/* The time we last checked the spool directory for work.  This is set
+   from the return value of isysdep_process_time, not isysdep_time,
+   for convenience in the routines which use it.  */
+static long iTchecktime;
+
 /* The stored time of the last received data.  */
 static long iTsecs;
 static long iTmicros;
@@ -470,6 +482,47 @@ fqueue (qdaemon, pfany)
   if (pfany != NULL)
     *pfany = qTlocal != NULL;
 
+  iTchecktime = isysdep_process_time ((long *) NULL);
+
+  return TRUE;
+}
+
+/* Recheck the work queue during a conversation.  This is only called
+   if it's been more than CCHECKWAIT seconds since the last time the
+   queue was checked.  */
+
+static boolean
+fcheck_queue (qdaemon)
+     struct sdaemon *qdaemon;
+{
+  int cchans;
+
+  /* Only check if we are the master, or if there are multiple
+     channels, or if we aren't already trying to get the other side to
+     hang up.  Otherwise, there's nothing we can do with any new jobs
+     we might find.  */
+  if ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) == 0)
+    cchans = 1;
+  else
+    cchans = qdaemon->qproto->cchans;
+  if (qdaemon->fmaster
+      || cchans > 1
+      || ! qdaemon->frequest_hangup)
+    {
+      boolean fany;
+
+      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+		      "fcheck_queue: Rechecking work queue");
+      if (! fqueue (qdaemon, &fany))
+	return FALSE;
+
+      /* If we found something to do, and we're not the master, and we
+	 don't have multiple channels to send new jobs over, try to
+	 get the other side to hang up.  */
+      if (fany && ! qdaemon->fmaster && cchans <= 1)
+	qdaemon->frequest_hangup = TRUE;
+    }
+
   return TRUE;
 }
 
@@ -509,22 +562,46 @@ floop (qdaemon)
 	}
 #endif
 
-      if (qdaemon->fmaster
-	  && qTremote == NULL
-	  && qTlocal == NULL
-	  && qTsend == NULL
-	  && qTreceive == NULL)
+      if (qdaemon->fmaster)
 	{
-	  /* Try to get some more jobs to do.  If we can't get any,
-	     start the hangup procedure.  */
-	  if (! fqueue (qdaemon, (boolean *) NULL))
+	  boolean fhangup;
+
+	  /* We've managed to become the master, so we no longer want
+	     to request a hangup.  */
+	  qdaemon->frequest_hangup = FALSE;
+
+	  fhangup = FALSE;
+
+	  if (qdaemon->fhangup_requested)
 	    {
-	      fret = FALSE;
-	      break;
+	      /* The remote system has requested that we transfer
+		 control by sending CYM after receiving a file.  */
+	      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+			      "floop: Transferring control at remote request");
+	      fhangup = TRUE;
 	    }
-	  if (qTlocal == NULL)
+	  else if (qTremote == NULL
+		   && qTlocal == NULL
+		   && qTsend == NULL
+		   && qTreceive == NULL)
 	    {
-	      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO, "floop: No work for master");
+	      /* We don't have anything to do.  Try to find some new
+		 jobs.  If we can't, transfer control.  */
+	      if (! fqueue (qdaemon, (boolean *) NULL))
+		{
+		  fret = FALSE;
+		  break;
+		}
+	      if (qTlocal == NULL)
+		{
+		  DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+				  "floop: No work for master");
+		  fhangup = TRUE;
+		}
+	    }
+
+	  if (fhangup)
+	    {
 	      if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, "H", 0, 0))
 		{
 		  fret = FALSE;
@@ -533,6 +610,10 @@ floop (qdaemon)
 	      qdaemon->fmaster = FALSE;
 	    }
 	}
+
+      /* Clear any requested hangup.  We may have already hung up
+	 before checking this variable in the block above.  */
+      qdaemon->fhangup_requested = FALSE;
 
       /* Immediately queue up any remote jobs.  We don't need local
 	 channel numbers for them, since we can disambiguate based on
@@ -669,6 +750,19 @@ floop (qdaemon)
 	      iendsecs = isysdep_process_time (&iendmicros);
 	      q->isecs += iendsecs - isecs;
 	      q->imicros += iendmicros - imicros;
+
+	      /* If it's been long enough since the last time we
+		 checked the queue, check it again.  It doesn't really
+		 matter that this may not get called; it will
+		 certainly get called eventually.  */
+	      if (iendsecs - iTchecktime >= CCHECKWAIT)
+		{
+		  if (! fcheck_queue (qdaemon))
+		    {
+		      fret = FALSE;
+		      break;
+		    }
+		}
 	    }
 	}
     }
@@ -951,6 +1045,14 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
     {
       q->isecs += inextsecs - iTsecs;
       q->imicros += inextmicros - iTmicros;
+    }
+
+  /* If it's been sufficiently long since the last time we checked the
+     work queue, check it again.  */
+  if (iTsecs - iTchecktime >= CCHECKWAIT)
+    {
+      if (! fcheck_queue (qdaemon))
+	fret = FALSE;
     }
 
   iTsecs = inextsecs;

@@ -763,6 +763,8 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
   sdaem.cmax_ever = -2;
   sdaem.cmax_receive = -1;
   sdaem.ifeatures = 0;
+  sdaem.frequest_hangup = FALSE;
+  sdaem.fhangup_requested = FALSE;
   sdaem.fhangup = FALSE;
   sdaem.fmaster = TRUE;
   sdaem.fcaller = TRUE;
@@ -1632,6 +1634,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sdaem.cmax_ever = -2;
   sdaem.cmax_receive = -1;
   sdaem.ifeatures = 0;
+  sdaem.frequest_hangup = FALSE;
+  sdaem.fhangup_requested = FALSE;
   sdaem.fhangup = FALSE;
   sdaem.fmaster = FALSE;
   sdaem.fcaller = FALSE;
