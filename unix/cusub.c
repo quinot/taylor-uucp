@@ -39,6 +39,13 @@ const char cusub_rcsid[] = "$Id$";
 
 #include <errno.h>
 
+/* 4.2 systems don't define SIGUSR2.  This should work for them.  On
+   systems which are missing SIGUSR1, or SIGURG, you must find two
+   signals which you can safely use.  */
+#ifndef SIGUSR2
+#define SIGUSR2 SIGURG
+#endif
+
 /* Get definitions for EAGAIN, EWOULDBLOCK and ENODATA.  */
 #ifndef EAGAIN
 #ifndef EWOULDBLOCK
