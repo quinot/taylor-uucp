@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/15  21:33:36  ian
+   Remove unreached line
+
    Revision 1.5  1991/11/15  21:00:59  ian
    Efficiency hacks for 'f' and 't' protocols
 
@@ -236,7 +239,7 @@ struct scmdtab asGproto_params[] =
 /* Local functions.  */
 
 static boolean fgexchange_init P((boolean fmaster, int ictl, int ival,
-				 int *piset));
+				 int *piset, boolean fgot));
 static boolean fgsend_control P((int ictl, int ival));
 static void ugadjust_ack P((int iseq));
 static boolean fgwait_for_packet P((boolean freturncontrol, int ctimeout,
@@ -262,6 +265,7 @@ fgstart (fmaster)
 {
   int iseg;
   int i;
+  boolean fgota, fgotb;
 
   /* The 'g' protocol requires a full eight bit interface.  */
   if (! fport_set (PORTSETTING_EIGHT))
@@ -292,16 +296,20 @@ fgstart (fmaster)
       iseg = 1;
     }
   
+  fgota = FALSE;
+  fgotb = FALSE;
   for (i = 0; i < cGstartup_retries; i++)
     {
       if (! fgexchange_init (fmaster, INITA, iGlocal_winsize,
-			    &iGremote_winsize))
+			     &iGremote_winsize, fgota))
 	continue;
+      fgota = TRUE;
       if (! fgexchange_init (fmaster, INITB, iseg,
-			    &iGremote_segsize))
+			     &iGremote_segsize, fgotb))
 	continue;
+      fgotb = TRUE;
       if (! fgexchange_init (fmaster, INITC, iGlocal_winsize,
-			    &iGremote_winsize))
+			     &iGremote_winsize, FALSE))
 	continue;
 
       /* We have succesfully connected.  Determine the remote packet
@@ -355,15 +363,24 @@ fgstart (fmaster)
    Unfortunately, this doesn't work for the other case, in which we
    are sending INITB but the other side has not yet seen INITA.  As
    far as I can see, if this happens we just have to wait until we
-   time out and resend INITA.  */
+   time out and resend INITA.
+
+   If we have timed out and gone back, and we have already received
+   the counterpart packet, fgot is passed in as true.  In this case
+   the other side probably dropped our packet while we saw the one it
+   sent and moved on.  We just resend the appropriate packet but don't
+   wait for a response, since it may well think that it has already
+   responded.  This should speed up connecting when a packet is
+   dropped.  */
 
 /*ARGSUSED*/
 static boolean
-fgexchange_init (fmaster, ictl, ival, piset)
+fgexchange_init (fmaster, ictl, ival, piset, fgot)
      boolean fmaster;
      int ictl;
      int ival;
      int *piset;
+     boolean fgot;
 {
   int i;
 
@@ -379,6 +396,10 @@ fgexchange_init (fmaster, ictl, ival, piset)
       if (! fgsend_control (ictl, ival))
 	return FALSE;
       
+      /* If we've already seen the response packet, get out now.  */
+      if (fgot)
+	return TRUE;
+
       itime = isysdep_time ();
       ctimeout = cGexchange_init_timeout;
 
