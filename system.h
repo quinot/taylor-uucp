@@ -763,9 +763,11 @@ extern boolean usysdep_walk_tree P((const char *zdir,
 extern char *zsysdep_jobid P((const struct uuconf_system *qsys,
 			      pointer pseq));
 
-/* See whether the current user is permitted to kill jobs submitted by
-   another user.  This should return TRUE if permission is granted,
-   FALSE otherwise.  */
+/* See whether the current user is privileged.  Privileged users are
+   permitted to kill jobs submitted by another user, and they are
+   permitted to use the -u argument to uucico; other uses of this call
+   may be added later.  This should return TRUE if permission is
+   granted, FALSE otherwise.  */
 extern boolean fsysdep_privileged P((void));
 
 /* Kill a job, given the jobid.  This should remove all associated

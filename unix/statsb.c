@@ -77,22 +77,6 @@ static int ussettime P((const char *z, time_t inow));
 static boolean fskill_or_rejuv P((pointer puuconf, const char *zid,
 				  boolean fkill));
 
-/* See whether the user is permitted to kill arbitrary jobs.  This is
-   true only for root and uucp.  We check for uucp by seeing if the
-   real user ID and the effective user ID are the same; this works
-   because we should be suid to uucp, so our effective user ID will
-   always be uucp while our real user ID will be whoever ran the
-   program.  */
-
-boolean
-fsysdep_privileged ()
-{
-  uid_t iuid;
-
-  iuid = getuid ();
-  return iuid == 0 || iuid == geteuid ();
-}
-
 /* Set file access time to the present.  On many systems this could be
    done by passing NULL to utime, but on some that doesn't work.  This
    routine is not time critical, so we never rely on NULL.  */

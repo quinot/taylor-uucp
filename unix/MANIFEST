@@ -43,6 +43,7 @@ pause.c
 picksb.c
 pipe.c
 portnm.c
+priv.c
 proctm.c
 recep.c
 remove.c

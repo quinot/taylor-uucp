@@ -140,7 +140,8 @@ static boolean fdo_call P((struct sdaemon *qdaemon,
 			   boolean *pfcalled, enum tstatus_type *pterr));
 static int iuport_lock P((struct uuconf_port *qport, pointer pinfo));
 static boolean flogin_prompt P((pointer puuconf,
-				struct sconnection *qconn));
+				struct sconnection *qconn,
+				const char *zlogin));
 static int icallin_cmp P((int iwhich, void *pinfo, const char *zfile));
 static boolean faccept_call P((pointer puuconf, const char *zlogin,
 			       struct sconnection *qconn,
@@ -173,6 +174,7 @@ static const struct option asLongopts[] =
   { "master", no_argument, NULL, 3 },
   { "slave", no_argument, NULL, 4 },
   { "system", required_argument, NULL, 's' },
+  { "login", required_argument, NULL, 'u' },
   { "wait", no_argument, NULL, 'w' },
   { "config", required_argument, NULL, 'I' },
   { "debug", required_argument, NULL, 'x' },
@@ -211,6 +213,8 @@ main (argc, argv)
   boolean fmaster = FALSE;
   /* -s,-S system: system to call.  */
   const char *zsystem = NULL;
+  /* -u: Login name to use.  */
+  const char *zlogin = NULL;
   /* -w: Whether to wait for a call after doing one.  */
   boolean fwait = FALSE;
   const char *zopts;
@@ -311,9 +315,15 @@ main (argc, argv)
 
 	case 'u':
 	  /* Some versions of uucpd invoke uucico with a -u argument
-	     specifying the login name.  I'm told it is safe to ignore
-	     this value, although perhaps we should use it rather than
-	     zsysdep_login_name ().  */
+	     specifying the login name.  If invoked by a privileged
+	     user, we use it instead of the result of
+	     zsysdep_login_name.  */
+	  if (fsysdep_privileged ())
+	    zlogin = optarg;
+	  else
+	    fprintf (stderr,
+		     "%s: ignoring command line login name: not a privileged user\n",
+		     zProgram);
 	  break;
 
 	case 'w':
@@ -638,7 +648,7 @@ main (argc, argv)
 	  if (fendless)
 	    {
 	      while (! FGOT_SIGNAL ()
-		     && flogin_prompt (puuconf, &sconn))
+		     && flogin_prompt (puuconf, &sconn, (const char *) NULL))
 		{
 		  /* Close and reopen the port in between calls.  */
 		  if (! fconn_close (&sconn, puuconf,
@@ -652,14 +662,15 @@ main (argc, argv)
 	  else
 	    {
 	      if (flogin)
-		fret = flogin_prompt (puuconf, &sconn);
+		fret = flogin_prompt (puuconf, &sconn, zlogin);
 	      else
 		{
 #if DEBUG > 1
 		  iholddebug = iDebug;
 #endif
-		  fret = faccept_call (puuconf, zsysdep_login_name (),
-				       &sconn, &zsystem);
+		  if (zlogin == NULL)
+		    zlogin = zsysdep_login_name ();
+		  fret = faccept_call (puuconf, zlogin, &sconn, &zsystem);
 #if DEBUG > 1
 		  iDebug = iholddebug;
 #endif
@@ -746,6 +757,7 @@ uhelp ()
   printf (" -c,--quiet: Don't log bad time or no work warnings\n");
   printf (" -C,--ifwork: Only call named system if there is work\n");
   printf (" -D,--nodetach: Don't detach from controlling terminal\n");
+  printf (" -u,--login: Set login name (privileged users only)\n");
   printf (" -x,-X,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   printf (" -I,--config file: Set configuration file to use\n");
@@ -1600,9 +1612,10 @@ struct scallin_info
 /* Prompt for a login name and a password, and run as the slave.  */
 
 static boolean
-flogin_prompt (puuconf, qconn)
+flogin_prompt (puuconf, qconn, zlogin)
      pointer puuconf;
      struct sconnection *qconn;
+     const char *zlogin;
 {
   char *zuser, *zpass;
   boolean fret;
@@ -1612,17 +1625,22 @@ flogin_prompt (puuconf, qconn)
   DEBUG_MESSAGE0 (DEBUG_HANDSHAKE, "flogin_prompt: Waiting for login");
 
   zuser = NULL;
-  do
+  if (zlogin == NULL)
     {
-      ubuffree (zuser);
-      if (! fconn_write (qconn, "login: ", sizeof "login: " - 1))
-	return FALSE;
-      zuser = zget_typed_line (qconn);
-    }
-  while (zuser != NULL && *zuser == '\0');
+      do
+	{
+	  ubuffree (zuser);
+	  if (! fconn_write (qconn, "login: ", sizeof "login: " - 1))
+	    return FALSE;
+	  zuser = zget_typed_line (qconn);
+	}
+      while (zuser != NULL && *zuser == '\0');
 
-  if (zuser == NULL)
-    return TRUE;
+      if (zuser == NULL)
+	return TRUE;
+
+      zlogin = zuser;
+    }
 
   if (! fconn_write (qconn, "Password:", sizeof "Password:" - 1))
     {
@@ -1639,7 +1657,7 @@ flogin_prompt (puuconf, qconn)
 
   fret = TRUE;
 
-  s.zuser = zuser;
+  s.zuser = zlogin;
   s.zpass = zpass;
   iuuconf = uuconf_callin (puuconf, icallin_cmp, &s);
 
@@ -1664,7 +1682,7 @@ flogin_prompt (puuconf, qconn)
 #if DEBUG > 1
       iholddebug = iDebug;
 #endif
-      (void) faccept_call (puuconf, zuser, qconn, (const char **) NULL);
+      (void) faccept_call (puuconf, zlogin, qconn, (const char **) NULL);
 #if DEBUG > 1
       iDebug = iholddebug;
 #endif

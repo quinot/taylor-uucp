@@ -27,7 +27,7 @@ OBJS = access.o addbas.o app3.o app4.o basnam.o bytfre.o corrup.o \
 	exists.o filnam.o fsusg.o indir.o init.o isdir.o isfork.o \
 	iswait.o jobid.o lcksys.o link.o locfil.o lock.o loctim.o \
 	mail.o mkdirs.o mode.o move.o opensr.o pause.o picksb.o pipe.o \
-	portnm.o proctm.o recep.o run.o seq.o serial.o signal.o \
+	portnm.o priv.o proctm.o recep.o run.o seq.o serial.o signal.o \
 	sindir.o size.o sleep.o spawn.o splcmd.o splnam.o spool.o \
 	srmdir.o statsb.o status.o time.o tmpfil.o trunc.o uacces.o \
 	ufopen.o ultspl.o unknwn.o uuto.o walk.o wldcrd.o work.o \
@@ -98,6 +98,7 @@ picksb.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 pipe.o: $(srcdir)/../uudefs.h $(srcdir)/../conn.h $(srcdir)/../system.h
 pipe.o: $(srcdir)/../uuconf.h
 portnm.o: $(srcdir)/../system.h
+priv.o: $(srcdir)/../system.h
 proctm.o: $(srcdir)/../system.h
 recep.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 run.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h

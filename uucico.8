@@ -72,17 +72,29 @@ or
 options may be used to force
 .I uucico
 to produce its own prompts of "login: " and "Password:".  When another
-daemon calls in, it will see these prompts and log in as usual; the
-login name and password will be checked against a separate list kept
-specially for
+daemon calls in, it will see these prompts and log in as usual.  The
+login name and password will normally be checked against a separate
+list kept specially for
 .I uucico
 rather than the
+.I /etc/passwd
+file; it is possible on some systems to direct
+.I uucico
+to use the
 .I /etc/passwd
 file.  The
 .B \-l
 or
 .B \--prompt
-option will prompt once and then exit.  The
+option will prompt once and then exit; in this mode the UUCP
+administrator or the superuser may use the
+.B \-u
+or
+.B \--login
+option to force a login name, in which case
+.I uucico
+will not prompt for one.
+The
 .B \-e
 or
 .B \--loop
@@ -140,8 +152,13 @@ This allows
 to be easily run from
 .I inetd
 (8).  The login name and password are checked against the UUCP
-password file, which has no connection to the file
+password file, which probably has no connection to the file
 .I /etc/passwd.
+The
+.B \-\-login 
+option may be used to force a login name, in which cause
+.I uucico
+will only prompt for a password.
 .TP 5
 .B \-p port, \-\-port port
 Specify a port to call out on or to listen to.
@@ -196,6 +213,15 @@ detaches from the terminal before each call out to another system and
 before invoking
 .I uuxqt.
 This option prevents this.
+.TP 5
+.B \-u name, \-\-login name
+Set the login name to use instead of that of the invoking user.  This
+option may only be used by the UUCP administrator or the superuser.
+If used with
+.B \-\-prompt,
+this will cause
+.I uucico
+to prompt only for the password, not the login name.
 .TP 5
 .B \-x type, \-X type, \-\-debug type
 Turn on particular debugging types.  The following types are
