@@ -1,7 +1,7 @@
 /* prot.h
    Protocol header file.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -165,6 +165,7 @@ extern boolean fijstart P((struct sdaemon *qdaemon, char **pzlog,
 extern struct uuconf_cmdtab asGproto_params[];
 extern boolean fgstart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean fbiggstart P((struct sdaemon *qdaemon, char **pzlog));
+extern boolean fvstart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean fgshutdown P((struct sdaemon *qdaemon));
 extern boolean fgsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
