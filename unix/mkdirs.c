@@ -17,8 +17,7 @@ fsysdep_make_dirs (zfile, fpublic)
   char *zcopy, *z;
   int imode;
 
-  zcopy = (char *) alloca (strlen (zfile) + 1);
-  strcpy (zcopy, zfile);
+  zcopy = zbufcpy (zfile);
 
   if (fpublic)
     imode = IPUBLIC_DIRECTORY_MODE;
@@ -36,12 +35,15 @@ fsysdep_make_dirs (zfile, fpublic)
 		{
 		  ulog (LOG_ERROR, "mkdir (%s): %s", zcopy,
 			strerror (errno));
+		  ubuffree (zcopy);
 		  return FALSE;
 		}
 	    }
 	  *z = '/';
 	}
     }
+
+  ubuffree (zcopy);
 
   return TRUE;
 }

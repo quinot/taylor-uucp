@@ -19,7 +19,7 @@ MORECFLAGS=-I$(srcdir)/..
 
 OBJS = buffer.o crc.o debug.o escape.o getopt.o getop1.o spool.o \
 	status.o xfree.o xmall.o xreall.o \
-	@LIBOBJS@ @ALLOCA@
+	@LIBOBJS@
 
 all: libuucp.a
 

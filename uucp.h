@@ -23,28 +23,6 @@
    c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
    */
 
-/* Define alloca as suggested by David MacKenzie.  AIX requires this
-   to be the first thing in the file.  I really hate system dependent
-   cruft like this, but I guess that's the price of using alloca.  */
-#define HAVE_ALLOCA 1
-#ifdef __GNUC__
-#ifndef __NeXT__
-#define alloca __builtin_alloca
-#endif /* ! defined (__NeXT__) */
-#else /* ! defined(__GNUC__) */
-#ifdef sparc
-#include <alloca.h>
-#else /* ! defined (sparc) */
-#ifdef _AIX
- #pragma alloca
-#else /* ! defined (_AIX) */
-/* We may not be using a real alloca.  */
-#undef HAVE_ALLOCA
-#define HAVE_ALLOCA 0
-#endif /* ! defined (_AIX) */
-#endif /* ! defined (sparc) */
-#endif /* ! defined (__GNUC__) */
-
 /* Get the system configuration parameters.  */
 #include "conf.h"
 #include "policy.h"
@@ -149,11 +127,6 @@ typedef const char *constpointer;
 #define BUCHAR(b) ((b) & 0xff)
 #endif /* ! HAVE_UNSIGNED_CHAR */
 #endif /* ! ANSI_C */
-
-/* Now that we have pointer, define alloca.  */
-#if ! HAVE_ALLOCA
-extern pointer alloca ();
-#endif
 
 /* Make sure we have a definition for offsetof.  */
 #ifndef offsetof

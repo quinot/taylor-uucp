@@ -60,8 +60,7 @@ fsysdep_in_directory (zfile, zdir, fcheck, freadable, zuser)
   if (! fcheck)
     return TRUE;
 
-  zcopy = (char *) alloca (strlen (zfile) + 1);
-  strcpy (zcopy, zfile);
+  zcopy = zbufcpy (zfile);
 
   /* Start checking directories after zdir.  Otherwise, we would
      require that all directories down to /usr/spool/uucppublic be
@@ -82,13 +81,17 @@ fsysdep_in_directory (zfile, zdir, fcheck, freadable, zuser)
 	  if (errno != ENOENT)
 	    {
 	      ulog (LOG_ERROR, "stat (%s): %s", zcopy, strerror (errno));
+	      ubuffree (zcopy);
 	      return FALSE;
 	    }
 
 	  /* If this is the top directory, any problems will be caught
 	     later when we try to open it.  */
 	  if (zslash == zcopy + c)
-	    return TRUE;
+	    {
+	      ubuffree (zcopy);
+	      return TRUE;
+	    }
 
 	  /* Go back and check the last directory for read or write
 	     access.  */
@@ -104,6 +107,7 @@ fsysdep_in_directory (zfile, zdir, fcheck, freadable, zuser)
       if (! fsuser_access (&s, X_OK, zuser))
 	{
 	  ulog (LOG_ERROR, "%s: %s", zcopy, strerror (EACCES));
+	  ubuffree (zcopy);
 	  return FALSE;
 	}
 
@@ -120,8 +124,10 @@ fsysdep_in_directory (zfile, zdir, fcheck, freadable, zuser)
   if (! fsuser_access (&s, freadable ? R_OK : W_OK, zuser))
     {
       ulog (LOG_ERROR, "%s: %s", zcopy, strerror (EACCES));
+      ubuffree (zcopy);
       return FALSE;
     }
 
+  ubuffree (zcopy);
   return TRUE;
 }

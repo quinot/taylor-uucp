@@ -311,12 +311,13 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    else
 	      zsys = zLsystem;
 
-	    zfile = (char *) alloca (strlen (zLogfile)
-				     + strlen (abProgram)
-				     + strlen (zsys)
-				     + 1);
+	    zfile = zbufalc (strlen (zLogfile)
+			     + strlen (abProgram)
+			     + strlen (zsys)
+			     + 1);
 	    sprintf (zfile, zLogfile, abProgram, zsys);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
+	    ubuffree (zfile);
 	  }
 #endif /* HAVE_HDB_LOGGING */
 

@@ -67,8 +67,7 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
       char *zcopy;
       char *zslash;
 
-      zcopy = (char *) alloca (strlen (zto) + 1);
-      strcpy (zcopy, zto);
+      zcopy = zbufcpy (zto);
       zslash = strrchr (zcopy, '/');
       if (zslash == zcopy)
 	zslash[1] = '\0';
@@ -79,14 +78,17 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
 	{
 	  ulog (LOG_ERROR, "stat (%s): %s", zcopy, strerror (errno));
 	  (void) remove (zorig);
+	  ubuffree (zcopy);
 	  return FALSE;
 	}
       if (! fsuser_access (&s, W_OK, zuser))
 	{
 	  ulog (LOG_ERROR, "%s: %s", zcopy, strerror (EACCES));
 	  (void) remove (zorig);
+	  ubuffree (zcopy);
 	  return FALSE;
 	}
+      ubuffree (zcopy);
 
       /* A malicious user now has a few milliseconds to change a
 	 symbolic link to a directory uucp has write permission on but

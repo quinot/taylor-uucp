@@ -1724,6 +1724,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       const char *zmail;
       int iuuconf;
       const char *zloc;
+      char *zfree;
 
       if (zrequestor != NULL)
 	zmail = zrequestor;
@@ -1740,25 +1741,26 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       else if (iuuconf != UUCONF_SUCCESS)
 	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
+      zfree = NULL;
       if (strcmp (qsys->uuconf_zname, zloc) != 0
 #if HAVE_INTERNET_MAIL
 	  && strchr (zmail, '@') == NULL
 #endif
 	  )
 	{
-	  char *zset;
-
-	  zset = (char *) alloca (strlen (qsys->uuconf_zname)
-				  + strlen (zmail)
-				  + sizeof "!");
-	  sprintf (zset, "%s!%s", qsys->uuconf_zname, zmail);
-	  zmail = zset;
+	  zfree = zbufalc (strlen (qsys->uuconf_zname)
+			   + strlen (zmail)
+			   + sizeof "!");
+	  sprintf (zfree, "%s!%s", qsys->uuconf_zname, zmail);
+	  zmail = zfree;
 	}
 
       xfree ((pointer) zloc);
 
       if (! fsysdep_mail (zmail, zsubject, i, pz))
 	fret = FALSE;
+
+      ubuffree (zfree);
     }
 
   while (istdin < i)

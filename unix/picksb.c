@@ -141,7 +141,7 @@ zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
 	      zsystem = qentry->d_name;
 	    }
 
-	  zdir = (char *) alloca (strlen (zStopdir) + strlen (zsystem) + 1);
+	  zdir = zbufalc (strlen (zStopdir) + strlen (zsystem) + 1);
 	  sprintf (zdir, "%s/%s", zStopdir, zsystem);
 
 	  qSsysdir = opendir (zdir);
@@ -155,6 +155,8 @@ zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
 	      ubuffree (zSsysdir);
 	      zSsysdir = zbufcpy (zsystem);
 	    }
+
+	  ubuffree (zdir);
 	}
 
       qentry = readdir (qSsysdir);

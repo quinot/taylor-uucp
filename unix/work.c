@@ -698,21 +698,26 @@ zsysdep_save_temp_file (pseq)
   else
     ++zslash;
 
-  zto = (char *) alloca (sizeof PRESERVEDIR + 1 + strlen (zslash));
+  zto = zbufalc (sizeof PRESERVEDIR + sizeof "/" + strlen (zslash));
   sprintf (zto, "%s/%s", PRESERVEDIR, zslash);
 
   if (! fsysdep_move_file (qline->ztemp, zto, TRUE, FALSE, FALSE,
 			   (const char *) NULL))
-    return "Could not move file to preservation directory";
+    {
+      ubuffree (zto);
+      return "Could not move file to preservation directory";
+    }
     
-  cwant = sizeof "File saved as\n\t" + strlen (zSspooldir) + 1 + strlen (zto);
+  cwant = sizeof "File saved as\n\t/" + strlen (zSspooldir) + strlen (zto);
   if (cwant > cbuf)
     {
-      zbuf = (char *) xrealloc ((pointer) zbuf, cwant);
+      ubuffree (zbuf);
+      zbuf = zbufalc (cwant);
       cbuf = cwant;
     }
 
   sprintf (zbuf, "File saved as\n\t%s/%s", zSspooldir, zto);
+  ubuffree (zto);
   return zbuf;
 }
 

@@ -70,7 +70,7 @@ zsysdep_local_file (zfile, zpubdir)
 
 	  ++zfile;
 	  cuserlen = strcspn (zfile, "/");
-	  zcopy = (char *) alloca (cuserlen + 1);
+	  zcopy = zbufalc (cuserlen + 1);
 	  memcpy (zcopy, zfile, cuserlen);
 	  zcopy[cuserlen] = '\0';
       
@@ -78,8 +78,10 @@ zsysdep_local_file (zfile, zpubdir)
 	  if (q == NULL)
 	    {
 	      ulog (LOG_ERROR, "User %s not found", zcopy);
+	      ubuffree (zcopy);
 	      return NULL;
 	    }
+	  ubuffree (zcopy);
 
 	  if (zfile[cuserlen] == '\0')
 	    return zbufcpy (q->pw_dir);

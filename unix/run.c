@@ -49,7 +49,7 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
   int aidescs[3];
   pid_t ipid;
 
-  zlib = (char *) alloca (sizeof SBINDIR + sizeof "/" + strlen (zprogram));
+  zlib = zbufalc (sizeof SBINDIR + sizeof "/" + strlen (zprogram));
   sprintf (zlib, "%s/%s", SBINDIR, zprogram);
 
   azargs[0] = zlib;
@@ -66,6 +66,7 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
   ipid = isspawn (azargs, aidescs, FALSE, FALSE, (const char *) NULL,
 		  FALSE, TRUE, (const char *) NULL,
 		  (const char *) NULL, (const char *) NULL);
+  ubuffree (zlib);
   if (ipid < 0)
     {
       ulog (LOG_ERROR, "isspawn: %s", strerror (errno));

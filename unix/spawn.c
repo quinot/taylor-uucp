@@ -97,7 +97,7 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
      const char *zuu_machine;
      const char *zuu_user;
 {
-  char *zshcmd = NULL;
+  char *zshcmd;
   int i;
   char *azenv[9];
   char **pazenv;
@@ -113,8 +113,9 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
   const char *zcmd;
 
   /* If we might have to use the shell, allocate enough space for the
-     quoted command before forking.  Otherwise the allocation might
+     quoted command before forking.  Otherwise the allocation would
      modify the data segment and we could not safely use vfork.  */
+  zshcmd = NULL;
   if (fshell)
     {
       size_t clen;
@@ -122,12 +123,11 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
       clen = 0;
       for (i = 0; pazargs[i] != NULL; i++)
 	clen += strlen (pazargs[i]);
-      zshcmd = (char *) alloca (2 * clen + i);
+      zshcmd = zbufalc (2 * clen + i);
     }
 
   /* Set up a standard environment.  This is again done before forking
-     because it might modify the data segment.  */
-
+     because it will modify the data segment.  */
   if (fkeepenv)
     pazenv = environ;
   else
@@ -139,24 +139,24 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
       if (zpath == NULL)
 	zpath = CMDPATH;
 
-      azenv[0] = (char *) alloca (sizeof "PATH=" + strlen (zpath));
+      azenv[0] = zbufalc (sizeof "PATH=" + strlen (zpath));
       sprintf (azenv[0], "PATH=%s", zpath);
       zspace = azenv[0] + sizeof "PATH=" - 1;
       while ((zspace = strchr (zspace, ' ')) != NULL)
 	*zspace = ':';
     
-      azenv[1] = (char *) alloca (sizeof "HOME=" + strlen (zSspooldir));
+      azenv[1] = zbufalc (sizeof "HOME=" + strlen (zSspooldir));
       sprintf (azenv[1], "HOME=%s", zSspooldir);
 
       zterm = getenv ("TERM");
       if (zterm == NULL)
 	zterm = "unknown";
-      azenv[2] = (char *) alloca (sizeof "TERM=" + strlen (zterm));
+      azenv[2] = zbufalc (sizeof "TERM=" + strlen (zterm));
       sprintf (azenv[2], "TERM=%s", zterm);
 
-      azenv[3] = (char *) "SHELL=/bin/sh";
+      azenv[3] = zbufcpy ("SHELL=/bin/sh");
   
-      azenv[4] = (char *) alloca (sizeof "USER=" + strlen (OWNER));
+      azenv[4] = zbufalc (sizeof "USER=" + strlen (OWNER));
       sprintf (azenv[4], "USER=%s", OWNER);
 
       ienv = 5;
@@ -164,23 +164,23 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
       ztz = getenv ("TZ");
       if (ztz != NULL)
 	{
-	  azenv[ienv] = (char *) alloca (sizeof "TZ=" + strlen (ztz));
+	  azenv[ienv] = zbufalc (sizeof "TZ=" + strlen (ztz));
 	  sprintf (azenv[ienv], "TZ=%s", ztz);
 	  ++ienv;
 	}
 
       if (zuu_machine != NULL)
 	{
-	  azenv[ienv] = (char *) alloca (sizeof "UU_MACHINE="
-					 + strlen (zuu_machine));
+	  azenv[ienv] = zbufalc (sizeof "UU_MACHINE="
+				 + strlen (zuu_machine));
 	  sprintf (azenv[ienv], "UU_MACHINE=%s", zuu_machine);
 	  ++ienv;
 	}
 
       if (zuu_user != NULL)
 	{
-	  azenv[ienv] = (char *) alloca (sizeof "UU_USER="
-					 + strlen (zuu_user));
+	  azenv[ienv] = zbufalc (sizeof "UU_USER="
+				 + strlen (zuu_user));
 	  sprintf (azenv[ienv], "UU_USER=%s", zuu_user);
 	  ++ienv;
 	}
@@ -282,22 +282,26 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 
   if (ferr)
     {
-      for (i = 0; i < cpar_close; i++)
-	(void) close (aipar_close[i]);
       for (i = 0; i < cchild_close; i++)
 	(void) close (aichild_close[i]);
-      errno = ierr;
-      return -1;
+      iret = -1;
     }
-
-  /* Here the fork has succeeded and all the pipes have been done.  */
 
   if (iret != 0)
     {
       /* The parent.  Close the child's ends of the pipes and return
-	 the process ID.  */
+	 the process ID, or an error.  */
       for (i = 0; i < cpar_close; i++)
 	(void) close (aipar_close[i]);
+      ubuffree (zshcmd);
+      if (! fkeepenv)
+	{
+	  char **pz;
+
+	  for (pz = azenv; *pz != NULL; pz++)
+	    ubuffree (*pz);
+	}
+      errno = ierr;
       return iret;
     }
 

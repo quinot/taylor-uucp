@@ -111,7 +111,7 @@ fsdo_lock (zlock, fspooldir, pferr)
     cslash = zslash - zpath + 1;
 
   sprintf (abtempfile, "TMP%010lx", (unsigned long) ime);
-  ztempfile = (char *) alloca (cslash + sizeof abtempfile);
+  ztempfile = zbufalc (cslash + sizeof abtempfile);
   memcpy (ztempfile, zpath, cslash);
   memcpy (ztempfile + cslash, abtempfile, sizeof abtempfile);
 
@@ -123,6 +123,7 @@ fsdo_lock (zlock, fspooldir, pferr)
 	  if (! fsysdep_make_dirs (ztempfile, FALSE))
 	    {
 	      ubuffree (zfree);
+	      ubuffree (ztempfile);
 	      return FALSE;
 	    }
 	  o = creat (ztempfile, IPUBLIC_FILE_MODE);
@@ -131,6 +132,7 @@ fsdo_lock (zlock, fspooldir, pferr)
 	{
 	  ulog (LOG_ERROR, "creat (%s): %s", ztempfile, strerror (errno));
 	  ubuffree (zfree);
+	  ubuffree (ztempfile);
 	  return FALSE;
 	}
     }
@@ -153,6 +155,7 @@ fsdo_lock (zlock, fspooldir, pferr)
       ulog (LOG_ERROR, "%s (%s): %s", zerr, ztempfile, strerror (errno));
       (void) remove (ztempfile);
       ubuffree (zfree);
+      ubuffree (ztempfile);
       return FALSE;
     }
 
@@ -422,6 +425,8 @@ fsdo_lock (zlock, fspooldir, pferr)
      it's worth.  */
   if (remove (ztempfile) != 0)
     ulog (LOG_ERROR, "remove (%s): %s", ztempfile, strerror (errno));
+
+  ubuffree (ztempfile);
 
   return fret;
 }

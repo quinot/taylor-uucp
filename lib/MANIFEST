@@ -1,6 +1,5 @@
 Makefile.in
 MANIFEST
-alloca.c
 bsrch.c
 buffer.c
 bzero.c

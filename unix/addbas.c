@@ -16,6 +16,8 @@ zsysdep_add_base (zfile, zname)
 {
   size_t clen;
   const char *zlook;
+  char *zfree;
+  char *zret;
 
 #if DEBUG > 0
   if (*zfile != '/')
@@ -28,21 +30,21 @@ zsysdep_add_base (zfile, zname)
     {
       if (! fsysdep_directory (zfile))
 	return zbufcpy (zfile);
+      zfree = NULL;
     }
   else
     {
-      char *zcopy;
-
       /* Trim out the trailing '/'.  */
-      zcopy = (char *) alloca (clen);
-      memcpy (zcopy, zfile, clen - 1);
-      zcopy[clen - 1] = '\0';
-      zfile = zcopy;
+      zfree = zbufcpy (zfile);
+      zfree[clen - 1] = '\0';
+      zfile = zfree;
     }
 
   zlook = strrchr (zname, '/');
   if (zlook != NULL)
     zname = zlook + 1;
 
-  return zsysdep_in_dir (zfile, zname);
+  zret = zsysdep_in_dir (zfile, zname);
+  ubuffree (zfree);
+  return zret;
 }

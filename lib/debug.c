@@ -56,8 +56,7 @@ idebug_parse (z)
       return (1 << i) - 1;
     }
 
-  zcopy = (char *) alloca (strlen (z) + 1);
-  strcpy (zcopy, z);
+  zcopy = zbufcpy (z);
 
   iret = 0;
 
@@ -83,6 +82,8 @@ idebug_parse (z)
 	ulog (LOG_ERROR, "Unrecognized debugging option \"%s\"",
 	      ztok);
     }
+
+  ubuffree (zcopy);
 
   return iret;
 }

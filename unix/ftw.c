@@ -190,7 +190,9 @@ ftw (dir, func, descriptors)
   if (descriptors <= 0)
     descriptors = 1;
 
-  dirs = (DIR **) alloca (descriptors * sizeof (DIR *));
+  dirs = (DIR **) malloc (descriptors * sizeof (DIR *));
+  if (dirs == NULL)
+    return -1;
   c = descriptors;
   p = dirs;
   while (c-- != 0)
@@ -202,7 +204,10 @@ ftw (dir, func, descriptors)
   if (stat (dir, &s) < 0)
     {
       if (errno != EACCES)
-	return -1;
+	{
+	  free ((pointer) dirs);
+	  return -1;
+	}
       flag = FTW_NS;
     }
   else if (S_ISDIR (s.st_mode))
@@ -213,7 +218,10 @@ ftw (dir, func, descriptors)
       else
 	{
 	  if (errno != EACCES)
-	    return -1;
+	    {
+	      free ((pointer) dirs);
+	      return -1;
+	    }
 	  flag = FTW_DNR;
 	}
     }
@@ -236,5 +244,6 @@ ftw (dir, func, descriptors)
 	}
     }
 
+  free ((pointer) dirs);
   return ret;
 }

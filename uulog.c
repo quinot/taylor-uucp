@@ -93,7 +93,7 @@ main (argc, argv)
 	  char *znew;
 
 	  clen = strlen (argv[i]);
-	  znew = (char *) alloca (clen + 2);
+	  znew = zbufalc (clen + 2);
 	  znew[0] = '-';
 	  znew[1] = 'n';
 	  memcpy (znew + 2, argv[i] + 1, clen);
@@ -195,10 +195,10 @@ main (argc, argv)
     else
       zprogram = "uucico";
 
-    zalc = (char *) alloca (strlen (zlogfile)
-			    + strlen (zprogram)
-			    + strlen (zsystem)
-			    + 1);
+    zalc = zbufalc (strlen (zlogfile)
+		    + strlen (zprogram)
+		    + strlen (zsystem)
+		    + 1);
     sprintf (zalc, zlogfile, zprogram, zsystem);
     zfile = zalc;
   }

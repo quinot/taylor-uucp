@@ -78,7 +78,7 @@ init.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 isdir.o: $(srcdir)/../system.h
 iswait.o: $(srcdir)/../uudefs.h
 jobid.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
-lcksys.o: $(srcdir)/../system.h $(srcdir)/../uuconf.h
+lcksys.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 link.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 locfil.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 lock.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
@@ -114,7 +114,7 @@ uacces.o: $(srcdir)/../uudefs.h
 ufopen.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 ultspl.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uuto.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
-walk.o: $(srcdir)/../system.h
+walk.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 wldcrd.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 work.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 xqtfil.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h

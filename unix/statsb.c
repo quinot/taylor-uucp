@@ -504,8 +504,7 @@ fsysdep_lock_status ()
   aidescs[2] = 2;
 
   /* Parse PS_PROGRAM into an array of arguments.  */
-  zcopy = (char *) alloca (sizeof PS_PROGRAM);
-  strcpy (zcopy, PS_PROGRAM);
+  zcopy = zbufcpy (PS_PROGRAM);
 
   cargs = 0;
   for (ztok = strtok (zcopy, " \t");
@@ -513,9 +512,9 @@ fsysdep_lock_status ()
        ztok = strtok ((char *) NULL, " \t"))
     ++cargs;
 
-  pazargs = (char **) alloca ((cargs + 1) * sizeof (char *));
+  pazargs = (char **) xmalloc ((cargs + 1) * sizeof (char *));
 
-  strcpy (zcopy, PS_PROGRAM);
+  memcpy (zcopy, PS_PROGRAM, sizeof PS_PROGRAM);
   for (ztok = strtok (zcopy, " \t"), iarg = 0;
        ztok != NULL;
        ztok = strtok ((char *) NULL, " \t"), ++iarg)
@@ -529,7 +528,7 @@ fsysdep_lock_status ()
     char *zlast, *zset;
 
     zlast = pazargs[cargs - 1];
-    zset = (char *) alloca (strlen (zlast) + 20);
+    zset = zbufalc (strlen (zlast) + 20);
     for (i = 0; i < cgot; i++)
       {
 	pid_t ipid;
@@ -546,6 +545,7 @@ fsysdep_lock_status ()
 	else
 	  (void) iswait ((unsigned long) ipid, PS_PROGRAM);
       }
+    ubuffree (zset);
   }
 #else
   {
@@ -553,7 +553,7 @@ fsysdep_lock_status ()
     int i;
     pid_t ipid;
 
-    zlast = (char *) alloca (strlen (pazargs[cargs - 1]) + cgot * 20 + 1);
+    zlast = zbufalc (strlen (pazargs[cargs - 1]) + cgot * 20 + 1);
     strcpy (zlast, pazargs[cargs - 1]);
     for (i = 0; i < cgot; i++)
       {
@@ -574,8 +574,12 @@ fsysdep_lock_status ()
       ulog (LOG_ERROR, "isspawn: %s", strerror (errno));
     else
       (void) iswait ((unsigned long) ipid, PS_PROGRAM);
+    ubuffree (zlast);
   }
 #endif    
+
+  ubuffree (zcopy);
+  xfree ((pointer) pazargs);
 
   return TRUE;
 }

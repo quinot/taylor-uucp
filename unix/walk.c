@@ -2,6 +2,7 @@
    Walk a directory tree.  */
 
 #include "uucp.h"
+#include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
 
@@ -41,17 +42,16 @@ iswalk_dir (zname, qstat, iflag)
      struct stat *qstat;
      int iflag;
 {
-  size_t clen;
   char *zcopy;
 
   if (iflag != FTW_F)
     return 0;
 
-  clen = strlen (zname + cSlen);
-  zcopy = (char *) alloca (clen + 1);
-  memcpy (zcopy, zname + cSlen, clen + 1);
+  zcopy = zbufcpy (zname + cSlen);
 
   (*puSfn) (zname, zcopy, pSinfo);
+
+  ubuffree (zcopy);
 
   return 0;
 }

@@ -92,6 +92,8 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
   char **pzchat;
   char *zbuf;
   size_t cbuflen;
+  boolean fret;
+  int i;
 
   /* First run the program, if any.  */
   if (qchat->uuconf_pzprogram != NULL)
@@ -108,8 +110,8 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
   if (qchat->uuconf_pzfail == NULL)
     {
       cstrings = 1;
-      azstrings = (char **) alloca (sizeof (char *));
-      aclens = (size_t *) alloca (sizeof (size_t));
+      azstrings = (char **) xmalloc (sizeof (char *));
+      aclens = (size_t *) xmalloc (sizeof (size_t));
     }
   else
     {
@@ -120,8 +122,8 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       for (pz = qchat->uuconf_pzfail; *pz != NULL; pz++)
 	++cstrings;
 
-      azstrings = (char **) alloca (cstrings * sizeof (char *));
-      aclens = (size_t *) alloca (cstrings * sizeof (size_t));
+      azstrings = (char **) xmalloc (cstrings * sizeof (char *));
+      aclens = (size_t *) xmalloc (cstrings * sizeof (size_t));
 
       /* Get the strings into the array, and handle all the escape
 	 characters.  */
@@ -129,17 +131,14 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	   *pz != NULL;
 	   cstrings++, pz++)
 	{
-	  size_t csize;
-
-	  csize = strlen (*pz) + 1;
-	  azstrings[cstrings] = (char *) alloca (csize);
-	  memcpy (azstrings[cstrings], *pz, csize);
+	  azstrings[cstrings] = zbufcpy (*pz);
 	  aclens[cstrings] = cescape (azstrings[cstrings]);
 	}
     }
 
   cbuflen = 0;
   zbuf = NULL;
+  fret = TRUE;
 
   pzchat = qchat->uuconf_pzchat;
 
@@ -150,11 +149,13 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       /* Loop over subexpects and subsends.  */
       while (TRUE)
 	{
-	  /* Copy the expect string onto the stack.  */
+	  /* Copy the expect string into the buffer so that we can
+	     modify it in cescape.  */
 	  clen = strlen (*pzchat);
 	  if (clen >= cbuflen)
 	    {
-	      zbuf = (char *) alloca (clen + 1);
+	      ubuffree (zbuf);
+	      zbuf = zbufalc (clen + 1);
 	      cbuflen = clen;
 	    }
 	  memcpy (zbuf, *pzchat, clen + 1);
@@ -190,14 +191,18 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 
 	      /* If we got an error, return FALSE.  */
 	      if (istr < -1)
-		return FALSE;
+		{
+		  fret = FALSE;
+		  break;
+		}
 
 	      /* If we found a failure string, log it and get out.  */
 	      if (istr > 0)
 		{
 		  ulog (LOG_ERROR, "Chat script failed: Got \"%s\"",
 			qchat->uuconf_pzfail[istr - 1]);
-		  return FALSE;
+		  fret = FALSE;
+		  break;
 		}
 
 	      /* We timed out; look for a send subsequence.  If none,
@@ -205,27 +210,21 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	      if (pzchat[1] == NULL || pzchat[1][0] != '-')
 		{
 		  ulog (LOG_ERROR, "Timed out in chat script");
-		  return FALSE;
+		  fret = FALSE;
+		  break;
 		}
 	    }
 
-	  /* Send the send subsequence.  A \"\" will send nothing.  An
-	     empty string will send a carriage return.  */
+	  /* Send the send subsequence without the leading '-'.  A
+	     \"\" will send nothing.  An empty string will send a
+	     carriage return.  */
 	  ++pzchat;
-
-	  /* Copy the send subsequence on to the stack, not including
-	     the leading '-'.  */
-	  clen = strlen (*pzchat + 1);
-	  if (clen >= cbuflen)
-	    {
-	      zbuf = (char *) alloca (clen + 1);
-	      cbuflen = clen;
-	    }
-	  memcpy (zbuf, *pzchat + 1, clen + 1);
-
-	  if (! fcsend (qconn, puuconf, zbuf, qsys, qdial, zphone,
+	  if (! fcsend (qconn, puuconf, *pzchat + 1, qsys, qdial, zphone,
 			ftranslate))
-	    return FALSE;
+	    {
+	      fret = FALSE;
+	      break;
+	    }
 
 	  /* If there is no expect subsequence, we are done.  */
 	  if (pzchat[1] == NULL || pzchat[1][0] != '-')
@@ -234,6 +233,9 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 	  /* Move on to next expect subsequence.  */
 	  ++pzchat;
 	}
+
+      if (! fret)
+	break;
 
       /* Move on to the send string.  If there is none, we have
 	 succeeded.  */
@@ -244,29 +246,28 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       while (*pzchat != NULL && (*pzchat)[0] == '-');
 
       if (*pzchat == NULL)
-	return TRUE;
+	break;
 
-      /* Copy the send string into zbuf.  */
-      clen = strlen (*pzchat);
-      if (clen >= cbuflen)
+      if (**pzchat != '\0')
 	{
-	  zbuf = (char *) alloca (clen + 1);
-	  cbuflen = clen;
-	}
-      memcpy (zbuf, *pzchat, clen + 1);
-
-      if (*zbuf != '\0')
-	{
-	  if (! fcsend (qconn, puuconf, zbuf, qsys, qdial, zphone,
+	  if (! fcsend (qconn, puuconf, *pzchat, qsys, qdial, zphone,
 			ftranslate))
-	    return FALSE;
+	    {
+	      fret = FALSE;
+	      break;
+	    }
 	}
 
       ++pzchat;
     }
 
-  /* The chat sequence has been completed.  */
-  return TRUE;
+  ubuffree (zbuf);
+  for (i = 1; i < cstrings; i++)
+    ubuffree (azstrings[i]);
+  xfree ((pointer) azstrings);
+  xfree ((pointer) aclens);
+
+  return fret;
 }
 
 /* Read characters and wait for one of a set of memory strings to come
@@ -297,7 +298,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
     if (cmax < aclens[i])
       cmax = aclens[i];
 
-  zhave = (char *) alloca (cmax);
+  zhave = zbufalc (cmax);
   chave = 0;
 
   iendtime = isysdep_time ((long *) NULL) + ctimeout;
@@ -328,6 +329,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
 	      iDebug = iolddebug;
 	    }
 #endif
+	  ubuffree (zhave);
 	  return -1;
 	}
 
@@ -361,6 +363,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
 	      iDebug = iolddebug;
 	    }
 #endif
+	  ubuffree (zhave);
 	  return bchar;
 	}
 
@@ -411,6 +414,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
 		  iDebug = iolddebug;
 		}
 #endif
+	      ubuffree (zhave);
 	      return i;
 	    }
 	}
@@ -1002,7 +1006,7 @@ fctranslate (puuconf, zphone, pzprefix, pzsuffix)
   *pzprefix = zphone;
   *pzsuffix = NULL;
 
-  zdialcode = (char *) alloca (strlen (zphone) + 1);
+  zdialcode = zbufalc (strlen (zphone) + 1);
   zfrom = zphone;
   zto = zdialcode;
   while (*zfrom != '\0' && isalpha (BUCHAR (*zfrom)))
@@ -1010,9 +1014,15 @@ fctranslate (puuconf, zphone, pzprefix, pzsuffix)
   *zto = '\0';
 
   if (*zdialcode == '\0')
-    return TRUE;
+    {
+      ubuffree (zdialcode);
+      return TRUE;
+    }
 
   iuuconf = uuconf_dialcode (puuconf, zdialcode, &ztrans);
+
+  ubuffree (zdialcode);
+
   if (iuuconf == UUCONF_NOT_FOUND)
     return TRUE;
   else if (iuuconf != UUCONF_SUCCESS)
@@ -1090,13 +1100,13 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
   for (pz = pzprogram; *pz != NULL; pz++)
     ++cargs;
 
-  pzpass = (char **) alloca (cargs * sizeof (char *));
+  pzpass = (char **) xmalloc (cargs * sizeof (char *));
 
   zcallout_login = NULL;
   zcallout_pass = NULL;
+  fret = TRUE;
 
   /* Copy the string into memory expanding escape sequences.  */
-
   for (pz = pzprogram, pzarg = pzpass; *pz != NULL; pz++, pzarg++)
     {
       const char *zfrom;
@@ -1105,8 +1115,7 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 
       if (strchr (*pz, '\\') == NULL)
 	{
-	  *pzarg = xmalloc (strlen (*pz) + 1);
-	  strcpy (*pzarg, *pz);
+	  *pzarg = zbufcpy (*pz);
 	  continue;
 	}
       
@@ -1117,16 +1126,22 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 
       for (zfrom = *pz; *zfrom != '\0'; zfrom++)
 	{
-	  const char *zadd;
+	  const char *zadd = NULL;
 	  size_t cadd;
+	  char abadd[15];
 
 	  if (*zfrom != '\\')
 	    {
 	      if (clen + 2 > calc)
 		{
-		  calc = clen + 80;
-		  *pzarg = (char *) xrealloc ((pointer) *pzarg, calc);
-		  zto = *pzarg + clen;
+		  char *znew;
+
+		  calc = clen + 50;
+		  znew = zbufalc (calc);
+		  memcpy (znew, *pzarg, clen);
+		  ubuffree (*pzarg);
+		  *pzarg = znew;
+		  zto = znew + clen;
 		}
 	      *zto++ = *zfrom;
 	      ++clen;
@@ -1149,13 +1164,15 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		if (qsys == NULL)
 		  {
 		    ulog (LOG_ERROR, "chat-program: Illegal use of \\L");
-		    return FALSE;
+		    fret = FALSE;
+		    break;
 		  }
 		zlog = qsys->uuconf_zcall_login;
 		if (zlog == NULL)
 		  {
 		    ulog (LOG_ERROR, "chat-program: No login defined");
-		    return FALSE;
+		    fret = FALSE;
+		    break;
 		  }
 		if (zlog[0] == '*' && zlog[1] == '\0')
 		  {
@@ -1171,12 +1188,14 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 			  {
 			    ulog (LOG_ERROR,
 				  "chat-program: No login defined");
-			    return FALSE;
+			    fret = FALSE;
+			    break;
 			  }
 			else if (iuuconf != UUCONF_SUCCESS)
 			  {
 			    ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
-			    return FALSE;
+			    fret = FALSE;
+			    break;
 			  }
 		      }
 		    zlog = zcallout_login;
@@ -1191,13 +1210,15 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		if (qsys == NULL)
 		  {
 		    ulog (LOG_ERROR, "chat-program: Illegal use of \\P");
-		    return FALSE;
+		    fret = FALSE;
+		    break;
 		  }
 		zpass = qsys->uuconf_zcall_password;
 		if (zpass == NULL)
 		  {
 		    ulog (LOG_ERROR, "chat-program: No password defined");
-		    return FALSE;
+		    fret = FALSE;
+		    break;
 		  }
 		if (zpass[0] == '*' && zpass[1] == '\0')
 		  {
@@ -1212,13 +1233,15 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 			    || zcallout_pass == NULL)
 			  {
 			    ulog (LOG_ERROR,
-				  "chat-program: No password  defined");
-			    return FALSE;
+				  "chat-program: No password defined");
+			    fret = FALSE;
+			    break;
 			  }
 			else if (iuuconf != UUCONF_SUCCESS)
 			  {
 			    ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
-			    return FALSE;
+			    fret = FALSE;
+			    break;
 			  }
 		      }
 		    zpass = zcallout_pass;
@@ -1230,7 +1253,8 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 	      if (qdial == NULL || zphone == NULL)
 		{
 		  ulog (LOG_ERROR, "chat-program: Illegal use of \\D");
-		  return FALSE;
+		  fret = FALSE;
+		  break;
 		}
 	      zadd = zphone;
 	      break;
@@ -1241,11 +1265,15 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		if (qdial == NULL || zphone == NULL)
 		  {
 		    ulog (LOG_ERROR, "chat-program: Illegal use of \\T");
-		    return FALSE;
+		    fret = FALSE;
+		    break;
 		  }
 
 		if (! fctranslate (puuconf, zphone, &zprefix, &zsuffix))
-		  return FALSE;
+		  {
+		    fret = FALSE;
+		    break;
+		  }
 
 		if (zsuffix == NULL)
 		  zadd = zprefix;
@@ -1256,9 +1284,14 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		    cprefix = strlen (zprefix);
 		    if (clen + cprefix + 1 > calc)
 		      {
+			char *znew;
+
 			calc = clen + cprefix + 20;
-			*pzarg = (char *) xrealloc ((pointer) *pzarg, calc);
-			zto = *pzarg + clen;
+			znew = zbufalc (calc);
+			memcpy (znew, *pzarg, clen);
+			ubuffree (*pzarg);
+			*pzarg = znew;
+			zto = znew + clen;
 		      }
 		    memcpy (zto, zprefix, cprefix);
 		    zto += cprefix;
@@ -1271,7 +1304,8 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 	      if (zLdevice == NULL && zport == NULL)
 		{
 		  ulog (LOG_ERROR, "chat-program: Illegal use of \\Y");
-		  return FALSE;
+		  fret = FALSE;
+		  break;
 		}
 	      /* zLdevice will generally make more sense than zport, but
 		 it might not be set yet.  */
@@ -1283,50 +1317,57 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 	      if (qsys == NULL)
 		{
 		  ulog (LOG_ERROR, "chat-program: Illegal use of \\Z");
-		  return FALSE;
+		  fret = FALSE;
+		  break;
 		}
 	      zadd = qsys->uuconf_zname;
 	      break;
 	    case 'S':
 	      {
-		char *zalc;
-
 		if (ibaud == 0)
 		  {
 		    ulog (LOG_ERROR, "chat-program: Illegal use of \\S");
-		    return FALSE;
+		    fret = FALSE;
+		    break;
 		  }
-		zalc = (char *) alloca (15);
-		sprintf (zalc, "%ld", ibaud);
-		zadd = zalc;
+		sprintf (abadd, "%ld", ibaud);
+		zadd = abadd;
 	      }
 	      break;
 	    default:
 	      {
-		char *zset;
-
 		ulog (LOG_ERROR,
 		      "chat-program: Unrecognized escape sequence \\%c",
 		      *zfrom);
-		zset = (char *) alloca (2);
-		zset[0] = *zfrom;
-		zset[1] = '\0';
-		zadd = zset;
+		abadd[0] = *zfrom;
+		abadd[1] = '\0';
+		zadd = abadd;
 	      }
 	      break;
 	    }
 
+	  if (! fret)
+	    break;
+
 	  cadd = strlen (zadd);
 	  if (clen + cadd + 1 > calc)
 	    {
+	      char *znew;
+
 	      calc = clen + cadd + 20;
-	      *pzarg = (char *) xrealloc ((pointer) *pzarg, calc);
-	      zto = *pzarg + clen;
+	      znew = zbufalc (calc);
+	      memcpy (znew, *pzarg, clen);
+	      ubuffree (*pzarg);
+	      *pzarg = znew;
+	      zto = znew + clen;
 	    }
 	  memcpy (zto, zadd, cadd + 1);
 	  zto += cadd;
 	  clen += cadd;
 	}
+
+      if (! fret)
+	break;
 
       *zto++ = '\0';
       ++clen;
@@ -1334,10 +1375,12 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 
   *pzarg = NULL;
 
-  fret = fconn_run_chat (qconn, pzpass);
+  if (fret)
+    fret = fconn_run_chat (qconn, pzpass);
 
   for (pz = pzpass; *pz != NULL; pz++)
-    xfree ((pointer) *pz);
+    ubuffree (*pz);
+  xfree ((pointer) pzpass);
   xfree ((pointer) zcallout_login);
   xfree ((pointer) zcallout_pass);
 

@@ -346,7 +346,7 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
       c = 0;
       for (pz = qsys->uuconf_pzpath; *pz != NULL; pz++)
 	c += strlen (*pz) + 1;
-      zpath = (char *) alloca (c);
+      zpath = zbufalc (c);
       *zpath = '\0';
       for (pz = qsys->uuconf_pzpath; *pz != NULL; pz++)
 	{
@@ -362,6 +362,8 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 		  ! fshell, zpath, qsys->uuconf_zname, zuser);
 
   ierr = errno;
+
+  ubuffree (zpath);
 
   if (aidescs[0] != SPAWN_NULL)
     (void) close (aidescs[0]);
@@ -473,9 +475,9 @@ fsysdep_lock_uuxqt_file (zfile)
      const char *zfile;
 {
   char *zcopy, *z;
+  boolean fret;
 
-  zcopy = (char *) alloca (strlen (zfile) + 1);
-  strcpy (zcopy, zfile);
+  zcopy = zbufcpy (zfile);
 
   z = strrchr (zcopy, '/');
   if (z == NULL)
@@ -483,7 +485,9 @@ fsysdep_lock_uuxqt_file (zfile)
   else
     *(z + 1) = 'L';
 
-  return fsdo_lock (zcopy, TRUE, (boolean *) NULL);
+  fret = fsdo_lock (zcopy, TRUE, (boolean *) NULL);
+  ubuffree (zcopy);
+  return fret;
 }
 
 /* Unlock a particular execute file.  */
@@ -493,9 +497,9 @@ fsysdep_unlock_uuxqt_file (zfile)
      const char *zfile;
 {
   char *zcopy, *z;
+  boolean fret;
 
-  zcopy = (char *) alloca (strlen (zfile) + 1);
-  strcpy (zcopy, zfile);
+  zcopy = zbufcpy (zfile);
 
   z = strrchr (zcopy, '/');
   if (z == NULL)
@@ -503,7 +507,9 @@ fsysdep_unlock_uuxqt_file (zfile)
   else
     *(z + 1) = 'L';
 
-  return fsdo_unlock (zcopy, TRUE);
+  fret = fsdo_unlock (zcopy, TRUE);
+  ubuffree (zcopy);
+  return fret;
 }
 
 /* Lock the execute directory.  Since we use a different directory
