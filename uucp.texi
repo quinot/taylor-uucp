@@ -4,7 +4,10 @@
 @settitle Taylor UUCP
 @setchapternewpage odd
 @c %**end of header
-@setchapternewpage odd
+
+@iftex
+@finalout
+@end iftex
 
 @ignore
 ---------------------------------------------------------------------->
@@ -413,7 +416,7 @@ These are the installation instructions for the Taylor UUCP package.
 
 You will have to decide what types of configuration files you want to
 use.  This package supports a new sort of configuration file;
-@xref{Configuration files}.  It also supports V2 configuration files
+@xref{Configuration Files}.  It also supports V2 configuration files
 (@file{L.sys}, @file{L-devices}, etc.) and BNU configuration files
 (@file{Systems}, @file{Devices}, etc.).  No documentation is provided
 for V2 or BNU configuration files.  All types of configuration files can
@@ -422,14 +425,14 @@ configuration files is not really possible, because there is no way to
 specify a dialer (there are no built in dialers, and the program does
 not know how to read @file{acucap} or @file{modemcap}); however, V2
 configuration files can be used with a new style dialer file
-(@pxref{dial file}), or with a BNU @file{Dialers} file.
+(@pxref{dial File}), or with a BNU @file{Dialers} file.
 
 Use of BNU configuration files has two known bugs.  A blank line in the
 middle of an entry in the @file{Permissions} file will not be ignored as
 it should be.  Dialer programs are not recognized directly.  If you must
 use a dialer program, rather than an entry in @file{Devices}, you must
 use the @code{chat-program} command in a new style dialer file; see
-@ref{dial file}.  You will have to invoke the dialer program via a shell
+@ref{dial File}.  You will have to invoke the dialer program via a shell
 script, since an exit code of 0 is required to recognize success.
 
 If you are installing a new system, or you want to use the new form of
@@ -575,15 +578,15 @@ winds up dying.  It will create a directory @file{/usr/tmp/tstuu} and
 fill it with configuration files, and create spool directories
 @file{/usr/tmp/tstuu/spool1} and @file{/usr/tmp/tstuu/spool2}.
 
-The program will finish with an execute file @file{X.@var{something}}
-and a data file @file{D.@var{something}} in @file{/usr/tmp/tstuu/spool1}
-(or, more likely, in subdirectories, depending on the choice of
-@code{SPOOLDIR} in @file{sysdep.h}).  The log files
-@file{/usr/tmp/tstuu/Log1} and @file{/usr/tmp/tstuu/Log2} (or, if you
-have selected @code{HAVE_BNU_LOGGING},
-@file{/usr/tmp/tstuu/Log1/uucico/test2} and
-@file{/usr/tmp/tstuu/Log2/uucico/test1}) should look fairly normal.  You
-can test @code{uuxqt} by typing @samp{./uuxqt -I
+The program will finish with an execute file named
+@file{X.@var{something}} and a data file named @file{D.@var{something}}
+in the directory @file{/usr/tmp/tstuu/spool1} (or, more likely, in
+subdirectories, depending on the choice of @code{SPOOLDIR} in
+@file{sysdep.h}).  The log files @file{/usr/tmp/tstuu/Log1} and
+@file{/usr/tmp/tstuu/Log2} (if you have selected @code{HAVE_BNU_LOGGING}
+the first log file will be @file{/usr/tmp/tstuu/Log1/uucico/test2} and
+the second will be @file{/usr/tmp/tstuu/Log2/uucico/test1}) should look
+fairly normal.  You can test @code{uuxqt} by typing @samp{./uuxqt -I
 /usr/tmp/tstuu/Config1}.  This should leave a command file
 @file{C.@var{something}} and a data file @file{D.@var{something}} in
 @file{/usr/tmp/tstuu/spool1} or in subdirectories.  Again, there should
@@ -620,7 +623,7 @@ sorts of files are I'm not going to tell you here.
 
 If @code{tstuu} passes, or you can't run it for some reason or other,
 move on to testing with some other system.  Set up the configuration
-files (@pxref{Configuration files}), or use an existing configuration.
+files (@pxref{Configuration Files}), or use an existing configuration.
 Tell @code{uucico} to dial out to the system by using the @samp{-s}
 system switch (e.g.  @samp{uucico -s uunet}).  The log file should tell
 you what happens.
@@ -709,7 +712,7 @@ the code to permit making connections over TCP.  Specifying that a
 system should be reached via TCP is easy, but nonobvious.
 
 If you are using the new style configuration files, see
-@ref{Configuration files}.  Basically, you can just add the line
+@ref{Configuration Files}.  Basically, you can just add the line
 @samp{port type tcp} to the entry in the system configuration file.  By
 default UUCP will get the port number by looking up @samp{uucp} in
 @file{/etc/services}; if @samp{uucp} is not found, port 540 will be
@@ -760,7 +763,7 @@ default port number because @code{uucico} will not be running as
 @code{root} and will therefore not be able to bind a reserved port.
 
 Basically, you must define a port, either using the port file
-(@pxref{port file}) if you are using the new configuration method or
+(@pxref{port File}) if you are using the new configuration method or
 with an entry in Devices if you are using BNU; there is no way to define
 a port using V2.  If you are using BNU the port must be named
 @samp{TCP}; a line as shown above will suffice.  You can then start
@@ -859,7 +862,7 @@ appropriate section of this chapter.
 
 To start with, here are some examples of uses of the main configuration
 file, @file{config}.  For a complete description of the commands that
-are permitted in @file{config}, see @ref{config file}.
+are permitted in @file{config}, see @ref{config File}.
 
 In many cases you will not need to create a @file{config} file at all.
 The most common reason to create one is to give your machine a special
@@ -905,7 +908,7 @@ the systems which call in are effectively anonymous.  By default,
 unknown systems are not permitted to call in.  To permit this you must
 use the @code{unknown} command in @file{config}.  The @code{unknown}
 command is followed by any command that may appear in the system file;
-for full details, see @ref{sys file}.
+for full details, see @ref{sys File}.
 
 I will show two possible anonymous UUCP configurations.  The first will
 let any system call in and download files, but will not permit them to
@@ -931,7 +934,7 @@ public directory.  Note that when using @samp{csh} or @samp{bash} the
 @kbd{!} and the second @kbd{~} must be quoted.
 
 The next example will permit remote systems to upload files to a special
-directory @file{/usr/spool/anonymous/upload}.  Permitting a remote
+directory named @file{/usr/spool/anonymous/upload}.  Permitting a remote
 system to upload files permits it to send work requests as well; this
 example is careful to prohibit commands from unknown systems.
 
@@ -955,7 +958,7 @@ unknown remote-receive ~/upload
 A relatively common simple case is a @dfn{leaf site}, a system which
 only calls or is called by a single remote site.  Here is a typical
 @file{sys} file that might be used in such a case.  For full details on
-what commands can appear in the @file{sys} file, see @ref{sys file}.
+what commands can appear in the @file{sys} file, see @ref{sys File}.
 
 This is the @file{sys} file that is used at @file{airs.com}.  We use a
 single modem to dial out to @file{uunet}.  This example shows how you
@@ -1148,7 +1151,7 @@ address uu.psi.com
 chat ogin: \L word: \P
 @end example
 
-The ports are defined in the file @file{port} (@pxref{port file}).  For
+The ports are defined in the file @file{port} (@pxref{port File}).  For
 this example they are both connected to the same type of 2400 baud
 Hayes-compatible modem.
 
@@ -1168,7 +1171,7 @@ dialer hayes
 speed 2400
 @end example
 
-Dialers are described in the @file{dial} file (@pxref{dial file}).
+Dialers are described in the @file{dial} file (@pxref{dial File}).
 
 @example
 # This is dial
@@ -1502,7 +1505,7 @@ file; see @ref{Miscellaneous (sys)}.
 @cindex unknown systems
 
 The @var{string} and subsequent arguments are treated as though they
-appeared in the system file (@pxref{sys file}).  They are used to apply
+appeared in the system file (@pxref{sys File}).  They are used to apply
 to any unknown systems that may call in, probably to set file transfer
 permissions and the like.  If the @code{unknown} command is not used,
 unknown systems are not permitted to call in.
@@ -1546,7 +1549,7 @@ This can be useful while testing.  The default is true.
 
 Specify the system file(s).  The default is the file @file{sys} in the
 directory @var{newconfigdir}.  These files hold information about other
-systems with which this system communicates; see @ref{sys file}.
+systems with which this system communicates; see @ref{sys File}.
 Multiple system files may be given on the line, and the @code{sysfile}
 command may be repeated; each system file has its own set of defaults.
 
@@ -1556,7 +1559,7 @@ command may be repeated; each system file has its own set of defaults.
 Specify the port file(s).  The default is the file @file{port} in the
 directory @var{newconfigdir}.  These files describe ports which are used
 to call other systems and accept calls from other systems; see @ref{port
-file}.  No port files need be named at all.  Multiple port files may be
+File}.  No port files need be named at all.  Multiple port files may be
 given on the line, and the @code{portfile} command may be repeated.
 
 @item dialfile @var{strings}
@@ -1564,7 +1567,7 @@ given on the line, and the @code{portfile} command may be repeated.
 
 Specify the dial file(s).  The default is the file @file{dial} in the
 directory @var{newconfigdir}.  These files describe dialing devices
-(modems); @xref{dial file}.  No dial files need be named at all.
+(modems); @xref{dial File}.  No dial files need be named at all.
 Multiple dial files may be given on the line, and the @code{dialfile}
 command may be repeated.
 
@@ -1992,7 +1995,7 @@ baud rate.
 
 If more than one string follows the @code{port} command, the subsequent
 strings are treated as commands that might appear in the port file
-(@pxref{port file}).  If a port is named (by using a single string
+(@pxref{port File}).  If a port is named (by using a single string
 following @code{port}) these commands are ignored; their purpose is to
 permit defining the port completely in the system file rather than
 always requiring entries in two different files.  In order to call out,
@@ -2224,7 +2227,7 @@ through a combination of port and dialer specifications, you will have
 to use the @code{protocol} command for the system or no protocol will be
 selected at all (the only reasonable choice would be @samp{protocol f}).
 
-A protocol list may also be specified for a port (@pxref{port file}),
+A protocol list may also be specified for a port (@pxref{port File}),
 but if there is a list for the system the list for the port is ignored.
 
 @item protocol-parameter @var{character} @var{string} @dots{}
@@ -3005,7 +3008,7 @@ is used only for UUCP.  If this is the case, then you should create a
 call-in password file (@pxref{Configuration File Names}) and let
 @code{uucico} do its own login prompting.  For example, to let remote
 sites log in on a port named @samp{entry} in the port file (@pxref{port
-file}) you might invoke @samp{uucico -p entry}.  This would cause
+File}) you might invoke @samp{uucico -p entry}.  This would cause
 @code{uucico} to enter an endless loop of login prompts and daemon
 executions.  The advantage of this approach is that even if remote users
 break into the system by guessing or learning the password, they will
@@ -3363,7 +3366,7 @@ versions of BNU UUCP, this can be modified by giving a list of protocols
 after the device name in the Devices file or the @file{Systems} file.
 Taylor UUCP provides the @code{protocol} command which may be used
 either for a system (@pxref{Protocol Selection}) or a port (@pxref{port
-file}).
+File}).
 
 After the protocol has been selected and the initial handshake has been
 completed, both sides turn on the selected protocol.  For some protocols
@@ -3789,7 +3792,7 @@ protocol very well at all.
 This discussion of the @samp{g} protocol explains how it works, but does
 not discuss useful error handling techniques.  Some discussion of this
 can be found in Jamie E. Hanrahan's paper (@pxref{Documentation
-references}).  A detailed examination of the source code would also be
+References}).  A detailed examination of the source code would also be
 profitable.
 
 The Taylor UUCP code to handle the @samp{g} protocol is in the file
@@ -4466,6 +4469,7 @@ Aleksey P. Rudnev @file{<alex@@kiae.su>}
 @file{peter@@ficc.ferranti.com} (Peter da Silva)
 @file{frumious!pat} (Patrick Smith)
 @file{roscom!monty@@bu.edu} (Monty Solomon)
+Harlan Stenn @file{<harlan@@mumps.pfcs.com>}
 @file{chs@@antic.apu.fi} (Hannu Strang)
 @file{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
 Oleg Tabarovsky @file{<olg@@olghome.pccentre.msk.su>}
