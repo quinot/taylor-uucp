@@ -65,6 +65,7 @@ srmdir.c
 statsb.c
 status.c
 strerr.c
+sync.c
 tcp.c
 time.c
 tli.c
