@@ -354,11 +354,6 @@ Rudnev Aleksey: add 'g' protocol parameters to force the local window
 and packet size to use, overriding the (presumably stupid) request by
 the other system.
 
-104.
-
-T. William Wells: the sh -c fallback doesn't use the file located via
-the path, it uses the unadorned command.
-
 105.
 
 T. William Wells: close and open the Debug file after each file
@@ -379,14 +374,14 @@ file are needed, and an entry was needed in the port file.
 
 Detach from controlling terminal before execing uucico.
 
-110.
-
-Michael Nolan: allow full pathname to be specified in execution
-request (don't just match against basename in zsysdep_find_command).
-
 111.
 
 Michael Nolan: have uuxqt detach from the terminal so that the modem
 port is more likely to be dropped.
 
 112.
+
+Franc,ois Pinard: allow defaults to appear at the top of the dial file
+(and presumably of the port file as well).
+
+113.
