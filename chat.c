@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/03/28  19:57:22  ian
+   David J. MacKenzie: send port device for /Y rather than port name
+
    Revision 1.22  1992/03/17  01:03:03  ian
    Miscellaneous cleanup
 
@@ -208,28 +211,49 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
   while (*zchat != '\0')
     {
       int cchatlen;
+      char *znext;
 
+      /* Get this expect string into zbuf.  */
       cchatlen = strcspn (zchat, " \t");
       strncpy (zbuf, zchat, cchatlen);
       zbuf[cchatlen] = '\0';
       zchat += cchatlen;
       zchat += strspn (zchat, " \t");
 
-      if (strcmp (zbuf, "\"\"") != 0)
-	{
-	  int istr;
-	  char *znext;
+      /* Separate out the first subexpect string.  */
+      azstrings[0] = zbuf;
+      znext = strchr (zbuf, '-');
+      if (znext != NULL)
+	*znext = '\0';
+      aclens[0] = ccescape (azstrings[0]);
 
-	  azstrings[0] = zbuf;
-	  znext = strchr (zbuf, '-');
-	  if (znext != NULL)
-	    *znext = '\0';
-	  aclens[0] = ccescape (azstrings[0]);
-	  while ((istr = icexpect (cstrings, azstrings, aclens,
-				   qchat->ctimeout, qchat->fstrip))
-		 != 0)
+      /* Loop over subexpects and subsends.  */
+      while (TRUE)
+	{
+	  char *zsub;
+
+	  if (aclens[0] == 0
+	      || (aclens[0] == 2
+		  && strcmp (azstrings[0], "\"\"") == 0))
 	    {
-	      char *zsub;
+	      /* There is no subexpect sequence.  If there is a
+		 subsend sequence we move on to it.  Otherwise we let
+		 this expect succeed.  This is somewhat inconsistent,
+		 but it seems to be the traditional approach.  */
+	      if (znext == NULL)
+		break;
+	    }
+	  else
+	    {
+	      int istr;
+
+	      istr = icexpect (cstrings, azstrings, aclens,
+			       qchat->ctimeout, qchat->fstrip);
+
+	      /* If we found the string, break out of the
+		 subexpect/subsend loop.  */
+	      if (istr == 0)
+		break;
 
 	      /* If we got an error, return FALSE.  */
 	      if (istr < -1)
@@ -261,30 +285,36 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
 		  ulog (LOG_ERROR, "Timed out in chat script");
 		  return FALSE;
 		}
-
-	      ++znext;
-	      zsub = znext;
-	      znext = strchr (zsub, '-');
-	      if (znext != NULL)
-		*znext = '\0';
-	      if (! fcsend (zsub, qsys, qdial, zphone, ftranslate))
-		return FALSE;
-
-	      if (znext == NULL)
-		break;
-
-	      ++znext;
-	      azstrings[0] = znext;
-	      znext = strchr (azstrings[0], '-');
-	      if (znext != NULL)
-		*znext = '\0';
-	      aclens[0] = ccescape (azstrings[0]);
 	    }
+
+	  /* Send the send subsequence.  A \"\" will send nothing.  An
+	     empty string will send a carriage return.  */
+	  ++znext;
+	  zsub = znext;
+	  znext = strchr (zsub, '-');
+	  if (znext != NULL)
+	    *znext = '\0';
+	  if (! fcsend (zsub, qsys, qdial, zphone, ftranslate))
+	    return FALSE;
+
+	  /* If there is no expect subsequence, we are done.  */
+	  if (znext == NULL)
+	    break;
+
+	  /* Move on to next expect subsequence.  */
+	  ++znext;
+	  azstrings[0] = znext;
+	  znext = strchr (azstrings[0], '-');
+	  if (znext != NULL)
+	    *znext = '\0';
+	  aclens[0] = ccescape (azstrings[0]);
 	}
 
+      /* We matched the expect string.  */
       if (*zchat == '\0')
 	return TRUE;
 
+      /* Copy the send string into zbuf.  */
       cchatlen = strcspn (zchat, " \t");
       strncpy (zbuf, zchat, cchatlen);
       zbuf[cchatlen] = '\0';
