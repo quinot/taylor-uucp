@@ -114,8 +114,8 @@ configure-unix:
 	ln sys5.unx sys5.c
 	ln sys6.unx sys6.c
 
-# The CONFIG file can be constructed automatically from taylor.texi
-CONFIG: taylor.texi
+# The CONFIG file can be constructed automatically from uucp.texi
+CONFIG: uucp.texi
 	echo '1,/^CONFIG file starts here$$/d' >CONFIG.sed
 	echo '/^CONFIG file ends here$$/,$$d' >>CONFIG.sed
 	echo '/^@menu/,/@end menu/d' >>CONFIG.sed
@@ -128,7 +128,7 @@ CONFIG: taylor.texi
 	echo 's/^@example.*$$//g' >>CONFIG.sed
 	echo 's/^@end.*$$//g' >>CONFIG.sed
 	echo 's/@[a-z]*{\([^}]*\)}/\1/g' >>CONFIG.sed
-	sed -f CONFIG.sed <taylor.texi | uniq >CONFIG
+	sed -f CONFIG.sed <uucp.texi | uniq >CONFIG
 	rm CONFIG.sed
 
 clean:
