@@ -1,5 +1,8 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* configure.in: Only check for getline if getdelim is present.
+	* configure: Rebuild.
+
 	* unix/serial.c (asSbaud_table): Add more entries.
 
 	* uucp.c (uchelp): Correct text: -u is like --user, not --usage.
