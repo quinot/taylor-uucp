@@ -648,7 +648,8 @@ main (argc, argv)
 		  || qsys == NULL)
 		ucuabort ();
 
-	      if (qsys->uuconf_qalternate == NULL)
+	      qsys = qsys->uuconf_qalternate;
+	      if (qsys == NULL)
 		ulog (LOG_FATAL, "%s: No remaining alternates", zsystem);
 
 	      fCuclose_conn = FALSE;
