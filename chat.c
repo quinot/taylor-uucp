@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:38:16  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -321,7 +324,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout)
 
   while (TRUE)
     {
-      int cread;
+      int bchar;
 
       /* If we have no more time, get out.  */
       if (ctimeout < 0)
@@ -337,18 +340,17 @@ icexpect (cstrings, azstrings, aclens, ctimeout)
 	  xmemmove (zhave, zhave + 1, cmax - 1);
 	  --chave;
 	}
-      cread = 1;
-      if (! fport_read (zhave + chave, &cread, 1, ctimeout, TRUE))
-	return -2;
 
-      /* If we didn't get any data, we timed out.  */
-      if (cread == 0)
-	return -1;
+      /* The timeout/error return values from breceive_char are the
+	 same as for this function.  */
+      bchar = breceive_char (ctimeout, TRUE);
+      if (bchar < 0)
+	return bchar;
 
       /* Some systems send out characters with parity bits turned on.
 	 There should be some way for the chat script to specify
 	 parity.  */
-      zhave[chave] &= 0x7f;
+      zhave[chave] = bchar & 0x7f;
 
       ++chave;
 
@@ -757,24 +759,23 @@ fcecho_send (zwrite, cwrite)
 
   for (; zwrite < zend; zwrite++)
     {
-      char b;
+      int b;
 
       if (! fport_write (zwrite, 1))
 	return FALSE;
       do
 	{
-	  int cread;
-
-	  cread = 1;
-	  if (! fport_read (&b, &cread, 1, 1, TRUE))
-	    return FALSE;
-	  if (cread == 0)
+	  /* We arbitrarily wait five seconds for the echo.  */
+	  b = breceive_char (5, TRUE);
+	  /* Now b == -1 on timeout, -2 on error.  */
+	  if (b < 0)
 	    {
-	      ulog (LOG_ERROR, "Character not echoed");
+	      if (b == -1)
+		ulog (LOG_ERROR, "Character not echoed");
 	      return FALSE;
 	    }
 	}
-      while (b != *zwrite);
+      while (b != BUCHAR (*zwrite));
     }
 
   return TRUE;

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/11/11  18:55:52  ian
+   Get protocol parameters from port and dialer for incoming calls
+
    Revision 1.11  1991/11/11  16:59:05  ian
    Eliminate fread_port_info, allow NULL pflock arg to ffind_port
 
@@ -2544,18 +2547,13 @@ zget_uucp_cmd (freport)
   cgot = -1;
   while (TRUE)
     {
-      int cread;
-      char b;
+      int b;
       
-      cread = 1;
-      if (! fport_read (&b, &cread, 1,
-			(int) (iendtime - isysdep_time ()),
-			freport))
-	return NULL;
-
-      if (cread == 0)
+      b = breceive_char ((int) (iendtime - isysdep_time ()), freport);
+      /* Now b == -1 on timeout, -2 on error.  */
+      if (b < 0)
 	{
-	  if (freport)
+	  if (b == -1 && freport)
 	    ulog (LOG_ERROR, "Timeout");
 	  return NULL;
 	}
@@ -2603,14 +2601,13 @@ zget_typed_line ()
   cgot = 0;
   while (TRUE)
     {
-      int cread;
-      char b;
+      int b;
       
-      cread = 1;
-      if (! fport_read (&b, &cread, 1, CTIMEOUT, FALSE))
+      b = breceive_char (CTIMEOUT, FALSE);
+      /* Now b == -1 on timeout, -2 on error.  */
+      if (b == -2)
 	return NULL;
-
-      if (cread == 0)
+      if (b == -1)
 	continue;
 
       if (cgot >= calc)

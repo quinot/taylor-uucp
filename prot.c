@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/11  04:21:16  ian
+   Added 'f' protocol
+
    Revision 1.2  1991/11/10  19:24:22  ian
    Added pffile protocol entry point for file level control
 
@@ -1048,4 +1051,39 @@ freceive_data (cneed, pcrec, ctimeout)
   iPrecend = (iPrecend + *pcrec) % CRECBUFLEN;
 
   return TRUE;
+}
+
+/* Read a single character.  Get it out of the receive buffer if it's
+   there, otherwise read directly from the port.  This is used because
+   the freceive_data may read ahead and eat characters that should be
+   read outside the protocol routines.  The ctimeout argument is the
+   timeout in seconds; the freport argument is FALSE if no error
+   should be reported.  This returns a character, or -1 on timeout or
+   -2 on error.  */
+
+int
+breceive_char (ctimeout, freport)
+     int ctimeout;
+     boolean freport;
+{
+  char b;
+
+  if (iPrecstart != iPrecend)
+    {
+      b = abPrecbuf[iPrecstart];
+      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
+      return BUCHAR (b);
+    }
+  else
+    {
+      int cread;
+
+      cread = 1;
+      if (! fport_read (&b, &cread, 1, ctimeout, freport))
+	return -2;
+      if (cread == 1)
+	return BUCHAR (b);
+      else
+	return -1;
+    }
 }

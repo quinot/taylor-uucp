@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/10  20:05:44  ian
+   Changed ffilerewind to use fseek rather than rewind
+
    Revision 1.6  1991/11/10  19:24:22  ian
    Added pffile protocol entry point for file level control
 
@@ -521,6 +524,14 @@ extern void uaddtimetable P((const char *zname, const char *ztime));
 
 /* Check login name and password.  */
 extern boolean fcheck_login P((const char *zuser, const char *zpass));
+
+/* Get one character from the remote system, going through the
+   procotol buffering.  The ctimeout argument is the timeout in
+   seconds, and the freport argument is TRUE if errors should be
+   reported (when closing a connection it is pointless to report
+   errors).  This returns a character or -1 on a timeout or -2 on an
+   error.  */
+extern int breceive_char P((int ctimeout, boolean freport));
 
 /* See whether a file belongs in the spool directory.  */
 extern boolean fspool_file P((const char *zfile));
