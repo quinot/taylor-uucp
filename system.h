@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/11/13  23:08:40  ian
+   Expand remote pathnames in uucp and uux; fix up uux special cases
+
    Revision 1.7  1991/11/11  18:55:52  ian
    Get protocol parameters from port and dialer for incoming calls
 
@@ -97,8 +100,10 @@ extern const char *zsysdep_login_name P((void));
    determine any appropriate protocol parameters.  This may return
    NULL if the port cannot be determined, which will just mean that no
    protocol parameters are applied.  The name returned should be the
-   sort of name that would appear in the port file.  */
-extern const char *zsysdep_port_name P((void));
+   sort of name that would appear in the port file.  This should set
+   *pftcp_port to TRUE if it can determine that the port is a TCP
+   connection rather than a normal serial port.  */
+extern const char *zsysdep_port_name P((boolean *pftcp_port));
 
 /* Make a spool directory for a system.  This will be called each time
    the system might be accessed.  It should return FALSE on error.  */

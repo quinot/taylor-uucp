@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1991/11/14  03:20:13  ian
+   Added seven-bit and reliable commands to help when selecting protocols
+
    Revision 1.17  1991/11/13  23:08:40  ian
    Expand remote pathnames in uucp and uux; fix up uux special cases
 
@@ -1117,6 +1120,7 @@ static boolean faccept_call (zlogin, qport)
   struct sproto_param *qport_proto_params, *qdial_proto_params;
   int iport_reliable, idial_reliable;
   struct sport sportinfo;
+  boolean ftcp_port;
   char *zsend, *zspace;
   const char *zstr;
   struct ssysteminfo ssys;
@@ -1139,12 +1143,13 @@ static boolean faccept_call (zlogin, qport)
       cport_proto_params = qport->cproto_params;
       qport_proto_params = qport->qproto_params;
       iport_reliable = qport->ireliable;
+      ftcp_port = FALSE;
     }
   else
     {
       const char *zport;
 
-      zport = zsysdep_port_name ();
+      zport = zsysdep_port_name (&ftcp_port);
       if (zport == NULL
 	  || ! ffind_port (zport, (long) 0, (long) 0, &sportinfo,
 			   (boolean (*) P((struct sport *, boolean))) NULL,
@@ -1201,10 +1206,16 @@ static boolean faccept_call (zlogin, qport)
 	}	  
 #if HAVE_TCP
       else if (qport->ttype == PORTTYPE_TCP)
-	idial_reliable = (RELIABLE_SPECIFIED | RELIABLE_ENDTOEND
-			  | RELIABLE_RELIABLE | RELIABLE_EIGHT);
+	ftcp_port = TRUE;
 #endif
     }
+
+  /* If it's a TCP port, it's fully reliable.  Even if HAVE_TCP is not
+     supported, zsysdep_port_name may be able to figure this out (not
+     on Unix, though).  */
+  if (ftcp_port)
+    idial_reliable = (RELIABLE_SPECIFIED | RELIABLE_ENDTOEND
+		      | RELIABLE_RELIABLE | RELIABLE_EIGHT);
 
   /* We have to check to see whether some system uses this login name
      to indicate a different local name.  Obviously, this means that
