@@ -175,9 +175,12 @@ static int icuport_lock P((struct uuconf_port *qport, pointer pinfo));
 static boolean fcudo_cmd P((pointer puuconf, struct sconnection *qconn,
 			    int bcmd));
 static boolean fcuset_var P((pointer puuconf, char *zline));
-static int icuunrecognized P((pointer puuconf, int argc, char **argv,
-			      pointer pvar, pointer pinfo));
+static int icuunrecogvar P((pointer puuconf, int argc, char **argv,
+			    pointer pvar, pointer pinfo));
+static int icuunrecogfn P((pointer puuconf, int argc, char **argv,
+			   pointer pvar, pointer pinfo));
 static void uculist_vars P((void));
+static void uculist_fns P((const char *zescape));
 static boolean fcudo_subcmd P((pointer puuconf, struct sconnection *qconn,
 			       char *zline));
 static boolean fcusend_buf P((struct sconnection *qconn, const char *zbuf,
@@ -618,6 +621,8 @@ main (argc, argv)
       if (! fsysdep_port_access (sconn.qport))
 	ulog (LOG_FATAL, "Access to port denied");
       qdialer = NULL;
+      if (! fconn_carrier (&sconn, FALSE))
+	ulog (LOG_FATAL, "Can't turn off carrier");
     }
   qCudialer = qdialer;
 
@@ -1008,20 +1013,31 @@ fcudo_cmd (puuconf, qconn, bcmd)
 	       abescape);
       ucuputs (abbuf);
 #endif
-      sprintf (abbuf,
-	       "[%s%%break send break]         [%s%%cd DIR change directory]",
-	       abescape, abescape);
-      ucuputs (abbuf);
-      sprintf (abbuf,
-	       "[%s%%put FROM TO send file]    [%s%%take FROM TO receive file]",
-	       abescape, abescape);
-      ucuputs (abbuf);
-      sprintf (abbuf,
-	       "[%s%%nostop no XON/XOFF]       [%s%%stop use XON/XOFF]",
-	       abescape, abescape);
-      ucuputs (abbuf);
+      uculist_fns (abescape);
       return TRUE;
     }
+}
+
+/* List ~% functions.  */
+
+static void
+uculist_fns (zescape)
+     const char *zescape;
+{
+  char abbuf[100];
+
+  sprintf (abbuf,
+	   "[%s%%break send break]         [%s%%cd DIR change directory]",
+	   zescape, zescape);
+  ucuputs (abbuf);
+  sprintf (abbuf,
+	   "[%s%%put FROM TO send file]    [%s%%take FROM TO receive file]",
+	   zescape, zescape);
+  ucuputs (abbuf);
+  sprintf (abbuf,
+	   "[%s%%nostop no XON/XOFF]       [%s%%stop use XON/XOFF]",
+	   zescape, zescape);
+  ucuputs (abbuf);
 }
 
 /* Set a variable.  */
@@ -1065,7 +1081,7 @@ fcuset_var (puuconf, zline)
     }
 
   iuuconf = uuconf_cmd_args (puuconf, 2, azargs, asCuvars,
-			     (pointer) NULL, icuunrecognized, 0,
+			     (pointer) NULL, icuunrecogvar, 0,
 			     (pointer) NULL);
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
@@ -1077,14 +1093,24 @@ fcuset_var (puuconf, zline)
 
 /*ARGSUSED*/
 static int
-icuunrecognized (puuconf, argc, argv, pvar, pinfo)
+icuunrecogvar (puuconf, argc, argv, pvar, pinfo)
      pointer puuconf;
      int argc;
      char **argv;
      pointer pvar;
      pointer pinfo;
 {
-  ulog (LOG_ERROR, "%s unknown", argv[1]);
+  char abescape[5];
+
+  if (! isprint (*zCuvar_escape))
+    sprintf (abescape, "\\%03o", (unsigned int) *zCuvar_escape);
+  else
+    {
+      abescape[0] = *zCuvar_escape;
+      abescape[1] = '\0';
+    }
+  ulog (LOG_ERROR, "%s: unknown variable (%sv lists variables)",
+	argv[0], abescape);
   return UUCONF_CMDTABRET_CONTINUE;
 }
 
@@ -1222,12 +1248,40 @@ fcudo_subcmd (puuconf, qconn, zline)
     }
 
   iuuconf = uuconf_cmd_args (puuconf, iarg, azargs, asCucmds,
-			     (pointer) qconn, icuunrecognized,
+			     (pointer) qconn, icuunrecogfn,
 			     0, (pointer) NULL);
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 
   return TRUE;
+}
+
+/* Warn about an unknown function.  */
+
+/*ARGSUSED*/
+static int
+icuunrecogfn (puuconf, argc, argv, pvar, pinfo)
+     pointer puuconf;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  char abescape[5];
+
+  if (! isprint (*zCuvar_escape))
+    sprintf (abescape, "\\%03o", (unsigned int) *zCuvar_escape);
+  else
+    {
+      abescape[0] = *zCuvar_escape;
+      abescape[1] = '\0';
+    }
+  if (argv[0][0] == '?')
+    uculist_fns (abescape);
+  else
+    ulog (LOG_ERROR, "%s: unknown (%s%%? lists choices)",
+	  argv[0], abescape);
+  return UUCONF_CMDTABRET_CONTINUE;
 }
 
 /* Send a break.  */
