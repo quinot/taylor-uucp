@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/01/19  18:29:05  ian
+   Added HAVE_BSEARCH configuration parameter
+
    Revision 1.34  1992/01/18  22:48:53  ian
    Reworked sending of mail and general handling of failed transfers
 
@@ -212,6 +215,13 @@ extern char *getenv ();
 #include <memory.h>
 #endif
 #endif /* ! HAVE_STDLIB_H */
+
+/* If we need to declare errno, do so.  I don't want to always do
+   this, because some system might theoretically have a different
+   declaration for errno.  On a POSIX system this is sure to work.  */
+#if ! HAVE_ERRNO_DECLARATION
+extern int errno;
+#endif
 
 /* The boolean type holds boolean values.  */
 
