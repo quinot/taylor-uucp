@@ -400,6 +400,9 @@ fsysdep_lock_status ()
   struct dirent *qentry;
   int calc;
   pid_t *pai;
+#if HAVE_QNX_LOCKFILES
+  nid_t *painid;
+#endif
   int cgot;
   int aidescs[3];
   char *zcopy, *ztok;
@@ -424,10 +427,16 @@ fsysdep_lock_status ()
     {
       char *zname;
       int o;
+#if HAVE_QNX_LOCKFILES
+      nid_t inid;
+      char ab[23];
+      char *zend;
+#else
 #if HAVE_V2_LOCKFILES
       int i;
 #else
       char ab[12];
+#endif
 #endif
       int cread;
       int ierr;
@@ -465,14 +474,24 @@ fsysdep_lock_status ()
 
       ubuffree (zname);
 
+#if HAVE_QNX_LOCKFILES
+      ab[cread] = '\0';
+      ipid = (pid_t) strtol (ab, &zend, 10);
+      inid = (nid_t) strtol (zend, (char **) NULL, 10);
+#else
 #if HAVE_V2_LOCKFILES
       ipid = (pid_t) i;
 #else
       ab[cread] = '\0';
       ipid = (pid_t) strtol (ab, (char **) NULL, 10);
 #endif
+#endif
 
+#if HAVE_QNX_LOCKFILES
+      printf ("%s: %ld %ld\n", qentry->d_name, (long) inid, (long) ipid);
+#else
       printf ("%s: %ld\n", qentry->d_name, (long) ipid);
+#endif
 
       for (icheck = 0; icheck < cgot; icheck++)
 	if (pai[icheck] == ipid)
@@ -484,9 +503,16 @@ fsysdep_lock_status ()
 	{
 	  calc += 10;
 	  pai = (pid_t *) xrealloc ((pointer) pai, calc * sizeof (pid_t));
+#if HAVE_QNX_LOCKFILES
+	  painid = (nid_t *) xrealloc ((pointer) painid,
+				       calc * sizeof (nid_t));
+#endif
 	}
 
       pai[cgot] = ipid;
+#if HAVE_QNX_LOCKFILES
+      painid[cgot] = inid;
+#endif
       ++cgot;
     }
 
@@ -520,15 +546,39 @@ fsysdep_lock_status ()
   {
     int i;
     char *zlast, *zset;
+#if HAVE_QNX_LOCKFILES
+    char *zpenultimate, *zsetnid;
+#endif /* HAVE_QNX_LOCKFILES */
 
     zlast = pazargs[cargs - 1];
     zset = zbufalc (strlen (zlast) + 20);
+
+#if HAVE_QNX_LOCKFILES
+    /* We assume in this case that PS_PROGRAM ends with " -n -p".
+       Thus, the last argument is "-p" and the second-to-last
+       (penultimate) argument is "-n".  We modify them to read "-n###"
+       and "-p###" where "###" is the node ID and the process ID,
+       respectively.  This seems like quite a roundabout way of doing
+       things.  Why don't we just leave the " -n -p" part out of
+       PS_PROGRAM and construct the "-n###" and "-p###" arguments here
+       from scratch?  Because that would not fit as well with how the
+       code works for the other systems and would require larger
+       changes. */
+    zpenultimate = pazargs[cargs - 2];
+    zsetnid = zbufalc (strlen (zpenultimate) + 20);
+#endif
+
     for (i = 0; i < cgot; i++)
       {
 	pid_t ipid;
 
 	sprintf (zset, "%s%ld", zlast, (long) pai[i]);
 	pazargs[cargs - 1] = zset;
+
+#if HAVE_QNX_LOCKFILES
+        sprintf (zsetnid, "%s%ld", zpenultimate, (long) painid[i]);
+        pazargs[cargs - 2] = zsetnid;
+#endif
 
 	ipid = ixsspawn ((const char **) pazargs, aidescs, FALSE, FALSE,
 			 (const char *) NULL, FALSE, TRUE,
@@ -540,6 +590,9 @@ fsysdep_lock_status ()
 	  (void) ixswait ((unsigned long) ipid, PS_PROGRAM);
       }
     ubuffree (zset);
+#if HAVE_QNX_LOCKFILES
+    ubuffree (zsetnid);
+#endif
   }
 #else
   {
@@ -570,7 +623,7 @@ fsysdep_lock_status ()
       (void) ixswait ((unsigned long) ipid, PS_PROGRAM);
     ubuffree (zlast);
   }
-#endif    
+#endif
 
   ubuffree (zcopy);
   xfree ((pointer) pazargs);

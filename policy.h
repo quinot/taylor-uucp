@@ -273,6 +273,13 @@
 #define PS_PROGRAM "/bin/ps -flp"
 #define HAVE_PS_MULTIPLE 1
 #endif
+#ifdef __QNX__
+/* Use this for QNX, along with HAVE_QNX_LOCKFILES.  */
+#undef PS_PROGRAM
+#undef HAVE_PS_MULTIPLE
+#define PS_PROGRAM "/bin/ps -l -n -p"
+#define HAVE_PS_MULTIPLE 0
+#endif
 
 /* If you use other programs that also lock devices, such as cu or
    uugetty, the other programs and UUCP must agree on whether a device
@@ -318,13 +325,61 @@
 
    Coherent use a completely different method of terminal locking.
    See unix/cohtty for details.  For locks other than for terminals,
-   HDB type lock files are used.  */
+   HDB type lock files are used.
+
+   QNX lock files are similar to HDB lock files except that the node
+   ID must be stored in addition to the process ID and for serial
+   devices the node ID must be included in the lock file name.  QNX
+   boxes are generally used in bunches, and all of them behave like
+   one big machine to some extent.  Thus, processes on different
+   machines will be sharing the files in the spool directory.  To
+   detect if a process has died and a lock is thus stale, you need the
+   node ID of the process as well as the process ID.  The process ID
+   is stored as a number written using ASCII digits padded to 10
+   characters, followed by a space, followed by the node ID written
+   using ASCII digits padded to 10 characters, followed by a newline.
+   The format for QNX lock files was made up just for Taylor UUCP.
+   QNX doesn't come with a version of UUCP.  */
 #define HAVE_V2_LOCKFILES 0
-#define HAVE_HDB_LOCKFILES 1
+#define HAVE_HDB_LOCKFILES 0
 #define HAVE_SCO_LOCKFILES 0
 #define HAVE_SVR4_LOCKFILES 0
 #define HAVE_SEQUENT_LOCKFILES 0
 #define HAVE_COHERENT_LOCKFILES 0
+#define HAVE_QNX_LOCKFILES 0
+
+/* This tries to pick a default based on preprocessor definitions.
+   Ignore it if you have explicitly set one of the above values.  */
+#if HAVE_V2_LOCKFILES + HAVE_HDB_LOCKFILES + HAVE_SCO_LOCKFILES + HAVE_SVR4_LOCKFILES + HAVE_SEQUENT_LOCKFILES + HAVE_COHERENT_LOCKFILES + HAVE_QNX_LOCKFILES == 0
+#ifdef __QNX__
+#undef HAVE_QNX_LOCKFILES
+#define HAVE_QNX_LOCKFILES 1
+#else /* ! defined (__QNX__) */
+#ifdef __COHERENT__
+#undef HAVE_COHERENT_LOCKFILES
+#define HAVE_COHERENT_LOCKFILES 1
+#else /* ! defined (__COHERENT__) */
+#ifdef _SEQUENT_
+#undef HAVE_SEQUENT_LOCKFILES
+#define HAVE_SEQUENT_LOCKFILES 1
+#else /* ! defined (_SEQUENT) */
+#ifdef sco
+#undef HAVE_SCO_LOCKFILES
+#define HAVE_SCO_LOCKFILES 1
+#else /* ! defined (sco) */
+#ifdef __svr4__
+#undef HAVE_SVR4_LOCKFILES
+#define HAVE_SVR4_LOCKFILES 1
+#else /* ! defined (__svr4__) */
+/* Final default is HDB.  There's no way to tell V2 from HDB.  */
+#undef HAVE_HDB_LOCKFILES
+#define HAVE_HDB_LOCKFILES 1
+#endif /* ! defined (__svr4__) */
+#endif /* ! defined (sco) */
+#endif /* ! defined (_SEQUENT) */
+#endif /* ! defined (__COHERENT__) */
+#endif /* ! defined (__QNX__) */
+#endif /* no LOCKFILES define */
 
 /* If your system supports Internet mail addresses (which look like
    user@host.domain rather than system!user), HAVE_INTERNET_MAIL

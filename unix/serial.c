@@ -568,6 +568,39 @@ fsserial_lockfile (flok, qconn)
   zalc = NULL;
   if (z == NULL)
     {
+#if HAVE_QNX_LOCKFILES
+      {
+	nid_t idevice_nid;
+	char abdevice_nid[13]; /* length of long, a period, and a NUL */
+	size_t cdevice_nid;
+	const char *zbase;
+	size_t clen;
+
+        /* If the node ID is explicitly specified as part of the
+           pathname to the device, use that.  Otherwise, presume the
+           device is local to the current node. */
+        if (qsysdep->zdevice[0] == '/' && qsysdep->zdevice[1] == '/')
+          idevice_nid = (nid_t) strtol (qsysdep->zdevice + 2,
+					(char **) NULL, 10);
+        else
+          idevice_nid = getnid ();
+
+        sprintf (abdevice_nid, "%ld.", (long) idevice_nid);
+        cdevice_nid = strlen (abdevice_nid);
+
+ 	zbase = strrchr (qsysdep->zdevice, '/') + 1;
+ 	clen = strlen (zbase);
+
+        zalc = zbufalc (sizeof LCK_TEMPLATE + cdevice_nid + clen);
+
+	memcpy (zalc, LCK_TEMPLATE, sizeof LCK_TEMPLATE - 1);
+	memcpy (zalc + sizeof LCK_TEMPLATE - 1, abdevice_nid, cdevice_nid);
+	memcpy (zalc + sizeof LCK_TEMPLATE - 1 + cdevice_nid,
+		zbase, clen + 1);
+
+	z = zalc;
+      }
+#else /* ! HAVE_QNX_LOCKFILES */
 #if ! HAVE_SVR4_LOCKFILES
       {
 	const char *zbase;
@@ -589,8 +622,7 @@ fsserial_lockfile (flok, qconn)
 #endif
 	z = zalc;
       }
-#else /* ! HAVE_SVR4_LOCKFILES */
-#if HAVE_SVR4_LOCKFILES
+#else /* HAVE_SVR4_LOCKFILES */
       {
 	struct stat s;
 
@@ -605,10 +637,8 @@ fsserial_lockfile (flok, qconn)
 		 major (s.st_rdev), minor (s.st_rdev));
 	z = zalc;
       }
-#else /* ! HAVE_SVR4_LOCKFILES */
-      z = strrchr (qsysdep->zdevice, '/') + 1;
-#endif /* ! HAVE_SVR4_LOCKFILES */
-#endif /* ! HAVE_SVR4_LOCKFILES */
+#endif /* HAVE_SVR4_LOCKFILES */
+#endif /* ! HAVE_QNX_LOCKFILES */
     }
 
   if (flok)
