@@ -389,3 +389,8 @@ Franc,ois Pinard: allow defaults to appear at the top of the dial file
 Chip Salzenberg: handle a truncated Shere.
 
 114.
+
+Michael Nolan: check permissions for transfer in uucp and uux rather
+than waiting for uucico to check them.
+
+115.
