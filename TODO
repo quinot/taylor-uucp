@@ -198,10 +198,6 @@ don't permit shell scripts to be executed via execl.
 David Nugent: it would be nice to be able to set debugging, log, and
 statistics files on a site by site basis.
 
-58.
-
-Lele Gaifax: put the complete year in the log file.
-
 67.
 
 Franc,ois Pinard:
