@@ -287,12 +287,19 @@ values for your system.
 Run the shell script @file{configure}.  This script was generated using
 David MacKenzie's @file{autoconf} program.  It takes a while to run.  It
 will generate a file @file{conf.h}, and copy @file{Makefile.in} to
-@file{Makefile} with substitions.  If @file{configure} fails for some
-reason, or if you have a very wierd system, you may have to configure
-the package by hand.  To do this, copy the file @file{conf.h-dist} to
-@file{conf.h} and edit it for your system.  Then copy @file{Makefile.in}
-to @file{Makefile}, find the words within @kbd{@@} characters, and set
-them correctly for your system.
+@file{Makefile} with substitions.  
+
+You can pass certain arguments to @file{configure} in the environment;
+for example, if you wanted to include the @file{posix} library, then
+(using @code{sh} or @code{bash}) you could enter @samp{LIBS=-lposix
+./configure}.  Useful arguments are @samp{LIBS}, @samp{CC}, and
+@samp{INSTALL}.  There are probably others.
+
+If @file{configure} fails for some reason, or if you have a very wierd
+system, you may have to configure the package by hand.  To do this, copy
+the file @file{conf.h-dist} to @file{conf.h} and edit it for your
+system.  Then copy @file{Makefile.in} to @file{Makefile}, find the words
+within @kbd{@@} characters, and set them correctly for your system.
 
 @item
 You may want to verify that @file{configure} worked correctly by
@@ -305,7 +312,7 @@ be found, a simplistic substitute from @file{alloca.c} will be used.  If
 you provide your own @file{alloca.o} file, it will be used instead; you
 might, for example, use the one from the GNU emacs distribution.  If
 none of this makes any sense to you, don't worry; everything will
-probably will work fine.
+probably work fine.
 
 @item
 Edit @file{policy.h} for your local system.  The comments should explain
@@ -376,10 +383,11 @@ particularly obstinate about being run as a child; I was only able to
 run it by creating a login name with no password whose shell was
 @file{/usr/lib/uucp/uucico}.  Calling login in this way will leave fake
 entries in @file{wtmp} and @file{utmp}; if you compile @file{tstout.c}
-as an suid @code{root} program, @code{tstuu} will run it to clear those
-entries out.  On most systems, such hackery should not be necessary,
-although on SCO I had to su to @code{root} (@code{uucp} might also have
-worked) before I could run @file{/usr/lib/uucp/uucico}.
+(it's distributed in the @file{contrib} directory) as an suid
+@code{root} program, @code{tstuu} will run it to clear those entries
+out.  On most systems, such hackery should not be necessary, although on
+SCO I had to su to @code{root} (@code{uucp} might also have worked)
+before I could run @file{/usr/lib/uucp/uucico}.
 
 You can test @code{uucp} and @code{uux} with the @samp{-r} switch to
 make sure they create the right sorts of files (see Appendix A of the
@@ -388,22 +396,19 @@ that should be created).
 
 If @code{tstuu} passes, or you can't run it for some reason or other,
 move on to testing with some other system.  Set up the configuration
-files as described elsewhere in this document, or use an existing
-configuration.  Tell @code{uucico} to dial out to the system by using
-the @samp{-s} system switch (e.g.  @samp{uucico -s uunet}).  The log
-file should tell you what happens.  You can use debugging mode to get a
-great deal of information about what sort of data is flowing back and
-forth; use @samp{-x @var{number}} (e.g. @samp{uucico -s uunet -x 9}),
-giving a number from 1 to 9.  The higher the number, the more debugging
+files (@pxref{Configuration files}), or use an existing configuration.
+Tell @code{uucico} to dial out to the system by using the @samp{-s}
+system switch (e.g.  @samp{uucico -s uunet}).  The log file should tell
+you what happens.  You can use debugging mode to get a great deal of
+information about what sort of data is flowing back and forth; use
+@samp{-x @var{number}} (e.g. @samp{uucico -s uunet -x 9}), giving a
+number from 1 to 9.  The higher the number, the more debugging
 information you will get.  The debugging information is written to a
 file, normally @file{/usr/spool/uucp/Debug} although the default can be
 changed in @file{sysdep.h} and the configuration file can override the
 name with the @code{debugfile} command.  The debugging file will contain
 passwords and some file contents as they are transmitted over the line,
-so the debugging file is only readable by the @code{uucp} user.  On most
-systems you can redirect the debugging output to the terminal by using
-@samp{debugfile /dev/tty}; this tricks can also be used with
-@code{nlogfile} and @code{statfile}.
+so the debugging file is only readable by the @code{uucp} user.
 
 You can use the @samp{-f} switch to force @code{uucico} to call out even
 if the last call failed recently; using @samp{-S} when naming a system
@@ -515,7 +520,7 @@ The @code{uucico} daemon can also be run as a TCP server.  This code is
 not completely solid, although it does work, sort of.  I don't recommend
 investigating it unless you are willing to tinker a bit.  Basically, you
 must define a port, either using the port file (@pxref{port file}) if
-you are using the new configuration methord or with an entry in Devices
+you are using the new configuration method or with an entry in Devices
 if you are using BNU (there is no way to define a port using V2).  If
 you are using BNU the port must be named @samp{TCP} (a line as shown
 above will suffice).  You can then start @code{uucico} as @samp{uucico
