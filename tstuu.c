@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.46  1992/03/04  15:38:19  ian
+   Roberto Biancardi: use poll if we haven't got select
+
    Revision 1.45  1992/03/04  01:40:51  ian
    Thomas Fischer: tweaked a bit for the NeXT
 
@@ -176,8 +179,11 @@ char tstuu_rcsid[] = "$Id$";
 
 #include "sysdep.h"
 
-#include <sys/ioctl.h>
 #include <sys/times.h>
+
+#if HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
 
 #if HAVE_SELECT
 #include <sys/time.h>
@@ -894,7 +900,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       /* Wait for the other side to open the port and flush input.  */
       fprintf (eprog, "sleep 1\n");
       fprintf (eprog,
-	       "echo password $1 speed $2 '(ignore this error)' 1>&2\n");
+	       "echo password $1 speed $2 1>&2\n");
       fprintf (eprog, "echo test1\n");
       fprintf (eprog, "exit 0\n");
 
@@ -979,7 +985,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       eprog = xfopen ("/usr/tmp/tstuu/Chat2", "w");
 
       fprintf (eprog,
-	       "echo port $1 '(ignore this error)' 1>&2\n");
+	       "echo port $1 1>&2\n");
       fprintf (eprog, "exit 0\n");
 
       xfclose (eprog);
