@@ -447,6 +447,13 @@ fgstart (qdaemon, pzlog)
       iseg = 1;
     }
   
+  if (iGrequest_winsize <= 0 || iGrequest_winsize > 7)
+    {
+      ulog (LOG_ERROR, "Illegal window size %d for '%c' protocol",
+	    iGrequest_winsize, qdaemon->qproto->bname);
+      iGrequest_winsize = IWINDOW;
+    }
+
   fgota = FALSE;
   fgotb = FALSE;
   for (i = 0; i < cGstartup_retries; i++)
