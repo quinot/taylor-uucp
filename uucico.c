@@ -1421,11 +1421,31 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
     /* Now send the hangup message.  As the caller, we send six O's
        and expect to receive seven O's.  We send the six O's twice to
-       help the other side.  We don't worry about errors here, and, in
-       fact, we don't even look for the message from the remote
-       system.  */
-    if (fsend_uucp_cmd (qconn, "OOOOOO"))
-      (void) fsend_uucp_cmd (qconn, "OOOOOO");
+       help the other side.  We don't worry about errors here.  */
+    if (fsend_uucp_cmd (qconn, "OOOOOO")
+	&& fsend_uucp_cmd (qconn, "OOOOOO"))
+      {
+	int i, fdone;
+
+	/* We look for the remote hangup string to ensure that the
+	   modem has sent out our hangup string.  This is only
+	   necessary because some versions of UUCP complain if they
+	   don't get the hangup string.  The remote site should send 7
+	   O's, but some versions of UUCP only send 6.  We look for
+	   the string several times because supposedly some
+	   implementations send some garbage after the last packet but
+	   before the hangup string.  */
+	for (i = 0; i < 25; i++)
+	  {
+	    zstr = zget_uucp_cmd (qconn, FALSE);
+	    if (zstr == NULL)
+	      break;
+	    fdone = strstr (zstr, "OOOOOO") != NULL;
+	    ubuffree (zstr);
+	    if (fdone)
+	      break;
+	  }
+      }
 
     iend_time = ixsysdep_time ((long *) NULL);
 
@@ -2227,11 +2247,32 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
     fret = floop (&sDaemon);
 
-    /* Hangup.  As the answerer, we send seven O's and expect to see
-       six.  We don't even bother to look for the characters from the
-       remote system.  */
-    if (fsend_uucp_cmd (qconn, "OOOOOOO"))
-      (void) fsend_uucp_cmd (qconn, "OOOOOOO");
+    /* Hangup.  As the answerer, we send seven O's and expect to
+       receive six O's.  We send the seven O's twice to help the other
+       side.  We don't worry about errors here.  */
+    if (fsend_uucp_cmd (qconn, "OOOOOOO")
+	&& fsend_uucp_cmd (qconn, "OOOOOOO"))
+      {
+	int fdone;
+
+	/* We look for the remote hangup string to ensure that the
+	   modem has sent out our hangup string.  This is only
+	   necessary because some versions of UUCP complain if they
+	   don't get the hangup string.  We look for the string
+	   several times because supposedly some implementations send
+	   some garbage after the last packet but before the hangup
+	   string.  */
+	for (i = 0; i < 25; i++)
+	  {
+	    zstr = zget_uucp_cmd (qconn, FALSE);
+	    if (zstr == NULL)
+	      break;
+	    fdone = strstr (zstr, "OOOOOO") != NULL;
+	    ubuffree (zstr);
+	    if (fdone)
+	      break;
+	  }
+      }
 
     iend_time = ixsysdep_time ((long *) NULL);
 
