@@ -50,7 +50,7 @@ AC_COMPILE_CHECK([sys/select.h],
 [#include <sys/select.h>
 #include <sys/time.h>],
 [int i;],
-[AC_DEFINE(sys/select.h)])
+[AC_DEFINE(HAVE_SYS_SELECT_H)])
 dnl
 AC_MAJOR_HEADER
 dnl
