@@ -165,7 +165,7 @@ _uuconf_ihread_permissions (qglobal)
       --cchars;
       if (zline[cchars] == '\n')
 	zline[cchars] = '\0';
-      if (isspace (BUCHAR (zline[0])) || zline[0] == '#')
+      if (zline[0] == '#')
 	continue;
 
       centries = _uuconf_istrsplit (zline, '\0', &pzsplit, &csplit);
