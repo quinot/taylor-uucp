@@ -1051,15 +1051,12 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 			  else
 			    zfile = zbufcpy (qshow->s.zfrom);
 			  if (zfile == NULL)
-			    cbytes = 0;
+			    cbytes = -1;
 			  else
-			    {
-			      cbytes = csysdep_size (zfile);
-			      if (cbytes < 0)
-				cbytes = 0;
-			    }
-			  printf ("Sending %s (%ld bytes) to %s",
-				  qshow->s.zfrom, cbytes, qshow->s.zto);
+			    cbytes = csysdep_size (zfile);
+			  if (cbytes >= 0)
+			    printf ("Sending %s (%ld bytes) to %s",
+				    qshow->s.zfrom, cbytes, qshow->s.zto);
 			  ubuffree (zfile);
 			  break;
 			case 'R':
