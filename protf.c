@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/16  00:31:01  ian
+   Increased default 't' and 'f' protocol timeouts
+
    Revision 1.3  1991/11/15  23:32:15  ian
    Don't use 1 second timeouts--loses data on System V
 
@@ -69,6 +72,9 @@ char protf_rcsid[] = "$Id$";
    This causes all output bytes to be in the range 040 to 0176; these
    are the printable ASCII characters.  */
 
+/* Internal functions.  */
+static boolean ffprocess_data P((boolean *pfexit, int *pcneed));
+
 /* The size of the buffer we allocate to store outgoing data in.  */
 #define CFBUFSIZE (256)
 
@@ -236,8 +242,24 @@ boolean
 ffprocess (pfexit)
      boolean *pfexit;
 {
+  return ffprocess_data (pfexit, (int *) NULL);
+}
+
+/* Process data and return the amount of data we are looking for in
+   *pcneed.  The 'f' protocol doesn't really reveal this, but when
+   transferring file we know that we need at least seven characters
+   for the checksum.  */
+
+static boolean
+ffprocess_data (pfexit, pcneed)
+     boolean *pfexit;
+     int *pcneed;
+{
   int i;
   register unsigned int itmpchk;
+
+  if (pcneed != NULL)
+    *pcneed = 1;
 
   if (! fFfile)
     {
@@ -294,7 +316,7 @@ ffprocess (pfexit)
 	  if (b < 040 || b > 0176)
 	    {
 	      ulog (LOG_ERROR, "Illegal byte %d", b);
-	      return FALSE;
+	      continue;
 	    }
 
 	  /* Characters >= 0172 are always special characters.  The
@@ -310,7 +332,8 @@ ffprocess (pfexit)
 		    {
 		      ulog (LOG_ERROR, "Illegal bytes %d %d",
 			    bFspecial, b);
-		      return FALSE;
+		      bFspecial = 0;
+		      continue;
 		    }
 
 		  /* Pass any initial data.  */
@@ -398,6 +421,19 @@ ffprocess (pfexit)
 
   iFcheck = itmpchk;
 
+  if (pcneed != NULL)
+    {
+      /* At this point we may have seen the first 0176 in the checksum
+	 but not the second.  The checksum is at least seven
+	 characters long (0176 0176 a b c d \r).  This won't help
+	 much, but reading seven characters is a lot better than
+	 reading two, which is what I saw in a 2400 baud log file.  */
+      if (bFspecial == 0176)
+	*pcneed = 6;
+      else
+	*pcneed = 7;
+    }
+
   *pfexit = FALSE;
   return TRUE;
 }
@@ -411,9 +447,9 @@ ffwait ()
   while (TRUE)
     {
       boolean fexit;
-      int crec;
+      int cneed, crec;
 
-      if (! ffprocess (&fexit))
+      if (! ffprocess_data (&fexit, &cneed))
 	return FALSE;
       if (fexit)
 	return TRUE;
@@ -425,7 +461,7 @@ ffwait ()
 	 half a second and get all available characters again, and
 	 keep this up until we don't get anything after sleeping.  */
 
-      if (! freceive_data (1, &crec, cFtimeout))
+      if (! freceive_data (cneed, &crec, cFtimeout))
 	return FALSE;
 
       if (crec == 0)
