@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/07  20:52:33  ian
+   Chip Salzenberg: pass command as single argument to /bin/sh
+
    Revision 1.4  1991/09/19  03:23:34  ian
    Chip Salzenberg: append to private debugging file, don't overwrite it
 
@@ -271,6 +274,11 @@ extern openfile_t esysdep_open_receive P((const struct ssysteminfo *qsys,
    be removed even if an error occurs.  */
 extern boolean fsysdep_move_file P((const char *zorig, const char *zto,
 				    unsigned int imode));
+
+/* Truncate a file which we are receiving into.  This may be done by
+   closing the original file, removing it and reopening it.  This
+   should return FALSE on error.  */
+extern openfile_t esysdep_truncate P((openfile_t e, const char *zname));
 
 /* Start expanding a wildcarded file name.  This should return FALSE
    on error; otherwise subsequent calls to zsysdep_wildcard should

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/11/09  18:53:07  ian
+   Reworked protocol interface
+
    Revision 1.7  1991/11/07  18:15:38  ian
    Chip Salzenberg: move CMAXRETRIES to conf.h for easy configuration
 
@@ -64,12 +67,12 @@ char uucico_rcsid[] = "$Id$";
 
 /* Define the known protocols.
    bname, ffullduplex, qcmds, pfstart, pfshutdown, pfsendcmd, pzgetspace,
-   pfsenddata, pfprocess, pfwait  */
+   pfsenddata, pfprocess, pfwait, pffile  */
 
 static struct sprotocol asProtocols[] =
 {
   { 'g', FALSE, asGproto_params, fgstart, fgshutdown, fgsendcmd,
-      zggetspace, fgsenddata, fgprocess, fgwait }
+      zggetspace, fgsenddata, fgprocess, fgwait, NULL }
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/09  18:53:07  ian
+   Reworked protocol interface
+
    Revision 1.1  1991/09/10  19:47:55  ian
    Initial revision
 
@@ -69,6 +72,11 @@ struct sprotocol
   /* Wait for data to come in and call fgot_data with it until
      fgot_data sets *pfexit.  */
   boolean (*pfwait) P((void));
+  /* Handle any file level actions that need to be taken.  If fstart
+     is TRUE, a file transfer is beginning.  If fstart is FALSE a file
+     transfer is ending, and *pfredo should be set to TRUE if the file
+     transfer needs to be redone.  */
+  boolean (*pffile) P((boolean fstart, boolean fsend, boolean *pfredo));
 };
 
 /* Send a file.

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/11/09  18:51:50  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -215,6 +218,13 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 
   cPsent_bytes = 0;
 
+  /* Tell the protocol that we are starting to send a file.  */
+  if (qProto->pffile != NULL)
+    {
+      if (! (*qProto->pffile) (TRUE, TRUE, (boolean *) NULL))
+	return FALSE;
+    }
+
   return fploop ();
 }
 
@@ -369,6 +379,13 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 
   cPreceived_bytes = 0;
   fPreceived_error = FALSE;
+
+  /* Tell the protocol that we are starting to receive a file.  */
+  if (qProto->pffile != NULL)
+    {
+      if (! (*qProto->pffile) (TRUE, FALSE, (boolean *) NULL))
+	return FALSE;
+    }
 
   return fploop ();
 }
@@ -670,10 +687,40 @@ fploop ()
 
 	      cPsent_bytes += cdata;
 
-	      /* If we have reached the end of the file, wait for
-		 confirmation and return out to get the next file.  */
+	      /* If we have reached the end of the file, tell the
+		 protocol that the file is finished (the protocol
+		 could also detect this by looking for zero passed as
+		 the data length to the send data routine, but would
+		 have no convenient way to tell us to redo the file
+		 send).  If we are not supposed to redo the file
+		 transfer, wait for confirmation and return out to get
+		 the next file.  */
+
 	      if (cdata == 0)
-		return fpsendfile_confirm ();
+		{
+		  if (qProto->pffile != NULL)
+		    {
+		      boolean fredo;
+
+		      if (! (*qProto->pffile) (FALSE, TRUE, &fredo))
+			return FALSE;
+
+		      if (fredo)
+			{
+			  ulog (LOG_NORMAL, "Resending file");
+			  if (! ffilerewind (eSendfile))
+			    {
+			      ulog (LOG_ERROR, "rewind: %s",
+				    strerror (errno));
+			      usendfile_error ();
+			      return FALSE;
+			    }
+			  continue;
+			}
+		    }
+
+		  return fpsendfile_confirm ();
+		}
 	    }
 
 	  /* Process the data in the receive buffer, and decide
@@ -736,6 +783,26 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
     {
       if (cdata == 0)
 	{
+	  /* The file transfer is complete.  If the protocol has a
+	     file level routine, call it to see whether we have to
+	     receive the file again.  */
+	  if (qProto->pffile != NULL)
+	    {
+	      boolean fredo;
+
+	      if (! (*qProto->pffile) (FALSE, FALSE, &fredo))
+		return FALSE;
+	    
+	      if (fredo)
+		{
+		  ulog (LOG_NORMAL, "File being resent");
+		  if (! frecfile_rewind ())
+		    return FALSE;
+		  fPreceived_error = FALSE;
+		  return TRUE;
+		}
+	    }
+
 	  if (! fprecfile_confirm ())
 	    return FALSE;
 	  *pfexit = TRUE;

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/07  20:32:04  ian
+   Chip Salzenberg: allow ANSI_C to be defined in conf.h
+
    Revision 1.4  1991/11/07  18:21:47  ian
    Chip Salzenberg: move CMAXRETRIES to conf.h for easy configuration
 
@@ -141,6 +144,7 @@ typedef FILE *openfile_t;
 #define cfileread(e, z, c) fread ((z), 1, (c), (e))
 #define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
+#define ffilerewind(e) (rewind (e), ferror (e))
 #define ffileclose(e) (fclose (e) == 0)
 #else
 typedef int openfile_t;
@@ -149,6 +153,7 @@ typedef int openfile_t;
 #define cfileread(e, z, c) read ((e), (z), (c))
 #define ffilereaderror(e, c) ((c) < 0)
 #define cfilewrite(e, z, c) write ((e), (z), (c))
+#define ffilerewind(e) (lseek (e, (long) 0, SEEK_SET) >= 0)
 #define ffileclose(e) (close (e) >= 0)
 #endif
 
@@ -542,6 +547,10 @@ extern boolean freceived_file P((boolean fsent, long cbytes));
 /* Note an error receiving a file.  The function freceived_file must
    still be called after this is called.  */
 extern void urecfile_error P((void));
+
+/* Prepare to receive a file again by discarding the previous
+   contents.  */
+extern boolean frecfile_rewind P((void));
 
 /* See whether a file is one of a list of directories.  The qsys and
    zsystem arguments are passed down to allow ~ expansion.  */

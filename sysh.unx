@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/08  22:52:34  ian
+   Brian Campbell: only include <sys/time.h> and <sys/ioctl.h> when needed
+
    Revision 1.5  1991/11/08  22:11:45  ian
    Brian Campbell: allow sigsetjmp as configuration option
 
@@ -168,6 +171,10 @@
    This is mainly done to avoid running with root permissions, which
    make locking complex.  */
 #define HAVE_EUID 1
+
+/* Define HAVE_FTRUNCATE if you have the ftruncate call which
+   truncates an open file to a specified length.  */
+#define HAVE_FTRUNCATE 1
 
 /* Exactly one of the following macros must be defined.  The exact
    format of the spool directories is explained in sys3.unx.
