@@ -83,6 +83,8 @@ int statvfs ();
 
 #if ! STAT_NONE
 
+static long adjust_blocks P((long blocks, int fromsize, int tosize));
+
 /* Return the number of TOSIZE-byte blocks used by
    BLOCKS FROMSIZE-byte blocks, rounding up.  */
 
