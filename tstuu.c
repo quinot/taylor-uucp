@@ -841,7 +841,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "# Second test system file\n");
       fprintf (e, "system test1\n");
       fprintf (e, "called-login test1\n");
-      fprintf (e, "called-request true\n");
+      fprintf (e, "request true\n");
       fprintf (e, "commands cat\n");
       if (zProtocols != NULL)
 	fprintf (e, "protocol %s\n", zProtocols);
