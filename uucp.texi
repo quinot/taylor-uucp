@@ -476,8 +476,9 @@ it should be.  Dialer programs, as found in some versions of HDB, are
 not recognized directly.  If you must use a dialer program, rather than
 an entry in @file{Devices}, you must use the @code{chat-program} command
 in a new style dialer file; see @ref{dial File}.  You will have to
-invoke the dialer program via a shell script, since an exit code of 0 is
-required to recognize success.
+invoke the dialer program via a shell script or another program, since
+an exit code of 0 is required to recognize success; the dialHDB program
+in the contrib directory may be used for this purpose.
 
 The @code{uuconv} program can be used to convert from V2 or HDB
 configuration files to the new style (it can also do the reverse
@@ -510,8 +511,9 @@ not be owned by @code{root}).
 Run the shell script @code{configure}.  This script was generated using
 the @code{autoconf} program written by David MacKenzie of the Free
 Software Foundation.  It takes a while to run.  It will generate the
-file @file{conf.h} based on @file{conf.h.in}, and, for each source code
-directory, will generate @file{Makefile} based on @file{Makefile.in}.
+file @file{config.h} based on @file{config.h.in}, and, for each source
+code directory, will generate @file{Makefile} based on
+@file{Makefile.in}.
 
 You can pass certain arguments to @code{configure} in the environment.
 Because @code{configure} will compile little test programs to see what
@@ -552,10 +554,10 @@ derived versions of Unix do not use @samp{LIBS=-lx} because this will
 bring in the wrong versions of certain routines; if you want to use
 @samp{-lx} you must specify @samp{LIBS=-lc -lx}.
 
-If @code{configure} fails for some reason, or if you have a very wierd
+If @code{configure} fails for some reason, or if you have a very weird
 system, you may have to configure the package by hand.  To do this, copy
-the file @file{conf.h.in} to @file{conf.h} and edit it for your system.
-Then for each source directory (the top directory, and the
+the file @file{config.h.in} to @file{config.h} and edit it for your
+system.  Then for each source directory (the top directory, and the
 subdirectories @file{lib}, @file{unix}, and @file{uuconf}) copy
 @file{Makefile.in} to @file{Makefile}, find the words within @kbd{@@}
 characters, and set them correctly for your system.
@@ -578,7 +580,7 @@ add @samp{-lcposix} to @samp{LIBS}.
 
 @item
 You should verify that @code{configure} worked correctly by checking
-@file{conf.h} and the instances of @file{Makefile}.
+@file{config.h} and the instances of @file{Makefile}.
 
 @item
 Edit @file{policy.h} for your local system.  The comments should explain
@@ -729,8 +731,13 @@ you install several versions of Taylor UUCP, you can still go back to
 your original UUCP programs).  You can retrieve the original programs by
 typing @samp{make uninstall}.
 
-Simply installing the executable files is not enough, however.  You must
-also arrange for them to be used correctly.
+Note that by default the programs are compiled with debugging
+information, and they are not stripped when they are installed.  You may
+want to strip the installed programs to save disk space.  See the
+documentation for strip for more information.
+
+Simply installing the executable files is not enough.  You must also
+arrange for them to be used correctly.
 
 @menu
 * Running uucico::              Running uucico
@@ -949,7 +956,9 @@ program.
 You can also have @code{inetd} start up @code{uucico} with the @samp{-l}
 switch, which will cause it to prompt with @samp{login:} and
 @samp{Password:} and check the results against the UUCP (not the system)
-password file.  This may be used in place of @code{uucpd}.
+password file (you may want to also use the @samp{-D} switch to avoid a
+fork, which in this case is unnecessary).  This may be used in place of
+@code{uucpd}.
 
 @node Configuration Files, Protocols, Overall Installation, Top
 @chapter Taylor UUCP Configuration Files
@@ -1481,6 +1490,12 @@ but the hexadecimal escape sequence continues as far as possible.  To
 follow a hexadecimal escape sequence with a hex digit, interpose a send
 string of @samp{""}.
 
+A chat script expect string may also specify a timeout.  This is done by
+using the escape sequence @samp{\W@var{seconds}}.  This escape sequence
+may only appear at the very end of the expect string.  It temporarily
+overrides the timeout set by @code{chat-timeout} (described below) only
+for the expect string to which it is attached.
+
 A send string may simply be @samp{""} to skip the send phase.
 Otherwise, all of the escape characters legal for expect strings may be
 used, and the following escape characters are also permitted:
@@ -1540,6 +1555,12 @@ This permits a chat script to be quickly aborted if an error string is
 seen.  For example, a script used to dial out on a modem might use the
 command @samp{chat-fail BUSY} to stop the chat script immediately if the
 string @samp{BUSY} was seen.
+
+The @code{chat-fail} strings are considered in the order they are
+listed, so if one string is a suffix of another the longer one should be
+listed first.  Of course, if one string is contained within another, the
+smaller string will always be found before the larger string could
+match.
 
 @item chat-seven-bit @var{boolean}
 @findex chat-seven-bit
@@ -1628,6 +1649,15 @@ Since all the values that may be specified in the main configuration
 file also have defaults, there need not be a main configuration file at
 all.
 
+Each command in @file{config} may have a program prefix, which is a
+separate word appearing at the beginning of the line.  The currently
+supported prefixes are @samp{uucp} and @samp{cu}.  Any command prefixed
+by @samp{uucp} will not be read by the @code{cu} program.  Any command
+prefixed by @samp{cu} will only be read by the @code{cu} program.  For
+example, to use a list of systems known only to @code{cu}, list them in
+a separate file @file{@var{file}} and put @samp{cu sysfile
+@file{@var{file}}} in @file{config}.
+
 @menu
 * Miscellaneous (config)::      Miscellaneous config file commands
 * Configuration File Names::    Using different configuration files
@@ -1707,6 +1737,28 @@ If HDB configuration files are being read and the code was compiled
 without @code{HAVE_TAYLOR_CONFIG}, then if the file @file{Maxuuxqts} in
 the configuration directory contains a readable number it will be used as
 the value for @code{max-uuxqts}.
+
+@item run-uuxqt @var{string} or @var{number}
+@findex run-uuxqt
+
+Specify when @code{uuxqt} should be run by @code{uucico}.  This may be a
+positive number, in which case @code{uucico} will start a @code{uuxqt}
+process whenever it receives the given number of execution files from
+the remote system, and, if necessary, at the end of the call.  The
+argument may also be one of the strings @samp{once}, @samp{percall}, or
+@samp{never}.  The string @samp{once} means that @code{uucico} will
+start @code{uuxqt} once at the end of execution.  The string
+@samp{percall} means that @code{uucico} will start @code{uuxqt} once per
+call that it makes (this is only different from @code{once} when
+@code{uucico} is invoked in a way that causes it to make multiple calls,
+such as when the @samp{-r1} argument is used without the @samp{-s}
+argument).  The string @samp{never} means that @code{uucico} will never
+start @code{uuxqt}, in which case @code{uuxqt} should be periodically
+run via some other mechanism.  The default depends upon which type of
+configuration files are being used; if @code{HAVE_TAYLOR_CONFIG} is used
+the default is @samp{once}, otherwise if @code{HAVE_HDB_CONFIG} is used
+the default is @samp{percall}, and otherwise, for @code{HAVE_V2_CONFIG},
+the default is @samp{10}.
 
 @item timetable @var{string} @var{string}
 @findex timetable
@@ -1811,14 +1863,16 @@ the file @file{call} in the directory @var{newconfigdir}.  If the call
 out login name or password for a system are given as @kbd{*}
 (@pxref{Logging In}), these files are read to get the real login name or
 password.  Each line in the file(s) has three words: the system name,
-the login name, and the password.  This file is only used when placing
-calls to remote systems; the password file described under
-@code{passwdfile} below is used for incoming calls.  The intention of
-the call out file is to permit the system file to be publically
-readable; the call out files must obviously be kept secure.  These files
-need not be used.  Multiple call out files may be specified on the line,
-and the @code{callfile} command may be repeated; all the files will be
-read in turn until the system is found.
+the login name, and the password.  The login name and password may
+contain escape sequences like those in a chat script expect string
+(@pxref{Chat Scripts}).  This file is only used when placing calls to
+remote systems; the password file described under @code{passwdfile}
+below is used for incoming calls.  The intention of the call out file is
+to permit the system file to be publically readable; the call out files
+must obviously be kept secure.  These files need not be used.  Multiple
+call out files may be specified on the line, and the @code{callfile}
+command may be repeated; all the files will be read in turn until the
+system is found.
 
 @item passwdfile @var{strings}
 @findex passwdfile
@@ -1833,14 +1887,25 @@ is doing its own login prompting, which it does when given the
 @samp{-e}, @samp{-l} or @samp{-w} switches.  The default is the file
 @file{passwd} in the directory @var{newconfigdir}.  Each line in the
 file(s) has two words: the login name and the password (e.g. @code{Ufoo
-foopas}).  The login name is accepted before the system name is known,
-so these are independent of which system is calling in; a particular
-login may be required for a system by using the @code{called-login}
-command in the system file (@pxref{Accepting a Call}).  These password
-files are optional, although one must exist if @code{uucico} is to
-present its own login prompts.  Multiple password files may be specified
-on the line, and the @code{passwdfile} command may be repeated; all the
-files will be read in turn until the login name is found.
+foopas}).  They may contain escape sequences like those in a chat script
+expect string (@pxref{Chat Scripts}).  The login name is accepted before
+the system name is known, so these are independent of which system is
+calling in; a particular login may be required for a system by using the
+@code{called-login} command in the system file (@pxref{Accepting a
+Call}).  These password files are optional, although one must exist if
+@code{uucico} is to present its own login prompts.
+
+As a special exception, a colon may be used to separate the login name
+from the password, and a colon may be used to terminate the password.
+This means that the login name and password may not contain a colon.
+This feature, in conjunction with the @code{HAVE_ENCRYPTED_PASSWORDS}
+define in @file{policy.h}, permits using a standard Unix
+@file{/etc/passwd} as a UUCP password file, providing the same set of
+login names and passwords for both @code{getty} and @code{uucico}.
+
+Multiple password files may be specified on the line, and the
+@code{passwdfile} command may be repeated; all the files will be read in
+turn until the login name is found.
 
 @end table
 
@@ -1855,7 +1920,7 @@ files will be read in turn until the login name is found.
 
 Name the log file.  The default is from @file{policy.h}.  Logging
 information is written to this file.  If @code{HAVE_HDB_LOGGING} is
-defined in @file{conf.h}, then by default a separate log file is used
+defined in @file{policy.h}, then by default a separate log file is used
 for each system.  Using this command to name a log file will cause all
 the systems to use it.
 
@@ -1870,15 +1935,14 @@ Statistical information about file transfers is written to this file.
 @findex debugfile
 @cindex debugging file
 
-Name the file to which debugging information is written.  The default is
-from @file{policy.h}.  This command is only effective if the code has
-been compiled to include debugging (this is controlled by the
-@code{DEBUG} variable in @file{policy.h}).  After the first debugging
-message has been written, messages written to the log file are also
-written to the debugging file to make it easier to keep the order of
-actions straight.  The debugging file is different from the log file
-because information such as passwords can appear in it, so it must be
-not be publically readable.
+Name the file to which all debugging information is written.  The
+default is from @file{policy.h}.  This command is only effective if the
+code has been compiled to include debugging (this is controlled by the
+@code{DEBUG} variable in @file{policy.h}).  If debugging is on, messages
+written to the log file are also written to the debugging file to make
+it easier to keep the order of actions straight.  The debugging file is
+different from the log file because information such as passwords can
+appear in it, so it must be not be publically readable.
 
 @end table
 
@@ -2337,7 +2401,9 @@ have to specify the simple chat script @samp{ogin: \L word: \P}.
 Specify the login name to send with @kbd{\L} in the chat script.  If the
 string is @samp{*} (e.g. @samp{call-login *}) the login name will be
 fetched from the call out login name and password file
-(@pxref{Configuration File Names}).  There is no default.
+(@pxref{Configuration File Names}).  The string may contain escape
+sequences as though it were an expect string in a chat script
+(@pxref{Chat Scripts}).  There is no default.
 
 @item call-password @var{string}
 @findex call-password
@@ -2345,7 +2411,9 @@ fetched from the call out login name and password file
 Specify the password to send with @kbd{\P} in the chat script.  If the
 string is @samp{*} (e.g. @samp{call-password *}) the password will be
 fetched from the call-out login name and password file
-(@pxref{Configuration File Names}).  There is no default.
+(@pxref{Configuration File Names}).  The string may contain escape
+sequences as though it were an expect string in a chat script
+(@pxref{Chat Scripts}).  There is no default.
 
 @end table
 
@@ -2471,6 +2539,10 @@ seven-bit transmissions.  It is a streaming protocol, so, while it can
 be used on a serial port, the port must be completely reliable and flow
 controlled; many aren't.
 
+The @samp{v} protocol is the @samp{g} protocol as used by the DOS
+program UUPC/Extended (it is provided only so that UUPC/Extended users
+can use it; there is no particular reason to select it).
+
 The protocols will be considered in the order shown above.  This means
 that if neither the @code{seven-bit} nor the @code{reliable} command are
 used, the @samp{t} protocol will be used over a TCP connection and the
@@ -2501,14 +2573,10 @@ numeric arguments:
 @table @code
 @item window
 The window size to request the remote system to use.  This must be
-between 1 and 31 inclusive.  The default is 16.
+between 1 and 16 inclusive.  The default is 16.
 @item packet-size
 The packet size to request the remote system to use.  This must be
 between 1 and 4095 inclusive.  The default is 1024.
-@item remote-window
-If this is between 1 and 31 inclusive, the window size requested by the
-remote system is ignored and this is used instead.  The default is 0,
-which means that the remote system's request is honored.
 @item remote-packet-size
 If this is between 1 and 4095 inclusive, the packet size requested by
 the remote system is ignored and this is used instead.  The default is
@@ -2535,11 +2603,15 @@ The rate at which to ignore errors.  Each time this many packets are
 received, the error count is decreased by one, so that a long connection
 with an occasional error will not exceed the limit set by @code{errors}.
 The default is 10.
+@item ack-frequency
+The number of packets to receive before sending an acknowledgement.  The
+default is half the requested window size, which should provide good
+performance in most cases.
 @end table
 
-The @samp{g} and @samp{G} protocols support the following commands, all
-of which take numeric arguments, except @code{short-packets} which takes
-a boolean argument:
+The @samp{g}, @samp{G} and @samp{v} protocols support the following
+commands, all of which take numeric arguments, except
+@code{short-packets} which takes a boolean argument:
 
 @table @code
 @item window
@@ -2547,9 +2619,14 @@ The window size to request the remote system to use.  This must be
 between 1 and 7 inclusive.  The default is 7.
 @item packet-size
 The packet size to request the remote system to use.  This must be a
-power of 2 between 32 and 4096 inclusive.  The default is 64, which is
-the only packet size supported by many older UUCP packages.  Some UUCP
-packages will even dump core if a larger packet size is requested.
+power of 2 between 32 and 4096 inclusive.  The default is 64 for the
+@samp{g} and @samp{G} protocols and 512 for the @samp{v} protocol.  Many
+older UUCP packages do not support packet sizes larger than 64, and many
+others do not support packet sizes larger than 128.  Some UUCP packages
+will even dump core if a larger packet size is requested.  The packet
+size is not a negotiation, and it may be different in each direction.
+If you request a packet size larger than the remote system supports, you
+will not be able to send any files.
 @item startup-retries
 The number of times to retry the initialization sequence.  The default
 is 8.
@@ -2593,8 +2670,8 @@ If this is true, then the code will optimize by sending shorter packets
 when there is less data to send.  This confuses some UUCP packages, such
 as System V Release 4 (when using the @samp{G} protocol) and Waffle;
 when connecting to such a package, this parameter must be set to false.
-The default is true for the @samp{g} protocol and false for the @samp{G}
-protocol.
+The default is true for the @samp{g} and @samp{v} protocols and false
+for the @samp{G} protocol.
 @end table
 
 The @samp{a} protocol is a Zmodem like protocol contributed by Doug
@@ -2907,10 +2984,7 @@ to a certain value.  This command may be used to put a limit on the
 debugging level which the system may request, to avoid filling up the
 disk with debugging information.  Only the debugging types named in the
 @code{max-remote-debug} command may be turned on by the remote system.
-To prohibit any debugging, use @samp{max-remote-debug none}.  The
-default is @samp{abnormal,chat,handshake}; to turn off these default
-entries, you must use @samp{max-remote-debug none} followed by other
-@code{max-remote-debug} commands specifying the settings you want.
+To prohibit any debugging, use @samp{max-remote-debug none}.
 
 @end table
 
@@ -2943,14 +3017,23 @@ max-remote-debug abnormal,chat,handshake
 @cindex port configuration file
 @cindex configuration file (port)
 
-The port files may be used to name and describe ports.  Any commands in
-the file before the first @code{port} command specify defaults for all
-ports in the file.  All commands after a @code{port} command up to the
-next @code{port} command then describe that port.  There are different
-types of ports; each type supports its own set of commands.  Each
-command indicates which types of ports support it.  There may be many
-ports with the same name; if a system requests a port by name then each
-port with that name will be tried until an unlocked one is found.
+The port files may be used to name and describe ports.  By default there
+is a single port file, named @file{port} in the directory
+@var{newconfigdir}.  This may be overridden by the @code{portfile}
+command in the main configuration file; see @ref{Configuration File
+Names}.
+
+Any commands in a port file before the first @code{port} command specify
+defaults for all ports in the file; however, since the @code{type}
+command must appear before all other commands for a port, the defaults
+are only useful if all ports in the file are of the same type (this
+restriction may be lifted in a later version).  All commands after a
+@code{port} command up to the next @code{port} command then describe
+that port.  There are different types of ports; each type supports its
+own set of commands.  Each command indicates which types of ports
+support it.  There may be many ports with the same name; if a system
+requests a port by name then each port with that name will be tried
+until an unlocked one is found.
 
 @table @code
 
@@ -2978,6 +3061,8 @@ For a direct connection to another system.
 For a connection using TCP.
 @item tli
 For a connection using TLI.
+@item pipe
+For a connection through a pipe running another program.
 @end table
 
 @item protocol @var{string}
@@ -3051,12 +3136,25 @@ with @samp{speed 2400}, which means that when this port is used with a
 system that does not specify a speed, the port will be used at 2400
 baud.
 
-@item carrier @var{boolean} [ modem only ]
+@item carrier @var{boolean} [ modem and direct only ]
 @findex carrier in port file
 
-The argument indicates whether the port supports carrier.  If it does
-not, carrier will never be required on this port, regardless of what the
-modem chat script indicates.  The default is true.
+The argument indicates whether the port supports carrier.  
+
+If a modem port does not support carrier, the carrier detect signal will
+never be required on this port, regardless of what the modem chat script
+indicates.  The default for a modem port is true.
+
+If a direct port supports carrier, the port will be set to expect
+carrier whenever it is used.  The default for a direct port is false.
+
+@item hardflow @var{boolean} [ modem and direct only ]
+@findex hardflow
+
+The argument indicates whether the port supports hardware flow control.
+If it does not, hardware flow control will not be turned on for this
+port.  The default is true.  Hardware flow control is only supported on
+some systems.
 
 @item dial-device @var{string} [ modem only ]
 @findex dial-device
@@ -3081,7 +3179,7 @@ situations without needing to go to a separate file.  There is no
 default.  Some sort of dialer information must be specified to call out
 on a modem.
 
-@item dialer-sequence @var{strings} [ modem or tli only ]
+@item dialer-sequence @var{strings} [ modem or tcp or tli only ]
 @findex dialer-sequence
 
 Name a sequence of dialers and tokens (phone numbers) to use.  The first
@@ -3096,15 +3194,18 @@ dialcodes translation.  A missing final token is taken as @kbd{\D}.
 
 This command currently does not work if @code{dial-device} is specified;
 to handle this correctly will require a more systematic notion of chat
-scripts.  Moreover, only the @code{complete} and @code{abort} chat
-scripts from the first dialer specified are used, and only the protocol
-parameters from the first dialer are used.
+scripts.  Moreover, the @code{complete} and @code{abort} chat scripts,
+the protocol parameters, and the @code{carrier} and @code{dtr-toggle}
+commands are ignored for all but the first dialer.
 
 This command basically lets you specify a sequence of chat scripts to
 use.  For example, the first dialer might get you to a local network and
 the second dialer might describe how to select a machine from the local
 network.  This lets you break your dialing sequence into simple modules,
 and may make it easier to share dialer entries between machines.
+
+This command is to only way to use a chat script with a TCP port.  This
+can be useful when using a modem which is accessed via TCP.
 
 When this command is used with a TLI port, then if the first dialer is
 @samp{TLI} or @samp{TLIS} the first token is used as the address to
@@ -3115,7 +3216,7 @@ expanded as they are for chat script expect strings (@pxref{Chat
 Scripts}).  The different between @samp{TLI} and @samp{TLIS} is that the
 latter implies the command @samp{stream true}.  These contortions are
 all for HDB compatibility.  Any subsequent dialers are treated as they
-are for a modem.
+are for a TCP port.
 
 @item lockname @var{string} [ modem and direct only ]
 @findex lockname
@@ -3150,10 +3251,22 @@ If this is true, and the @code{push} command was not used, the
 @samp{tirdwr} module is pushed on to the TLI stream.
 
 @item server-address @var{string} [ tli only ]
+@findex server-address
 
 Give the address to use when running as a TLI server.  Escape sequences
 in the address are expanded as they are for chat script expect strings
 (@pxref{Chat Scripts}).
+
+@item command @var{strings} [ pipe only ]
+@findex command
+
+Give the command, with arguments, to run when using a pipe port type.
+When a port of this type is used, the command is executed and uucico
+communicates with it over a pipe.  This permits uucico or cu to
+communicate with another system which can only be reached through some
+unusual means.  A sample use might be @samp{command /bin/rlogin -E -8 -l
+@var{login} @var{system}}.  The command is run with the full privileges
+of UUCP; it is responsible for maintaining security.
 
 @end table
 
@@ -3163,10 +3276,16 @@ in the address are expanded as they are for chat script expect strings
 @cindex dialer configuration file
 @cindex configuration file (dial)
 
-The dialer configuration files define dialers.  Any commands in the file
-before the first @code{dialer} command specify defaults for all the
-dialers in the file.  All commands after a @code{dialer} command up to
-the next @code{dialer} command are associated with the named dialer.
+The dialer configuration files define dialers.  By default there is a
+single dialer file, named @file{dial} in the directory
+@var{newconfigdir}.  This may be overridden by the @code{dialfile}
+command in the main configuration file; see @ref{Configuration File
+Names}.
+
+Any commands in the file before the first @code{dialer} command specify
+defaults for all the dialers in the file.  All commands after a
+@code{dialer} command up to the next @code{dialer} command are
+associated with the named dialer.
 
 @table @code
 
@@ -4214,7 +4333,7 @@ Every packet begins with a @samp{^P}.
 @item @var{k} (1 <= @var{k} <= 9)
 @ifinfo
 The @var{k} value is always 9 for a control packet.  For a data packet,
-the @var{k} value indicates how must data follows the six byte header.
+the @var{k} value indicates how much data follows the six byte header.
 The amount of data is 2 ** (@var{k} + 4), where ** indicates
 exponentiation.  Thus a @var{k} value of 1 means 32 data bytes and a
 @var{k} value of 8 means 4096 data bytes.  The @var{k} value for a data
@@ -4233,7 +4352,7 @@ means 32 data bytes and a @var{k} value of 8 means 4096 data bytes.  The
 The checksum value is described below.
 
 @item control byte
-The control packet indicates the type of packet, and is described below.
+The control byte indicates the type of packet, and is described below.
 
 @item xor byte
 This byte is the xor of @var{k}, the checksum low byte, the checksum
@@ -4697,7 +4816,7 @@ void (function return values only)
 character string
 @end table
 
-A generic pointer ('p') is sometimes a @code{void *}, sometimes a
+A generic pointer (@code{p}) is sometimes a @code{void *}, sometimes a
 function pointer in which case the prefix is pf, and sometimes a pointer
 to another type, in which case the next character is the type to which
 it points (pf is overloaded).
@@ -4784,9 +4903,10 @@ Salzenberg @code{<chip@@tct.com>} has contributed many patches.
 Franc,ois Pinard @code{<pinard@@iro.umontreal.ca>} tirelessly tested the
 code and suggested many improvements.  He also put together the initial
 version of this document.  Doug Evans contributed the zmodem protocol.
-Finally, Verbus M. Counts @code{<verbus@@westmark.com>} and Centel
-Federal Systems, Inc. deserve special thanks, since they actually paid
-me money to port this code to System III.
+Marc Boucher @code{<marc@@CAM.ORG>} contributed the code supporting the
+pipe port type.  Finally, Verbus M. Counts @code{<verbus@@westmark.com>}
+and Centel Federal Systems, Inc. deserve special thanks, since they
+actually paid me money to port this code to System III.
 @end ifinfo
 @iftex
 First of all, I would like to thank the people at Infinity Development
@@ -4802,10 +4922,11 @@ Fran\c cois Pinard
 @end tex
 @code{<pinard@@iro.umontreal.ca>} tirelessly tested the code and
 suggested many improvements.  He also put together the initial version
-of this document.  Doug Evans contributed the zmodem protocol.  Finally,
-Verbus M. Counts @code{<verbus@@westmark.com>} and Centel Federal
-Systems, Inc. deserve special thanks, since they actually paid me money
-to port this code to System III.
+of this document.  Doug Evans contributed the zmodem protocol.  Marc
+Boucher @code{<marc@@CAM.ORG>} contributed the code supporting the pipe
+port type.  Finally, Verbus M. Counts @code{<verbus@@westmark.com>} and
+Centel Federal Systems, Inc. deserve special thanks, since they actually
+paid me money to port this code to System III.
 @end iftex
 
 In alphabetical order:
@@ -4816,6 +4937,7 @@ In alphabetical order:
 @code{cambler@@zeus.calpoly.edu} (Christopher J. Ambler)
 Brian W. Antoine @code{<briana@@tau-ceti.isc-br.com>}
 @code{jantypas@@soft21.s21.com} (John Antypas)
+@code{james@@bigtex.cactus.org} (James Van Artsdalen)
 @code{nba@@sysware.DK} (Niels Baggesen)
 @code{uunet!hotmomma!sdb} (Scott Ballantyne)
 Zacharias Beckman @code{<zac@@dolphin.com>}
@@ -4823,61 +4945,84 @@ Zacharias Beckman @code{<zac@@dolphin.com>}
 @code{bob@@usixth.sublink.org} (Roberto Biancardi)
 @code{statsci!scott@@coco.ms.washington.edu} (Scott Blachowicz)
 @code{bag%wood2.cs.kiev.ua@@relay.ussr.eu.net} (Andrey G Blochintsev)
+@code{spider@@Orb.Nashua.NH.US} (Spider Boardman)
 Gregory Bond @code{<gnb@@bby.com.au>}
 Marc Boucher @code{<marc@@CAM.ORG>}
 @code{dean@@coplex.com} (Dean Brooks)
+@code{jbrow@@radical.com} (Jim Brownfield)
 @code{dave@@dlb.com} (Dave Buck)
 @code{gordon@@sneaky.lonestar.org} (Gordon Burditt)
+@code{dburr@@sbphy.physics.ucsb.edu} (Donald Burr)
 @code{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
 Brian Campbell @code{<brianc@@quantum.on.ca>}
 Andrew A. Chernov @code{<ache@@astral.msk.su>}
 @code{mafc!frank@@bach.helios.de} (Frank Conrad)
 Ed Carp @code{<erc@@apple.com>}
+@code{mpc@@mbs.linet.org} (Mark Clements)
 @code{verbus@@westmark.westmark.com} (Verbus M. Counts)
 @code{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
 Bob Cunningham @code{<bob@@soest.hawaii.edu>}
+@code{kdburg@@incoahe.hanse.de} (Klaus Dahlenburg)
+Damon @code{<d@@exnet.co.uk>}
 @code{hubert@@arakis.fdn.org} (Hubert Delahaye)
+@code{markd@@bushwire.apana.org.au} (Mark Delany)
+Allen Delaney @code{<allen@@brc.ubc.ca>}
 @code{denny@@dakota.alisa.com} (Bob Denny)
 @code{ssd@@nevets.oau.org} (Steven S. Dick)
 @code{gert@@greenie.gold.sub.org} (Gert Doering)
+@code{gemini@@geminix.in-berlin.de} (Uwe Doering)
 Hans-Dieter Doll @code{<hd2@@Insel.DE>}
+Mark W. Eichin @code{<eichin@@cygnus.com>}
 Andrew Evans @code{<andrew@@airs.com>}
 @code{dje@@cygnus.com} (Doug Evans)
 Marc Evans @code{<marc@@synergytics.com>}
+Dan Everhart @code{<dan@@dyndata.com>}
 @code{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
 @code{fenner@@jazz.psu.edu} (Bill Fenner)
 "David J. Fiander" @code{<golem!david@@news.lsuc.on.ca>}
 Thomas Fischer @code{<batman@@olorin.dark.sub.org>}
+@code{louis@@marco.de} (Ju"rgen Fluk)
 @code{erik@@eab.retix.com} (Erik Forsberg)
+@code{andy@@scp.caltech.edu} (Andy Fyfe)
 Lele Gaifax @code{<piggy@@idea.sublink.org>}
 @code{Peter.Galbavy@@micromuse.co.uk}
 @code{hunter@@phoenix.pub.uu.oz.au} (James Gardiner [hunter])
 Terry Gardner @code{<cphpcom!tjg01>}
 @code{ol@@infopro.spb.su} (Oleg Girko)
 @code{jimmy@@tokyo07.info.com} (Jim Gottlieb)
+@code{elg@@elgamy.jpunix.com} (Eric Lee Green)
 @code{ryan@@cs.umb.edu} (Daniel R. Guilderson)
 @code{greg@@gagme.chi.il.us} (Gregory Gulik)
 Richard H. Gumpertz @code{<rhg@@cps.com>}
 Michael Haberler @code{<mah@@parrot.prv.univie.ac.at>}
+Daniel Hagerty @code{<hag@@eddie.mit.edu>}
 @code{jh@@moon.nbn.com} (John Harkin)
 @code{guy@@auspex.auspex.com} (Guy Harris)
 Petri Helenius @code{<pete@@fidata.fi>}
+@code{gabe@@edi.com} (B. Gabriel Helou)
 Bob Hemedinger @code{<bob@@dalek.mwc.com>}
 Andrew Herbert @code{<andrew@@werple.pub.uu.oz.au>}
 Peter Honeyman @code{<honey@@citi.umich.edu>}
+@code{jhood@@smoke.marlboro.vt.us} (John Hood)
+Bill Irwin @code{<bill@@twg.bc.ca>}
 @code{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
 @code{bei@@dogface.austin.tx.us} (Bob Izenberg)
+@code{djamiga!djjames@@fsd.com} (D.J.James)
 Rob Janssen @code{<cmgit!rob@@relay.nluug.nl>}
 @code{harvee!esj} (Eric S Johansson)
+Kevin Johnson @code{<kjj@@pondscum.phx.mcd.mot.com>}
 Alan Judge @code{<aj@@dec4ie.IEunet.ie>}
 @code{chris@@cj_net.in-berlin.de} (Christof Junge)
 @code{tron@@Veritas.COM} (Ronald S. Karr)
 Brendan Kehoe @code{<brendan@@cs.widener.edu>}
 @code{kersing@@nlmug.nl.mugnet.org} (Jac Kersing)
+Gabor Kiss @code{<kissg@@sztaki.hu>}
+@code{gero@@gkminix.han.de} (Gero Kuhlmann)
 @code{rob@@pact.nl} (Rob Kurver)
 @code{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
 @code{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
 @code{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
+@code{alex@@hal.rhein-main.de} (Alexander Lehmann)
 @code{merlyn@@digibd.com} (Merlyn LeRoy)
 @code{clewis@@ferret.ocunix.on.ca} (Chris Lewis)
 @code{gdonl@@ssi1.com} (Don Lewis)
@@ -4892,12 +5037,17 @@ John R MacMillan @code{<chance!john@@sq.sq.com>}
 Giles D Malet @code{<shrdlu!gdm@@provar.kwnet.on.ca>}
 @code{mem@@mv.MV.COM} (Mark E. Mallett)
 @code{pepe@@dit.upm.es} (Jose A. Manas)
+@code{peter@@xpoint.ruessel.sub.org} (Peter Mandrella)
 @code{martelli@@cadlab.sublink.org} (Alex Martelli)
+W Christopher Martin @code{<wcm@@geek.ca.geac.com>}
 Yanek Martinson @code{<yanek@@mthvax.cs.miami.edu>}
 @code{jm@@aristote.univ-paris8.fr} (Jean Mehat)
+@code{me@@halfab.freiburg.sub.org} (Udo Meyer)
 @code{les@@chinet.chi.il.us} (Leslie Mikesell)
 @code{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
+Emmanuel Mogenet @code{<mgix@@krainte.jpn.thomson-di.fr>}
 @code{rmohr@@infoac.rmi.de} (Rupert Mohr)
+Jason Molenda @code{<molenda@@sequent.com>}
 @code{ianm@@icsbelf.co.uk} (Ian Moran)
 @code{brian@@ilinx.wimsey.bc.ca} (Brian J. Murrell)
 @code{service@@infohh.rmi.de} (Dirk Musstopf)
@@ -4905,22 +5055,31 @@ Yanek Martinson @code{<yanek@@mthvax.cs.miami.edu>}
 @code{rolf@@saans.north.de} (Rolf Nerstheimer)
 @code{tom@@smart.bo.open.de} (Thomas Neumann)
 @code{mnichols@@pacesetter.com}
+Richard E. Nickle @code{<trystro!rick@@Think.COM>}
+@code{stephan@@sunlab.ka.sub.org} (Stephan Niemz)
 @code{nolan@@helios.unl.edu} (Michael Nolan)
 david nugent @code{<david@@csource.oz.au>}
+Jim O'Connor @code{<jim@@bahamut.fsc.com>}
 Petri Ojala @code{<ojala@@funet.fi>}
+@code{oneill@@cs.ulowell.edu} (Brian 'Doc' O'Neill)
 @code{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
 Tim Peiffer @code{peiffer@@cs.umn.edu}
 @code{don@@blkhole.resun.com} (Don Phillips)
 "Mark Pizzolato 415-369-9366" @code{<mark@@infocomm.com>}
+John Plate @code{<plate@@infotek.dk>}
 @code{dplatt@@ntg.com} (Dave Platt)
 @code{eldorado@@tharr.UUCP} (Mark Powell)
 Mark Powell @code{<mark@@inet-uk.co.uk>}
 @code{pozar@@kumr.lns.com} (Tim Pozar)
 @code{putsch@@uicc.com} (Jeff Putsch)
+@code{ar@@nvmr.robin.de} (Andreas Raab)
 Jarmo Raiha @code{<jarmo@@ksvltd.FI>}
 Scott Reynolds @code{<scott@@clmqt.marquette.Mi.US>}
 @code{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
+Kenji Rikitake @code{<kenji@@rcac.astem.or.jp>}
 @code{arnold@@cc.gatech.edu} (Arnold Robbins)
+@code{steve@@Nyongwa.cam.org} (Steve M. Robbins)
+Serge Robyns @code{<sr@@denkart.be>}
 @code{ross@@sun490.fdu.edu} (Jeff Ross)
 Aleksey P. Rudnev @code{<alex@@kiae.su>}
 "Heiko W.Rupp" @code{<hwr@@pilhuhn.ka.sub.org>}
@@ -4930,36 +5089,51 @@ Aleksey P. Rudnev @code{<alex@@kiae.su>}
 @code{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
 Nickolay Saukh @code{<nms@@ussr.EU.net>}
 Eric Schnoebelen @code{<eric@@cirr.com>}
+@code{russell@@alpha3.ersys.edmonton.ab.ca} (Russell Schulz)
 @code{scott@@geom.umn.edu}
 Igor V. Semenyuk @code{<iga@@argrd0.argonaut.su>}
+Christopher Sawtell @code{<chris@@gerty.equinox.gen.nz>}
+@code{schuler@@bds.sub.org} (Bernd Schuler)
 @code{uunet!gold.sub.org!root} (Christian Seyb)
 @code{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
 @code{peter@@ficc.ferranti.com} (Peter da Silva)
+@code{vince@@victrola.sea.wa.us} (Vince Skahan)
 @code{frumious!pat} (Patrick Smith)
 @code{roscom!monty@@bu.edu} (Monty Solomon)
+@code{sommerfeld@@orchard.medford.ma.us} (Bill Sommerfeld)
+Julian Stacey @code{<stacey@@guug.de>}
 Harlan Stenn @code{<harlan@@mumps.pfcs.com>}
 Ralf Stephan @code{<ralf@@ark.abg.sub.org>}
 @code{chs@@antic.apu.fi} (Hannu Strang)
 @code{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
+@code{sullivan@@Mathcom.com} (S. Sullivan)
 Shigeya Suzuki @code{<shigeya@@dink.foretune.co.jp>}
 @code{swiers@@plains.NoDak.edu}
 Oleg Tabarovsky @code{<olg@@olghome.pccentre.msk.su>}
 John Theus @code{<john@@theus.rain.com>}
-Karsten Thygesen @code{<karthy@@dannug.dk>}
+@code{rd@@aii.com} (Bob Thrush)
+ppKarsten Thygesen @code{<karthy@@dannug.dk>}
 Graham Toal @code{<gtoal@@pizzabox.demon.co.uk>}
 @code{rmtodd@@servalan.servalan.com} (Richard Todd)
+Martin Tomes @code{<mt00@@controls.eurotherm.co.uk>}
 Len Tower @code{<tower-prep@@ai.mit.edu>}
 Mark Towfiq @code{<justice!towfiq@@Eingedi.Newton.MA.US>}
 @code{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
 Tomi Vainio @code{<tomppa@@fidata.fi>}
+Andrew Vignaux @code{<ajv@@ferrari.datamark.co.nz>}
 @code{vogel@@omega.ssw.de} (Andreas Vogel)
-@code{jv@@mh.nl} (Johan Vromans)
+@code{jos@@bull.nl} (Jos Vos)
+@code{jv@@nl.net} (Johan Vromans)
+@code{Marcel.Waldvogel@@nice.usergroup.ethz.ch} (Marcel Waldvogel)
 @code{steve@@nshore.org} (Stephen J. Walick)
+@code{syd@@dsinc.dsi.com} (Syd Weinstein)
 @code{gerben@@rna.indiv.nluug.nl} (Gerben Wierda)
+@code{jbw@@cs.bu.edu} (Joe Wells)
 @code{frnkmth!twwells.com!bill} (T. William Wells)
 Peter Wemm @code{<Peter_Wemm@@zeus.dialix.oz.au>}
 @code{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
 Michael Yu.Yaroslavtsev @code{<mike@@yaranga.ipmce.su>}
+Alexei K. Yushin @code{<root@@july.elis.crimea.ua>}
 @code{jon@@console.ais.org} (Jon Zeeff)
 Matthias Zepf @code{<agnus@@amylnd.stgt.sub.org>}
 Eric Ziegast @code{<uunet!ziegast>}

@@ -318,16 +318,6 @@ system and command locks, and do any other type of file.
 Scott Blachowicz: provide some sort of include mechanism for the
 configuration files.
 
-162.
-
-Chris Lewis: add uuxqtpolicy command, probably in config, supporting
-the following values which determine when uuxqt should be run:
-	- never (let cron or something else worry about it)
-	- perinvocation (when uucico exits for good - current behaviour)
-	- persite (when uucico terminates a conversation - HDBish)
-	- periodic (per 5 or 10 incoming X. files - BSDish)
-	- perturnaround?
-
 164.
 
 Ed Carp: preserve files if uuxqt execution fails.
@@ -737,3 +727,21 @@ system.  This would be useful to hide details of a non-strongly-
 connected network, particularly if the details were subject to change.
 
 231.
+
+Gert Doering: Perhaps it should be possible to -r the default for uucp
+and uux.  This would require adding a new option to force the
+invocation of uucico.
+
+232.
+
+Mark Davies: spaces are not handled correctly in the -a argument of
+uux.  If an E command is generated, the requestor address is not
+quoted correctly, nor is it parsed correctly.  If an execution file is
+generated, the R line is not parsed correctly.
+
+233.
+
+Emmanuel Mogenet: provide some mechanism for a maximum number of
+garbage bytes during a chat script before giving up.
+
+234.
