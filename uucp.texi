@@ -8112,6 +8112,7 @@ Zacharias Beckman @code{<zac@@dolphin.com>}
 @code{spider@@Orb.Nashua.NH.US} (Spider Boardman)
 Gregory Bond @code{<gnb@@bby.com.au>}
 Marc Boucher @code{<marc@@CAM.ORG>}
+Ard van Breemen @code{<ard@@cstmel.hobby.nl>}
 @code{dean@@coplex.com} (Dean Brooks)
 @code{jbrow@@radical.com} (Jim Brownfield)
 @code{dave@@dlb.com} (Dave Buck)
