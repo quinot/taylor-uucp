@@ -127,6 +127,12 @@ string.
 
 Write some protocols that support bidirectional transfers.
 
+James Gardiner says:
+> MHSnet has this but with also 3  channels per direction.  Each channel
+> sends different size packets.  This alows mail, which is usually smaller,
+> to overtake news or big files.  Mail being the more important.
+> However, with high speed modems, this is no so important.
+
 21.
 
 Support transfers through systems using uucp and uux.  Implement the
@@ -170,3 +176,14 @@ outputs a single login: and Password: prompt, handles the call, and
 then exits.  This would be useful when invoked by inetd.
 
 28.
+
+Christof Junge: there should be a -L option on uux to try to link the
+files into the spool directory.  This allows a single news batch to be
+sent to several systems without copying it several times or leaving it
+around whereever news batches are created.
+
+29.
+
+David Nugent: report characters per second in the stats file.
+
+30.
