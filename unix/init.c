@@ -133,11 +133,11 @@ int cSysdep_max_name_len = 7;
 int cSysdep_max_name_len = 14;
 #endif /* SPOOLDIR_HDB */
 #if SPOOLDIR_TAYLOR
-#if HAVE_LONG_FILENAMES
+#if HAVE_LONG_FILE_NAMES
 int cSysdep_max_name_len = 255;
-#else /* ! HAVE_LONG_FILENAMES */
+#else /* ! HAVE_LONG_FILE_NAMES */
 int cSysdep_max_name_len = 14;
-#endif /* ! HAVE_LONG_FILENAMES */
+#endif /* ! HAVE_LONG_FILE_NAMES */
 #endif /* SPOOLDIR_TAYLOR */
 
 void

@@ -401,9 +401,9 @@
    file <sys/wait.h>.  */
 #define HAVE_UNION_WAIT 0
 
-/* Set HAVE_LONG_FILENAMES to 1 if the system supports file names
+/* Set HAVE_LONG_FILE_NAMES to 1 if the system supports file names
    longer than 14 characters.  */
-#define HAVE_LONG_FILENAMES 0
+#define HAVE_LONG_FILE_NAMES 0
 
 /* If slow system calls are restarted after interrupts, set
    HAVE_RESTARTABLE_SYSCALLS to 1.  This is ignored if HAVE_SIGACTION

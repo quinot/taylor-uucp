@@ -5,7 +5,7 @@ dnl
 AC_INIT(policy.h)
 AC_PREFIX(gcc)
 AC_CONFIG_HEADER(conf.h)
-AC_PROG_GCC
+AC_PROG_CC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
 AC_PROG_INSTALL
@@ -390,7 +390,7 @@ AC_COMPILE_CHECK([union wait],
 [union wait u; if (WIFEXITED (u)) wait (&u);],
 AC_DEFINE([HAVE_UNION_WAIT]))
 dnl
-AC_LONG_FILENAMES
+AC_LONG_FILE_NAMES
 AC_RESTARTABLE_SYSCALLS
 dnl
 AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)
