@@ -206,11 +206,6 @@ don't permit shell scripts to be executed via execl.
 Franc,ois Pinard: Have the install target in the Makefile save the
 original UUCP programs, and add an uninstall target to restore them.
 
-41.
-
-Terry Gardner: on some systems O_NONBLOCK and O_NDELAY can not be used
-together, for some reason.
-
 43.
 
 David Nugent: it would be nice to be able to debugging levels, as well
@@ -231,12 +226,6 @@ it is over.
 If no ! is used in the first uux command, and the command is quoted,
 the error message is screwy.  In fact, there should be no error
 message at all.
-
-51.
-
-David Nugent: uuxqt should keep looping through the directories until
-nothing new appears.  Right now if something is added for a system
-after it has already been examined, uuxqt won't see it.
 
 53.
 
