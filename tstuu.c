@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/11  23:47:24  ian
+   Added chat-program to run a program to do a chat script
+
    Revision 1.2  1991/11/11  04:21:16  ian
    Added 'f' protocol
 
@@ -677,6 +680,8 @@ uprepare_test (itest, fcall_uucico, zsys)
 
   if (! fcall_uucico)
     {
+      FILE *eprog;
+
       e = xfopen ("/usr/tmp/tstuu/Config2", "w");
 
       fprintf (e, "# Second test configuration file\n");
@@ -700,6 +705,16 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "system test1\n");
       fprintf (e, "called-login test1\n");
       fprintf (e, "called-request true\n");
+
+      eprog = xfopen ("/usr/tmp/tstuu/Chat2", "w");
+
+      fprintf (eprog,
+	       "echo port $1 '(ignore this error)' 1>&2\n");
+      fprintf (eprog, "exit 0\n");
+
+      xfclose (eprog);
+
+      fprintf (e, "called-chat-program /bin/sh /usr/tmp/tstuu/Chat2 \\Y\n");
       fprintf (e, "time any\n");
 
       xfclose (e);

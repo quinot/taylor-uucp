@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1991/11/12  18:25:33  ian
+   Added 't' protocol
+
    Revision 1.14  1991/11/11  23:47:24  ian
    Added chat-program to run a program to do a chat script
 
@@ -1466,6 +1469,28 @@ static boolean faccept_call (zlogin, qport)
 
     qProto = &asProtocols[i];
   }
+
+  /* If there is a chat program or script to run when a call is
+     received, do so.  */
+
+  if (qsys->zcalled_chat_program != NULL)
+    {
+      if (! fchat_program (qsys->zcalled_chat_program, qsys,
+			   (const struct sdialer *) NULL,
+			   (const char *) NULL,
+			   qport == NULL ? "unknown" : qport->zname,
+			   iport_baud ()))
+	return FALSE;
+    }
+
+  if (qsys->zcalled_chat != NULL)
+    {
+      if (! fchat (qsys->zcalled_chat, qsys->zcalled_chat_fail,
+		   qsys->ccalled_chat_timeout, qsys,
+		   (const struct sdialer *) NULL, (const char *) NULL,
+		   FALSE))
+	return FALSE;
+    }
 
   /* Run any protocol parameter commands.  There should be a way to
      read the dialer information if there is any to permit modem

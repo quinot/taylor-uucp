@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/11  23:47:24  ian
+   Added chat-program to run a program to do a chat script
+
    Revision 1.3  1991/11/11  16:19:21  ian
    Added message for no protocol specified
 
@@ -414,6 +417,23 @@ ukshow (qsys)
 
       if (qsys->fsequence)
 	printf (" Sequence numbers are used\n");
+
+      if (fcalled)
+	{
+	  if (qsys->zcalled_chat_program != NULL)
+	    printf (" When called, chat program %s\n",
+		    qsys->zcalled_chat_program);
+
+	  if (qsys->zcalled_chat != NULL)
+	    {
+	      printf (" When called, chat script %s\n", qsys->zcalled_chat);
+	      printf (" When called, chat script timeout %d\n",
+		      qsys->ccalled_chat_timeout);
+	      if (qsys->zcalled_chat_fail != NULL)
+		printf (" When called, chat failure strings %s\n",
+			qsys->zcalled_chat_fail);
+	    }
+	}
 
       if (fcall)
 	{

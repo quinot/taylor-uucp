@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/11/11  23:47:24  ian
+   Added chat-program to run a program to do a chat script
+
    Revision 1.8  1991/11/11  19:32:03  ian
    Added breceive_char to read characters through protocol buffering
 
@@ -301,6 +304,14 @@ struct ssysteminfo
   int cproto_params;
   /* Protocol parameters array.  */
   struct sproto_param *qproto_params;
+  /* Chat program to run when called.  */
+  const char *zcalled_chat_program;
+  /* Chat script to run when called.  */
+  char *zcalled_chat;
+  /* Timeout to use for the chat script to run when called.  */
+  int ccalled_chat_timeout;
+  /* Failure strings for the chat script to run when called.  */
+  char *zcalled_chat_fail;
   /* Whether the other system may request things when we call them.  */
   boolean fcall_request;
   /* Whether the other system may request things when they call us.  */
