@@ -501,6 +501,9 @@ main (argc, argv)
       if (close (oslave1) < 0)
 	perror ("close");
 
+      /* This is said to improve the tests on Linux.  */
+      sleep (3);
+
       if (zDebug != NULL)
 	fprintf (stderr, "About to exec first process\n");
 
@@ -537,6 +540,9 @@ main (argc, argv)
 
       if (close (oslave2) < 0)
 	perror ("close");
+
+      /* This is said to improve the tests on Linux.  */
+      sleep (5);
 
       if (zDebug != NULL)
 	fprintf (stderr, "About to exec second process\n");
