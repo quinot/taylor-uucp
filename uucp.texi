@@ -178,9 +178,10 @@ Licenses that accompany them.
 @chapter Introduction to Taylor UUCP
 
 This is the complete source code for a basic UUCP package.  It includes
-the programs @code{uucico}, @code{uuxqt}, @code{uux} and @code{uucp}, as
-well as @code{uuchk} (a program to check configuration files) and
-@code{tstuu} (a test harness for the package).
+the programs @code{uucico}, @code{uuxqt}, @code{uux}, @code{uucp},
+@code{uustat}, @code{uulog}, and @code{uuname} as well as @code{uuchk}
+(a program to check configuration files) and @code{tstuu} (a test
+harness for the package).
 
 The package currently supports the @samp{f}, @samp{g} (in all window and
 packet sizes), @samp{t} and @samp{e} protocols.  If you have a Berkeley
@@ -208,10 +209,8 @@ On the other hand:
 @enumerate
 
 @item
-You don't get @code{uulog}, @code{uustat}, @code{uusched}, etc.  I hope
-to provide @code{uustat} in the next release, and @code{uulog} is pretty
-simple so it might get in there too.  If you have current copies of
-these programs, you may be able to use them.
+You don't get @code{uusched} and a few other programs.  If you have
+current copies of these programs, you may be able to use them.
 
 @item
 The package does not read @file{modemcap} or @file{acucap} files,
@@ -281,39 +280,36 @@ directory choices are described at somewhat tedious length in
 @enumerate
 
 @item
-Take a look at the top of Makefile to make sure the definitions are
-reasonable for your system.  I highly recommend using gcc, but it is not
-required; if you don't have it, change @code{CC} and @code{CFLAGS}
-accordingly.  On some systems, you may want to make entries for @code{LIBS}.
-I'm told that on some systems @code{uucico} will crash within realloc unless
-@samp{-lmalloc} is added to @code{LIBS}.
+Take a look at the top of @file{Makefile.in} and set the appropriate
+values for your system.
 
 @item
-This package uses the alloca function.  When compiled with gcc, it will
-automatically use the builtin function.  If your system has alloca in
-some special library, add the library to @code{LIBS} (e.g. @samp{-lPW}).
-On SCO 3.2.2 I had to extract @file{alloca.o} from @file{/lib/libPW.a}
-and set @code{LIBS} to @samp{alloca.o}.  If you have no alloca, you can
-indicate this in @file{conf.h}; a simplistic substitute will be used.
-You may also be able to use the public domain alloca available with the
-GNU emacs distribution.
+Run the shell script @file{configure}.  This script was generated using
+David MacKenzie's @file{autoconf} program.  It takes a while to run.  It
+will generate a file @file{conf.h}, and copy @file{Makefile.in} to
+@file{Makefile} with substitions.  If @file{configure} fails for some
+reason, or if you have a very wierd system, you may have to configure
+the package by hand.  To do this, copy the file @file{conf.h-dist} to
+@file{conf.h} and edit it for your system.  Then copy @file{Makefile.in}
+to @file{Makefile}, find the words within @kbd{@@} characters, and set
+them correctly for your system.
 
 @item
-Type @samp{make configure-unix} to prepare to compile for a Unix system
-(there are no other choices now, but someday there may be).  This will
-link the @file{sys?.unx} files to @file{sysdep.h} and @file{sys?.c}.
-Separating the system dependent files into @file{*.unx} is intended to
-be the start of supporting several systems with this package.
+You may want to verify that @file{configure} worked correctly by
+checking @file{conf.h} and @file{Makefile}.
 
 @item
-Edit @file{conf.h} for your local system.  The comments should explain
+This package uses the alloca function.  The @file{configure} script will
+try to figure out how to make it work on your system.  If alloca cannot
+be found, a simplistic substitute from @file{alloca.c} will be used.  If
+you provide your own @file{alloca.o} file, it will be used instead; you
+might, for example, use the one from the GNU emacs distribution.  If
+none of this makes any sense to you, don't worry; everything will
+probably will work fine.
+
+@item
+Edit @file{policy.h} for your local system.  The comments should explain
 the various choices.
-
-@item
-Edit @file{sysdep.h} for your local system.  Again, the comments should
-explain the various choices.  The intent is that system dependent
-definitions are kept in @file{sysdep.h} whereas general, system
-independent definitions are kept in @file{conf.h}.
 
 @item
 Type @samp{make} to compile everything.

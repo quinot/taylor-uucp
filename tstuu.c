@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.40  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.39  1992/01/29  04:27:11  ian
    Jay Vassos-Libove: removed some conflicting declarations
 
@@ -170,7 +173,7 @@ char tstuu_rcsid[] = "$Id$";
 
 #include "getopt.h"
 
-/* We want an O_NDELAY definition.  */
+/* Get definitions for both O_NONBLOCK and O_NDELAY.  */
 
 #ifndef O_NDELAY
 #ifdef FNDELAY
@@ -180,8 +183,6 @@ char tstuu_rcsid[] = "$Id$";
 #endif /* ! defined (FNDELAY) */
 #endif /* ! defined (O_NDELAY) */
 
-/* We want an O_NONBLOCK definition.  */
-
 #ifndef O_NONBLOCK
 #ifdef FNBLOCK
 #define O_NONBLOCK FNBLOCK
@@ -190,10 +191,17 @@ char tstuu_rcsid[] = "$Id$";
 #endif /* ! defined (FNBLOCK) */
 #endif /* ! defined (O_NONBLOCK) */
 
-#if USE_FOR_UNBLOCKED != 0
-#define FILE_UNBLOCKED USE_FOR_UNBLOCKED
-#else
+#if O_NDELAY == 0 && O_NONBLOCK == 0
+ #error No way to do nonblocking I/O
+#endif
+
+/* If we can define them both together, do so.  This is because some
+   ancient drivers on some systems appear to look for one but not the
+   other.  Otherwise just use O_NONBLOCK.  */
+#if COMBINED_UNBLOCK
 #define FILE_UNBLOCKED (O_NDELAY | O_NONBLOCK)
+#else
+#define FILE_UNBLOCKED O_NONBLOCK
 #endif
 
 /* Get definitions for both EAGAIN and EWOULDBLOCK.  */
@@ -217,6 +225,13 @@ char tstuu_rcsid[] = "$Id$";
 #define CLK_TCK (60)
 #endif
 
+/* Don't try too hard to get a TIMES_TICK value; it doesn't matter
+   that much.  */
+#if TIMES_TICK == 0
+#undef TIMES_TICK
+#define TIMES_TICK CLK_TCK
+#endif
+
 #define ZUUCICO_CMD "login uucp"
 #define UUCICO_EXECL "/bin/login", "login", "uucp"
 
@@ -227,7 +242,7 @@ extern int fclose (), fflush (), rand (), system ();
 extern unsigned int sleep ();
 extern pid_t fork ();
 
-#if HAVE_WAIT4
+#if ! HAVE_WAITPID && HAVE_WAIT4
 extern pid_t wait4 ();
 #endif
 
@@ -244,7 +259,7 @@ static void ucheck_file P((const char *zfile, const char *zerr,
 			   int cextra));
 static void ucheck_test P((int itest, boolean fcall_uucico));
 static void utransfer P((int ofrom, int oto, int otoslave, int *pc));
-static sigret_t uchild P((int isig));
+static SIGTYPE uchild P((int isig));
 static int cpshow P((char *z, int bchar));
 static void xsystem P((const char *zcmd));
 
@@ -573,7 +588,7 @@ main (argc, argv)
 
 /* When a child dies, kill them both.  */
 
-static sigret_t
+static SIGTYPE
 uchild (isig)
      int isig;
 {
@@ -591,25 +606,25 @@ uchild (isig)
 
 #if HAVE_WAITPID
   (void) waitpid (iPid1, (wait_status_t *) NULL, 0);
-#endif
+#else /* ! HAVE_WAITPID */
 #if HAVE_WAIT4
   (void) wait4 (iPid1, (wait_status_t *) NULL, 0, (struct rusage *) NULL);
-#endif
-#if ! HAVE_WAITPID  &&  ! HAVE_WAIT4
+#else /* ! HAVE_WAIT4 */
   (void) wait ((wait_status_t *) NULL);
-#endif
+#endif /* ! HAVE_WAIT4 */
+#endif /* ! HAVE_WAITPID */
 
   (void) times (&s1);
 
 #if HAVE_WAITPID
   (void) waitpid (iPid2, (wait_status_t *) NULL, 0);
-#endif
+#else /* ! HAVE_WAITPID */
 #if HAVE_WAIT4
   (void) wait4 (iPid2, (wait_status_t *) NULL, 0, (struct rusage *) NULL);
-#endif
-#if ! HAVE_WAITPID  &&  ! HAVE_WAIT4
+#else /* ! HAVE_WAIT4 */
   (void) wait ((wait_status_t *) NULL);
-#endif
+#endif /* ! HAVE_WAIT4 */
+#endif /* ! HAVE_WAITPID */
 
   (void) times (&s2);
 
@@ -1338,7 +1353,7 @@ xsystem (zcmd)
    file stuff.  Instead, we have local copies of functions that may be
    needed by getopt.c.  This should be done in a cleaner way.  */
 
-#if ! HAVE_MEMFNS && ! HAVE_BFNS
+#if ! HAVE_MEMCPY && ! HAVE_BCOPY
 
 /* Copy one block of memory to another.  */
 
@@ -1356,7 +1371,7 @@ memcpy (ptoarg, pfromarg, c)
   return ptoarg;
 }
 
-#endif /* ! HAVE_MEMFNS && ! HAVE_BFNS */
+#endif /* ! HAVE_MEMCPY && ! HAVE_BCOPY */
 
 #if ! HAVE_STRCHR && ! HAVE_INDEX
 
@@ -1376,18 +1391,3 @@ strchr (z, b)
 }
 
 #endif /* ! HAVE_STRCHR && ! HAVE_INDEX */
-
-#if ! HAVE_ALLOCA
-
-/* The GNU getopt function calls alloca, and we don't want to link
-   util.c with this program since that would bring in the log file
-   stuff and other junk we don't need.  */
-
-pointer
-alloca (isize)
-     int isize;
-{
-  return malloc (isize);
-}
-
-#endif /* HAVE_ALLOCA */

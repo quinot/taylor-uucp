@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1992/02/08  22:33:32  ian
+   Only get the current working directory if it's going to be needed
+
    Revision 1.23  1992/02/08  20:33:57  ian
    Handle all possible signals raised by abort
 
@@ -150,7 +153,7 @@ static int cXcmds;
 /* Local functions.  */
 
 static void uxusage P((void));
-static sigret_t uxcatch P((int isig));
+static SIGTYPE uxcatch P((int isig));
 static void uxadd_xqt_line P((int bchar, const char *z1, const char *z2));
 static void uxadd_send_file P((const char *zfrom, const char *zto,
 			       const char *zoptions, const char *ztemp));
@@ -1184,7 +1187,7 @@ uxusage ()
 
 /* Catch a signal.  We should clean up here, but so far we don't.  */
 
-static sigret_t
+static SIGTYPE
 uxcatch (isig)
      int isig;
 {

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/02/18  19:03:02  ian
+   Pass fdaemon argument correctly to usysdep_initialize
+
    Revision 1.24  1992/02/18  04:53:26  ian
    T. William Wells: make sure sh execution uses absolute path
 
@@ -128,7 +131,7 @@ static boolean fQunlock_directory;
 /* Local functions.  */
 
 static void uqusage P((void));
-static sigret_t uqcatch P((int isig));
+static SIGTYPE uqcatch P((int isig));
 static void uqdo_xqt_file P((const char *zfile,
 			     const struct ssysteminfo *qsys,
 			     const char *zcmd, boolean *pfprocessed));
@@ -270,7 +273,8 @@ main (argc, argv)
 	  boolean fprocessed;
 
 #if ! HAVE_ALLOCA
-	  uclear_alloca ();
+	  /* Clear out any accumulated alloca buffers.  */
+	  (void) alloca (0);
 #endif
 
 	  /* It would be more efficient to pass zdosys down to the
@@ -355,7 +359,7 @@ uqusage ()
 
 /* Clean up and die after catching a signal.  */
 
-static sigret_t
+static SIGTYPE
 uqcatch (isig)
      int isig;
 {

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1992/02/14  20:25:55  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -44,7 +47,7 @@ char abProgram[] = "uuname";
 /* Local functions.  */
 
 static void unusage P((void));
-static sigret_t uncatch P((int isig));
+static SIGTYPE uncatch P((int isig));
 
 /* Long getopt options.  */
 
@@ -163,7 +166,7 @@ unusage ()
 /* Catch a signal (we only do this because a fatal error raises
    SIGABRT).  */
 
-static sigret_t
+static SIGTYPE
 uncatch (isig)
      int isig;
 {

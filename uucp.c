@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/02/14  05:17:09  ian
+   Niels Baggesen: have to copy abtname into memory
+
    Revision 1.16  1992/02/08  22:33:32  ian
    Only get the current working directory if it's going to be needed
 
@@ -100,7 +103,7 @@ const struct option *_getopt_long_options = asClongopts;
 /* Local functions.  */
 
 static void ucusage P((void));
-static sigret_t uccatch P((int isig));
+static SIGTYPE uccatch P((int isig));
 static void ucadd_cmd P((const struct ssysteminfo *qsys,
 			 const struct scmd *qcmd));
 static void ucspool_cmds P((int bgrade));
@@ -686,7 +689,7 @@ ucusage ()
 
 /* Catch a signal.  We should cleanup here, but we don't yet.  */
 
-static sigret_t
+static SIGTYPE
 uccatch (isig)
      int isig;
 {

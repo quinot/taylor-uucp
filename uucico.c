@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.54  1992/02/20  22:57:19  ian
+   Chip Salzenberg: some systems truncate the Shere= machine name
+
    Revision 1.53  1992/02/19  19:36:07  ian
    Rearranged time functions
 
@@ -232,7 +235,7 @@ static struct ssysteminfo sLocked_system;
 /* Local functions.  */
 
 static void uusage P((void));
-static sigret_t ucatch P((int));
+static SIGTYPE ucatch P((int));
 static boolean fcall P((const struct ssysteminfo *qsys,
 			struct sport *qport,
 			boolean fforce, int bgrade));
@@ -666,7 +669,7 @@ uusage ()
 
 /* Catch a signal.  Clean up and die.  */
 
-static sigret_t
+static SIGTYPE
 ucatch (isig)
      int isig;
 {
@@ -2007,7 +2010,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 #if ! HAVE_ALLOCA
       /* This only works if we know that no caller of this function is
 	 holding an alloca'ed pointer.  */
-      uclear_alloca ();
+      (void) alloca (0);
 #endif
 
       /* We send a command to the remote system if

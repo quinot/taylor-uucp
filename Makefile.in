@@ -1,4 +1,12 @@
-# Makefile for Taylor UUCP
+# This is the Makefile for Taylor UUCP
+#
+# The file Makefile.in should be processed by Configure to generate
+# Makefile.  If you want to generate Makefile by hand, you must find
+# all variables surrounded by @ and replace them with the correct
+# value (e.g. @CC@ must be replaced by something like cc or gcc).
+#
+# Once you have done that, you should check the definitions at the top
+# of this file to make sure that they are reasonable for your system.
 
 # Prefix directory for installation directories.
 prefix = /usr/local
@@ -11,7 +19,7 @@ owner = uucp
 # from by default.  If you use this definition, $(prefix)/lib must exist.
 libdir = $(prefix)/lib/uucp
 
-# Where to install uucp, uux and uuchk.
+# Where to install uucp, uux, uuchk, uustat, uuname and uulog.
 bindir = $(prefix)/bin
 
 # Where to install man pages.  Section 1 for user programs, 8 for daemons.
@@ -31,28 +39,34 @@ newconfigdir = $(libdir)
 # V2 (when using HAVE_V2_CONFIG) style configuration files.
 oldconfigdir = /usr/lib/uucp
 
-# Define programs and flags
-CC = gcc
-CFLAGS = -Wall -Wshadow -Wwrite-strings -g
-LIBS =
-
-INSTALL = cp
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL)
-
 # If you don't want to compile tstuu, which requires BSD style ptys
-# and the Taylor configuration files, comment out the following line.
+# and the Taylor configuration files, comment out the following line
 # The tstuu program is only used to test the package; it is described
-# further in INSTALL.
+# further in the documentation.
 TSTUU = tstuu
+
+#
+# The next few lines are set up by the configuration script.  You may
+# want to look them over.
+#
 
 # If you do not have the mkdir system call, undefine the following three
 # lines.  This will install uudir as an suid root program.  This is
 # necessary because invoking /bin/mkdir from an suid program will
 # leave the directories owned by the wrong user.
-# UUDIR = uudir
-# uudirdir = $(libdir)/util
-# UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(uudirdir)/$(UUDIR)\"
+@UUDIR@UUDIR = uudir
+@UUDIR@uudirdir = $(libdir)/util
+@UUDIR@UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(uudirdir)/$(UUDIR)\"
+
+# Define programs and flags
+CC = @CC@
+CFLAGS = @CFLAGS@
+LIBS = @LIBS@
+ALLOCA = @ALLOCA@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = $(INSTALL)
+INSTALL_DATA = @INSTALLDATA@
 
 #
 # Nothing else to configure
@@ -64,25 +78,28 @@ VERSION = 1.02
 
 CONFIG = -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" $(UUDIRFLAGS)
 
+PROGRAMS = uucico uuxqt uux uucp uuchk uustat uuname uulog
+
 UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
 	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
-	parse.o copy.o sys1.o sys2.o sys3.o sys4.o version.o getopt.o
+	parse.o copy.o sys1.o sys2.o sys3.o sys4.o version.o getopt.o \
+	$(ALLOCA)
 XQTOBJS = uuxqt.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
-	copy.o sys1.o sys3.o sys5.o version.o getopt.o
+	copy.o sys1.o sys3.o sys5.o version.o getopt.o $(ALLOCA)
 UUXOBJS = uux.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
-	copy.o sys1.o sys3.o sys6.o version.o getopt.o
+	copy.o sys1.o sys3.o sys6.o version.o getopt.o $(ALLOCA)
 UUCPOBJS = uucp.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
-	copy.o sys1.o sys3.o sys6.o version.o getopt.o
+	copy.o sys1.o sys3.o sys6.o version.o getopt.o $(ALLOCA)
 UUCHKOBJS = uuchk.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
-	log.o sys1.o version.o getopt.o
+	log.o sys1.o version.o getopt.o $(ALLOCA)
 UUSTATOBJS = uustat.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
 	log.o parse.o copy.o sys1.o sys3.o sys4.o sys5.o sys7.o version.o \
-	getopt.o
+	getopt.o $(ALLOCA)
 UUNAMEOBJS = uuname.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
-	log.o sys1.o version.o getopt.o
+	log.o sys1.o version.o getopt.o $(ALLOCA)
 UULOGOBJS = uulog.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
-	log.o sys1.o version.o getopt.o
-TSTOBJS = tstuu.o version.o getopt.o
+	log.o sys1.o version.o getopt.o $(ALLOCA)
+TSTOBJS = tstuu.o version.o getopt.o $(ALLOCA)
 
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uustat.o uuname.o uulog.o \
 	uudir.o tstuu.o prot.o protg.o protf.o prott.o prote.o config.o v2.o \
@@ -90,9 +107,9 @@ ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uustat.o uuname.o uulog.o \
 	tcp.o parse.o copy.o sys1.o sys2.o sys3.o sys4.o sys5.o sys6.o \
 	sys7.o version.o getopt.o
 
-all: uucico uuxqt uux uucp uuchk uustat uuname uulog $(TSTUU) $(UUDIR)
+all: $(PROGRAMS) $(TSTUU) $(UUDIR)
 
-install: uucico uuxqt uux uucp uuchk uustat uuname uulog uucp.info $(UUDIR)
+install: $(PROGRAMS) uucp.info $(UUDIR)
 	-mkdir $(libdir) $(bindir)
 	-ln $(libdir)/uucico $(libdir)/uucico.old
 	-ln $(libdir)/uuxqt $(libdir)/uuxqt.old
@@ -193,14 +210,29 @@ sys1.o: sys1.c
 uudir.o: uudir.c
 	$(CC) -c $(CFLAGS) $(CONFIG) -DOWNER=\"$(owner)\" uudir.c
 
-configure-unix:
+sysdep.h: sysh.unx
+	rm -f sysdep.h
 	ln sysh.unx sysdep.h
+sys1.c: sys1.unx
+	rm -f sys1.c
 	ln sys1.unx sys1.c
+sys2.c: sys2.unx
+	rm -f sys2.c
 	ln sys2.unx sys2.c
+sys3.c: sys3.unx
+	rm -f sys3.c
 	ln sys3.unx sys3.c
+sys4.c: sys4.unx
+	rm -f sys4.c
 	ln sys4.unx sys4.c
+sys5.c: sys5.unx
+	rm -f sys5.c
 	ln sys5.unx sys5.c
+sys6.c: sys6.unx
+	rm -f sys6.c
 	ln sys6.unx sys6.c
+sys7.c: sys7.unx
+	rm -f sys7.c
 	ln sys7.unx sys7.c
 
 clean:
@@ -208,21 +240,33 @@ clean:
 	rm -f uucp-$(VERSION).tar.Z
 	rm -rf uucp-$(VERSION)
 
-dist: uucp.info
+# The distribution targets are mostly for my own use; they are not
+# expected to work on other systems.
+
+dist: uucp.info conf.h-dist
 	-rm -rf uucp-$(VERSION)
 	-rm -f taylor-uucp-$(VERSION).tar taylor-uucp-$(VERSION).tar.Z
 	mkdir uucp-$(VERSION)
 	ln `cat MANIFEST` uucp-$(VERSION)
-	rm -f uucp-$(VERSION)/conf.h uucp-$(VERSION)/sysh.unx
-	rm -f uucp-$(VERSION)/Makefile
-	cp conf.h sysh.unx Makefile uucp-$(VERSION)
-	chmod 0644 uucp-$(VERSION)/conf.h uucp-$(VERSION)/sysh.unx
-	chmod 0644 uucp-$(VERSION)/Makefile
+	rm -f uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
+	cp policy.h Makefile.in uucp-$(VERSION)
+	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
 	compress taylor-uucp-$(VERSION).tar
 
 uucp.info: uucp.texi
 	makeinfo uucp.texi
+
+conf.h-dist: conf.h
+	cp conf.h conf.h-dist
+
+conf.h Makefile: configure
+	configure
+
+Makefile: Makefile.in
+
+configure: configure.in
+	autoconf
 
 # GNU standards want these targets
 
@@ -234,41 +278,42 @@ TAGS:
 
 # Header file depedencies.  These are maintained by hand.
 
-uucico.o: uucp.h conf.h system.h prot.h port.h sysdep.h getopt.h
-uuxqt.o: uucp.h conf.h system.h getopt.h sysdep.h
-uux.o: uucp.h conf.h system.h getopt.h sysdep.h
-uucp.o: uucp.h conf.h system.h getopt.h sysdep.h
-uuchk.o: uucp.h conf.h port.h sysdep.h system.h getopt.h
-uustat.o: uucp.h conf.h system.h sysdep.h getopt.h
-uuname.o: uucp.h conf.h system.h sysdep.h getopt.h
-uulog.o: uucp.h conf.h system.h sysdep.h getopt.h
-tstuu.o: uucp.h conf.h sysdep.h getopt.h
-uudir.o: uucp.h conf.h sysdep.h
-prot.o: uucp.h conf.h system.h prot.h port.h sysdep.h
-protg.o: uucp.h conf.h system.h prot.h port.h sysdep.h
-protf.o: uucp.h conf.h prot.h port.h sysdep.h system.h
-prott.o: uucp.h conf.h prot.h port.h sysdep.h system.h
-prote.o: uucp.h conf.h prot.h port.h sysdep.h system.h
-config.o: uucp.h conf.h system.h sysdep.h
-v2.o: uucp.h conf.h port.h sysdep.h
-bnu.o: uucp.h conf.h port.h sysdep.h
-file.o: uucp.h conf.h system.h
-util.o: uucp.h conf.h
-sysinf.o: uucp.h conf.h system.h port.h sysdep.h
-time.o: uucp.h conf.h
-log.o: uucp.h conf.h system.h
-chat.o: uucp.h conf.h system.h port.h sysdep.h
-port.o: uucp.h conf.h port.h sysdep.h
-tcp.o: uucp.h conf.h port.h sysdep.h system.h
-prtinf.o: uucp.h conf.h port.h sysdep.h
-parse.o: uucp.h conf.h
-copy.o: uucp.h conf.h system.h sysdep.h
-sys1.o: uucp.h conf.h system.h sysdep.h
-sys2.o: uucp.h conf.h system.h port.h sysdep.h
-sys3.o: uucp.h conf.h system.h sysdep.h
-sys4.o: uucp.h conf.h system.h sysdep.h
-sys5.o: uucp.h conf.h system.h sysdep.h
-sys6.o: uucp.h conf.h system.h sysdep.h
-sys7.o: uucp.h conf.h system.h sysdep.h
-version.o: uucp.h conf.h
-getopt.o: uucp.h conf.h getopt.h
+uucico.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h getopt.h
+uuxqt.o: uucp.h conf.h policy.h system.h getopt.h sysdep.h
+uux.o: uucp.h conf.h policy.h system.h getopt.h sysdep.h
+uucp.o: uucp.h conf.h policy.h system.h getopt.h sysdep.h
+uuchk.o: uucp.h conf.h policy.h port.h sysdep.h system.h getopt.h
+uustat.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
+uuname.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
+uulog.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
+tstuu.o: uucp.h conf.h policy.h sysdep.h getopt.h
+uudir.o: uucp.h conf.h policy.h sysdep.h
+prot.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h
+protg.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h
+protf.o: uucp.h conf.h policy.h prot.h port.h sysdep.h system.h
+prott.o: uucp.h conf.h policy.h prot.h port.h sysdep.h system.h
+prote.o: uucp.h conf.h policy.h prot.h port.h sysdep.h system.h
+config.o: uucp.h conf.h policy.h system.h sysdep.h
+v2.o: uucp.h conf.h policy.h port.h sysdep.h
+bnu.o: uucp.h conf.h policy.h port.h sysdep.h
+file.o: uucp.h conf.h policy.h system.h
+util.o: uucp.h conf.h policy.h
+sysinf.o: uucp.h conf.h policy.h system.h port.h sysdep.h
+time.o: uucp.h conf.h policy.h
+log.o: uucp.h conf.h policy.h system.h
+chat.o: uucp.h conf.h policy.h system.h port.h sysdep.h
+port.o: uucp.h conf.h policy.h port.h sysdep.h
+tcp.o: uucp.h conf.h policy.h port.h sysdep.h system.h
+prtinf.o: uucp.h conf.h policy.h port.h sysdep.h
+parse.o: uucp.h conf.h policy.h
+copy.o: uucp.h conf.h policy.h system.h sysdep.h
+sys1.o: uucp.h conf.h policy.h system.h sysdep.h
+sys2.o: uucp.h conf.h policy.h system.h port.h sysdep.h
+sys3.o: uucp.h conf.h policy.h system.h sysdep.h
+sys4.o: uucp.h conf.h policy.h system.h sysdep.h
+sys5.o: uucp.h conf.h policy.h system.h sysdep.h
+sys6.o: uucp.h conf.h policy.h system.h sysdep.h
+sys7.o: uucp.h conf.h policy.h system.h sysdep.h
+version.o: uucp.h conf.h policy.h
+getopt.o: uucp.h conf.h policy.h getopt.h
+alloca.o: uucp.h conf.h policy.h

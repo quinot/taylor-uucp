@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.37  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.36  1992/01/19  21:30:21  ian
    Matthew Lyle: some systems don't declare errno in <errno.h>
 
@@ -133,15 +136,35 @@
 
    */
 
-#ifndef UUCP_H
-
-#define UUCP_H
-
+/* Define alloca as suggested by David MacKenzie.  AIX requires this
+   to be the first thing in the file.  I really hate system dependent
+   cruft like this (and this is the only case in which it appears),
+   but I guess that's the price of using alloca.  */
+#define HAVE_ALLOCA 1
 #ifdef __GNUC__
- #pragma once
-#endif
+#ifndef __NeXT__
+#define alloca __builtin_alloca
+#endif /* ! defined (__NeXT__) */
+#else /* ! defined(__GNUC__) */
+#ifdef sparc
+#include <alloca.h>
+#else /* ! defined (sparc) */
+#ifdef _AIX
+ #pragma alloca
+#else /* ! defined (_AIX) */
+/* We may not be using a real alloca.  */
+#undef HAVE_ALLOCA
+#define HAVE_ALLOCA 0
+#endif /* ! defined (_AIX) */
+#endif /* ! defined (sparc) */
+#endif /* ! defined (__GNUC__) */
+
+/* Get the system configuration parameters.  */
 
 #include "conf.h"
+#include "policy.h"
+
+/* We always want <stdio.h>.  */
 
 #include <stdio.h>
 
@@ -155,60 +178,53 @@
 #endif /* ! defined (__STDC__) */
 #endif /* ! defined (ANSI_C) */
 
-/* The macro P is used when declaring prototypes, to allow a somewhat
-   readable syntax for both ANSI and Classic C.  */
+/* Set up some definitions for both ANSI C and Classic C.
+
+   P() is used for function prototypes (e.g. extern int foo P((int)) ).
+   pointer is used for a generic pointer (i.e. void *).
+   constpointer is used for a generic pointer to constant data.
+   BUCHAR is used to convert a character to unsigned.  */
 
 #if ANSI_C
-#undef HAVE_VOID
-#define HAVE_VOID 1
+#if ! HAVE_VOID || ! HAVE_UNSIGNED_CHAR
+ #error ANSI C compiler without void or unsigned char
+#endif
+#define P(x) x
 typedef void *pointer;
 typedef const void *constpointer;
-#define P(x) x
 #define BUCHAR(b) ((unsigned char) (b))
 #else /* ! ANSI_C */
+#define P(x) ()
+typedef char *pointer;
+typedef const char *constpointer;
+#if HAVE_UNSIGNED_CHAR
+#define BUCHAR(b) ((unsigned char) (b))
+#else /* ! HAVE_UNSIGNED_CHAR */
+/* This should work on most systems, but not necessarily all.  */
+#define BUCHAR(b) ((b) & 0xff)
+#endif /* ! HAVE_UNSIGNED_CHAR */
+/* Handle uses of const and void in Classic C.  */
 #define const
 #if ! HAVE_VOID
 #define void int
 #endif
-typedef char *pointer;
-typedef const char *constpointer;
-#define P(x) ()
-/* This isn't necessarily right, but what else can I do?  I need to
-   get an unsigned char to safely pass to the ctype macros, and not
-   all Classic C compilers support unsigned char.  This will work on
-   all normal machines.  */
-#define BUCHAR(b) ((b) & 0xff)
 #endif /* ! ANSI_C */
 
-/* Use builtin alloca if we can, and only use inline with gcc.  */
+/* Only use inline with gcc.  */
 
-#ifdef __GNUC__
-#if HAVE_ALLOCA
-#define alloca __builtin_alloca
-#endif
-#undef HAVE_ALLOCA
-#define HAVE_ALLOCA 1
-#else /* ! __GNUC__ */
+#ifndef __GNUC__
 #define __inline__
-#if HAVE_ALLOCA
-#if NEED_ALLOCA_H
-#include <alloca.h>
-#else /* ! NEED_ALLOCA_H */
-extern pointer alloca P((int));
-#endif /* ! NEED_ALLOCA_H */
-#else /* ! HAVE_ALLOCA */
-extern pointer alloca P((int));
-extern void uclear_alloca P((void));
-#endif /* ! HAVE_ALLOCA */
-#endif /* ! __GNUC__ */
+#endif
 
-/* Get the string functions, which are used throughout the code.  On
-   some older systems, the memory functions are defined in <memory.h>
-   rather than <string.h>.  The only memory function we really need a
-   return value for is memchr, so we just declare it ourselves before
-   including <string.h>.  */
+/* Get the string functions, which are used throughout the code.  */
 
+#if HAVE_MEMORY_H
+#include <memory.h>
+#else
+/* We really need a definition for memchr, and this should not
+   conflict with anything in <string.h>.  I hope.  */
 extern pointer memchr ();
+#endif
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -216,12 +232,15 @@ extern pointer memchr ();
 #if HAVE_STRINGS_H
 #include <strings.h>
 #else /* ! HAVE_STRINGS_H */
-extern int strcmp (), strncmp (), memcmp ();
+extern int strcmp (), strncmp ();
 extern char *strcpy (), *strncpy (), *strchr (), *strrchr (), *strtok ();
 extern char *strcat (), *strerror (), *strstr ();
-extern pointer memcpy (), memmove ();
 /* These should be size_t, but there's no declaration to conflict with.  */
 extern int strlen (), strspn (), strcspn ();
+#if ! HAVE_MEMORY_H
+extern pointer memcpy (), memmove (), memchr ();
+extern int memcmp ();
+#endif /* ! HAVE_MEMORY_H */
 #endif /* ! HAVE_STRINGS_H */
 #endif /* ! HAVE_STRING_H */
 
@@ -245,6 +264,10 @@ extern char *getenv ();
 #if ! HAVE_ERRNO_DECLARATION
 extern int errno;
 #endif
+
+/* If the system has the socket call, guess that we can compile the
+   TCP code.  */
+#define HAVE_TCP HAVE_SOCKET
 
 /* The boolean type holds boolean values.  */
 
@@ -308,16 +331,6 @@ extern int read (), write (), close ();
    include sysdep.h here.  */
 
 #endif /* ! USE_STDIO */
-
-/* The sigret_t type holds the return type of a signal function.  We
-   use #define rather than typedef because at least one compiler
-   doesn't like typedef void.  */
-
-#if HAVE_INT_SIGNALS
-#define sigret_t int
-#else
-#define sigret_t void
-#endif
 
 /* Define the time_t type.  This still won't help if they don't have
    time or ctime.  */
@@ -893,18 +906,18 @@ extern char *strdup P((const char *z));
 extern char *strstr P((const char *zouter, const char *zinner));
 #endif
 
+#if ! HAVE_STRCASECMP
 #if HAVE_STRICMP
 /* Use macros to access stricmp and strnicmp as strcasecmp and
    strncasecmp.  */
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
-#endif
-
-#if ! HAVE_STRCASECMP && ! HAVE_STRICMP
+#else /* ! HAVE_STRICMP */
 /* Use our own case insensitive string comparisons.  */
 extern int strcasecmp P((const char *z1, const char *z2));
 extern int strncasecmp P((const char *z1, const char *z2, int clen));
-#endif
+#endif /* ! HAVE_STRICMP */
+#endif /* ! HAVE_STRCASECMP */
 
 #if ! HAVE_STRERROR
 /* Get a string corresponding to an error message.  */
@@ -914,25 +927,37 @@ extern char *strerror P((int ierr));
 /* Get the appropriate definitions for memcmp, memcpy, memchr and
    bzero.  Hopefully the declarations of bzero, bcmp and bcopy will
    not cause any trouble.  */
-#if HAVE_MEMFNS && HAVE_BFNS
-extern void bzero ();
-#endif /* HAVE_MEMFNS && HAVE_BFNS */
-#if ! HAVE_MEMFNS && HAVE_BFNS
+#if ! HAVE_MEMCMP
+#if HAVE_BCMP
 #define memcmp(p1, p2, c) bcmp ((p1), (p2), (c))
-#define memcpy(pto, pfrom, c) bcopy ((pfrom), (pto), (c))
-extern pointer memchr P((constpointer p, int b, int c));
-extern void bcopy (), bzero ();
 extern int bcmp ();
-#endif /* ! HAVE_MEMFNS && HAVE_BFNS */
-#if HAVE_MEMFNS && ! HAVE_BFNS
-#define bzero(p, c) memset ((p), 0, (c))
-#endif /* HAVE_MEMFNS && ! HAVE_BFNS */
-#if ! HAVE_MEMFNS && ! HAVE_BFNS
+#else /* ! HAVE_BCMP */
 extern int memcmp P((constpointer p1, constpointer p2, int c));
+#endif /* ! HAVE_BCMP */
+#endif /* ! HAVE_MEMCMP */
+
+#if ! HAVE_MEMCPY
+#if HAVE_BCOPY
+#define memcpy(pto, pfrom, c) bcopy ((pfrom), (pto), (c))
+extern void bcopy ();
+#else /* ! HAVE_BCOPY */
 extern pointer memcpy P((pointer pto, constpointer pfrom, int c));
+#endif /* ! HAVE_BCOPY */
+#endif /* ! HAVE_MEMCPY */
+
+#if ! HAVE_MEMCHR
 extern pointer memchr P((constpointer p, int b, int c));
+#endif
+
+#if HAVE_BZERO
+extern void bzero ();
+#else /* ! HAVE_BZERO */
+#if HAVE_MEMSET
+#define bzero(p, c) memset ((p), 0, (c))
+#else /* ! HAVE_MEMSET */
 extern void bzero P((pointer p, int c));
-#endif /* ! HAVE_MEMFNS && ! HAVE_BFNS */
+#endif /* ! HAVE_MEMSET */
+#endif /* ! HAVE_BZERO */
 
 /* Move a memory block safely.  Go through xmemmove to allow for
    systems which have the prototype (using size_t, which we don't want
@@ -947,13 +972,20 @@ extern pointer xmemmove P((pointer, constpointer, int));
 #if ! HAVE_STRCHR
 #if HAVE_INDEX
 #define strchr index
-#define strrchr rindex
-extern char *index (), *rindex ();
+extern char *index ();
 #else /* ! HAVE_INDEX */
 extern char *strchr P((const char *z, int b));
-extern char *strrchr P((const char *z, int b));
 #endif /* ! HAVE_INDEX */
 #endif /* ! HAVE_STRCHR */
+
+#if ! HAVE_STRRCHR
+#if HAVE_RINDEX
+#define strrchr rindex
+extern char *rindex ();
+#else /* ! HAVE_RINDEX */
+extern char *strrchr P((const char *z, int b));
+#endif /* ! HAVE_RINDEX */
+#endif /* ! HAVE_STRRCHR */
 
 /* Turn a string into a long integer.  */
 #if ! HAVE_STRTOL
@@ -1061,5 +1093,3 @@ extern openfile_t eRecfile;
 
 /* TRUE if we are aborting because somebody used LOG_FATAL.  */
 extern boolean fAborting;
-
-#endif

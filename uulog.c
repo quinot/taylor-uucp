@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1992/02/14  21:22:51  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -33,6 +36,7 @@ char uulog_rcsid[] = "$Id$";
 
 #include <stdio.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "system.h"
 #include "sysdep.h"
@@ -49,7 +53,7 @@ char abProgram[] = "uulog";
 /* Local functions.  */
 
 static void ulusage P((void));
-static sigret_t ulcatch P((int isig));
+static SIGTYPE ulcatch P((int isig));
 
 /* Long getopt options.  */
 
@@ -268,7 +272,7 @@ ulusage ()
 /* Catch a signal (we only do this because a fatal error raises
    SIGABRT).  */
 
-static sigret_t
+static SIGTYPE
 ulcatch (isig)
      int isig;
 {

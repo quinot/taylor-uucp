@@ -1,12 +1,12 @@
 COPYING
 ChangeLog
 MANIFEST
-Makefile
+Makefile.in
 README
 TODO
 bnu.c
 chat.c
-conf.h
+conf.h-dist
 config.c
 copy.c
 file.c
@@ -14,6 +14,7 @@ getopt.c
 getopt.h
 log.c
 parse.c
+policy.h
 port.c
 port.h
 prot.c

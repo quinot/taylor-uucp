@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/02/08  22:33:32  ian
+   Only get the current working directory if it's going to be needed
+
    Revision 1.19  1992/02/08  20:33:57  ian
    Handle all possible signals raised by abort
 
@@ -105,7 +108,7 @@ char abProgram[] = "uuchk";
 /* Local functions.  */
 
 static void ukusage P((void));
-static sigret_t ukcatch P((int isig));
+static SIGTYPE ukcatch P((int isig));
 static void ukshow P((const struct ssysteminfo *qsys));
 static boolean fkshow_port P((struct sport *qport, boolean fin));
 static void ukshow_dialer P((struct sdialer *qdial));
@@ -226,7 +229,7 @@ ukusage ()
 /* Catch a signal (we only do this because a fatal error raises
    SIGABRT).  */
 
-static sigret_t
+static SIGTYPE
 ukcatch (isig)
      int isig;
 {

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+ * Revision 1.1  1992/02/20  04:18:59  ian
+ * Initial revision
+ *
    */
 
 #include "uucp.h"
@@ -66,7 +69,7 @@ char abProgram[] = "uustat";
 /* Local functions.  */
 
 static void ususage P((void));
-static sigret_t uscatch P((int isig));
+static SIGTYPE uscatch P((int isig));
 static boolean fsworkfiles P((boolean fall, const char *zsystem,
 			      const char *zuser, long iold,
 			      long iyoung));
@@ -354,7 +357,7 @@ ususage ()
 /* Catch a signal (we only do this because a fatal error raises
    SIGABRT).  */
 
-static sigret_t
+static SIGTYPE
 uscatch (isig)
      int isig;
 {

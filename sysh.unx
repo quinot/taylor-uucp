@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.36  1992/02/20  04:18:59  ian
+   Added uustat
+
    Revision 1.35  1992/02/09  05:10:50  ian
    Added HAVE_MKDIR configuration parameter and mkdir emulation
 
@@ -138,400 +141,24 @@
  #pragma once
 #endif
 
-/* The name of the default spool directory.  This may be overridden by
-   the ``spool'' command in the configuration file.  */
-#define SPOOLDIR "/usr/spool/uucp"
-
-/* The name of the default public directory.  This may be overridden
-   by the ``pubdir'' command in the configuration file.  Also, a
-   particular system may be given a specific public directory by
-   using the ``pubdir'' command in the system file.  */
-#define PUBDIR "/usr/spool/uucppublic"
-
-/* If you use other programs that also access devices, the other
-   programs must agree on whether a device is locked.  This is
-   typically done by creating a lock file in a specific directory.
-   The lock file is named LCK.. followed by the name of the device.
-   Remote systems are also locked the same way.  If the LOCKDIR macro
-   is defined, these lock files will be placed in the named directory;
-   otherwise they will be placed in the default spool directory.  On
-   some BNU systems the lock files are placed in /etc/locks.  */
-/* #define LOCKDIR "/etc/locks" */
-
-/* You must also specify the format of the lock files by setting
-   exactly one of the following macros to 1.  The BNU style is to
-   write the locking process ID in ASCII, taking up ten bytes with a
-   following newline.  The V2 style is to write the locking process ID
-   as four binary bytes in the host byte order.  Check an existing
-   lock file to decide which of these choices is more appropriate.  */
-#define HAVE_V2_LOCKFILES 0
-#define HAVE_BNU_LOCKFILES 1
-
-#if HAVE_TAYLOR_LOGGING
-
-/* The default log file when using HAVE_TAYLOR_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
-   command in the configuration file.  */
-#define LOGFILE "/usr/spool/uucp/Log"
-
-/* The default statistics file when using HAVE_TAYLOR_LOGGING.  When
-   using HAVE_TAYLOR_CONFIG, this may be overridden by the
-   ``statfile'' command in the configuration file.  */
-#define STATFILE "/usr/spool/uucp/Stats"
-
-/* The default debugging file when using HAVE_TAYLOR_LOGGING.  When
-   using HAVE_TAYLOR_CONFIG, this may be overridden by the
-   ``debugfile'' command in the configuration file.  */
-#define DEBUGFILE "/usr/spool/uucp/Debug"
-
-#endif /* HAVE_TAYLOR_LOGGING */
-
-#if HAVE_V2_LOGGING
-
-/* The default log file when using HAVE_V2_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
-   command in the configuration file.  */
-#define LOGFILE "/usr/spool/uucp/LOGFILE"
-
-/* The default statistics file when using HAVE_V2_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``statfile''
-   command in the configuration file.  */
-#define STATFILE "/usr/spool/uucp/SYSLOG"
-
-/* The default debugging file when using HAVE_V2_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``debugfile''
-   command in the configuration file.  */
-#define DEBUGFILE "/usr/spool/uucp/DEBUG"
-
-#endif /* HAVE_V2_LOGGING */
-
-#if HAVE_BNU_LOGGING
-
-/* The default log file when using HAVE_BNU_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
-   command in the configuration file.  The first %s in the string will
-   be replaced by the program name (e.g. uucico); the second %s will
-   be replaced by the system name (if there is no appropriate system,
-   "ANY" will be used).  No other '%' character may appear in the
-   string.  */
-#define LOGFILE "/usr/spool/uucp/.Log/%s/%s"
-
-/* The default statistics file when using HAVE_BNU_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``statfile''
-   command in the configuration file.  */
-#define STATFILE "/usr/spool/uucp/.Admin/xferstats"
-
-/* The default debugging file when using HAVE_BNU_LOGGING.  When using
-   HAVE_TAYLOR_CONFIG, this may be overridden by the ``debugfile''
-   command in the configuration file.  */
-#define DEBUGFILE "/usr/spool/uucp/.Admin/audit.local"
-
-#endif /* HAVE_BNU_LOGGING */
-
-/* The default command path, specifying which directories the commands
-   to be executed must be located in.  */
-#define CMDPATH "/bin /usr/bin /usr/local/bin"
-
-/* ISC 2.02, and probably other systems, does not have the include
-   file <sys/wait.h>.  On such a system, set the following macro to 0
-   to avoid trying to include it.  */
-#define HAVE_SYSWAIT_H 1
-
-/* The type pid_t is the type of a process identifier.  It is normally
-   defined in <sys/types.h>; if it is not defined there, uncomment the
-   following line and set it to the correct type.  This is the type
-   returned by the fork(2) function and the getpid(2) function.  */
-/* #define PID_T int */
-
-/* The type uid_t is the type of a user identifier.  It is normally
-   defined in <sys/types.h>; if it is not defined there, uncomment the
-   following line and set it to the correct type.  This is the type
-   returned by the getuid(2) function; on System V it is often
-   unsigned short.  */
-/* #define UID_T short */
-
-/* The type off_t is the return value of lseek(2).  It is sometimes
-   defined in <sys/types.h>; if it is not define there, uncomment the
-   following line and set it to the correct type.  */
-/* #define OFF_T long */
-
-/* If you want to be able to use a default for the system name without
-   specifying it with the ``nodename'' command in the configuration
-   file, one of the following macros must be set to 1.  Set
-   HAVE_GETHOSTNAME to 1 if you have the gethostname call.  Set
-   HAVE_UNAME to 1 if you have the uname call.  */
-#define HAVE_GETHOSTNAME 1
-#define HAVE_UNAME 0
-
-/* Exactly one of the following macros must be set to 1.
-
-   HAVE_BSD_TTY -- Use the 4.2BSD tty routines
-   HAVE_SYSV_TERMIO -- Use the System V termio routines
-   HAVE_POSIX_TERMIOS -- Use the POSIX termios routines
-   */
-#define HAVE_BSD_TTY 1
-#define HAVE_SYSV_TERMIO 0
-#define HAVE_POSIX_TERMIOS 0
-
-/* On QNX 4, and possibly other systems, including <sys/ioctl.h>
-   interferes with <termios.h>.  On such a system, set the following
-   macro to 0 to avoid include <sys/ioctl.h>.  On any normal system,
-   or any system which does not use HAVE_POSIX_TERMIOS, do not change
-   this line.  */
-#define HAVE_SYSIOCTL_H 1
-
-/* On Sun3/280 OS 3.2, and possibly other systems, <sys/time.h>
-   includes <time.h> and <time.h> does not permit multiple inclusion.
-   On such a system, set the following macro to 0.  This does not
-   override the value of HAVE_TIME_H.  */
-#define HAVE_SYS_TIME_AND_TIME_H 1
-
-/* On HPUX 8.0, and possibly other systems, fcntl returns an error if
-   you try to specify both O_NONBLOCK and O_NDELAY.  If you get an
-   invalid argument from fcntl, this may be the problem.  If this
-   macro is non zero, it will be used as the argument to fcntl to
-   force a file descriptor to not block.  */
-#define USE_FOR_UNBLOCKED 0
-
-/* There are various possibilities for routines to sleep for less than
-   a second.  If you are using HAVE_BSD_TTY, these will be used to
-   improve CPU performance when reading from a serial line.  They are
-   also used to sleep half a second in a chat script.  Set either zero
-   or one of these to 1.
-
-   HAVE_SETITIMER -- Use the BSD setitimer routine
-   HAVE_NAPMS -- Use napms which takes a number of milliseconds to sleep
-   HAVE_NAP -- Use nap which takes a number of milliseconds to sleep
-   HAVE_USLEEP -- Use usleep which takes a number of microseconds to sleep
-   */
-#define HAVE_SETITIMER 1
-#define HAVE_NAPMS 0
-#define HAVE_NAP 0
-#define HAVE_USLEEP 0
-
-/* Set HAVE_SIGSETJMP to 1 if you have the sigsetjmp and siglongjmp
-   calls, and they should be used to jump out of a signal handler.
-   Otherwise if you don't have setjmp and longjmp but you do have
-   setret and longret, set HAVE_SETRET to 1.  */
-#define HAVE_SIGSETJMP 1
-#define HAVE_SETRET 0
-
-/* Set HAVE_EUID to 1 if it makes sense to call setuid (geteuid ()).
-   This is mainly done to avoid running with root permissions, which
-   make locking complex.  Setting it to 1 will actually do no harm
-   even if the call fails.  */
-#define HAVE_EUID 1
-
-/* Set HAVE_FTRUNCATE to 1 if you have the ftruncate call which
-   truncates an open file to a specified length.  Alternatively, set
-   HAVE_LTRUNC to 1 if you have the ltrunc call which also truncates a
-   file but takes different arguments.  */
-#define HAVE_FTRUNCATE 1
-#define HAVE_LTRUNC 0
-
-/* Set HAVE_RENAME to 1 if you have the rename call which renames a
-   file.  If this is set to 0, the program will use the link and
-   unlink calls.  */
-#define HAVE_RENAME 1
-
-/* Exactly one of the following macros must be set to 1.  The exact
-   format of the spool directories is explained in sys3.unx.
-
-   SPOOLDIR_V2 -- Use a Version 2 (original UUCP) style spool directory
-   SPOOLDIR_BSD42 -- Use a BSD 4.2 style spool directory
-   SPOOLDIR_BSD43 -- Use a BSD 4.3 style spool directory
-   SPOOLDIR_BNU -- Use a BNU (HDB) style spool directory
-   SPOOLDIR_ULTRIX -- Use an Ultrix style spool directory
-   SPOOLDIR_TAYLOR -- Use a new style spool directory
-
-   If you are not worried about compatibility with a currently running
-   UUCP, use SPOOLDIR_TAYLOR.  */
-#define SPOOLDIR_V2 0
-#define SPOOLDIR_BSD42 0
-#define SPOOLDIR_BSD43 0
-#define SPOOLDIR_BNU 0
-#define SPOOLDIR_ULTRIX 0
-#define SPOOLDIR_TAYLOR 1
-
-/* Set exactly one of the following macros to 1 to determine how
-   directories should be read.  If you have do not have the
-   opendir/readdir/closedir functions, I recommend that you find Doug
-   Gwyn's public domain implementation (among other places, it is
-   available from uunet in ~/packages/gnu/dirent.tar.Z).  However, if
-   you have the original Unix directory format (a two byte inode
-   followed by a 14 byte filename) you can set HAVE_OLD_DIRECTORIES to
-   1 to use a somewhat simplistic emulation.
-
-   HAVE_POSIX_DIRENT -- Use POSIX (and System V) dirent structure
-   HAVE_BSD_DIRECT -- Use BSD direct structure
-   HAVE_OLD_DIRECTORIES -- Read old style directories directly.  */
-#define HAVE_POSIX_DIRENT 1
-#define HAVE_BSD_DIRECT 0
-#define HAVE_OLD_DIRECTORIES 0
-
-/* If you have the dup2 call, set HAVE_DUP2 to 1.  */
-#define HAVE_DUP2 0
-
-/* If you have the mkdir system call, set HAVE_MKDIR to 1.  Otherwise
-   make sure that MKDIR_PROGRAM is a program that will create a
-   directory, and look in the Makefile and follow the directions by
-   the UUDIR target.  A special suid program is needed because the
-   directories must be owned by uucp, not by the real uid of the
-   process.  */
-#define HAVE_MKDIR 1
-#define MKDIR_PROGRAM "/bin/mkdir"
-
-/* If the system supports file names longer than 14 characters,
-   set HAVE_LONG_NAMES to 1.  */
-#define HAVE_LONG_NAMES 1
-
-/* Define the mail program to use.  This will be called with the user
-   name to send mail to as the only argument, and the mail to send
-   will be written to standard input.  */
-#define MAIL_PROGRAM "/usr/ucb/mail"
-
-/* Define the echo program to use.  This will be called to expand
-   wildcard specifications.  */
-#define ECHO_PROGRAM "/bin/echo"
-
-/* The uucico daemon, when talking to another copy of itself, can
-   check the amount of free disk space to make sure there is enough
-   room before accepting a transferred file.  Unfortunately, there is
-   no standard way to determine the amount of free disk space.  One of
-   the following macros must be set to 1 in order for the amount of
-   free space to be discovered.  This is only helpful when talking to
-   another instance of Taylor UUCP, and in any case setting all the
-   choices to 0 will do no real harm, it will just mean that the
-   package will not check whether the disk will be filled before
-   accepting a file.
-
-   HAVE_ULTRIX_STATFS -- Use the statfs call as found on Ultrix systems
-   HAVE_SCO_STATFS -- Use the statfs call as found on SCO Unix
-   HAVE_USTAT -- Use the System V ustat call  */
-#define HAVE_ULTRIX_STATFS 1
-#define HAVE_SCO_STATFS 0
-#define HAVE_USTAT 0
-
-/* If you have the gettimeofday function which takes a pointer to a
-   timeval structure and fills in the time in seconds and
-   microseconds, set HAVE_GETTIMEOFDAY to 1.  Otherwise, if you have
-   the ftime call which takes a pointer to a timeb structure and fills
-   in the time in seconds and milliseconds, set HAVE_FTIME to 1.
-   Otherwise, if you have the times function which returns the time
-   since some epoch in fractions of a second, set HAVE_TIMES to 1.  If
-   you set HAVE_TIMES to 1 you must also set TIMES_TICK to the
-   fraction of a second which times returns (for example, if times
-   returns 100ths of a second TIMES_TICK should be set to 100).  On a
-   true POSIX system TIMES_TICK may simply be defined as CLK_TCK.  On
-   some systems the environment variable HZ is what you want for
-   TIMES_TICK, but on some other systems HZ has the wrong value; check
-   the man page.  The tstuu program requires the times function, and
-   will use TIMES_TICK even if HAVE_TIMES is set to 0; if you plan to
-   compile tstuu, set TIMES_TICK correctly even if you do not set
-   HAVE_TIMES.  */
-#define HAVE_GETTIMEOFDAY 1
-#define HAVE_FTIME 0
-#define HAVE_TIMES 0
-#define TIMES_TICK CLK_TCK
-
-/* If you have the POSIX getcwd function to get the current directory,
-   set HAVE_GETCWD to 1.  Otherwise, if you have the BSD getwd
-   function, set HAVE_GETWD to 1.  Otherwise, set both to 0 and make
-   sure that PWD_PROGRAM is the name of a program that will print the
-   current working directory (followed by a newline) on stdout.  */
-#define HAVE_GETCWD 1
-#define HAVE_GETWD 0
-#define PWD_PROGRAM "/bin/pwd"
-
-/* The NeXT, and possibly other systems, requires the argument to the
-   wait function to be a pointer to a variable of type union wait.  On
-   such systems, set HAVE_UNION_WAIT to 1.  Note that on a POSIX
-   system, HAVE_UNION_WAIT should be 0.  */
-#define HAVE_UNION_WAIT 0
-
-/* If you have the POSIX waitpid system call, set HAVE_WAITPID to 1.
-   Otherwise, if you have the wait4 system call, which also lets you
-   specify a particular pid to wait for, set HAVE_WAIT4 to 1.  These
-   are only used by the tstuu test program, and even for that setting
-   them both to 0 will not have seriously bad effects.  */
-#define HAVE_WAITPID 1
-#define HAVE_WAIT4 0
-
-/* Set PS_PROGRAM to the program to run to get a process status,
-   including the arguments to pass it.  This is used by ``uustat -p''.
-   Set HAVE_PS_MULTIPLE to 1 if a comma separated list of process
-   numbers may be appended (e.g. ``ps -flp1,10,100'').  Otherwise ps
-   will be invoked multiple times, with a single process number append
-   each time.  The commented out definitions are appropriate for
-   System V.  */
-#define PS_PROGRAM "/bin/ps -l"
-#define HAVE_PS_MULTIPLE 0
-/* #define PS_PROGRAM "/bin/ps -flp" */
-/* #define HAVE_PS_MULTIPLE 1 */
-
-/* The default amount of free space to require for systems that do
-   not specify an amount with the ``free-space'' command.  */
-#define DEFAULT_FREE_SPACE (50000)
-
-/* It is possible for an execute job to request to be executed using
-   /bin/sh(1), rather than execve(2).  This is such a security risk,
-   it is being disabled by default; to allow such jobs, set the
-   following macro to 1.  */
-#define ALLOW_SH_EXECUTION 0
-
-/* If a command executed on behalf of a remote system takes a filename
-   as an argument, a security breach may be possible (note that on my
-   system neither of the default commands, rmail and rnews, take
-   filename arguments).  If you set ALLOW_FILENAME_ARGUMENTS to 0, all
-   arguments to a command will be checked; if any argument
-   1) starts with ../
-   2) contains the string /../
-   3) begins with a / but does not name a file that may be sent or
-      received (according to the specified ``remote-send'' and
-      ``remote-receive'')
-   the command will be rejected.  By default, any argument is
-   permitted. */
-#define ALLOW_FILENAME_ARGUMENTS 1
-
-/*
-
-  THERE ARE NO MORE CONFIGURATION PARAMETERS.
-
-  */
-
-/* Make sure the defines do not conflict.  */
+/* Make sure the defines do not conflict.  These are in this file
+   because they are Unix dependent.  */
 
 #if HAVE_V2_LOCKFILES + HAVE_BNU_LOCKFILES != 1
  #error LOCKFILES define not set or duplicated
 #endif
 
 #if HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS != 1
- #error Terminal routine macro definition not set or duplicated
+ #error Terminal driver define not set or duplicated
 #endif
 
 #if SPOOLDIR_V2 + SPOOLDIR_BSD42 + SPOOLDIR_BSD43 + SPOOLDIR_BNU + SPOOLDIR_ULTRIX + SPOOLDIR_TAYLOR != 1
  #error Spool directory define not set or duplicated
 #endif
 
-#if HAVE_POSIX_DIRENT + HAVE_BSD_DIRECT + HAVE_OLD_DIRECTORIES != 1
- #error No way to read directories
-#endif
-
-#if HAVE_ULTRIX_STATFS + HAVE_SCO_STATFS + HAVE_USTAT > 1
- #error Multiple disk space definitions
-#endif
-
-#ifdef PID_T
-typedef PID_T pid_t;
-#endif
-
-#ifdef UID_T
-typedef UID_T uid_t;
-#endif
-
-#ifdef OFF_T
-typedef OFF_T off_t;
-#endif
+/* On Unix, binary files are the same as text files.  */
+#define BINREAD "r"
+#define BINWRITE "w"
 
 #if HAVE_BSD_TTY
 #include <sgtty.h>
@@ -626,7 +253,7 @@ typedef struct termios sterminal;
 /* The wait status stuff is complex enough that we do it in here.  I
    could create a new header file but it's too much trouble.  */
 
-#if HAVE_SYSWAIT_H
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
 
@@ -662,9 +289,11 @@ typedef int wait_status_t;
 #endif
 #endif /* ! HAVE_UNION_WAIT */
 
-#if HAVE_OLD_DIRECTORIES
+#if ! HAVE_OPENDIR
 
-/* Define some structures to use if we don't have opendir, etc.  */
+/* Define some structures to use if we don't have opendir, etc.  These
+   will only work if we have the old Unix filesystem, with a 2 byte
+   inode and a 14 byte filename.  */
 
 #include <sys/dir.h>
 
@@ -683,7 +312,7 @@ extern DIR *opendir P((const char *zdir));
 extern struct dirent readdir P((DIR *));
 extern int closedir P((DIR *));
 
-#endif /* HAVE_OLD_DIRECTORIES */
+#endif /* ! HAVE_OPENDIR */
 
 /* Information we need for a UNIX serial port.  */
 
