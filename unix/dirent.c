@@ -21,14 +21,10 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o AIRS, P.O. Box 520, Waltham, MA 02254.  */
+   c/o Infinity Development Systems, P.O. Box 520, Waltham, MA 02254.
+   */
 
 #include "uucp.h"
-
-#if USE_STDIO && HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "sysdep.h"
 
 #include <errno.h>
@@ -68,7 +64,7 @@ opendir (zdir)
   o = open ((char *) zdir, O_RDONLY | O_NOCTTY, 0);
   if (o < 0)
     return NULL;
-  if (fcntl (o, F_SETFD, FD_CLOEXEC) < 0
+  if (fcntl (o, F_SETFD, fcntl (o, F_GETFD, 0) | FD_CLOEXEC) < 0
       || fstat (o, &s) < 0)
     {
       int isave;
