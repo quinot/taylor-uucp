@@ -8270,6 +8270,7 @@ Jason Molenda @code{<molenda@@sequent.com>}
 @code{mnichols@@pacesetter.com}
 Richard E. Nickle @code{<trystro!rick@@Think.COM>}
 @code{stephan@@sunlab.ka.sub.org} (Stephan Niemz)
+@code{raymond@@es.ele.tue.nl} (Raymond Nijssen)
 @code{nolan@@helios.unl.edu} (Michael Nolan)
 david nugent @code{<david@@csource.oz.au>}
 Jim O'Connor @code{<jim@@bahamut.fsc.com>}
