@@ -237,6 +237,11 @@ main (argc, argv)
 
   zProgram = argv[0];
 
+  /* When uucico is invoked by login, the first character of the
+     program will be a dash.  We don't want that.  */
+  if (*zProgram == '-')
+    ++zProgram;
+
 #if COHERENT_C_OPTION
   zopts = "c:CDefi:I:lp:qr:s:S:u:x:X:vw";
 #else
