@@ -217,7 +217,7 @@ uulog: $(UULOGOBJS)
 	$(CC) $(LDFLAGS) -o uulog $(UULOGOBJS) $(LIBS)
 
 uuto: uuto.in Makefile
-	sed 's/@BINDIR@/$(bindir)/' < uuto.in > uuto
+	sed 's,@BINDIR@,$(bindir),' < uuto.in > uuto
 
 uupick: $(UUPICKOBJS)
 	$(CC) $(LDFLAGS) -o uupick $(UUPICKOBJS) $(LIBS)
