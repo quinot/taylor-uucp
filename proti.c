@@ -1127,9 +1127,9 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  if (iIrequest_winsize > 0
 	      && CSEQDIFF (iseq, iIlocal_ack) > iIrequest_winsize)
 	    {
-	      DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			      "fiprocess_data: Out of order packet %d",
-			      iseq);
+	      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			      "fiprocess_data: Out of order packet %d (ack %d)",
+			      iseq, iIlocal_ack);
 
 	      ++cIbad_order;
 	      if (! ficheck_errors (qdaemon))
@@ -1263,16 +1263,16 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 		  || (iIrequest_winsize > 0
 		      && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize))
 		{
-		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-				  "fiprocess_data: Ignoring out of order packet %d",
-				  iseq);
+		  DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+				  "fiprocess_data: Ignoring out of order packet %d (recseq %d)",
+				  iseq, iIrecseq);
 		  continue;
 		}
 	      else
 		{
-		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-				  "fiprocess_data: Saving unexpected packet %d",
-				  iseq);
+		  DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+				  "fiprocess_data: Saving unexpected packet %d (recseq %d)",
+				  iseq, iIrecseq);
 
 		  if (azIrecbuffers[iseq] == NULL)
 		    {
@@ -1485,9 +1485,9 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 		&& (CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
 		    || CSEQDIFF (iIsendseq, iseq) > iIremote_winsize)))
 	  {
-	    DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			    "fiprocess_packet: Ignoring out of order NAK %d",
-			    iseq);
+	    DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			    "fiprocess_packet: Ignoring out of order NAK %d (sendseq %d)",
+			    iseq, iIsendseq);
 	    return TRUE;
 	  }
 
