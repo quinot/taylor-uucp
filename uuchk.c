@@ -229,6 +229,7 @@ ukshow (qsys, puuconf)
   char **pz;
   int i;
   int iret;
+  boolean fanycall;
 
   printf ("System: %s", qsys->uuconf_zname);
   if (qsys->uuconf_pzalias != NULL)
@@ -244,6 +245,7 @@ ukshow (qsys, puuconf)
     }
   printf ("\n");
 
+  fanycall = FALSE;
   for (i = 0; qsys != NULL; qsys = qsys->uuconf_qalternate, i++)
     {
       boolean fcall, fcalled;
@@ -270,6 +272,9 @@ ukshow (qsys, puuconf)
 	  printf (" This alternate is never used\n");
 	  continue;
 	}
+
+      if (fcall)
+	fanycall = TRUE;
 
       if (fcalled)
 	{
@@ -605,6 +610,9 @@ ukshow (qsys, puuconf)
       if (qsys->uuconf_qproto_params != NULL)
 	ukshow_proto_params (qsys->uuconf_qproto_params, 1);
     }
+
+  if (! fanycall)
+    printf (" Calls will never be placed to this system\n");
 }
 
 /* Show information about a port.  */
