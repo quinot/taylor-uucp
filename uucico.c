@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.43  1992/01/21  19:39:12  ian
+   Chip Salzenberg: uucp and uux start uucico for right system, not any
+
    Revision 1.42  1992/01/20  16:44:54  ian
    Marty Shannon: update .Status file if it's the wrong time to call
 
@@ -676,9 +679,11 @@ static boolean fcall (qsys, qport, fforce, bgrade)
      int bgrade;
 {
   boolean fbadtime;
+  const struct ssysteminfo *qorigsys;
   struct sstatus sstat;
 
-  if (! fsysdep_get_status (qsys, &sstat))
+  qorigsys = qsys;
+  if (! fsysdep_get_status (qorigsys, &sstat))
     return FALSE;
 
   /* Make sure it's been long enough since the last failed call.  */
@@ -753,7 +758,7 @@ static boolean fcall (qsys, qport, fforce, bgrade)
       /* We should probably indicate that it was the wrong time to
 	 call in the status file.  */
       sstat.ilast = isysdep_time ();
-      (void) fsysdep_set_status (qsys, &sstat);
+      (void) fsysdep_set_status (qorigsys, &sstat);
     }
 
   return FALSE;
