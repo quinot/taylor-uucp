@@ -856,7 +856,13 @@ uqdo_xqt_file (puuconf, zfile, qsys, zlocalname, zcmd, pfprocessed)
 
 #endif /* ! ALLOW_FILENAME_ARGUMENTS */
 
-  ulog (LOG_NORMAL, "Executing %s (%s)", zfile, zQcmd);
+  {
+    char *zbase;
+
+    zbase = zsysdep_base_name (zfile);
+    ulog (LOG_NORMAL, "Executing %s (%s)", zbase, zQcmd);
+    ubuffree (zbase);
+  }
 
   if (zQinput != NULL)
     {
