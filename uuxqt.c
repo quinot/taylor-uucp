@@ -638,16 +638,6 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
   *pfprocessed = FALSE;
 
-  /* If we're not permitted to execute anything for this system,
-     we can just clobber the file without even looking at it.  */
-  if (qsys->uuconf_pzcmds == NULL)
-    {
-      ulog (LOG_ERROR, "%s: No commands permitted for system %s",
-	    zbase, qsys->uuconf_zname);
-      (void) remove (zfile);
-      return;
-    }
-
   e = fopen (zfile, "r");
   if (e == NULL)
     return;
