@@ -168,9 +168,13 @@ fsysdep_get_status (qsys, qret, pfnone)
 	qret->zstring = NULL;
       else
 	{
+	  if (*znext == '"')
+	    ++znext;
 	  qret->zstring = zbufcpy (znext);
 	  zend = qret->zstring + strlen (qret->zstring);
 	  while (zend != qret->zstring && *zend != ' ')
+	    --zend;
+	  if (*zend == '"' && zend != qret->zstring)
 	    --zend;
 	  if (zend != qret->zstring)
 	    *zend = '\0';
@@ -224,9 +228,16 @@ fsysdep_set_status (qsys, qset)
     istat = aiMapstatus[istat];
 #endif /* MAP_STATUS */
 
-  fprintf (e, "%d %d %ld %d %s %s\n", istat, qset->cretries,
-	   qset->ilast, qset->cwait, azStatus[(int) qset->ttype],
-	   qsys->uuconf_zname);
+  fprintf (e, "%d %d %ld %d ", istat, qset->cretries, qset->ilast,
+	   qset->cwait);
+
+#if SPOOLDIR_SVR4
+  fprintf (e, "\"%s\"", azStatus[(int) qset->ttype]);
+#else
+  fprintf (e, "%s", azStatus[(int) qset->ttype]);
+#endif
+
+  fprintf (e, " %s\n", qsys->uuconf_zname);
   if (fclose (e) != 0)
     {
       ulog (LOG_ERROR, "fclose: %s", strerror (errno));
