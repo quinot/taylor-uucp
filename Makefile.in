@@ -90,8 +90,8 @@ MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVER
 
 MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)' VERSION='$(VERSION)'
 
-PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uulog uuto \
-	uupick cu
+PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uusched \
+	uulog uuto uupick cu
 
 UUOBJS = uucico.o trans.o send.o rec.o xcmd.o prot.o protg.o protf.o \
 	prott.o prote.o proti.o protz.o time.o log.o chat.o conn.o \
@@ -122,11 +122,13 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	-mkdir $(sbindir) $(bindir) $(infodir)
 	-ln $(sbindir)/uucico $(sbindir)/uucico.old
 	-ln $(sbindir)/uuxqt $(sbindir)/uuxqt.old
-	rm -f $(sbindir)/uucico $(sbindir)/uuxqt
+	-ln $(sbindir)/uusched $(sbindir)/uusched.old
+	rm -f $(sbindir)/uucico $(sbindir)/uuxqt $(sbindir)/uusched
 	$(INSTALL_PROGRAM) uucico $(sbindir)/uucico
 	$(INSTALL_PROGRAM) uuxqt $(sbindir)/uuxqt
 	$(INSTALL_PROGRAM) uuchk $(sbindir)/uuchk
 	$(INSTALL_PROGRAM) uuconv $(sbindir)/uuconv
+	$(INSTALL_PROGRAM) uusched $(sbindir)/uusched
 	chown $(owner) $(sbindir)/uucico $(sbindir)/uuxqt
 	chmod 4555 $(sbindir)/uucico $(sbindir)/uuxqt
 	chown $(owner) $(sbindir)/uuchk $(sbindir)/uuconv
@@ -166,9 +168,10 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	-$(INSTALL_DATA) $(srcdir)/uucp.info-4 $(infodir)/uucp.info-4
 
 uninstall:
-	rm -f $(sbindir)/uucico $(sbindir)/uuxqt
+	rm -f $(sbindir)/uucico $(sbindir)/uuxqt $(sbindir)/uusched
 	-cp $(sbindir)/uucico.old $(sbindir)/uucico
 	-cp $(sbindir)/uuxqt.old $(sbindir)/uuxqt
+	-cp $(sbindir)/uusched.old $(sbindir)/uusched
 	-chown $(owner) $(sbindir)/uucico $(sbindir)/uuxqt
 	-chmod 4555 $(sbindir)/uucico $(sbindir)/uuxqt
 	-chown $(owner) $(sbindir)/uuchk $(sbindir)/uuconv
@@ -209,8 +212,13 @@ uuname: $(UUNAMEOBJS) $(UULIBS)
 uulog: $(UULOGOBJS) $(UULIBS)
 	$(CC) $(LDFLAGS) -o uulog $(UULOGOBJS) $(UULIBS) $(LIBS)
 
+uusched: uusched.in Makefile
+	sed 's,@SBINDIR@,$(sbindir),' < $(srcdir)/uusched.in > uusched
+	chmod 0555 uusched
+
 uuto: uuto.in Makefile
-	sed 's,@BINDIR@,$(bindir),' < uuto.in > uuto
+	sed 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto
+	chmod 0555 uuto
 
 uupick: $(UUPICKOBJS) $(UULIBS)
 	$(CC) $(LDFLAGS) -o uupick $(UUPICKOBJS) $(UULIBS) $(LIBS)

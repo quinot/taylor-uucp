@@ -50,6 +50,7 @@ uudir.c
 uulog.c
 uuname.c
 uupick.c
+uusched.in
 uustat.1
 uustat.c
 uuto.in
