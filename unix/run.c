@@ -31,12 +31,8 @@
 
 #include <errno.h>
 
-/* Start up a new program.  We don't have to worry about SIGHUP
-   because the current process is either not a process group leader
-   (uucp, uux) or it does not have a controlling terminal (uucico).
-   We ignore the ffork argument, and always fork a new process.  */
+/* Start up a new program.  */
 
-/*ARGSUSED*/
 boolean
 fsysdep_run (ffork, zprogram, zarg1, zarg2)
      boolean ffork;
@@ -48,6 +44,40 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
   const char *azargs[4];
   int aidescs[3];
   pid_t ipid;
+
+  /* If we are supposed to fork, fork and then spawn so that we don't
+     have to worry about zombie processes.  */
+  if (ffork)
+    {
+      ipid = ixsfork ();
+      if (ipid < 0)
+	{
+	  ulog (LOG_ERROR, "fork: %s", strerror (errno));
+	  return FALSE;
+	}
+
+      if (ipid != 0)
+	{
+	  /* This is the parent.  Wait for the child we just forked to
+	     exit (below) and return.  */
+	  (void) ixswait ((unsigned long) ipid, (const char *) NULL);
+
+	  /* Force the log files to be reopened in case the child just
+	     output any error messages and stdio doesn't handle
+	     appending correctly.  */
+	  ulog_close ();
+
+	  return TRUE;
+	}
+
+      /* This is the child.  Detach from the terminal to avoid any
+	 unexpected SIGHUP signals.  At this point we are definitely
+	 not a process group leader, so usysdep_detach will not fork
+	 again.  */
+      usysdep_detach ();
+
+      /* Now spawn the program and then exit.  */
+    }
 
   zlib = zbufalc (sizeof SBINDIR + sizeof "/" + strlen (zprogram));
   sprintf (zlib, "%s/%s", SBINDIR, zprogram);
@@ -67,11 +97,17 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
 		   FALSE, TRUE, (const char *) NULL,
 		   (const char *) NULL, (const char *) NULL);
   ubuffree (zlib);
+
   if (ipid < 0)
     {
       ulog (LOG_ERROR, "ixsspawn: %s", strerror (errno));
+      if (ffork)
+	_exit (EXIT_FAILURE);
       return FALSE;
     }
+
+  if (ffork)
+    _exit (EXIT_SUCCESS);
 
   return TRUE;
 }
