@@ -232,13 +232,6 @@ If no ! is used in the first uux command, and the command is quoted,
 the error message is screwy.  In fact, there should be no error
 message at all.
 
-50.
-
-David Nugent: uucico should check for whether there's more stuff to
-send once it's sent everything it has.  Otherwise if the other side
-has nothing to do, uucico will hang up even though there's work that
-it could do.
-
 51.
 
 David Nugent: uuxqt should keep looping through the directories until
@@ -251,3 +244,8 @@ Oleg Tabarovsky: record more information about protocol usage
 somewhere, such as retransmissions, timeouts, etc.
 
 54.
+
+Right now the slave uucico gives an error if there is no port file.
+The documentation says that this is permitted, and it should be.
+
+55.
