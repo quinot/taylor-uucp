@@ -173,6 +173,10 @@ extern void utransfree P((struct stransfer *qtrans));
    this point.  */
 extern boolean fqueue P((struct sdaemon *qdaemon, boolean *pfany));
 
+/* Clear away any queued requests.  This may be called more than once
+   at the end of a call.  */
+extern void uclear_queue P((struct sdaemon *qdaemon));
+
 /* Queue a new transfer request made by the local system.  */
 extern void uqueue_local P((struct stransfer *qtrans));
 

@@ -813,7 +813,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 	 with fewer restrictions on grade or file transfer size.  */
       if (fifwork && ! fany)
 	{
-	  usysdep_get_work_free (qsys);
+	  uclear_queue (&sdaem);
 	  continue;
 	}
 
@@ -821,7 +821,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 
       fret = fconn_call (&sdaem, qport, &sstat, cretry, &fcalled);
 
-      usysdep_get_work_free (qsys);
+      uclear_queue (&sdaem);
 
       if (fret)
 	return TRUE;
@@ -2185,7 +2185,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   if (! fqueue (&sdaem, (boolean *) NULL)
       || ! (*sdaem.qproto->pfstart) (&sdaem, &zlog))
     {
-      usysdep_get_work_free (qsys);
+      uclear_queue (&sdaem);
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = ixsysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
@@ -2236,7 +2236,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
 	  iend_time - istart_time);
 
-    usysdep_get_work_free (qsys);
+    uclear_queue (&sdaem);
 
     (void) uuconf_system_free (puuconf, &ssys);
     if (qport == &sport)

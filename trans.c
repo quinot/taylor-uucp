@@ -497,6 +497,36 @@ fqueue (qdaemon, pfany)
   return TRUE;
 }
 
+/* Clear everything off the work queue.  This is used when the call is
+   complete, or if the call is never made.  */
+
+void
+uclear_queue (qdaemon)
+     struct sdaemon *qdaemon;
+{
+  int i;
+
+  usysdep_get_work_free (qdaemon->qsys);
+
+  qTlocal = NULL;
+  qTremote = NULL;
+  qTsend = NULL;
+  qTreceive = NULL;
+  cTchans = 0;
+  iTchan = 0;
+  iTsecs = 0;
+  iTmicros = 0;
+  qTtiming = NULL;
+  cTtiming_alcs = 0;
+  cTcmdlen = 0;
+  qTreceive_ack = NULL;
+  for (i = 0; i < IMAX_CHAN + 1; i++)
+    {
+      aqTchan[i] = NULL;
+      aqTremote[i] = NULL;
+    }
+}
+
 /* Recheck the work queue during a conversation.  This is only called
    if it's been more than CCHECKWAIT seconds since the last time the
    queue was checked.  */
@@ -543,7 +573,6 @@ boolean
 floop (qdaemon)
      struct sdaemon *qdaemon;
 {
-  int i;
   int cchans;
   boolean fret;
 
@@ -796,25 +825,6 @@ floop (qdaemon)
     uwindow_acked (qdaemon, TRUE);
   else
     ustats_failed (qdaemon->qsys);
-
-  /* Clear all the variables in case we make another call.  */
-  qTlocal = NULL;
-  qTremote = NULL;
-  qTsend = NULL;
-  qTreceive = NULL;
-  cTchans = 0;
-  iTchan = 0;
-  iTsecs = 0;
-  iTmicros = 0;
-  qTtiming = NULL;
-  cTtiming_alcs = 0;
-  cTcmdlen = 0;
-  qTreceive_ack = NULL;
-  for (i = 0; i < IMAX_CHAN + 1; i++)
-    {
-      aqTchan[i] = NULL;
-      aqTremote[i] = NULL;
-    }
 
   return fret;
 }
