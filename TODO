@@ -201,7 +201,8 @@ first alternate, that is.
 
 72.
 
-Monty Solomon: put corrupted files in a special directory (.Corrupt?).
+Monty Solomon: put corrupted C. and D. files in a special directory
+(.Corrupt?).
 
 74.
 
@@ -210,7 +211,7 @@ permit shell execution.
 
 75.
 
-Mike Park: we should accept and Shere=foo message with an alias of the
+Mike Park: we should accept an Shere=foo message with an alias of the
 system we are calling.
 
 79.
@@ -239,11 +240,6 @@ Les Mikesell: add TLI and TLIS connection ability.
 
 Les Mikesell: allow a separate program to be specified to handle the
 communications with a particular system.
-
-91.
-
-If a file cannot be sent for some reason, save it off somewhere so
-that it can be retrieved and examined later.
 
 99.
 
@@ -319,21 +315,5 @@ Peter da Silva: perhaps there should be a ``chat-end-program'' command
 to let a program be run after the initial handshake has been completed
 and the protocol has been selected and turned on.  This would let
 people run stty to change their terminal parameters.
-
-125.
-
-Support the NeXT statfs command.
-
-126.
-
-Neils Baggesen: if we're out of disk space, the last thing we want to
-do is keep accepting file sends, failing to write them locally, and
-then telling the other side that we couldn't handle the file.  We
-should probably drop the connection if we run out of disk space.
-There may also be uses for a non permanent file send failure message.
-
-127.
-
-Gerben: have uuchk explicitly comment when no port or dialer matches.
 
 128.
