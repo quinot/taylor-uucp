@@ -215,6 +215,13 @@
 #define HAVE_SIGVEC 0
 #define HAVE_SIGSET 0
 
+/* If the code is going to use sigvec (HAVE_SIGACTION is 0 and
+   HAVE_SIGVEC is 1), then HAVE_SIGVEC_SV_FLAGS must be set to 1 if
+   the sigvec structure contains the sv_flags field, or 0 if the
+   sigvec structure contains the sv_onstack field.  If the code is not
+   going to use sigvec, it doesn't matter what this is set to.  */
+#define HAVE_SIGVEC_SV_FLAGS 0
+
 /* The code will try to use each of the following functions in turn
    when blocking signals from delivery.  If none are available, a
    relatively unimportant race condition will exist.  */
@@ -329,7 +336,7 @@
 
 /* If slow system calls are restarted after interrupts, set
    HAVE_RESTARTABLE_SYSCALLS to 1.  This is ignored if HAVE_SIGACTION
-   is 1 or if HAVE_SIGVEC is 1 and SV_INTERRUPT is defined in
-   <signal.h>.  In both of these cases system calls can be prevented
-   from restarting.  */
+   is 1 or if HAVE_SIGVEC is 1 and HAVE_SIGVEC_SV_FLAGS is 1 and
+   SV_INTERRUPT is defined in <signal.h>.  In both of these cases
+   system calls can be prevented from restarting.  */
 #define HAVE_RESTARTABLE_SYSCALLS 0

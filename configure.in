@@ -260,6 +260,13 @@ case $DEFS in
    fi ;;
 esac
 dnl
+case $DEFS in
+*HAVE_SIGVEC*)
+  AC_LIBTHING_CHECK([sv_flags],
+  [#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
+  AC_DEFINE([HAVE_SIGVEC_SV_FLAGS]), :) ;;
+esac
+dnl
 AC_LIBTHING_CHECK([times declared as long],
 [#include <sys/types.h>
 #ifdef HAVE_LIBC_H

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.59  1992/05/21  02:34:00  ian
+   Defined _OK macros in sysh.unx
+
    Revision 1.58  1992/05/19  22:29:10  ian
    Renamed fsdirectory_exists to fsysdep_directory
 
@@ -260,11 +263,11 @@ typedef OFF_T off_t;
 #define HAVE_RESTARTABLE_SYSCALLS 0
 #endif
 
-/* If we have sigvec and SV_INTERRUPT is defined, we can force system
-   calls to not be restarted (signal.h is included by uucp.h before
-   this point, so SV_INTERRUPT will be defined by now if it it ever
-   is).  */
-#if HAVE_SIGVEC
+/* If we have sigvec, and we have HAVE_SIGVEC_SV_FLAGS, and
+   SV_INTERRUPT is defined, we can force system calls to not be
+   restarted (signal.h is included by uucp.h before this point, so
+   SV_INTERRUPT will be defined by now if it it ever is).  */
+#if HAVE_SIGVEC && HAVE_SIGVEC_SV_FLAGS
 #ifdef SV_INTERRUPT
 #undef HAVE_RESTARTABLE_SYSCALLS
 #define HAVE_RESTARTABLE_SYSCALLS 0
