@@ -1908,7 +1908,7 @@ fsserial_hardflow (qconn, fhardflow)
       q->snew.c_cflag &=~ CTSCD;
 #endif /* defined (CTSCD) */
 #ifdef CCTS_OFLOW
-      q->snew.c_cflags &=~ (CCTS_OFLOW | CRTS_IFLOW);
+      q->snew.c_cflag &=~ (CCTS_OFLOW | CRTS_IFLOW);
 #endif
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
