@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/30  04:07:13  ian
+   Don't send RR packets when a failure occurs
+
    Revision 1.11  1991/12/28  03:49:23  ian
    Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
 
@@ -323,6 +326,7 @@ fgstart (fmaster)
   iGlocal_ack = 0;
   cGsent_packets = 0;
   cGresent_packets = 0;
+  cGdelayed_packets = 0;
   cGrec_packets = 0;
   cGbad_hdr = 0;
   cGbad_checksum = 0;
