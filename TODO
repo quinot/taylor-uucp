@@ -430,3 +430,8 @@ Marc Sheldon: use exit codes from <sysexits.h> in uux and uucp.
 Chip Salzenberg: allow chat failure strings to specify a retry time.
 
 166.
+
+Gregory Bond: allow a dialer sequence for a TCP port, so you can make
+a TCP connection to a modem and then dial out.
+
+167.
