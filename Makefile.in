@@ -10,6 +10,7 @@
 
 # Prefix directory for installation directories.
 prefix = /usr/local
+#prefix = /usr
 
 # The user name that should own the resulting executables, several of
 # which are suid.
@@ -18,6 +19,7 @@ owner = uucp
 # Where to install uucico, uuxqt, uuchk and uuconv.  If you use this
 # definition, $(prefix)/lib must exist.
 sbindir = $(prefix)/lib/uucp
+#sbindir = $(prefix)/libexec/uucp
 
 # Where to install uucp, uux, uustat, uuname, uulog, uuto, uupick and
 # cu.
@@ -25,17 +27,21 @@ bindir = $(prefix)/bin
 
 # Where to install man pages.  Section 1 for user programs, 8 for daemons.
 man1dir = $(prefix)/man/man1
+#man1dir = $(prefix)/share/man/man1
 man1ext = .1
 man8dir = $(prefix)/man/man8
+#man8dir = $(prefix)/share/man/man8
 man8ext = .8
 
 # Where to install the info files.
 infodir = $(prefix)/info
+#infodir = $(prefix)/share/doc
 
 # The directory to look in for new style configuration files (when
 # using HAVE_TAYLOR_CONFIG).  Note that by default this is different
 # from sbindir, unlike traditional UUCP packages.
 newconfigdir = $(prefix)/conf/uucp
+#newconfigdir = /etc/uucp
 
 # The directory to look in for BNU (when using HAVE_BNU_CONFIG) or
 # V2 (when using HAVE_V2_CONFIG) style configuration files.

@@ -295,6 +295,7 @@
 /* #define LOCKDIR "/etc/locks" */
 /* #define LOCKDIR "/usr/spool/locks" */
 /* #define LOCKDIR "/usr/spool/uucp/LCK" */
+/* #define LOCKDIR "/var/spool/lock" */
 
 /* You must also specify the format of the lock files by setting
    exactly one of the following macros to 1.  Check an existing lock
@@ -556,6 +557,7 @@
    set to 1, this may be overridden by the ``spool'' command in the
    configuration file.  */
 #define SPOOLDIR "/usr/spool/uucp"
+/* #define SPOOLDIR "/var/spool/uucp" */
 
 /* The name of the default public directory.  If HAVE_TAYLOR_CONFIG is
    set to 1, this may be overridden by the ``pubdir'' command in the
@@ -563,6 +565,7 @@
    specific public directory by using the ``pubdir'' command in the
    system file.  */
 #define PUBDIR "/usr/spool/uucppublic"
+/* #define PUBDIR "/var/spool/uucppublic" */
 
 /* The default command path.  This is a space separated list of
    directories.  Remote command executions requested by uux are looked
@@ -617,16 +620,19 @@
    HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
    command in the configuration file.  */
 #define LOGFILE "/usr/spool/uucp/Log"
+/* #define LOGFILE "/var/spool/uucp/Log" */
 
 /* The default statistics file when using HAVE_TAYLOR_LOGGING.  When
    using HAVE_TAYLOR_CONFIG, this may be overridden by the
    ``statfile'' command in the configuration file.  */
 #define STATFILE "/usr/spool/uucp/Stats"
+/* #define STATFILE "/var/spool/uucp/Stats" */
 
 /* The default debugging file when using HAVE_TAYLOR_LOGGING.  When
    using HAVE_TAYLOR_CONFIG, this may be overridden by the
    ``debugfile'' command in the configuration file.  */
 #define DEBUGFILE "/usr/spool/uucp/Debug"
+/* #define DEBUGFILE "/var/spool/uucp/Debug" */
 
 #endif /* HAVE_TAYLOR_LOGGING */
 
