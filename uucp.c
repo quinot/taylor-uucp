@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/09/19  02:30:37  ian
+   From Chip Salzenberg: check whether signal is ignored differently
+
    Revision 1.2  1991/09/11  02:33:14  ian
    Added ffork argument to fsysdep_run
 
@@ -85,11 +88,14 @@ main (argc, argv)
   boolean fuucico = TRUE;
   /* -s: report status to named file.  */
   const char *zstatus_file = NULL;
+  /* -W: expand local file names only.  */
+  boolean fexpand = TRUE;
   /* -x: set debugging level.  */
   int idebug = -1;
   int i;
   char *zexclam;
   char *zdestfile;
+  const char *zconst;
   struct ssysteminfo sdestsys;
   const struct ssysteminfo *qdestsys;
   boolean flocaldest;
@@ -98,7 +104,7 @@ main (argc, argv)
   char abrec_options[3];
   char *zoptions;
 
-  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:rs:x:")) != EOF)
+  while ((iopt = getopt (argc, argv, "cCdfg:I:jmn:rs:Wx:")) != EOF)
     {
       switch (iopt)
 	{
@@ -155,6 +161,11 @@ main (argc, argv)
 	case 's':
 	  /* Report status to named file.  */
 	  zstatus_file = optarg;
+	  break;
+
+	case 'W':
+	  /* Expand only local file names.  */
+	  fexpand = FALSE;
 	  break;
 
 	case 'x':
@@ -289,11 +300,23 @@ main (argc, argv)
 	}
     }
 
+  /* If the destination file is not an absolute path, expand it
+     with the current directory.  */
+  if (fexpand || flocaldest)
+    {
+      zconst = zsysdep_add_cwd (zdestfile, flocaldest);
+      if (zconst == NULL)
+	{
+	  ulog_close ();
+	  usysdep_exit (FALSE);
+	}
+      zdestfile = xstrdup (zconst);
+    }
+
   /* Process each file.  */
 
   for (i = optind; i < argc - 1; i++)
     {
-      const char *zconst;
       struct scmd s;
 
       zexclam = strchr (argv[i], '!');
@@ -305,7 +328,7 @@ main (argc, argv)
 	  /* This is a local file.  Make sure we get it out of the
 	     original directory.  We don't support local wildcards
 	     yet (if ever).  */
-	  zconst = zsysdep_add_cwd (argv[i]);
+	  zconst = zsysdep_add_cwd (argv[i], TRUE);
 	  if (zconst == NULL)
 	    {
 	      ulog_close ();
@@ -401,6 +424,22 @@ main (argc, argv)
 	  char *zcopy;
 	  struct ssysteminfo *qfromsys;
 
+	  /* Add the current directory to the filename if it's not
+	     already there.  */
+	  if (fexpand)
+	    {
+	      zconst = zsysdep_add_cwd (zexclam + 1, FALSE);
+	      if (zconst == NULL)
+		{
+		  ulog_close ();
+		  usysdep_exit (FALSE);
+		}
+	      zconst = xstrdup (zconst);
+	    }
+	  else
+	    zconst = zexclam + 1;
+
+	  /* Read the system information.  */
 	  clen = zexclam - argv[i];
 	  zcopy = (char *) xmalloc (clen + 1);
 	  strncpy (zcopy, argv[i], clen);
@@ -432,9 +471,9 @@ main (argc, argv)
 		 wildcards.  Note that it should do no harm to mistake
 		 a non-wildcard for a wildcard.  */
 
-	      if (strchr (zexclam + 1, '*') != NULL
-		  || strchr (zexclam + 1, '?') != NULL
-		  || strchr (zexclam + 1, '[') != NULL)
+	      if (strchr (zconst, '*') != NULL
+		  || strchr (zconst, '?') != NULL
+		  || strchr (zconst, '[') != NULL)
 		{
 		  s.bcmd = 'X';
 		  zto = (char *) alloca (strlen (zLocalname)
@@ -449,7 +488,7 @@ main (argc, argv)
 		  zto = zdestfile;
 		}
 	      s.pseq = NULL;
-	      s.zfrom = zexclam + 1;
+	      s.zfrom = zconst;
 	      s.zto = zto;
 	      s.zuser = zuser;
 	      s.zoptions = abrec_options;
@@ -466,7 +505,7 @@ main (argc, argv)
 
 	      s.bcmd = 'X';
 	      s.pseq = NULL;
-	      s.zfrom = zexclam + 1;
+	      s.zfrom = zconst;
 	      s.zto = argv[argc - 1];
 	      s.zuser = zuser;
 	      s.zoptions = abrec_options;

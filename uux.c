@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/08  21:53:17  ian
+   Brian Campbell: fix argument handling when looking for '-'
+
    Revision 1.5  1991/11/07  22:52:49  ian
    Chip Salzenberg: avoid recursive strtok, handle redirection better
 
@@ -106,6 +109,8 @@ main (argc, argv)
   boolean fuucico = TRUE;
   /* -s: report status to named file.  */
   const char *zstatus_file = NULL;
+  /* -W: only expand local file names.  */
+  boolean fexpand = TRUE;
   /* -x: set debugging level.  */
   int idebug = -1;
   /* -z: report status only on error.  */
@@ -161,7 +166,7 @@ main (argc, argv)
   /* The leading + in the getopt string means to stop processing
      options as soon as a non-option argument is seen.  */
 
-  while ((iopt = getopt (argc, argv, "+a:bcCg:I:jlnprs:x:z")) != EOF)
+  while ((iopt = getopt (argc, argv, "+a:bcCg:I:jlnprs:Wx:z")) != EOF)
     {
       switch (iopt)
 	{
@@ -220,6 +225,11 @@ main (argc, argv)
 	case 's':
 	  /* Report status to named file.  */
 	  zstatus_file = optarg;
+	  break;
+
+	case 'W':
+	  /* Only expand local file names.  */
+	  fexpand = FALSE;
 	  break;
 
 	case 'x':
@@ -411,7 +421,7 @@ main (argc, argv)
 
   for (i = 0; i < cargs; i++)
     {
-      const char *zsystem;
+      const char *zsystem, *zconst;
       char *zfile;
       boolean finput, foutput;
       boolean flocal;
@@ -478,6 +488,19 @@ main (argc, argv)
 	  zfile = zexclam + 1;
 	}
 
+      /* Add the current working directory to the file name if it's
+	 not an absolute path.  */
+      if (fexpand || flocal)
+	{
+	  zconst = zsysdep_add_cwd (zfile, flocal);
+	  if (zconst == NULL)
+	    {
+	      ulog_close ();
+	      usysdep_exit (FALSE);
+	    }	
+	  zfile = xstrdup (zconst);
+	}
+
       /* Check for output redirection.  We strip this argument out,
 	 and create an O command which tells uuxqt where to send the
 	 output.  */
@@ -501,25 +524,14 @@ main (argc, argv)
 
       if (flocal)
 	{
-	  const char *zconst;
 	  char *zuse;
 	  const char *zdata;
 	  char abtname[CFILE_NAME_LEN];
 	  char abdname[CFILE_NAME_LEN];
 
 	  /* It's a local file.  If requested by -C, copy the file to
-	     the spool directory; otherwise if the command is begin
-	     executed locally, prepend the current directory.  If the
-	     file is being shipped to another system, we must set up a
-	     file transfer request.  */
-
-	  zconst = zsysdep_add_cwd (zfile);
-	  if (zconst == NULL)
-	    {
-	      ulog_close ();
-	      usysdep_exit (FALSE);
-	    }
-	  zuse = xstrdup (zconst);
+	     the spool directory.  If the file is being shipped to
+	     another system, we must set up a transfer request.  */
 
 	  if (fcopy)
 	    {
@@ -535,28 +547,32 @@ main (argc, argv)
 
 	      zdup = xstrdup (zdata);
 
-	      if (! fcopy_file (zuse, zdup, FALSE))
+	      if (! fcopy_file (zfile, zdup, FALSE))
 		{
 		  ulog_close ();
 		  usysdep_exit (FALSE);
 		}
 
-	      xfree ((pointer) zuse);
 	      xfree ((pointer) zdup);
 
 	      zuse = abtname;
 	    }
-	  else if (! fxqtlocal)
+	  else
 	    {
-	      zdata = zsysdep_data_file_name (qxqtsys, bgrade,
-					      (char *) NULL, abdname,
-					      (char *) NULL);
-	      if (zdata == NULL)
+	      zuse = zfile;
+
+	      if (! fxqtlocal)
 		{
-		  ulog_close ();
-		  usysdep_exit (FALSE);
+		  zdata = zsysdep_data_file_name (qxqtsys, bgrade,
+						  (char *) NULL, abdname,
+						  (char *) NULL);
+		  if (zdata == NULL)
+		    {
+		      ulog_close ();
+		      usysdep_exit (FALSE);
+		    }
+		  strcpy (abtname, "D.0");
 		}
-	      strcpy (abtname, "D.0");
 	    }
 
 	  if (fxqtlocal)
@@ -595,13 +611,7 @@ main (argc, argv)
       else if (strcmp (qxqtsys->zname, zsystem) == 0)
 	{
 	  /* The file is already on the system where the command is to
-	     be executed.  Standard uux would prepend the current
-	     directory to the file name, even though the current
-	     directory may not have any meaning on the remote system.
-	     Since we want this to work across systems with different
-	     naming conventions, we don't do this, and simply require
-	     any uux call to fully specify remote path names.  If I
-	     think of a better way to handle this, I'll change it.  */
+	     be executed.  */
 	  if (finput)
 	    uxadd_xqt_line ('I', zfile, (const char *) NULL);
 	  else
@@ -611,8 +621,6 @@ main (argc, argv)
 	{
 	  struct ssysteminfo sfromsys;
 	  const struct ssysteminfo *qfromsys;
-	  const char *zconst;
-	  char *zdata;
 	  char abtname[CFILE_NAME_LEN];
 	  char abdname[CFILE_NAME_LEN];
 	  char *ztemp;
@@ -660,18 +668,16 @@ main (argc, argv)
 	      usysdep_exit (FALSE);
 	    }
 
-	  zdata = xstrdup (zconst);
-
-	  /* Request the file.  As noted above, standard uux would
-	     prepend the current directory to zfile here, but we do
-	     not.  */
+	  /* Request the file.  The special option '9' is a signal to
+	     uucico that it's OK to receive a file into the spool
+	     directory; normally such requests are rejected.  */
 
 	  s.bcmd = 'R';
 	  s.pseq = NULL;
 	  s.zfrom = zfile;
-	  s.zto = zdata;
+	  s.zto = abtname;
 	  s.zuser = zuser;
-	  s.zoptions = "";
+	  s.zoptions = "9";
 	  s.ztemp = "";
 	  s.imode = 0600;
 	  s.znotify = "";
@@ -716,8 +722,12 @@ main (argc, argv)
 		  usysdep_exit (FALSE);
 		}
 
-	      /* This doesn't work correctly, since it never removes
-		 the file from the local spool directory.  */
+	      /* Queue up a uucp command to be executed locally once
+		 the file arrives.  We take advantage of the file
+		 renaming and moving that uuxqt does to remove the
+		 file and avoid the hassles of adding the current
+		 directory.  The -W switch to uucp prevents from
+		 adding the current directory to the remote file.  */
 
 	      e = esysdep_fopen (zxqt_file, FALSE, FALSE);
 	      if (e == NULL)
@@ -727,8 +737,8 @@ main (argc, argv)
 		}
 
 	      fprintf (e, "U %s %s\n", zuser, zLocalname);
-	      fprintf (e, "F %s\n", abtname);
-	      fprintf (e, "C uucp -C %s %s!%s\n", zdata, qxqtsys->zname,
+	      fprintf (e, "F %s foo\n", abtname);
+	      fprintf (e, "C uucp -CW foo %s!%s\n", qxqtsys->zname,
 		       abdname);
 
 	      if (fclose (e) != 0)
@@ -736,11 +746,7 @@ main (argc, argv)
 	    }
 
 	  /* Tell the command execution to wait until the file has
-	     been received, and tell it the real file name to use.
-	     This isn't right if the file is not being used as
-	     standard input, because it should be zsysdep_base_name
-	     (zfile), but we can't call that because we're the wrong
-	     system.  I don't know what to do about this.  */
+	     been received, and tell it the real file name to use.  */
 
 	  if (finput)
 	    {
@@ -749,8 +755,16 @@ main (argc, argv)
 	    }
 	  else
 	    {
-	      uxadd_xqt_line ('F', ztemp, zfile);
-	      pzargs[i] = zfile;
+	      const char *zbase;
+
+	      zbase = zsysdep_base_name (zfile);
+	      if (zbase == NULL)
+		{
+		  ulog_close ();
+		  usysdep_exit (FALSE);
+		}
+	      uxadd_xqt_line ('F', ztemp, zbase);
+	      pzargs[i] = xstrdup (zbase);
 	    }
 	}
     }

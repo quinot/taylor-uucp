@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/11  18:55:52  ian
+   Get protocol parameters from port and dialer for incoming calls
+
    Revision 1.6  1991/11/10  19:24:22  ian
    Added pffile protocol entry point for file level control
 
@@ -433,8 +436,12 @@ extern boolean fsysdep_unlock_uuxqt_dir P((void));
 
 /* Add the working directory to a file name.  If the file already has
    a directory, it should not be changed.  The return value may point
-   to a common static buffer.  This should return NULL on error.  */
-extern const char *zsysdep_add_cwd P((const char *zfile));
+   to a common static buffer.  If the flocal argument is TRUE, then
+   this is a local file (so, for example, a leading ~ should be
+   expanded as appropriate); otherwise the file is on a remote system.
+   This should return NULL on error.  */
+extern const char *zsysdep_add_cwd P((const char *zfile,
+				      boolean flocal));
 
 /* Get the base name of a file.  The file will be a local file name,
    and this function should return the base file name, ideally in a

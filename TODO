@@ -122,8 +122,3 @@ Should there be some way to specify the retry time and the maximum
 number of retries using the new configuration scheme?  The retry time
 can currently be specified by using a semicolon at the end of a time
 string.
-
-20.
-
-Relative path names should be expanded by uucp and uux.  My original
-decision on this was wrong.

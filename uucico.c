@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1991/11/12  19:47:04  ian
+   Add called-chat set of commands to run a chat script on an incoming call
+
    Revision 1.15  1991/11/12  18:25:33  ian
    Added 't' protocol
 
@@ -1797,39 +1800,57 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	      break;
 
 	    case 'R':
-	      /* Receive a file.  We do not permit users to receive
-		 files into the spool directory.  */
+	      /* Receive a file.  */
 
 	      if (fspool_file (s.zto))
 		{
-		  ulog (LOG_ERROR, "Not permitted to receive %s", s.zto);
-		  (void) fsysdep_did_work (s.pseq);
-		  break;
-		}
+		  /* Normal users are not allowed to receive files in
+		     the spool directory, and to make it particularly
+		     difficult we require a special option '9'.  This
+		     is used only by uux when a file must be requested
+		     from one system and then sent to another.  */
+		  if (strchr (s.zoptions, '9') == NULL)
+		    {
+		      ulog (LOG_ERROR, "Not permitted to receive %s",
+			    s.zto);
+		      (void) fsysdep_did_work (s.pseq);
+		      break;
+		    }
 
-	      zuse = zsysdep_real_file_name (qsys, s.zto, s.zfrom);
-	      if (zuse == NULL)
-		{
-		  (void) fsysdep_did_work (s.pseq);
-		  break;
-		}
-
-	      /* Check permissions.  */
-	      if (! fok_to_receive (zuse, TRUE, fcaller, qsys, s.zuser))
-		{
-		  ulog (LOG_ERROR, "Not permitted to receive %s", s.zto);
-		  (void) fsysdep_did_work (s.pseq);
-		  break;
-		}
-
-	      /* The 'f' option means that directories should not be
-		 created if they do not already exist.  */
-	      if (strchr (s.zoptions, 'f') != NULL)
-		{
-		  if (! fsysdep_make_dirs (zuse))
+		  zuse = zsysdep_spool_file_name (qsys, s.zto);
+		  if (zuse == NULL)
 		    {
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
+		    }
+		}
+	      else
+		{
+		  zuse = zsysdep_real_file_name (qsys, s.zto, s.zfrom);
+		  if (zuse == NULL)
+		    {
+		      (void) fsysdep_did_work (s.pseq);
+		      break;
+		    }
+
+		  /* Check permissions.  */
+		  if (! fok_to_receive (zuse, TRUE, fcaller, qsys, s.zuser))
+		    {
+		      ulog (LOG_ERROR, "Not permitted to receive %s",
+			    s.zto);
+		      (void) fsysdep_did_work (s.pseq);
+		      break;
+		    }
+
+		  /* The 'f' option means that directories should not
+		     be created if they do not already exist.  */
+		  if (strchr (s.zoptions, 'f') != NULL)
+		    {
+		      if (! fsysdep_make_dirs (zuse))
+			{
+			  (void) fsysdep_did_work (s.pseq);
+			  break;
+			}
 		    }
 		}
 
