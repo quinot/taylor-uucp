@@ -908,6 +908,7 @@ uccopy (zfile, zdest)
 	  clen = zfrom - zexclam - 1;
 	  zforward = zbufalc (clen + 1);
 	  memcpy (zforward, zexclam + 1, clen);
+	  zforward[clen] = '\0';
 	}
 
       ++zfrom;
