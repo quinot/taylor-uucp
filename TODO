@@ -269,3 +269,8 @@ problem.
 Michael Nolan: some systems don't have dup2.
 
 90.
+
+Rupert Mohr: it is possible that cmax_size_ever fails if there are
+some times for which no size restriction is made.
+
+91.
