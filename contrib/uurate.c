@@ -233,6 +233,7 @@ struct Host_entry
 
 extern int optind;                /* GETOPT : Option Index */
 extern char *optarg;            /* GETOPT : Option Value */
+extern int getopt();
 #if ! HAVE_STDLIB_H
    extern pointer *calloc();
 #endif  /* HAVE_STDLIB_H */
@@ -1032,7 +1033,7 @@ int main(argc, argv)
                     hdrprt('p',0);            /* print the header line(s) */
                     hdr_done = TRUE;
                 }
-                printf("%-8s %3s  %4d %4d %5d %4d    %10d %7d %10d\n",
+                printf("%-8s %3s  %4ld %4ld %5ld %4ld    %10ld %7ld %10ld\n",
                                     type == NULL ? " ":cur->Hostname,
                                     prot->type,
                                     prot->pr_psizemin,
@@ -1076,7 +1077,7 @@ int main(argc, argv)
                          hdrprt('p',1);       /* print the header line(s) */
                          hdr_done = TRUE;
                       }
-                      printf("%-8s %3s  %11d %11d  %11d %11d\n",
+                      printf("%-8s %3s  %11ld %11ld  %11ld %11ld\n",
                                     type == NULL ? " ":cur->Hostname,
                                     prot->type,
                                     prot->pr_eheader,
