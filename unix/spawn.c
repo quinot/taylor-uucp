@@ -350,8 +350,20 @@ ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
 
   if (! fkeepuid)
     {
+      /* Return to the uid of the invoking user.  */
       (void) setuid (getuid ());
       (void) setgid (getgid ());
+    }
+  else
+    {
+      /* Try to force the UUCP uid to be both real and effective user
+	 ID, in order to present a consistent environment regardless
+	 of the invoking user.  This won't work on System V based
+	 systems, but it will do no harm.  It would be possible to use
+	 a setuid root program to force the UID setting, but I don't
+	 think the efficiency loss is worth it.  */
+      (void) setuid (geteuid ());
+      (void) setgid (getegid ());
     }
 
   if (zchdir != NULL)

@@ -56,7 +56,7 @@ espopen (pazargs, frd, pipid)
     }
   aidescs[2] = SPAWN_NULL;
 
-  ipid = ixsspawn (pazargs, aidescs, FALSE, FALSE,
+  ipid = ixsspawn (pazargs, aidescs, TRUE, FALSE,
 		   (const char *) NULL, FALSE, TRUE,
 		   (const char *) NULL, (const char *) NULL,
 		   (const char *) NULL);

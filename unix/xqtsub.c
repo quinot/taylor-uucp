@@ -370,7 +370,7 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 
   /* Pass zchdir as zxqtdir, fnosigs as TRUE, fshell as TRUE if we
      aren't already using the shell.  */
-  ipid = ixsspawn (pazargs, aidescs, FALSE, FALSE, zxqtdir, TRUE,
+  ipid = ixsspawn (pazargs, aidescs, TRUE, FALSE, zxqtdir, TRUE,
 		   ! fshell, zpath, qsys->uuconf_zname, zuser);
 
   ierr = errno;
