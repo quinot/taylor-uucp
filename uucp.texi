@@ -4398,7 +4398,7 @@ Brian W. Antoine @file{<briana@@tau-ceti.isc-br.com>}
 @file{jantypas@@soft21.s21.com} (John Antypas)
 @file{nba@@sysware.DK} (Niels Baggesen)
 @file{uunet!hotmomma!sdb} (Scott Ballantyne)
-@file{magus!dolphin!zack} (Zacharias Beckman)
+Zacharias Beckman @file{<zac@@dolphin.com>}
 @file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
 @file{bob@@usixth.sublink.org} (Roberto Biancardi)
 @file{statsci!scott@@coco.ms.washington.edu} (Scott Blachowicz)
