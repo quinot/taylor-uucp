@@ -267,8 +267,6 @@ main (argc, argv)
 	      zsystem = zbufcpy (ssys.uuconf_zname);
 	      (void) uuconf_system_free (puuconf, &ssys);
 	    }
-	  else if (iuuconf != UUCONF_NOT_FOUND)
-	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 	}
     }
 
