@@ -872,18 +872,20 @@ extern int uuconf_maxuuxqts (void *uuconf_pglobal,
 /* Check a login name and password.  This checks the Taylor UUCP
    password file (not /etc/passwd).  It will work even if
    uuconf_taylor_init was not called.  If the function argument is not
-   NULL, it should take a string, transform it in place, and return
-   the new length; it will be called on the login name and password
-   from the password file before comparing them to the passed in login
-   name and password.  This is basically a hack to avoid require the
-   uuconf library to know about escape sequences.  If the login name
-   exists and the password is correct, this returns UUCONF_SUCCESS.
-   If the login does not exist, or the password is wrong, this returns
-   UUCONF_NOT_FOUND.  Other errors are also possible.  */
+   NULL, it will be used as a comparison routine; the first argument
+   is the pinfo argument to uuconf_callin and the second argument is
+   that password from the file.  It should return non-zero if the
+   password from the file matches the desired password, zero if the
+   password does not match.  If the function argument is NULL, the
+   pinfo argument is taken to be a string and strcmp is used as the
+   comparison function.  If the login name exists and the password
+   compares as TRUE, this returns UUCONF_SUCCESS.  If the login does
+   not exist, or the password is wrong, this returns UUCONF_NOT_FOUND.
+   Other errors are also possible.  */
 extern int uuconf_callin (void *uuconf_pglobal,
 			  const char *uuconf_zlogin,
-			  const char *uuconf_zpassword,
-			  size_t (*uuconf_transform) (char *));
+			  int (*uuconf_cmp) (void *, const char *),
+			  void *uuconf_pinfo);
 
 /* Get the callout login name and password for a system.  This will
    set both *pzlog and *pzpass to a string allocated by malloc, or to
