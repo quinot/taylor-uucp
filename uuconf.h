@@ -84,7 +84,7 @@ struct uuconf_chat
      hold a program to run).  */
   char **uuconf_pzchat;
   /* The chat program to run.  This is a NULL terminated list of
-     arguments; element 0 if the program.  May be NULL, in which case
+     arguments; element 0 is the program.  May be NULL, in which case
      there is no program.  */
   char **uuconf_pzprogram;
   /* The timeout in seconds to use for expect strings in the chat
