@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1991/12/28  03:49:23  ian
+   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
+
    Revision 1.24  1991/12/23  05:15:54  ian
    David Nugent: set debugging level for a specific system
 
@@ -845,6 +848,18 @@ extern void bzero P((pointer p, int c));
 #else /* ! HAVE_MEMMOVE */
 extern pointer xmemmove P((pointer, constpointer, int));
 #endif /* ! HAVE_MEMMOVE */
+
+/* Look up a character in a string.  */
+#if ! HAVE_STRCHR
+#if HAVE_INDEX
+#define strchr index
+#define strrchr rindex
+extern char *index (), *rindex ();
+#else /* ! HAVE_INDEX */
+extern char *strchr P((const char *z, int b));
+extern char *strrchr P((const char *z, int b));
+#endif /* ! HAVE_INDEX */
+#endif /* ! HAVE_STRCHR */
 
 /* Turn a string into a long integer.  */
 #if ! HAVE_STRTOL

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.24  1991/12/28  04:05:13  ian
+   Create spool directories
+
    Revision 1.23  1991/12/28  03:49:23  ian
    Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
 
@@ -1297,6 +1300,25 @@ memcpy (ptoarg, pfromarg, c)
 }
 
 #endif /* ! HAVE_MEMFNS && ! HAVE_BFNS */
+
+#if ! HAVE_STRCHR && ! HAVE_INDEX
+
+/* Look for a character in a string.  This is supposed to work for a
+   null byte, although we never actually call it with one.  */
+
+char *
+strchr (z, b)
+     const char *z;
+     int b;
+{
+  b = (char) b;
+  while (*z != b)
+    if (*z++ == '\0')
+      return NULL;
+  return (char *) z;
+}
+
+#endif /* ! HAVE_STRCHR && ! HAVE_INDEX */
 
 #if ! HAVE_ALLOCA
 
