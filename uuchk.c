@@ -503,7 +503,7 @@ ukshow (qsys, puuconf)
 	    }
 
 	  if (qsys->uuconf_cmax_retries > 0)
-	    printf (" May retry the call up to %d times",
+	    printf (" May retry the call up to %d times\n",
 		    qsys->uuconf_cmax_retries);
 
 	  if (qsys->uuconf_qcalltimegrade != NULL)
