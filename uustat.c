@@ -1276,8 +1276,9 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 
 	      /* Ask stdin whether this job should be killed.  */
 	      fprintf (stderr, "%s: %s %s?",
+		       zProgram,
 		       (icmd & JOB_REJUVENATE) != 0 ? "Rejuvenate" : "Kill",
-		       zProgram, zlistid);
+		       zlistid);
 	      (void) fflush (stderr);
 	      b = getchar ();
 	      fkill_or_rejuv = b == 'y' || b == 'Y';
@@ -1547,8 +1548,9 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 
 	      /* Ask stdin whether this job should be killed.  */
 	      fprintf (stderr, "%s: %s %s?",
+		       zProgram,
 		       (icmd & JOB_REJUVENATE) != 0 ? "Rejuvenate" : "Kill",
-		       zProgram, zSxqt_cmd);
+		       zSxqt_cmd);
 	      (void) fflush (stderr);
 	      b = getchar ();
 	      fkill_or_rejuv = b == 'y' || b == 'Y';
