@@ -58,6 +58,7 @@
 #define HDB_DIALERS "/Dialers"
 #define HDB_DIALCODES "/Dialcodes"
 #define HDB_MAXUUXQTS "/Maxuuxqts"
+#define HDB_REMOTE_UNKNOWN "/remote.unknown"
 
 /* A string which is inserted between the value of OLDCONFIGLIB
    (defined in the Makefile) and any names specified in the HDB

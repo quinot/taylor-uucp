@@ -37,6 +37,7 @@ hdnams.c
 hinit.c
 hlocnm.c
 hport.c
+hrmunk.c
 hsinfo.c
 hsnams.c
 hsys.c
@@ -59,6 +60,7 @@ prtsub.c
 rdlocs.c
 rdperm.c
 reliab.c
+remunk.c
 sinfo.c
 snams.c
 split.c

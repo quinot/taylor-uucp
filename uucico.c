@@ -1690,8 +1690,29 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   iuuconf = uuconf_system_info (puuconf, zstr + 1, &ssys);
   if (iuuconf == UUCONF_NOT_FOUND)
     {
-      if (! fsysdep_unknown_caller (zstr + 1)
-	  || ! funknown_system (puuconf, zstr + 1, &ssys))
+      char *zscript;
+
+      /* Run the remote.unknown script, if appropriate.  */
+      iuuconf = uuconf_remote_unknown (puuconf, &zscript);
+      if (iuuconf == UUCONF_SUCCESS)
+	{
+	  if (! fsysdep_unknown_caller (zscript, zstr + 1))
+	    {
+	      xfree ((pointer) zscript);
+	      (void) fsend_uucp_cmd (qconn, "RYou are unknown to me");
+	      ubuffree (zstr);
+	      return FALSE;
+	    }
+	  xfree ((pointer) zscript);
+	}
+      else if (iuuconf != UUCONF_NOT_FOUND)
+	{
+	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+	  ubuffree (zstr);
+	  return FALSE;
+	}
+
+      if (! funknown_system (puuconf, zstr + 1, &ssys))
 	{
 	  (void) fsend_uucp_cmd (qconn, "RYou are unknown to me");
 	  ulog (LOG_ERROR, "Call from unknown system %s", zstr + 1);

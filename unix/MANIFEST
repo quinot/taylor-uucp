@@ -62,6 +62,7 @@ trunc.c
 uacces.c
 ufopen.c
 ultspl.c
+unknwn.c
 uuto.c
 walk.c
 wldcrd.c

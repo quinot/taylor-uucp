@@ -876,6 +876,14 @@ extern int uuconf_validate (void *uuconf_pglobal,
 			    const struct uuconf_system *uuconf_qsys,
 			    const char *uuconf_zlogin);
 
+/* Get the name of the HDB remote.unknown shell script, if using
+   HAVE_HDB_CONFIG.  This does not actually run the shell script.  If
+   the function returns UUCONF_SUCCESS, the name will be in *pzname,
+   which will point to an malloced buffer.  If it returns
+   UUCONF_NOT_FOUND, then there is no script to run.  */
+extern int uuconf_remote_unknown (void *uuconf_pglobal,
+				  char **pzname);
+
 /* Translate a dial code.  This sets *pznum to an malloced string.
    This will look up the entire zdial string in the dialcode file, so
    for normal use the alphabetic prefix should be separated.  */
@@ -916,6 +924,7 @@ extern int uuconf_debuglevel ();
 extern int uuconf_maxuuxqts ();
 extern int uuconf_callin ();
 extern int uuconf_callout ();
+extern int uuconf_remote_unknown ();
 extern int uuconf_validate ();
 extern int uuconf_grade_cmp ();
 
@@ -1157,6 +1166,13 @@ extern int uuconf_hdb_login_localname (void *uuconf_pglobal,
 				       const char *uuconf_zlogin,
 				       char **pzname);
 
+/* Get the name of the HDB remote.unknown shell script.  This does not
+   actually run the shell script.  If the function returns
+   UUCONF_SUCCESS, the name will be in *pzname, which will point to an
+   malloced buffer.  */
+extern int uuconf_hdb_remote_unknown (void *uuconf_pglobal,
+				      char **pzname);
+
 #else /* ! UUCONF_ANSI_C */
 
 extern int uuconf_hdb_init ();
@@ -1167,6 +1183,7 @@ extern int uuconf_hdb_find_port ();
 extern int uuconf_hdb_dialer_names ();
 extern int uuconf_hdb_dialer_info ();
 extern int uuconf_hdb_localname ();
+extern int uuconf_hdb_remote_unknown ();
 
 #endif /* ! UUCONF_ANSI_C */
 
