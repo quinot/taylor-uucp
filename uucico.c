@@ -132,7 +132,7 @@ static boolean fcall P((pointer puuconf, const char *zconfig, boolean fuuxqt,
 			const struct uuconf_system *qsys,
 			struct uuconf_port *qport, boolean fifwork,
 			boolean fforce, boolean fdetach,
-			boolean fquiet));
+			boolean fquiet, boolean ftrynext));
 static boolean fconn_call P((struct sdaemon *qdaemon,
 			     struct uuconf_port *qport,
 			     struct sstatus *qstat, int cretry,
@@ -181,6 +181,7 @@ static const struct option asLongopts[] =
   { "system", required_argument, NULL, 's' },
   { "login", required_argument, NULL, 'u' },
   { "wait", no_argument, NULL, 'w' },
+  { "try-next", no_argument, NULL, 'z' },
   { "config", required_argument, NULL, 'I' },
   { "debug", required_argument, NULL, 'x' },
   { "version", no_argument, NULL, 'v' },
@@ -224,6 +225,8 @@ main (argc, argv)
   const char *zlogin = NULL;
   /* -w: Whether to wait for a call after doing one.  */
   boolean fwait = FALSE;
+  /* -z: Try next alternate if call fails.  */
+  boolean ftrynext = FALSE;
   const char *zopts;
   int iopt;
   struct uuconf_port *qport;
@@ -360,6 +363,11 @@ main (argc, argv)
 	case 'w':
 	  /* Call out and then wait for a call in  */
 	  fwait = TRUE;
+	  break;
+
+	case 'z':
+	  /* Try next alternate if call fails.  */
+	  ftrynext = TRUE;
 	  break;
 
 	case 'I':
@@ -509,7 +517,7 @@ main (argc, argv)
 	    {
 	      fLocked_system = TRUE;
 	      fret = fcall (puuconf, zconfig, fuuxqt, &sLocked_system, qport,
-			    fifwork, fforce, fdetach, fquiet);
+			    fifwork, fforce, fdetach, fquiet, ftrynext);
 	      if (fLocked_system)
 		{
 		  (void) fsysdep_unlock_system (&sLocked_system);
@@ -593,7 +601,8 @@ main (argc, argv)
 		    {
 		      fLocked_system = TRUE;
 		      if (! fcall (puuconf, zconfig, fuuxqt, &sLocked_system,
-				   qport, TRUE, fforce, fdetach, fquiet))
+				   qport, TRUE, fforce, fdetach, fquiet,
+				   ftrynext))
 			fret = FALSE;
 
 		      /* Now ignore any SIGHUP that we got.  */
@@ -848,7 +857,7 @@ uabort ()
 
 static boolean
 fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
-       fquiet)
+       fquiet, ftrynext)
      pointer puuconf;
      const char *zconfig;
      boolean fuuxqt;
@@ -858,6 +867,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
      boolean fforce;
      boolean fdetach;
      boolean fquiet;
+     boolean ftrynext;
 {
   struct sstatus sstat;
   long inow;
@@ -973,7 +983,7 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
 
       if (fret)
 	return TRUE;
-      if (fcalled)
+      if (fcalled && ! ftrynext)
 	return FALSE;
 
       /* Now we have to dump that port so that we can aquire a new

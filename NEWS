@@ -43,6 +43,9 @@ Changes in version 1.05:
 
     uucico accepts a -u argument to set the user name.
 
+    uucico accepts a -z argument to try the next alternate if a call
+    fails.
+
     uustat accepts a -R argument to rejuvenate each listed job.
     
     Mailer configuration was moved from configure checking to
