@@ -316,7 +316,8 @@ extern void ulog_close P((void));
 /* Make an entry in the statistics file.  */
 extern void ustats P((boolean fsucceeded, const char *zuser,
 		      const char *zsystem, boolean fsent,
-		      long cbytes, long csecs, long cmicros));
+		      long cbytes, long csecs, long cmicros,
+		      boolean fmaster));
 
 /* Close the statistics file.  */
 extern void ustats_close P((void));

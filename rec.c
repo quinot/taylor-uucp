@@ -976,7 +976,8 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
     (void) remove (qinfo->ztemp);
 
   ustats (zerr == NULL, qtrans->s.zuser, qdaemon->qsys->uuconf_zname,
-	  FALSE, qtrans->cbytes, qtrans->isecs, qtrans->imicros);
+	  FALSE, qtrans->cbytes, qtrans->isecs, qtrans->imicros,
+	  qdaemon->fmaster);
 
   if (zerr == NULL)
     {

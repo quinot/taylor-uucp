@@ -1354,7 +1354,8 @@ ufailed (qdaemon)
 	{
 	  if (q->fsendfile || q->frecfile)
 	    ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
-		    q->fsendfile, q->cbytes, q->isecs, q->imicros);
+		    q->fsendfile, q->cbytes, q->isecs, q->imicros,
+		    FALSE);
 	  if (q->frecfile)
 	    (void) frec_discard_temp (qdaemon, q);
 	  q = q->qnext;
@@ -1369,7 +1370,8 @@ ufailed (qdaemon)
 	{
 	  if (q->fsendfile || q->frecfile)
 	    ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
-		    q->fsendfile, q->cbytes, q->isecs, q->imicros);
+		    q->fsendfile, q->cbytes, q->isecs, q->imicros,
+		    FALSE);
 	  if (q->frecfile)
 	    (void) frec_discard_temp (qdaemon, q);
 	  q = q->qnext;

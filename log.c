@@ -543,8 +543,9 @@ ulog_close ()
 /* Add an entry to the statistics file.  We may eventually want to put
    failed file transfers in here, but we currently do not.  */
 
+/*ARGSUSED*/
 void
-ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
+ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
      boolean fsucceeded;
      const char *zuser;
      const char *zsystem;
@@ -552,6 +553,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
      long cbytes;
      long csecs;
      long cmicros;
+     boolean fmaster;
 {
   long cbps;
 
@@ -614,21 +616,19 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
   {
     static int iseq;
 
-    /* I don't know what the 'M' or the 'C' mean.  This format expects
-       us to get the time in fractions of a second; on Unix we could
-       use times to do this, and we probably should.  The sequence
-       number should probably correspond to the sequence number in the
-       log file, but that is currently always 0; using this fake
-       sequence number will still at least reveal which transfers are
-       from different calls.  We don't report a failed data transfer
-       with this format.  */
+    /* I don't know what the 'C' means.  The sequence number should
+       probably correspond to the sequence number in the log file, but
+       that is currently always 0; using this fake sequence number
+       will still at least reveal which transfers are from different
+       calls.  We don't report a failed data transfer with this
+       format.  */
     if (! fsucceeded)
       return;
     ++iseq;
     fprintf (eLstats,
-	     "%s!%s M (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld %s\n",
-	     zsystem, zuser, zldate_and_time (), iLid, iseq,
-	     zLdevice == NULL ? "unknown" : zLdevice,
+	     "%s!%s %c (%s) (C,%d,%d) [%s] %s %ld / %ld.%03ld secs, %ld %s\n",
+	     zsystem, zuser, fmaster ? 'M' : 'S', zldate_and_time (),
+	     iLid, iseq, zLdevice == NULL ? "unknown" : zLdevice,
 	     fsent ? "->" : "<-",
 	     cbytes, csecs, cmicros / 1000, cbps,
 	     "bytes/sec");
