@@ -1780,12 +1780,50 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
    program.  It's also not a great checksum, since it can be fooled
    by some single bit errors.  */
 
+/* Sorry about this knavery, but it speeds up the VAX code
+   significantly.  It would be better to rewrite the whole routine in
+   assembler.  */
+#ifdef __GNUC__
+#ifdef __vax__
+#define VAX_ASM 1
+#endif
+#endif
+
+#if VAX_ASM
+#define ROTATE(i) \
+  asm ("cvtwl %1,%0\n\trotl $1,%0,%0" : "=g" (i) : "g" (i))
+#else
+#define ROTATE(i) i += i + ((i & 0x8000) >> 15)
+#endif
+
+#define ITERATION \
+      /* Rotate ichk1 left.  */ \
+      ROTATE (ichk1); \
+ \
+      /* The guts of the checksum.  */ \
+      b = BUCHAR (*z++); \
+      if (b != 0) \
+	{ \
+	  ichk1 &= 0xffff; \
+	  ichk1 += b; \
+	  ichk2 += ichk1 ^ c; \
+	  if ((ichk1 >> 16) != 0) \
+	    ichk1 ^= ichk2; \
+	} \
+      else \
+	{ \
+	  ichk2 += ichk1 ^ c; \
+	  ichk1 ^= ichk2; \
+	} \
+ \
+      --c
+
 static int
 igchecksum (z, c)
      register const char *z;
      register size_t c;
 {
-  register unsigned int ichk1, ichk2;
+  register unsigned long ichk1, ichk2;
 
   ichk1 = 0xffff;
   ichk2 = 0;
@@ -1794,29 +1832,12 @@ igchecksum (z, c)
     {
       register unsigned int b;
 
-      /* Rotate ichk1 left.  */
-      if ((ichk1 & 0x8000) == 0)
-	ichk1 <<= 1;
-      else
-	{
-	  ichk1 <<= 1;
-	  ++ichk1;
-	}
-
-      /* Add the next character to ichk1.  */
-      b = *z++ & 0xff;
-      ichk1 += b;
-
-      /* Add ichk1 xor the character position in the buffer counting from
-	 the back to ichk2.  */
-      ichk2 += ichk1 ^ c;
-
-      /* If the character was zero, or adding it to ichk1 caused an
-	 overflow, xor ichk2 to ichk1.  */
-      if (b == 0 || (ichk1 & 0xffff) < b)
-	ichk1 ^= ichk2;
+      ITERATION;
+      ITERATION;
+      ITERATION;
+      ITERATION;
     }
-  while (--c > 0);
+  while (c > 0);
 
   return ichk1 & 0xffff;
 }
@@ -1834,7 +1855,7 @@ igchecksum2 (zfirst, cfirst, zsecond, csecond)
      const char *zsecond;
      size_t csecond;
 {
-  register unsigned int ichk1, ichk2;
+  register unsigned long ichk1, ichk2;
   register const char *z;
   register size_t c;
 
@@ -1848,34 +1869,14 @@ igchecksum2 (zfirst, cfirst, zsecond, csecond)
     {
       register unsigned int b;
 
-      /* Rotate ichk1 left.  */
-      if ((ichk1 & 0x8000) == 0)
-	ichk1 <<= 1;
-      else
-	{
-	  ichk1 <<= 1;
-	  ++ichk1;
-	}
-
-      /* Add the next character to ichk1.  */
-      b = *z++ & 0xff;
-      ichk1 += b;
+      ITERATION;
 
       /* If the first buffer has been finished, switch to the second.  */
       --cfirst;
       if (cfirst == 0)
 	z = zsecond;
-
-      /* Add ichk1 xor the character position in the buffer counting from
-	 the back to ichk2.  */
-      ichk2 += ichk1 ^ c;
-
-      /* If the character was zero, or adding it to ichk1 caused an
-	 overflow, xor ichk2 to ichk1.  */
-      if (b == 0 || (ichk1 & 0xffff) < b)
-	ichk1 ^= ichk2;
     }
-  while (--c > 0);
+  while (c > 0);
 
   return ichk1 & 0xffff;
 }
