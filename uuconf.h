@@ -271,9 +271,10 @@ struct uuconf_system
   struct uuconf_proto_param *uuconf_qproto_params;
   /* Chat script to run when called by this system.  */
   struct uuconf_chat uuconf_scalled_chat;
-  /* Debugging level to set during a conversation.  */
+  /* Debugging level to set during a conversation.  May be NULL.  */
   char *uuconf_zdebug;
-  /* Maximum remote debugging level this system may request.  */
+  /* Maximum remote debugging level this system may request.  May be
+     NULL.  */
   char *uuconf_zmax_remote_debug;
   /* Non-zero if remote requests are permitted when calling this
      system.  */
@@ -634,18 +635,26 @@ extern int uuconf_system_info (void *uuconf_pglobal,
 			       struct uuconf_system *uuconf_qsys);
 
 /* Get information for an unknown (anonymous) system.  The
-   uuconf_zname field of the return system will be NULL.  If no
-   information is available for unknown systems, this will return
-   UUCONF_NOT_FOUND.  This does not run the HDB remote.unknown shell
-   script.  */
+   uuconf_zname field of the returned system information will be NULL.
+   If no information is available for unknown systems, this will
+   return UUCONF_NOT_FOUND.  This does not run the HDB remote.unknown
+   shell script.  */
 extern int uuconf_system_unknown (void *uuconf_pglobal,
 				  struct uuconf_system *uuconf_qsys);
 
+/* Get information for the local system.  Normally the local system
+   name should first be looked up using uuconf_system_info.  If that
+   returns UUCONF_NOT_FOUND, this function may be used to get an
+   appropriate set of defaults.  The uuconf_zname field of the
+   returned system information may be NULL.  */
+extern int uuconf_system_local (void *uuconf_pglobal,
+				struct uuconf_system *uuconf_qsys);
+
 /* Free the memory occupied by system information returned by
-   uuconf_system_info, uuconf_system_unknown or any of the
-   configuration file type specific routines described below.  After
-   this is called, the contents of the structure shall not be referred
-   to.  */
+   uuconf_system_info, uuconf_system_unknown, uuconf_system_local, or
+   any of the configuration file type specific routines described
+   below.  After this is called, the contents of the structure shall
+   not be referred to.  */
 extern int uuconf_system_free (void *uuconf_pglobal,
 			       struct uuconf_system *uuconf_qsys);
 
@@ -834,6 +843,7 @@ extern int uuconf_init_thread ();
 extern int uuconf_system_names ();
 extern int uuconf_system_info ();
 extern int uuconf_system_unknown ();
+extern int uuconf_system_local ();
 extern int uuconf_system_free ();
 extern int uuconf_find_port ();
 extern int uuconf_port_free ();
