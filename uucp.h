@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/10  19:29:02  ian
+   Move statistics file stuff from file.c to log.c
+
    Revision 1.12  1991/11/21  22:17:06  ian
    Add version string, print version when printing usage
 
@@ -647,6 +650,9 @@ extern void ulog_system P((const char *zsystem));
 
 /* Set the system and user name used by the logging functions.  */
 extern void ulog_user P((const char *zuser));
+
+/* Set the device name used by the logging functions.  */
+extern void ulog_device P((const char *zdevice));
 
 /* Close the log file.  */
 extern void ulog_close P((void));
