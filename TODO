@@ -218,3 +218,9 @@ port (or Devices) file, but what if multiple ports used the same
 physical device?  Hmmm.
 
 33.
+
+David Nugent: allow the minimum wait time to be specified for a
+system, such that calls to that system are not made more frequently
+than, say, once an hour.
+
+34.
