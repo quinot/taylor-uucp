@@ -58,9 +58,9 @@ TSTUU = tstuu
 # want to look them over.
 #
 
-# If you do not have the mkdir system call, undefine the following three
-# lines.  This will install uudir as an suid root program.  This is
-# necessary because invoking /bin/mkdir from an suid program will
+# If you do not have the mkdir system call, uncomment the following
+# three lines.  This will install uudir as an suid root program.  This
+# is necessary because invoking /bin/mkdir from an suid program will
 # leave the directories owned by the wrong user.
 @UUDIR@UUDIR = uudir
 @UUDIR@uudirdir = $(sbindir)/util
