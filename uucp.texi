@@ -2067,6 +2067,7 @@ kent@@sparky.IMD.Sterling.COM (Kent Landfield)
 lebaron@@inrs-telecom.uquebec.ca  (Gregory LeBaron)
 bruce%blilly@@Broadcast.Sony.COM (Bruce Lilly)
 "Arne Ludwig" <arne@@rrzbu.hanse.de>
+Matthew Lyle <matt@@mips.mitek.com>
 djm@@eng.umd.edu (David J. MacKenzie)
 John R MacMillan <chance!john@@sq.sq.com>
 mem@@mv.MV.COM (Mark E. Mallett)
