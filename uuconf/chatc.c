@@ -80,7 +80,7 @@ _uuconf_ichat_cmd (qglobal, argc, argv, qchat, pblock)
   /* This is only invoked when argv[0] will contain the string "chat";
      the specific chat script command comes after that point.  */
   for (zchat = argv[0]; *zchat != '\0'; zchat++)
-    if (tolower (BUCHAR (*zchat)) == 'c'
+    if ((*zchat == 'c' || *zchat == 'C')
 	&& strncasecmp (zchat, "chat", sizeof "chat" - 1) == 0)
       break;
   if (*zchat == '\0')

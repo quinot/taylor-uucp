@@ -87,11 +87,15 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
     qlist = NULL;
 
   /* Expand the string using a timetable.  */
-  bfirst = tolower (BUCHAR (*ztime));
+  bfirst = *ztime;
+  if (isupper (BUCHAR (bfirst)))
+    bfirst = tolower (BUCHAR (bfirst));
   pz = qglobal->qprocess->pztimetables;
   while (*pz != NULL)
     {
-      if ((int) bfirst == (int) tolower (BUCHAR ((*pz)[0]))
+      if ((bfirst == (*pz)[0]
+	   || (isupper (BUCHAR ((*pz)[0]))
+	       && bfirst == tolower (BUCHAR ((*pz)[0]))))
 	  && strcasecmp (ztime, *pz) == 0)
 	{
 	  ztime = pz[1];
@@ -123,7 +127,9 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
       z = ztime;
       do
 	{
-	  bfirst = tolower (BUCHAR (*z));
+	  bfirst = *z;
+	  if (isupper (BUCHAR (bfirst)))
+	    bfirst = tolower (BUCHAR (bfirst));
 	  for (iday = 0; asTdays[iday].zname != NULL; iday++)
 	    {
 	      size_t clen;
