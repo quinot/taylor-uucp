@@ -1510,10 +1510,11 @@ fsysdep_modem_begin_dial (qconn, qdial)
 }
 
 /* Tell the port to require or not require carrier.  On BSD this uses
-   TIOCCAR and TIOCNCAR, which I assume are generally supported.  On
-   System V it resets or sets CLOCAL.  We only require carrier if the
-   port supports it.  This will only be called with fcarrier TRUE if
-   the dialer supports carrier.  */
+   TIOCCAR and TIOCNCAR, which I assume are generally supported (it
+   can also use the LNOMDM bit supported by IS68K Unix).  On System V
+   it resets or sets CLOCAL.  We only require carrier if the port
+   supports it.  This will only be called with fcarrier TRUE if the
+   dialer supports carrier.  */
 
 static boolean
 fsmodem_carrier (qconn, fcarrier)
@@ -1540,6 +1541,23 @@ fsmodem_carrier (qconn, fcarrier)
 	    }
 #endif /* TIOCCAR */
 
+#if HAVE_BSD_TTY
+#ifdef LNOMDM
+      /* IS68K Unix uses a local LNOMDM bit.  */
+      {
+	int iparam;
+
+	iparam = LNOMDM;
+	if (ioctl (q->o, TIOCLBIC, &iparam) < 0)
+	  {
+	    ulog (LOG_ERROR, "ioctl (TIOCLBIC, LNOMDM): %s",
+		  strerror (errno));
+	    return FALSE;
+	  }
+      }
+#endif /* LNOMDM */
+#endif /* HAVE_BSD_TTY */
+
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
 	  /* Put the modem into nonlocal mode.  */
 	  q->snew.c_cflag &=~ CLOCAL;
@@ -1561,6 +1579,23 @@ fsmodem_carrier (qconn, fcarrier)
 	  return FALSE;
 	}
 #endif /* TIOCNCAR */
+
+#if HAVE_BSD_TTY
+#ifdef LNOMDM
+      /* IS68K Unix uses a local LNOMDM bit.  */
+      {
+	int iparam;
+
+	iparam = LNOMDM;
+	if (ioctl (q->o, TIOCLBIS, &iparam) < 0)
+	  {
+	    ulog (LOG_ERROR, "ioctl (TIOCLBIS, LNOMDM): %s",
+		  strerror (errno));
+	    return FALSE;
+	  }
+      }
+#endif /* LNOMDM */
+#endif /* HAVE_BSD_TTY */
 
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
       /* Put the modem into local mode (ignore carrier) to start the chat
