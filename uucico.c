@@ -23,12 +23,15 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
- * Revision 1.2  1991/09/11  02:33:14  ian
- * Added ffork argument to fsysdep_run
- *
- * Revision 1.1  1991/09/10  19:40:31  ian
- * Initial revision
- *
+   Revision 1.3  1991/09/12  05:04:26  ian
+   Changed sense of \0 return from btime_low_grade on calltimegrade
+
+   Revision 1.2  1991/09/11  02:33:14  ian
+   Added ffork argument to fsysdep_run
+  
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+  
    */
 
 #include "uucp.h"
@@ -75,10 +78,11 @@ static boolean fcall P((const struct ssysteminfo *qsys,
 			boolean fforce, int bgrade));
 static boolean fdo_call P((const struct ssysteminfo *qsys,
 			   struct sport *qport,
-			   struct sstatus *qstat, boolean *pfcalled,
-			   struct sport *quse));
+			   struct sstatus *qstat, int cretry,
+			   boolean *pfcalled, struct sport *quse));
 static boolean fcall_failed P((const struct ssysteminfo *qsys,
-			       enum tstatus twhy, struct sstatus *qstat));
+			       enum tstatus twhy, struct sstatus *qstat,
+			       int cretry));
 static boolean fwait_for_calls P((struct sport *qport));
 static boolean faccept_call P((const char *zlogin));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
@@ -510,15 +514,18 @@ static boolean fcall (qsys, qport, fforce, bgrade)
   do
     {
       const struct ssysteminfo *qnext;
+      int cretry;
 
-      if (fcheck_time (bgrade, qsys->ztime))
+      cretry = ccheck_time (bgrade, qsys->ztime);
+      if (cretry >= 0)
 	{
 	  boolean fret, fcalled;
 	  struct sport sportinfo;
 	  
 	  fbadtime = FALSE;
 
-	  fret = fdo_call (qsys, qport, &sstat, &fcalled, &sportinfo);
+	  fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled,
+			   &sportinfo);
 	  (void) fport_close (fret);
 	  if (fret)
 	    return TRUE;
@@ -559,10 +566,11 @@ static boolean fcall (qsys, qport, fforce, bgrade)
    failure during the call.  The quse argument is used to hold port
    information which must be preserved after the call is done.  */
 
-static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
+static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
      const struct ssysteminfo *qsys;
      struct sport *qport;
      struct sstatus *qstat;
+     int cretry;
      boolean *pfcalled;
      struct sport *quse;
 {
@@ -606,7 +614,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
 
   if (! fport_open (qport, qsys->ibaud, qsys->ihighbaud, FALSE))
     {
-      (void) fcall_failed (qsys, STATUS_PORT_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_PORT_FAILED, qstat, cretry);
       return FALSE;
     }
 
@@ -614,7 +622,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
   qdial_proto_params = NULL;
   if (! fport_dial (qsys, &cdial_proto_params, &qdial_proto_params))
     {
-      (void) fcall_failed (qsys, STATUS_DIAL_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_DIAL_FAILED, qstat, cretry);
       return FALSE;
     }
 
@@ -624,7 +632,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
 		   qsys, (const struct sdialer *) NULL,
 		   (const char *) NULL, FALSE))
 	{
-	  (void) fcall_failed (qsys, STATUS_LOGIN_FAILED, qstat);
+	  (void) fcall_failed (qsys, STATUS_LOGIN_FAILED, qstat, cretry);
 	  return FALSE;
 	}
     }
@@ -646,13 +654,13 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
   zstr = zget_uucp_cmd (TRUE);
   if (zstr == NULL)
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       return FALSE;
     }
 
   if (strncmp (zstr, "Shere", 5) != 0)
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       ulog (LOG_ERROR, "Bad initialization string");
       return FALSE;
     }
@@ -661,7 +669,8 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
     {
       if (strcmp(zstr + 6, qsys->zname) != 0)
 	{
-	  (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+	  (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
+			       cretry);
 	  ulog (LOG_ERROR, "Called wrong system (%s)", zstr + 6);
 	  return FALSE;
 	}
@@ -715,7 +724,8 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
 	iseq = isysdep_get_sequence (qsys);
 	if (iseq < 0)
 	  {
-	    (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+	    (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
+				 cretry);
 	    return FALSE;
 	  }
 	if (bgrade == '\0')
@@ -727,7 +737,8 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
 
     if (! fsend_uucp_cmd (zsend))
       {
-	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
+			     cretry);
 	return FALSE;
       }
   }
@@ -738,13 +749,13 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
   zstr = zget_uucp_cmd (TRUE);
   if (zstr == NULL)
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       return FALSE;
     }
 
   if (zstr[0] != 'R')
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       ulog (LOG_ERROR, "Bad reponse to handshake string (%s)",
 	    zstr);
       return FALSE;
@@ -763,7 +774,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
     }
   else
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       ulog (LOG_ERROR, "Handshake failed (%s)", zstr + 1);
       return FALSE;
     }
@@ -774,13 +785,13 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
   zstr = zget_uucp_cmd (TRUE);
   if (zstr == NULL)
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       return FALSE;
     }
 
   if (zstr[0] != 'P')
     {
-      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+      (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
       ulog (LOG_ERROR, "Bad protocol handshake (%s)", zstr);
       return FALSE;
     }
@@ -818,7 +829,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
     if (i >= CPROTOCOLS)
       {
 	(void) fsend_uucp_cmd ("UN");
-	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
 	ulog (LOG_ERROR, "No mutually supported protocols");
 	return FALSE;
       }
@@ -828,7 +839,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
     sprintf (ab, "U%c", qproto->bname);
     if (! fsend_uucp_cmd (ab))
       {
-	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+	(void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat, cretry);
 	return FALSE;
       }
   }
@@ -854,7 +865,8 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
     {
       if (! (*qproto->pfstart)(TRUE))
 	{
-	  (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat);
+	  (void) fcall_failed (qsys, STATUS_HANDSHAKE_FAILED, qstat,
+			       cretry);
 	  return FALSE;
 	}
     }
@@ -900,7 +912,7 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
 
     if (! fret)
       {
-	(void) fcall_failed (qsys, STATUS_FAILED, qstat);
+	(void) fcall_failed (qsys, STATUS_FAILED, qstat, cretry);
 	return FALSE;
       }
     else
@@ -916,10 +928,11 @@ static boolean fdo_call (qsys, qport, qstat, pfcalled, quse)
    goes wrong.  */
 
 static boolean
-fcall_failed (qsys, twhy, qstat)
+fcall_failed (qsys, twhy, qstat, cretry)
      const struct ssysteminfo *qsys;
      enum tstatus twhy;
      struct sstatus *qstat;
+     int cretry;
 {
 #if DEBUG > 2
   if (iDebug > 2)
@@ -929,7 +942,10 @@ fcall_failed (qsys, twhy, qstat)
   qstat->ttype = twhy;
   qstat->cretries++;
   qstat->ilast = isysdep_time ();
-  qstat->cwait = CRETRY_WAIT (qstat->cretries);
+  if (cretry == 0)
+    qstat->cwait = CRETRY_WAIT (qstat->cretries);
+  else
+    qstat->cwait = cretry * 60;
   return fsysdep_set_status (qsys, qstat);
 }
 

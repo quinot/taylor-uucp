@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:47:55  ian
+   Initial revision
+
    */
 
 #ifndef UUCP_H
@@ -213,10 +216,11 @@ struct ssysteminfo
   char *zalias;
   /* Linked list of alternate sets of call information.  */
   struct ssysteminfo *qalternate;
-  /* Legal times to call.  A grade, a time string, ' ', repeated.  */
+  /* Legal times to call.  A grade, a time string, an optional ';' and
+     retry time, ' ', repeated.  */
   char *ztime;
-  /* Grade to request of other system and associated time.  A grade,
-     a time string, ' ', repeated.  */
+  /* Grade to request of other system and associated time.  A grade, a
+     time string, ' ', repeated.  */
   char *zcalltimegrade;
   /* Sizes for local requests and calls.  A size, ' ', a time string,
      ' ', repeated.  */
@@ -469,8 +473,10 @@ extern enum tcmdtabret tprocess_one_cmd P((int cargs, char **azargs,
 extern const char *ztranslate_system P((const char *zsystem));     
 
 /* Check whether the we may call a system now if we have work of a
-   given grade.  */
-extern boolean fcheck_time P((int bgrade, const char *ztime));
+   given grade.  This returns the retry time, which may be zero to
+   indicate use of the default retry backoff, or -1 if the system may
+   not be called.  */
+extern int ccheck_time P((int bgrade, const char *ztime));
 
 /* Get the lowest grade of work we are permitted to do at the current
    time according to a time string.  Returns a null byte if no grades

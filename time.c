@@ -23,12 +23,15 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
- * Revision 1.2  1991/09/11  16:59:00  ian
- * fcheck_time and btime_low_grade looped endlessly on unusual grades
- *
- * Revision 1.1  1991/09/10  19:40:31  ian
- * Initial revision
- *
+   Revision 1.3  1991/09/12  05:04:44  ian
+   Wrong sense of comparison in btime_low_grade
+
+   Revision 1.2  1991/09/11  16:59:00  ian
+   fcheck_time and btime_low_grade looped endlessly on unusual grades
+  
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+  
    */
 
 #include "uucp.h"
@@ -121,20 +124,25 @@ static struct
   { NULL, 0, 0 }
 };
 
-/* Check whether a broken-down time matches a time string.  The time
-   string continues to a null byte or a space.  */
+/* Check whether a broken-down time matches a time string.
+   The time string continues to a null byte, a space or a semicolon.
+   On success, return the retry time.  On failure, return -1. */
 
-static boolean fttime_ok P((const struct tm *, const char *ztime));
+static int cttime_ok P((const struct tm *, const char *ztime));
 
-static boolean
-fttime_ok (q, ztime)
+static int
+cttime_ok (q, ztime)
      const struct tm *q;
      const char *ztime;
 {
-  int i;
+  int i, cretry;
   const char *zend;
 
-  zend = ztime + strcspn (ztime, " ");
+  zend = ztime + strcspn (ztime, "; ");
+
+  cretry = 0;
+  if (*zend == ';')
+    cretry = atoi (zend + 1);
 
   if (pasTtable == NULL)
     utinit_timetable ();
@@ -186,7 +194,7 @@ fttime_ok (q, ztime)
 	  if (asTdays[iday].zname == NULL)
 	    {
 	      ulog (LOG_ERROR, "%s: unparseable time string", ztime);
-	      return FALSE;
+	      return -1;
 	    }
 	}
       while (isalpha (BUCHAR (*z)));
@@ -200,17 +208,18 @@ fttime_ok (q, ztime)
 	  if (*zendnum != '-' || ! isdigit (BUCHAR (zendnum[1])))
 	    {
 	      ulog (LOG_ERROR, "%s: unparseable time string", ztime);
-	      return FALSE;
+	      return -1;
 	    }
 	  z = zendnum + 1;
 	  iend = (int) strtol (z, &zendnum, 10);
 	  if (*zendnum != '\0'
 	      && *zendnum != ' '
+	      && *zendnum != ';'
 	      && *zendnum != ','
 	      && *zendnum != '|')
 	    {
 	      ulog (LOG_ERROR, "%s: unparseable time string", ztime);
-	      return FALSE;
+	      return -1;
 	    }
 
 	  if (fmatch)
@@ -232,39 +241,44 @@ fttime_ok (q, ztime)
 	}
 
       if (fmatch)
-	return TRUE;
+	return cretry;
     }
 
-  return FALSE;
+  return -1;
 }
 
 /* Check whether we can call a system now, given a grade of work to
-   be done.  */
+   be done.  Return retry time, or -1 if failure.  */
 
-boolean
-fcheck_time (bgrade, ztimegrade)
+int
+ccheck_time (bgrade, ztimegrade)
      int bgrade;
      const char *ztimegrade;
 {
   struct tm *q;
   time_t itime;
+  int cretry;
 
   /* Get the time.  */
   time (&itime);
   q = localtime (&itime);
 
-  /* The format of ztime is a series of single character grades followed
-     by time strings.  Each grade/time string pair is separated by
-     a space.  */
+  /* The format of ztime is a series of single character grades
+     followed by time strings.  The time string may end with a
+     semicolon and a retry time in minutes.  Each grade/time/retry
+     tuple is separated by a space.  */
 
   while (TRUE)
     {
       /* Make sure this grade/time pair applies to this grade.  It
 	 doesn't if the grade from ztimegrade is executed before the
 	 grade from bgrade.  */
-      if (igradecmp (*ztimegrade, bgrade) >= 0
-	  && fttime_ok (q, ztimegrade + 1))
-	return TRUE;
+      if (igradecmp (*ztimegrade, bgrade) >= 0)
+	{
+	  cretry = cttime_ok (q, ztimegrade + 1);
+	  if (cretry >= 0)
+	    return cretry;
+	}
 
       ztimegrade += strcspn (ztimegrade, " ");
 
@@ -274,7 +288,7 @@ fcheck_time (bgrade, ztimegrade)
       ++ztimegrade;
     }
       
-  return FALSE;
+  return -1;
 }
 
 /* Determine the lowest grade of work we are permitted to do at the
@@ -299,7 +313,7 @@ btime_low_grade (ztimegrade)
     {
       if ((bgrade == '\0'
 	   || igradecmp (bgrade, *ztimegrade) < 0)
-	  && fttime_ok (q, ztimegrade + 1))
+	  && cttime_ok (q, ztimegrade + 1) >= 0)
 	bgrade = *ztimegrade;
 
       ztimegrade += strcspn (ztimegrade, " ");
@@ -333,5 +347,5 @@ ftime_now (ztime)
       fhave = TRUE;
     }
 
-  return fttime_ok (&s, ztime);
+  return cttime_ok (&s, ztime) >= 0;
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:40:31  ian
+   Initial revision
+
    */
 
 #include "uucp.h"
@@ -354,12 +357,20 @@ ukshow (qsys)
 
 	      if (strcasecmp (z + 1, "never") != 0)
 		{
+		  char *zsemi;
+
 		  printf (" If there is ");
 		  if (*z == BGRADE_LOW)
 		    printf ("any work");
 		  else
 		    printf ("work of grade %c or higher", *z);
-		  printf (" may call at time %s\n", z + 1);
+		  zsemi = strchr (z, ';');
+		  if (zsemi != NULL)
+		    *zsemi = '\0';
+		  printf (" may call at time %s", z + 1);
+		  if (zsemi != NULL)
+		    printf (" (retry time %d)", atoi (zsemi + 1));
+		  printf ("\n");
 		}
 
 	      z += c + 1;
