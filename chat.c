@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.3  1991/11/11  23:47:24  ian
+   Added chat-program to run a program to do a chat script
+
    Revision 1.2  1991/11/11  19:32:03  ian
    Added breceive_char to read characters through protocol buffering
 
@@ -293,7 +296,8 @@ ccescape (z)
 	  ulog (LOG_ERROR,
 		"Unrecognized escape sequence \\%c in expect string",
 		*zfrom);
-	  return -1;
+	  *zto++ = *zfrom;
+	  break;
 	}
 
       ++zfrom;
