@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/03/13  22:59:25  ian
+   Have breceive_char go through freceive_data
+
    Revision 1.17  1992/03/12  19:56:10  ian
    Debugging based on types rather than number
 
@@ -382,6 +385,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
       if (! (qProto->pfsendcmd) (zsend))
 	{
 	  (void) ffileclose (e);
+	  (void) remove (qcmd->ztemp);
 	  return FALSE;
 	}
 
@@ -391,6 +395,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
       if (zrec == NULL)
 	{
 	  (void) ffileclose (e);
+	  (void) remove (qcmd->ztemp);
 	  return FALSE;
 	}
 
@@ -399,6 +404,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 	{
 	  ulog (LOG_ERROR, "Bad response to receive request");
 	  (void) ffileclose (e);
+	  (void) remove (qcmd->ztemp);
 	  return FALSE;
 	}
 
@@ -417,6 +423,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 		 ever be enough room.  */
 	      ulog (LOG_ERROR, "too large", qcmd->zfrom);
 	      (void) ffileclose (e);
+	      (void) remove (qcmd->ztemp);
 	      return TRUE;
 	    }
 	  else
@@ -430,6 +437,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 	    }
 	  ulog (LOG_ERROR, "Can't receive %s: %s", qcmd->zfrom, zerr);
 	  (void) ffileclose (e);
+	  (void) remove (qcmd->ztemp);
 	  (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
 				 qcmd->zfrom, zfromsys,
 				 qcmd->zto, zLocalname,
@@ -451,6 +459,7 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
       if (! (qProto->pfsendcmd) ("SY"))
 	{
 	  (void) ffileclose (e);
+	  (void) remove (qcmd->ztemp);
 	  return FALSE;
 	}
       imode = qcmd->imode;

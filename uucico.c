@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.90  1992/03/28  22:06:38  ian
+   Michael I Bushnell: renamed enum tstatus to avoid header file conflict
+
    Revision 1.89  1992/03/28  20:52:11  ian
    Petri Helenius: must dump controlling terminal when going to next alternate
 
@@ -2783,6 +2786,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		{
 		  ulog (LOG_ERROR, "%s is too big to receive", zuse);
 		  (void) ffileclose (e);
+		  (void) remove (s.ztemp);
 		  if (! ftransfer_fail ('S', FAILURE_SIZE))
 		    return FALSE;
 		  break;
