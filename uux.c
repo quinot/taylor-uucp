@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/01/21  19:39:12  ian
+   Chip Salzenberg: uucp and uux start uucico for right system, not any
+
    Revision 1.19  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -635,7 +638,13 @@ main (argc, argv)
 	     to the spool directory; if the link fails, we copy the
 	     file, unless -c was explictly used.  If the file is being
 	     shipped to another system, we must set up a transfer
-	     request.  */
+	     request.  First make sure the user has legitimate access,
+	     since we are running setuid.  */
+	  if (! fsysdep_access (zfile))
+	    {
+	      ulog_close ();
+	      usysdep_exit (FALSE);
+	    }
 
 	  if (fcopy || flink)
 	    {
@@ -685,6 +694,13 @@ main (argc, argv)
 	    }
 	  else
 	    {
+	      /* Make sure the daemon can access the file.  */
+	      if (! fsysdep_daemon_access (zfile))
+		{
+		  ulog_close ();
+		  usysdep_exit (FALSE);
+		}
+
 	      zuse = zfile;
 
 	      if (! fxqtlocal)

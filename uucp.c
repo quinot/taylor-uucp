@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/01/21  19:39:12  ian
+   Chip Salzenberg: uucp and uux start uucico for right system, not any
+
    Revision 1.10  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -365,6 +368,14 @@ main (argc, argv)
 	    }
 	  zfrom = xstrdup (zconst);
 
+	  /* Make sure the user has access to this file, since we are
+	     running setuid.  */
+	  if (! fsysdep_access (zfrom))
+	    {
+	      ulog_close ();
+	      usysdep_exit (FALSE);
+	    }
+
 	  if (flocaldest)
 	    {
 	      char *zto;
@@ -410,7 +421,17 @@ main (argc, argv)
 		}
 
 	      if (! fcopy)
-		strcpy (abtname, "D.0");
+		{
+		  /* Make sure the daemon will have access to this
+		     file.  This is not a critical check, but it will
+		     help prevent user misconceptions.  */
+		  if (! fsysdep_daemon_access (zfrom))
+		    {
+		      ulog_close ();
+		      usysdep_exit (FALSE);
+		    }
+		  strcpy (abtname, "D.0");
+		}
 	      else
 		{
 		  char *zdata;
@@ -498,7 +519,13 @@ main (argc, argv)
 		 filespec is wildcarded, we must generate an 'X'
 		 request.  We currently check for Unix shell
 		 wildcards.  Note that it should do no harm to mistake
-		 a non-wildcard for a wildcard.  */
+		 a non-wildcard for a wildcard.  We doublecheck that
+		 the daemon will be able to receive into the
+		 directory; this is not critical, but it will give an
+		 error early rather than late.  */
+	      if (! fin_directory_list (qfromsys, zdestfile,
+					qfromsys->zlocal_receive))
+		ulog (LOG_FATAL, "Not permitted to receive %s", zdestfile);
 
 	      if (strchr (zconst, '*') != NULL
 		  || strchr (zconst, '?') != NULL

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1992/01/21  19:39:12  ian
+   Chip Salzenberg: uucp and uux start uucico for right system, not any
+
    Revision 1.15  1992/01/04  21:43:24  ian
    Chip Salzenberg: added ALLOW_FILENAME_ARGUMENTS to permit them
 
@@ -532,5 +535,19 @@ extern const char *zsysdep_in_dir P((const char *zdir, const char *zfile));
 /* Get the mode of a file.  This should return a Unix style file mode.
    It should return 0 on error.  */
 extern unsigned int isysdep_file_mode P((const char *zfile));
+
+/* See whether the user has access to a file.  This is called by uucp
+   and uux to prevent copying of a file which uucp can read but the
+   user cannot.  If access is denied, this should log an error message
+   and return FALSE.  */
+extern boolean fsysdep_access P((const char *zfile));
+
+/* See whether the daemon has access to a file.  This is called by
+   uucp and uux when a file is queued up for transfer without being
+   copied into the spool directory.  It is merely an early error
+   check, as the daemon would of course discover the error itself when
+   it tried the transfer.  If access would be denied, this should log
+   an error message and return FALSE.  */
+extern boolean fsysdep_daemon_access P((const char *zfile));
 
 #endif
