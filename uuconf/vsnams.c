@@ -1,7 +1,7 @@
 /* vsnams.c
    Get all known system names from the V2 configuration files.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
