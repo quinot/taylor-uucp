@@ -123,7 +123,7 @@ zremove_local_sys (qlocalsys, z)
 
 	  for (pzal = qlocalsys->uuconf_pzalias; *pzal != NULL; pzal++)
 	    if (strlen (*pzal) == zexclam - z
-		&& strncmp (z, *pzal, zexclam - z) == 0)
+		&& strncmp (z, *pzal, (size_t) (zexclam - z)) == 0)
 	      break;
 	  if (*pzal == NULL)
 	    break;
