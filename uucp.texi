@@ -95,8 +95,9 @@ translation approved by the author instead of in the original English.
 @node Top, Copying, (dir), (dir)
 @top Taylor UUCP 1.02
 
-The set of program documented here was written by Ian Lance Taylor.  The
-author can be reached at @file{ian@@airs.com}, or, equivalently,
+This is the documentation for the Taylor UUCP package, version 1.02.
+The programs were written by Ian Lance Taylor.  The author can be
+reached at @file{ian@@airs.com}, or, equivalently,
 @file{uunet!airs!ian}, or @cite{c/o Infinity Development, P.O. Box 520,
 Waltham MA, 02254}.
 
@@ -113,7 +114,7 @@ send it to @file{taylor-uucp@@gnu.ai.mit.edu}.
 * Configuration files::         Taylor UUCP configuration files
 * Acknowledgements::            Acknowledgements
 
-* Concept Index::               Concept Index
+* Configuration Index::         Configuration Index
 
  --- The Detailed Node Listing ---
 
@@ -142,6 +143,13 @@ This package is covered by the Gnu Public License.  See the file
 @file{COPYING} for details.  If you would like to do something with this
 package that you feel is reasonable but you feel is prohibited by the
 license, contact me to see if we can work it out.
+
+Here is some propaganda from the Free Software Foundation.  If you find
+this stuff offensive or annoying, remember that you probably did not
+spend any money to get this code.  I did not write this code to make
+life easier for developers of UUCP packages, I wrote it to help end
+users, and I believe that these are the most appropriate conditions for
+distribution.
 
 All the programs, scripts and documents relating to Taylor UUCP are
 @dfn{free}; this means that everyone is free to use them and free to
@@ -232,9 +240,6 @@ modifications.
 
 @node Overall Installation, Configuration files, Introduction, Top
 @chapter Taylor UUCP Overall Installation
-@ignore
-INSTALL file starts here
-@end ignore
 
 These are the installation instructions for the Taylor UUCP package,
 version 1.02.
@@ -538,15 +543,9 @@ You can also have @code{inetd} start up @code{uucico} with the @samp{-l}
 switch, which will cause it to prompt with @samp{login:} and
 @samp{Password:} and check the results against the UUCP (not the system)
 password file.  This may be used in place of @code{uucpd}.
-@ignore
-INSTALL file ends here
-@end ignore
 
 @node Configuration files, Acknowledgements, Overall Installation, Top
 @chapter Taylor UUCP configuration files
-@ignore
-CONFIG file starts here
-@end ignore
 
 This chapter describes the configuration files accepted by the Taylor
 UUCP package if compiled with @code{HAVE_TAYLOR_CONFIG} defined in
@@ -559,10 +558,10 @@ spaces are read).  The rest of the line is interpreted according to the
 keyword.  Most keywords are followed by numbers, boolean values or
 simple strings (with no embedded spaces).  The @kbd{#} character is used
 for comments, and everything from a @kbd{#} to the end of the line is
-ignored unless the @kdb{#} is preceded by a @kbd{\} (backslash); if the
-@kbd{#} is preceeded by a @kdb{\}, the @kdb{\} is removed but the
+ignored unless the @kbd{#} is preceded by a @kbd{\} (backslash); if the
+@kbd{#} is preceeded by a @kbd{\}, the @kbd{\} is removed but the
 @kbd{#} remains in the line (this can be useful for a phone number
-containing a @kdb{#}) (the backslash is not a general quoting character;
+containing a @kbd{#}) (the backslash is not a general quoting character;
 to enter the sequence @samp{\#}, you would use @samp{\\#}).  Everything
 after the keyword must be on the same line.  A @var{boolean} may be
 specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and
@@ -1987,10 +1986,7 @@ protocol-parameter g timeout 20
 protocol-parameter g retries 10
 @end example
 
-@ignore
-CONFIG file ends here
-@end ignore
-@node Acknowledgements, Concept Index, Configuration files, Top
+@node Acknowledgements, Configuration Index, Configuration files, Top
 @chapter Acknowledgements
 
 This is a list of people who gave help or suggestions while I was
@@ -2001,13 +1997,14 @@ comments were criticisms.
 First of all, I would like to thank the people at Infinity Development
 Systems (formerly AIRS, which lives on in the domain name, at least for
 now) for permitting me to use their computers and @file{uunet} access.
-I would also like to thank Richard Stallman <@file{rms@@gnu.ai.mit.edu}>
-for founding the Free Software Foundation and John Gilmore
-<@file{gnu@@cygnus.com}> for writing the initial version of gnuucp which
-was a direct inspiration for this somewhat larger project.  Also, Chip
-Salzenberg <@file{chip@@tct.com}> contributed many early patches, and
-Franc,ois Pinard <@file{pinard@@iro.umontreal.ca}> tirelessly tested the
-code and suggested many improvements.
+I would also like to thank Richard Stallman <rms@@gnu.ai.mit.edu> for
+founding the Free Software Foundation and John Gilmore <gnu@@cygnus.com>
+for writing the initial version of gnuucp which was a direct inspiration
+for this somewhat larger project.  Also, Chip Salzenberg <chip@@tct.com>
+contributed many early patches, and Franc,ois Pinard
+<pinard@@iro.umontreal.ca> tirelessly tested the code and suggested many
+improvements (and also put together the initial version of this
+document).
 
 In alphabetical order:
 
@@ -2073,11 +2070,10 @@ frnkmth!twwells.com!bill (T. William Wells)
 mauxci!eci386!woods@@apple.com (Greg A. Woods)
 @end example
 
-@node Concept Index,  , Acknowledgements, Top
-@unnumbered Index for Commands and Concepts
+@node Configuration Index,  , Acknowledgements, Top
+@unnumbered Index for New Style Configuration File
 
 @printindex cp
 
 @contents
 @bye
-
