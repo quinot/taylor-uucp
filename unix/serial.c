@@ -2747,6 +2747,7 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
       break;
     case XONXOFF_ON:
 #ifdef CRTSCTS
+#if HAVE_POSIX_TERMIOS
       /* This is system dependent, but I haven't figured out a good
 	 way around it yet.  If we are doing hardware flow control, we
 	 don't send XON/XOFF characters but we do recognize them.  */
@@ -2757,6 +2758,7 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 	  fdo = TRUE;
 	  break;
 	}
+#endif /* HAVE_POSIX_TERMIOS */
 #endif /* defined (CRTSCTS) */
       iset = IXON | IXOFF;
       iclear = 0;
