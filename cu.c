@@ -1222,13 +1222,17 @@ fcuset_var (puuconf, zline)
   else
     {
       azargs[0] = zvar;
-      azargs[1] = zval;
+      azargs[1] = zbufcpy (zval);
     }
 
   iuuconf = uuconf_cmd_args (puuconf, 2, azargs, asCuvars,
 			     (pointer) NULL, icuunrecogvar, 0,
 			     (pointer) NULL);
-  if (iuuconf != UUCONF_SUCCESS)
+
+  if (zval != NULL && (iuuconf & UUCONF_CMDTABRET_KEEP) == 0)
+    ubuffree (azargs[1]);
+
+  if ((iuuconf &~ UUCONF_CMDTABRET_KEEP) != UUCONF_SUCCESS)
     ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
 
   return TRUE;
