@@ -1,5 +1,8 @@
 2002-03-05  Ian Lance Taylor  <ian@zembu.com>
 
+	* uucp.texi: Use new Texinfo commands @command, @option, @email,
+	and @url.
+
 	* uucp.texi: Update version number to 1.07.
 
 	* uucico.8: Don't specify debugging file location, just mention
