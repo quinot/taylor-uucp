@@ -2,6 +2,7 @@ COPYING
 ChangeLog
 MANIFEST
 Makefile.in
+NEWS
 README
 TODO
 chat.c
