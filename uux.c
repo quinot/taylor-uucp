@@ -54,9 +54,6 @@ const char uux_rcsid[] = "$Id$";
    operators.  */
 #define ZSHELLNONREDIRSEPS ";&*| \t"
 
-/* The program name.  */
-char abProgram[] = "uux";
-
 /* The name of the execute file.  */
 const char *zXxqt_name;
 
@@ -72,6 +69,7 @@ static FILE *eXclose;
 
 /* Local functions.  */
 static void uxusage P((void));
+static void uxhelp P((void));
 static void uxadd_xqt_line P((int bchar, const char *z1, const char *z2));
 static void uxadd_send_file P((const char *zfrom, const char *zto,
 			       const char *zoptions, const char *ztemp,
@@ -84,7 +82,26 @@ static void uxrecord_file P((const char *zfile));
 static void uxabort P((void));
 
 /* Long getopt options.  */
-static const struct option asXlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asXlongopts[] =
+{
+  { "requestor", required_argument, NULL, 'a' },
+  { "return-stdin", no_argument, NULL, 'b' },
+  { "nocopy", no_argument, NULL, 'c' },
+  { "copy", no_argument, NULL, 'C' },
+  { "grade", required_argument, NULL, 'g' },
+  { "jobid", no_argument, NULL, 'j' },
+  { "link", no_argument, NULL, 'l' },
+  { "notification", required_argument, NULL, 2 },
+  { "stdin", no_argument, NULL, 'p' },
+  { "nouucico", no_argument, NULL, 'r' },
+  { "status", required_argument, NULL, 's' },
+  { "noexpand", no_argument, NULL, 'W' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 /* The main routine.  */
 
@@ -156,6 +173,8 @@ main (argc, argv)
   char aboptions[10];
   boolean fexit;
 
+  zProgram = argv[0];
+
   /* We need to be able to read a single - as an option, which getopt
      won't do.  So that we can still use getopt, we run through the
      options looking for an option "-"; if we find one we change it to
@@ -166,28 +185,14 @@ main (argc, argv)
 	break;
       if (argv[i][1] == '\0')
 	argv[i] = zbufcpy ("-p");
-      else
-	{
-	  const char *z;
-
-	  for (z = argv[i] + 1; *z != '\0'; z++)
-	    {
-	      /* If the option takes an argument, and the argument is
-		 not appended, then skip the next argument.  */
-	      if (*z == 'a' || *z == 'g' || *z == 'I'
-		  || *z == 's' || *z == 'x')
-		{
-		  if (z[1] == '\0')
-		    i++;
-		  break;
-		}
-	    }
-	}
+      /* This won't work right if "-" is given as an argument to one
+	 of the options which takes an argument.  Too bad.  Such an
+	 argument doesn't really make sense anyhow.  */
     }
 
   /* The leading + in the getopt string means to stop processing
      options as soon as a non-option argument is seen.  */
-  while ((iopt = getopt_long (argc, argv, "+a:bcCg:I:jlnprs:Wx:z",
+  while ((iopt = getopt_long (argc, argv, "+a:bcCg:I:jlnprs:Wvx:z",
 			      asXlongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -271,6 +276,41 @@ main (argc, argv)
 	  /* Report status only on error.  */
 	  ferror_ack = TRUE;
 	  break;
+
+	case 2:
+	  /* --notify={true,false,error}.  */
+	  if (*optarg == 't'
+	      || *optarg == 'T'
+	      || *optarg == 'y'
+	      || *optarg == 'Y'
+	      || *optarg == 'e'
+	      || *optarg == 'E')
+	    {
+	      ferror_ack = TRUE;
+	      fno_ack = FALSE;
+	    }
+	  else if (*optarg == 'f'
+		   || *optarg == 'F'
+		   || *optarg == 'n'
+		   || *optarg == 'N')
+	    {
+	      ferror_ack = FALSE;
+	      fno_ack = TRUE;
+	    }
+	  break;
+
+	case 'v':
+	  /* Print version and exit.  */
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  uxhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
 
 	case 0:
 	  /* Long option found and flag set.  */
@@ -1253,43 +1293,40 @@ main (argc, argv)
 /* Report command usage.  */
 
 static void
+uxhelp ()
+{
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	  VERSION);
+  printf ("Usage: %s [options] [-] command\n", zProgram);
+  printf (" -,-p,--stdin: Read standard input for standard input of command\n");
+  printf (" -c,--nocopy: Do not copy local files to spool directory (default)\n");
+  printf (" -C,--copy: Copy local files to spool directory\n");
+  printf (" -l,--link: link local files to spool directory\n");
+  printf (" -g,--grade grade: Set job grade (must be alphabetic)\n");
+  printf (" -n,--notification=no: Do not report completion status\n");
+  printf (" -z,--notification=error: Report completion status only on error\n");
+  printf (" -r,--nouucico: Do not start uucico daemon\n");
+  printf (" -a,--requestor address: Address to mail status report to\n");
+  printf (" -b,--return-stdin: Return standard input with status report\n");
+  printf (" -s,--status file: Report completion status to file\n");
+  printf (" -j,--jobid: Report job id\n");
+  printf (" -x,--debug debug: Set debugging level\n");
+#if HAVE_TAYLOR_CONFIG
+  printf (" -I,--config file: Set configuration file to use\n");
+#endif /* HAVE_TAYLOR_CONFIG */
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
+}
+
+static void
 uxusage ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uux [options] [-] command\n");
-  fprintf (stderr,
-	   " -,-p: Read standard input for standard input of command\n");
-  fprintf (stderr,
-	   " -c: Do not copy local files to spool directory (default)\n");
-  fprintf (stderr,
-	   " -C: Copy local files to spool directory\n");
-  fprintf (stderr,
-	   " -l: link local files to spool directory\n");
-  fprintf (stderr,
-	   " -g grade: Set job grade (must be alphabetic)\n");
-  fprintf (stderr,
-	   " -n: Do not report completion status\n");
-  fprintf (stderr,
-	   " -z: Report completion status only on error\n");
-  fprintf (stderr,
-	   " -r: Do not start uucico daemon\n");
-  fprintf (stderr,
-	   " -a address: Address to mail status report to\n");
-  fprintf (stderr,
-	   " -b: Return standard input with status report\n");
-  fprintf (stderr,
-	   " -s file: Report completion status to file\n");
-  fprintf (stderr,
-	   " -j: Report job id\n");
-  fprintf (stderr,
-	   " -x debug: Set debugging level\n");
-#if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
-#endif /* HAVE_TAYLOR_CONFIG */
+	   "Usage: %s [options] [-] command\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
   exit (EXIT_FAILURE);
 }
 
