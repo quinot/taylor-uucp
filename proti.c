@@ -1039,6 +1039,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
       int iseq;
       int csize;
       int iack;
+      boolean fdelayed;
 
       /* Look for the IINTRO character.  */
       if (abPrecbuf[iPrecstart] != IINTRO)
@@ -1250,12 +1251,12 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	    {
 	      if (iseq == iIrecseq
 		  || (iIrequest_winsize > 0
-		      && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize)
-		  || azIrecbuffers[iseq] != NULL)
+		      && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize))
 		{
 		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-				  "fiprocess_data: Ignoring duplicate packet %d",
+				  "fiprocess_data: Ignoring out of order packet %d",
 				  iseq);
+		  continue;
 		}
 	      else
 		{
@@ -1263,15 +1264,19 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 				  "fiprocess_data: Saving unexpected packet %d",
 				  iseq);
 
-		  azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN + csize));
-		  memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
-		  if (csize > 0)
+		  if (azIrecbuffers[iseq] == NULL)
 		    {
-		      memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
-			      (size_t) cfirst);
-		      if (csecond > 0)
-			memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
-				zsecond, (size_t) csecond);
+		      azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN
+							       + csize));
+		      memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
+		      if (csize > 0)
+			{
+			  memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
+				  (size_t) cfirst);
+			  if (csecond > 0)
+			    memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
+				    zsecond, (size_t) csecond);
+			}
 		    }
 		}
 
@@ -1304,6 +1309,8 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 			      pfexit))
 	return FALSE;
 
+      fdelayed = FALSE;
+
       if (iseq != -1)
 	{
 	  int inext;
@@ -1316,6 +1323,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	      char *z;
 	      int c;
 
+	      fdelayed = TRUE;
 	      z = azIrecbuffers[inext];
 	      c = CHDRCON_GETBYTES (z[IHDR_CONTENTS1], z[IHDR_CONTENTS2]);
 	      iIrecseq = inext;
@@ -1334,13 +1342,15 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	 traffic when only one side is sending.  We should normally
 	 not have to send an ACK if we have data to send, since each
 	 packet sent will ACK the most recently received packet.  So
-	 if we have an unacknowledged packet, assume that something
-	 went wrong and resend the whole packet rather than just an
-	 ACK.  */
+	 if we have an unacknowledged packet, and we're not sending
+	 this ACK just because we processed a set of delayed packets,
+	 assume that something went wrong and resend the whole packet
+	 rather than just an ACK.  */
       if (iIrequest_winsize > 0
 	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= iIrequest_winsize / 2)
 	{
-	  if (INEXTSEQ (iIremote_ack) != iIsendseq)
+	  if (! fdelayed
+	      && INEXTSEQ (iIremote_ack) != iIsendseq)
 	    {
 	      if (! firesend (qdaemon))
 		return FALSE;
