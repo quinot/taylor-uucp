@@ -114,7 +114,6 @@ fscmd_seq (zsystem, zseq)
 	if (ferr || FGOT_SIGNAL ())
 	  return FALSE;
 	sleep (5);
-
       }
   }
 #endif
@@ -199,8 +198,26 @@ fscmd_seq (zsystem, zseq)
     slock.l_whence = SEEK_SET;
     slock.l_start = 0;
     slock.l_len = 0;
-    if (fcntl (o, F_SETLKW, &slock) == -1)
+    while (fcntl (o, F_SETLKW, &slock) == -1)
       {
+	boolean fagain;
+
+	fagain = FALSE;
+	if (errno == ENOMEM)
+	  fagain = TRUE;
+#ifdef ENOLCK
+	if (errno == ENOLCK)
+	  fagain = TRUE;
+#endif
+#ifdef ENOSPC
+	if (errno == ENOSPC)
+	  fagain = TRUE;
+#endif
+	if (fagain)
+	  {
+	    sleep (5);
+	    continue;
+	  }
 	ulog (LOG_ERROR, "Locking %s: %s", zfile, strerror (errno));
 	(void) close (o);
 	return FALSE;
