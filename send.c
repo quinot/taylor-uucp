@@ -150,10 +150,9 @@ usfree_send (qtrans)
    flocal_send_request.
 
    If flocal_send_await_reply is called before the entire file has
-   been sent: if it gets an SN, it calls flocal_send_cancelled to send
-   an empty data block to inform the remote system that the file
-   transfer has stopped.  If it gets a file position request, it must
-   adjust the file position accordingly.
+   been sent: if it gets an SN, it sets the file position to the end
+   and arranges to call flocal_send_cancelled.  If it gets a file
+   position request, it must adjust the file position accordingly.
 
    If flocal_send_await_reply is called after the entire file has been
    sent: if it gets an SN, it can simply delete the request.  It can
@@ -600,9 +599,19 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	}
       else
 	{
+	  /* Seek to the end of the file so that the next read will
+	     send end of file.  We have to be careful here, because we
+	     may have actually already sent end of file--we could be
+	     being called because of data received while the end of
+	     file block was sent.  */
+	  if (! ffileseekend (qtrans->e))
+	    {
+	      ulog (LOG_ERROR, "seek to end: %s", strerror (errno));
+	      usfree_send (qtrans);
+	      return FALSE;
+	    }
 	  qtrans->psendfn = flocal_send_cancelled;
 	  qtrans->precfn = NULL;
-	  qtrans->fsendfile = FALSE;
 	  return fqueue_send (qdaemon, qtrans);
 	}
     }
@@ -764,10 +773,9 @@ flocal_send_open_file (qtrans, qdaemon)
   return fqueue_send (qdaemon, qtrans);
 }
 
-/* Cancel a file send by sending an empty buffer.  This is only called
-   for a protocol which supports multiple channels.  It is needed
-   so that both systems agree as to when a channel is no longer
-   needed.  */
+/* Cancel a file send.  This is only called for a protocol which
+   supports multiple channels.  It is needed so that both systems
+   agree as to when a channel is no longer needed.  */
 
 static boolean
 flocal_send_cancelled (qtrans, qdaemon)
@@ -775,32 +783,17 @@ flocal_send_cancelled (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-  char *zdata;
-  size_t cdata;
-  boolean fret;
   
-  zdata = (*qdaemon->qproto->pzgetspace) (qdaemon, &cdata);
-  if (zdata == NULL)
-    {
-      usfree_send (qtrans);
-      return FALSE;
-    }
-
-  fret = (*qdaemon->qproto->pfsenddata) (qdaemon, zdata, (size_t) 0,
-					 qtrans->ilocal, qtrans->iremote,
-					 qtrans->ipos);
-
   /* If we are breaking a 'E' command into two 'S' commands, and that
      was for the first 'S' command, we still have to send the second
      one.  */
-  if (fret
-      && qtrans->s.bcmd == 'E'
+  if (qtrans->s.bcmd == 'E'
       && (qdaemon->ifeatures & FEATURE_EXEC) == 0
       && qinfo->zexec == NULL)
     return fsend_exec_file_init (qtrans, qdaemon);
 
   usfree_send (qtrans);
-  return fret;
+  return TRUE;
 }
 
 /* A remote request to receive a file (meaning that we have to send a
