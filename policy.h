@@ -279,6 +279,10 @@
    device itself, and zzz is the minor device number of the port
    device.
 
+   Sequent DYNIX/ptx (but perhaps not Dynix 3.x) uses yet another
+   naming convention.  The lock file for /dev/ttyXA/XAAP is named
+   LCK..ttyXAAP.
+
    Coherent use a completely different method of terminal locking.
    See unix/cohtty for details.  For locks other than for terminals,
    HDB type lock files are used.  */
@@ -286,6 +290,7 @@
 #define HAVE_HDB_LOCKFILES 1
 #define HAVE_SCO_LOCKFILES 0
 #define HAVE_SVR4_LOCKFILES 0
+#define HAVE_SEQUENT_LOCKFILES 0
 #define HAVE_COHERENT_LOCKFILES 0
 
 /* If your system supports Internet mail addresses (which look like

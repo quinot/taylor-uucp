@@ -544,6 +544,12 @@ usserial_free (qconn)
   qconn->psysdep = NULL;
 }
 
+#ifdef HAVE_SEQUENT_LOCKFILES
+#define LCK_TEMPLATE "LCK..tty"
+#else
+#define LCK_TEMPLATE "LCK.."
+#endif
+
 /* This routine is used for both locking and unlocking.  It is the
    only routine which knows how to translate a device name into the
    name of a lock file.  If it can't figure out a name, it does
@@ -574,14 +580,14 @@ fsserial_lockfile (flok, qconn)
 
 	zbase = strrchr (qsysdep->zdevice, '/') + 1;
 	clen = strlen (zbase);
-	zalc = zbufalc (sizeof "LCK.." + clen);
-	memcpy (zalc, "LCK..", sizeof "LCK.." - 1);
-	memcpy (zalc + sizeof "LCK.." - 1, zbase, clen + 1);
+	zalc = zbufalc (sizeof LCK_TEMPLATE + clen);
+	memcpy (zalc, LCK_TEMPLATE, sizeof LCK_TEMPLATE - 1);
+	memcpy (zalc + sizeof LCK_TEMPLATE - 1, zbase, clen + 1);
 #if HAVE_SCO_LOCKFILES
 	{
 	  char *zl;
 
-	  for (zl = zalc + sizeof "LCK.." - 1; *zl != '\0'; zl++)
+	  for (zl = zalc + sizeof LCK_TEMPLATE - 1; *zl != '\0'; zl++)
 	    if (isupper (*zl))
 	      *zl = tolower (*zl);
 	}
@@ -620,14 +626,14 @@ fsserial_lockfile (flok, qconn)
     {
       if (flok)
 	{
-	  if (lockttyexist (z + sizeof "LCK.." - 1))
+	  if (lockttyexist (z + sizeof LCK_TEMPLATE - 1))
 	    {
 	      ulog (LOG_NORMAL, "%s: port already locked",
-		    z + sizeof "LCK.." - 1);
+		    z + sizeof LCK_TEMPLATE - 1);
 	      fret = FALSE;
 	    }
 	  else
-	    fret = fscoherent_disable_tty (z + sizeof "LCK.." - 1,
+	    fret = fscoherent_disable_tty (z + sizeof LCK_TEMPLATE - 1,
 					   &qsysdep->zenable);
 	}
       else
