@@ -1,5 +1,10 @@
 2002-02-07  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/xqtsub.c (fsysdep_lock_uuxqt_dir): Call fclean_uuxqt_dir.
+	(fsysdep_unlock_uuxqt_dir): Move directory cleaning code into
+	fclean_uuxqt_dir, and call it.
+	(fclean_uuxqt_dir): New static function.
+
 	* unix/xqtsub.c (fsysdep_copy_uuxqt_files): Rename from
 	fsysdep_move_uuxqt_files.  Remove fto parameter.  Use link instead
 	of rename.  Don't bother moving files back on failure.

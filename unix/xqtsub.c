@@ -77,6 +77,8 @@ const char xqtsub_rcsid[] = "$Id$";
 #ifndef EX_TEMPFAIL
 #define EX_TEMPFAIL 75
 #endif
+
+static boolean fclean_uuxqt_dir P((const char *zxqtdir));
 
 /* Get the full pathname of the command to execute, given the list of
    permitted commands and the allowed path.  */
@@ -527,7 +529,7 @@ fsysdep_unlock_uuxqt_file (zfile)
 /* Lock the execute directory.  Since we use a different directory
    depending on which LCK.XQT.dddd file we got, there is actually no
    need to create a lock file.  We do make sure that the directory
-   exists, though.  */
+   exists, though, and that it is empty.  */
 
 boolean
 fsysdep_lock_uuxqt_dir (iseq)
@@ -552,7 +554,7 @@ fsysdep_lock_uuxqt_dir (iseq)
       return FALSE;
     }
 
-  return TRUE;
+  return fclean_uuxqt_dir (zxqtdir);
 }
 
 /* Unlock the execute directory and clear it out.  The lock is
@@ -565,7 +567,6 @@ fsysdep_unlock_uuxqt_dir (iseq)
 {
   const char *zxqtdir;
   char abxqtdir[sizeof XQTDIR + 4];
-  DIR *qdir;
 
   if (iseq == 0)
     zxqtdir = XQTDIR;
@@ -574,6 +575,15 @@ fsysdep_unlock_uuxqt_dir (iseq)
       sprintf (abxqtdir, "%s%04d", XQTDIR, iseq);
       zxqtdir = abxqtdir;
     }
+
+  return fclean_uuxqt_dir (zxqtdir);
+}
+
+static boolean
+fclean_uuxqt_dir (zxqtdir)
+     const char *zxqtdir;
+{
+  DIR *qdir;
 
   qdir = opendir ((char *) zxqtdir);
   if (qdir != NULL)
