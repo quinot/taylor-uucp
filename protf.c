@@ -665,6 +665,12 @@ ffawait_ack (qtrans, qdaemon, zdata, cdata)
   /* An R means to retry sending the file.  */
   if (*zdata == 'R')
     {
+      if (! ffileisopen (qtrans->e))
+	{
+	  ulog (LOG_ERROR, "Request to resent non-file");
+	  return FALSE;
+	}
+
       ++cFretries;
       if (cFretries > cFmaxretries)
 	{
@@ -746,6 +752,12 @@ ffawait_cksum (qtrans, qdaemon, zdata, cdata)
       DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
 		      "Checksum failed; calculated 0x%x, got 0x%x",
 		      iFcheck & 0xffff, icheck);
+
+      if (! ffileisopen (qtrans->e))
+	{
+	  ulog (LOG_ERROR, "Failed to get non-file");
+	  return FALSE;
+	}
 
       ++cFretries;
       if (cFretries > cFmaxretries)
