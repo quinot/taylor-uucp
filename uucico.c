@@ -1299,7 +1299,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
   if (zstr[0] != 'R')
     {
-      ulog (LOG_ERROR, "Bad reponse to handshake string (%s)",
+      ulog (LOG_ERROR, "Bad response to handshake string (%s)",
 	    zstr);
       ubuffree (zstr);
       return FALSE;
