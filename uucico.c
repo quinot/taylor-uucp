@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1991/12/18  05:12:00  ian
+   Added -l option to uucico to prompt for login name once and then exit
+
    Revision 1.25  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -1799,11 +1802,9 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	  /* Get the next work line for this system.  All the arguments
 	     are left pointing into a static buffer, so they must be
 	     copied out before the next call.  */
+	  ulog_user ((const char *) NULL);
 	  if (fnowork)
-	    {
-	      s.bcmd = 'H';
-	      ulog_user ((const char *) NULL);
-	    }
+	    s.bcmd = 'H';
 	  else
 	    {
 	      s.zuser = NULL;
@@ -2056,12 +2057,11 @@ fuucp (fmaster, qsys, bgrade, fnew)
 
 	  /* We are the slave.  Get the next command from the other
 	     system.  */
+	  ulog_user ((const char *) NULL);
 	  if (! fgetcmd (fmaster, &s))
 	    return FALSE;
 
-	  if (s.bcmd == 'H' || s.bcmd == 'Y')
-	    ulog_user ((const char *) NULL);
-	  else
+	  if (s.bcmd != 'H' && s.bcmd != 'Y')
 	    ulog_user (s.zuser);
 
 	  switch (s.bcmd)
