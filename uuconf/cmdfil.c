@@ -1,7 +1,7 @@
 /* cmdfil.c
    Read and parse commands from a file.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -98,6 +98,9 @@ uuconf_cmd_file (pglobal, e, qtab, pinfo, pfiunknown, iflags, pblock)
 
       iret = UUCONF_SUCCESS;
     }
+
+  if (zline != NULL)
+    free ((pointer) zline);
 
   return iret;
 }
