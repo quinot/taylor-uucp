@@ -1295,10 +1295,8 @@ usworkfile_header (qsys, qcmd, zjobid, itime, ffirst)
 	  qcmd->zuser != NULL ? qcmd->zuser : OWNER);
 
   usysdep_localtime (itime, &stime);
-  printf ("%04d-%02d-%02d %02d:%02d:%02d ",
-	  stime.tm_year + 1900, stime.tm_mon + 1,
-	  stime.tm_mday, stime.tm_hour,
-	  stime.tm_min, stime.tm_sec);
+  printf ("%02d-%02d %02d:%02d ",
+	  stime.tm_mon + 1, stime.tm_mday, stime.tm_hour, stime.tm_min);
 }
 
 /* List queued executions that have not been processed by uuxqt for
@@ -1425,10 +1423,9 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 		printf ("%s", zSxqt_user);
 
 	      usysdep_localtime (itime, &stime);
-	      printf (" %04d-%02d-%02d %02d:%02d:%02d ",
-		      stime.tm_year + 1900, stime.tm_mon + 1,
-		      stime.tm_mday, stime.tm_hour,
-		      stime.tm_min, stime.tm_sec);
+	      printf (" %02d-%02d %02d:%02d ",
+		      stime.tm_mon + 1, stime.tm_mday, stime.tm_hour,
+		      stime.tm_min);
 
 	      printf ("%s\n", zSxqt_cmd);
 	    }
@@ -2073,7 +2070,7 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
 	return FALSE;
     }
 
-  printf ("%s %dC (", qsys->uuconf_zname, cwork);
+  printf ("%-14s %3dC (", qsys->uuconf_zname, cwork);
 
   if (cwork == 0)
     printf ("0 secs");
@@ -2083,10 +2080,10 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
   printf (") ");
 
   if (qxqt == NULL)
-    printf ("0X (0 secs)");
+    printf ("  0X (0 secs)");
   else
     {
-      printf ("%dX (", qxqt->cxqts);
+      printf ("%3dX (", qxqt->cxqts);
       usunits_show (inow - qxqt->ifirst);
       printf (")");
     }
@@ -2099,10 +2096,8 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
 
   usysdep_localtime (sstat.ilast, &stime);
 
-  printf (" %04d-%02d-%02d %02d:%02d:%02d ", 
-	  stime.tm_year + 1900, stime.tm_mon + 1,
-	  stime.tm_mday, stime.tm_hour,
-	  stime.tm_min, stime.tm_sec);
+  printf (" %02d-%02d %02d:%02d ", 
+	  stime.tm_mon + 1,stime.tm_mday, stime.tm_hour, stime.tm_min);
 
   printf ("%s\n", azStatus[(int) sstat.ttype]);
 
