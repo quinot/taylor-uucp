@@ -24,7 +24,7 @@ a taylor.texi file.  Many things remain to do, among which:
 @ifinfo
 This file documents Taylor UUCP, version 1.04.
 
-Copyright @copyright{} 1992 Free Software Foundation, Inc.
+Copyright @copyright{} 1992, 1993 Ian Lance Taylor
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -52,13 +52,13 @@ translation approved by the author instead of in the original English.
 @titlepage
 @title Taylor UUCP
 @subtitle Version 1.04
-@author Ian Lance Taylor @file{<ian@@airs.com>}
+@author Ian Lance Taylor @code{<ian@@airs.com>}
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992 Free Software Foundation, Inc.
+Copyright @copyright{} 1992, 1993 Ian Lance Taylor
 
-Published by Ian Lance Taylor @file{<ian@@airs.com>}.
+Published by Ian Lance Taylor @code{<ian@@airs.com>}.
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -81,16 +81,16 @@ translation approved by the author instead of in the original English.
 
 This is the documentation for the Taylor UUCP package, version 1.04.
 The programs were written by Ian Lance Taylor.  The author can be
-reached at @file{<ian@@airs.com>}, or @cite{c/o Infinity Development,
-P.O. Box 520, Waltham MA, 02254}.
+reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, 4th
+Floor, Building 200, 1 Kendall Square, Cambridge, MA, 02139}.
 
 There is a mailing list for discussion of the package.  To join (or get
 off) the list, send mail to
-@file{<taylor-uucp-request@@gnu.ai.mit.edu>}.  Mail to this address is
-answered by a person, not a program.  When joining the list, make sure
-you include the address at which you want to receive mail in the body of
-your message.  To send a message to the list, send it to
-@file{<taylor-uucp@@gnu.ai.mit.edu>}.
+@code{<taylor-uucp-request@@gnu.ai.mit.edu>}.  Mail to this address is
+answered by a person, not a program.  When joining the list, please give
+the address at which you wish to receive mail; do not rely on the
+message headers.  To send a message to the list, send it to
+@code{<taylor-uucp@@gnu.ai.mit.edu>}.
 
 @menu
 * Copying::                     Taylor UUCP copying conditions
@@ -289,8 +289,8 @@ same standard input.
 Neither @code{uucp} nor @code{uux} actually do any work immediately.
 Instead, they queue up requests for later processing.  They then start a
 daemon process which processes the requests and calls up the appropriate
-systems.  Usually the daemon will also be started regularly to check if
-there is any work to be done and to do it.  The advantage of this system
+systems.  Normally the system will also start the daemon periodically to
+check if there is any work to be done.  The advantage of this approach
 is that it all happens automatically.  You don't have to sit around
 waiting for the files to be transferred.  The disadvantage is that if
 anything goes wrong it might be a while before anybody notices.
@@ -327,19 +327,19 @@ the past.
 @code{uuto} is a simple shell script interface to @code{uucp}.  It will
 transfer a file, or the contents of a directory, to a remote system, and
 notify a particular user on the remote system when it arrives.  The
-remote user can then retrieve the file(s) with @code{uupick}.
+remote user can then retrieve the file(s) with @code{uupick}.
 
 @item cu
 
 The @code{cu} program can be used to call up another system and
 communicate with it as though you were directly connected.  It can also
-do simple file transfers (it does not provide any error checking).
+do simple file transfers, though it does not provide any error checking.
 
 @end table
 
 These eight programs just described, @code{uucp}, @code{uux},
 @code{uuto}, @code{uupick}, @code{uustat}, @code{uuname}, @code{uulog},
-and @code{cu} are the user programs provided by Taylor UUCP.
+and @code{cu} are the user programs provided by Taylor UUCP@.
 @code{uucp}, @code{uux}, and @code{uuto} add requests to the work queue,
 @code{uupick} extracts files from the UUCP public directory,
 @code{uustat} examines the work queue, @code{uuname} examines the
@@ -391,18 +391,18 @@ automatically by mailer programs.  When @samp{bantam} has a mail message
 to send to @samp{ian} at @samp{airs}, it executes @samp{uux - airs!rmail
 ian} and writes the mail message to the @code{uux} process as standard
 input.  The @code{uux} program, running on @samp{bantam}, will read the
-standard input and store it, and the @code{rmail} request, on the work
-queue for @code{airs}.  @code{uux} will then start the @code{uucico}
-daemon.  The @code{uucico} daemon will call up @samp{airs}, just as in
-the @code{uucp} example, and transfer the work request and the mail
-message.  The @code{uucico} daemon on @samp{airs} will put the files on
-a local work queue.  When the communication session is over, the
-@code{uucico} daemon on @samp{airs} will start the @code{uuxqt} daemon.
-@code{uuxqt} will see the request to run, and will run @samp{rmail ian}
-with the mail message as standard input.  The @code{rmail} program,
-which is not part of the UUCP package, is then responsible for either
-putting the message in the right mailbox on @samp{airs} or forwarding
-the message on to another system.
+standard input and store it, as well as the @code{rmail} request itself,
+on the work queue for @samp{airs}.  @code{uux} will then start the
+@code{uucico} daemon.  The @code{uucico} daemon will call up
+@samp{airs}, just as in the @code{uucp} example, and transfer the work
+request and the mail message.  The @code{uucico} daemon on @samp{airs}
+will put the files on a local work queue.  When the communication
+session is over, the @code{uucico} daemon on @samp{airs} will start the
+@code{uuxqt} daemon.  @code{uuxqt} will see the request to run, and will
+run @samp{rmail ian} with the mail message as standard input.  The
+@code{rmail} program, which is not part of the UUCP package, is then
+responsible for either putting the message in the right mailbox on
+@samp{airs} or forwarding the message on to another system.
 
 Taylor UUCP comes with a few other programs that are useful when
 installing and configuring UUCP.
@@ -412,7 +412,7 @@ installing and configuring UUCP.
 @item uuchk
 
 The @code{uuchk} program reads the UUCP configuration files and displays
-a rather lengthy description of what it finds.  This is very useful when
+a rather lengthy description of what it finds.  This is useful when
 configuring UUCP to make certain that the UUCP package will do what you
 expect it to do.
 
@@ -422,7 +422,7 @@ The @code{uuconv} program can be used to convert UUCP configuration
 files from one support format to another.  This can be useful for
 administrators converting from an older UUCP.  Taylor UUCP is able to
 read and use old configuration file formats, but some new features can
-not be selected using the old format.
+not be selected using the old formats.
 
 @item uusched
 
@@ -501,17 +501,17 @@ directory choices are described at somewhat tedious length in
 
 @item
 Take a look at the top of @file{Makefile.in} and set the appropriate
-values for your system.  These control where the program is installed
+values for your system.  These control where the programs are installed
 and which user on the system owns them (normally they will be owned by a
 special user @code{uucp} rather than a real person; they should probably
 not be owned by @code{root}).
 
 @item
 Run the shell script @code{configure}.  This script was generated using
-David MacKenzie's @code{autoconf} program.  It takes a while to run.  It
-will generate the file @file{conf.h} based on @file{conf.h.in}, and, for
-each source code directory, will generate @file{Makefile} based on
-@file{Makefile.in}.
+the @code{autoconf} program written by David MacKenzie of the Free
+Software Foundation.  It takes a while to run.  It will generate the
+file @file{conf.h} based on @file{conf.h.in}, and, for each source code
+directory, will generate @file{Makefile} based on @file{Makefile.in}.
 
 You can pass certain arguments to @code{configure} in the environment.
 Because @code{configure} will compile little test programs to see what
@@ -521,7 +521,7 @@ It recognizes the following environment variables:
 @table @samp
 @item CC
 The C compiler.  If this is not set, then if @code{configure} can find
-@code{gcc} it will use it, otherwise it will use @samp{cc}.
+@samp{gcc} it will use it, otherwise it will use @samp{cc}.
 @item CFLAGS
 Flags to pass to the C compiler when compiling the actual code.  If this
 is not set, @code{configure} will use @samp{-g}.
@@ -548,17 +548,9 @@ Suppose you want to set the environment variable @samp{CC} to
 @code{csh}, do @samp{setenv CC rcc; sh configure}.
 
 On some systems you will want to use @samp{LIBS=-lmalloc}.  On Xenix
-derived systems do not use @samp{LIBS=-lx} because this will bring in
-the wrong versions of certain routines; if you want to use @samp{-lx}
-you must specify @samp{LIBS=-lc -lx}.
-
-Besides @file{conf.h} and the instances of @file{Makefile}, the
-configure script will create @file{config.status}.  This is a shell
-script which does the actual work of creating the newly generated files.
-If @code{configure} gets a couple of things wrong, you can correct them
-in @file{config.status} and do @samp{sh config.status} to redo the
-configuration.  Please report any such problems, so that they can be
-fixed in later versions.
+derived versions of Unix do not use @samp{LIBS=-lx} because this will
+bring in the wrong versions of certain routines; if you want to use
+@samp{-lx} you must specify @samp{LIBS=-lc -lx}.
 
 If @code{configure} fails for some reason, or if you have a very wierd
 system, you may have to configure the package by hand.  To do this, copy
@@ -597,14 +589,15 @@ so you may not have to make any changes.
 Type @samp{make} to compile everything.  The @file{tstuu.c} file is not
 particularly portable; if you can't figure out how to compile it you can
 safely ignore it, as it is only used for testing (to use STREAMS
-pseudo-terminals, tstuu.c must be compiled with -DHAVE_STREAMS_PTYS;
-this is not automatically determined at the moment).  If you have any
-other problems there is probably a bug in the @code{configure} script.
+pseudo-terminals, tstuu.c must be compiled with
+@samp{-DHAVE_STREAMS_PTYS}; this is not automatically determined at the
+moment).  If you have any other problems there is probably a bug in the
+@code{configure} script.
 
 @item
 Please report any problems you have.  That is the only way they will get
-fixed for other people.  Supply a patch if you can, or just ask for
-help.
+fixed for other people.  Supply a patch if you can (@pxref{Patches}), or
+just ask for help.
 
 @end enumerate
 
@@ -617,48 +610,44 @@ some situations.  Do not rely on this code until you have proven to
 yourself that it will work.
 
 You can use the @code{uuchk} program to test your configuration files.
-It will read them and print out a verbose description.  This is
-particularly important if you are using V2 or HDB configuration files,
-because there may be bugs in how they are read.  This program should not
-be made suid, because it will display passwords if it can read them.
+It will read them and print out a verbose description.  This program
+should not be made setuid, because it will display passwords if it can
+read them.
 
 If your system supports pseudo-terminals, and you compiled the code to
 support the new style of configuration files, you should be able to use
 the @code{tstuu} program to test the @code{uucico} daemon (if your
 system supports STREAMS based pseudo-terminals, you must compile tstuu.c
-with -DHAVE_STREAMS_PTYS, at least at the moment; the STREAMS based code
-was contributed by Marc Boucher).
+with @samp{-DHAVE_STREAMS_PTYS}, at least at the moment; the STREAMS
+based code was contributed by Marc Boucher).
 
 To run @code{tstuu}, just type @samp{tstuu} with no arguments while
 logged in to the compilation directory (since it runs @file{./uucp},
-@file{./uux} and @file{./uucico}) to run a lengthy series of tests (it
-takes over ten minutes on a slow VAX).  You will need a fair amount of
-space available in @file{/usr/tmp}.  You will probably want to put it in
-the background.  Do not use @kbd{^Z}, because the program traps on
-@code{SIGCHLD} and winds up dying.  It will create a directory
+@file{./uux} and @file{./uucico}).  It will run a lengthy series of
+tests (it takes over ten minutes on a slow VAX).  You will need a fair
+amount of space available in @file{/usr/tmp}.  You will probably want to
+put it in the background.  Do not use @kbd{^Z}, because the program
+traps on @code{SIGCHLD} and winds up dying.  It will create a directory
 @file{/usr/tmp/tstuu} and fill it with configuration files, and create
 spool directories @file{/usr/tmp/tstuu/spool1} and
 @file{/usr/tmp/tstuu/spool2}.
 
-In 1.04, the @samp{tstuu} program does not appear work with the @code{i}
-protocol on SCO Unix, and probably other systems.  It appears to get
-stuck trying to write to a full pseudo-terminal input buffer, while both
-child @code{uucico} daemons are waiting on write for @samp{tstuu} to
-empty their buffers.  @samp{tstuu} does work with the @code{g} protocol,
-selectable by using @samp{tstuu -c g}.
+If your system does not support the @code{FIONREAD} call, the
+@samp{tstuu} program will run very slowly.  This may or may not get
+fixed in a later version.
 
-The @samp{tstuu} programs does not seem to work under SunOS 4.1.1.  This
+The @samp{tstuu} program does not seem to work under SunOS 4.1.1.  This
 seems to be due to a bug in the implementation of ptys.
 
 The program will finish with an execute file named
 @file{X.@var{something}} and a data file named @file{D.@var{something}}
 in the directory @file{/usr/tmp/tstuu/spool1} (or, more likely, in
 subdirectories, depending on the choice of @code{SPOOLDIR} in
-@file{sysdep.h}).  The log files @file{/usr/tmp/tstuu/Log1} and
-@file{/usr/tmp/tstuu/Log2} (if you have selected @code{HAVE_HDB_LOGGING}
-the first log file will be @file{/usr/tmp/tstuu/Log1/uucico/test2} and
-the second will be @file{/usr/tmp/tstuu/Log2/uucico/test1}) should look
-fairly normal.  You can test @code{uuxqt} by typing @samp{./uuxqt -I
+@file{policy.h}).  Two log files will be created in the directory
+@file{/usr/tmp/tstuu}.  They will be named @file{Log1} and @file{Log2},
+or, if you have selected @code{HAVE_HDB_LOGGING} in @file{policy.h},
+@file{Log1/uucico/test2} and @file{Log2/uucico/test1}.  You can test
+@code{uuxqt} by running the command @samp{./uuxqt -I
 /usr/tmp/tstuu/Config1}.  This should leave a command file
 @file{C.@var{something}} and a data file @file{D.@var{something}} in
 @file{/usr/tmp/tstuu/spool1} or in subdirectories.  Again, there should
@@ -668,21 +657,21 @@ Assuming you compiled the code with debugging enabled, the @samp{-x}
 switch can be used to set debugging modes; see the @code{debug} command
 for details (@pxref{Debugging Levels}).  Use @samp{-x all} to turn on
 all debugging and generate far more output than you will ever want to
-see.  The @code{uucico} daemons will put debugging output in
-@file{/usr/tmp/tstuu/Debug1} and @file{/usr/tmp/tstuu/Debug2}.  At this
-point you're pretty much on your own.
+see.  The @code{uucico} daemons will put debugging output in the files
+@file{Debug1} and @file{Debug2} in the directory @file{/usr/tmp/tstuu}.
+After that, you're pretty much on your own.
 
 On some systems you can also use @code{tstuu} to test @code{uucico}
 against the system @code{uucico}, by using the @samp{-u} switch.  For
 this to work, change the definitions of @code{ZUUCICO_CMD} and
 @code{UUCICO_EXECL} at the top of @file{tstuu.c} to something
 appropriate for your system.  The definitions in @file{tstuu.c} are what
-I used for Ultrix 4.0, in which @file{/usr/lib/uucp/uucico} is
+I used for Ultrix 4.0, on which @file{/usr/lib/uucp/uucico} is
 particularly obstinate about being run as a child; I was only able to
 run it by creating a login name with no password whose shell was
 @file{/usr/lib/uucp/uucico}.  Calling login in this way will leave fake
 entries in @file{wtmp} and @file{utmp}; if you compile @file{tstout.c}
-(in the @file{contrib} directory) as an suid @code{root} program,
+(in the @file{contrib} directory) as a setuid @code{root} program,
 @code{tstuu} will run it to clear those entries out.  On most systems,
 such hackery should not be necessary, although on SCO I had to su to
 @code{root} (@code{uucp} might also have worked) before I could run
@@ -724,15 +713,21 @@ subdirectory of the main spool directory, normally
 rapid succession.
 
 Again, please let me know about any problems you have and how you got
-around them.
+around them.  If you do report a problem, please include the version
+number of the package you are using, and a sample of the debugging file
+showing the problem.  General questions such as ``why doesn't uucico
+dial out'' are impossible to answer without much more information.
 
 @node Installation, TCP, Testing, Overall Installation
 @section Installing Taylor UUCP
 
 You can install the executable files by becoming @code{root} and typing
-@samp{make install}.  Or you can look at what make install does and do
-it by hand.  It tries to preserve your old programs, if any.  You can
-retrieve them by typing @samp{make uninstall}.
+@samp{make install}.  Or you can look at what @samp{make install} does
+and do it by hand.  It tries to preserve your old programs, if any, but
+it only does this the first time Taylor UUCP is installed (so that if
+you install several versions of Taylor UUCP, you can still go back to
+your original UUCP programs).  You can retrieve the original programs by
+typing @samp{make uninstall}.
 
 Simply installing the executable files is not enough, however.  You must
 also arrange for them to be used correctly.
@@ -783,7 +778,7 @@ In this example @var{sys} is the system you wish to call, and
 @samp{/usr/spool/uucp} is your UUCP spool directory.
 If you are using @code{SPOOLDIR_HDB}, use
 @example
-touch /usr/spool/uucp/SYS/C.SYSA0000
+touch /usr/spool/uucp/@var{sys}/C.@var{sys}A0000
 @end example
 
 For example, I use the following crontab entries locally:
@@ -794,8 +789,9 @@ For example, I use the following crontab entries locally:
 @end example
 
 Every hour, at 45 minutes past, this will check if there is any work to
-be done.  Also, at 4:40am, 10:40am and 3:40pm this will create a poll
-file file for @samp{uunet}, forcing the next check to call @samp{uunet}.
+be done, and, if there is, will call the appropriate system.  Also, at
+4:40am, 10:40am and 3:40pm this will create a poll file file for
+@samp{uunet}, forcing the next check to call @samp{uunet}.
 
 @node Using UUCP for mail and news, Trimming UUCP Log Files, Running uucico, Installation
 @subsection Using UUCP for mail and news.
@@ -811,9 +807,9 @@ source code form.
 
 Configuring and using mail delivery agents is a notoriously complex
 topic, and I will not be discussing it here.  Configuring news systems
-is considerably simpler, but I will not be discussing that either.  I
-will merely mention the interactions between the mail and news systems
-and UUCP.
+is usually simpler, but I will not be discussing that either.  I will
+merely describe the interactions between the mail and news systems and
+UUCP.
 
 A mail or news system interacts with UUCP in two ways.
 
@@ -827,9 +823,9 @@ A mail or news system interacts with UUCP in two ways.
 
 When mail is to be sent from your machine to another machine via UUCP,
 the mail delivery agent will invoke @code{uux}.  It will generally run a
-command such as @samp{uux - SYSTEM!rmail}, where @samp{SYSTEM} is to
-remote system to which the mail is being sent.  It may pass other
-options to @code{uux}, such as @samp{-r}, or @samp{-g}.
+command such as @samp{uux - @var{system}!rmail}, where @var{system} is
+the remote system to which the mail is being sent.  It may pass other
+options to @code{uux}, such as @samp{-r} or @samp{-g}.
 
 News also invokes @code{uux} in order to transfer articles to another
 system.  The only difference is that news will use @code{uux} to invoke
@@ -839,8 +835,8 @@ You should arrange for your mail and news systems to invoke the Taylor
 UUCP version of @code{uux} when sending mail via UUCP.  If you simply
 replace any existing version of @code{uux} with the Taylor UUCP version,
 this will probably happen automatically.  However, if both versions
-exist on your system, you will probably have to modify the configuration
-files in some way.
+exist on your system, you will probably have to modify the mail and news
+configuration files in some way.
 
 Actually, if both the system UUCP and Taylor UUCP are using the same
 spool directory format, the system @code{uux} will probably work fine
@@ -875,7 +871,7 @@ continue to grow without limit.  The names of the log files are set in
 @file{/usr/spool/uucp/Log} and @file{/usr/spool/uucp/Stats}.
 
 You may find the @code{savelog} program in the @file{contrib} directory
-may be of use.  There is a manual page in @file{contrib} as well.
+may be of use.  There is a manual page for it in @file{contrib} as well.
 
 @node TCP,  , Installation, Overall Installation
 @section TCP together with Taylor UUCP
@@ -1000,7 +996,7 @@ to the end of the line is ignored unless the @kbd{#} is preceded by a
 @kbd{\} (backslash); if the @kbd{#} is preceeded by a @kbd{\}, the
 @kbd{\} is removed but the @kbd{#} remains in the line.  This can be
 useful for a phone number containing a @kbd{#}.  To enter the sequence
-@samp{\#}, you would use @samp{\\#}.  
+@samp{\#}, use @samp{\\#}.  
 
 The backslash character may be used to continue lines.  If the last
 character in a line is a backslash, the backslash is removed and the
@@ -1064,7 +1060,7 @@ nodename airs
 The UUCP spool directory name is set in @file{policy.h} when the code is
 compiled.  You might at some point decide that it is appropriate to move
 the spool directory, perhaps to put it on a different disk partition.
-You might use the following commands in @file{config} to change to
+You would use the following commands in @file{config} to change to
 directories on the partition @file{/uucp}:
 
 @example
@@ -1093,7 +1089,7 @@ upload files to your system.
 
 @example
 # No files may be transferred to this system
-unknown request no
+unknown receive-request no
 # The public directory is /usr/spool/anonymous
 unknown pubdir /usr/spool/anonymous
 # Only files in the public directory may be sent (the default anyhow)
@@ -1180,9 +1176,9 @@ call-password *
 # We can send anything at any time.
 time any
 
-# During the day we only accept grade 'Z' or above; at other times
+# During the day we only accept grade `Z' or above; at other times
 # (not mentioned here) we accept all grades.  uunet queues up news
-# at grade 'd', which is lower than 'Z'.
+# at grade `d', which is lower than `Z'.
 call-timegrade Z Wk0755-2305,Su1655-2305
 
 # The phone number.
@@ -1375,7 +1371,7 @@ Several commands use time strings to specify a range of times.  This
 section describes how to write time strings.
 
 A time string may be a list of simple time strings separated with a
-vertical bar @kbd{|} or a command @kbd{,}.
+vertical bar @kbd{|} or a comma @kbd{,}.
 
 Each simple time string must begin with @samp{Su}, @samp{Mo}, @samp{Tu},
 @samp{We}, @samp{Th}, @samp{Fr}, or @samp{Sa}, or @samp{Wk} for any
@@ -1453,7 +1449,7 @@ An expect string may contain additional subsend and subexpect strings,
 separated by hyphens.  If the expect string is not seen, the subsend
 string is sent and the chat script continues by waiting for the
 subexpect string.  This means that a hyphen may not appear in an expect
-string; use @samp{\055} instead.
+string; on an ASCII system, use @samp{\055} instead.
 
 An expect string may simply be @samp{""}, meaning to skip the expect
 phase.  Otherwise, the following escape characters may appear in expect
@@ -1501,9 +1497,9 @@ delay sending for 1 or 2 seconds
 @item \e
 disable echo checking
 @item \E
-enable echo checking (wait for echo before continuing)
+enable echo checking
 @item \K
-same as @kbd{BREAK} (for HDB compatibility)
+same as @samp{BREAK} (for HDB compatibility)
 @item \p
 pause sending for a fraction of a second
 @end table
@@ -1550,13 +1546,13 @@ string @samp{BUSY} was seen.
 
 If the argument is true, all incoming characters are stripped to seven
 bits when being compared to the expect string.  Otherwise all eight bits
-are used in the comparison.  The default is true because some Unix
+are used in the comparison.  The default is true, because some Unix
 systems generate parity bits during the login prompt which must be
 ignored while running a chat script.  This has no effect on any
 @code{chat-program}, which must ignore parity by itself if necessary.
 
 @item chat-program @var{strings}
-@findex chat-program in sys file
+@findex chat-program
 
 Specify a program to run before executing the chat script.  This program
 could run its own version of a chat script, or it could do whatever it
@@ -1653,9 +1649,9 @@ all.
 @cindex UUCP system name
 @cindex system name
 
-These keywords are equivalent.  They specify the UUCP name of the
-local host.  If there is no configuration file, an appropriate
-function will be used to get the host name, if possible.
+These keywords are equivalent.  They specify the UUCP name of the local
+host.  If there is no configuration file, an appropriate system function
+will be used to get the host name, if possible.
 
 @item spool @var{string}
 @findex spool
@@ -1673,11 +1669,11 @@ it.
 @cindex uucppublic
 @cindex /usr/spool/uucppublic
 
-Specify the public directory.  The default is from @file{policy.h}.  On
-Unix, when a file is named using a leading @kbd{~/}, it is taken from or
-to the public directory.  Each system may use a separate public
-directory by using the @code{pubdir} command in the system configuration
-file; see @ref{Miscellaneous (sys)}.
+Specify the public directory.  The default is from @file{policy.h}.
+When a file is named using a leading @kbd{~/}, it is taken from or to
+the public directory.  Each system may use a separate public directory
+by using the @code{pubdir} command in the system configuration file; see
+@ref{Miscellaneous (sys)}.
 
 @item lockdir @var{string}
 @findex lockdir
@@ -1834,7 +1830,7 @@ read in turn until the system is found.
 
 Specify the password file(s) to use for login names when @code{uucico}
 is doing its own login prompting, which it does when given the
-@samp{-e}, @samp{-l} or @samp{-w} switch.  The default is the file
+@samp{-e}, @samp{-l} or @samp{-w} switches.  The default is the file
 @file{passwd} in the directory @var{newconfigdir}.  Each line in the
 file(s) has two words: the login name and the password (e.g. @code{Ufoo
 foopas}).  The login name is accepted before the system name is known,
@@ -1907,9 +1903,9 @@ Output debugging messages for chat scripts.
 @item handshake
 Output debugging messages for the initial handshake.
 @item uucp-proto
-Output debugging messages for the UUCP protocol itself.
+Output debugging messages for the UUCP session protocol.
 @item proto
-Output debugging messages for the individual protocols.
+Output debugging messages for the individual link protocols.
 @item port
 Output debugging messages for actions on the communication port.
 @item config
@@ -2061,7 +2057,9 @@ used.  The default is true.
 @findex alias
 
 Specify an alias for the current system.  The alias may be used by local
-@code{uucp} and @code{uux} commands.  The default is to have no aliases.
+@code{uucp} and @code{uux} commands, as well as by the remote system
+(which can be convenient if a remote system changes its name).  The
+default is to have no aliases.
 
 @item myname @var{string}
 @findex myname
@@ -2242,8 +2240,8 @@ using the @code{baud} command to select ports from the port file.
 
 Give a phone number to call (when using a modem port) or a remote host
 to contact (when using a TCP or TLI port).  The commands @code{phone}
-and @code{address} are equivalent, but are intended to be more mnemonic
-depending on the type of port in use.
+and @code{address} are equivalent; the duplication is intended to
+provide a mnemonic choice depending on the type of port in use.
 
 When used with a modem port, an @kbd{=} character in the phone number
 means to wait for a secondary dial tone (although only some modems
@@ -2291,7 +2289,7 @@ Two additional escape sequences may be used in send strings.
 @item \L
 Send the login name, as set by the @code{call-login} command.
 @item \P
-Send the passowrd, as set by the @code{call-password} command.
+Send the password, as set by the @code{call-password} command.
 @end table
 
 Three additional escape sequences may be used with the
@@ -2390,7 +2388,7 @@ defaults.
 
 If @var{boolean} is true, then when the remote system calls
 @code{uucico} will hang up the connection and prepare to call it back.
-This is false by default.
+The default is false.
 
 @item called-chat @var{strings}
 @findex called-chat
@@ -2532,7 +2530,6 @@ default is 6.
 @item errors
 The maximum number of errors to permit before closing the connection.
 The default is 100.
-@item error-decay
 @item error-decay
 The rate at which to ignore errors.  Each time this many packets are
 received, the error count is decreased by one, so that a long connection
@@ -2692,8 +2689,8 @@ send files to the local system.  The default is yes.
 @item request @var{boolean}
 @findex request
 
-Equivalent to specifying both @samp{send-request @var{boolean}} and
-@samp{receive-request @var{boolean}}.
+A shorthand command, equivalent to specifying both @samp{send-request
+@var{boolean}} and @samp{receive-request @var{boolean}}.
 
 @item call-transfer @var{boolean}
 @findex call-transfer
@@ -2873,14 +2870,14 @@ default is @samp{rnews rmail}.
 
 Specify the minimum amount of file system space (in bytes) to leave free
 after receiving a file.  If the incoming file will not fit, it will be
-rejected.  This initial rejections will only work when talking to
-another instance of this package, since older UUCP packages do not
-provide the file size of incoming files.  Also, while a file is being
-received, @code{uucico} will periodically check the amount of free
-space.  If it drops below this amount, the file transfer will be
-aborted.  The default amount of space to leave free is from
-@file{policy.h}.  Not all systems may be able to provide the amount of
-available space.
+rejected.  This initial rejection will only work when talking to another
+instance of this package, since older UUCP packages do not provide the
+file size of incoming files.  Also, while a file is being received,
+@code{uucico} will periodically check the amount of free space.  If it
+drops below the amount given by the @code{free-space} command, the file
+transfer will be aborted.  The default amount of space to leave free is
+from @file{policy.h}.  This file space checking may not work on all
+systems.
 
 @item pubdir @var{string}
 @findex pubdir in sys file
@@ -2924,9 +2921,6 @@ The following are used as default values for all systems; they can be
 considered as appearing before the start of the file.
 
 @example
-timetable Evening Wk1705-0755,Sa,Su
-timetable Night Wk2305-0755,Sa,Su2305-1655
-timetable NonPeak Wk1805-0655,Sa,Su
 time Never
 chat "" \r\c ogin:-BREAK-ogin:-BREAK-ogin: \L word: \P
 chat-timeout 10
@@ -2949,13 +2943,14 @@ max-remote-debug abnormal,chat,handshake
 @cindex port configuration file
 @cindex configuration file (port)
 
-The port files may be used to name and describe ports.  The first
-command in each file must be @code{port}.  All command up to the next
-@code{port} command then describe that port.  There are different types
-of ports; each type supports its own set of commands.  Each command
-indicates which types of ports support it.  There may be many ports with
-the same name; if a system requests a port by name then each port with
-that name will be tried until an unlocked one is found.
+The port files may be used to name and describe ports.  Any commands in
+the file before the first @code{port} command specify defaults for all
+ports in the file.  All commands after a @code{port} command up to the
+next @code{port} command then describe that port.  There are different
+types of ports; each type supports its own set of commands.  Each
+command indicates which types of ports support it.  There may be many
+ports with the same name; if a system requests a port by name then each
+port with that name will be tried until an unlocked one is found.
 
 @table @code
 
@@ -3001,23 +2996,23 @@ systems (@pxref{Protocol Selection}).  This one takes precedence.
 @item seven-bit @var{boolean} [ any type ]
 @findex seven-bit in port file
 
-This is only used during protocol negotiation; if the argument is
-@samp{true}, it forces the selection of a protocol which works across a
-seven-bit link.  It does not prevent eight bit characters from being
-transmitted.  The default is @samp{false}.
+This is only used during protocol negotiation; if the argument is true,
+it forces the selection of a protocol which works across a seven-bit
+link.  It does not prevent eight bit characters from being transmitted.
+The default is false.
 
 @item reliable @var{boolean} [ any type ]
 @findex reliable in port file
 
 This is only used during protocol negotiation; if the argument is
-@samp{false}, it forces the selection of a protocol which works across
-an unreliable communication link.  The default is @samp{true}.  It would
+false, it forces the selection of a protocol which works across
+an unreliable communication link.  The default is true.  It would
 be more common to specify this for a dialer rather than a port.
 
 @item half-duplex @var{boolean} [ any type ]
 @findex half-duplex in port file
 
-If the argument is @samp{true}, it means that the port only supports
+If the argument is true, it means that the port only supports
 half-duplex connections.  This only affects bidirectional protocols, and
 causes them to not do bidirectional transfers.
 
@@ -3061,7 +3056,7 @@ baud.
 
 The argument indicates whether the port supports carrier.  If it does
 not, carrier will never be required on this port, regardless of what the
-modem chat script indicates.  The default is @samp{true}.
+modem chat script indicates.  The default is true.
 
 @item dial-device @var{string} [ modem only ]
 @findex dial-device
@@ -3168,10 +3163,10 @@ in the address are expanded as they are for chat script expect strings
 @cindex dialer configuration file
 @cindex configuration file (dial)
 
-The dialer configuration files define dialers.  The first command in
-each file must be a @code{dialer} command, which names the dialer.
-Subsequent commands up to the next @code{dialer} command are associated
-with the named dialer.
+The dialer configuration files define dialers.  Any commands in the file
+before the first @code{dialer} command specify defaults for all the
+dialers in the file.  All commands after a @code{dialer} command up to
+the next @code{dialer} command are associated with the named dialer.
 
 @table @code
 
@@ -3255,11 +3250,11 @@ in a phone number.  The default is a comma.
 @item carrier @var{boolean}
 @findex carrier in dial file
 
-If the argument is @samp{true}, the dialer supports the modem carrier
-signal.  After the phone number is dialed, @code{uucico} will require
-that carrier be on.  One some systems, it will be able to wait for it.
-If the argument is @samp{false}, carrier will not be required.  The
-default is @samp{true}.
+If the argument is true, the dialer supports the modem carrier signal.
+After the phone number is dialed, @code{uucico} will require that
+carrier be on.  One some systems, it will be able to wait for it.  If
+the argument is false, carrier will not be required.  The default is
+true.
 
 @item carrier-wait @var{number}
 @findex carrier-wait
@@ -3271,10 +3266,10 @@ some systems support waiting for carrier.
 @item dtr-toggle @var{boolean} @var{boolean}
 @findex dtr-toggle
 
-If the first argument is @samp{true}, then DTR is toggled before using
+If the first argument is true, then DTR is toggled before using
 the modem.  This is only supported on some systems and some ports.  The
 second @var{boolean} need not be present; if it is, and it is
-@samp{true}, the program will sleep for 1 second after toggling DTR.
+true, the program will sleep for 1 second after toggling DTR.
 The default is not to toggle DTR.
 
 @item complete-chat @var{strings}
@@ -3333,23 +3328,23 @@ for the port, then those for the system.
 @item seven-bit @var{boolean}
 @findex seven-bit in dial file
 
-This is only used during protocol negotiation; if it is @samp{true}, it
+This is only used during protocol negotiation; if it is true, it
 forces selection of a protocol which works across a seven-bit link.  It
 does not prevent eight bit characters from being transmitted.  The
-default is @samp{false}.  It would be more common to specify this for a
+default is false.  It would be more common to specify this for a
 port than for a dialer.
 
 @item reliable @var{boolean}
 @findex reliable in dial file
 
-This is only used during protocol negotiation; if it is @samp{false}, it
+This is only used during protocol negotiation; if it is false, it
 forces selection of a protocol which works across an unreliable
-communication link.  The default is @samp{true}.
+communication link.  The default is true.
 
 @item half-duplex @var{boolean} [ any type ]
 @findex half-duplex in dial file
 
-If the argument is @samp{true}, it means that the dialer only supports
+If the argument is true, it means that the dialer only supports
 half-duplex connections.  This only affects bidirectional protocols, and
 causes them to not do bidirectional transfers.
 
@@ -3401,8 +3396,9 @@ sent.
 There are some security holes and race conditions that apply to the
 above discussion which I will not elaborate on.  They are not hidden
 from anybody who reads the source code, but they are somewhat technical
-and difficult (but scarcely impossible) to exploit.  Suffice it to say
-that even under the best of conditions UUCP is not completely secure.
+and difficult (though scarcely impossible) to exploit.  Suffice it to
+say that even under the best of conditions UUCP is not completely
+secure.
 
 For many sites, security from remote sites is a more important
 consideration.  Fortunately, Taylor UUCP does provide some support in
@@ -3452,11 +3448,17 @@ can sometimes be more trouble than it's worth.
 @chapter UUCP protocol internals
 
 This chapter describes how the various UUCP protocols work, and
-discusses some other internal UUCP issues.  
+discusses some other internal UUCP issues.
 
 This chapter is quite technical.  You do not need to understand it, or
 even read it, in order to use Taylor UUCP.  It is intended for people
 who are interested in how UUCP code works.
+
+This chapter is also, unfortunately, somewhat out of date, although I
+believe that is incomplete rather than inaccurate.  I post this
+information to the newsgroups @samp{comp.mail.uucp} and
+@samp{news.answers} each month; if you want to write code based on this
+information, please get the most recent copy.
 
 Most of the discussion covers the protocols used by all UUCP packages,
 not just Taylor UUCP.  Any information specific to Taylor UUCP is
@@ -3826,7 +3828,7 @@ master: @samp{S @var{from} @var{to} @var{user} -@var{options} @var{temp}
 
 The @samp{S} and the @samp{-} are literal characters.  This is a request
 by the master to send a file to the slave.  Taylor UUCP handles the
-@samp{S} request in the function @code{fsend_file}.
+@samp{S} request in the file @file{send.c}.
 
 @table @var
 
@@ -3915,9 +3917,7 @@ change to the SVR4 behaviour).
 
 @end table
 
-The slave then responds with an S command response.  Taylor UUCP
-generates these responses in @code{freceive_file} and
-@code{ftransfer_fail}.
+The slave then responds with an S command response.
 
 @table @samp
 
@@ -3976,7 +3976,7 @@ master: @samp{R @var{from} @var{to} @var{user} -@var{options}
 The @samp{R} and the @samp{-} are literal characters.  This is a request
 by the master to receive a file from the slave.  I do not know how SVR4
 UUCP implements file transfer restart in this case.  Taylor UUCP
-implements the @samp{R} request in @code{freceive_file}.
+implements the @samp{R} request in the file @file{rec.c}.
 
 @table @var
 
@@ -4020,9 +4020,7 @@ initial handshake).
 
 @end table
 
-The slave then responds with an @samp{R} command response.  Taylor UUCP
-generates these responses in @code{fsend_file} and
-@code{ftransfer_fail}.
+The slave then responds with an @samp{R} command response.
 
 @table @samp
 
@@ -4076,8 +4074,7 @@ master: @samp{X @var{from} @var{to} @var{user} -@var{options}}
 The @samp{X} and the @samp{-} are literal characters.  This is a request
 by the master to, in essence, execute @code{uucp} on the slave.  The
 slave should execute @samp{uucp @var{from} @var{to}}.  Taylor UUCP
-generates the @samp{X} request in @code{fxcmd} and handles it in
-@code{fdo_xcmd}.
+handles the @samp{X} request in the file @file{xcmd.c}.
 
 @table @var
 
@@ -4105,8 +4102,7 @@ the options field.
 
 @end table
 
-The slave then responds with an X command response.  Taylor UUCP sends
-this response in either @code{fxcmd_confirm} or @code{ftransfer_fail}.
+The slave then responds with an X command response.
 
 @table @samp
 
@@ -4127,9 +4123,7 @@ In either case, the master will then send another command.
 master: @samp{H}
 
 This is used by the master to hang up the connection.  The slave will
-respond with an @samp{H} command response.  Taylor UUCP processes this
-request in @code{fhangup_request}, @code{fhangup_reply}, and
-@code{fgetcmd}.
+respond with an @samp{H} command response.
 
 @table @samp
 
@@ -4154,10 +4148,7 @@ After the protocol has been shut down, the final handshake is
 performed.  This handshake has no real purpose, and some UUCP packages
 simply drop the connection rather than do it (in fact, some will drop
 the connection immediately after both sides agree to hangup, without
-even closing down the protocol).  Taylor UUCP always sends the
-appropriate final handshake string (in @code{fdo_call} or
-@code{faccept_call}) but ignores the handshake string from the other
-side unless it is in @samp{handshake} debugging mode.
+even closing down the protocol).
 
 @table @asis
 
@@ -4738,9 +4729,38 @@ I am always grateful for any patches sent in.  Much of the flexibility
 and portability of the code is due to other people.  Please do not
 hesitate to send me any changes you have found necessary or useful.
 
-I rarely apply the patches directly.  Instead I work my way through them
-and apply each one separately.  This ensures that the naming remains
-consistent and that I understand all the code.
+When sending a patch, please send the output of the Unix @code{diff}
+program invoked with the @samp{-c} option (if you have the GNU version
+of @code{diff}, use the @samp{-p} option).  Always invoke @code{diff}
+with the original file first and the modified file second.
+
+If your @code{diff} does not support @samp{-c} (or you don't have
+@code{diff}), send a complete copy of the modified file (if you have
+just changed a single function, you can just send the new version of the
+function).  In particular, please do not send @code{diff} output without
+the @samp{-c} option, as it is useless.
+
+If you have made a number of changes, it is very convenient for me if
+you send each change as a separate mail message.  Sometimes I will think
+that one change is useful but another one is not.  If they are in
+different messages it is much easier for me to apply one but not the
+other.
+
+I rarely apply the patches directly.  Instead I work my way through the
+hunks and apply each one separately.  This ensures that the naming
+remains consistent, and that I understand all the code.
+
+If you can not follow all these rules, then don't.  But if you do, it
+makes it more likely that I will incorporate your changes.  I am not
+paid for my UUCP work, and my available time is unfortunately very
+restricted.  The package is important to me, and I do what I can, but I
+can not do all that I would like, much less all that everybody else
+would like.
+
+Finally, please do not be offended if I do not reply to messages for
+some time, even a few weeks.  I am often behind on my mail, and if I
+think your message deserves a considered reply I will often put it aside
+until I have time to deal with it.
 
 @node Acknowledgements, Index (concepts), Hacking, Top
 @chapter Acknowledgements
@@ -4756,15 +4776,15 @@ unappreciated.
 First of all, I would like to thank the people at Infinity Development
 Systems (formerly AIRS, which lives on in the domain name, at least for
 now) for permitting me to use their computers and @file{uunet} access.
-I would also like to thank Richard Stallman @file{<rms@@gnu.ai.mit.edu>}
+I would also like to thank Richard Stallman @code{<rms@@gnu.ai.mit.edu>}
 for founding the Free Software Foundation and John Gilmore
-@file{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
+@code{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
 was a direct inspiration for this somewhat larger project.  Chip
-Salzenberg @file{<chip@@tct.com>} has contributed many patches.
-Franc,ois Pinard @file{<pinard@@iro.umontreal.ca>} tirelessly tested the
+Salzenberg @code{<chip@@tct.com>} has contributed many patches.
+Franc,ois Pinard @code{<pinard@@iro.umontreal.ca>} tirelessly tested the
 code and suggested many improvements.  He also put together the initial
 version of this document.  Doug Evans contributed the zmodem protocol.
-Finally, Verbus M. Counts @file{<verbus@@westmark.com>} and Centel
+Finally, Verbus M. Counts @code{<verbus@@westmark.com>} and Centel
 Federal Systems, Inc. deserve special thanks, since they actually paid
 me money to port this code to System III.
 @end ifinfo
@@ -4772,178 +4792,177 @@ me money to port this code to System III.
 First of all, I would like to thank the people at Infinity Development
 Systems (formerly AIRS, which lives on in the domain name, at least for
 now) for permitting me to use their computers and @file{uunet} access.
-I would also like to thank Richard Stallman @file{<rms@@gnu.ai.mit.edu>}
+I would also like to thank Richard Stallman @code{<rms@@gnu.ai.mit.edu>}
 for founding the Free Software Foundation and John Gilmore
-@file{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
+@code{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
 was a direct inspiration for this somewhat larger project.  Chip
-Salzenberg @file{<chip@@tct.com>} contributed many early patches.
+Salzenberg @code{<chip@@tct.com>} has contributed many patches.
 @tex
 Fran\c cois Pinard
 @end tex
-@file{<pinard@@iro.umontreal.ca>} tirelessly tested
-the code and suggested many improvements.  He also put together the
-initial version of this document.  Finally, Verbus M. Counts
-@file{<verbus@@westmark.com>} and Centel Federal Systems, Inc. deserve
-special thanks, since they actually paid me money to port this code to
-System III.
+@code{<pinard@@iro.umontreal.ca>} tirelessly tested the code and
+suggested many improvements.  He also put together the initial version
+of this document.  Doug Evans contributed the zmodem protocol.  Finally,
+Verbus M. Counts @code{<verbus@@westmark.com>} and Centel Federal
+Systems, Inc. deserve special thanks, since they actually paid me money
+to port this code to System III.
 @end iftex
 
 In alphabetical order:
 
 @example
-"Earle F. Ake - SAIC" @file{<ake@@Dayton.SAIC.COM>}
-@file{mra@@searchtech.com} (Michael Almond)
-@file{cambler@@zeus.calpoly.edu} (Christopher J. Ambler)
-Brian W. Antoine @file{<briana@@tau-ceti.isc-br.com>}
-@file{jantypas@@soft21.s21.com} (John Antypas)
-@file{nba@@sysware.DK} (Niels Baggesen)
-@file{uunet!hotmomma!sdb} (Scott Ballantyne)
-Zacharias Beckman @file{<zac@@dolphin.com>}
-@file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
-@file{bob@@usixth.sublink.org} (Roberto Biancardi)
-@file{statsci!scott@@coco.ms.washington.edu} (Scott Blachowicz)
-@file{bag%wood2.cs.kiev.ua@@relay.ussr.eu.net} (Andrey G Blochintsev)
-Gregory Bond @file{<gnb@@bby.com.au>}
-Marc Boucher @file{<marc@@CAM.ORG>}
-@file{dean@@coplex.com} (Dean Brooks)
-@file{dave@@dlb.com} (Dave Buck)
-@file{gordon@@sneaky.lonestar.org} (Gordon Burditt)
-@file{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
-Brian Campbell @file{<brianc@@quantum.on.ca>}
-Andrew A. Chernov @file{<ache@@astral.msk.su>}
-@file{mafc!frank@@bach.helios.de} (Frank Conrad)
-Ed Carp @file{<erc@@apple.com>}
-@file{verbus@@westmark.westmark.com} (Verbus M. Counts)
-@file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
-Bob Cunningham @file{<bob@@soest.hawaii.edu>}
-@file{hubert@@arakis.fdn.org} (Hubert Delahaye)
-@file{denny@@dakota.alisa.com} (Bob Denny)
-@file{ssd@@nevets.oau.org} (Steven S. Dick)
-@file{gert@@greenie.gold.sub.org} (Gert Doering)
-Hans-Dieter Doll @file{<hd2@@Insel.DE>}
-Andrew Evans @file{<andrew@@airs.com>}
-@file{dje@@cygnus.com} (Doug Evans)
-Marc Evans @file{<marc@@synergytics.com>}
-@file{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
-@file{fenner@@jazz.psu.edu} (Bill Fenner)
-"David J. Fiander" @file{<golem!david@@news.lsuc.on.ca>}
-Thomas Fischer @file{<batman@@olorin.dark.sub.org>}
-@file{erik@@eab.retix.com} (Erik Forsberg)
-Lele Gaifax @file{<piggy@@idea.sublink.org>}
-@file{Peter.Galbavy@@micromuse.co.uk}
-@file{hunter@@phoenix.pub.uu.oz.au} (James Gardiner [hunter])
-Terry Gardner @file{<cphpcom!tjg01>}
-@file{ol@@infopro.spb.su} (Oleg Girko)
-@file{jimmy@@tokyo07.info.com} (Jim Gottlieb)
-@file{ryan@@cs.umb.edu} (Daniel R. Guilderson)
-@file{greg@@gagme.chi.il.us} (Gregory Gulik)
-Richard H. Gumpertz @file{<rhg@@cps.com>}
-Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
-@file{jh@@moon.nbn.com} (John Harkin)
-@file{guy@@auspex.auspex.com} (Guy Harris)
-Petri Helenius @file{<pete@@fidata.fi>}
-Bob Hemedinger @file{<bob@@dalek.mwc.com>}
-Andrew Herbert @file{<andrew@@werple.pub.uu.oz.au>}
-Peter Honeyman @file{<honey@@citi.umich.edu>}
-@file{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
-@file{bei@@dogface.austin.tx.us} (Bob Izenberg)
-Rob Janssen @file{<cmgit!rob@@relay.nluug.nl>}
-@file{harvee!esj} (Eric S Johansson)
-Alan Judge @file{<aj@@dec4ie.IEunet.ie>}
-@file{chris@@cj_net.in-berlin.de} (Christof Junge)
-@file{tron@@Veritas.COM} (Ronald S. Karr)
-Brendan Kehoe @file{<brendan@@cs.widener.edu>}
-@file{kersing@@nlmug.nl.mugnet.org} (Jac Kersing)
-@file{rob@@pact.nl} (Rob Kurver)
-@file{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
-@file{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
-@file{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
-@file{merlyn@@digibd.com} (Merlyn LeRoy)
-@file{clewis@@ferret.ocunix.on.ca} (Chris Lewis)
-@file{gdonl@@ssi1.com} (Don Lewis)
-@file{libove@@libove.det.dec.com} (Jay Vassos-Libove)
-@file{bruce%blilly@@Broadcast.Sony.COM} (Bruce Lilly)
-Ted Lindgreen @file{<tlindgreen@@encore.nl>}
-@file{andrew@@cubetech.com} (Andrew Loewenstern)
-"Arne Ludwig" @file{<arne@@rrzbu.hanse.de>}
-Matthew Lyle @file{<matt@@mips.mitek.com>}
-@file{djm@@eng.umd.edu} (David J. MacKenzie)
-John R MacMillan @file{<chance!john@@sq.sq.com>}
-Giles D Malet @file{<shrdlu!gdm@@provar.kwnet.on.ca>}
-@file{mem@@mv.MV.COM} (Mark E. Mallett)
-@file{pepe@@dit.upm.es} (Jose A. Manas)
-@file{martelli@@cadlab.sublink.org} (Alex Martelli)
-Yanek Martinson @file{<yanek@@mthvax.cs.miami.edu>}
-@file{jm@@aristote.univ-paris8.fr} (Jean Mehat)
-@file{les@@chinet.chi.il.us} (Leslie Mikesell)
-@file{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
-@file{rmohr@@infoac.rmi.de} (Rupert Mohr)
-@file{ianm@@icsbelf.co.uk} (Ian Moran)
-@file{brian@@ilinx.wimsey.bc.ca} (Brian J. Murrell)
-@file{service@@infohh.rmi.de} (Dirk Musstopf)
-@file{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
-@file{rolf@@saans.north.de} (Rolf Nerstheimer)
-@file{tom@@smart.bo.open.de} (Thomas Neumann)
-@file{mnichols@@pacesetter.com}
-@file{nolan@@helios.unl.edu} (Michael Nolan)
-david nugent @file{<david@@csource.oz.au>}
-Petri Ojala @file{<ojala@@funet.fi>}
-@file{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
-Tim Peiffer @file{peiffer@@cs.umn.edu}
-@file{don@@blkhole.resun.com} (Don Phillips)
-"Mark Pizzolato 415-369-9366" @file{<mark@@infocomm.com>}
-@file{dplatt@@ntg.com} (Dave Platt)
-@file{eldorado@@tharr.UUCP} (Mark Powell)
-Mark Powell @file{<mark@@inet-uk.co.uk>}
-@file{pozar@@kumr.lns.com} (Tim Pozar)
-@file{putsch@@uicc.com} (Jeff Putsch)
-Jarmo Raiha @file{<jarmo@@ksvltd.FI>}
-Scott Reynolds @file{<scott@@clmqt.marquette.Mi.US>}
-@file{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
-@file{arnold@@cc.gatech.edu} (Arnold Robbins)
-@file{ross@@sun490.fdu.edu} (Jeff Ross)
-Aleksey P. Rudnev @file{<alex@@kiae.su>}
-"Heiko W.Rupp" @file{<hwr@@pilhuhn.ka.sub.org>}
-@file{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
-@file{tbr@@tfic.bc.ca} (Tom Rushworth)
-@file{rsalz@@bbn.com} (Rich Salz)
-@file{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
-Nickolay Saukh @file{<nms@@ussr.EU.net>}
-Eric Schnoebelen @file{<eric@@cirr.com>}
-@file{scott@@geom.umn.edu}
-Igor V. Semenyuk @file{<iga@@argrd0.argonaut.su>}
-@file{uunet!gold.sub.org!root} (Christian Seyb)
-@file{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
-@file{peter@@ficc.ferranti.com} (Peter da Silva)
-@file{frumious!pat} (Patrick Smith)
-@file{roscom!monty@@bu.edu} (Monty Solomon)
-Harlan Stenn @file{<harlan@@mumps.pfcs.com>}
-Ralf Stephan @file{<ralf@@ark.abg.sub.org>}
-@file{chs@@antic.apu.fi} (Hannu Strang)
-@file{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
-Shigeya Suzuki @file{<shigeya@@dink.foretune.co.jp>}
-Karl Swartz @file{<kls@@ohare.Chicago.COM>}
-@file{swiers@@plains.NoDak.edu}
-Oleg Tabarovsky @file{<olg@@olghome.pccentre.msk.su>}
-John Theus @file{<john@@theus.rain.com>}
-Karsten Thygesen @file{<karthy@@dannug.dk>}
-Graham Toal @file{<gtoal@@pizzabox.demon.co.uk>}
-@file{rmtodd@@servalan.servalan.com} (Richard Todd)
-Len Tower @file{<tower-prep@@ai.mit.edu>}
-Mark Towfiq @file{<justice!towfiq@@Eingedi.Newton.MA.US>}
-@file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
-Tomi Vainio @file{<tomppa@@fidata.fi>}
-@file{vogel@@omega.ssw.de} (Andreas Vogel)
-@file{jv@@mh.nl} (Johan Vromans)
-@file{steve@@nshore.org} (Stephen J. Walick)
-@file{gerben@@rna.indiv.nluug.nl} (Gerben Wierda)
-@file{frnkmth!twwells.com!bill} (T. William Wells)
-Peter Wemm @file{<Peter_Wemm@@zeus.dialix.oz.au>}
-@file{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
-Michael Yu.Yaroslavtsev @file{<mike@@yaranga.ipmce.su>}
-@file{jon@@console.ais.org} (Jon Zeeff)
-Matthias Zepf @file{<agnus@@amylnd.stgt.sub.org>}
-Eric Ziegast @file{<uunet!ziegast>}
+"Earle F. Ake - SAIC" @code{<ake@@Dayton.SAIC.COM>}
+@code{mra@@searchtech.com} (Michael Almond)
+@code{cambler@@zeus.calpoly.edu} (Christopher J. Ambler)
+Brian W. Antoine @code{<briana@@tau-ceti.isc-br.com>}
+@code{jantypas@@soft21.s21.com} (John Antypas)
+@code{nba@@sysware.DK} (Niels Baggesen)
+@code{uunet!hotmomma!sdb} (Scott Ballantyne)
+Zacharias Beckman @code{<zac@@dolphin.com>}
+@code{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
+@code{bob@@usixth.sublink.org} (Roberto Biancardi)
+@code{statsci!scott@@coco.ms.washington.edu} (Scott Blachowicz)
+@code{bag%wood2.cs.kiev.ua@@relay.ussr.eu.net} (Andrey G Blochintsev)
+Gregory Bond @code{<gnb@@bby.com.au>}
+Marc Boucher @code{<marc@@CAM.ORG>}
+@code{dean@@coplex.com} (Dean Brooks)
+@code{dave@@dlb.com} (Dave Buck)
+@code{gordon@@sneaky.lonestar.org} (Gordon Burditt)
+@code{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
+Brian Campbell @code{<brianc@@quantum.on.ca>}
+Andrew A. Chernov @code{<ache@@astral.msk.su>}
+@code{mafc!frank@@bach.helios.de} (Frank Conrad)
+Ed Carp @code{<erc@@apple.com>}
+@code{verbus@@westmark.westmark.com} (Verbus M. Counts)
+@code{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
+Bob Cunningham @code{<bob@@soest.hawaii.edu>}
+@code{hubert@@arakis.fdn.org} (Hubert Delahaye)
+@code{denny@@dakota.alisa.com} (Bob Denny)
+@code{ssd@@nevets.oau.org} (Steven S. Dick)
+@code{gert@@greenie.gold.sub.org} (Gert Doering)
+Hans-Dieter Doll @code{<hd2@@Insel.DE>}
+Andrew Evans @code{<andrew@@airs.com>}
+@code{dje@@cygnus.com} (Doug Evans)
+Marc Evans @code{<marc@@synergytics.com>}
+@code{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
+@code{fenner@@jazz.psu.edu} (Bill Fenner)
+"David J. Fiander" @code{<golem!david@@news.lsuc.on.ca>}
+Thomas Fischer @code{<batman@@olorin.dark.sub.org>}
+@code{erik@@eab.retix.com} (Erik Forsberg)
+Lele Gaifax @code{<piggy@@idea.sublink.org>}
+@code{Peter.Galbavy@@micromuse.co.uk}
+@code{hunter@@phoenix.pub.uu.oz.au} (James Gardiner [hunter])
+Terry Gardner @code{<cphpcom!tjg01>}
+@code{ol@@infopro.spb.su} (Oleg Girko)
+@code{jimmy@@tokyo07.info.com} (Jim Gottlieb)
+@code{ryan@@cs.umb.edu} (Daniel R. Guilderson)
+@code{greg@@gagme.chi.il.us} (Gregory Gulik)
+Richard H. Gumpertz @code{<rhg@@cps.com>}
+Michael Haberler @code{<mah@@parrot.prv.univie.ac.at>}
+@code{jh@@moon.nbn.com} (John Harkin)
+@code{guy@@auspex.auspex.com} (Guy Harris)
+Petri Helenius @code{<pete@@fidata.fi>}
+Bob Hemedinger @code{<bob@@dalek.mwc.com>}
+Andrew Herbert @code{<andrew@@werple.pub.uu.oz.au>}
+Peter Honeyman @code{<honey@@citi.umich.edu>}
+@code{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
+@code{bei@@dogface.austin.tx.us} (Bob Izenberg)
+Rob Janssen @code{<cmgit!rob@@relay.nluug.nl>}
+@code{harvee!esj} (Eric S Johansson)
+Alan Judge @code{<aj@@dec4ie.IEunet.ie>}
+@code{chris@@cj_net.in-berlin.de} (Christof Junge)
+@code{tron@@Veritas.COM} (Ronald S. Karr)
+Brendan Kehoe @code{<brendan@@cs.widener.edu>}
+@code{kersing@@nlmug.nl.mugnet.org} (Jac Kersing)
+@code{rob@@pact.nl} (Rob Kurver)
+@code{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
+@code{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
+@code{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
+@code{merlyn@@digibd.com} (Merlyn LeRoy)
+@code{clewis@@ferret.ocunix.on.ca} (Chris Lewis)
+@code{gdonl@@ssi1.com} (Don Lewis)
+@code{libove@@libove.det.dec.com} (Jay Vassos-Libove)
+@code{bruce%blilly@@Broadcast.Sony.COM} (Bruce Lilly)
+Ted Lindgreen @code{<tlindgreen@@encore.nl>}
+@code{andrew@@cubetech.com} (Andrew Loewenstern)
+"Arne Ludwig" @code{<arne@@rrzbu.hanse.de>}
+Matthew Lyle @code{<matt@@mips.mitek.com>}
+@code{djm@@eng.umd.edu} (David J. MacKenzie)
+John R MacMillan @code{<chance!john@@sq.sq.com>}
+Giles D Malet @code{<shrdlu!gdm@@provar.kwnet.on.ca>}
+@code{mem@@mv.MV.COM} (Mark E. Mallett)
+@code{pepe@@dit.upm.es} (Jose A. Manas)
+@code{martelli@@cadlab.sublink.org} (Alex Martelli)
+Yanek Martinson @code{<yanek@@mthvax.cs.miami.edu>}
+@code{jm@@aristote.univ-paris8.fr} (Jean Mehat)
+@code{les@@chinet.chi.il.us} (Leslie Mikesell)
+@code{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
+@code{rmohr@@infoac.rmi.de} (Rupert Mohr)
+@code{ianm@@icsbelf.co.uk} (Ian Moran)
+@code{brian@@ilinx.wimsey.bc.ca} (Brian J. Murrell)
+@code{service@@infohh.rmi.de} (Dirk Musstopf)
+@code{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
+@code{rolf@@saans.north.de} (Rolf Nerstheimer)
+@code{tom@@smart.bo.open.de} (Thomas Neumann)
+@code{mnichols@@pacesetter.com}
+@code{nolan@@helios.unl.edu} (Michael Nolan)
+david nugent @code{<david@@csource.oz.au>}
+Petri Ojala @code{<ojala@@funet.fi>}
+@code{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
+Tim Peiffer @code{peiffer@@cs.umn.edu}
+@code{don@@blkhole.resun.com} (Don Phillips)
+"Mark Pizzolato 415-369-9366" @code{<mark@@infocomm.com>}
+@code{dplatt@@ntg.com} (Dave Platt)
+@code{eldorado@@tharr.UUCP} (Mark Powell)
+Mark Powell @code{<mark@@inet-uk.co.uk>}
+@code{pozar@@kumr.lns.com} (Tim Pozar)
+@code{putsch@@uicc.com} (Jeff Putsch)
+Jarmo Raiha @code{<jarmo@@ksvltd.FI>}
+Scott Reynolds @code{<scott@@clmqt.marquette.Mi.US>}
+@code{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
+@code{arnold@@cc.gatech.edu} (Arnold Robbins)
+@code{ross@@sun490.fdu.edu} (Jeff Ross)
+Aleksey P. Rudnev @code{<alex@@kiae.su>}
+"Heiko W.Rupp" @code{<hwr@@pilhuhn.ka.sub.org>}
+@code{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
+@code{tbr@@tfic.bc.ca} (Tom Rushworth)
+@code{rsalz@@bbn.com} (Rich Salz)
+@code{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
+Nickolay Saukh @code{<nms@@ussr.EU.net>}
+Eric Schnoebelen @code{<eric@@cirr.com>}
+@code{scott@@geom.umn.edu}
+Igor V. Semenyuk @code{<iga@@argrd0.argonaut.su>}
+@code{uunet!gold.sub.org!root} (Christian Seyb)
+@code{s4mjs!mjs@@nirvo.nirvonics.com} (M. J. Shannon Jr.)
+@code{peter@@ficc.ferranti.com} (Peter da Silva)
+@code{frumious!pat} (Patrick Smith)
+@code{roscom!monty@@bu.edu} (Monty Solomon)
+Harlan Stenn @code{<harlan@@mumps.pfcs.com>}
+Ralf Stephan @code{<ralf@@ark.abg.sub.org>}
+@code{chs@@antic.apu.fi} (Hannu Strang)
+@code{ralf@@reswi.ruhr.de} (Ralf E. Stranzenbach)
+Shigeya Suzuki @code{<shigeya@@dink.foretune.co.jp>}
+@code{swiers@@plains.NoDak.edu}
+Oleg Tabarovsky @code{<olg@@olghome.pccentre.msk.su>}
+John Theus @code{<john@@theus.rain.com>}
+Karsten Thygesen @code{<karthy@@dannug.dk>}
+Graham Toal @code{<gtoal@@pizzabox.demon.co.uk>}
+@code{rmtodd@@servalan.servalan.com} (Richard Todd)
+Len Tower @code{<tower-prep@@ai.mit.edu>}
+Mark Towfiq @code{<justice!towfiq@@Eingedi.Newton.MA.US>}
+@code{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
+Tomi Vainio @code{<tomppa@@fidata.fi>}
+@code{vogel@@omega.ssw.de} (Andreas Vogel)
+@code{jv@@mh.nl} (Johan Vromans)
+@code{steve@@nshore.org} (Stephen J. Walick)
+@code{gerben@@rna.indiv.nluug.nl} (Gerben Wierda)
+@code{frnkmth!twwells.com!bill} (T. William Wells)
+Peter Wemm @code{<Peter_Wemm@@zeus.dialix.oz.au>}
+@code{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
+Michael Yu.Yaroslavtsev @code{<mike@@yaranga.ipmce.su>}
+@code{jon@@console.ais.org} (Jon Zeeff)
+Matthias Zepf @code{<agnus@@amylnd.stgt.sub.org>}
+Eric Ziegast @code{<uunet!ziegast>}
 @end example
 
 @node Index (concepts), Index (configuration file), Acknowledgements, Top
@@ -4952,7 +4971,7 @@ Eric Ziegast @file{<uunet!ziegast>}
 @printindex cp
 
 @node Index (configuration file),  , Index (concepts), Top
-@unnumbered Index to New Configuration File
+@unnumbered Configuration File Index
 
 @printindex fn
 
