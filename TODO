@@ -242,3 +242,8 @@ Monty Solomon: put corrupted files in a special directory (.Corrupt?).
 Chip Salzenberg: make file name restrictions a configuration option.
 
 74.
+
+Yanek Martinson: allow each systems to independently choose whether to
+permit shell execution.
+
+75.
