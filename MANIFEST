@@ -5,7 +5,7 @@ Makefile.in
 README
 TODO
 chat.c
-conf.h.in
+config.h.in
 configure
 configure.in
 conn.c
