@@ -142,10 +142,10 @@ fsdo_lock (zlock, fspooldir, pferr)
     }
 
 #if HAVE_V2_LOCKFILES
-  i = ime;
+  i = (int) ime;
   cwrote = write (o, &i, sizeof i);
 #else
-  sprintf (ab, "%10d\n", (int) ime);
+  sprintf (ab, "%10ld\n", (long) ime);
   cwrote = write (o, ab, strlen (ab));
 #endif
 
@@ -177,7 +177,7 @@ fsdo_lock (zlock, fspooldir, pferr)
   while (link (ztempfile, zpath) != 0)
     {
       int cgot;
-      int ipid;
+      pid_t ipid;
       boolean freadonly;
 
       fret = FALSE;
@@ -229,10 +229,10 @@ fsdo_lock (zlock, fspooldir, pferr)
 	}
 
 #if HAVE_V2_LOCKFILES
-      ipid = i;
+      ipid = (pid_t) i;
 #else
       ab[cgot] = '\0';
-      ipid = strtol (ab, (char **) NULL, 10);
+      ipid = (pid_t) strtol (ab, (char **) NULL, 10);
 #endif
 
       /* On NFS, the link might have actually succeeded even though we
@@ -257,8 +257,8 @@ fsdo_lock (zlock, fspooldir, pferr)
       if (kill (ipid, 0) == 0 || errno == EPERM)
 	break;
 
-      ulog (LOG_ERROR, "Found stale lock %s held by process %d",
-	    zpath, ipid);
+      ulog (LOG_ERROR, "Found stale lock %s held by process %ld",
+	    zpath, (long) ipid);
 
       /* This is a stale lock, created by a process that no longer
 	 exists.
@@ -328,10 +328,10 @@ fsdo_lock (zlock, fspooldir, pferr)
 	}
 
 #if HAVE_V2_LOCKFILES
-      i = ime;
+      i = (int) ime;
       cwrote = write (o, &i, sizeof i);
 #else
-      sprintf (ab, "%10d\n", (int) ime);
+      sprintf (ab, "%10ld\n", (long) ime);
       cwrote = write (o, ab, strlen (ab));
 #endif
 
@@ -362,10 +362,10 @@ fsdo_lock (zlock, fspooldir, pferr)
 	}
 
 #if HAVE_V2_LOCKFILES
-      ipid = i;
+      ipid = (pid_t) i;
 #else
       ab[cgot] = '\0';
-      ipid = strtol (ab, (char **) NULL, 10);
+      ipid = (pid_t) strtol (ab, (char **) NULL, 10);
 #endif
 
       if (ipid == ime)

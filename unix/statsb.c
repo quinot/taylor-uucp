@@ -1,7 +1,7 @@
 /* statsb.c
    System dependent routines for uustat.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -399,7 +399,7 @@ fsysdep_lock_status ()
   DIR *qdir;
   struct dirent *qentry;
   int calc;
-  int *pai;
+  pid_t *pai;
   int cgot;
   int aidescs[3];
   char *zcopy, *ztok;
@@ -431,7 +431,7 @@ fsysdep_lock_status ()
 #endif
       int cread;
       int ierr;
-      int ipid;
+      pid_t ipid;
 
       if (strncmp (qentry->d_name, "LCK..", sizeof "LCK.." - 1) != 0)
 	continue;
@@ -465,18 +465,18 @@ fsysdep_lock_status ()
       ubuffree (zname);
 
 #if HAVE_V2_LOCKFILES
-      ipid = i;
+      ipid = (pid_t) i;
 #else
       ab[cread] = '\0';
-      ipid = strtol (ab, (char **) NULL, 10);
+      ipid = (pid_t) strtol (ab, (char **) NULL, 10);
 #endif
 
-      printf ("%s: %d\n", qentry->d_name, ipid);
+      printf ("%s: %ld\n", qentry->d_name, (long) ipid);
 
       if (cgot >= calc)
 	{
 	  calc += 10;
-	  pai = (int *) xrealloc ((pointer) pai, calc * sizeof (int));
+	  pai = (pid_t *) xrealloc ((pointer) pai, calc * sizeof (pid_t));
 	}
 
       pai[cgot] = ipid;
@@ -520,7 +520,7 @@ fsysdep_lock_status ()
       {
 	pid_t ipid;
 
-	sprintf (zset, "%s%d", zlast, pai[i]);
+	sprintf (zset, "%s%ld", zlast, (long) pai[i]);
 	pazargs[cargs - 1] = zset;
 
 	ipid = ixsspawn ((const char **) pazargs, aidescs, FALSE, FALSE,
@@ -546,7 +546,7 @@ fsysdep_lock_status ()
       {
 	char ab[20];
 
-	sprintf (ab, "%d", pai[i]);
+	sprintf (ab, "%ld", (long) pai[i]);
 	strcat (zlast, ab);
 	if (i + 1 < cgot)
 	  strcat (zlast, ",");
