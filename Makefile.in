@@ -320,15 +320,14 @@ dist:
 	-rm -rf uucp-$(VERSION)
 	-rm -f uucp-$(VERSION).tar uucp-$(VERSION).tar.gz
 	mkdir uucp-$(VERSION)
-	ln `cat MANIFEST` uucp-$(VERSION)
+	ln `cat $(srcdir)/MANIFEST | sed -e 's|^|$(srcdir)/|'` uucp-$(VERSION)
 	rm -f uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
-	cp policy.h Makefile.in uucp-$(VERSION)
+	cp $(srcdir)/policy.h $(srcdir)/Makefile.in uucp-$(VERSION)
 	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
-	chmod 0644 uucp-$(VERSION)/uucp.texi
 	mkdir uucp-$(VERSION)/contrib
-	ln contrib/* uucp-$(VERSION)/contrib
+	ln $(srcdir)/contrib/* uucp-$(VERSION)/contrib
 	mkdir uucp-$(VERSION)/sample
-	ln sample/* uucp-$(VERSION)/sample
+	ln $(srcdir)/sample/* uucp-$(VERSION)/sample
 	(cd unix; $(MAKE) $(MDEFINES) dist)
 	(cd uuconf; $(MAKE) $(MDEFINES) dist)
 	(cd lib; $(MAKE) $(MDEFINES) dist)

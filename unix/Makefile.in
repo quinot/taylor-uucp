@@ -54,7 +54,7 @@ libunix.a: $(OBJS)
 
 dist:
 	mkdir ../uucp-$(VERSION)/unix
-	ln `cat MANIFEST` ../uucp-$(VERSION)/unix
+	ln `cat $(srcdir)/MANIFEST | sed -e 's|^|$(srcdir)/|'` ../uucp-$(VERSION)/unix
 
 Makefile: Makefile.in
 	cd .. && CONFIG_FILES=unix/Makefile CONFIG_HEADERS= $(SHELL) ./config.status

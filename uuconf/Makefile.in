@@ -65,7 +65,7 @@ maintainer-clean realclean: distclean
 
 dist:
 	mkdir ../uucp-$(VERSION)/uuconf
-	ln `cat MANIFEST` ../uucp-$(VERSION)/uuconf
+	ln `cat $(srcdir)/MANIFEST | sed -e 's|^|$(srcdir)/|'` ../uucp-$(VERSION)/uuconf
 
 Makefile: Makefile.in
 	cd .. && CONFIG_FILES=uuconf/Makefile CONFIG_HEADERS= $(SHELL) ./config.status
