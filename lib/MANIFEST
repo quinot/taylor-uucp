@@ -1,12 +1,18 @@
 Makefile.in
 MANIFEST
+alloca.c
 bsrch.c
+buffer.c
 bzero.c
+debug.c
 getlin.c
+getopt.c
 memchr.c
 memcmp.c
 memcpy.c
 memmov.c
+spool.c
+status.c
 strcas.c
 strchr.c
 strdup.c
@@ -18,4 +24,3 @@ strtol.c
 xfree.c
 xmall.c
 xreall.c
-xstrdp.c
