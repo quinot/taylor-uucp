@@ -59,7 +59,9 @@ distclean: clean
 
 # My build targets; not expected to work elsewhere.
 
-dist: MANIFEST configure
+dist:
+	mkdir ../uucp-$(VERSION)/uuconf
+	ln `cat MANIFEST` ../uucp-$(VERSION)/uuconf
 
 Makefile: Makefile.in
 	(cd $(srcdir)/..; sh config.status)

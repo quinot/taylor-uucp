@@ -57,6 +57,10 @@ libunix.a: $(OBJS)
 .c.o:
 	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
 
+dist:
+	mkdir ../uucp-$(VERSION)/unix
+	ln `cat MANIFEST` ../uucp-$(VERSION)/unix
+
 Makefile: Makefile.in
 	(cd ..; sh config.status)
 

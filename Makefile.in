@@ -84,11 +84,11 @@ LN_S = @LN_S@
 
 SHELL = /bin/sh
 
-VERSION = 1.03
+VERSION = 1.04
 
 MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
-MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)'
+MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)' VERSION='$(VERSION)'
 
 PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uulog uuto \
 	uupick cu
@@ -258,7 +258,7 @@ clean:
 # The distribution targets are mostly for my own use; they are not
 # expected to work on other systems.
 
-dist: uucp.info
+dist:
 	-rm -rf uucp-$(VERSION)
 	-rm -f taylor-uucp-$(VERSION).tar taylor-uucp-$(VERSION).tar.Z
 	mkdir uucp-$(VERSION)
@@ -268,6 +268,9 @@ dist: uucp.info
 	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
 	mkdir uucp-$(VERSION)/contrib
 	ln contrib/* uucp-$(VERSION)/contrib
+	(cd unix; make $(MDEFINES) dist)
+	(cd uuconf; make $(MDEFINES) dist)
+	(cd lib; make $(MDEFINES) dist)
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
 	compress taylor-uucp-$(VERSION).tar
 

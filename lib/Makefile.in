@@ -38,6 +38,10 @@ libuucp.a: $(OBJS)
 .c.o:
 	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
 
+dist:
+	mkdir ../uucp-$(VERSION)/lib
+	ln `cat MANIFEST` ../uucp-$(VERSION)/lib
+
 Makefile: Makefile.in
 	(cd ..; sh config.status)
 
