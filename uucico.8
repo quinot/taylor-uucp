@@ -223,6 +223,15 @@ this will cause
 .I uucico
 to prompt only for the password, not the login name.
 .TP 5
+.B \-i type, \-\-stdin type
+Set the type of port to use when using standard input.  The only
+support port type is TLI, and this is only available on machines which
+support the TLI networking interface.  Specifying
+.B \-iTLI
+causes
+.I uucico
+to use TLI calls to perform I/O.
+.TP 5
 .B \-x type, \-X type, \-\-debug type
 Turn on particular debugging types.  The following types are
 recognized: abnormal, chat, handshake, uucp-proto, proto, port,
