@@ -194,7 +194,7 @@ const char protg_rcsid[] = "$Id$";
    connection.  Protocol parameter ``errors''.  */
 #define CERRORS (100)
 
-/* Default decay rate.  Each time we receive this many packets
+/* Default decay rate.  Each time we send or receive this many packets
    succesfully, we decrement the error level by one (protocol
    parameter ``error-decay'').  */
 #define CERROR_DECAY (10)
@@ -346,6 +346,18 @@ static long cGbad_order;
    received).  */
 static long cGremote_rejects;
 
+/* The error level.  This is the total number of errors as adjusted by
+   cGerror_decay.  */
+static long cGerror_level;
+
+/* Each time we send an RJ, we can expect several out of order of
+   packets, because the other side will probably have sent a full
+   window by the time it sees the RJ.  This variable keeps track of
+   the number of out of order packets we expect to see.  We don't
+   count expected out of order packets against the error level.  This
+   is reset to 0 when an in order packet is received.  */
+static int cGexpect_bad_order;
+
 #if DEBUG > 1
 /* Control packet names used for debugging.  */
 static const char * const azGcontrol[] =
@@ -407,7 +419,9 @@ fgstart (qdaemon, pzlog)
   cGbad_checksum = 0;
   cGbad_order = 0;
   cGremote_rejects = 0;
-  
+  cGerror_level = 0;
+  cGexpect_bad_order = 0;
+
   /* We must determine the segment size based on the packet size
      which may have been modified by a protocol parameter command.
      A segment size of 2^n is passed as n - 5.  */
@@ -1215,6 +1229,15 @@ fggot_ack (qdaemon, iack)
   int inext;
   char *zsend;
 
+  /* We only decrement the error level if we are not retransmitting
+     packets.  We want to catch a sudden downgrade in line quality as
+     fast as possible.  */
+  if (cGerror_level > 0
+      && iGretransmit_seq == -1
+      && cGsent_packets % cGerror_decay == 0)
+    --cGerror_level;
+  cGexpect_bad_order = 0;
+
   /* Each time packet 0 is acknowledged, we call uwindow_acked since a
      new window has been acked.  */
   if (iack < iGremote_ack)
@@ -1267,19 +1290,7 @@ static boolean
 fgcheck_errors (qdaemon)
      struct sdaemon *qdaemon;
 {
-  int corder;
-
-  if (cGmax_errors < 0)
-    return TRUE;
-
-  corder = (cGbad_order
-	    - ((cGbad_hdr + cGbad_checksum) * (iGremote_winsize - 1)));
-  if (corder < 0)
-    corder = 0;
-
-  if (((cGbad_hdr + cGbad_checksum + corder + cGremote_rejects)
-       - (cGrec_packets / cGerror_decay))
-      > cGmax_errors)
+  if (cGerror_level > cGmax_errors && cGmax_errors >= 0)
     {
       ulog (LOG_ERROR, "Too many '%c' protocol errors",
 	    qdaemon->qproto->bname);
@@ -1376,6 +1387,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  || CONTROL_TT (ab[IFRAME_CONTROL]) == ALTCHAN)
 	{
 	  ++cGbad_hdr;
+	  ++cGerror_level;
 
 	  DEBUG_MESSAGE4 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			  "fgprocess_data: Bad header: K %d TT %d XOR byte %d calc %d",
@@ -1408,6 +1420,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	    {
 	      ++cGbad_hdr;
+	      ++cGerror_level;
 
 	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fgprocess_data: Bad header: control packet with data");
@@ -1431,6 +1444,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL)
 	    {
 	      ++cGbad_hdr;
+	      ++cGerror_level;
 
 	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fgprocess_data: Bad header: data packet is type CONTROL");
@@ -1503,6 +1517,8 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			  ihdrcheck, idatcheck);
 
 	  ++cGbad_checksum;
+	  ++cGerror_level;
+
 	  if (! fgcheck_errors (qdaemon))
 	    return FALSE;
 
@@ -1530,6 +1546,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		{
 		  if (! fgsend_control (qdaemon, RJ, iGrecseq))
 		    return FALSE;
+		  cGexpect_bad_order += iGrequest_winsize - 1;
 		}
 	    }
 
@@ -1571,9 +1588,15 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			      CONTROL_XXX (ab[IFRAME_CONTROL]),
 			      INEXTSEQ (iGrecseq));
 
-	      ++cGbad_order;
-	      if (! fgcheck_errors (qdaemon))
-		return FALSE;
+	      if (cGexpect_bad_order > 0)
+		--cGexpect_bad_order;
+	      else
+		{
+		  ++cGbad_order;
+		  ++cGerror_level;
+		  if (! fgcheck_errors (qdaemon))
+		    return FALSE;
+		}
 
 	      /* This code used to send an RR to encourage the other
 		 side to get back in synch, but that may confuse some
@@ -1585,6 +1608,10 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	  /* We got the packet we expected.  */
 	  ++cGrec_packets;
+	  if (cGerror_level > 0
+	      && cGrec_packets % cGerror_decay == 0)
+	    --cGerror_level;
+	  cGexpect_bad_order = 0;
 
 	  iGrecseq = INEXTSEQ (iGrecseq);
 
@@ -1725,6 +1752,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	      ++cGresent_packets;
 	      ++cGremote_rejects;
+	      ++cGerror_level;
 	      if (! fgcheck_errors (qdaemon))
 		return FALSE;
 	      zpack = zgadjust_ack (iGretransmit_seq);
@@ -1745,6 +1773,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	    ++cGresent_packets;
 	    ++cGremote_rejects;
+	    ++cGerror_level;
 	    zpack = zgadjust_ack (CONTROL_YYY (ab[IFRAME_CONTROL]));
 	    if (! fsend_data (qdaemon->qconn, zpack,
 			      CFRAMELEN + CPACKLEN (zpack),
