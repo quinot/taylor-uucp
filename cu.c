@@ -243,6 +243,7 @@ main (argc, argv)
   int i;
   struct uuconf_system ssys;
   const struct uuconf_system *qsys = NULL;
+  boolean flooped;
   struct uuconf_port sport;
   struct sconnection sconn;
   struct sconninfo sinfo;
@@ -460,100 +461,38 @@ main (argc, argv)
       qsys = &ssys;
     }
 
-  /* The uuconf_find_port function only selects directly on a port
-     name and a speed.  To select based on the line name, we use a
-     function.  If we can't find any defined port, and the user
-     specified a line name but did not specify a port name or a system
-     or a phone number, then we fake a direct port with that line name
-     (we don't fake a port if a system or phone number were given
-     because if we fake a port we have no way to place a call; perhaps
-     we should automatically look up a particular dialer).  This
-     permits users to say cu -lttyd0 without having to put ttyd0 in
-     the ports file, provided they have read and write access to the
-     port.  */
-  sinfo.fmatched = FALSE;
-  sinfo.flocked = FALSE;
-  sinfo.qconn = &sconn;
-  sinfo.zline = zline;
-  if (zport != NULL || zline != NULL || ibaud != 0L)
+  /* This loop is used if a system is specified.  It loops over the
+     various alternates until it finds one for which the dial
+     succeeds.  This is an ugly spaghetti construction, and it should
+     be broken up into different functions someday.  */
+  flooped = FALSE;
+  while (TRUE)
     {
-      iuuconf = uuconf_find_port (puuconf, zport, ibaud, 0L, icuport_lock,
-				  (pointer) &sinfo, &sport);
-      if (iuuconf != UUCONF_SUCCESS)
+      enum tparitysetting tparity;
+      enum tstripsetting tstrip;
+
+      /* The uuconf_find_port function only selects directly on a port
+	 name and a speed.  To select based on the line name, we use a
+	 function.  If we can't find any defined port, and the user
+	 specified a line name but did not specify a port name or a
+	 system or a phone number, then we fake a direct port with
+	 that line name (we don't fake a port if a system or phone
+	 number were given because if we fake a port we have no way to
+	 place a call; perhaps we should automatically look up a
+	 particular dialer).  This permits users to say cu -lttyd0
+	 without having to put ttyd0 in the ports file, provided they
+	 have read and write access to the port.  */
+      sinfo.fmatched = FALSE;
+      sinfo.flocked = FALSE;
+      sinfo.qconn = &sconn;
+      sinfo.zline = zline;
+      if (zport != NULL || zline != NULL || ibaud != 0L)
 	{
-	  if (iuuconf != UUCONF_NOT_FOUND)
+	  iuuconf = uuconf_find_port (puuconf, zport, ibaud, 0L,
+				      icuport_lock, (pointer) &sinfo,
+				      &sport);
+	  if (iuuconf != UUCONF_SUCCESS)
 	    {
-	      if (sinfo.flocked)
-		{
-		  (void) fconn_unlock (&sconn);
-		  uconn_free (&sconn);
-		}
-	      ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
-	    }
-	  if (zline == NULL
-	      || zport != NULL
-	      || zphone != NULL
-	      || qsys != NULL)
-	    {
-	      if (sinfo.fmatched)
-		ulog (LOG_FATAL, "All matching ports in use");
-	      else
-		ulog (LOG_FATAL, "No matching ports");
-	    }
-
-	  sport.uuconf_zname = zline;
-	  sport.uuconf_ttype = UUCONF_PORTTYPE_DIRECT;
-	  sport.uuconf_zprotocols = NULL;
-	  sport.uuconf_qproto_params = NULL;
-	  sport.uuconf_ireliable = 0;
-	  sport.uuconf_zlockname = NULL;
-	  sport.uuconf_palloc = NULL;
-	  sport.uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
-	  sport.uuconf_u.uuconf_sdirect.uuconf_ibaud = ibaud;
-
-	  if (! fsysdep_port_access (&sport))
-	    ulog (LOG_FATAL, "%s: Permission denied", zline);
-
-	  if (! fconn_init (&sport, &sconn))
-	    ucuabort ();
-
-	  if (! fconn_lock (&sconn, FALSE))
-	    ulog (LOG_FATAL, "%s: Line in use", zline);
-
-	  qCuconn = &sconn;
-	}
-      ihighbaud = 0L;
-    }
-  else
-    {
-      for (; qsys != NULL; qsys = qsys->uuconf_qalternate)
-	{
-	  if (! qsys->uuconf_fcall)
-	    continue;
-	  if (qsys->uuconf_qport != NULL)
-	    {
-	      if (fconn_init (qsys->uuconf_qport, &sconn))
-		{
-		  if (fconn_lock (&sconn, FALSE))
-		    {
-		      qCuconn = &sconn;
-		      break;
-		    }
-		  uconn_free (&sconn);
-		}
-	    }
-	  else
-	    {
-	      sinfo.fmatched = FALSE;
-	      sinfo.flocked = FALSE;
-	      sinfo.qconn = &sconn;
-	      iuuconf = uuconf_find_port (puuconf, qsys->uuconf_zport,
-					  qsys->uuconf_ibaud,
-					  qsys->uuconf_ihighbaud,
-					  icuport_lock, (pointer) &sinfo,
-					  &sport);
-	      if (iuuconf == UUCONF_SUCCESS)
-		break;
 	      if (iuuconf != UUCONF_NOT_FOUND)
 		{
 		  if (sinfo.flocked)
@@ -563,86 +502,185 @@ main (argc, argv)
 		    }
 		  ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 		}
+	      if (zline == NULL
+		  || zport != NULL
+		  || zphone != NULL
+		  || qsys != NULL)
+		{
+		  if (sinfo.fmatched)
+		    ulog (LOG_FATAL, "All matching ports in use");
+		  else
+		    ulog (LOG_FATAL, "No matching ports");
+		}
+
+	      sport.uuconf_zname = zline;
+	      sport.uuconf_ttype = UUCONF_PORTTYPE_DIRECT;
+	      sport.uuconf_zprotocols = NULL;
+	      sport.uuconf_qproto_params = NULL;
+	      sport.uuconf_ireliable = 0;
+	      sport.uuconf_zlockname = NULL;
+	      sport.uuconf_palloc = NULL;
+	      sport.uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
+	      sport.uuconf_u.uuconf_sdirect.uuconf_ibaud = ibaud;
+
+	      if (! fsysdep_port_access (&sport))
+		ulog (LOG_FATAL, "%s: Permission denied", zline);
+
+	      if (! fconn_init (&sport, &sconn))
+		ucuabort ();
+
+	      if (! fconn_lock (&sconn, FALSE))
+		ulog (LOG_FATAL, "%s: Line in use", zline);
+
+	      qCuconn = &sconn;
 	    }
+	  ihighbaud = 0L;
 	}
-
-      if (qsys == NULL)
-	{
-	  if (sinfo.fmatched)
-	    ulog (LOG_FATAL, "%s: All matching ports in use", zsystem);
-	  else
-	    ulog (LOG_FATAL, "%s: No matching ports", zsystem);
-	}
-
-      ibaud = qsys->uuconf_ibaud;
-      ihighbaud = qsys->uuconf_ihighbaud;
-    }
-
-  /* Here we have locked a connection to use.  */
-  if (! fconn_open (&sconn, ibaud, ihighbaud, FALSE))
-    ucuabort ();
-
-  fCuclose_conn = TRUE;
-
-  if (FGOT_SIGNAL ())
-    ucuabort ();
-
-  /* Set up the connection.  */
-  {
-    enum tparitysetting tparity;
-    enum tstripsetting tstrip;
-
-    if (fodd && feven)
-      {
-	tparity = PARITYSETTING_NONE;
-	tstrip = STRIPSETTING_SEVENBITS;
-      }
-    else if (fodd)
-      {
-	tparity = PARITYSETTING_ODD;
-	tstrip = STRIPSETTING_SEVENBITS;
-      }
-    else if (feven)
-      {
-	tparity = PARITYSETTING_EVEN;
-	tstrip = STRIPSETTING_SEVENBITS;
-      }
-    else
-      {
-	tparity = PARITYSETTING_DEFAULT;
-	tstrip = STRIPSETTING_DEFAULT;
-      }
-
-    if (! fconn_set (&sconn, tparity, tstrip, XONXOFF_ON))
-      ucuabort ();
-  }
-
-  if (qsys != NULL)
-    zphone = qsys->uuconf_zphone;
-
-  if (qsys != NULL || zphone != NULL)
-    {
-      enum tdialerfound tdialer;
-
-      if (! fconn_dial (&sconn, puuconf, qsys, zphone, &sdialer, &tdialer))
-	ucuabort ();
-      if (tdialer == DIALERFOUND_FALSE)
-	qdialer = NULL;
       else
-	qdialer = &sdialer;
+	{
+	  for (; qsys != NULL; qsys = qsys->uuconf_qalternate)
+	    {
+	      if (! qsys->uuconf_fcall)
+		continue;
+	      if (qsys->uuconf_qport != NULL)
+		{
+		  if (fconn_init (qsys->uuconf_qport, &sconn))
+		    {
+		      if (fconn_lock (&sconn, FALSE))
+			{
+			  qCuconn = &sconn;
+			  break;
+			}
+		      uconn_free (&sconn);
+		    }
+		}
+	      else
+		{
+		  sinfo.fmatched = FALSE;
+		  sinfo.flocked = FALSE;
+		  sinfo.qconn = &sconn;
+		  iuuconf = uuconf_find_port (puuconf, qsys->uuconf_zport,
+					      qsys->uuconf_ibaud,
+					      qsys->uuconf_ihighbaud,
+					      icuport_lock,
+					      (pointer) &sinfo,
+					      &sport);
+		  if (iuuconf == UUCONF_SUCCESS)
+		    break;
+		  if (iuuconf != UUCONF_NOT_FOUND)
+		    {
+		      if (sinfo.flocked)
+			{
+			  (void) fconn_unlock (&sconn);
+			  uconn_free (&sconn);
+			}
+		      ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+		    }
+		}
+	    }
+
+	  if (qsys == NULL)
+	    {
+	      const char *zrem;
+
+	      if (flooped)
+		zrem = "remaining ";
+	      else
+		zrem = "";
+	      if (sinfo.fmatched)
+		ulog (LOG_FATAL, "%s: All %smatching ports in use",
+		      zsystem, zrem);
+	      else
+		ulog (LOG_FATAL, "%s: No %smatching ports", zsystem, zrem);
+	    }
+
+	  ibaud = qsys->uuconf_ibaud;
+	  ihighbaud = qsys->uuconf_ihighbaud;
+	}
+
+      /* Here we have locked a connection to use.  */
+      if (! fconn_open (&sconn, ibaud, ihighbaud, FALSE))
+	ucuabort ();
+
+      fCuclose_conn = TRUE;
+
+      if (FGOT_SIGNAL ())
+	ucuabort ();
+
+      /* Set up the connection.  */
+      if (fodd && feven)
+	{
+	  tparity = PARITYSETTING_NONE;
+	  tstrip = STRIPSETTING_SEVENBITS;
+	}
+      else if (fodd)
+	{
+	  tparity = PARITYSETTING_ODD;
+	  tstrip = STRIPSETTING_SEVENBITS;
+	}
+      else if (feven)
+	{
+	  tparity = PARITYSETTING_EVEN;
+	  tstrip = STRIPSETTING_SEVENBITS;
+	}
+      else
+	{
+	  tparity = PARITYSETTING_DEFAULT;
+	  tstrip = STRIPSETTING_DEFAULT;
+	}
+
+      if (! fconn_set (&sconn, tparity, tstrip, XONXOFF_ON))
+	ucuabort ();
+
+      if (qsys != NULL)
+	zphone = qsys->uuconf_zphone;
+
+      if (qsys != NULL || zphone != NULL)
+	{
+	  enum tdialerfound tdialer;
+
+	  if (! fconn_dial (&sconn, puuconf, qsys, zphone, &sdialer,
+			    &tdialer))
+	    {
+	      if (zport != NULL
+		  || zline != NULL
+		  || ibaud != 0L
+		  || qsys == NULL)
+		ucuabort ();
+
+	      if (qsys->uuconf_qalternate == NULL)
+		ulog (LOG_FATAL, "%s: No remaining alternates", zsystem);
+
+	      fCuclose_conn = FALSE;
+	      (void) fconn_close (&sconn, pCuuuconf, qCudialer, FALSE);
+	      qCuconn = NULL;
+	      (void) fconn_unlock (&sconn);
+	      uconn_free (&sconn);
+
+	      /* Loop around and try another alternate.  */
+	      flooped = TRUE;
+	      continue;
+	    }
+	  if (tdialer == DIALERFOUND_FALSE)
+	    qdialer = NULL;
+	  else
+	    qdialer = &sdialer;
+	}
+      else
+	{
+	  /* If no system or phone number was specified, we connect
+	     directly to the modem.  We only permit this if the user
+	     has access to the port, since it permits various
+	     shenanigans such as reprogramming the automatic
+	     callbacks.  */
+	  if (! fsysdep_port_access (sconn.qport))
+	    ulog (LOG_FATAL, "Access to port denied");
+	  qdialer = NULL;
+	  if (! fconn_carrier (&sconn, FALSE))
+	    ulog (LOG_FATAL, "Can't turn off carrier");
+	}
     }
-  else
-    {
-      /* If no system or phone number was specified, we connect
-	 directly to the modem.  We only permit this if the user has
-	 access to the port, since it permits various shenanigans such
-	 as reprogramming the automatic callbacks.  */
-      if (! fsysdep_port_access (sconn.qport))
-	ulog (LOG_FATAL, "Access to port denied");
-      qdialer = NULL;
-      if (! fconn_carrier (&sconn, FALSE))
-	ulog (LOG_FATAL, "Can't turn off carrier");
-    }
+
   qCudialer = qdialer;
 
   if (FGOT_SIGNAL ())
