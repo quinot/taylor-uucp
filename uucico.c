@@ -31,6 +31,12 @@ const char uucico_rcsid[] = "$Id$";
 
 #include <ctype.h>
 
+#if HAVE_LIMITS_H
+#include <limits.h>
+#else
+#define LONG_MAX 2147483647L
+#endif
+
 #include "getopt.h"
 
 #include "uudefs.h"
@@ -1243,7 +1249,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 		  break;
 		case 'U':
 		  c = strtol (zopt, &zend, 0);
-		  if (c > 0)
+		  if (c > 0 && c <= LONG_MAX / (long) 512)
 		    qdaemon->cmax_receive = c * (long) 512;
 		  zopt = zend;
 		  break;
@@ -1919,7 +1925,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		     prepared to received, in blocks where each block
 		     is 512 bytes.  */
 		  c = strtol (optarg, (char **) NULL, 0);
-		  if (c > 0)
+		  if (c > 0 && c < LONG_MAX / (long) 512)
 		    sdaem.cmax_receive = c * (long) 512;
 		  break;
 
