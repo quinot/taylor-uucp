@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.25  1992/02/23  03:26:51  ian
    Overhaul to use automatic configure shell script
 
@@ -936,7 +939,10 @@ main (argc, argv)
 	  int cwrite;
 
 	  if (fsysdep_catch ())
-	    cread = fread (ab, sizeof (char), sizeof ab, stdin);
+	    {
+	      usysdep_start_catch ();
+	      cread = fread (ab, sizeof (char), sizeof ab, stdin);
+	    }
 
 	  usysdep_end_catch ();
 

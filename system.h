@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.22  1992/02/24  04:58:47  ian
    Only permit files to be received into directories that are world-writeable
 
@@ -155,15 +158,25 @@ extern const char *zsysdep_login_name P((void));
    BSD requires more complex handling.  */
 extern void usysdep_signal P((int isig));
 
-/* Catch a signal.  This is called before a routine which must exit if
-   a signal occurs, and is expected to set do a setjmp.  It is
-   actually only called in one place in the system independent code,
-   before the call to read stdin in uux.  This is needed to handle 4.2
-   BSD restartable system calls, which require a longjmp.  On systems
-   which don't need to do setjmp/longjmp around system calls, this can
-   be redefined in <sysdep.h> to TRUE.  It should return TRUE if the
-   routine proceed, or FALSE if a signal occurred.  */
+/* Catch a signal.  This is actually defined as a macro in the system
+   dependent header file, and the prototype here just indicates how it
+   should be called.  It is called before a routine which must exit if
+   a signal occurs, and is expected to set do a setjmp (which is why
+   it must be a macro).  It is actually only called in one place in
+   the system independent code, before the call to read stdin in uux.
+   This is needed to handle 4.2 BSD restartable system calls, which
+   require a longjmp.  On systems which don't need to do
+   setjmp/longjmp around system calls, this can be redefined in
+   <sysdep.h> to TRUE.  It should return TRUE if the routine should
+   proceed, or FALSE if a signal occurred.  After having this return
+   TRUE, usysdep_start_catch should be used to start catching the
+   signal; this basically tells the signal handler that it's OK to do
+   the longjmp, if fsysdep_catch did not already do so.  */
 extern boolean fsysdep_catch P((void));
+
+/* Start catching a signal.  This is called after fsysdep_catch to
+   tell the signal handler to go ahead and do the longjmp.  */
+extern void usysdep_start_catch P((void));
 
 /* Stop catching a signal.  This is called when it is no longer
    necessary for fsysdep_catch to handle signals.  */
