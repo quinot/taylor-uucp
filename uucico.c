@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.81  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.80  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -3153,7 +3156,7 @@ zget_uucp_cmd (frequired)
   if (FDEBUGGING (DEBUG_HANDSHAKE))
     {
       ulog (LOG_DEBUG_START, "zget_uucp_cmd: Got \"");
-      iDebug &=~ DEBUG_INCOMING;
+      iDebug &=~ (DEBUG_INCOMING | DEBUG_PORT);
     }
 #endif
 
@@ -3279,7 +3282,7 @@ zget_typed_line ()
   if (FDEBUGGING (DEBUG_CHAT))
     {
       ulog (LOG_DEBUG_START, "zget_typed_line: Got \"");
-      iDebug &=~ DEBUG_INCOMING;
+      iDebug &=~ (DEBUG_INCOMING | DEBUG_PORT);
     }
 #endif
 
