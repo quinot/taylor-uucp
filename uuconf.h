@@ -746,6 +746,16 @@ extern int uuconf_localname (void *uuconf_pglobal,
 			     const char *uuconf_zlogin,
 			     char **pzname);
 
+/* Check a login name and password.  This checks the Taylor UUCP
+   password file (not /etc/passwd).  It will work even if
+   uuconf_taylor_init was not called.  If the login name exists and
+   the password is correct, this returns UUCONF_SUCCESS.  If the login
+   does not exist, or the password is wrong, this returns
+   UUCONF_NOT_FOUND.  Other errors are also possible.  */
+extern int uuconf_callin (void *uuconf_pglobal,
+			  const char *uuconf_zlogin,
+			  const char *uuconf_zpassword);
+
 /* Get the callout login name and password for a system.  This will
    set both *pzlog and *pzpass to a string allocated by malloc, or to
    NULL if the value is not found.  If neither value is found, the
@@ -784,6 +794,7 @@ extern int uuconf_dialer_names ();
 extern int uuconf_dialer_info ();
 extern int uuconf_dialer_free ();
 extern int uuconf_localname ();
+extern int uuconf_callin ();
 extern int uuconf_callout ();
 extern int uuconf_validate ();
 extern int uuconf_grade_cmp ();

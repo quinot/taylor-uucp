@@ -17,6 +17,7 @@ allblk.c
 alloc.c
 base.c
 bool.c
+callin.c
 calout.c
 chatc.c
 cmdarg.c
