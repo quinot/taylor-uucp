@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.64  1992/03/04  00:36:44  ian
+   Michael Richardson: better chat script debugging
+
    Revision 1.63  1992/03/03  21:01:20  ian
    Use strict timeout in fsserial_read, eliminate all race conditions
 
@@ -3137,6 +3140,12 @@ zget_uucp_cmd (frequired)
 	  cgot = 0;
 	  continue;
 	}
+
+      /* Some systems send a trailing \n on the Shere line.  As far as
+	 I can tell this line can never contain a \n, so this
+	 modification should be safe enough.  */
+      if (b == '\r' || b == '\n')
+	b = '\0';
 
       if (cgot >= calc)
 	{
