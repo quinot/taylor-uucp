@@ -134,7 +134,7 @@ const char serial_rcsid[] = "$Id$";
  #error No way to do nonblocking I/O
 #endif
 
-/* Get definitions for both EAGAIN and EWOULDBLOCK.  */
+/* Get definitions for EAGAIN, EWOULDBLOCK and ENODATA.  */
 #ifndef EAGAIN
 #ifndef EWOULDBLOCK
 #define EAGAIN (-1)
@@ -147,6 +147,10 @@ const char serial_rcsid[] = "$Id$";
 #define EWOULDBLOCK EAGAIN
 #endif /* ! defined (EWOULDBLOCK) */
 #endif /* defined (EAGAIN) */
+
+#ifndef ENODATA
+#define ENODATA EAGAIN
+#endif
 
 /* Make sure we have a definition for MAX_INPUT.  */
 #ifndef MAX_INPUT
@@ -2131,7 +2135,7 @@ fsysdep_conn_write (qconn, zwrite, cwrite)
 
       if (cdid < 0)
 	{
-	  if (errno != EWOULDBLOCK && errno != EAGAIN)
+	  if (errno != EAGAIN && errno != EWOULDBLOCK && errno != ENODATA)
 	    {
 	      ulog (LOG_ERROR, "write: %s", strerror (errno));
 	      return FALSE;
@@ -2294,7 +2298,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
       if (cgot < 0)
 	{
-	  if (errno != EAGAIN && errno != EWOULDBLOCK)
+	  if (errno != EAGAIN && errno != EWOULDBLOCK && errno != ENODATA)
 	    {
 	      ulog (LOG_ERROR, "read: %s", strerror (errno));
 	      return FALSE;
@@ -2360,7 +2364,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 
       if (cdid < 0)
 	{
-	  if (errno != EWOULDBLOCK && errno != EAGAIN)
+	  if (errno != EAGAIN && errno != EWOULDBLOCK && errno != ENODATA)
 	    {
 	      ulog (LOG_ERROR, "write: %s", strerror (errno));
 	      return FALSE;

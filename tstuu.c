@@ -114,8 +114,7 @@ extern char *ptsname ();
  #error No way to do nonblocking I/O
 #endif
 
-/* Get definitions for both EAGAIN and EWOULDBLOCK.  */
-
+/* Get definitions for EAGAIN, EWOULDBLOCK and ENODATA.  */
 #ifndef EAGAIN
 #ifndef EWOULDBLOCK
 #define EAGAIN (-1)
@@ -128,6 +127,10 @@ extern char *ptsname ();
 #define EWOULDBLOCK EAGAIN
 #endif /* ! defined (EWOULDBLOCK) */
 #endif /* defined (EAGAIN) */
+
+#ifndef ENODATA
+#define ENODATA EAGAIN
+#endif
 
 /* Make sure we have a CLK_TCK definition, even if it makes no sense.
    This is in case TIMES_TICK is defined as CLK_TCK.  */
@@ -1245,7 +1248,7 @@ utransfer (ofrom, oto, otoslave, pc)
   cread = read (ofrom, abbuf, sizeof abbuf);
   if (cread < 0)
     {
-      if (errno == EAGAIN || errno == EWOULDBLOCK)
+      if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
 	cread = 0;
       else
 	{
@@ -1322,7 +1325,7 @@ utransfer (ofrom, oto, otoslave, pc)
       cwrote = write (oto, zwrite, cdo);
       if (cwrote < 0)
 	{
-	  if (errno == EAGAIN || errno == EWOULDBLOCK)
+	  if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENODATA)
 	    cwrote = 0;
 	  else
 	    {
