@@ -1,28 +1,4 @@
-''' $Id$
-''' $Log$
-''' Revision 1.7  1992/04/01  21:11:19  ian
-''' Cleaned up a bit, updated -x switch
-'''
-''' Revision 1.6  1992/03/28  04:34:11  ian
-''' David J. MacKenzie: change .TP5 to .TP 5; also updated to 1.03
-'''
-''' Revision 1.5  1992/03/08  17:08:20  ian
-''' Ted Lindgreen: ignore -u option
-'''
-''' Revision 1.4  1992/02/27  05:40:54  ian
-''' T. William Wells: detach from controlling terminal, handle signals safely
-'''
-''' Revision 1.3  1992/01/20  23:52:23  ian
-''' Change to version 1.02
-'''
-''' Revision 1.2  1991/12/18  05:12:00  ian
-''' Added -l option to uucico to prompt for login name once and then exit
-'''
-''' Revision 1.1  1991/12/14  19:05:30  ian
-''' Initial revision
-'''
-'''
-.TH uucico 8 "Taylor UUCP 1.03"
+.TH uucico 8 "Taylor UUCP 1.04"
 .SH NAME
 uucico \- UUCP file transfer daemon
 .SH SYNOPSIS
@@ -124,9 +100,9 @@ The following options may be given to
 Start in master mode (call out to a system); implied by
 .B \-s
 or
-.B \-S.  If no system is specified, 
-call any system for which work is
-waiting to be done.
+.B \-S.
+If no system is specified, call any system for which work is waiting
+to be done.
 .TP 5
 .B \-r0
 Start in slave mode.  This is the default.
