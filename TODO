@@ -186,13 +186,6 @@ simpler way?
 David Nugent: it would be nice to be able to set debugging, log, and
 statistics files on a site by site basis.
 
-68.
-
-Francois Pinard: attach a name to each alternate and then indicate
-which one was used when the connection succeeded.  The name could
-simply be an argument to the ``alternate'' command.  Except for the
-first alternate, that is.
-
 74.
 
 Yanek Martinson: allow each system to independently choose whether to
@@ -303,11 +296,6 @@ certain percentage of errors out of a certain number of packets.
 Chip Salzenberg: give .XQTDIR a mode of 0700 and the files put into it
 a mode of 0444.
 
-135.
-
-Gerben Wierda: document how to make UUCP secure, to the extent that it
-is possible at all.
-
 136.
 
 Thomas Fischer: every so often (1/2 hour) check to see whether there
@@ -357,3 +345,42 @@ the file checking needed to ensure that this doesn't break security,
 but that should be double-checked.
 
 143.
+
+David J. MacKenzie: write a program to convert between the various
+different configuration styles.  This should not be too difficult.
+
+144.
+
+T. William Wells: add a -g option to uucico to permit specifying the
+maximum grade to be transferred at that time.  This could restrict the
+timegrade command further, but should not be permitted to override it.
+
+145.
+
+T. William Wells: if uucico or uuxqt get started with bad arguments,
+put an indication in the log file since stderr may be /dev/null.
+
+146.
+
+Richard Todd: it would be nice to sometimes be able to request the
+other side to turn on debugging.
+
+147.
+
+Bart Schaefer: some more possible options for uucico:
+    -R reverse roles (hangup immediately).  Not too exciting.
+    some method to restrict calling to particular systems.
+
+148.
+
+Jarmo Raiha: some method to control the work queue at the remote end.
+This could get awfully general, though.
+
+149.
+
+The interaction of the time command and defaults can be confusing,
+since any time command in the actual system entry, even a fairly
+specific one, will wipe out the default entry.  Not sure what can be
+done about this.
+
+150.
