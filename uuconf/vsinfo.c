@@ -77,7 +77,7 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 
   qglobal->ilineno = 0;
 
-  while ((cchars = getline (&zline, &cline, e)) > 0)
+  while ((cchars = _uuconf_getline (qglobal, &zline, &cline, e)) > 0)
     {
       int ctoks, ctimes, i;
       struct uuconf_system *qset;
