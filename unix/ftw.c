@@ -76,7 +76,7 @@ ftw_dir (dirs, level, descriptors, dir, len, func)
     {
       size_t namlen;
       struct stat s;
-      int flag, ret, newlev;
+      int flag, ret, newlev = 0;
 
       ++got;
 
