@@ -222,24 +222,9 @@ which one was used when the connection succeeded.  The name could
 simply be an argument to the ``alternate'' command.  Except for the
 first alternate, that is.
 
-70.
-
-Mark Mallett: in 'g' protocol initialization if we are the slave don't
-send out INITx until we have seen INITx.  Some standard UUCP packages
-assume that if they are the master and they get an INITA, the slave
-has already seen their INITA.
-
-71.
-
-Execute uuxqt even if uucico gets an error.
-
 72.
 
 Monty Solomon: put corrupted files in a special directory (.Corrupt?).
-
-73.
-
-Chip Salzenberg: make file name restrictions a configuration option.
 
 74.
 
