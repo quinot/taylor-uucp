@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.32  1992/03/04  02:32:26  ian
+   Handle executions on local system
+
    Revision 1.31  1992/02/29  04:07:08  ian
    Added -j option to uucp and uux
 
@@ -287,7 +290,7 @@ main (argc, argv)
 	  if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
 	    continue;
 
-	  if (strcmp (zdosys, zLocalname) == 0)
+	  if (strcmp (zgetsys, zLocalname) == 0)
 	    qusesys = &sLocalsys;
 	  else
 	    {
