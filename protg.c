@@ -1040,7 +1040,7 @@ fgsend_control (qdaemon, ixxx, iyyy)
 
 #if DEBUG > 1
   if (FDEBUGGING (DEBUG_PROTO) ||
-      (FDEBUGGING (DEBUG_ABNORMAL) && ixxx == RJ))
+      (FDEBUGGING (DEBUG_ABNORMAL) && ixxx != RR))
     ulog (LOG_DEBUG, "fgsend_control: Sending control %s %d",
 	  azGcontrol[ixxx], iyyy);
 #endif
