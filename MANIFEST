@@ -11,6 +11,7 @@ configure.in
 conn.c
 conn.h
 copy.c
+cu.1
 cu.c
 cu.h
 getopt.h

@@ -163,6 +163,7 @@ install: $(PROGRAMS) $(UUDIR)
 	$(INSTALL_DATA) $(srcdir)/uux.1 $(man1dir)/uux$(man1ext)
 	$(INSTALL_DATA) $(srcdir)/uucp.1 $(man1dir)/uucp$(man1ext)
 	$(INSTALL_DATA) $(srcdir)/uustat.1 $(man1dir)/uustat$(man1ext)
+	$(INSTALL_DATA) $(srcdir)/cu.1 $(man1dir)/cu$(man1ext)
 	@echo Use \"make install-info\" to install the info pages.
 
 uninstall:
