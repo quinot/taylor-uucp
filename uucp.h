@@ -217,8 +217,8 @@ typedef FILE *openfile_t;
 #define ffileisopen(e) ((e) != NULL)
 #define ffileeof(e) feof (e)
 #define cfileread(e, z, c) fread ((z), 1, (c), (e))
-#define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
+#define ffileioerror(e, c) ferror (e)
 #ifdef SEEK_SET
 #define ffileseek(e, i) (fseek ((e), (long) (i), SEEK_SET) == 0)
 #define ffilerewind(e) (fseek ((e), (long) 0, SEEK_SET) == 0)
@@ -244,8 +244,8 @@ typedef int openfile_t;
 #define ffileisopen(e) ((e) >= 0)
 #define ffileeof(e) (FALSE)
 #define cfileread(e, z, c) read ((e), (z), (c))
-#define ffilereaderror(e, c) ((c) < 0)
 #define cfilewrite(e, z, c) write ((e), (z), (c))
+#define ffileioerror(e, c) ((c) < 0)
 #ifdef SEEK_SET
 #define ffileseek(e, i) (lseek ((e), (long) i, SEEK_SET) >= 0)
 #define ffilerewind(e) (lseek ((e), (long) 0, SEEK_SET) >= 0)
