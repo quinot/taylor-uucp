@@ -427,19 +427,25 @@ ihadd_norw (qglobal, ppz, pzno)
       char *znew;
       int iret;
 
-      csize = strlen (*pz) + 1;
-      znew = (char *) uuconf_malloc (qglobal->pblock, csize + 1);
-      if (znew == NULL)
+      /* Ignore an attempt to say NOREAD or NOWRITE with an empty
+	 string, since it will be interpreted as an attempt to deny
+	 everything.  */
+      if (**pz != '\0')
 	{
-	  qglobal->ierrno = errno;
-	  return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+	  csize = strlen (*pz) + 1;
+	  znew = (char *) uuconf_malloc (qglobal->pblock, csize + 1);
+	  if (znew == NULL)
+	    {
+	      qglobal->ierrno = errno;
+	      return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
+	    }
+	  znew[0] = '!';
+	  memcpy ((pointer) (znew + 1), (pointer) *pz, csize);
+	  iret = _uuconf_iadd_string (qglobal, znew, FALSE, FALSE, ppz,
+				      qglobal->pblock);
+	  if (iret != UUCONF_SUCCESS)
+	    return iret;
 	}
-      znew[0] = '!';
-      memcpy ((pointer) (znew + 1), (pointer) *pz, csize);
-      iret = _uuconf_iadd_string (qglobal, znew, FALSE, FALSE, ppz,
-				  qglobal->pblock);
-      if (iret != UUCONF_SUCCESS)
-	return iret;
     }
 
   return UUCONF_SUCCESS;
