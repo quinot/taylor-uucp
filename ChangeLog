@@ -7,6 +7,8 @@
 
 2002-03-05  Ian Lance Taylor  <ian@airs.com>
 
+	* Released beta version 1.07.
+
 	* configure.in: Don't define SBINDIR.
 	* unix/Makefile.am (AM_CFLAGS): Define SBINDIR.
 	* configure, config.h.in, unix/Makefile.in: Rebuild.
