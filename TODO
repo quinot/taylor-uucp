@@ -223,3 +223,8 @@ simply be an argument to the ``alternate'' command.  Except for the
 first alternate, that is.
 
 69.
+
+David Fiander: check the arguments to all commands executed by uuxqt
+to make sure they are not filenames we don't want people to access.
+
+70.
