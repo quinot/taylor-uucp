@@ -80,31 +80,40 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
 {
   struct uuconf_timespan *qlist;
   char bfirst;
-  char **pz;
   const char *z;
 
   qlist = *pqspan;
   if (qlist == (struct uuconf_timespan *) &_uuconf_unset)
     qlist = NULL;
 
-  /* Expand the string using a timetable.  */
-  bfirst = *ztime;
-  if (isupper (BUCHAR (bfirst)))
-    bfirst = tolower (BUCHAR (bfirst));
-  pz = qglobal->qprocess->pztimetables;
-  while (*pz != NULL)
+  /* Expand the string using a timetable.  Keep rechecking the string
+     until it does not match.  */
+  while (TRUE)
     {
-      if ((bfirst == (*pz)[0]
-	   || (isupper (BUCHAR ((*pz)[0]))
-	       && bfirst == tolower (BUCHAR ((*pz)[0]))))
-	  && strcasecmp (ztime, *pz) == 0)
+      char **pz;
+      char *zfound;
+
+      bfirst = *ztime;
+      if (isupper (BUCHAR (bfirst)))
+	bfirst = tolower (BUCHAR (bfirst));
+
+      zfound = NULL;
+      pz = qglobal->qprocess->pztimetables;
+
+      /* We want the last timetable to have been defined with this
+	 name, so we always look through the entire table.  */
+      while (*pz != NULL)
 	{
-	  ztime = pz[1];
-	  /* Now search the table for this string.  */
-	  pz = qglobal->qprocess->pztimetables;
+	  if ((bfirst == (*pz)[0]
+	       || (isupper (BUCHAR ((*pz)[0]))
+		   && bfirst == tolower (BUCHAR ((*pz)[0]))))
+	      && strcasecmp (ztime, *pz) == 0)
+	    zfound = pz[1];
+	  pz += 2;
 	}
-      else
-	pz += 2;
+      if (zfound == NULL)
+	break;
+      ztime = zfound;
     }
 
   /* Look through the time string.  */
