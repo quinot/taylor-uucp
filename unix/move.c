@@ -152,7 +152,7 @@ fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
     }
   (void) close (o);
 
-  if (! fcopy_file (zorig, zto, fpublic, fmkdirs))
+  if (! fcopy_file (zorig, zto, fpublic, fmkdirs, FALSE))
     return FALSE;
 
   if (remove (zorig) != 0)

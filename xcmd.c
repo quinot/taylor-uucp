@@ -330,7 +330,7 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 
       /* Copy the file either to the final destination or to the
 	 spool directory.  */
-      if (! fcopy_file (zfile, zto, qdestsys == NULL, fmkdirs))
+      if (! fcopy_file (zfile, zto, qdestsys == NULL, fmkdirs, FALSE))
 	{
 	  ubuffree (zto);
 	  break;

@@ -683,7 +683,7 @@ fsysdep_move_uuxqt_files (cfiles, pzfrom, pzto, fto, iseq, pzinput)
 	      break;
 	    }
 
-	  if (! fcopy_file (zfrom, zto, FALSE, FALSE))
+	  if (! fcopy_file (zfrom, zto, FALSE, FALSE, FALSE))
 	    {
 	      ubuffree (zfree);
 	      break;
