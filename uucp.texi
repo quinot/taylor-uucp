@@ -8277,6 +8277,7 @@ Jim O'Connor @code{<jim@@bahamut.fsc.com>}
 Petri Ojala @code{<ojala@@funet.fi>}
 @code{oneill@@cs.ulowell.edu} (Brian 'Doc' O'Neill)
 @code{Stephen.Page@@prg.oxford.ac.uk}
+Peter Palfrader @code{<peter@@palfrader.org>}
 @code{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
 Tim Peiffer @code{peiffer@@cs.umn.edu}
 @code{don@@blkhole.resun.com} (Don Phillips)
