@@ -1,7 +1,7 @@
 /* tsinfo.c
    Get information about a system from the Taylor UUCP configuration files.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -99,6 +99,8 @@ static const struct cmdtab_offset asIcmds[] =
       offsetof (struct uuconf_system, uuconf_csuccess_wait), NULL },
   { "call-timegrade", UUCONF_CMDTABTYPE_FN | 3,
       offsetof (struct uuconf_system, uuconf_qcalltimegrade), iitimegrade },
+  { "called-timegrade", UUCONF_CMDTABTYPE_FN | 3,
+      offsetof (struct uuconf_system, uuconf_qcalledtimegrade), iitimegrade },
   { "call-local-size", UUCONF_CMDTABTYPE_FN | 3,
       offsetof (struct uuconf_system, uuconf_qcall_local_size), iisize },
   { "call-remote-size", UUCONF_CMDTABTYPE_FN | 3,
