@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/02/25  18:47:38  ian
+   Bob Denny: reset timeouts only when data is recognized
+
    Revision 1.24  1992/02/19  19:36:07  ian
    Rearranged time functions
 
@@ -221,6 +224,68 @@ char protg_rcsid[] = "$Id$";
 
 #define CMAXWINDOW (7)
 
+/* Defaults for the protocol parameters.  These may all be changed by
+   using the ``protocol-parameter g'' command, so there is no
+   particular reason to change the values given here.  */
+
+/* The desired window size.  This is what we tell the other system to
+   use.  It must be between 1 and 7, and there's no reason to use less
+   than 7.  Protocol parameter ``window''.  */
+#define IWINDOW (7)
+
+/* The desired packet size.  Many implementations only support 64 byte
+   packets.  Protocol parameter ``packet-size''.  */
+#define IPACKSIZE (64)
+
+/* The number of times to retry the exchange of INIT packets when
+   starting the protocol.  Protocol parameter ``startup-retries''.  */
+#define CSTARTUP_RETRIES (8)
+
+/* The timeout to use when waiting for an INIT packet when starting up
+   the protocol.  Protocol parameter ``init-timeout''.  */
+#define CEXCHANGE_INIT_TIMEOUT (10)
+
+/* The number of times to retry sending and waiting for a single INIT
+   packet when starting the protocol.  This controls a single INIT
+   packet, while CSTARTUP_RETRIES controls how many times to try the
+   entire INIT sequence.  Protocol parameter ``init-retries''.  */
+#define CEXCHANGE_INIT_RETRIES (4)
+
+/* The timeout to use when waiting for a packet.  Protocol parameter
+   ``timeout''.  */
+#define CTIMEOUT (10)
+
+/* The number of times to retry waiting for a packet.  Each time the
+   timeout fails we send a copy of our last data packet or a reject
+   message for the packet we expect from the other side, depending on
+   whether we are waiting for an acknowledgement or a data packet.
+   This is the number of times we try doing that and then waiting
+   again.  Protocol parameter ``retries''.   */
+#define CRETRIES (6)
+
+/* If we see more than this much unrecognized data, we drop the
+   connection.  This must be larger than a single packet size, which
+   means it must be larger than 4096 (the largest possible packet
+   size).  Protocol parameter ``garbage''.  */
+#define CGARBAGE (10000)
+
+/* If we see more than this many protocol errors, we drop the
+   connection.  Protocol parameter ``errors''.  */
+#define CERRORS (100)
+
+/* If this value is non-zero, it will be used as the remote window
+   size regardless of what the other side requested.  This can be
+   useful for dealing with some particularly flawed packages.  This
+   default value should always be 0, and protocol parameter
+   ``remote-window'' should be used for the affected systems.  */
+#define IREMOTE_WINDOW (0)
+
+/* If this value is non-zero, it will be used as the packet size to
+   send to the remote system regardless of what it requested.  It's
+   difficult to imagine any circumstances where you would want to set
+   this.  Protocol parameter ``remote-packet-size''.  */
+#define IREMOTE_PACKSIZE (0)
+
 /* Local variables.  */
 
 /* Next sequence number to send.  */
@@ -238,52 +303,66 @@ static int iGrecseq;
 /* Last sequence number we have acked.  */
 static int iGlocal_ack;
 
-/* Local window size.  */
-int iGlocal_winsize = 7;
+/* Window size to request (protocol parameter ``window'').  */
+static int iGrequest_winsize = IWINDOW;
 
-/* Local packet size.  Used only during handshake.  */
-int iGlocal_packsize = 64;
+/* Packet size to request (protocol parameter ``packet-size'').  */
+static int iGrequest_packsize = IPACKSIZE;
 
 /* Remote window size (set during handshake).  */
 static int iGremote_winsize;
 
+/* Forced remote window size (protocol parameter ``remote-window'').  */
+static int iGforced_remote_winsize = IREMOTE_WINDOW;
+
 /* Remote segment size (set during handshake).  This is one less than
-   the value in the header.  */
+   the value in a packet header.  */
 static int iGremote_segsize;
 
-/* Remote packet size (set during handshake).  */
+/* Remote packet size (set based on iGremote_segsize).  */
 static int iGremote_packsize;
+
+/* Forced remote packet size (protocol parameter
+   ``remote-packet-size'').  */
+static int iGforced_remote_packsize = IREMOTE_PACKSIZE;
 
 /* Recieved control byte.  */
 static int iGpacket_control;
 
-/* Number of times to retry the initial handshake.  */
-static int cGstartup_retries = 8;
+/* Number of times to retry the initial handshake.  Protocol parameter
+   ``startup-retries''.  */
+static int cGstartup_retries = CSTARTUP_RETRIES;
 
-/* Number of times to retry sending an initial control packet.  */
-static int cGexchange_init_retries = 4;
+/* Number of times to retry sending an initial control packet.
+   Protocol parameter ``init-retries''.  */
+static int cGexchange_init_retries = CEXCHANGE_INIT_RETRIES;
 
-/* Timeout (seconds) for receiving an initial control packet.  */
-static int cGexchange_init_timeout = 10;
+/* Timeout (seconds) for receiving an initial control packet.
+   Protocol parameter ``init-timeout''.  */
+static int cGexchange_init_timeout = CEXCHANGE_INIT_TIMEOUT;
 
-/* Timeout (seconds) for receiving a data packet.  */
-static int cGtimeout = 10;
+/* Timeout (seconds) for receiving a data packet.  Protocol parameter
+   ``timeout''.  */
+static int cGtimeout = CTIMEOUT;
 
-/* Maximum number of timeouts when receiving a data packet.  */
-static int cGretries = 6;
+/* Maximum number of timeouts when receiving a data packet or
+   acknowledgement.  Protocol parameter ``retries''.  */
+static int cGretries = CRETRIES;
 
-/* Amount of garbage data we are prepared to see before giving up.  */
-static int cGgarbage_data = 10000;
+/* Amount of garbage data we are prepared to see before giving up.
+   Protocol parameter ``garbage''.  */
+static int cGgarbage_data = CGARBAGE;
 
-/* Maximum number of errors we are prepared to see before giving up.  */
-static int cGmax_errors = 100;
+/* Maximum number of errors we are prepared to see before giving up.
+   Protocol parameter ``errors''.  */
+static int cGmax_errors = CERRORS;
 
 /* Protocol parameter commands.  */
 
 struct scmdtab asGproto_params[] =
 {
-  { "window", CMDTABTYPE_INT, (pointer) &iGlocal_winsize, NULL },
-  { "packet-size", CMDTABTYPE_INT, (pointer) &iGlocal_packsize, NULL },
+  { "window", CMDTABTYPE_INT, (pointer) &iGrequest_winsize, NULL },
+  { "packet-size", CMDTABTYPE_INT, (pointer) &iGrequest_packsize, NULL },
   { "startup-retries", CMDTABTYPE_INT, (pointer) &cGstartup_retries, NULL },
   { "init-timeout", CMDTABTYPE_INT, (pointer) &cGexchange_init_timeout,
       NULL },
@@ -293,6 +372,10 @@ struct scmdtab asGproto_params[] =
   { "retries", CMDTABTYPE_INT, (pointer) &cGretries, NULL },
   { "garbage", CMDTABTYPE_INT, (pointer) &cGgarbage_data, NULL },
   { "errors", CMDTABTYPE_INT, (pointer) &cGmax_errors, NULL },
+  { "remote-window", CMDTABTYPE_INT, (pointer) &iGforced_remote_winsize,
+      NULL },
+  { "remote-packet-size", CMDTABTYPE_INT, (pointer) &iGforced_remote_packsize,
+      NULL },
   { NULL, 0, NULL, NULL }
 };
 
@@ -379,7 +462,7 @@ fgstart (fmaster)
      which may have been modified by a protocol parameter command.
      A segment size of 2^n is passed as n - 5.  */
 
-  i = iGlocal_packsize;
+  i = iGrequest_packsize;
   iseg = -1;
   while (i > 0)
     {
@@ -390,7 +473,7 @@ fgstart (fmaster)
   if (iseg < 0 || iseg > 7)
     {
       ulog (LOG_ERROR, "Illegal packet size %d for 'g' protocol",
-	    iGlocal_packsize);
+	    iGrequest_packsize);
       iseg = 1;
     }
   
@@ -400,12 +483,12 @@ fgstart (fmaster)
     {
       if (fgota)
 	{
-	  if (! fgsend_control (INITA, iGlocal_winsize))
+	  if (! fgsend_control (INITA, iGrequest_winsize))
 	    return FALSE;
 	}
       else
 	{
-	  if (! fgexchange_init (fmaster, INITA, iGlocal_winsize,
+	  if (! fgexchange_init (fmaster, INITA, iGrequest_winsize,
 				 &iGremote_winsize))
 	    continue;
 	}
@@ -424,7 +507,7 @@ fgstart (fmaster)
 	}
       fgotb = TRUE;
 
-      if (! fgexchange_init (fmaster, INITC, iGlocal_winsize,
+      if (! fgexchange_init (fmaster, INITC, iGrequest_winsize,
 			     &iGremote_winsize))
 	continue;
 
@@ -433,13 +516,36 @@ fgstart (fmaster)
 
       iGremote_packsize = 1 << (iGremote_segsize + 5);
 
+      /* If the user requested us to force specific remote window and
+	 packet sizes, do so now.  */
+
+      if (iGforced_remote_winsize > 0
+	  && iGforced_remote_winsize <= CMAXWINDOW)
+	iGremote_winsize = iGforced_remote_winsize;
+
+      if (iGforced_remote_packsize >= 32
+	  && iGforced_remote_packsize <= 4096)
+	{
+	  /* Force the value to a power of two.  */
+	  i = iGforced_remote_packsize;
+	  iseg = -1;
+	  while (i > 0)
+	    {
+	      ++iseg;
+	      i >>= 1;
+	    }
+	  iGremote_packsize = 1 << iseg;
+	}
+
+      /* Set up packet buffers to use.  We don't do this until we know
+	 the maximum packet size we are going to send.  */
       if (! fginit_sendbuffers (TRUE))
 	return FALSE;
 
 #if DEBUG > 2
       if (iDebug > 2)
-	ulog (LOG_DEBUG, "fgstart: Protocol started; segsize %d, winsize %d",
-	      iGremote_segsize, iGremote_winsize);
+	ulog (LOG_DEBUG, "fgstart: Protocol started; packsize %d, winsize %d",
+	      iGremote_packsize, iGremote_winsize);
 #endif
 
       return TRUE;
@@ -593,6 +699,21 @@ fgshutdown ()
     ulog (LOG_NORMAL,
 	  "Errors: header %ld, checksum %ld, order %ld, remote rejects %ld",
 	  cGbad_hdr, cGbad_checksum, cGbad_order, cGremote_rejects);
+
+  /* Reset all the parameters to their default values, so that the
+     protocol parameters used for this connection do not affect the
+     next one.  */
+  iGrequest_winsize = IWINDOW;
+  iGrequest_packsize = IPACKSIZE;
+  cGstartup_retries = CSTARTUP_RETRIES;
+  cGexchange_init_timeout = CEXCHANGE_INIT_TIMEOUT;
+  cGexchange_init_retries = CEXCHANGE_INIT_RETRIES;
+  cGtimeout = CTIMEOUT;
+  cGretries = CRETRIES;
+  cGgarbage_data = CGARBAGE;
+  cGmax_errors = CERRORS;
+  iGforced_remote_winsize = IREMOTE_WINDOW;
+  iGforced_remote_packsize = IREMOTE_PACKSIZE;
 
   return TRUE;
 }
