@@ -17,6 +17,7 @@ dup2.c
 efopen.c
 epopen.c
 exists.c
+failed.c
 filnam.c
 fsusg.c
 fsusg.h
