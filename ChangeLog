@@ -1,5 +1,9 @@
 2002-02-08  Ian Lance Taylor  <ian@airs.com>
 
+	* configure.in: Don't put AC_MSG_WARN for ftime on the same line
+	as AC_MSG_RESULT.
+	* configure: Rebuild.
+
 	* uuxqt.c (uqdo_xqt_file): If uucp is not a permitted command,
 	then reject a uucp command which does not have two arguments.
 	(fqforward): Don't crash if zfile is NULL.
