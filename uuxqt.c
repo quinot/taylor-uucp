@@ -250,13 +250,13 @@ main (argc, argv)
 
       /* Look for each execute file, and run it.  */
 
-      if (! fsysdep_get_xqt_init ())
+      if (! fsysdep_get_xqt_init (zdosys))
 	{
 	  ulog_close ();
 	  usysdep_exit (FALSE);
 	}
 
-      while ((z = zsysdep_get_xqt (&zgetsys, &ferr)) != NULL)
+      while ((z = zsysdep_get_xqt (zdosys, &zgetsys, &ferr)) != NULL)
 	{
 	  const char *zloc;
 	  boolean fprocessed;
@@ -344,7 +344,7 @@ main (argc, argv)
 	  ubuffree (zgetsys);
 	}
 
-      usysdep_get_xqt_free ();
+      usysdep_get_xqt_free (zdosys);
     }
   while (fany && ! FGOT_SIGNAL ());
 
