@@ -90,12 +90,9 @@ to accept.
 
 16.
 
-The -j switch to uucp and uux does nothing.  As far as I can tell, the
-traditional uustat does not attempt to remove all files associated
-with a particular uucp or uux request, but just one of them.  Is it
-worth it to keep a list of files in files in another special directory
-(/usr/spool/uucp/.Requests) to make uustat complete and easy to
-implement?
+The -j switch to uucp and uux does nothing.  It should print out the
+sequence number of the file, and uustat should be written to take that
+sequence number and delete the file.
 
 17.
 
@@ -147,7 +144,8 @@ effective user id is always uucp.  If we have saved set user id we
 could switch the effective user id to root and then back again;
 otherwise we have to not use setuid and start the program as root.
 Actually, we could use another program to start as root, bind the
-port, and invoke uucico.  That may be the required solution.
+port, and invoke uucico.  One could also just use inetd.  Maybe the
+TCP server code should simply be stripped out.
 
 31.
 
@@ -184,15 +182,10 @@ than, say, once an hour.
 
 34.
 
-Bob Izenberg: HDB UUCP will retry a call once if it fails.  I might
-want some sort of configuration parameter to allow calls to be
-retried.  This can be done by adding an alternate and repeating the
-phone number, though.
-
-35.
-
-Terry Gardner: there's no way to embed a # character in a phone
-number.
+Bob Izenberg: HDB UUCP will retry a call once if it fails.  This can
+be done in my system by adding an alternate and repeating the phone
+number.  Should there be a configuration parameter to do it in a
+simpler way?
 
 36.
 
@@ -208,15 +201,6 @@ statistics files on a site by site basis.
 58.
 
 Lele Gaifax: put the complete year in the log file.
-
-59.
-
-John Theus: use getwd as an option for getcwd.
-
-65.
-
-Monty Solomon: add an option to use ``union wait'' as the argument to
-wait(2).
 
 67.
 
