@@ -233,7 +233,7 @@ clean:
 # The distribution targets are mostly for my own use; they are not
 # expected to work on other systems.
 
-dist: uucp.info conf.h-dist
+dist: uucp.info
 	-rm -rf uucp-$(VERSION)
 	-rm -f taylor-uucp-$(VERSION).tar taylor-uucp-$(VERSION).tar.Z
 	mkdir uucp-$(VERSION)
@@ -249,12 +249,10 @@ dist: uucp.info conf.h-dist
 uucp.info: uucp.texi
 	makeinfo uucp.texi
 
-conf.h-dist: conf.h
-	cp conf.h conf.h-dist
-
 conf.h Makefile: configure
 	configure
 
+conf.h: conf.h.in
 Makefile: Makefile.in
 
 configure: configure.in
