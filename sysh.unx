@@ -1,0 +1,360 @@
+/* sysh.unx
+   The header file for the UNIX system dependent routines.
+
+   Copyright (C) 1991 Ian Lance Taylor
+
+   This file is part of the Taylor UUCP package.
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+   The author of the program may be contacted at ian@airs.com or
+   c/o AIRS, P.O. Box 520, Waltham, MA 02254.
+
+   $Log$
+   */
+
+#ifndef SYSH_UNX_H
+
+#define SYSH_UNX_H
+
+#ifdef __GNUC__
+ #pragma once
+#endif
+
+/* The name of the directory where uucico and uuxqt will be put.  This
+   should probably be the same as the LIBDIR variable in Makefile.  */
+#define LIBDIR "/usr/lib/uucp"
+
+/* The name of the default spool directory.  This may be overridden by
+   the ``spool'' command in the configuration file.  */
+#define SPOOLDIR "/usr/spool/uucp"
+
+/* The name of the default public directory.  This may be overridden
+   by the ``pubdir'' command in the configuration file.  Also, a
+   particular system may be given a specific public directory by
+   using the ``pubdir'' command in the system file.  */
+#define PUBDIR "/usr/spool/uucppublic"
+
+#if HAVE_TAYLOR_CONFIG
+
+/* The name of the default configuration file.  This may be overridden
+   by the -C command line argument.  */
+#define CONFIGFILE "/usr/lib/uucp/config"
+
+/* The name of the default system file.  This may be overridden by
+   the ``sysfile'' command in the configuration file.  */
+#define SYSFILE "/usr/lib/uucp/sys"
+
+/* The name of the default port file.  This may be overridden by the
+   `portfile' command in the configuration file.  */
+#define PORTFILE "/usr/lib/uucp/port"
+
+/* The name of the default dial file, which holds information about
+   dialers.  This may be overridden by the `dialfile' command in the
+   configuration file.  */
+#define DIALFILE "/usr/lib/uucp/dial"
+
+/* The name of the default call file, which may be used to store
+   login names and passwords used when calling other systems.  This
+   may be overridden by the `callfile' command in the configuration
+   file.  */
+#define CALLFILE "/usr/lib/uucp/call"
+
+/* The name of the default password file, which is used when other
+   systems call in and the daemon is providing login and Password
+   prompts.  This may be overridden by the `passwdfile' command
+   in the configuration file.  */
+#define PASSWDFILE "/usr/lib/uucp/passwd"
+
+/* The name of the default dialcodes file.  This may be overridden by
+   the `dialcodefile' command in the configuration file.  */
+#define DIALCODEFILE "/usr/lib/uucp/dialcode"
+
+#endif /* HAVE_TAYLOR_CONFIG */
+
+/* The name of the default log file.  This may be overridden by the
+   `logfile' command in the configuration file.  */
+#define LOGFILE "/usr/spool/uucp/Log"
+
+/* The name of the default statistics file.  This may be overridden
+   by the `statfile' command in the configuration file.  */
+#define STATFILE "/usr/spool/uucp/Stats"
+
+/* The name of the debugging file.  This may be overridden by the
+   `debugfile' command in the configuration file.  */
+#define DEBUGFILE "/usr/spool/uucp/Debug"
+
+/* The default command path, specifying which directories the commands
+   to be executed must be located in.  */
+#define CMDPATH "/bin /usr/bin /usr/local/bin"
+
+/* One of the following macros must be defined if you want to be able
+   to default the system name (not specify it in the configuration
+   file).  */
+#define HAVE_GETHOSTNAME 1
+/* #define HAVE_UNAME 1 */
+
+/* Exactly one of the following macros must be defined.
+
+   HAVE_BSD_TTY -- Use the 4.2BSD tty routines
+   HAVE_SYSV_TERMIO -- Use the System V termio routines
+   HAVE_POSIX_TERMIOS -- Use the POSIX termios routines
+   */
+#define HAVE_BSD_TTY 1
+/* #define HAVE_SYSV_TERMIO 1 */
+/* #define HAVE_POSIX_TERMIOS 1 */
+
+/* Define HAVE_SETITIMER if you have the setitimer routine.
+   Alternatively, define HAVE_NAPMS if you have the napms routine
+   which takes a number of milliseconds to sleep.  Alternatively
+   again, define HAVE_NAP if you have the nap routine which takes a
+   longword which is the number of milliseconds to sleep.  If you are
+   using HAVE_BSD_TTY, these will be used to improve CPU performance
+   when reading from a serial line.  They are also used to sleep half
+   a second in a chat script.  */
+#define HAVE_SETITIMER 1
+/* #define HAVE_NAPMS 1 */
+/* #define HAVE_NAP 1 */
+
+/* Define HAVE_EUID if it makes sense to call setuid (geteuid ()).
+   This is mainly done to avoid running with root permissions, which
+   make locking complex.  */
+#define HAVE_EUID 1
+
+/* Exactly one of the following macros must be defined.  The exact
+   format of the spool directories is explained in sys3.unx.
+
+   SPOOLDIR_V2 -- Use a Version 2 (original UUCP) style spool directory
+   SPOOLDIR_BSD42 -- Use a BSD 4.2 style spool directory
+   SPOOLDIR_BSD43 -- Use a BSD 4.3 style spool directory
+   SPOOLDIR_BNU -- Use a BNU (HoneyDanBer) style spool directory
+   SPOOLDIR_ULTRIX -- Use an Ultrix style spool directory
+   SPOOLDIR_TAYLOR -- Use a new style spool directory
+
+   If you are not worried about compatibility with a currently running
+   UUCP, use SPOOLDIR_TAYLOR.  */
+/* #define SPOOLDIR_V2 1 */
+/* #define SPOOLDIR_BSD42 1 */
+/* #define SPOOLDIR_BSD43 1 */
+/* #define SPOOLDIR_BNU 1 */
+/* #define SPOOLDIR_ULTRIX 1 */
+#define SPOOLDIR_TAYLOR 1
+
+/* Define one of the following macros to determine how directories
+   should be read.
+
+   HAVE_POSIX_DIRENT -- Use POSIX (and System V) dirent structure
+   HAVE_BSD_DIRECT -- Use BSD direct structure  */
+#define HAVE_POSIX_DIRENT 1
+/* #define HAVE_BSD_DIRECT 1 */
+
+/* If the system supports file names longer than 14 characters,
+   HAVE_LONG_NAMES should be defined.  */
+#define HAVE_LONG_NAMES 1
+
+/* Define the mail program to use.  This will be called with the user
+   name to send mail to as the only argument, and the mail to send
+   will be written to standard input.  */
+#define MAIL_PROGRAM "/usr/ucb/mail"
+
+/* Define the echo program to use.  This will be called to expand
+   wildcard specifications.  */
+#define ECHO_PROGRAM "/bin/echo"
+
+/* The uucico daemon, when talking to another copy of itself, can
+   check the amount of free disk space to make sure there is enough
+   room before accepting a transferred file.  Unfortunately, there is
+   no standard way to determine the amount of free disk space.  One of
+   the following macros must be defined in order for the amount of
+   free space to be discovered.
+
+   HAVE_ULTRIX_STATFS -- Use the statfs call as found on Ultrix systems
+   HAVE_SCO_STATFS -- Use the statfs call as found on SCO Unix
+   HAVE_USTAT -- Use the System V ustat call  */
+#define HAVE_ULTRIX_STATFS 1
+/* #define HAVE_SCO_STATFS 1 */
+/* #define HAVE_USTAT 1 */
+
+/* The default amount of free space to require for systems that do
+   not specify an amount.  */
+#define DEFAULT_FREE_SPACE (50000)
+
+/*
+
+  THERE ARE NO MORE CONFIGURATION PARAMETERS.
+
+  */
+
+/* Make sure the defines do not conflict.  */
+
+#if HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS != 1
+ #error Terminal routine macro definition not set or duplicated
+#endif
+
+#if SPOOLDIR_V2 + SPOOLDIR_BSD42 + SPOOLDIR_BSD43 + SPOOLDIR_BNU + SPOOLDIR_ULTRIX + SPOOLDIR_TAYLOR != 1
+ #error Spool directory define not set or duplicated
+#endif
+
+#if HAVE_POSIX_DIRENT + HAVE_BSD_DIRECT != 1
+ #error No way to read directories
+#endif
+
+#if HAVE_ULTRIX_STATFS + HAVE_SCO_STATFS + HAVE_USTAT > 1
+ #error Multiple disk space definitions
+#endif
+
+#if HAVE_BSD_TTY
+#include <sgtty.h>
+typedef struct sgttyb sterminal;
+#define fgetterminfo(o, q) (ioctl ((o), TIOCGETP, (q)) == 0)
+#define fsetterminfo(o, q) (ioctl ((o), TIOCSETN, (q)) == 0)
+#endif /* HAVE_BSD_TTY */
+
+#if HAVE_SYSV_TERMIO
+#include <termio.h>
+typedef struct termio sterminal;
+#define fgetterminfo(o, q) (ioctl ((o), TCGETA, (q)) == 0)
+#define fsetterminfo(o, q) (ioctl ((o), TCSETA, (q)) == 0)
+#endif /* HAVE_SYSV_TERMIO */
+
+#if HAVE_POSIX_TERMIOS
+#include <termios.h>
+typedef struct termios sterminal;
+#define fgetterminfo(o, q) (tcgetattr ((o), (q)) == 0)
+#define fsetterminfo(o, q) (tcsetattr ((o), TCSANOW, (q)) == 0)
+#endif /* HAVE_POSIX_TERMIOS */
+
+/* The root directory (this is needed by the system independent stuff).  */
+#define ZROOTDIR "/"
+
+/* The name of the execution directory within the spool directory.  */
+#define XQTDIR ".Xqtdir"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+/* We create files with these modes (should this be configurable?).  */
+#ifdef S_IRUSR
+#define IPRIVATE_FILE_MODE (S_IRUSR | S_IWUSR)
+#define IPUBLIC_FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+#else /* ! defined (S_IRUSR) */
+#define IPRIVATE_FILE_MODE (0600)
+#define IPUBLIC_FILE_MODE (0644)
+#endif /* ! defined (S_IRUSR) */
+
+/* We create directories with this mode (should this be configurable?).  */
+#ifdef S_IXUSR
+#define IDIRECTORY_MODE (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
+#define IPUBLIC_DIRECTORY_MODE (S_IRWXU | S_IRWXG | S_IRWXO)
+#else /* ! defined (S_IXUSR) */
+#define IDIRECTORY_MODE (0755)
+#define IPUBLIC_DIRECTORY_MODE (0777)
+#endif /* ! defined (S_IXUSR) */
+
+/* Information we need for a UNIX serial port.  */
+
+struct ssysdep_serial_port
+{
+  /* File descriptor to read from.  */
+  int oread;
+  /* Whether the read descriptor is blocking.  */
+  boolean fread_blocking;
+  /* File descriptor to write to.  */
+  int owrite;
+  /* Whether the write descriptor is blocking.  */
+  boolean fwrite_blocking;
+  /* Hold the real read descriptor when using a dialer device.  */
+  int oholdread;
+  /* Hold the real write descriptor when using a dialer device.  */
+  int oholdwrite;
+  /* TRUE if this is a terminal and the remaining fields are valid.  */
+  boolean fterminal;
+  /* Baud rate.  */
+  long ibaud;
+  /* Original terminal settings.  */
+  sterminal sorig;
+  /* New terminal settings (raw mode, etc.).  */
+  sterminal snew;
+};
+
+/* Information we need for a UNIX stdin port.  */
+
+struct ssysdep_stdin_port
+{
+  struct ssysdep_serial_port s;
+  boolean fpty;
+};
+
+/* For debugging it is helpful to know whether we are connected through
+   a pty; the fsserial_read routine uses to information to know whether
+   to sleep or not.  */
+#define SYSDEP_STDIN_CMDS(q) \
+ { "pty", CMDTABTYPE_BOOLEAN, (pointer) &(q)->fpty, NULL }
+
+#define SYSDEP_STDIN_INIT(q) ((q)->fpty = FALSE, (q)->s.oread = -1)
+
+/* Information we need for a UNIX modem port.  */
+
+struct ssysdep_modem_port
+{
+  struct ssysdep_serial_port s;
+};
+
+#define SYSDEP_MODEM_INIT(q) ((q)->s.oread = -1)
+
+/* Information we need for a UNIX direct port.  */
+
+struct ssysdep_direct_port
+{
+  struct ssysdep_serial_port s;
+};
+
+#define SYSDEP_DIRECT_INIT(q) ((q)->s.oread = -1)
+
+/* Lock a string.  */
+extern boolean fsdo_lock P((const char *));
+
+/* Unlock a string.  */
+extern boolean fsdo_unlock P((const char *));
+
+/* See whether a directory exists.  */
+extern boolean fsdirectory_exists P((const char *));
+
+/* Expand a leading tilde to the public directory or a user's home
+   directory.  */
+extern const char *zstilde_expand P((const struct ssysteminfo *qsys,
+				     const char *zfile));
+
+/* Prepend a directory to a file name.  */
+extern const char *zsappend P((const char *zdir, const char *zfile));
+
+/* Get a temporary file name.  */
+extern const char *zstemp_file P((void));
+
+#if SPOOLDIR_ULTRIX
+/* See whether there is a spool directory for a system.  */
+extern boolean fsultrix_has_spool P((const char *zsystem));
+#endif /* SPOOLDIR_ULTRIX */
+
+/* The working directory from which the program was run (this is set
+   by usysdep_initialize).  */
+extern char *zScwd;
+
+/*
+  Local variables:
+  mode:c
+  End:
+  */
+#endif

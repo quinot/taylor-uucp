@@ -1,0 +1,316 @@
+Things to do for the Taylor UUCP package.  This list includes some of
+my thoughts, but is mostly suggestions from the net.  They are in no
+particular order.  Some of the numbers that were in here have been
+removed.
+
+2.
+
+John Cowan <cowan@snark.thyrsus.com> says:
+
+>I think you should accept a broader range of time specifications.
+>Consider using getdate() (from your handy Usenet news source code)
+>with its high-powered yacc parser.
+
+Of course, getdate() accepts a single date, but we want a range.  A
+better syntax would be certainly be nice.
+
+3.
+
+Wolfgang Rupprecht <wolfgang@wsrcc.com> suggests a chat script to be
+run when a connection is made from a specific site, allowing
+per-system modem parameters to be set.  Leslie Mikesell
+<les@chinet.chi.il.us> also suggested this.
+
+4.
+
+John R MacMillan <chance!john@sq.sq.com> mentions the HDB notion of
+services; something like this should be added whenever I get around to
+writing a version of cu.
+
+5.
+
+There were lots of ideas about chat scripts, and clearly the chat
+script system should get overhauled completely.
+
+Guy Harris <auspex!guy> says:
+
+>At one point I'd been discussing that with Peter Honeyman, and came up
+>with an idea he'd approved of - there already exists a language that can
+>be used for doing "chat" scripts, and its interpreter is present on most
+>UNIX systems, under the name "/bin/sh".  I.e., add enough utilities you
+>can fire up from a shell script, and you can do your "chat" scripts - at
+>least the ones with dialers - as shell scripts.  It's probably overkill
+>for login chat scripts, and as such might be a pain if it's *all* you
+>had, though.
+
+Leslie Mikesell <les@chinet.chi.il.us> says:
+
+>There are a few things lacking in normal HDB which be fixed by adding to
+>the chat script escape codes:
+>  modem control: already exists in recent versions as \M to ignore carrier and
+>     \m to require carrier at specific places in the chat.
+>  settable timeouts: could be \w{sec} to control how long to wait for the
+>     current "expect" string(s).
+>  multi-way branching:  could be \o{expect send ...} to specify an alternative
+>     continuation of the chat if this "expect" string is seen before the
+>     primary one, or \O{expect label} to branch to a completely different
+>     entry in the Dialers file. A variation of this could allow "calling"
+>     the other script and returning to the current one.  More than one
+>     alternative "expect" could be pending at once.
+>  some additional ioctl() type functions, notably setting the speed: could
+>     be \S{speed}.  In combination with the above branching you could observe
+>     the CONNECT nnnn messages from modems and switch the port speed to
+>     match on machines that don't do hardware flow control.
+>  an explicit FAIL: could be \F for use in the alternative branching to
+>     bail out on BUSY, NO CARRIER, etc. without waiting for a timeout.
+
+and in a later message:
+
+>I forgot about that one, \!{cmd}, of course.  I'd still like branching,
+>though.  Pretty much everything else can be built around a single
+>test-and-branch primitive.  And throw in an explicit write-log-entry.
+>Maybe \L{text}, with some %escape substitutions if you are ambititious,
+>to fill in the current time, file size, last line of chat input received,
+>current "expect" and the like.
+
+T. William Wells <bill@twwells.com> says:
+
+>Please implement this as a state machine. Here's a rough idea; if
+>you are interested in following this up, I can work up a more
+>serious proposal.
+>
+>state 0 send "init" nextstate 1
+>
+>(state 0 would never have an expect; if not present, state 1 is
+>the initial state.)
+>
+>state 1 expect "foo" send "bar" nextstate 1
+>state 1 expect "xyzzy" send "plugh" done
+>state 1 expect "you lose" fail
+>state 1 timeout 1m close nexstate 0
+>
+>This could give you much greater flexibility, especially if you
+>want to add new features later.
+
+Greg A. Woods <mauxci!eci386!woods@apple.com> says:
+
+>For each instance of "chat" scripts, please allow specification of a
+>programme name, such that arbitrary algorithms may be implemented in
+>arbitrary languages.  Make the interface simple.  Attach stdin, stdout
+>to the device and stderr back to the calling programme (in a pipe for
+>relaying error messages), and provide environment variables for all
+>the nifty parameters.  Maybe allow some optional command line
+>arguments.  Perhaps the programme could also be used only as the first
+>step in the chat sequence, and a traditional send-expect sequence
+>could continue the process.
+>
+>Finally, I've invented a simple grammar for defining chat scripts.
+>Here's an example that includes all the features (assume 'standard"
+>escape sequences for special characters in strings):
+>
+>hayes-dialer:
+>	set CLOCAL				# flags like this, not '\M'
+>	send: \rAT				# defaults \r at end
+>		expect: OK
+>		got: ERROR			# not error, but unexpected
+>			send: AT
+>				expect: OK
+>				abort-on: ERROR,"Modem failure"	# error messages too!
+>			end-send
+>		end-got
+>		got: ""				# multiple "got"s ("" is nothing)
+>			send: ATQ0
+>				expect: OK
+>				abort: "Modem can't set result codes on"
+>			end-send
+>		end-got
+>	end-send
+>	set ECHOCHECK
+>	send: ATDT\T
+>		abort-on: NO\sDIALTONE, "No dial tone"
+>		abort-on: BUSY, "Line Busy"	# multiple abort-on's
+>		got: CONNECT\s1200
+>			set B1200
+>		end-got
+>		got: "CONNECT 2400"	# optional quotes on strings
+>			set B2400
+>		end-got
+>		expect: CONNECT		# got/expect order significant
+>	end-send
+>	clear ECHOCHECK
+>	clear CLOCAL
+>end
+>
+>This syntax could also be used for login chats.
+>
+>I've not implemented an interpreter, but perhaps this would be an
+>excellent use of the optional chat programme -- call the interpreter,
+>specifying the script to run.
+
+Bruce Lilly <uunet!sonyusa!sonyd1!blilly!bruce> says:
+
+>Check out Emmet Gray's pcomm program, which uses a shell script to
+>do the equivalent of a chat script. The pcomm package includes
+>programs to facilitate this.
+
+Peter da Silva <peter@ficc.ferranti.com> says:
+
+>	send AAAAAA
+>	sleep 1
+>	send AT\r
+>	expect OK continue
+>	timeout 30 {
+>		send "+++"
+>		sleep 1
+>		send ATH\r
+>		expect OK
+>		timeout 30 fail
+>	}
+>	send ATDT$NUMBER\r
+>	expect BUSY fail
+>	expect "NO CARRIER" fail
+>	expect "CONNECT 300" { baud 300 }
+>	expect "CONNECT 1200" { baud 1200 }
+>	expect "CONNECT 2400" { baud 2400 }
+>	expect "CONNECT 9600" { baud 9600 }
+>	expect "CONNECT FAST/COMP/UUCP" { baud 19200; window 3 }
+>	expect "CONNECT V32" { baud 19200 }
+>	expect "CONNECT"
+>	timeout 30 fail
+>
+>Then, on login:
+>
+>	send \r
+>	expect ogin:
+>	expect host: {
+>		send uucp
+>		expect ogin:
+>		expect "not found" fail
+>		timeout 30 fail
+>	}
+>	timeout 30 {
+>		send \r
+>		expect ogin:
+>		expect host: {
+>			send uucp
+>			expect ogin:
+>			expect "not found" fail
+>			timeout 30 fail
+>		}
+>		timeout 30 fail
+>	}
+>	send $LOGIN
+>	expect word: { send $PASSWORD }
+>	expect telnet> {
+>		send "quit\r"
+>		expect ogin: { send $LOGIN }
+>		timeout 10 fail
+>		expect word: { send $PASSWORD }
+>		timeout 30 fail
+>	}
+>	timeout 30 fail
+
+Rich Salz <rsalz@bbn.com> says:
+
+>I encourage people looking for a replacement to UUCP-style chat scripts to
+>look at the scripting language that comes with the BBN dialupip package.
+>Look at src/diald/runscript.c.  It's fairly nice, giving timeouts logging,
+>parameter substitution, and alternates.  Source is freely
+>redistributable.  Among other places, on UUNET:
+>	networking/dialupip2.0.tar.Z
+
+6.
+
+T. William Wells <bill@twwells.com> says:
+
+>Something related that might be useful: when calling the other
+>system, at certain times I do not want the other system to gain
+>control and begin to send files. If that worked, I could call
+>them for e-mail without worrying about getting my newsfeed at
+>daytime rates. Unfortunately, I can't ask them to batch me at
+>night only; my site gets a multibatch. Note that call-timegrade
+>would do as well, provided that the other system respects it but
+>I have no way to know that, other than by trying it.
+
+8.
+
+T. William Wells <bill@twwells.com> suggests making the dialer
+``complete'' and ``abort'' commands into chat scripts, rather than
+simple strings.
+
+9.
+
+Gordon Burditt <gordon@sneaky.lonestar.org> warns about modifications
+to the TZ environment variable, to fool uucico into dialing out at an
+inappropriate time.
+
+10.
+
+Gordon Burditt <gordon@sneaky.lonestar.org> says:
+
+>(4) Less important, because few people will have this problem, is a 
+>port-specific dialcodes file.  Why?  Well, one system I had was connected
+>to 2 inside lines "dial 9 for outside line", and one outside line (which
+>doesn't want the 9).  A number of the systems called were "inside", so
+>you didn't add the 9 on those lines dialing from inside, but you did add 
+>"390" to the 4-digit number if you dialed it via "outside".  Also not 
+>unheard of are systems with 2 outside lines that are local to different 
+>area codes, or one local outside line and one WATS line (which MUST
+>have an area code).
+>Example:
+>	inside-line Dialcodes		outside-line Dialcodes
+>	pbx	""			pbx	"390"
+>	local	"9"			local	""
+>	nyc	"9-1212"		nyc	"1212"
+
+12.
+
+Ralf E. Stranzenbach <ralf@reswi.ruhr.de> says:
+
+>It would be nice to also have the option of running a shell script each time  
+>uucico connects/disconnects a systen. I do not mean shell scripts for dial/in.  
+>I would like to do some accounting and batching when the connection  
+>establishes.
+
+13.
+
+les@chinet.chi.il.us (Leslie Mikesell) writes:
+
+>>local-send /usr/spool/uucppublic !/usr/spool/uucpublic/private
+>>
+>>The directories are searched from left to right, and the last one to
+>>match determines whether the file may be sent or not.  This is
+>>slightly more general than NOWRITE, since it permits a public
+>>directory within a private directory within a public directory,
+>>although probably nobody will ever want that.
+>
+>Interesting... The obvious enhancement is to generalize to shell-like
+>wild cards for the READ/WRITE/COMMANDS entries.
+
+14.
+
+There should be some way for chat scripts to specify the parity to
+expect and to generate.
+
+15.
+
+There may need to be a compile time switch to determine the behaviour
+of the -z switch to uux.
+
+16.
+
+The -j switch to uucp and uux does nothing.  As far as I can tell, the
+traditional uustat does not attempt to remove all files associated
+with a particular uucp or uux request, but just one of them.  Is it
+worth it to keep a list of files in files in another special directory
+(/usr/spool/uucp/.Requests) to make uustat complete and easy to
+implement?
+
+17.
+
+The -b and -s switches to uux are not implemented by uuxqt.
+
+18.
+
+If we are supposed to call a system back, we should do it immediately
+rather than merely queuing up an empty command file.

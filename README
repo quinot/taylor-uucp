@@ -1,0 +1,181 @@
+This is the README file for beta release 1 of the Taylor UUCP package.
+
+This package is covered by the Gnu Public License.  See the file
+COPYING for details.
+
+It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
+or, equivalently, uunet!airs!ian, or c/o AIRS P.O. Box 520, Waltham
+MA, 02254.  I will be on vacation and generally unreachable from the
+last week of September until late October, 1991.
+
+CONFIGURATION
+
+You will have to decide what types of configuration files you want to
+use.  This package supports a new sort of configuration file,
+described in the file CONFIG.  It also supports V2 configuration files
+(L.sys, L-devices, etc.) and BNU configuration files (Systems,
+Devices, etc.).  No documentation is provided for V2 or BNU
+configuration files.  All types of configuration files can be used at
+once, if you are so inclined.  Currently using just V2 configuration
+files is not really possible, because there is no way to specify a
+dialer (there are no built in dialers, and the program does not know
+how to read acucap or modemcap); however, V2 configuration files can
+be used with a dialer file as described in CONFIG, or with a BNU
+Dialers file.
+
+If you are installing a new system, or you want to use the new form of
+configuration files, you must write the configuration files.
+
+You must also decide what sort of spool directory you want to use.  If
+you will only be using these programs, I recommend SPOOLDIR_TAYLOR;
+otherwise select the spool directory corresponding to your existing
+UUCP package.  The details of the spool directory choices are
+described in sys3.unx.
+
+COMPILATION
+
+1) Take a look at the top of Makefile to make sure the definitions are
+reasonable for your system.  If you don't have gcc, get it.  In the
+meantime, change CC and CFLAGS accordingly.  On some systems, you may
+want to make entries for LIBS.
+
+2) This package uses the alloca function.  When compiled with gcc, it
+will automatically use the builtin function.  If your system has
+alloca in some special library, add the library to LIBS (e.g. -lPW).
+On SCO 3.2.2 I had to extract alloca.o from /lib/libPW.a and set LIBS
+to alloca.o.  If you have no alloca, you can indicate this in conf.h;
+a simplistic substitute will be used.  You may also be able to use the
+public domain alloca available with the emacs distribution.
+
+2) Type ``make configure-unix'' to prepare to compile for a Unix
+system (there are no other choices now, but someday there may be).
+
+3) Edit conf.h for your local system.  The comments should explain the
+various choices.
+
+4) Edit sysdep.h for your local system.  Again, the comments should
+explain the various choices.  The intent is that system dependent
+definitions are kept in sysdep.h whereas general, system independent
+definitions are kept in conf.h.
+
+5) Type ``make'' to compile everything.
+
+6) I've tested compilation on a DECSystem 3100 running Ultrix 4.0, a
+VAXStation II/GPX running Ultrix 3.1, and a 386 box running SCO Unix
+3.2.2 (I have only tested under real world conditions on the VAX,
+although I have run my test programs on all the machines).  On all of
+these I have compiled using gcc and cc (on SCO, with rcc as well).  On
+other platforms there are likely to be compilation problems.  Please
+let me know what problems you have, and any solutions or workarounds
+you come up with.  You may have trouble with tstuu.c; it is only used
+for testing, and is not nearly as portable as the rest of the code.
+
+TESTING
+
+This is a beta release.  We have been using it at AIRS to talk to
+uunet for three weeks with no trouble since the first three days.
+However, it will doubtless fail in some situations.  Do not rely on
+this code until you have proven to yourself that it will work.
+
+You can use the uuchk program to test your configuration files.  It
+will read them and print out a verbose description.  This is
+particularly important if you are using V2 or BNU configuration files,
+because there may be bugs in how they are read.  This program should
+not be made suid, because it will display passwords if it can read
+them.
+
+If your system supports BSD style pseudo-terminals, and you compiled
+the code to support the new style of configuration files, you should
+be able to use the tstuu program to test the uucico daemon.  Just type
+tstuu with no arguments while logged in to the compilation directory
+(since it runs ./uucp, ./uux and ./uucico) to run a lengthy series of
+tests (it takes over ten minutes on a slow VAX).  You will need a fair
+amount of space available in /usr/tmp.  You will probably want to put
+it in the background.  Do not use ^Z, because the program traps on
+SIGCHLD and winds up dying.  It will create a directory /usr/tmp/tstuu
+and fill it with configuration files, and create spool directories
+/usr/tmp/tstuu/spool1 and /usr/tmp/tstuu/spool2.
+
+The program will finish with an execute file (X.something) and a data
+file (D.something) in /usr/tmp/tstuu/spool1 (or, more likely, in
+subdirectories, depending on the choice of SPOOLDIR in sysdep.h).  The
+log files /usr/tmp/tstuu/Log1 and /usr/tmp/tstuu/Log2 should look
+fairly normal; an error at the end of Log2 is expected, as tstuu shuts
+down the slave uucico using a signal.  You can test uuxqt by typing
+``./uuxqt -I /usr/tmp/tstuu/Config1''.  This should leave a command
+file (C.something) and a data file (D.something) in
+/usr/tmp/tstuu/spool1 or in subdirectories.  Again, there should be no
+errors in the log file /usr/tmp/tstuu/Log1.
+
+The -x switch will put tstuu in debugging mode, and generate far more
+output than you will ever want to see.  The uucico daemons will put
+debugging output in /usr/tmp/tstuu/Debug1 and /usr/tmp/tstuu/Debug2.
+At this point you're pretty much on your own.
+
+On some systems you can also use tstuu to test my uucico against the
+system uucico, by using the -u switch.  For this to work, change the
+definitions of ZUUCICO_CMD and UUCICO_EXECL at the top of tstuu.c to
+something appropriate for your system.  The definitions in tstuu.c are
+what I used for Ultrix 4.0, in which /usr/lib/uucp/uucico is
+particularly obstinate about being run as a child; I was only able to
+run it by creating a login name with no password whose shell was
+/usr/lib/uucp/uucico.  Calling login in this way will leave fake
+entries in wtmp and utmp; if you compile tstout.c as an suid root
+program, tstuu will run it to clear those entries out.  On most
+systems, such hackery should not be necessary, although on SCO I had
+to su to root (uucp might also have worked) before I could run
+/usr/lib/uucp/uucico.
+
+You can test uucp and uux with the -r switch to make sure they create
+the right sorts of files (see Appendix A of the Nutshell Handbook
+``Managing UUCP and Usenet'' for the sorts of files that should be
+created).
+
+If tstuu passes, or you can't run it for some reason or other, move on
+to testing with some other system.  Set up the configuration files as
+described in CONFIG, or use an existing configuration.  Tell uucico to
+dial out to the system by using the -s system switch (e.g.  ``uucico
+-s uunet'').  The log file should tell you what happens.  You can use
+debugging mode to get a great deal of information about what sort of
+data is flowing back and forth; use -x number (e.g. ``uucico -s uunet
+-x 9''), giving a number from 1 to 9.  The higher the number, the more
+debugging information you will get.  The debugging information is
+written to a file, normally /usr/spool/uucp/Debug although the default
+can be changed in sysdep.h and the configuration file can override the
+name with the ``debugfile'' command.  The debugging file will contain
+passwords and some file contents as they are transmitted over the
+line, so the debugging file is only readable by uucp.
+
+You can use the -f switch to force uucico to call out even if the last
+call failed recently, or use -S when naming a system.  Otherwise the
+status file (in the .Status subdirectory of the main spool directory,
+normally /usr/spool/uucp) will prevent too many attempts from
+occurring in rapid succession.
+
+Again, let me know about any problems you have and how you got around
+them.
+
+INSTALLATION
+
+You can install by suing to root and typing make install.  Or you can
+look at what make install does and do it by hand.  It's pretty
+simplistic.
+
+COMMENTS
+
+First of all, let me know about any comments you have.
+
+Obviously, there are several more programs that need to be written
+eventually, such as uulog, uustat, and, perhaps, uusched.
+
+The -j options to uucp and uux do not do anything (and they are
+meaningless without uustat).
+
+The -z option to uux means to send mail to the user if the command
+fails.  I have heard that under HDB -z means to send mail if the
+command succeeds.  If this is true, there should probably be a compile
+time switch to select which behaviour to follow.
+
+The -b and -s options to uux are not implemented by uuxqt.  
+
+More protocols need to be written.
