@@ -9,21 +9,24 @@
 # of this file to make sure that they are reasonable for your system.
 
 # Prefix directory for installation directories.
-prefix = /usr/local
+prefix = @prefix@
 #prefix = /usr
+
+# Prefix directory for files that are specific to a host type.
+exec_prefix = @exec_prefix@
 
 # The user name that should own the resulting executables, several of
 # which are suid.
 owner = uucp
 
 # Where to install uucico, uuxqt, uuchk and uuconv.  If you use this
-# definition, $(prefix)/lib must exist.
-sbindir = $(prefix)/lib/uucp
-#sbindir = $(prefix)/libexec/uucp
+# definition, $(exec_prefix)/lib must exist.
+sbindir = $(exec_prefix)/lib/uucp
+#sbindir = $(exec_prefix)/libexec/uucp
 
 # Where to install uucp, uux, uustat, uuname, uulog, uuto, uupick and
 # cu.
-bindir = $(prefix)/bin
+bindir = $(exec_prefix)/bin
 
 # Where to install man pages.  Section 1 for user programs, 8 for daemons.
 man1dir = $(prefix)/man/man1
@@ -76,6 +79,7 @@ VPATH = @srcdir@
 
 # Define programs and flags
 CC = @CC@
+CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -93,6 +97,8 @@ MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 DVITPS = dvips
 
+@SET_MAKE@
+
 #
 # Nothing else to configure
 #
@@ -101,9 +107,9 @@ SHELL = /bin/sh
 
 VERSION = 1.05
 
-MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
+MORECFLAGS = -I. -I$(srcdir) -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
-MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' AR='$(AR)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)' VERSION='$(VERSION)'
+MDEFINES = CC='$(CC)' CPPFLAGS='$(CPPFLAGS)' CFLAGS='$(CFLAGS)' AR='$(AR)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newconfigdir='$(newconfigdir)' oldconfigdir='$(oldconfigdir)' owner='$(owner)' sbindir='$(sbindir)' UUDIRFLAGS='$(UUDIRFLAGS)' VERSION='$(VERSION)'
 
 PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uusched \
 	uulog uuto uupick cu
@@ -265,10 +271,10 @@ uudir: uudir.o $(UULIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o uudir uudir.o $(UULIBS) $(LIBS)
 
 .c.o:
-	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CPPFLAGS) $(CFLAGS) $<
 
 uuconv.o: uuconv.c
-	$(CC) -c $(MORECFLAGS) -I$(srcdir)/uuconf -Iuuconf $(CFLAGS) $(srcdir)/uuconv.c
+	$(CC) -c $(MORECFLAGS) -I$(srcdir)/uuconf -Iuuconf $(CPPFLAGS) $(CFLAGS) $(srcdir)/uuconv.c
 
 sysdep.h: sysh.unx
 	rm -f sysdep.h
@@ -301,11 +307,11 @@ distclean:
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
 	rm -f uucp-$(VERSION).tar.gz
 	rm -rf uucp-$(VERSION)
-	rm -f Makefile config.h config.status
+	rm -f Makefile config.h config.status stamp-h config.log config.cache
 
 mostlyclean: clean
 
-realclean: distclean
+maintainer-clean realclean: distclean
 
 # The distribution targets are mostly for my own use; they are not
 # expected to work on all other systems.
@@ -366,20 +372,21 @@ ps: uucp.ps
 uucp.ps: uucp.dvi
 	$(DVITPS) -o uucp.ps $<
 
-# Having Makefile depend on config.h.in insures that config.h will get
-# rebuilt when config.h.in changes.  We don't want config.h to change
-# unnecessarily, nor do we want to run config.status unnecessarily.
-# This won't work on versions of make that don't check dependencies
-# for Makefile, but I'm the only person likely to change config.h.in
-# anyhow.
-Makefile: config.status Makefile.in config.h.in
-	sh config.status
+# Suggested autoconf targets.
+
+${srcdir}/configure: configure.in
+	cd ${srcdir} && autoconf
+
+config.h: stamp-h
+stamp-h: config.h.in config.status
+	CONFIG_FILES= CONFIG_HEADERS=config.h $(SHELL) ./config.status
+	echo > stamp-h
+
+Makefile: Makefile.in config.status
+	CONFIG_FILES=Makefile CONFIG_HEADERS= $(SHELL) ./config.status
 
 config.status: configure
-	sh config.status --recheck
-
-configure: configure.in
-	cd $(srcdir); autoconf
+	$(SHELL) ./config.status --recheck
 
 TAGS:
 	etags *.h *.c
@@ -425,4 +432,4 @@ copy.o: uudefs.h system.h sysdep.h
 .NOEXPORT:
 
 .PHONY: all install uninstall clean distclean mostlyclean realclean
-.PHONY: dist doc-dist info info install-info dvi ps
+.PHONY: maintainer-clean dist doc-dist info info install-info dvi ps

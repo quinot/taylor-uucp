@@ -8,12 +8,13 @@
 SHELL = /bin/sh
 
 # These values are overriden by the top level Makefile
-prefix = /usr/local
+prefix = @prefix@
 newconfigdir = $(prefix)/conf/uucp
 oldconfigdir = /usr/lib/uucp
 
 # These values are overridden by the top level Makefile
 CC = @CC@
+CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@
 AR = @AR@
 RANLIB = @RANLIB@
@@ -23,7 +24,7 @@ LN_S = @LN_S@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS = -I$(srcdir) -I. -I$(srcdir)/.. -I.. -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
+MORECFLAGS = -I. -I$(srcdir) -I.. -I$(srcdir)/.. -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
 
 OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o callin.o \
 	calout.o chatc.o cmdarg.o cmdfil.o cmdlin.o debfil.o deblev.o \
@@ -46,7 +47,7 @@ libuuconf.a: $(OBJS)
 	-$(RANLIB) libuuconf.a
 
 .c.o:
-	$(CC) -c $(MORECFLAGS) $(CFLAGS) $<
+	$(CC) -c $(MORECFLAGS) $(CPPFLAGS) $(CFLAGS) $<
 
 syshdr.h: syshdr.unx
 	rm -f syshdr.h
@@ -59,14 +60,14 @@ distclean: clean
 	rm -f Makefile
 
 mostlyclean: clean
-realclean: distclean
+maintainer-clean realclean: distclean
 
 dist:
 	mkdir ../uucp-$(VERSION)/uuconf
 	ln `cat MANIFEST` ../uucp-$(VERSION)/uuconf
 
 Makefile: Makefile.in
-	(cd ..; sh config.status)
+	cd .. && CONFIG_FILES=uuconf/Makefile CONFIG_HEADERS= $(SHELL) ./config.status
 
 # Header file dependencies
 
@@ -79,4 +80,4 @@ freblk.o: alloc.h
 free.o: alloc.h
 mrgblk.o: alloc.h
 
-.PHONY: all clean distclean mostlyclean realclean dist
+.PHONY: all clean distclean mostlyclean maintainer-clean realclean dist

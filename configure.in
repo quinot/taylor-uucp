@@ -1,177 +1,284 @@
 dnl Taylor UUCP configuration file
 dnl This should be processed with autoconf to produce a configure script.
-dnl Copyright (c) 1992, 1993, 1994 Ian Lance Taylor
+dnl Copyright (c) 1992, 1993, 1994, 1995 Ian Lance Taylor
 dnl
+AC_REVISION($Id$)
 AC_INIT(policy.h)
 AC_CONFIG_HEADER(config.h)
 AC_PROG_CC
-AC_PROG_CPP
-AC_GCC_TRADITIONAL
+AC_PROG_GCC_TRADITIONAL
 AC_PROG_INSTALL
+AC_PROG_MAKE_SET
 dnl AR was added to the Makefiles to allow building on funny systems.
 dnl Adding it here allows the environment value of AR at configure time to
 dnl be cached in config.status and in the Makefiles.
 AR=${AR-ar}
 AC_SUBST(AR)
 AC_PROG_RANLIB
+AC_PREFIX_PROGRAM(gcc)
 AC_ISC_POSIX
 AC_MINIX
 AC_AIX
-AC_DYNIX_SEQ
-AC_IRIX_SUN
-AC_CROSS_CHECK
-AC_CONST
-AC_COMPILE_CHECK([prototypes],
-[extern int foo (short);
+AC_CHECK_LIB(sun, getpwnam)
+AC_C_CROSS
+AC_C_CONST
+AC_MSG_CHECKING([for prototypes])
+AC_CACHE_VAL(uucp_cv_c_prototypes,
+[AC_TRY_COMPILE([extern int foo (short);
 int foo(short i) { return i; }],
 [int i;],
-[AC_DEFINE(HAVE_PROTOTYPES)])
+uucp_cv_c_prototypes=yes, uucp_cv_c_prototypes=no)])
+AC_MSG_RESULT($uucp_cv_c_prototypes)
+if test $uucp_cv_c_prototypes = yes; then
+  AC_DEFINE(HAVE_PROTOTYPES)
+fi
 dnl
 CFLAGS=${CFLAGS--g}
 AC_SUBST(CFLAGS)dnl
 AC_SUBST(LDFLAGS)dnl
 dnl
-AC_HAVE_POUNDBANG(POUNDBANG=yes, POUNDBANG=no)
+AC_SYS_INTERPRETER
+POUNDBANG=$ac_cv_sys_interpreter
 AC_SUBST(POUNDBANG)
 dnl
-echo checking for echo program
+AC_MSG_CHECKING(for echo)
 if (PATH= echo test) 2>/dev/null | grep test >/dev/null 2>&1; then
- AC_DEFINE([ECHO_PROGRAM], "echo")
+ AC_DEFINE([ECHO_PROGRAM], "echo") AC_MSG_RESULT(shell builtin)
 elif test -s /bin/echo; then
- AC_DEFINE([ECHO_PROGRAM], "/bin/echo")
+ AC_DEFINE([ECHO_PROGRAM], "/bin/echo") AC_MSG_RESULT(/bin/echo)
+else
+ AC_MSG_RESULT(not found)
 fi
-AC_LN_S
+AC_PROG_LN_S
 dnl
-AC_HAVE_HEADERS(stddef.h stdarg.h string.h strings.h unistd.h stdlib.h)
-AC_HAVE_HEADERS(limits.h time.h sys/wait.h sys/ioctl.h memory.h)
-AC_HAVE_HEADERS(fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
-AC_HAVE_HEADERS(sysexits.h poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h)
-AC_HAVE_HEADERS(glob.h sys/param.h sys/types.tcp.h)
+AC_CHECK_HEADERS(stddef.h stdarg.h string.h strings.h unistd.h stdlib.h)
+AC_CHECK_HEADERS(limits.h time.h sys/wait.h sys/ioctl.h memory.h)
+AC_CHECK_HEADERS(fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
+AC_CHECK_HEADERS(sysexits.h poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h)
+AC_CHECK_HEADERS(glob.h sys/param.h sys/types.tcp.h)
 dnl
 # Under Next 3.2 <dirent.h> apparently does not define struct dirent
 # by default.
-AC_COMPILE_CHECK([dirent.h],
-[#include <dirent.h>],
+AC_MSG_CHECKING([for dirent.h])
+AC_CACHE_VAL(uucp_cv_header_dirent_h,
+[AC_TRY_COMPILE([#include <dirent.h>],
 [struct dirent s;],
-[AC_DEFINE(HAVE_DIRENT_H)])
+uucp_cv_header_dirent_h=yes, uucp_cv_header_dirent_h=no)])
+AC_MSG_RESULT($uucp_cv_header_dirent_h)
+if test $uucp_cv_header_dirent_h = yes; then
+  AC_DEFINE(HAVE_DIRENT_H)
+fi
 dnl
 # Under Next 3.2 <utime.h> apparently does not define struct utimbuf
 # by default.
-AC_COMPILE_CHECK([utime.h],
-[#include <sys/types.h>
+AC_MSG_CHECKING([for utime.h])
+AC_CACHE_VAL(uucp_cv_header_utime_h,
+[AC_TRY_COMPILE([#include <sys/types.h>
 #if HAVE_TIME_H
 #include <time.h>
 #endif
 #include <utime.h>],
 [struct utimbuf s;],
-[AC_DEFINE(HAVE_UTIME_H)])
+uucp_cv_header_utime_h=yes, uucp_cv_header_utime_h=no)])
+AC_MSG_RESULT($uucp_cv_header_utime_h)
+if test $uucp_cv_header_utime_h = yes; then
+  AC_DEFINE(HAVE_UTIME_H)
+fi
 dnl
-AC_COMPILE_CHECK([sys/select.h],
-[#include <sys/select.h>
+AC_MSG_CHECKING([for sys/select.h])
+AC_CACHE_VAL(uucp_cv_header_sys_select_h,
+[AC_TRY_COMPILE([#include <sys/select.h>
 #include <sys/time.h>],
 [int i;],
-[AC_DEFINE(HAVE_SYS_SELECT_H)])
+uucp_cv_header_sys_select_h=yes, uucp_cv_header_sys_select_h=no)])
+AC_MSG_RESULT($uucp_cv_header_sys_select_h)
+if test $uucp_cv_header_sys_select_h = yes; then
+  AC_DEFINE(HAVE_SYS_SELECT_H)
+fi
 dnl
-AC_MAJOR_HEADER
+AC_HEADER_MAJOR
 dnl
-AC_RETSIGTYPE
+AC_TYPE_SIGNAL
 dnl
-AC_STAT_MACROS_BROKEN
+AC_HEADER_STAT
 dnl
-AC_TIME_WITH_SYS_TIME
+AC_HEADER_TIME
 AC_STRUCT_TM
 dnl
-AC_COMPILE_CHECK([termios.h and sys/ioctl.h being included together],
-[#include <termios.h>
+AC_MSG_CHECKING([whether termios.h and sys/ioctl.h may both be included])
+AC_CACHE_VAL(uucp_cv_header_termios_and_ioctl,
+[AC_TRY_COMPILE([#include <termios.h>
 #include <sys/ioctl.h>],
 [int i;],
-AC_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H]))
+uucp_cv_header_termios_and_ioctl=yes, uucp_cv_header_termios_and_ioctl=no)])
+AC_MSG_RESULT($uucp_cv_header_termios_and_ioctl)
+if test $uucp_cv_header_termios_and_ioctl = yes; then
+  AC_DEFINE(HAVE_TERMIOS_AND_SYS_IOCTL_H)
+fi
 dnl
-AC_COMPILE_CHECK([CBREAK],
-[#include <sgtty.h>], [int i = CBREAK;],
-AC_DEFINE([HAVE_CBREAK]))
+AC_MSG_CHECKING(for CBREAK)
+AC_CACHE_VAL(uucp_cv_decl_cbreak,
+[AC_TRY_COMPILE([#include <sgtty.h>], [int i = CBREAK;],
+uucp_cv_decl_cbreak=yes, uucp_cv_decl_cbreak=no)])
+AC_MSG_RESULT($uucp_cv_decl_cbreak)
+if test $uucp_cv_decl_cbreak = yes; then
+  AC_DEFINE(HAVE_CBREAK)
+fi
 dnl
-AC_COMPILE_CHECK([pid_t in sys/types.h],
-[#include <sys/types.h>], [pid_t x;], ,
-AC_DEFINE(PID_T, int))
+AC_MSG_CHECKING(for pid_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_pid_t,
+[AC_TRY_COMPILE([#include <sys/types.h>], [pid_t x;],
+uucp_cv_decl_pid_t=yes, uucp_cv_decl_pid_t=no)])
+AC_MSG_RESULT($uucp_cv_decl_pid_t)
+if test $uucp_cv_decl_pid_t = no; then
+  AC_DEFINE(PID_T, int)
+fi
 dnl
-AC_COMPILE_CHECK([uid_t in sys/types.h],
-[#include <sys/types.h>], [uid_t x;], ,
-AC_DEFINE(UID_T, int))
+AC_MSG_CHECKING(for uid_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_uid_t,
+[AC_TRY_COMPILE([#include <sys/types.h>], [uid_t x;],
+uucp_cv_decl_uid_t=yes, uucp_cv_decl_uid_t=no)])
+AC_MSG_RESULT($uucp_cv_decl_uid_t)
+if test $uucp_cv_decl_uid_t = no; then
+  AC_DEFINE(UID_T, int)
+fi
 dnl
-AC_COMPILE_CHECK([gid_t in sys/types.h],
-[#include <sys/types.h>], [gid_t x;], ,
-AC_DEFINE(GID_T, int))
+AC_MSG_CHECKING(for gid_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_gid_t,
+[AC_TRY_COMPILE([#include <sys/types.h>], [gid_t x;],
+uucp_cv_decl_gid_t=yes, uucp_cv_decl_gid_t=no)])
+AC_MSG_RESULT($uucp_cv_decl_gid_t)
+if test $uucp_cv_decl_gid_t = no; then
+  AC_DEFINE(GID_T, int)
+fi
 dnl
-AC_COMPILE_CHECK([off_t in sys/types.h],
-[#include <sys/types.h>], [off_t x;], ,
-AC_DEFINE(OFF_T, long))
+AC_MSG_CHECKING(for off_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_off_t,
+[AC_TRY_COMPILE([#include <sys/types.h>], [off_t x;],
+uucp_cv_decl_off_t=yes, uucp_cv_decl_off_t=no)])
+AC_MSG_RESULT($uucp_cv_decl_off_t)
+if test $uucp_cv_decl_off_t = no; then
+  AC_DEFINE(OFF_T, long)
+fi
 dnl
 dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
-AC_COMPILE_CHECK([sig_atomic_t in signal.h],
-[#include <signal.h>], [sig_atomic_t x;],
-AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H]))
+AC_MSG_CHECKING(for sig_atomic_t in signal.h)
+AC_CACHE_VAL(uucp_cv_decl_sig_atomic_t_signal_h,
+[AC_TRY_COMPILE([#include <signal.h>], [sig_atomic_t x;],
+uucp_cv_decl_sig_atomic_t_signal_h=yes,
+uucp_cv_decl_sig_atomic_t_signal_h=no)])
+AC_MSG_RESULT($uucp_cv_decl_sig_atomic_t_signal_h)
+if test $uucp_cv_decl_sig_atomic_t_signal_h = yes; then
+  AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H])
+fi
 dnl
-AC_COMPILE_CHECK([sig_atomic_t in sys/types.h],
-[#include <sys/types.h>], [sig_atomic_t x;],
-AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H]))
+AC_MSG_CHECKING(for sig_atomic_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_sig_atomic_t_types_h,
+[AC_TRY_COMPILE([#include <sys/types.h>], [sig_atomic_t x;],
+uucp_cv_decl_sig_atomic_t_types_h=yes,
+uucp_cv_decl_sig_atomic_t_types_h=no)])
+AC_MSG_RESULT($uucp_cv_decl_sig_atomic_t_types_h)
+if test $uucp_cv_decl_sig_atomic_t_types_h = yes; then
+  AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H])
+fi
 dnl
-case $DEFS in
-*HAVE_STDDEF_H*)
-  AC_COMPILE_CHECK([size_t in stddef.h],
-  [#include <stddef.h>], [size_t x;],
-  AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H])) ;;
-esac
+if test $ac_cv_header_stddef_h = yes; then
+  AC_MSG_CHECKING(for size_t in stddef.h)
+  AC_CACHE_VAL(uucp_cv_decl_size_t_stddef_h,
+  [AC_TRY_COMPILE([#include <stddef.h>], [size_t x;],
+  uucp_cv_decl_size_t_stddef_h=yes, uucp_cv_decl_size_t_stddef_h=no)])
+  AC_MSG_RESULT($uucp_cv_decl_size_t_stddef_h)
+  if test $uucp_cv_decl_size_t_stddef_h = yes; then
+    AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H])
+  fi
+fi
 dnl
-AC_COMPILE_CHECK([size_t in sys/types.h],
-[#include <sys/types.h>], [size_t x;],
-AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H]))
+AC_MSG_CHECKING(for size_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_size_t_types_h,
+[AC_TRY_COMPILE([#include <sys/types.h>], [size_t x;],
+uucp_cv_decl_size_t_types_h=yes, uucp_cv_decl_size_t_types_h=no)])
+AC_MSG_RESULT($uucp_cv_decl_size_t_types_h)
+if test $uucp_cv_decl_size_t_types_h = yes; then
+  AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H])
+fi
 dnl
-AC_COMPILE_CHECK([time_t in time.h],
-[#include <time.h>], [time_t i;],
-AC_DEFINE([HAVE_TIME_T_IN_TIME_H]))
+AC_MSG_CHECKING(for time_t in time.h)
+AC_CACHE_VAL(uucp_cv_decl_time_t_time_h,
+[AC_TRY_COMPILE([#include <time.h>], [time_t i;],
+uucp_cv_decl_time_t_time_h=yes, uucp_cv_decl_time_t_time_h=no)])
+AC_MSG_RESULT($uucp_cv_decl_time_t_time_h)
+if test $uucp_cv_decl_time_t_time_h = yes; then
+  AC_DEFINE([HAVE_TIME_T_IN_TIME_H])
+fi
 dnl
-AC_COMPILE_CHECK([time_t in sys/types.h],
-[#include <sys/types.h>], [time_t i;],
-AC_DEFINE([HAVE_TIME_T_IN_TYPES_H]))
+AC_MSG_CHECKING(time_t in sys/types.h)
+AC_CACHE_VAL(uucp_cv_decl_time_t_types_h,
+[AC_TRY_COMPILE([#include <sys/types.h>], [time_t i;],
+uucp_cv_decl_time_t_types_h=yes, uucp_cv_decl_time_t_types_h=no)])
+AC_MSG_RESULT($uucp_cv_decl_time_t_types_h)
+if test $uucp_cv_decl_time_t_types_h = yes; then
+  AC_DEFINE([HAVE_TIME_T_IN_TYPES_H])
+fi
 dnl
-AC_COMPILE_CHECK([void],
-[], [extern void foo (); (void) exit (0);],
-AC_DEFINE([HAVE_VOID]))
+AC_MSG_CHECKING(for void)
+AC_CACHE_VAL(uucp_cv_c_void,
+[AC_TRY_COMPILE([], [extern void foo (); (void) exit (0);],
+uucp_cv_c_void=yes, uucp_cv_c_void=no)])
+AC_MSG_RESULT($uucp_cv_c_void)
+if test $uucp_cv_c_void = yes; then
+  AC_DEFINE([HAVE_VOID])
+fi
 dnl
-AC_COMPILE_CHECK([unsigned char],
-[], [unsigned char i = (unsigned char) -1;],
-AC_DEFINE([HAVE_UNSIGNED_CHAR]))
+AC_MSG_CHECKING(for unsigned char)
+AC_CACHE_VAL(uucp_cv_c_unsigned_char,
+[AC_TRY_COMPILE([], [unsigned char i = (unsigned char) -1;],
+uucp_cv_c_unsigned_char=yes, uucp_cv_c_unsigned_char=no)])
+AC_MSG_RESULT($uucp_cv_c_unsigned_char)
+if test $uucp_cv_c_unsigned_char = yes; then
+  AC_DEFINE([HAVE_UNSIGNED_CHAR])
+fi
 dnl
-AC_COMPILE_CHECK([errno],
-[#include <errno.h>], [int i = errno; errno = 1;],
-AC_DEFINE([HAVE_ERRNO_DECLARATION]))
+AC_MSG_CHECKING(for errno declaration)
+AC_CACHE_VAL(uucp_cv_decl_errno,
+[AC_TRY_COMPILE([#include <errno.h>], [int i = errno; errno = 1;],
+uucp_cv_decl_errno=yes, uucp_cv_decl_errno=no)])
+AC_MSG_RESULT($uucp_cv_decl_errno)
+if test $uucp_cv_decl_errno = yes; then
+  AC_DEFINE([HAVE_ERRNO_DECLARATION])
+fi
 dnl
-AC_COMPILE_CHECK([TXADDCD],
-[#include <sys/ioctl.h>], [int i = (int) TXADDCD;],
-AC_DEFINE([HAVE_TXADDCD]))
+AC_MSG_CHECKING(for TXADDCD)
+AC_CACHE_VAL(uucp_cv_txaddcd,
+[AC_TRY_COMPILE([#include <sys/ioctl.h>], [int i = (int) TXADDCD;],
+uucp_cv_txaddcd=yes, uucp_cv_txaddcd=no)])
+AC_MSG_RESULT($uucp_cv_txaddcd)
+if test $uucp_cv_txaddcd = yes; then
+  AC_DEFINE([HAVE_TXADDCD])
+fi
 dnl
 undefine([index])
-AC_HAVE_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
-AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strtoul strstr)
-AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp)
-AC_HAVE_FUNCS(bsearch vfprintf)
-AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
-AC_HAVE_FUNCS(sigsetjmp setret sigaction sigvec sigset)
-AC_HAVE_FUNCS(sigprocmask sigblock sighold getdtablesize sysconf)
-AC_HAVE_FUNCS(setpgrp setsid setreuid gethostname uname)
-AC_HAVE_FUNCS(gettimeofday ftw glob dev_info)
+AC_CHECK_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
+AC_CHECK_FUNCS(strchr strrchr index rindex strerror strtol strtoul strstr)
+AC_CHECK_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp)
+AC_CHECK_FUNCS(bsearch vfprintf)
+AC_CHECK_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
+AC_CHECK_FUNCS(sigsetjmp setret sigaction sigvec sigset)
+AC_CHECK_FUNCS(sigprocmask sigblock sighold getdtablesize sysconf)
+AC_CHECK_FUNCS(setpgrp setsid setreuid gethostname uname)
+AC_CHECK_FUNCS(gettimeofday ftw glob dev_info)
 dnl Check for getline, but not in -linet, since ISC has an
 dnl incompatible version there.
 SAVELIBS="$LIBS"
 LIBS=`echo $LIBS | sed 's/-linet//'`
-AC_HAVE_FUNCS(getline)
+AC_CHECK_FUNCS(getline)
 LIBS="$SAVELIBS"
 dnl Check for the SCO buggy ftime; the code can cope with the bug,
 dnl though it would prefer not to, so if we're cross-configuring we
 dnl accept that ftime exists.
-AC_FUNC_CHECK(ftime,
-[AC_TEST_PROGRAM([
+AC_CHECK_FUNC(ftime,
+[AC_MSG_CHECKING(that ftime works correctly)
+AC_CACHE_VAL(uucp_cv_sys_ftime_ok,
+[AC_TRY_RUN([
 #include <sys/types.h>
 #include <sys/timeb.h>
 main ()
@@ -193,229 +300,204 @@ main ()
   exit (0);
 }
 ],
-AC_DEFINE(HAVE_FTIME),
-echo 1>&2 "Your ftime seems to be buggy",
-AC_DEFINE(HAVE_FTIME))])
-dnl
-AC_HAVE_FUNCS(times)
-AC_HAVE_FUNCS(napms nap usleep poll select)
-case $DEFS in
-*HAVE_NAPMS*) ;;
-*HAVE_NAP*)  ;;
-*HAVE_USLEEP*) ;;
-*HAVE_POLL*) ;;
-*HAVE_SELECT*) ;;
-*) echo 1>&2 'WARNING: No way to sleep for less than one second'
-   echo 1>&2 '         \p in chat scripts will sleep for a full second'
-   ;;
+uucp_cv_sys_ftime_ok=yes,
+uucp_cv_sys_ftime_ok=no,
+uucp_cv_sys_ftime_ok=runtime)])
+case $uucp_cv_sys_ftime_ok in
+yes) AC_DEFINE(HAVE_FTIME) AC_MSG_RESULT(yes) ;;
+no)  AC_MSG_RESULT(no) AC_MSG_WARN(ftime seems to be buggy) ;;
+runtime) AC_DEFINE(HAVE_FTIME) AC_MSG_RESULT(will check at run time) ;;
 esac
+])
 dnl
-AC_HAVE_FUNCS(getgrent)
+AC_CHECK_FUNCS(times)
+AC_CHECK_FUNCS(napms nap usleep poll select)
+if test $ac_cv_func_napms != yes \
+   && test $ac_cv_func_nap != yes \
+   && test $ac_cv_func_usleep != yes \
+   && test $ac_cv_func_poll != yes \
+   && test $ac_cv_func_select != yes; then
+  AC_MSG_WARN(No way to sleep for less than one second)
+  AC_MSG_WARN(\p in chat scripts will sleep for a full second)
+fi
 dnl
-changequote(,)dnl
-trfrom='[a-z]' trto='[A-Z]'
-changequote([,])dnl
-for i in socket t_open; do
-  def=HAVE_`echo $i|tr "$trfrom" "$trto"`
-  AC_FUNC_CHECK([$i],[AC_DEFINE($def)],[missing=1])dnl
-  for lib in "-lsocket" "-lnsl" "-lsocket -lnsl" "-lxti"; do
-    if test -n "$missing"; then
-      case $LIBS in
-      *${lib}*) ;;
-      *)
-	SAVELIBS="$LIBS"
-	LIBS="$LIBS $lib"
-	missing=
-	AC_COMPILE_CHECK([$i with $lib], , [extern char $i(); $i();],
-			 [AC_DEFINE($def)],
-			 [missing=1; LIBS="$SAVELIBS"])dnl
-	;;
-      esac
-    fi
-  done
-done
+AC_CHECK_FUNCS(getgrent)
 dnl
-AC_HAVE_FUNCS(getcwd getwd)
-case $DEFS in
-*HAVE_GETCWD*) ;;
-*HAVE_GETWD*) ;;
-*) UNIXOBJS="$UNIXOBJS getcwd.o"
-   if test -s /bin/pwd; then
-     AC_DEFINE([PWD_PROGRAM], "/bin/pwd")
-   fi ;;
+case $LIBS in
+*-lnsl*) ;;
+*) AC_CHECK_LIB(nsl, main) ;;
 esac
-dnl
-AC_HAVE_FUNCS(mkdir)
-case $DEFS in
-*HAVE_MKDIR*) UUDIR='# ' ;;
-*) UUDIR=
-   UNIXOBJS="$UNIXOBJS mkdir.o"
-   if test -s /bin/mkdir; then
-     AC_DEFINE([MKDIR_PROGRAM], "/bin/mkdir")
-   fi ;;
+case $LIBS in
+*-lsocket*) ;;
+*) AC_CHECK_LIB(socket, socket) ;;
 esac
+case $LIBS in
+*-lxti*) ;;
+*) AC_CHECK_LIB(xti, t_open);;
+esac
+AC_CHECK_FUNCS(socket t_open)
+dnl
+AC_CHECK_FUNCS(getcwd getwd)
+if test $ac_cv_func_getcwd != yes \
+   && test $ac_cv_func_getwd != yes; then
+  UNIXOBJS="$UNIXOBJS getcwd.o"
+  if test -s /bin/pwd; then
+    AC_DEFINE([PWD_PROGRAM], "/bin/pwd")
+  fi
+fi
+dnl
+AC_CHECK_FUNCS(mkdir)
+if test $ac_cv_func_mkdir = yes; then
+  UUDIR='# '
+else
+  UUDIR=
+  UNIXOBJS="$UNIXOBJS mkdir.o"
+  if test -s /bin/mkdir; then
+    AC_DEFINE([MKDIR_PROGRAM], "/bin/mkdir")
+  fi
+fi
 AC_SUBST(UUDIR)dnl
 dnl
-AC_HAVE_FUNCS(rmdir)
-case $DEFS in
-*HAVE_RMDIR*) ;;
-*) UNIXOBJS="$UNIXOBJS rmdir.o"
-   if test -s /bin/rmdir; then
-     AC_DEFINE([RMDIR_PROGRAM], "/bin/rmdir")
-   fi ;;
-esac
+AC_CHECK_FUNCS(rmdir)
+if test $ac_cv_func_rmdir != yes; then
+  UNIXOBJS="$UNIXOBJS rmdir.o"
+  if test -s /bin/rmdir; then
+    AC_DEFINE([RMDIR_PROGRAM], "/bin/rmdir")
+  fi
+fi
 dnl
 dnl Figure out which functions we need from lib subdirectory
-case $DEFS in
-*HAVE_BSEARCH*) ;;
-*) LIBOBJS="$LIBOBJS bsrch.o" ;;
-esac
-case $DEFS in
-*HAVE_BZERO*) ;;
-*HAVE_MEMSET*) ;;
-*) LIBOBJS="$LIBOBJS bzero.o" ;;
-esac
-case $DEFS in
-*HAVE_GETLINE*) ;;
-*) LIBOBJS="$LIBOBJS getlin.o" ;;
-esac
-case $DEFS in
-*HAVE_MEMCHR*) ;;
-*) LIBOBJS="$LIBOBJS memchr.o" ;;
-esac
-case $DEFS in
-*HAVE_MEMCMP*) ;;
-*HAVE_BCMP*) ;;
-*) LIBOBJS="$LIBOBJS memcmp.o" ;;
-esac
-case $DEFS in
-*HAVE_MEMCPY*) ;;
-*HAVE_BCOPY*) ;;
-*) LIBOBJS="$LIBOBJS memcpy.o" ;;
-esac
-case $DEFS in
-*HAVE_STRCASECMP*) ;;
-*HAVE_STRICMP*) ;;
-*) LIBOBJS="$LIBOBJS strcas.o" ;;
-esac
-case $DEFS in
-*HAVE_STRCHR*) ;;
-*HAVE_INDEX*) ;;
-*) LIBOBJS="$LIBOBJS strchr.o" ;;
-esac
-case $DEFS in
-*HAVE_STRDUP*) ;;
-*) LIBOBJS="$LIBOBJS strdup.o" ;;
-esac
-case $DEFS in
-*HAVE_STRNCASECMP*) ;;
-*HAVE_STRNICMP*) ;;
-*) LIBOBJS="$LIBOBJS strncs.o" ;;
-esac
-case $DEFS in
-*HAVE_STRRCHR*) ;;
-*HAVE_RINDEX*) ;;
-*) LIBOBJS="$LIBOBJS strrch.o" ;;
-esac
-case $DEFS in
-*HAVE_STRSTR*) ;;
-*) LIBOBJS="$LIBOBJS strstr.o" ;;
-esac
-case $DEFS in
-*HAVE_STRTOL*) ;;
-*) LIBOBJS="$LIBOBJS strtol.o" ;;
-esac
-case $DEFS in
-*HAVE_STRTOUL*) ;;
-*) LIBOBJS="$LIBOBJS strtou.o" ;;
-esac
+if test $ac_cv_func_bsearch != yes; then
+  LIBOBJS="$LIBOBJS bsrch.o"
+fi
+if test $ac_cv_func_bzero != yes \
+   && test $ac_cv_func_memset != yes; then
+  LIBOBJS="$LIBOBJS bzero.o"
+fi
+if test $ac_cv_func_getline != yes; then
+  LIBOBJS="$LIBOBJS getlin.o"
+fi
+if test $ac_cv_func_memchr != yes; then
+  LIBOBJS="$LIBOBJS memchr.o"
+fi
+if test $ac_cv_func_memcmp != yes \
+   && test $ac_cv_func_bcmp != yes; then
+  LIBOBJS="$LIBOBJS memcmp.o"
+fi
+if test $ac_cv_func_memcpy != yes \
+   && test $ac_cv_func_bcopy != yes; then
+  LIBOBJS="$LIBOBJS memcpy.o"
+fi
+if test $ac_cv_func_strcasecmp != yes \
+   && test $ac_cv_func_stricmp != yes; then
+  LIBOBJS="$LIBOBJS strcas.o"
+fi
+if test $ac_cv_func_strchr != yes \
+   && test $ac_cv_func_index != yes; then
+  LIBOBJS="$LIBOBJS strchr.o"
+fi
+if test $ac_cv_func_strdup != yes; then
+  LIBOBJS="$LIBOBJS strdup.o"
+fi
+if test $ac_cv_func_strncasecmp != yes \
+   && test $ac_cv_func_strnicmp != yes; then
+  LIBOBJS="$LIBOBJS strncs.o"
+fi
+if test $ac_cv_func_strrchr != yes \
+   && test $ac_cv_func_rindex != yes; then
+  LIBOBJS="$LIBOBJS strrch.o"
+fi
+if test $ac_cv_func_strstr != yes; then
+  LIBOBJS="$LIBOBJS strstr.o"
+fi
+if test $ac_cv_func_strtol != yes; then
+  LIBOBJS="$LIBOBJS strtol.o"
+fi
+if test $ac_cv_func_strtoul != yes; then
+  LIBOBJS="$LIBOBJS strtou.o"
+fi
 AC_SUBST(LIBOBJS)dnl
 dnl Figure out which functions we need from unix subdirectory
-case $DEFS in
-*HAVE_OPENDIR*) ;;
-*) UNIXOBJS="$UNIXOBJS dirent.o" ;;
-esac
-case $DEFS in
-*HAVE_DUP2*) ;;
-*) UNIXOBJS="$UNIXOBJS dup2.o" ;;
-esac
-case $DEFS in
-*HAVE_FTW=*) ;;
-*) UNIXOBJS="$UNIXOBJS ftw.o" ;;
-esac
-case $DEFS in
-*HAVE_REMOVE*) ;;
-*) UNIXOBJS="$UNIXOBJS remove.o" ;;
-esac
-case $DEFS in
-*HAVE_RENAME*) ;;
-*) UNIXOBJS="$UNIXOBJS rename.o" ;;
-esac
-case $DEFS in
-*HAVE_STRERROR*) ;;
-*) UNIXOBJS="$UNIXOBJS strerr.o" ;;
-esac
+if test $ac_cv_func_opendir != yes; then
+  UNIXOBJS="$UNIXOBJS dirent.o"
+fi
+if test $ac_cv_func_dup2 != yes; then
+  UNIXOBJS="$UNIXOBJS dup2.o"
+fi
+if test $ac_cv_func_ftw != yes; then
+  UNIXOBJS="$UNIXOBJS ftw.o"
+fi
+if test $ac_cv_func_remove != yes; then
+  UNIXOBJS="$UNIXOBJS remove.o"
+fi
+if test $ac_cv_func_rename != yes; then
+  UNIXOBJS="$UNIXOBJS rename.o"
+fi
+if test $ac_cv_func_strerror != yes; then
+  UNIXOBJS="$UNIXOBJS strerr.o"
+fi
 AC_SUBST(UNIXOBJS)
 dnl
-case $DEFS in
-*HAVE_SIGVEC*)
-  AC_COMPILE_CHECK([sv_flags],
-  [#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
-  AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])) ;;
-esac
+if test $ac_cv_func_sigvec = yes; then
+  AC_MSG_CHECKING(for sv_flags)
+  AC_CACHE_VAL(uucp_cv_struct_sv_flags,
+  [AC_TRY_COMPILE([#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
+  uucp_cv_struct_sv_flags=yes, uucp_cv_struct_sv_flags=no)])
+  AC_MSG_RESULT($uucp_cv_struct_sv_flags)
+  if test $uucp_cv_struct_sv_flags = yes; then
+    AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])
+  fi
+fi
 dnl
 dnl The filesystem info code is from David MacKenzie's fileutils 3.4
 dnl package.
-echo checking how to get filesystem space usage
 # SVR4
-AC_HEADER_CHECK(sys/statvfs.h,
-  [AC_FUNC_CHECK(statvfs, AC_DEFINE(STAT_STATVFS) space=1)])
+AC_CHECK_HEADER(sys/statvfs.h,
+  [AC_CHECK_FUNC(statvfs, AC_DEFINE(STAT_STATVFS) space=1)])
 if test -z "$space"; then
-  AC_FUNC_CHECK(statfs, [dnl
+  AC_CHECK_FUNC(statfs, [dnl
     # AIX
-    AC_HEADER_EGREP(f_nlsdirtype, sys/statfs.h, 
+    AC_EGREP_HEADER(f_nlsdirtype, sys/statfs.h, 
       AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
     if test -z "$space"; then
       # SVR3
-      AC_HEADER_CHECK(sys/statfs.h, AC_DEFINE(STAT_STATFS4) space=1)
+      AC_CHECK_HEADER(sys/statfs.h, AC_DEFINE(STAT_STATFS4) space=1)
     fi
     if test -z "$space"; then
       # 4.3BSD
-      AC_HEADER_CHECK(sys/vfs.h, AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
+      AC_CHECK_HEADER(sys/vfs.h, AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
     fi
     if test -z "$space"; then
       # 4.4BSD
-      AC_PROGRAM_EGREP(found_mount_ufs, [#include <sys/mount.h>
+      AC_EGREP_CPP(found_mount_ufs, [#include <sys/mount.h>
 #ifdef MOUNT_UFS
 found_mount_ufs
 #endif],AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
     fi
     if test -z "$space"; then
       # Ultrix
-      AC_HEADER_CHECK(sys/mount.h, AC_DEFINE(STAT_STATFS2_FS_DATA) space=1)
+      AC_CHECK_HEADER(sys/mount.h, AC_DEFINE(STAT_STATFS2_FS_DATA) space=1)
     fi
   ])dnl
 fi
 if test -z "$space"; then
   # AIX PS/2
-  AC_HEADER_CHECK(sys/dustat.h,
-    [AC_FUNC_CHECK(dustat, AC_DEFINE(STAT_DUSTAT) space=1)])
+  AC_CHECK_HEADER(sys/dustat.h,
+    [AC_CHECK_FUNC(dustat, AC_DEFINE(STAT_DUSTAT) space=1)])
 fi
 if test -z "$space"; then
-  AC_FUNC_CHECK(ustat, AC_DEFINE(STAT_USTAT) space=1)
+  AC_CHECK_FUNC(ustat, AC_DEFINE(STAT_USTAT) space=1)
 fi
 if test -z "$space"; then
   # QNX
-  AC_FUNC_CHECK(disk_space, AC_DEFINE(STAT_DISK_SPACE) space=1)
+  AC_CHECK_FUNC(disk_space, AC_DEFINE(STAT_DISK_SPACE) space=1)
 fi
 dnl
 dnl See whether we can make an extern declaration
-define(ILT_CHECK_DECLARATION,
-[changequote(,)dnl
-trfrom='[a-z]' trto='[A-Z]'
-changequote([,])dnl
-AC_COMPILE_CHECK([$1 declared as "$2"],
-[#include <sys/types.h>
+AC_DEFUN(UUCP_CHECK_DECLARATION,
+[AC_MSG_CHECKING(for $1 declared as $2)
+AC_CACHE_VAL(uucp_cv_decl_$1,
+[AC_TRY_COMPILE([#include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
 #ifdef HAVE_LIBC_H
@@ -424,35 +506,55 @@ AC_COMPILE_CHECK([$1 declared as "$2"],
 #ifdef HAVE_SYS_TIMES_H
 #include <sys/times.h>
 #endif
-extern $2 $1 ();], ,
-AC_DEFINE(`echo $1 | tr "$trfrom" "$trto"`_DECLARATION_OK))])
+extern $2 $1 ();], [int i = 0;],
+eval "uucp_cv_decl_$1=yes", eval "uucp_cv_decl_$1=no")])
+if eval "test \"`echo '$uucp_cv_decl_'$1`\" = yes"; then
+  AC_MSG_RESULT(yes)
+changequote(, )dnl
+  uucp_tr_decl=`echo $1 | tr '[a-z]' '[A-Z]'`_DECLARATION_OK
+changequote([, ])dnl
+  AC_DEFINE_UNQUOTED($uucp_tr_decl)
+else
+  AC_MSG_RESULT(no)
+fi
+])
 dnl
-ILT_CHECK_DECLARATION(times, long)
-ILT_CHECK_DECLARATION(getpwnam, struct passwd *)
-ILT_CHECK_DECLARATION(getpwuid, struct passwd *)
-ILT_CHECK_DECLARATION(getgrent, struct group *)
+UUCP_CHECK_DECLARATION(times, long)
+UUCP_CHECK_DECLARATION(getpwnam, struct passwd *)
+UUCP_CHECK_DECLARATION(getpwuid, struct passwd *)
+UUCP_CHECK_DECLARATION(getgrent, struct group *)
 dnl
-AC_COMPILE_CHECK([BSD setpgrp],
-[#ifdef HAVE_UNISTD_H
+AC_MSG_CHECKING(for BSD setpgrp)
+AC_CACHE_VAL(uucp_cv_decl_setpgrp,
+[AC_TRY_COMPILE([#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif],
 [getpgrp (0); setpgrp (0, 0);],
-AC_DEFINE([HAVE_BSD_PGRP]))
+uucp_cv_decl_setpgrp=yes, uucp_cv_decl_setpgrp=no)])
+AC_MSG_RESULT($uucp_cv_decl_setpgrp)
+if test $uucp_cv_decl_setpgrp = yes; then
+  AC_DEFINE([HAVE_BSD_PGRP])
+fi
 dnl
-AC_COMPILE_CHECK([union wait],
-[#include <sys/wait.h>
+AC_MSG_CHECKING(for union wait)
+AC_CACHE_VAL(uucp_cv_struct_wait,
+[AC_TRY_COMPILE([#include <sys/wait.h>
 #ifndef WIFEXITED
 #define WIFEXITED(u) ((u).w_termsig == 0)
 #endif],
 [union wait u; if (WIFEXITED (u)) wait (&u);],
-AC_DEFINE([HAVE_UNION_WAIT]))
+uucp_cv_struct_wait=yes, uucp_cv_struct_wait=no)])
+AC_MSG_RESULT($uucp_cv_struct_wait)
+if test $uucp_cv_struct_wait = yes; then
+  AC_DEFINE([HAVE_UNION_WAIT])
+fi
 dnl
-if test -n "$cross_compiling"; then
+if test "$cross_compiling" = yes; then
  AC_DEFINE([HAVE_LONG_FILE_NAMES], [0])
  AC_DEFINE([HAVE_RESTARTABLE_SYSCALLS], [-1])
 else
- AC_RESTARTABLE_SYSCALLS
- AC_LONG_FILE_NAMES
+ AC_SYS_RESTARTABLE_SYSCALLS
+ AC_SYS_LONG_FILE_NAMES
 fi
 dnl
 AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)
