@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/11/12  19:47:04  ian
+   Add called-chat set of commands to run a chat script on an incoming call
+
    Revision 1.9  1991/11/11  23:47:24  ian
    Added chat-program to run a program to do a chat script
 
@@ -707,8 +710,15 @@ extern char *strdup P((const char *z));
 extern char *strstr P((const char *zouter, const char *zinner));
 #endif
 
-#if ! HAVE_STRCASECMP
-/* Case insensitive string comparisons.  */
+#if HAVE_STRICMP
+/* Use macros to access stricmp and strnicmp as strcasecmp and
+   strncasecmp.  */
+#define strcasecmp stricmp
+#define strncasecmp strnicmp
+#endif
+
+#if ! HAVE_STRCASECMP && ! HAVE_STRICMP
+/* Use our own case insensitive string comparisons.  */
 extern int strcasecmp P((const char *z1, const char *z2));
 extern int strncasecmp P((const char *z1, const char *z2, int clen));
 #endif
