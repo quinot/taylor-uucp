@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/01/13  05:37:20  ian
+   Mike Park: use IPUBLIC_DIRECTORY_MODE rather than S_ macros
+
    Revision 1.28  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -186,6 +189,13 @@ char tstuu_rcsid[] = "$Id$";
 #define CLK_TCK (60)
 #endif
 
+/* Get a type to cast waitpid arguments to.  */
+#ifdef HAVE_UNION_WAIT
+typedef union wait wait_t;
+#else
+typedef int wait_t;
+#endif
+
 #define ZUUCICO_CMD "login uucp"
 #define UUCICO_EXECL "/bin/login", "login", "uucp"
 
@@ -196,8 +206,16 @@ extern int read (), write (), unlink (), open (), kill (), fcntl ();
 extern int mkdir ();
 extern int fclose (), fflush (), rand ();
 extern unsigned int sleep ();
-extern pid_t fork (), waitpid ();
+extern pid_t fork ();
 extern clock_t times ();
+
+#if HAVE_WAITPID
+extern pid_t waitpid ();
+#endif
+
+#if HAVE_WAIT4
+extern pid_t wait4 ();
+#endif
 
 #if ! HAVE_REMOVE
 #define remove unlink
@@ -558,17 +576,29 @@ uchild (isig)
   (void) kill (iPid2, SIGTERM);
 
   (void) times (&sbase);
-#if HAVE_UNION_WAIT
-  (void) waitpid (iPid1, (union wait *) NULL, 0);
-#else
-  (void) waitpid (iPid1, (int *) NULL, 0);
+
+#if HAVE_WAITPID
+  (void) waitpid (iPid1, (wait_t *) NULL, 0);
 #endif
+#if HAVE_WAIT4
+  (void) wait4 (iPid1, (wait_t *) NULL, 0, (struct rusage *) NULL);
+#endif
+#if ! HAVE_WAITPID  &&  ! HAVE_WAIT4
+  (void) wait ((wait_t *) NULL);
+#endif
+
   (void) times (&s1);
-#if HAVE_UNION_WAIT
-  (void) waitpid (iPid2, (union wait *) NULL, 0);
-#else
-  (void) waitpid (iPid2, (int *) NULL, 0);
+
+#if HAVE_WAITPID
+  (void) waitpid (iPid2, (wait_t *) NULL, 0);
 #endif
+#if HAVE_WAIT4
+  (void) wait4 (iPid2, (wait_t *) NULL, 0, (struct rusage *) NULL);
+#endif
+#if ! HAVE_WAITPID  &&  ! HAVE_WAIT4
+  (void) wait ((wait_t *) NULL);
+#endif
+
   (void) times (&s2);
 
   fprintf (stderr,

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/01/11  17:11:11  ian
+   Hannu Strang: avoid compiler bug by not using -> in address constant
+
    Revision 1.21  1992/01/04  21:43:24  ian
    Chip Salzenberg: added ALLOW_FILENAME_ARGUMENTS to permit them
 
@@ -410,6 +413,14 @@
    such systems, set HAVE_UNION_WAIT to 1.  Note that on a POSIX
    system, HAVE_UNION_WAIT should be 0.  */
 #define HAVE_UNION_WAIT 0
+
+/* If you have the POSIX waitpid system call, set HAVE_WAITPID to 1.
+   If you have the wait4 system call, which also lets you specify a
+   particular pid to wait for, set HAVE_WAIT4 to 1.  These are only
+   used by the tstuu test program, and even for that setting them to
+   both 0 will not have seriously bad effects.  */
+#define HAVE_WAITPID 1
+#define HAVE_WAIT4 0
 
 /* The default amount of free space to require for systems that do
    not specify an amount with the ``free-space'' command.  */
