@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.11  1991/12/17  23:14:08  ian
    T. William Wells: allow dialer complete and abort to be chat scripts
 
@@ -72,6 +75,9 @@ char uuchk_rcsid[] = "$Id$";
 #include "port.h"
 #include "system.h"
 #include "sysdep.h"
+
+/* External functions.  */
+extern int strcmp (), strcasecmp ();
 
 /* Program name.  */
 const char abProgram[] = "uuchk";
