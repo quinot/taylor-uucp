@@ -334,6 +334,8 @@ uuconf_hdb_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 
 	  qport->uuconf_palloc = pblock;
 
+	  iret = UUCONF_SUCCESS;
+
 	  break;
 	}
 
