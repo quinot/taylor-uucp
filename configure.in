@@ -85,8 +85,8 @@ ILT_LIBTHING_CHECK([sig_atomic_t in signal.h],
    <signal.h> as required by ANSI C.  */])
 ILT_LIBTHING_CHECK([sig_atomic_t in sys/types.h],
 [#include <sys/types.h>], [sig_atomic_t x;],
-[HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H],
-[/* Set HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H if sig_atomic_t is defined in
+[HAVE_SIG_ATOMIC_T_IN_TYPES_H],
+[/* Set HAVE_SIG_ATOMIC_T_IN_TYPES_H if sig_atomic_t is defined in
    <sys/types.h>.  */])
 ILT_HEADER_COMMENT([/* If sig_atomic_t is not defined in <signal.h> or <sys/types.h>, you can
    give it a definition here.  */])

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.58  1992/03/16  23:44:56  ian
+   Sometimes sig_atomic_t is in <sys/types.h> but not <signal.h>
+
    Revision 1.57  1992/03/15  04:51:17  ian
    Keep an array of signals we've received rather than a single variable
 
@@ -235,14 +238,14 @@
 /* On some systems that won't get us sig_atomic_t.  */
 
 #if ! HAVE_SIG_ATOMIC_T_IN_SIGNAL_H
-#if HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H
+#if HAVE_SIG_ATOMIC_T_IN_TYPES_H
 #include <sys/types.h>
-#else /* ! HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H */
+#else /* ! HAVE_SIG_ATOMIC_T_IN_TYPES_H */
 #ifndef sig_atomic_t
 /* There is no portable definition for sig_atomic_t.  */
 #define sig_atomic_t char
 #endif /* ! defined (sig_atomic_t) */
-#endif /* ! HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H */
+#endif /* ! HAVE_SIG_ATOMIC_T_IN_TYPES_H */
 #endif /* ! HAVE_SIG_ATOMIC_T_IN_SIGNAL_H */
 
 /* Get a definition for ANSI_C if we weren't given one.  */
