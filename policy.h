@@ -201,6 +201,7 @@
    systems the lock files are placed in /etc/locks.  On some they are
    placed in /usr/spool/locks.  On the NeXT they are placed in
    /usr/spool/uucp/LCK.  */
+/* #define LOCKDIR "/usr/spool/uucp" */
 /* #define LOCKDIR "/etc/locks" */
 /* #define LOCKDIR "/usr/spool/locks" */
 /* #define LOCKDIR "/usr/spool/uucp/LCK" */
