@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.86  1992/03/28  04:45:31  ian
+   Mark E. Mallett: minor cleanup
+
    Revision 1.85  1992/03/17  18:42:21  ian
    T. William Wells: set current time in status file when call completes
 
@@ -2257,6 +2260,17 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
       (void) alloca (0);
 #endif
 
+#if DEBUG > 1
+      /* If we're doing any debugging, close the log and debugging
+	 files regularly.  This will let people copy them off and
+	 remove them while the conversation is in progresss.  */
+      if (iDebug != 0)
+	{
+	  ulog_close ();
+	  ustats_close ();
+	}
+#endif
+
       /* We send a command to the remote system if
 	 we are the master or
 	 this is full duplex protocol which is ready for a command and
@@ -2624,6 +2638,12 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		    }
 
 		  fmaster = FALSE;
+
+		  /* Close the log file at every master/slave switch.
+		     This will cut down on the amount of time we have
+		     an old log file open.  */
+		  ulog_close ();
+		  ustats_close ();
 		}
 	      break;
 
@@ -2862,6 +2882,11 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		     the time might have changed significantly.  */
 		  clocal_size = cmax_size_now (zlocal_size);
 		  cremote_size = cmax_size_now (zremote_size);
+
+		  /* Close the log file at every switch of master and
+		     slave.  */
+		  ulog_close ();
+		  ustats_close ();
 		}
 	      else
 		{

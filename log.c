@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.26  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -170,10 +173,16 @@ static FILE *eLdebug;
 
 /* Whether we've tried to open the debugging file.  */
 static boolean fLdebug_tried;
+
+/* Whether we've written out any debugging information.  */
+static boolean fLdebugging;
 #endif
 
 /* The open statistics file.  */
 static FILE *eLstats;
+
+/* Whether we've tried to open the statistics file.  */
+static boolean fLstats_tried;
 
 /* The array of signals.  The elements are only set to TRUE by the
    default signal handler.  They are only set to FALSE if we don't
@@ -309,7 +318,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   const char *zhdr, *zstr;
 
   /* Log any received signal.  We do it this way to avoid calling ulog
-     from the signal handler.  ulog_close might call ulog to get this
+     from the signal handler.  A few routines call ulog to get this
      message out with zmsg == NULL.  */
   {
     static boolean fdoing_sigs;
@@ -334,16 +343,26 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (zmsg == NULL)
     return;
 
+#if DEBUG > 1
+  /* If we've had a debugging file open in the past, then we want to
+     write all log file entries to the debugging file even if it's
+     currently closed.  */
+  if (fLfile
+      && eLdebug == NULL
+      && ! fLdebug_tried
+      && (fLdebugging || (int) ttype >= (int) LOG_DEBUG))
+    {
+      fLdebug_tried = TRUE;
+      eLdebug = esysdep_fopen (zDebugfile, FALSE, TRUE, TRUE);
+      fLdebugging = TRUE;
+    }
+#endif /* DEBUG > 1 */
+
   if (! fLfile)
     e = stderr;
 #if DEBUG > 1
   else if ((int) ttype >= (int) LOG_DEBUG)
     {
-      if (eLdebug == NULL && ! fLdebug_tried)
-	{
-	  fLdebug_tried = TRUE;
-	  eLdebug = esysdep_fopen (zDebugfile, FALSE, TRUE, TRUE);
-	}
       e = eLdebug;
 
       /* If we can't open the debugging file, don't output any
@@ -364,10 +383,8 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    const char *zsys;
 	    char *zfile;
 
-	    /* We want to write to .Log/program/system, e.g.
-	       .Log/uucico/uunet.  The system name may not be set yet;
-	       the program name must be set because we just checked it
-	       above.  */
+	    /* We want to write to .Log/program/system, e.g.  	
+	       .Log/uucico/uunet.  The system name may not be set.  */
 	    if (zLsystem == NULL)
 	      zsys = "ANY";
 	    else
@@ -549,6 +566,13 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	(*fLfatal) ();
       usysdep_exit (FALSE);
     }
+
+#if 0
+  /* If you want to close and reopen the log file after every write,
+     change that 0 to a 1.  Perhaps I will make this an official
+     configuration option someday.  */
+  ulog_close ();
+#endif
 }
 
 /* Close the log file.  There's nothing useful we can do with errors,
@@ -557,17 +581,8 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 void
 ulog_close ()
 {
-  int i;
-
   /* Make sure we logged any signal we received.  */
-  for (i = 0; i < INDEXSIG_COUNT; i++)
-    {
-      if (afLog_signal[i])
-	{
-	  ulog (LOG_ERROR, (const char *) NULL);
-	  break;
-	}
-    }
+  ulog (LOG_ERROR, (const char *) NULL);
 
   if (eLlog != NULL)
     {
@@ -610,11 +625,9 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 
   if (eLstats == NULL)
     {
-      static boolean ftried;
-
-      if (ftried)
+      if (fLstats_tried)
 	return;
-      ftried = TRUE;
+      fLstats_tried = TRUE;
       eLstats = esysdep_fopen (zStatfile, TRUE, TRUE, TRUE);
       if (eLstats == NULL)
 	return;
@@ -675,6 +688,7 @@ ustats_close ()
       if (fclose (eLstats) != 0)
 	ulog (LOG_ERROR, "fclose: %s", strerror (errno));
       eLstats = NULL;
+      fLstats_tried = FALSE;
     }
 }
 
