@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.10  1992/01/16  18:16:58  ian
    Niels Baggesen: add some debugging messages
 
@@ -111,6 +114,9 @@ ftstart (fmaster)
   if (! fport_set (PORTSETTING_EIGHT))
     return FALSE;
   zTbuf = (char *) xmalloc (CTBUFSIZE + CTFRAMELEN);
+  /* The first two bytes of the buffer are always zero.  */
+  zTbuf[0] = 0;
+  zTbuf[1] = 0;
   fTfile = FALSE;
   usysdep_sleep (2);
   return TRUE;
@@ -176,11 +182,14 @@ ftsenddata (zdata, cdata)
      char *zdata;
      int cdata;
 {
-  /* Here we do htonl by hand, since it doesn't exist everywhere.  */
-  zdata[-4] = (cdata >> 24) & 0xff;
-  zdata[-3] = (cdata >> 16) & 0xff;
-  zdata[-2] = (cdata >>  8) & 0xff;
-  zdata[-1] =  cdata        & 0xff;
+  /* Here we do htonl by hand, since it doesn't exist everywhere.  We
+     know that the amount of data cannot be greater than CTBUFSIZE, so
+     the first two bytes of this value will always be 0.  They were
+     set to 0 in ftstart so we don't touch them here.  This is useful
+     because we cannot portably right shift by 24 or 16, since we
+     might be dealing with sixteen bit integers.  */
+  zdata[-2] = (cdata >> 8) & 0xff;
+  zdata[-1] = cdata & 0xff;
 
   /* We pass FALSE to fsend_data since we don't expect the other side
      to be sending us anything just now.  */
