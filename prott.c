@@ -76,9 +76,11 @@ static boolean ftprocess_data P((struct sdaemon *qdaemon, boolean *pfexit,
 /* Start the protocol.  */
 
 boolean
-ftstart (qdaemon)
+ftstart (qdaemon, pzlog)
      struct sdaemon *qdaemon;
+     char **pzlog;
 {
+  *pzlog = NULL;
   if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
 		   STRIPSETTING_EIGHTBITS, XONXOFF_OFF))
     return FALSE;

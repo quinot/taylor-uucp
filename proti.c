@@ -345,13 +345,16 @@ static boolean fiprocess_packet P((struct sdaemon *qdaemon,
    maximum window size we want to use.  */
 
 boolean
-fistart (qdaemon)
+fistart (qdaemon, pzlog)
      struct sdaemon *qdaemon;
+     char **pzlog;
 {
   char ab[CHDRLEN + 3 + CCKSUMLEN];
   unsigned long icksum;
   int ctries;
   int csyncs;
+
+  *pzlog = NULL;
 
   if (iIforced_remote_packsize <= 0
       || iIforced_remote_packsize >= IMAXPACKSIZE)
@@ -451,7 +454,10 @@ fistart (qdaemon)
 
       if (iseq >= IMAXSEQ)
 	{
-	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fistart: Protocol started");
+	  *pzlog = zbufalc (sizeof "protocol 'i' packet size %d window %d"
+			    + 50);
+	  sprintf (*pzlog, "protocol 'i' packet size %d window %d",
+		   (int) iIremote_packsize, (int) iIremote_winsize);
 
 	  return TRUE;
 	}

@@ -376,12 +376,15 @@ static int igchecksum2 P((const char *zfirst, size_t cfirst,
    INITB packet contains the packet size.  */
 
 boolean
-fgstart (qdaemon)
+fgstart (qdaemon, pzlog)
      struct sdaemon *qdaemon;
+     char **pzlog;
 {
   int iseg;
   int i;
   boolean fgota, fgotb;
+
+  *pzlog = NULL;
 
   /* The 'g' protocol requires a full eight bit interface.  */
   if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
@@ -456,12 +459,10 @@ fgstart (qdaemon)
 
       /* We have succesfully connected.  Determine the remote packet
 	 size.  */
-
       iGremote_packsize = 1 << (iGremote_segsize + 5);
 
       /* If the user requested us to force specific remote window and
 	 packet sizes, do so now.  */
-
       if (iGforced_remote_winsize > 0
 	  && iGforced_remote_winsize <= CMAXWINDOW)
 	iGremote_winsize = iGforced_remote_winsize;
@@ -485,9 +486,10 @@ fgstart (qdaemon)
       if (! fginit_sendbuffers (TRUE))
 	return FALSE;
 
-      DEBUG_MESSAGE2 (DEBUG_PROTO,
-		      "fgstart: Protocol started; packsize %d, winsize %d",
-		      (int) iGremote_packsize, iGremote_winsize);
+      *pzlog = zbufalc (sizeof "protocol '' packet size  window " + 50);
+      sprintf (*pzlog, "protocol '%c' packet size %d window %d",
+	       qdaemon->qproto->bname, (int) iGremote_packsize,
+	       (int) iGremote_winsize);
 
       return TRUE;
     }
@@ -502,11 +504,12 @@ fgstart (qdaemon)
    short packets are never supported.  */
 
 boolean
-fbiggstart (qdaemon)
+fbiggstart (qdaemon, pzlog)
      struct sdaemon *qdaemon;
+     char **pzlog;
 {
   fGshort_packets = FALSE;
-  return fgstart (qdaemon);
+  return fgstart (qdaemon, pzlog);
 }
 
 /* Exchange initialization messages with the other system.

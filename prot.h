@@ -51,8 +51,10 @@ struct sprotocol
   int cchans;
   /* Protocol parameter commands.  */
   struct uuconf_cmdtab *qcmds;
-  /* A routine to start the protocol.  */
-  boolean (*pfstart) P((struct sdaemon *qdaemon));
+  /* A routine to start the protocol.  If *pzlog is set to be
+     non-NULL, it is an informative message to be logged; it should
+     then be passed to ubuffree.  */
+  boolean (*pfstart) P((struct sdaemon *qdaemon, char **pzlog));
   /* Shutdown the protocol.  */
   boolean (*pfshutdown) P((struct sdaemon *qdaemon));
   /* Send a command to the other side.  */
@@ -128,8 +130,8 @@ extern int iPrecend;
 /* Prototypes for 'g' protocol functions.  */
 
 extern struct uuconf_cmdtab asGproto_params[];
-extern boolean fgstart P((struct sdaemon *qdaemon));
-extern boolean fbiggstart P((struct sdaemon *qdaemon));
+extern boolean fgstart P((struct sdaemon *qdaemon, char **pzlog));
+extern boolean fbiggstart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean fgshutdown P((struct sdaemon *qdaemon));
 extern boolean fgsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
@@ -141,7 +143,7 @@ extern boolean fgwait P((struct sdaemon *qdaemon));
 /* Prototypes for 'f' protocol functions.  */
 
 extern struct uuconf_cmdtab asFproto_params[];
-extern boolean ffstart P((struct sdaemon *qdaemon));
+extern boolean ffstart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean ffshutdown P((struct sdaemon *qdaemon));
 extern boolean ffsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
@@ -156,7 +158,7 @@ extern boolean fffile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 /* Prototypes for 't' protocol functions.  */
 
 extern struct uuconf_cmdtab asTproto_params[];
-extern boolean ftstart P((struct sdaemon *qdaemon));
+extern boolean ftstart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean ftshutdown P((struct sdaemon *qdaemon));
 extern boolean ftsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
@@ -171,7 +173,7 @@ extern boolean ftfile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 /* Prototypes for 'e' protocol functions.  */
 
 extern struct uuconf_cmdtab asEproto_params[];
-extern boolean festart P((struct sdaemon *qdaemon));
+extern boolean festart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean feshutdown P((struct sdaemon *qdaemon));
 extern boolean fesendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
@@ -186,7 +188,7 @@ extern boolean fefile P((struct sdaemon *qdaemon, struct stransfer *qtrans,
 /* Prototypes for 'i' protocol functions.  */
 
 extern struct uuconf_cmdtab asIproto_params[];
-extern boolean fistart P((struct sdaemon *qdaemon));
+extern boolean fistart P((struct sdaemon *qdaemon, char **pzlog));
 extern boolean fishutdown P((struct sdaemon *qdaemon));
 extern boolean fisendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));

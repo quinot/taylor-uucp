@@ -998,6 +998,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   int iuuconf;
   char *zstr;
   long istart_time;
+  char *zlog;
 
   puuconf = qdaemon->puuconf;
   qsys = qdaemon->qsys;
@@ -1319,11 +1320,15 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     }
 
   /* Turn on the selected protocol.  */
-  if (! (*qdaemon->qproto->pfstart) (qdaemon))
+  if (! (*qdaemon->qproto->pfstart) (qdaemon, &zlog))
     return FALSE;
-
-  /* Now we have succesfully logged in as the master.  */
-  ulog (LOG_NORMAL, "Handshake successful");
+  if (zlog == NULL)
+    {
+      zlog = zbufalc (sizeof "protocol ''" + 1);
+      sprintf (zlog, "protocol '%c'", qdaemon->qproto->bname);
+    }
+  ulog (LOG_NORMAL, "Handshake successful (%s)", zlog);
+  ubuffree (zlog);
 
   *pterr = STATUS_FAILED;
 
@@ -1487,6 +1492,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   struct sstatus sstat;
   boolean fgotseq, fgotn, fgotnval;
   int i;
+  char *zlog;
+  char *zgrade;
 
   if (pzsystem != NULL)
     *pzsystem = NULL;
@@ -2059,7 +2066,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   /* Get any jobs queued for the system, and turn on the selected
      protocol.  */
   if (! fqueue (&sdaem, (boolean *) NULL)
-      || ! (*sdaem.qproto->pfstart) (&sdaem))
+      || ! (*sdaem.qproto->pfstart) (&sdaem, &zlog))
     {
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = isysdep_time ((long *) NULL);
@@ -2067,26 +2074,33 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
+  if (zlog == NULL)
+    {
+      zlog = zbufalc (sizeof "protocol ''" + 1);
+      sprintf (zlog, "protocol '%c'", sdaem.qproto->bname);
+    }
+
+  zgrade = zbufalc (sizeof "grade  " + 1);
+  if (sdaem.bgrade == UUCONF_GRADE_LOW)
+    *zgrade = '\0';
+  else
+    sprintf (zgrade, "grade %c ", sdaem.bgrade);
+
   /* If we using HAVE_HDB_LOGGING, then the previous ``incoming call''
      message went to the general log, since we didn't know the system
      name at that point.  In that case, we repeat the port and login
      names.  */
 #if HAVE_HDB_LOGGING
-  if (sdaem.bgrade == BGRADE_LOW)
-    ulog (LOG_NORMAL, "Handshake successful (login %s port %s)",
-	  zlogin,
-	  zLdevice == NULL ? "unknown" : zLdevice);
-  else
-    ulog (LOG_NORMAL, "Handshake successful (login %s port %s grade %c)",
-	  zlogin,
-	  zLdevice == NULL ? "unknown" : zLdevice,
-	  sdaem.bgrade);
+  ulog (LOG_NORMAL, "Handshake successful (login %s port %s %s%s)",
+	zlogin,
+	zLdevice == NULL ? "unknown" : zLdevice,
+	zgrade, zlog);
 #else /* ! HAVE_HDB_LOGGING */
-  if (sdaem.bgrade == UUCONF_GRADE_LOW)
-    ulog (LOG_NORMAL, "Handshake successful");
-  else
-    ulog (LOG_NORMAL, "Handshake successful (grade %c)", sdaem.bgrade);
+  ulog (LOG_NORMAL, "Handshake successful (%s%s)", zgrade, zlog);
 #endif /* ! HAVE_HDB_LOGGING */
+
+  ubuffree (zlog);
+  ubuffree (zgrade);
 
   {
     long iend_time;

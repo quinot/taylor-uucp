@@ -144,9 +144,12 @@ static long cFrec_retries;
 /* Start the protocol.  */
 
 boolean
-ffstart (qdaemon)
+ffstart (qdaemon, pzlog)
      struct sdaemon *qdaemon;
+     char **pzlog;
 {
+  *pzlog = NULL;
+
   cFsent_data = 0;
   cFsent_bytes = 0;
   cFrec_data = 0;
