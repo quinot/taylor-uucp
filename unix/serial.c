@@ -241,16 +241,17 @@ static void usserial_free P((struct sconnection *qconn));
 static boolean fsserial_lockfile P((boolean flok,
 				    const struct sconnection *));
 static boolean fsserial_lock P((struct sconnection *qconn,
-				boolean fin));
+				boolean fin, boolean fuser));
 static boolean fsserial_unlock P((struct sconnection *qconn));
 static boolean fsserial_open P((struct sconnection *qconn, long ibaud,
-				boolean fwait, enum tclocal_setting tlocal));
+				boolean fwait, boolean fuser,
+				enum tclocal_setting tlocal));
 static boolean fsstdin_open P((struct sconnection *qconn, long ibaud,
-			       boolean fwait));
+			       boolean fwait, boolean fuser));
 static boolean fsmodem_open P((struct sconnection *qconn, long ibaud,
-			       boolean fwait));
+			       boolean fwait, boolean fuser));
 static boolean fsdirect_open P((struct sconnection *qconn, long ibaud,
-				boolean fwait));
+				boolean fwait, boolean fuser));
 static boolean fsblock P((struct ssysdep_conn *q, boolean fblock));
 static boolean fsserial_close P((struct ssysdep_conn *q));
 static boolean fsstdin_close P((struct sconnection *qconn,
@@ -733,9 +734,10 @@ fsserial_lockfile (flok, qconn)
    open because we can't fail out if it is locked then.  */
 
 static boolean
-fsserial_lock (qconn, fin)
+fsserial_lock (qconn, fin, fuser)
      struct sconnection *qconn;
      boolean fin;
+     boolean fuser;
 {
   if (! fsserial_lockfile (TRUE, qconn))
     return FALSE;
@@ -745,6 +747,8 @@ fsserial_lock (qconn, fin)
   {
     struct ssysdep_conn *qsysdep;
     int iflag;
+    uid_t ieuid;
+    gid_t iegid;
 
     qsysdep = (struct ssysdep_conn *) qconn->psysdep;
 
@@ -752,6 +756,15 @@ fsserial_lock (qconn, fin)
       iflag = 0;
     else
       iflag = iSunblock;
+
+    if (fuser)
+      {
+	if (! fsuser_perms (&ieuid, &iegid))
+	  {
+	    (void) fsserial_lockfile (FALSE, qconn);
+	    return FALSE;
+	  }
+      }
 
     qsysdep->o = open (qsysdep->zdevice, O_RDWR | iflag);
     if (qsysdep->o < 0)
@@ -766,9 +779,25 @@ fsserial_lock (qconn, fin)
 #endif
 	if (qsysdep->o < 0)
 	  {
-	    if (errno != EBUSY)
+	    int ierr;
+
+	    ierr = errno;
+	    if (fuser)
+	      (void) fsuucp_perms ((long) ieuid, (long) iegid);
+	    if (ierr != EBUSY)
 	      ulog (LOG_ERROR, "open (%s): %s", qsysdep->zdevice,
-		    strerror (errno));
+		    strerror (ierr));
+	    (void) fsserial_lockfile (FALSE, qconn);
+	    return FALSE;
+	  }
+      }
+
+    if (fuser)
+      {
+	if (! fsuucp_perms ((long) ieuid, (long) iegid))
+	  {
+	    (void) close (qsysdep->o);
+	    qsysdep->o = -1;
 	    (void) fsserial_lockfile (FALSE, qconn);
 	    return FALSE;
 	  }
@@ -984,15 +1013,16 @@ static int cSmin;
 
 /* Open a serial line.  This sets the terminal settings.  We begin in
    seven bit mode and let the protocol change if necessary.  If fwait
-   is FALSE we open the terminal in non-blocking mode.  If flocal is
-   TRUE we set CLOCAL on the terminal when using termio[s]; this is
-   supposedly required on some versions of BSD/386.  */
+   is FALSE we open the terminal in non-blocking mode.  If fuser is
+   true we open the port using the user's permissions.  The tlocal
+   parameter indicates whether to set, clear, or ignore CLOCAL.  */
 
 static boolean
-fsserial_open (qconn, ibaud, fwait, tlocal)
+fsserial_open (qconn, ibaud, fwait, fuser, tlocal)
      struct sconnection *qconn;
      long ibaud;
      boolean fwait;
+     boolean fuser;
      enum tclocal_setting tlocal;
 {
   struct ssysdep_conn *q;
@@ -1049,12 +1079,20 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
   if (q->o < 0)
     {
       int iflag;
+      uid_t ieuid;
+      gid_t iegid;
 
       if (fwait)
 	iflag = 0;
       else
 	iflag = iSunblock;
 
+      if (fuser)
+	{
+	  if (! fsuser_perms (&ieuid, &iegid))
+	    return FALSE;
+	}
+	  
       q->o = open (q->zdevice, O_RDWR | iflag);
       if (q->o < 0)
 	{
@@ -1067,10 +1105,21 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
 #endif
 	  if (q->o < 0)
 	    {
+	      int ierr;
+
+	      ierr = errno;
+	      if (fuser)
+		(void) fsuucp_perms ((long) ieuid, (long) iegid);
 	      ulog (LOG_ERROR, "open (%s): %s", q->zdevice,
-		    strerror (errno));
+		    strerror (ierr));
 	      return FALSE;
 	    }
+	}
+
+      if (fuser)
+	{
+	  if (! fsuucp_perms ((long) ieuid, (long) iegid))
+	    return FALSE;
 	}
 
       if (fcntl (q->o, F_SETFD, fcntl (q->o, F_GETFD, 0) | FD_CLOEXEC) < 0)
@@ -1260,10 +1309,11 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
    call to fsblock.  */
 
 static boolean
-fsstdin_open (qconn, ibaud, fwait)
+fsstdin_open (qconn, ibaud, fwait, fuser)
      struct sconnection *qconn;
      long ibaud;
      boolean fwait;
+     boolean fuser;
 {
   struct ssysdep_conn *q;
 
@@ -1272,7 +1322,7 @@ fsstdin_open (qconn, ibaud, fwait)
   q->owr = 1;
 
   q->o = q->ord;
-  if (! fsserial_open (qconn, ibaud, fwait, IGNORE_CLOCAL))
+  if (! fsserial_open (qconn, ibaud, fwait, fuser, IGNORE_CLOCAL))
     return FALSE;
   q->iwr_flags = fcntl (q->owr, F_GETFL, 0);
   if (q->iwr_flags < 0)
@@ -1286,10 +1336,11 @@ fsstdin_open (qconn, ibaud, fwait)
 /* Open a modem port.  */
 
 static boolean
-fsmodem_open (qconn, ibaud, fwait)
+fsmodem_open (qconn, ibaud, fwait, fuser)
      struct sconnection *qconn;
      long ibaud;
      boolean fwait;
+     boolean fuser;
 {
   struct uuconf_modem_port *qm;
 
@@ -1297,7 +1348,7 @@ fsmodem_open (qconn, ibaud, fwait)
   if (ibaud == (long) 0)
     ibaud = qm->uuconf_ibaud;
 
-  if (! fsserial_open (qconn, ibaud, fwait,
+  if (! fsserial_open (qconn, ibaud, fwait, fuser,
 		       fwait ? CLEAR_CLOCAL : SET_CLOCAL))
     return FALSE;
 
@@ -1316,17 +1367,18 @@ fsmodem_open (qconn, ibaud, fwait)
 /* Open a direct port.  */
 
 static boolean
-fsdirect_open (qconn, ibaud, fwait)
+fsdirect_open (qconn, ibaud, fwait, fuser)
      struct sconnection *qconn;
      long ibaud;
      boolean fwait;
+     boolean fuser;
 {
   struct uuconf_direct_port *qd;
 
   qd = &qconn->qport->uuconf_u.uuconf_sdirect;
   if (ibaud == (long) 0)
     ibaud = qd->uuconf_ibaud;
-  if (! fsserial_open (qconn, ibaud, fwait,
+  if (! fsserial_open (qconn, ibaud, fwait, fuser,
 		       qd->uuconf_fcarrier ? CLEAR_CLOCAL : SET_CLOCAL))
     return FALSE;
 

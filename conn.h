@@ -109,13 +109,16 @@ struct sconncmds
   /* Free up a connection.  */
   void (*pufree) P((struct sconnection *qconn));
   /* Lock the connection.  The fin argument is TRUE if the connection
-     is to be used for an incoming call.  May be NULL.  */
-  boolean (*pflock) P((struct sconnection *qconn, boolean fin));
+     is to be used for an incoming call.  The fuser argument is TRUE
+     if, should the port be opened, it should be opened using the
+     user's permissions rather than the effective permissions.  May be
+     NULL.  */
+  boolean (*pflock) P((struct sconnection *qconn, boolean fin, boolean fuser));
   /* Unlock the connection.  May be NULL.  */
   boolean (*pfunlock) P((struct sconnection *qconn));
   /* Open the connection.  */
   boolean (*pfopen) P((struct sconnection *qconn, long ibaud,
-		       boolean fwait));
+		       boolean fwait, boolean fuser));
   /* Close the connection.  */
   boolean (*pfclose) P((struct sconnection *qconn,
 			pointer puuconf,
@@ -179,8 +182,11 @@ extern void uconn_free P((struct sconnection *qconn));
 
 /* Lock a connection.  The fin argument is TRUE if the port is to be
    used for an incoming call; certains type of Unix locking need this
-   information because they need to open the port.  */
-extern boolean fconn_lock P((struct sconnection *qconn, boolean fin));
+   information because they need to open the port.  The fuser argument
+   is TRUE if, should the port be opened, it should be opened using
+   the user's permissions rather than the effective permissions.  */
+extern boolean fconn_lock P((struct sconnection *qconn, boolean fin,
+			     boolean fuser));
 
 /* Unlock a connection.  */
 extern boolean fconn_unlock P((struct sconnection *qconn));
@@ -188,9 +194,12 @@ extern boolean fconn_unlock P((struct sconnection *qconn));
 /* Open a connection.  If ibaud is 0, the natural baud rate of the
    port is used.  If ihighbaud is not 0, fconn_open chooses the
    highest supported baud rate between ibaud and ihighbaud.  If fwait
-   is TRUE, this should wait for an incoming call.  */
+   is TRUE, this should wait for an incoming call.  If fuser is true,
+   the device should be opened using the user's permissions rather
+   than the effective permissions.  */
 extern boolean fconn_open P((struct sconnection *qconn, long ibaud,
-			     long ihighbaud, boolean fwait));
+			     long ihighbaud, boolean fwait,
+			     boolean fuser));
 
 /* Close a connection.  The fsuccess argument is TRUE if the
    conversation completed normally, FALSE if it is being aborted.  */

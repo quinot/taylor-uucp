@@ -672,7 +672,7 @@ main (argc, argv)
 	    usysdep_detach ();
 	}
 
-      if (fconn_lock (&sconn, TRUE))
+      if (fconn_lock (&sconn, TRUE, FALSE))
 	flocked = TRUE;
       else
 	{
@@ -684,7 +684,7 @@ main (argc, argv)
 
       if (fret)
 	{
-	  if (! fconn_open (&sconn, (long) 0, (long) 0, TRUE))
+	  if (! fconn_open (&sconn, (long) 0, (long) 0, TRUE, FALSE))
 	    fret = FALSE;
 	  qConn = &sconn;
 	}
@@ -702,7 +702,8 @@ main (argc, argv)
 		  if (! fconn_close (&sconn, puuconf,
 				     (struct uuconf_dialer *) NULL,
 				     TRUE)
-		      || ! fconn_open (&sconn, (long) 0, (long) 0, TRUE))
+		      || ! fconn_open (&sconn, (long) 0, (long) 0, TRUE,
+				       FALSE))
 		    break;
 		}
 	      fret = FALSE;
@@ -1087,7 +1088,7 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
     {
       if (! fconn_init (qport, &sconn, UUCONF_PORTTYPE_UNKNOWN))
 	return FALSE;
-      if (! fconn_lock (&sconn, FALSE))
+      if (! fconn_lock (&sconn, FALSE, FALSE))
 	{
 	  ulog (LOG_ERROR, "%s: Port already locked",
 		qport->uuconf_zname);
@@ -1138,7 +1139,7 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
     }
 
   if (! fconn_open (&sconn, qsys->uuconf_ibaud, qsys->uuconf_ihighbaud,
-		    FALSE))
+		    FALSE, FALSE))
     {
       terr = STATUS_PORT_FAILED;
       fret = FALSE;
@@ -1698,7 +1699,7 @@ iuport_lock (qport, pinfo)
 
   if (! fconn_init (qport, q->qconn, UUCONF_PORTTYPE_UNKNOWN))
     return UUCONF_NOT_FOUND;
-  else if (! fconn_lock (q->qconn, FALSE))
+  else if (! fconn_lock (q->qconn, FALSE, FALSE))
     {
       uconn_free (q->qconn);
       return UUCONF_NOT_FOUND;

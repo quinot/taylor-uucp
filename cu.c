@@ -180,6 +180,7 @@ struct sconninfo
 {
   boolean fmatched;
   boolean flocked;
+  boolean fdirect;
   struct sconnection *qconn;
   const char *zline;
 };
@@ -560,6 +561,7 @@ main (argc, argv)
 	 have read and write access to the port.  */
       sinfo.fmatched = FALSE;
       sinfo.flocked = FALSE;
+      sinfo.fdirect = qsys == NULL && zphone == NULL;
       sinfo.qconn = &sconn;
       sinfo.zline = zline;
       if (zport != NULL || zline != NULL || ibaud != 0L)
@@ -602,7 +604,7 @@ main (argc, argv)
 	      if (! fconn_init (&sport, &sconn, UUCONF_PORTTYPE_UNKNOWN))
 		ucuabort ();
 
-	      if (! fconn_lock (&sconn, FALSE))
+	      if (! fconn_lock (&sconn, FALSE, TRUE))
 		ulog (LOG_FATAL, "%s: Line in use", zline);
 
 	      qCuconn = &sconn;
@@ -628,7 +630,7 @@ main (argc, argv)
 		  if (fconn_init (qsys->uuconf_qport, &sconn,
 				  UUCONF_PORTTYPE_UNKNOWN))
 		    {
-		      if (fconn_lock (&sconn, FALSE))
+		      if (fconn_lock (&sconn, FALSE, FALSE))
 			{
 			  qCuconn = &sconn;
 			  break;
@@ -681,7 +683,7 @@ main (argc, argv)
 	}
 
       /* Here we have locked a connection to use.  */
-      if (! fconn_open (&sconn, iusebaud, ihighbaud, FALSE))
+      if (! fconn_open (&sconn, iusebaud, ihighbaud, FALSE, sinfo.fdirect))
 	ucuabort ();
 
       fCuclose_conn = TRUE;
@@ -954,7 +956,7 @@ icuport_lock (qport, pinfo)
 
   if (! fconn_init (qport, q->qconn, UUCONF_PORTTYPE_UNKNOWN))
     return UUCONF_NOT_FOUND;
-  else if (! fconn_lock (q->qconn, FALSE))
+  else if (! fconn_lock (q->qconn, FALSE, q->fdirect))
     {
       uconn_free (q->qconn);
       return UUCONF_NOT_FOUND;

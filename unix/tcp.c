@@ -76,7 +76,7 @@ typedef struct sockaddr_in sockaddr_storage;
 static void utcp_free P((struct sconnection *qconn));
 static boolean ftcp_set_flags P((struct ssysdep_conn *qsysdep));
 static boolean ftcp_open P((struct sconnection *qconn, long ibaud,
-			    boolean fwait));
+			    boolean fwait, boolean fuser));
 static boolean ftcp_close P((struct sconnection *qconn,
 			     pointer puuconf,
 			     struct uuconf_dialer *qdialer,
@@ -172,10 +172,11 @@ ftcp_set_flags (qsysdep)
    system.  */
 
 static boolean
-ftcp_open (qconn, ibaud, fwait)
+ftcp_open (qconn, ibaud, fwait, fuser)
      struct sconnection *qconn;
      long ibaud ATTRIBUTE_UNUSED;
      boolean fwait;
+     boolean fuser ATTRIBUTE_UNUSED;
 {
   struct ssysdep_conn *qsysdep;
   const char *zport;

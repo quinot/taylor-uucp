@@ -1,5 +1,18 @@
 2002-02-24  Ian Lance Taylor  <ian@airs.com>
 
+	* conn.c (fconn_lock): Add fuser parameter.  Change all callers.
+	(fconn_open): Likewise.
+	* conn.h (struct sconncmds): Add fuser parameter to pflock and
+	pfopen.
+	(fconn_lock, fconn_open): Update declarations.
+	* cu.c (struct sconninfo): Add fdirect field.
+	(main): Initialize sinfo.fdirect.
+	* unix/pipe.c (fspipe_open): Add fuser parameter.
+	* unix/serial.c (fsserial_lock, fsserial_open): Likewise.
+	(fsstdin_open, fsmodem_open, fsdirect_open): Likewise.
+	* unix/tcp.c (ftcp_open): Likewise.
+	* unix/tli.c (ftli_open): Likewise.
+
 	* uux.c: Include <sysexits.h> if available.  Define macros from
 	<sysexits.h> if not defined.  Change all calls to exit to use EX_*
 	macros.  Change all calls to fsysdep_exit to use exit.
