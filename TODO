@@ -235,3 +235,7 @@ assume that if they are the master and they get an INITA, the slave
 has already seen their INITA.
 
 71.
+
+Execute uuxqt even if uucico gets an error.
+
+72.
