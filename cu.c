@@ -484,7 +484,7 @@ main (argc, argv)
 	  sport.uuconf_ireliable = 0;
 	  sport.uuconf_zlockname = NULL;
 	  sport.uuconf_palloc = NULL;
-	  sport.uuconf_u.uuconf_sdirect.uuconf_zdevice = zline;
+	  sport.uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
 	  sport.uuconf_u.uuconf_sdirect.uuconf_ibaud = ibaud;
 
 	  if (! fsysdep_port_access (&sport))
