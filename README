@@ -174,7 +174,7 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     what is available on your system, so if your system is at all
     unusual you will need to pass in $CC and $LIBS correctly.
 
-    The configure script will create conf.h from conf.h.in and
+    The configure script will create config.h from config.h.in and
     Makefile from Makefile.in.  It will also create config.status,
     which is a shell script which actually creates the files.  Please
     report any configuration problems, so that they can be fixed in
@@ -195,7 +195,7 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     use -posix, instead I run gcc with -D_POSIX_SOURCE, and add
     -lcposix to LIBS.
 
-    Examine conf.h and Makefile to make sure they're right.
+    Examine config.h and Makefile to make sure they're right.
 
     Edit policy.h for your local system.    
 
