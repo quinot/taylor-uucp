@@ -320,7 +320,7 @@ esysdep_open_receive (qsys, zto, ztemp, zreceive, pcrestart)
 	     restarted, and they know about this issue, they can touch
 	     it to bring it up to date.  */
 	  if (fstat (o, &s) < 0
-	      || time ((time_t *) NULL) + 7 * 24 * 60 * 60 < s.st_mtime)
+	      || s.st_mtime + 7 * 24 * 60 * 60 < time ((time_t *) NULL))
 	    {
 	      (void) close (o);
 	      o = -1;
