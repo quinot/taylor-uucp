@@ -198,6 +198,12 @@ fsdo_lock (zlock, fspooldir, pferr)
 	    }
 	  if (o < 0)
 	    {
+	      if (errno == ENOENT)
+		{
+		  /* The file was presumably removed between the link
+		     and the open.  Try the link again.  */
+		  continue;
+		}
 	      zerr = "open";
 	      break;
 	    }
@@ -299,9 +305,8 @@ fsdo_lock (zlock, fspooldir, pferr)
 	 forces the installer to be aware of the existence of the
 	 permanent lock file.
 
-	 For the benefit of cu, we stat the file after the sleep, to
-	 make sure some cu program hasn't deleted it for us.  */
-
+	 We stat the file after the sleep, to make sure some other
+	 program hasn't deleted it for us.  */
       if (freadonly)
 	{
 	  (void) close (o);
