@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.60  1992/03/17  01:28:18  ian
+   Undefine remove in uucp.h if ! HAVE_REMOVE
+
    Revision 1.59  1992/03/17  00:06:56  ian
    Changed HAVE_SIG_ATOMIC_T_IN_SYS_TYPES_H to HAVE_SIG_ATOMIC_T_IN_TYPES_H
 
@@ -277,6 +280,12 @@ typedef void *pointer;
 typedef const void *constpointer;
 #define BUCHAR(b) ((unsigned char) (b))
 #else /* ! ANSI_C */
+/* Handle uses of const, volatile and void in Classic C.  */
+#define const
+#define volatile
+#if ! HAVE_VOID
+#define void int
+#endif
 #define P(x) ()
 typedef char *pointer;
 typedef const char *constpointer;
@@ -286,12 +295,6 @@ typedef const char *constpointer;
 /* This should work on most systems, but not necessarily all.  */
 #define BUCHAR(b) ((b) & 0xff)
 #endif /* ! HAVE_UNSIGNED_CHAR */
-/* Handle uses of const, volatile and void in Classic C.  */
-#define const
-#define volatile
-#if ! HAVE_VOID
-#define void int
-#endif
 #endif /* ! ANSI_C */
 
 /* Only use inline with gcc.  */
