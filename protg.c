@@ -1,7 +1,7 @@
 /* protg.c
    The 'g' protocol.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -1614,7 +1614,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  && CONTROL_XXX (ab[IFRAME_CONTROL]) == RR
 	  && iGremote_ack == CONTROL_YYY (ab[IFRAME_CONTROL])
 	  && INEXTSEQ (iGremote_ack) != iGsendseq
-	  && iGretransmit_seq != -1)
+	  && iGretransmit_seq == -1)
 	{
 	  DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			  "fgprocess_data: Treating duplicate RR as RJ");
