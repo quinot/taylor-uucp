@@ -853,6 +853,12 @@ main (argc, argv)
 	    {
 	      char *zdata;
 
+	      if (! sfromsys.fcall_transfer
+		  && ! sfromsys.fcalled_transfer)
+		ulog (LOG_FATAL,
+		      "Not permitted to transfer files to or from %s",
+		      sfromsys.uuconf_zname);
+
 	      if (zforw != NULL)
 		{
 		  /* This is ``uux cmd a!b!file''.  To make this work,
@@ -1165,6 +1171,11 @@ main (argc, argv)
   if (cXcmds > 0)
     {
       char *zjobid;
+
+      if (! sxqtsys.fcall_transfer
+	  && ! sxqtsys.fcalled_transfer)
+	ulog (LOG_FATAL, "Not permitted to transfer files to or from %s",
+	      sxqtsys.uuconf_zname);
 
       zjobid = zsysdep_spool_commands (&sxqtsys, bgrade, cXcmds, pasXcmds);
       if (zjobid == NULL)
