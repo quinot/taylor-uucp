@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/03/30  04:49:10  ian
+   Niels Baggesen: added debugging types abnormal and uucp-proto
+
    Revision 1.29  1992/03/16  18:57:38  ian
    Niels Baggesen: improved debugging information
 
@@ -972,6 +975,8 @@ fgsenddata (zdata, cdata)
       ++cGdelayed_packets;
       return TRUE;
     }
+
+  iGretransmit_seq = -1;
 
   DEBUG_MESSAGE2 (DEBUG_PROTO,
 		  "fgsenddata: Sending packet %d (%d bytes)",
