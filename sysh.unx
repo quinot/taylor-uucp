@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/11/26  01:45:42  ian
+   Marty Shannon: configuration option to not include <sys/wait.h>
+
    Revision 1.10  1991/11/24  04:15:13  ian
    Removed extraneous comment left by last revision
 
@@ -197,6 +200,11 @@
    file but takes different arguments.  */
 #define HAVE_FTRUNCATE 1
 #define HAVE_LTRUNC 0
+
+/* Set HAVE_RENAME to 1 if you have the rename call which renames a
+   file.  If this is set to 0, the program will use the link and
+   unlink calls.  */
+#define HAVE_RENAME 1
 
 /* Exactly one of the following macros must be set to 1.  The exact
    format of the spool directories is explained in sys3.unx.
