@@ -544,7 +544,7 @@ usserial_free (qconn)
   qconn->psysdep = NULL;
 }
 
-#ifdef HAVE_SEQUENT_LOCKFILES
+#if HAVE_SEQUENT_LOCKFILES
 #define LCK_TEMPLATE "LCK..tty"
 #else
 #define LCK_TEMPLATE "LCK.."
