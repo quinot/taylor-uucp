@@ -119,6 +119,10 @@ const char serial_rcsid[] = "$Id$";
 #endif /* ! MAJOR_IN_MKDEV && ! MAJOR_IN_SYSMACROS */
 #endif /* HAVE_SVR4_LOCKFILES */
 
+#if HAVE_DEV_INFO
+#include <sys/dev.h>
+#endif
+
 /* Get definitions for both O_NONBLOCK and O_NDELAY.  */
 #ifndef O_NDELAY
 #ifdef FNDELAY
@@ -718,7 +722,7 @@ fsserial_lock (qconn, fin)
   if (! fsserial_lockfile (TRUE, qconn))
     return FALSE;
 
-#if HAVE_TIOCSINUSE || HAVE_TIOCEXCL
+#if HAVE_TIOCSINUSE || HAVE_TIOCEXCL || HAVE_DEV_INFO
   /* Open the line and try to mark it in use.  */
   {
     struct ssysdep_conn *qsysdep;
@@ -768,6 +772,38 @@ fsserial_lock (qconn, fin)
 	return FALSE;
       }
 #endif
+
+#if HAVE_DEV_INFO
+    /* QNX programs "lock" a serial port by simply opening it and
+       checking if some other program also has the port open.  If the
+       count of openers is greater than one, the program presumes the
+       port is "locked" and backs off.  This isn't really "locking" of
+       course, but it pretty much seems to work.  This can result in
+       dropping incoming connections if an outgoing connection is
+       started at exactly the same time.  It would probably be better
+       to stop using the lock files at all for this case, but that
+       would involve more complex changes to the code, and I'm afraid
+       I would break something.  -- Joe Wells <jbw@cs.bu.edu>  */
+    {
+      struct _dev_info_entry sdevinfo;
+
+      if (dev_info (qsysdep->o, &sdevinfo) == -1)
+        {
+          ulog (LOG_ERROR, "dev_info: %s", strerror (errno));
+          sdevinfo.open_count = 2; /* force presumption of "locked" */
+        }
+      if (sdevinfo.open_count != 1)
+        {
+#ifdef TIOCNOTTY
+          (void) ioctl (qsysdep->o, TIOCNOTTY, (char *) NULL);
+#endif /* TIOCNOTTY */
+          (void) close (qsysdep->o);
+          qsysdep->o = -1;
+          (void) fsserial_lockfile (FALSE, qconn);
+          return FALSE;
+        }
+    }
+#endif /* HAVE_DEV_INFO */
 
     if (fcntl (qsysdep->o, F_SETFD,
 	       fcntl (qsysdep->o, F_GETFD, 0) | FD_CLOEXEC) < 0)
