@@ -202,7 +202,7 @@ fjstart (qdaemon, pzlog)
 	  znew = zbufalc (cbuf);
 	  memcpy (znew, zbuf, cgot);
 	  ubuffree (zbuf);
-	  znew = zbuf;
+	  zbuf = znew;
 	}
       zbuf[cgot] = b;
       ++cgot;
