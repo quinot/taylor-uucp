@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/02/08  20:33:57  ian
+   Handle all possible signals raised by abort
+
    Revision 1.18  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -181,7 +184,7 @@ main (argc, argv)
   (void) signal (SIGIOT, ukcatch);
 #endif
 
-  usysdep_initialize (FALSE);
+  usysdep_initialize (FALSE, FALSE);
 
   uread_all_system_info (&c, &pas);
 

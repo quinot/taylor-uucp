@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/02/08  20:33:57  ian
+   Handle all possible signals raised by abort
+
    Revision 1.22  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -189,13 +192,14 @@ main (argc, argv)
   int idebug = -1;
   /* -z: report status only on error.  */
   boolean ferror_ack = FALSE;
-  const char *zuser;
   int i;
   int clen;
   char *zargs;
   char *zarg;
   char *zcmd;
   char *zexclam;
+  boolean fgetcwd;
+  const char *zuser;
   struct ssysteminfo sxqtsys;
   const struct ssysteminfo *qxqtsys;
   boolean fxqtlocal;
@@ -353,44 +357,10 @@ main (argc, argv)
   if (idebug != -1)
     iDebug = idebug;
 
-#ifdef SIGINT
-  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGINT, uxcatch);
-#endif
-#ifdef SIGHUP
-  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGHUP, uxcatch);
-#endif
-#ifdef SIGQUIT
-  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGQUIT, uxcatch);
-#endif
-#ifdef SIGTERM
-  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGTERM, uxcatch);
-#endif
-#ifdef SIGPIPE
-  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGPIPE, uxcatch);
-#endif
-#ifdef SIGABRT
-  (void) signal (SIGABRT, uxcatch);
-#endif
-#ifdef SIGILL
-  (void) signal (SIGILL, uxcatch);
-#endif
-#ifdef SIGIOT
-  (void) signal (SIGIOT, uxcatch);
-#endif
-
-  usysdep_initialize (FALSE);
-
-  zuser = zsysdep_login_name ();
-  if (zuser == NULL)
-    zuser = "unknown";
-
   /* The command and files arguments could be quoted in any number of
-     ways, so we split them apart ourselves.  */
+     ways, so we split them apart ourselves.  We do this before
+     calling usysdep_initialize because we want to set fgetcwd
+     correctly.  */
   clen = 1;
   for (i = optind; i < argc; i++)
     clen += strlen (argv[i]) + 1;
@@ -409,48 +379,6 @@ main (argc, argv)
   strncpy (zcmd, zargs, clen);
   zcmd[clen] = '\0';
   zargs += clen;
-
-  /* Figure out which system the command is to be executed on.  */
-  zexclam = strchr (zcmd, '!');
-  if (zexclam == NULL)
-    {
-      qxqtsys = &sLocalsys;
-      fxqtlocal = TRUE;
-    }
-  else
-    {
-      *zexclam = '\0';
-
-      if (*zcmd == '\0' || strcmp (zcmd, zLocalname) == 0)
-	{
-	  qxqtsys = &sLocalsys;
-	  fxqtlocal = TRUE;
-	}
-      else
-	{
-	  if (fread_system_info (zcmd, &sxqtsys))
-	    qxqtsys = &sxqtsys;
-	  else
-	    {
-	      if (! fUnknown_ok)
-		ulog (LOG_FATAL, "System %s unknown", zcmd);
-	      qxqtsys = &sUnknown;
-	      sUnknown.zname = zcmd;
-	    }
-
-	  fxqtlocal = FALSE;
-	}
-
-      zcmd = zexclam + 1;
-    }
-
-  /* Make sure we have a spool directory.  */
-
-  if (! fsysdep_make_spool_dir (qxqtsys))
-    {
-      ulog_close ();
-      usysdep_exit (FALSE);
-    }
 
   /* Split the arguments out into an array.  We break the arguments
      into alternating sequences of characters not in ZSHELLSEPS
@@ -498,6 +426,108 @@ main (argc, argv)
 	      zarg += clen;
 	    }
 	}
+    }
+
+  /* Now look through the arguments to see if we are going to need the
+     current working directory.  We don't try to make a precise
+     determination, just a conservative one.  The basic idea is that
+     we don't want to get the cwd for 'rmail - foo!user' (note that we
+     don't examine the command itself).  */
+  fgetcwd = FALSE;
+  for (i = 0; i < cargs; i++)
+    {
+      zexclam = strrchr (pzargs[i], '!');
+      if (zexclam != NULL && fsysdep_needs_cwd (zexclam + 1))
+	{
+	  fgetcwd = TRUE;
+	  break;
+	}
+      if ((pzargs[i][0] == '<' || pzargs[i][0] == '>')
+	  && i + 1 < cargs
+	  && strchr (pzargs[i + 1], '!') == NULL
+	  && fsysdep_needs_cwd (pzargs[i + 1]))
+	{
+	  fgetcwd = TRUE;
+	  break;
+	}
+    }
+
+#ifdef SIGINT
+  if (signal (SIGINT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGINT, uxcatch);
+#endif
+#ifdef SIGHUP
+  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGHUP, uxcatch);
+#endif
+#ifdef SIGQUIT
+  if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGQUIT, uxcatch);
+#endif
+#ifdef SIGTERM
+  if (signal (SIGTERM, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGTERM, uxcatch);
+#endif
+#ifdef SIGPIPE
+  if (signal (SIGPIPE, SIG_IGN) != SIG_IGN)
+    (void) signal (SIGPIPE, uxcatch);
+#endif
+#ifdef SIGABRT
+  (void) signal (SIGABRT, uxcatch);
+#endif
+#ifdef SIGILL
+  (void) signal (SIGILL, uxcatch);
+#endif
+#ifdef SIGIOT
+  (void) signal (SIGIOT, uxcatch);
+#endif
+
+  usysdep_initialize (FALSE, fgetcwd);
+
+  zuser = zsysdep_login_name ();
+  if (zuser == NULL)
+    zuser = "unknown";
+
+  /* Figure out which system the command is to be executed on.  */
+  zexclam = strchr (zcmd, '!');
+  if (zexclam == NULL)
+    {
+      qxqtsys = &sLocalsys;
+      fxqtlocal = TRUE;
+    }
+  else
+    {
+      *zexclam = '\0';
+
+      if (*zcmd == '\0' || strcmp (zcmd, zLocalname) == 0)
+	{
+	  qxqtsys = &sLocalsys;
+	  fxqtlocal = TRUE;
+	}
+      else
+	{
+	  if (fread_system_info (zcmd, &sxqtsys))
+	    qxqtsys = &sxqtsys;
+	  else
+	    {
+	      if (! fUnknown_ok)
+		ulog (LOG_FATAL, "System %s unknown", zcmd);
+	      qxqtsys = &sUnknown;
+	      sUnknown.zname = zcmd;
+	    }
+
+	  fxqtlocal = FALSE;
+	}
+
+      zcmd = zexclam + 1;
+    }
+
+  /* Make sure we have a spool directory.  */
+
+  if (! fsysdep_make_spool_dir (qxqtsys))
+    {
+      ulog_close ();
+      usysdep_exit (FALSE);
     }
 
   /* Name and open the execute file.  If the execution is to occur on

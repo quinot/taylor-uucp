@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/02/08  20:33:57  ian
+   Handle all possible signals raised by abort
+
    Revision 1.14  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -129,6 +132,7 @@ main (argc, argv)
   /* -x: set debugging level.  */
   int idebug = -1;
   int i;
+  boolean fgetcwd;
   char *zexclam;
   char *zdestfile;
   const char *zconst;
@@ -238,6 +242,25 @@ main (argc, argv)
   if (idebug != -1)
     iDebug = idebug;
 
+  /* See if we are going to need to know the current directory.  We
+     just check each argument to see whether it's an absolute
+     pathname.  We actually aren't going to need the cwd if fexpand is
+     FALSE and the file is remote, but so what.  */
+  fgetcwd = FALSE;
+  for (i = optind; i < argc; i++)
+    {
+      zexclam = strrchr (argv[i], '!');
+      if (zexclam == NULL)
+	zexclam = argv[i];
+      else
+	++zexclam;
+      if (fsysdep_needs_cwd (zexclam))
+	{
+	  fgetcwd = TRUE;
+	  break;
+	}
+    }
+
 #ifdef SIGINT
   if (signal (SIGINT, SIG_IGN) != SIG_IGN)
     (void) signal (SIGINT, uccatch);
@@ -268,7 +291,7 @@ main (argc, argv)
   (void) signal (SIGIOT, uccatch);
 #endif
 
-  usysdep_initialize (FALSE);
+  usysdep_initialize (FALSE, fgetcwd);
 
   zuser = zsysdep_login_name ();
   if (zuser == NULL)

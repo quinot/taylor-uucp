@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.17  1992/02/02  20:34:36  ian
    Niels Baggesen: must check user permissions on access to local files
 
@@ -95,8 +98,18 @@
 extern int cSysdep_max_name_len;
 
 /* Initialize.  If something goes wrong, this routine should just
-   exit.  The argument is true if called from uucico or uuxqt.  */
-extern void usysdep_initialize P((boolean fdaemon));
+   exit.  The fdaemon argument is TRUE if called from uucico or uuxqt.
+   The fgetcwd argument is TRUE if the current working directory is
+   needed.  This is used because on Unix it can be expensive to
+   determine the current working directory (some versions of getcwd
+   fork a process), but in most cases we don't need to know it.
+   However, we are going to chdir to the spool directory, so we have
+   to get the cwd now if we are ever going to get it.  Both uucp and
+   uux use the function fsysdep_needs_cwd to determine whether they
+   will need the current working directory, and pass the argument to
+   usysdep_initialize appropriately.  There's probably a cleaner way
+   to handle this, but this will suffice for now.  */
+extern void usysdep_initialize P((boolean fdaemon, boolean fgetcwd));
 
 /* Exit the program.  The fsuccess argument indicates whether to
    return an indication of success or failure to the outer
@@ -522,6 +535,13 @@ extern boolean fsysdep_unlock_uuxqt_dir P((void));
    This should return NULL on error.  */
 extern const char *zsysdep_add_cwd P((const char *zfile,
 				      boolean flocal));
+
+/* See whether a file name will need the current working directory
+   when zsysdep_add_cwd is called on it.  This will be called before
+   usysdep_initialize.  It should just check whether the argument is
+   an absolute path.  See the comment above usysdep_initialize in this
+   file for an explanation of why things are done this way.  */
+extern boolean fsysdep_needs_cwd P((const char *zfile));
 
 /* Get the base name of a file.  The file will be a local file name,
    and this function should return the base file name, ideally in a
