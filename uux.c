@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/12/20  03:07:54  ian
+   Added space and tab to ZSHELLSEPS to stop command at whitespace
+
    Revision 1.13  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -91,11 +94,11 @@ char uux_rcsid[] = "$Id$";
 
 /* This is the list of word separators.  We break filename arguments
    at these characters.  */
-#define ZSHELLSEPS ";&*()|<> \t"
+#define ZSHELLSEPS ";&*|<> \t"
 
 /* This is the list of word separators without the redirection
    operators.  */
-#define ZSHELLNONREDIRSEPS ";&*()| \t"
+#define ZSHELLNONREDIRSEPS ";&*| \t"
 
 /* The program name.  */
 const char abProgram[] = "uux";
@@ -305,7 +308,10 @@ main (argc, argv)
 
   if (! FGRADE_LEGAL (bgrade))
     {
-      fprintf (stderr, "uux: Ignoring illegal grade\n");
+      /* We use LOG_NORMAL rather than LOG_ERROR because this is going
+	 to stderr rather than to the log file, and we don't need the
+	 ERROR header string.  */
+      ulog (LOG_NORMAL, "Ignoring illegal grade");
       bgrade = BDEFAULT_UUX_GRADE;
     }
 
@@ -501,7 +507,11 @@ main (argc, argv)
 	{
 	  clen = strlen (pzargs[i]);
 	  if (pzargs[i][clen - 1] != ')')
-	    fprintf (stderr, "uux: Mismatched parentheses");
+	    {
+	      /* Use LOG_NORMAL because we don't need the ERROR:
+		 header.  */
+	      ulog (LOG_NORMAL, "Mismatched parentheses");
+	    }
 	  else
 	    pzargs[i][clen - 1] = '\0';
 	  ++pzargs[i];
