@@ -581,13 +581,24 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fmaster)
     cbps = 0;
   else
     {
-      long cmillis;
+      long cmillis, cdiv, crem;
 
-      /* This computation will not overflow provided csecs < 2147483
-	 and cbytes and cbps both fit in a long.  */
+      /* Compute ((csecs * 1000) / cmillis) using integer division.
+	 Where DIV is integer division, we know
+	     a = (a DIV b) * b + a % b
+	 so
+	     a / b = (a DIV b) + (a % b) / b
+	 We compute the latter with a as csecs and b as cmillis,
+	 mixing the multiplication by 1000.  */
       cmillis = csecs * 1000 + cmicros / 1000;
-      cbps = ((cbytes / cmillis) * 1000
-	      + ((cbytes % cmillis) * 1000) / cmillis);
+      cdiv = (cbytes / cmillis) * 1000;
+      crem = (cbytes % cmillis) * 1000;
+      cbps = cdiv + (crem / cmillis);
+      if (cmillis < 0 || cdiv < 0 || crem < 0 || cbps < 0)
+	{
+	  /* We overflowed using milliseconds, so use seconds.  */
+	  cbps = cbytes / (csecs + ((cmicros > 500000L) ? 1 : 0));
+	}
     }
 
   if (eLstats == NULL)
