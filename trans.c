@@ -381,6 +381,7 @@ qtransalc (qcmd)
       q->s.znotify = NULL;
       q->s.zcmd = NULL;
     }
+  q->zlog = NULL;
   q->isecs = 0;
   q->imicros = 0;
   q->cbytes = 0;
