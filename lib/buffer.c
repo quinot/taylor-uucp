@@ -104,6 +104,22 @@ ubuffree (z)
     return;
   ioff = offsetof (struct sbuf, u);
   q = (struct sbuf *) (pointer) (z - ioff);
+
+#ifdef DEBUG_BUFFER
+  {
+    struct sbuf *qlook;
+
+    for (qlook = qBlist; qlook != NULL; qlook = qlook->qnext)
+      {
+	if (qlook == q)
+	  {
+	    ulog (LOG_ERROR, "ubuffree: Attempt to free buffer twice");
+	    abort ();
+	  }
+      }
+  }
+#endif
+
   q->qnext = qBlist;
   qBlist = q;
 }
