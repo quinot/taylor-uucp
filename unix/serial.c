@@ -2825,20 +2825,35 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	  int c;
 
 	  /* We didn't write any data.  Call select.  We use a timeout
-             long enough for 1024 bytes to be sent.
+             long enough for 1024 bytes to be sent.  But we don't wait
+             longer than the times it takes to receive cread bytes, in
+             case our read buffer is small.
 	       secs/kbyte == (1024 bytes/kbyte * 10 bits/byte) / baud bits/sec
 	       usecs/kbyte == (((1024 bytes/kbyte * 1000000 usecs/sec)
 	                        / baud bits/sec)
 			       * 10 bits/byte)
+
 	     */
 	  if (q->fterminal)
 	    {
-	      stime.tv_sec = (long) 10240 / q->ibaud;
-	      stime.tv_usec = ((((long) 1024000000 / q->ibaud) * (long) 10)
-			       % (long) 1000000);
+	      unsigned long cwait;
+
+	      cwait = 1024;
+	      if (cwait > cread)
+		cwait = cread;
+	      stime.tv_sec = (cwait * 10) / q->ibaud;
+	      stime.tv_usec = ((((cwait * 1000000) / q->ibaud) * 10)
+			       % 1000000);
 	    }
 	  else
 	    {
+	      /* This is some sort of network connection.  We can't
+                 estimate how long it will take to write data.  It
+                 also doesn't matter as much, as most systems will
+                 buffer much more incoming network data than they will
+                 incoming serial data.  Sleep for a second, although
+                 normally the select will return sonner because we can
+                 write more data.  */
 	      stime.tv_sec = 1;
 	      stime.tv_usec = 0;
 	    }

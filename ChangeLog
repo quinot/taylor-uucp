@@ -1,3 +1,9 @@
+2002-02-22  Ian Lance Taylor  <ian@airs.com>
+
+	* Godfrey van der Linden: unix/serial.c (fsysdep_conn_io): Limit
+	the delay waiting for a write to the number of bytes we are
+	prepared to read.
+
 2002-02-17  Ian Lance Taylor  <ian@airs.com>
 
 	* unix/serial.c (fsysdep_conn_io): If FD_ZERO is defined, use
