@@ -47,6 +47,7 @@ const char log_rcsid[] = "$Id$";
 
 /* Local functions.  */
 
+__inline__ static char *zstpcpy P((char *zto, const char *zfrom));
 static const char *zldate_and_time P((void));
 
 /* Program name.  Set by main function.  */
@@ -214,6 +215,18 @@ ulog_device (zdevice)
   zLdevice = zbufcpy (zdevice);
 }
 
+/* A helper function for ulog.  */
+
+__inline__ static char *
+zstpcpy (zto, zfrom)
+     char *zto;
+     const char *zfrom;
+{
+  while ((*zto++ = *zfrom++) != '\0')
+    ;
+  return zto - 1;
+}
+
 /* Make a log entry.  We make a token concession to non ANSI_C systems,
    but it clearly won't always work.  */
 
@@ -237,7 +250,11 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 #endif
   FILE *e, *edebug;
   boolean fstart, fend;
-  const char *zhdr, *zstr;
+  const char *zhdr;
+  char *zprefix;
+  register char *zset;
+  char *zformat;
+  char *zfrom;
 
   /* Log any received signal.  We do it this way to avoid calling ulog
      from the signal handler.  A few routines call ulog to get this
@@ -401,16 +418,24 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       break;
     }
 
-  if (fstart)
+  if (! fstart)
+    zprefix = zbufcpy ("");
+  else
     {
       if (! fLfile)
 	{
-	  fprintf (e, "%s: ", zProgram);
-	  if (edebug != NULL)
-	    fprintf (edebug, "%s: ", zProgram);
+	  zprefix = zbufalc (strlen (zProgram) + 3);
+	  sprintf (zprefix, "%s: ", zProgram);
 	}
       else
 	{
+	  zprefix = zbufalc (strlen (zProgram)
+			     + (zLsystem == NULL ? 1 : strlen (zLsystem))
+			     + (zLuser == NULL ? 4 : strlen (zLuser))
+			     + sizeof "1991-12-31 12:00:00.00"
+			     + strlen (zhdr)
+			     + 100);
+	  zset = zprefix;
 #if HAVE_TAYLOR_LOGGING
 	  {
 	    char *zbase;
@@ -418,96 +443,97 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    zbase = zsysdep_base_name (zProgram);
 	    if (zbase == NULL)
 	      zbase = zbufcpy (zProgram);
-	    fprintf (e, "%s ", zbase);
-	    if (edebug != NULL)
-	      fprintf (edebug, "%s ", zbase);
+	    zset = zstpcpy (zset, zbase);
+	    *zset++ = ' ';
 	    ubuffree (zbase);
 	  }
 #else /* ! HAVE_TAYLOR_LOGGING */
-	  fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
-	  if (edebug != NULL)
-	    fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
+	  zset = zstpcpy (zset, zLuser == NULL ? "uucp" : zLuser);
+	  *zset++ = ' ';
 #endif /* HAVE_TAYLOR_LOGGING */
 
-	  fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
-	  if (edebug != NULL)
-	    fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
+	  zset = zstpcpy (zset, zLsystem == NULL ? "-" : zLsystem);
+	  *zset++ = ' ';
 
 #if HAVE_TAYLOR_LOGGING
-	  fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
-	  if (edebug != NULL)
-	    fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
+	  zset = zstpcpy (zset, zLuser == NULL ? "-" : zLuser);
+	  *zset++ = ' ';
 #endif /* HAVE_TAYLOR_LOGGING */
 
-	  zstr = zldate_and_time ();
-	  fprintf (e, "(%s", zstr);
-	  if (edebug != NULL)
-	    fprintf (edebug, "(%s", zstr); 
+	  *zset++ = '(';
+	  zset = zstpcpy (zset, zldate_and_time ());
 
 	  if (iLid != 0)
 	    {
 #if ! HAVE_HDB_LOGGING
 #if HAVE_TAYLOR_LOGGING
-	      fprintf (e, " %d", iLid);
-	      if (edebug != NULL)
-		fprintf (edebug, " %d", iLid);
+	      sprintf (zset, " %d", iLid);
 #else /* ! HAVE_TAYLOR_LOGGING */
-	      fprintf (e, "-%d", iLid);
-	      if (edebug != NULL)
-		fprintf (edebug, "-%d", iLid);
+	      sprintf (zset, "-%d", iLid);
 #endif /* ! HAVE_TAYLOR_LOGGING */
 #else /* HAVE_HDB_LOGGING */
-
 	      /* I assume that the second number here is meant to be
 		 some sort of file sequence number, and that it should
 		 correspond to the sequence number in the statistics
 		 file.  I don't have any really convenient way to do
 		 this, so I won't unless somebody thinks it's very
 		 important.  */
-	      fprintf (e, ",%d,%d", iLid, 0);
-	      if (edebug != NULL)
-		fprintf (edebug, ",%d,%d", iLid, 0);
+	      sprintf (zset, ",%d,%d", iLid, 0);
 #endif /* HAVE_HDB_LOGGING */
+
+	      zset += strlen (zset);
 	    }
 
 #if QNX_LOG_NODE_ID
-	  fprintf (e, " %ld", (long) getnid ());
-	  if (edebug != NULL)
-	    fprintf (edebug, " %ld", (long) getnid ());
+	  sprintf (zset, " %ld", (long) getnid ());
+	  zset += strlen (zset);
 #endif
 
-	  fprintf (e, ") ");
-	  if (edebug != NULL)
-	    fprintf (edebug, ") ");
+	  *zset++ = ')';
+	  *zset++ = ' ';
 
-	  fprintf (e, "%s", zhdr);
-	  if (edebug != NULL)
-	    fprintf (edebug, "%s", zhdr);
+	  strcpy (zset, zhdr);
 	}
+    }
+
+  zformat = zbufalc (2 * strlen (zprefix) + strlen (zmsg) + 2);
+
+  zset = zformat;
+  zfrom = zprefix;
+  while (*zfrom != '\0')
+    {
+      if (*zfrom == '%')
+	*zset++ = '%';
+      *zset++ = *zfrom++;
+    }
+
+  ubuffree (zprefix);
+
+  zset = zstpcpy (zset, zmsg);
+
+  if (fend)
+    {
+      *zset++ = '\n';
+      *zset = '\0';
     }
 
 #if HAVE_VFPRINTF
   va_start (parg, zmsg);
-  vfprintf (e, zmsg, parg);
+  vfprintf (e, zformat, parg);
   va_end (parg);
   if (edebug != NULL)
     {
       va_start (parg, zmsg);
-      vfprintf (edebug, zmsg, parg);
+      vfprintf (edebug, zformat, parg);
       va_end (parg);
     }
 #else /* ! HAVE_VFPRINTF */
-  fprintf (e, zmsg, a, b, c, d, f, g, h, i, j);
+  fprintf (e, zformat, a, b, c, d, f, g, h, i, j);
   if (edebug != NULL)
-    fprintf (edebug, zmsg, a, b, c, d, f, g, h, i, j);
+    fprintf (edebug, zformat, a, b, c, d, f, g, h, i, j);
 #endif /* ! HAVE_VFPRINTF */
 
-  if (fend)
-    {
-      fprintf (e, "\n");
-      if (edebug != NULL)
-	fprintf (edebug, "\n");
-    }
+  ubuffree (zformat);
 
   (void) fflush (e);
   if (edebug != NULL)
