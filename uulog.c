@@ -57,12 +57,16 @@ main (argc, argv)
      int argc;
      char **argv;
 {
+  /* -D: display Debug file */
+  boolean fdebug = FALSE;
   /* -f: keep displaying lines forever.  */
   boolean fforever = FALSE;
   /* -n lines: number of lines to display.  */
   int cshow = 0;
   /* -s: system name.  */
   const char *zsystem = NULL;
+  /* -S: display Stats file */
+  boolean fstats = FALSE;
   /* -u: user name.  */
   const char *zuser = NULL;
   /* -I: configuration file name.  */
@@ -74,6 +78,8 @@ main (argc, argv)
   pointer puuconf;
   int iuuconf;
   const char *zlogfile;
+  const char *zstatsfile;
+  const char *zdebugfile;
   const char *zfile;
   FILE *e;
   char **pzshow = NULL;
@@ -101,14 +107,29 @@ main (argc, argv)
 	}
     }
 
-  while ((iopt = getopt_long (argc, argv, "fI:n:s:u:xX:", asLlongopts,
+  while ((iopt = getopt_long (argc, argv, "Df:FI:n:s:Su:xX:", asLlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
 	{
+	case 'D':
+	  /* Show debugging file.  */
+	  fdebug = TRUE;
+	  break;
+
 	case 'f':
+	  /* Keep displaying lines forever for a particular system.  */
+	  fforever = TRUE;
+	  zsystem = optarg;
+	  if (cshow == 0)
+	    cshow = 10;
+	  break;
+
+	case 'F':
 	  /* Keep displaying lines forever.  */
 	  fforever = TRUE;
+	  if (cshow == 0)
+	    cshow = 10;
 	  break;
 
 	case 'I':
@@ -125,6 +146,11 @@ main (argc, argv)
 	case 's':
 	  /* System name.  */
 	  zsystem = optarg;
+	  break;
+
+	case 'S':
+	  /* Show statistics file.  */
+	  fstats = TRUE;
 	  break;
 
 	case 'u':
@@ -154,7 +180,7 @@ main (argc, argv)
 	}
     }
 
-  if (optind != argc)
+  if (optind != argc || (fstats && fdebug))
     ulusage ();
 
   iuuconf = uuconf_init (&puuconf, (const char *) NULL, zconfig);
@@ -177,32 +203,62 @@ main (argc, argv)
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
+  iuuconf = uuconf_statsfile (puuconf, &zstatsfile);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+  iuuconf = uuconf_debugfile (puuconf, &zdebugfile);
+  if (iuuconf != UUCONF_SUCCESS)
+    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
   usysdep_initialize (puuconf, 0);
 
+  if (fstats)
+    zfile = zstatsfile;
+  else if (fdebug)
+    zfile = zdebugfile;
+  else
+    {
 #if ! HAVE_HDB_LOGGING
-  zfile = zlogfile;
+      zfile = zlogfile;
 #else
-  {
-    const char *zprogram;
-    char *zalc;
+      const char *zprogram;
+      char *zalc;
 
-    /* We need a system to find a HDB log file.  */
-    if (zsystem == NULL)
-      ulusage ();
+      /* We need a system to find a HDB log file.  */
+      if (zsystem == NULL)
+	ulusage ();
 
-    if (fuuxqt)
-      zprogram = "uuxqt";
-    else
-      zprogram = "uucico";
+      if (strcmp (zsystem, "ANY") != 0)
+	{
+	  struct uuconf_system ssys;
 
-    zalc = zbufalc (strlen (zlogfile)
-		    + strlen (zprogram)
-		    + strlen (zsystem)
-		    + 1);
-    sprintf (zalc, zlogfile, zprogram, zsystem);
-    zfile = zalc;
-  }
+	  iuuconf = uuconf_system_info (puuconf, zsystem, &ssys);
+	  if (iuuconf != UUCONF_SUCCESS)
+	    {
+	      if (iuuconf != UUCONF_NOT_FOUND)
+		ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+	      ulog (LOG_FATAL, "%s: System not found", zsystem);
+	    }
+	  zsystem = zbufcpy (ssys.uuconf_zname);
+	}
+
+      if (fuuxqt)
+	zprogram = "uuxqt";
+      else
+	zprogram = "uucico";
+
+      zalc = zbufalc (strlen (zlogfile)
+		      + strlen (zprogram)
+		      + strlen (zsystem)
+		      + 1);
+      sprintf (zalc, zlogfile, zprogram, zsystem);
+      zfile = zalc;
+
+      if (strcmp (zsystem, "ANY") == 0)
+	zsystem = NULL;
 #endif
+    }
 
   e = fopen (zfile, "r");
   if (e == NULL)
@@ -240,29 +296,52 @@ main (argc, argv)
 	     any).  */
 	  znext = zline + strspn (zline, " \t");
 
+	  if (! fstats)
+	    {
 #if ! HAVE_TAYLOR_LOGGING
-	  /* The user name is the first field on the line.  */
-	  zluser = znext;
-	  cluser = strcspn (znext, " \t");
+	      /* The user name is the first field on the line.  */
+	      zluser = znext;
+	      cluser = strcspn (znext, " \t");
 #endif
       
-	  /* Skip the first field.  */
-	  znext += strcspn (znext, " \t");
-	  znext += strspn (znext, " \t");
+	      /* Skip the first field.  */
+	      znext += strcspn (znext, " \t");
+	      znext += strspn (znext, " \t");
 
-	  /* The system is the second field on the line.  */
-	  zlsys = znext;
-	  clsys = strcspn (znext, " \t");
+	      /* The system is the second field on the line.  */
+	      zlsys = znext;
+	      clsys = strcspn (znext, " \t");
 
-	  /* Skip the second field.  */
-	  znext += clsys;
-	  znext += strspn (znext, " \t");
+	      /* Skip the second field.  */
+	      znext += clsys;
+	      znext += strspn (znext, " \t");
 
 #if HAVE_TAYLOR_LOGGING
-	  /* The user is the third field on the line.  */
-	  zluser = znext;
-	  cluser = strcspn (znext, " \t");
+	      /* The user is the third field on the line.  */
+	      zluser = znext;
+	      cluser = strcspn (znext, " \t");
 #endif
+	    }
+	  else
+	    {
+#if ! HAVE_HDB_LOGGING
+	      /* The user name is the first field on the line, and the
+		 system name is the second.  */
+	      zluser = znext;
+	      cluser = strcspn (znext, " \t");
+	      znext += cluser;
+	      znext += strspn (znext, " \t");
+	      zlsys = znext;
+	      clsys = strcspn (znext, " \t");
+#else
+	      /* The first field is system!user.  */
+	      zlsys = znext;
+	      clsys = strcspn (znext, "!");
+	      znext += clsys + 1;
+	      zlsys = znext;
+	      clsys = strcspn (znext, " \t");
+#endif
+	    }
 
 	  /* See if we should print this line.  */
 	  if (zsystem != NULL
@@ -329,15 +408,26 @@ ulusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uulog [-s system] [-u user] [-x] [-I file] [-X debug]\n");
+	   "Usage: uulog [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n");
+  fprintf (stderr,
+	   " -n: show given number of lines from end of log\n");
   fprintf (stderr,
 	   " -s: print entries for named system\n");
   fprintf (stderr,
-	   " -u: print entries for name user\n");
+	   " -f: follow entries for named system\n");
+  fprintf (stderr,
+	   " -u: print entries for named user\n");
 #if HAVE_HDB_LOGGING
   fprintf (stderr,
 	   " -x: print uuxqt log rather than uucico log\n");
+#else
+  fprintf (stderr,
+	   " -F: follow entries for any system\n");
 #endif
+  fprintf (stderr,
+	   " -S: show statistics file\n");
+  fprintf (stderr,
+	   " -D: show debugging file\n");
   fprintf (stderr,
 	   " -X debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
