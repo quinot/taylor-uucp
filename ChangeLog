@@ -1,3 +1,11 @@
+2002-03-07  Ian Lance Taylor  <ian@airs.com>
+
+	* configure.in: Substitute NEWCONFIGDIR and OLDCONFIGDIR rather
+	than defining them.
+	* uuconf/Makefile.am (AM_CFLAGS): Define NEWCONFIGLIB and
+	OLDCONFIGLIB.
+	* configure, config.h.in, Makefile.in, */Makefile.in: Rebuild.
+
 2002-03-06  Ian Lance Taylor  <ian@airs.com>
 
 	* uucp.texi (Compilation): Use @option in table of configure

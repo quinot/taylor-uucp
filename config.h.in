@@ -369,12 +369,6 @@
 /* user ID for programs; normally uucp */
 #undef OWNER
 
-/* new config file directory; normally PREFIX/conf/uucp */
-#undef NEWCONFIGLIB
-
-/* old config file directory; normally /usr/lib/uucp */
-#undef OLDCONFIGLIB
-
 /* Whether the compiler supports prototypes */
 #undef HAVE_PROTOTYPES
 

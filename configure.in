@@ -17,17 +17,15 @@ AC_SUBST(OWNER)
 dnl
 AC_ARG_WITH(newconfigdir,
 [  --with-newconfigdir=DIRNAME  new config file directory; default PREFIX/conf/uucp],
-[newconfigdir=${withval}],
-[newconfigdir="${prefix}/conf/uucp"])
-AC_DEFINE_UNQUOTED(NEWCONFIGLIB, "$newconfigdir",
-                   [new config file directory; normally PREFIX/conf/uucp])
+[NEWCONFIGDIR=${withval}],
+[NEWCONFIGDIR="${prefix}/conf/uucp"])
+AC_SUBST(NEWCONFIGDIR)
 dnl
 AC_ARG_WITH(oldconfigdir,
 [  --with-oldconfigdir=DIRNAME  old config file directory; default /usr/lib/uucp],
-[oldconfigdir=${withval}],
-[oldconfigdir="/usr/lib/uucp"])
-AC_DEFINE_UNQUOTED(OLDCONFIGLIB, "$oldconfigdir",
-                   [old config file directory; normally /usr/lib/uucp])
+[OLDCONFIGDIR=${withval}],
+[OLDCONFIGDIR="/usr/lib/uucp"])
+AC_SUBST(OLDCONFIGDIR)
 dnl
 AC_PREFIX_PROGRAM(gcc)
 AC_PROG_CC

@@ -67,7 +67,9 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LIBOBJS = @LIBOBJS@
 LN_S = @LN_S@
 MAINT = @MAINT@
+NEWCONFIGDIR = @NEWCONFIGDIR@
 OBJEXT = @OBJEXT@
+OLDCONFIGDIR = @OLDCONFIGDIR@
 OWNER = @OWNER@
 PACKAGE = @PACKAGE@
 POUNDBANG = @POUNDBANG@
@@ -96,7 +98,7 @@ libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
 	vsys.c alloc.h syshdr.h uucnfi.h
 
 
-AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS)
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS) -DNEWCONFIGLIB=\"$(NEWCONFIGDIR)\" -DOLDCONFIGLIB=\"$(OLDCONFIGDIR)\"
 subdir = uuconf
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h

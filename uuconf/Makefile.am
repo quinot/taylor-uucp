@@ -16,4 +16,4 @@ libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
 	tval.c ugtlin.c unk.c val.c vinit.c vport.c vsinfo.c vsnams.c \
 	vsys.c alloc.h syshdr.h uucnfi.h
 
-AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS)
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS) -DNEWCONFIGLIB=\"$(NEWCONFIGDIR)\" -DOLDCONFIGLIB=\"$(OLDCONFIGDIR)\"
