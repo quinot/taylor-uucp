@@ -29,7 +29,7 @@ dnl
 AC_HAVE_HEADERS(string.h strings.h unistd.h stdlib.h limits.h time.h)
 AC_HAVE_HEADERS(sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
-AC_HAVE_HEADERS(poll.h stropts.h ftw.h)
+AC_HAVE_HEADERS(poll.h stropts.h ftw.h sys/select.h)
 dnl
 AC_MAJOR_HEADER
 dnl
