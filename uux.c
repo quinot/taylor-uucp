@@ -1401,18 +1401,35 @@ uxcopy_stdin (e)
     {
       size_t cwrite;
 
+      /* I want to use fread here, but there is a bug in some versions
+	 of SVR4 which causes fread to return less than a complete
+	 buffer even if EOF has not been reached.  This is not online
+	 time, so speed is not critical, but it's still quite annoying
+	 to have to use an inefficient algorithm.  */
+      cread = 0;
       if (fsysdep_catch ())
 	{
 	  usysdep_start_catch ();
-	  if (FGOT_SIGNAL ())
-	    uxabort ();
 
-	  /* There's an unimportant race here.  If the user hits ^C
-	     between the FGOT_SIGNAL we just did and the time we enter
-	     fread, we won't know about the signal (unless we're doing
-	     a longjmp, but we normally aren't).  It's not a big
-	     problem, because the user can just hit ^C again.  */
-	  cread = fread (ab, sizeof (char), sizeof ab, stdin);
+	  while (cread < sizeof (ab))
+	    {
+	      int b;
+
+	      if (FGOT_SIGNAL ())
+		uxabort ();
+
+	      /* There's an unimportant race here.  If the user hits
+		 ^C between the FGOT_SIGNAL we just did and the time
+		 we enter getchar, we won't know about the signal
+		 (unless we're doing a longjmp, but we normally
+		 aren't).  It's not a big problem, because the user
+		 can just hit ^C again.  */
+	      b = getchar ();
+	      if (b == EOF)
+		break;
+	      ab[cread] = b;
+	      ++cread;
+	    }
 	}
 
       usysdep_end_catch ();
