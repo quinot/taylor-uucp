@@ -4,6 +4,7 @@ alloca.c
 bsrch.c
 buffer.c
 bzero.c
+crc.c
 debug.c
 getlin.c
 getopt.c

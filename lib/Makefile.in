@@ -17,7 +17,8 @@ VPATH = @srcdir@
 
 MORECFLAGS=-I$(srcdir)/..
 
-OBJS = buffer.o debug.o getopt.o spool.o status.o xfree.o xmall.o xreall.o \
+OBJS = buffer.o crc.o debug.o getopt.o spool.o status.o xfree.o \
+	xmall.o xreall.o \
 	@LIBOBJS@ @ALLOCA@
 
 all: libuucp.a
@@ -49,4 +50,5 @@ Makefile: Makefile.in
 
 $(OBJS): $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
 
+crc.o: $(srcdir)/../prot.h
 getopt.o: $(srcdir)/../getopt.h
