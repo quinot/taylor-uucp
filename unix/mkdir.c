@@ -28,16 +28,16 @@ mkdir (zdir, imode)
   aidescs[1] = SPAWN_NULL;
   aidescs[2] = SPAWN_NULL;
 
-  ipid = isspawn (azargs, aidescs, FALSE, FALSE, (const char *) NULL,
-		  TRUE, FALSE, (const char *) NULL,
-		  (const char *) NULL, (const char *) NULL);
+  ipid = ixsspawn (azargs, aidescs, FALSE, FALSE, (const char *) NULL,
+		   TRUE, FALSE, (const char *) NULL,
+		   (const char *) NULL, (const char *) NULL);
 
   (void) umask (0);
 
   if (ipid < 0)
     return -1;
 
-  if (iswait ((unsigned long) ipid, (const char *) NULL) != 0)
+  if (ixswait ((unsigned long) ipid, (const char *) NULL) != 0)
     {
       /* Make up an errno value.  */
       errno = EACCES;

@@ -84,8 +84,8 @@ extern char **environ;
    descriptors it returns.  */
 
 pid_t
-isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
-	 zpath, zuu_machine, zuu_user)
+ixsspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
+	  zpath, zuu_machine, zuu_user)
      const char **pazargs;
      int aidescs[3];
      boolean fkeepuid;
@@ -272,7 +272,7 @@ isspawn (pazargs, aidescs, fkeepuid, fkeepenv, zchdir, fnosigs, fshell,
   if (! ferr)
     {
       /* This should really be vfork if available.  */
-      iret = isfork ();
+      iret = ixsfork ();
       if (iret < 0)
 	{
 	  ferr = TRUE;

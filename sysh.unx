@@ -374,7 +374,7 @@ extern void usset_signal P((int isig, RETSIGTYPE (*pfn) P((int)),
 extern RETSIGTYPE ussignal P((int isig));
 
 /* Try to fork, repeating several times.  */
-extern pid_t isfork P((void));
+extern pid_t ixsfork P((void));
 
 /* Spawn a job.  Returns the process ID of the spawned job or -1 on
    error.  The following macros may be passed in aidescs.  */
@@ -386,21 +386,21 @@ extern pid_t isfork P((void));
 /* Set element of aidescs to a pipe for caller to write to.  */
 #define SPAWN_WRITE_PIPE (-3)
 
-extern pid_t isspawn P((const char **pazargs, int *aidescs,
-			boolean fkeepuid, boolean fkeepenv,
-			const char *zchdir, boolean fnosigs,
-			boolean fshell, const char *zpath,
-			const char *zuu_machine,
-			const char *zuu_user));
+extern pid_t ixsspawn P((const char **pazargs, int *aidescs,
+			 boolean fkeepuid, boolean fkeepenv,
+			 const char *zchdir, boolean fnosigs,
+			 boolean fshell, const char *zpath,
+			 const char *zuu_machine,
+			 const char *zuu_user));
 
-/* Do a form of popen using isspawn.  */
+/* Do a form of popen using ixsspawn.  */
 extern FILE *espopen P((const char **pazargs, boolean frd,
 			pid_t *pipid));
 
 /* Wait for a particular process to finish, returning the exit status.
    The process ID should be pid_t, but we can't put that in a
    prototype.  */
-extern int iswait P((unsigned long ipid, const char *zreport));
+extern int ixswait P((unsigned long ipid, const char *zreport));
 
 /* Find a spool file in the spool directory.  For a local file, the
    bgrade argument is the grade of the file.  This is needed for

@@ -130,7 +130,7 @@ fsysdep_wildcard_start (zfile)
       zSwildcard_alloc = NULL;
     }
 
-  if (iswait ((unsigned long) ipid, ECHO_PROGRAM) != 0)
+  if (ixswait ((unsigned long) ipid, ECHO_PROGRAM) != 0)
     {
       xfree ((pointer) zSwildcard_alloc);
       return FALSE;

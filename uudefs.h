@@ -89,7 +89,7 @@ struct sstatus
   /* Number of failed retries.  */
   int cretries;
   /* Time of last call in seconds since epoch (determined by
-     isysdep_time).  */
+     ixsysdep_time).  */
   long ilast;
   /* Number of seconds until a retry is permitted.  */
   int cwait;

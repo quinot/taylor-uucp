@@ -24,14 +24,14 @@ rmdir (zdir)
   aidescs[1] = SPAWN_NULL;
   aidescs[2] = SPAWN_NULL;
 
-  ipid = isspawn (azargs, aidescs, TRUE, FALSE, (const char *) NULL,
-		  TRUE, TRUE, (const char *) NULL,
-		  (const char *) NULL, (const char *) NULL);
+  ipid = ixsspawn (azargs, aidescs, TRUE, FALSE, (const char *) NULL,
+		   TRUE, TRUE, (const char *) NULL,
+		   (const char *) NULL, (const char *) NULL);
 
   if (ipid < 0)
     return -1;
 
-  if (iswait ((unsigned long) ipid, (const char *) NULL) != 0)
+  if (ixswait ((unsigned long) ipid, (const char *) NULL) != 0)
     {
       /* Make up an errno value.  */
       errno = EBUSY;

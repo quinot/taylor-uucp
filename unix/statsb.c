@@ -278,7 +278,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 /* Get the time a work job was queued.  */
 
 long
-isysdep_work_time (qsys, pseq)
+ixsysdep_work_time (qsys, pseq)
      const struct uuconf_system *qsys;
      pointer pseq;
 {
@@ -290,7 +290,7 @@ isysdep_work_time (qsys, pseq)
   if (zfile == NULL)
     return 0;
   ubuffree (zjobid);
-  iret = isysdep_file_time (zfile);
+  iret = ixsysdep_file_time (zfile);
   ubuffree (zfile);
   return iret;
 }
@@ -299,7 +299,7 @@ isysdep_work_time (qsys, pseq)
    modified).  */
 
 long
-isysdep_file_time (zfile)
+ixsysdep_file_time (zfile)
      const char *zfile;
 {
   struct stat s;
@@ -308,7 +308,7 @@ isysdep_file_time (zfile)
     {
       if (errno != ENOENT)
 	ulog (LOG_ERROR, "stat (%s): %s", zfile, strerror (errno));
-      return isysdep_time ((long *) NULL);
+      return ixsysdep_time ((long *) NULL);
     }
 
   return (long) s.st_mtime;
@@ -523,14 +523,14 @@ fsysdep_lock_status ()
 	sprintf (zset, "%s%d", zlast, pai[i]);
 	pazargs[cargs - 1] = zset;
 
-	ipid = isspawn ((const char **) pazargs, aidescs, FALSE, FALSE,
-			(const char *) NULL, FALSE, TRUE,
-			(const char *) NULL, (const char *) NULL,
-			(const char *) NULL);
+	ipid = ixsspawn ((const char **) pazargs, aidescs, FALSE, FALSE,
+			 (const char *) NULL, FALSE, TRUE,
+			 (const char *) NULL, (const char *) NULL,
+			 (const char *) NULL);
 	if (ipid < 0)
-	  ulog (LOG_ERROR, "isspawn: %s", strerror (errno));
+	  ulog (LOG_ERROR, "ixsspawn: %s", strerror (errno));
 	else
-	  (void) iswait ((unsigned long) ipid, PS_PROGRAM);
+	  (void) ixswait ((unsigned long) ipid, PS_PROGRAM);
       }
     ubuffree (zset);
   }
@@ -553,14 +553,14 @@ fsysdep_lock_status ()
       }
     pazargs[cargs - 1] = zlast;
 
-    ipid = isspawn ((const char **) pazargs, aidescs, FALSE, FALSE,
-		    (const char *) NULL, FALSE, TRUE,
-		    (const char *) NULL, (const char *) NULL,
-		    (const char *) NULL);
+    ipid = ixsspawn ((const char **) pazargs, aidescs, FALSE, FALSE,
+		     (const char *) NULL, FALSE, TRUE,
+		     (const char *) NULL, (const char *) NULL,
+		     (const char *) NULL);
     if (ipid < 0)
-      ulog (LOG_ERROR, "isspawn: %s", strerror (errno));
+      ulog (LOG_ERROR, "ixsspawn: %s", strerror (errno));
     else
-      (void) iswait ((unsigned long) ipid, PS_PROGRAM);
+      (void) ixswait ((unsigned long) ipid, PS_PROGRAM);
     ubuffree (zlast);
   }
 #endif    

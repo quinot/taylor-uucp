@@ -94,10 +94,10 @@ extern time_t time ();
 
 /* Get the time in seconds and microseconds; this need only work
    within the process when called from the system independent code.
-   It is also called by isysdep_time.  */
+   It is also called by ixsysdep_time.  */
 
 long
-isysdep_process_time (pimicros)
+ixsysdep_process_time (pimicros)
      long *pimicros;
 {
 #if HAVE_GETTIMEOFDAY

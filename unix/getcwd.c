@@ -31,7 +31,7 @@ getcwd (zbuf, cbuf)
 
   (void) fclose (e);
 
-  if (iswait ((unsigned long) ipid, (const char *) NULL) != 0)
+  if (ixswait ((unsigned long) ipid, (const char *) NULL) != 0)
     {
       ierr = EACCES;
       cread = 0;

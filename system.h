@@ -232,19 +232,19 @@ extern boolean fsysdep_mail P((const char *zto, const char *zsubject,
    pimicros argument is not NULL, it should be set to the number of
    microseconds (if this is not available, *pimicros should be set to
    zero).  */
-extern long isysdep_time P((long *pimicros));
+extern long ixsysdep_time P((long *pimicros));
 
 /* Get the time in seconds and microseconds (millionths of a second)
    since some epoch.  The actual epoch is not important, and it may
    change in between program invocations; this is provided because on
    Unix the times function may be used.  If microseconds can not be
    determined, *pimicros can just be set to zero.  */
-extern long isysdep_process_time P((long *pimicros));
+extern long ixsysdep_process_time P((long *pimicros));
 
-/* Parse the value returned by isysdep_time into a struct tm.  I
+/* Parse the value returned by ixsysdep_time into a struct tm.  I
    assume that this structure is defined in <time.h>.  This is
    basically just localtime, except that the ANSI function takes a
-   time_t which may not be what is returned by isysdep_time.  */
+   time_t which may not be what is returned by ixsysdep_time.  */
 extern void usysdep_localtime P((long itime, struct tm *q));
 
 /* Sleep for a number of seconds.  */
@@ -264,7 +264,7 @@ extern boolean fsysdep_unlock_system P((const struct uuconf_system *qsys));
 
 /* Get the conversation sequence number for a remote system, and
    increment it for next time.  This should return -1 on error.  */
-extern long isysdep_get_sequence P((const struct uuconf_system *qsys));
+extern long ixsysdep_get_sequence P((const struct uuconf_system *qsys));
 
 /* Get the status of a remote system.  This should return FALSE on
    error.  Otherwise it should set *qret to the status.  If no status
@@ -599,7 +599,7 @@ extern boolean fsysdep_xqt_check_file P((const struct uuconf_system *qsys,
    zinput -- file name for standard input (may be NULL)
    zoutput -- file name for standard output (may be NULL)
    fshell -- if TRUE, use /bin/sh to execute file
-   ilock -- return value of isysdep_lock_uuxqt
+   ilock -- return value of ixsysdep_lock_uuxqt
    pzerror -- set to name of standard error file
    pftemp -- set to TRUE if error is temporary, FALSE otherwise
 
@@ -625,18 +625,18 @@ extern boolean fsysdep_execute P((const struct uuconf_system *qsys,
    NULL, it is a command that must be locked.  This should return a
    nonnegative number which will be passed to other routines,
    including fsysdep_unlock_uuxqt, or -1 on error.  */
-extern int isysdep_lock_uuxqt P((const char *zcmd,
-				 int cmaxuuxqts));
+extern int ixsysdep_lock_uuxqt P((const char *zcmd,
+				  int cmaxuuxqts));
 
 /* Unlock a uuxqt process.  This is passed the return value of
-   isysdep_lock_uuxqt, as well as the arguments passed to
-   isysdep_lock_uuxqt.  It may return FALSE on error, but at present
+   ixsysdep_lock_uuxqt, as well as the arguments passed to
+   ixsysdep_lock_uuxqt.  It may return FALSE on error, but at present
    the return value is ignored.  */
 extern boolean fsysdep_unlock_uuxqt P((int iseq, const char *zcmd,
 				       int cmaxuuxqts));
 
 /* See whether a particular uuxqt command is locked.  This should
-   return TRUE if the command is locked (because isysdep_lock_uuxqt
+   return TRUE if the command is locked (because ixsysdep_lock_uuxqt
    was called with it as an argument), FALSE otherwise.  There is no
    way to return error.  */
 extern boolean fsysdep_uuxqt_locked P((const char *zcmd));
@@ -650,7 +650,7 @@ extern boolean fsysdep_lock_uuxqt_file P((const char *zfile));
 extern boolean fsysdep_unlock_uuxqt_file P((const char *zfile));
 
 /* Lock the execution directory.  The ilock argument is the return
-   value of isysdep_lock_uuxqt.  This should return FALSE if the
+   value of ixsysdep_lock_uuxqt.  This should return FALSE if the
    directory is already locked.  There is no way to return error.  */
 extern boolean fsysdep_lock_uuxqt_dir P((int ilock));
 
@@ -708,7 +708,7 @@ extern char *zsysdep_in_dir P((const char *zdir, const char *zfile));
 
 /* Get the mode of a file.  This should return a Unix style file mode.
    It should return 0 on error.  */
-extern unsigned int isysdep_file_mode P((const char *zfile));
+extern unsigned int ixsysdep_file_mode P((const char *zfile));
 
 /* See whether the user has access to a file.  This is called by uucp
    and uux to prevent copying of a file which uucp can read but the
@@ -769,21 +769,21 @@ extern boolean fsysdep_kill_job P((pointer puuconf,
 /* Rejuvenate a job, given the jobid.  If possible, this should update
    the time associated with the job such that it will not be
    eliminated by uustat -K or similar programs that check the creation
-   time.  This should affect the return value of isysdep_work_time.
+   time.  This should affect the return value of ixsysdep_work_time.
    On error it should log an error message and return FALSE.  */
 extern boolean fsysdep_rejuvenate_job P((pointer puuconf,
 					 const char *zjobid));
 
 /* Get the time a job was queued, given the sequence number.  There is
    no way to indicate error.  The return value must use the same epoch
-   as isysdep_time.  */
-extern long isysdep_work_time P((const struct uuconf_system *qsys,
-				 pointer pseq));
+   as ixsysdep_time.  */
+extern long ixsysdep_work_time P((const struct uuconf_system *qsys,
+				  pointer pseq));
 
 /* Get the time a file was created.  This is called by uustat on
    execution files.  There is no way to indicate error.  The return
-   value must use the same epoch as isysdep_time.  */
-extern long isysdep_file_time P((const char *zfile));
+   value must use the same epoch as ixsysdep_time.  */
+extern long ixsysdep_file_time P((const char *zfile));
 
 /* Get the size in bytes of a file.  If this file does not exist, this
    should not give an error message, but should return -1.  If some

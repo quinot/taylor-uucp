@@ -2705,12 +2705,12 @@ fsrun_chat (oread, owrite, pzprog)
 
   /* Pass fkeepuid, fkeepenv and fshell as TRUE.  This puts the
      responsibility of maintaing security on the chat program.  */
-  ipid = isspawn ((const char **) pzprog, aidescs, TRUE, TRUE,
-		  (const char *) NULL, FALSE, TRUE, (const char *) NULL,
-		  (const char *) NULL, (const char *) NULL);
+  ipid = ixsspawn ((const char **) pzprog, aidescs, TRUE, TRUE,
+		   (const char *) NULL, FALSE, TRUE, (const char *) NULL,
+		   (const char *) NULL, (const char *) NULL);
   if (ipid < 0)
     {
-      ulog (LOG_ERROR, "isspawn (%s): %s", pzprog[0], strerror (errno));
+      ulog (LOG_ERROR, "ixsspawn (%s): %s", pzprog[0], strerror (errno));
       return FALSE;
     }
 
@@ -2720,7 +2720,7 @@ fsrun_chat (oread, owrite, pzprog)
       ulog (LOG_ERROR, "fdopen: %s", strerror (errno));
       (void) close (aidescs[2]);
       (void) kill (ipid, SIGKILL);
-      (void) iswait ((unsigned long) ipid, (const char *) NULL);
+      (void) ixswait ((unsigned long) ipid, (const char *) NULL);
       return FALSE;
     }
 
@@ -2742,7 +2742,7 @@ fsrun_chat (oread, owrite, pzprog)
   xfree ((pointer) z);
   (void) fclose (e);
 
-  return iswait ((unsigned long) ipid, "Chat program") == 0;
+  return ixswait ((unsigned long) ipid, "Chat program") == 0;
 }
 
 /* Run a chat program on a stdin port.  */

@@ -215,7 +215,7 @@ main (argc, argv)
 	  break;
 	case 'p':
 	  iPercent = (int) strtol (optarg, (char **) NULL, 10);
-	  srand ((unsigned int) isysdep_time ((long *) NULL));
+	  srand ((unsigned int) ixsysdep_time ((long *) NULL));
 	  break;
 	case 's':
 	  zsys = optarg;

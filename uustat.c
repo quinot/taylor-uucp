@@ -437,7 +437,7 @@ main (argc, argv)
     iold = (long) -1;
   else
     {
-      iold = (isysdep_time ((long *) NULL)
+      iold = (ixsysdep_time ((long *) NULL)
 	      - (long) ioldhours * (long) 60 * (long) 60);
       if (iold < 0L)
 	iold = 0L;
@@ -446,7 +446,7 @@ main (argc, argv)
     iyoung = (long) -1;
   else
     {
-      iyoung = (isysdep_time ((long *) NULL)
+      iyoung = (ixsysdep_time ((long *) NULL)
 		- (long) iyounghours * (long) 60 * (long) 60);
       if (iyoung < 0L)
 	iyoung = 0L;
@@ -919,7 +919,7 @@ fsworkfiles_system (puuconf, icmd, qsys, cusers, pazusers, fnotusers, iold,
 	    continue;
 	}
 
-      itime = isysdep_work_time (qsys, s.pseq);
+      itime = ixsysdep_work_time (qsys, s.pseq);
 
       if (iold != (long) -1 && itime > iold)
 	continue;
@@ -1381,7 +1381,7 @@ fsexecutions (puuconf, icmd, csystems, pazsystems, fnotsystems, cusers,
 	    }
 	}
 
-      itime = isysdep_file_time (zfile);
+      itime = ixsysdep_file_time (zfile);
 
       if ((iold != (long) -1 && itime > iold)
 	  || (iyoung != (long) -1 && itime < iyoung))
@@ -1857,7 +1857,7 @@ fsquery (puuconf)
 
 	  ubuffree (zsystem);
 	  ++qlook->cxqts;
-	  itime = isysdep_file_time (zfile);
+	  itime = ixsysdep_file_time (zfile);
 	  if (itime < qlook->ifirst)
 	    qlook->ifirst = itime;
 	}
@@ -1869,7 +1869,7 @@ fsquery (puuconf)
 	  qnew->qnext = qlist;
 	  qnew->zsystem = zsystem;
 	  qnew->cxqts = 1;
-	  qnew->ifirst = isysdep_file_time (zfile);
+	  qnew->ifirst = ixsysdep_file_time (zfile);
 	  qlist = qnew;
 	}
 
@@ -1881,7 +1881,7 @@ fsquery (puuconf)
   if (ferr)
     return FALSE;
 
-  inow = isysdep_time ((long *) NULL);
+  inow = ixsysdep_time ((long *) NULL);
 
   /* Show the information for each system.  */
   iuuconf = uuconf_system_names (puuconf, &pznames, 0);
@@ -2023,7 +2023,7 @@ fsquery_system (qsys, pq, inow, zlocalname)
 	  zid = zthisid;
 	}
 
-      itime = isysdep_work_time (qsys, s.pseq);
+      itime = ixsysdep_work_time (qsys, s.pseq);
       if (ifirstwork == 0L || ifirstwork > itime)
 	ifirstwork = itime;
     }
@@ -2181,7 +2181,7 @@ fsmachines ()
 	{
 	  printf (" (%d %s", sstat.cretries,
 		  sstat.cretries == 1 ? "try" : "tries");
-	  if (sstat.ilast + sstat.cwait > isysdep_time ((long *) NULL))
+	  if (sstat.ilast + sstat.cwait > ixsysdep_time ((long *) NULL))
 	    {
 	      usysdep_localtime (sstat.ilast + sstat.cwait, &stime);
 	      printf (", next after %02d-%02d %02d:%02d",

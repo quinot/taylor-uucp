@@ -358,8 +358,8 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 
   /* Pass zchdir as zxqtdir, fnosigs as TRUE, fshell as TRUE if we
      aren't already using the shell.  */
-  ipid = isspawn (pazargs, aidescs, FALSE, FALSE, zxqtdir, TRUE,
-		  ! fshell, zpath, qsys->uuconf_zname, zuser);
+  ipid = ixsspawn (pazargs, aidescs, FALSE, FALSE, zxqtdir, TRUE,
+		   ! fshell, zpath, qsys->uuconf_zname, zuser);
 
   ierr = errno;
 
@@ -374,12 +374,12 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 
   if (ipid < 0)
     {
-      ulog (LOG_ERROR, "isspawn: %s", strerror (ierr));
+      ulog (LOG_ERROR, "ixsspawn: %s", strerror (ierr));
       *pftemp = TRUE;
       return FALSE;
     }
 
-  istat = iswait ((unsigned long) ipid, "Execution");
+  istat = ixswait ((unsigned long) ipid, "Execution");
 
   if (istat == EX_TEMPFAIL)
     *pftemp = TRUE;
@@ -390,7 +390,7 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 /* Lock a uuxqt process.  */
 
 int
-isysdep_lock_uuxqt (zcmd, cmaxuuxqts)
+ixsysdep_lock_uuxqt (zcmd, cmaxuuxqts)
      const char *zcmd;
      int cmaxuuxqts;
 {

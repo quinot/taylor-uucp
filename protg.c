@@ -572,7 +572,7 @@ fgexchange_init (qdaemon, ictl, ival, piset)
 	    return FALSE;
 	}
 
-      itime = isysdep_time ((long *) NULL);
+      itime = ixsysdep_time ((long *) NULL);
       ctimeout = cGexchange_init_timeout;
 
       do
@@ -626,7 +626,7 @@ fgexchange_init (qdaemon, ictl, ival, piset)
 		iGremote_segsize = CONTROL_YYY (iGpacket_control);
 	    }
 
-	  inewtime = isysdep_time ((long *) NULL);
+	  inewtime = ixsysdep_time ((long *) NULL);
 	  ctimeout -= inewtime - itime;
 	}
       while (ctimeout > 0);

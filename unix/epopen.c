@@ -1,5 +1,5 @@
 /* epopen.c
-   A version of popen that goes through isspawn.
+   A version of popen that goes through ixsspawn.
 
    Copyright (C) 1992 Ian Lance Taylor
 
@@ -28,7 +28,7 @@
 
 #include <errno.h>
 
-/* A version of popen that goes through isspawn.  This actually takes
+/* A version of popen that goes through ixsspawn.  This actually takes
    an array of arguments rather than a string, and takes a boolean
    read/write value rather than a string.  It sets *pipid to the
    process ID of the child.  */
@@ -55,10 +55,10 @@ espopen (pazargs, frd, pipid)
     }
   aidescs[2] = SPAWN_NULL;
 
-  ipid = isspawn (pazargs, aidescs, FALSE, FALSE,
-		  (const char *) NULL, FALSE, TRUE,
-		  (const char *) NULL, (const char *) NULL,
-		  (const char *) NULL);
+  ipid = ixsspawn (pazargs, aidescs, FALSE, FALSE,
+		   (const char *) NULL, FALSE, TRUE,
+		   (const char *) NULL, (const char *) NULL,
+		   (const char *) NULL);
   if (ipid < 0)
     return NULL;
 
@@ -73,7 +73,7 @@ espopen (pazargs, frd, pipid)
       ierr = errno;
       (void) close (frd ? aidescs[1] : aidescs[0]);
       (void) kill (ipid, SIGKILL);
-      (void) iswait ((unsigned long) ipid, (const char *) NULL);
+      (void) ixswait ((unsigned long) ipid, (const char *) NULL);
       errno = ierr;
       return NULL;
     }

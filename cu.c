@@ -1860,7 +1860,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 	{
 	  long iend;
 
-	  iend = isysdep_time ((long *) NULL) + (long) cCuvar_timeout;
+	  iend = ixsysdep_time ((long *) NULL) + (long) cCuvar_timeout;
 	  for (zget = zsendbuf; zget < zput; zget++)
 	    {
 	      int bread;
@@ -1894,7 +1894,7 @@ fcusend_buf (qconn, zbufarg, cbufarg)
 		    }
 
 		  bread = breceive_char (qconn,
-					 iend - isysdep_time ((long *) NULL),
+					 iend - ixsysdep_time ((long *) NULL),
 					 TRUE);
 		  if (bread < 0)
 		    {

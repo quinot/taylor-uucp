@@ -673,7 +673,7 @@ zldate_and_time ()
   static char ab[sizeof "12/31-12:00:00"];
 #endif
 
-  isecs = isysdep_time (&imicros);
+  isecs = ixsysdep_time (&imicros);
   usysdep_localtime (isecs, &s);
 
 #if HAVE_TAYLOR_LOGGING

@@ -30,14 +30,14 @@ fsysdep_unknown_caller (zscript, zsystem)
   aidescs[1] = SPAWN_NULL;
   aidescs[2] = SPAWN_NULL;
 
-  ipid = isspawn (azargs, aidescs, TRUE, TRUE, (const char *) NULL, FALSE,
-		  TRUE, (const char *) NULL, (const char *) NULL,
-		  (const char *) NULL);
+  ipid = ixsspawn (azargs, aidescs, TRUE, TRUE, (const char *) NULL, FALSE,
+		   TRUE, (const char *) NULL, (const char *) NULL,
+		   (const char *) NULL);
   if (ipid < 0)
     {
-      ulog (LOG_ERROR, "isspawn: %s", strerror (errno));
+      ulog (LOG_ERROR, "ixsspawn: %s", strerror (errno));
       return FALSE;
     }
 
-  return iswait ((unsigned long) ipid, (const char *) NULL) != 0;
+  return ixswait ((unsigned long) ipid, (const char *) NULL) != 0;
 }

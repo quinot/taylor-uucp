@@ -87,7 +87,7 @@ usysdep_detach ()
 	 die.  */
       usset_signal (SIGHUP, SIG_IGN, FALSE, &fignored);
 
-      ipid = isfork ();
+      ipid = ixsfork ();
       if (ipid < 0)
 	ulog (LOG_FATAL, "fork: %s", strerror (errno));
 

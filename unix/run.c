@@ -32,7 +32,7 @@
 #include "system.h"
 
 /* Start up a new program and end the current one.  We always go
-   through isspawn, and never exec directly.  We don't have to worry
+   through ixsspawn, and never exec directly.  We don't have to worry
    about SIGHUP because the current process is either not a process
    group leader (uucp, uux) or it does not have a controlling terminal
    (uucico).  */
@@ -63,13 +63,13 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
 
   /* We pass fshell as TRUE, which permits uucico and uuxqt to be
      replaced by shell scripts.  */
-  ipid = isspawn (azargs, aidescs, FALSE, FALSE, (const char *) NULL,
-		  FALSE, TRUE, (const char *) NULL,
-		  (const char *) NULL, (const char *) NULL);
+  ipid = ixsspawn (azargs, aidescs, FALSE, FALSE, (const char *) NULL,
+		   FALSE, TRUE, (const char *) NULL,
+		   (const char *) NULL, (const char *) NULL);
   ubuffree (zlib);
   if (ipid < 0)
     {
-      ulog (LOG_ERROR, "isspawn: %s", strerror (errno));
+      ulog (LOG_ERROR, "ixsspawn: %s", strerror (errno));
       return FALSE;
     }
 

@@ -81,5 +81,5 @@ fsysdep_mail (zto, zsubject, cstrs, paz)
 
   (void) fclose (e);
 
-  return iswait ((unsigned long) ipid, MAIL_PROGRAM) == 0;
+  return ixswait ((unsigned long) ipid, MAIL_PROGRAM) == 0;
 }

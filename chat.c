@@ -301,7 +301,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
   zhave = zbufalc (cmax);
   chave = 0;
 
-  iendtime = isysdep_time ((long *) NULL) + ctimeout;
+  iendtime = ixsysdep_time ((long *) NULL) + ctimeout;
 
 #if DEBUG > 1
   cchars = 0;
@@ -419,7 +419,7 @@ icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
 	    }
 	}
 
-      ctimeout = (int) (iendtime - isysdep_time ((long *) NULL));
+      ctimeout = (int) (iendtime - ixsysdep_time ((long *) NULL));
     }
 }
 

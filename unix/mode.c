@@ -10,7 +10,7 @@
 #include "system.h"
 
 unsigned int
-isysdep_file_mode (zfile)
+ixsysdep_file_mode (zfile)
      const char *zfile;
 {
   struct stat s;

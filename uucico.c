@@ -404,7 +404,7 @@ main (argc, argv)
 	  for (pz = pznames; *pz != NULL; pz++)
 	    c++;
 
-	  srand ((unsigned int) isysdep_time ((long *) NULL));
+	  srand ((unsigned int) ixsysdep_time ((long *) NULL));
 	  for (i = c - 1; i > 0; i--)
 	    {
 	      int iuse;
@@ -733,7 +733,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
      we are over the limit on retries, we permit a call to be made if
      24 hours have passed.  This 24 hour limit is still controlled by
      the retry time.  */
-  inow = isysdep_time ((long *) NULL);
+  inow = ixsysdep_time ((long *) NULL);
   if (! fforce)
     {
       if (qorigsys->uuconf_cmax_retries > 0
@@ -979,7 +979,7 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
 		      (int) terr, azStatus[(int) terr]);
       qstat->ttype = terr;
       qstat->cretries++;
-      qstat->ilast = isysdep_time ((long *) NULL);
+      qstat->ilast = ixsysdep_time ((long *) NULL);
       if (cretry == 0)
 	qstat->cwait = CRETRY_WAIT (qstat->cretries);
       else
@@ -1038,7 +1038,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     return FALSE;
 
   *pfcalled = TRUE;
-  istart_time = isysdep_time ((long *) NULL);
+  istart_time = ixsysdep_time ((long *) NULL);
 
   *pterr = STATUS_HANDSHAKE_FAILED;
 
@@ -1058,7 +1058,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   ulog (LOG_NORMAL, "Login successful");
 
   qstat->ttype = STATUS_TALKING;
-  qstat->ilast = isysdep_time ((long *) NULL);
+  qstat->ilast = ixsysdep_time ((long *) NULL);
   qstat->cretries = 0;
   qstat->cwait = 0;
   if (! fsysdep_set_status (qsys, qstat))
@@ -1169,7 +1169,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
       {
 	long iseq;
 
-	iseq = isysdep_get_sequence (qsys);
+	iseq = ixsysdep_get_sequence (qsys);
 	if (iseq < 0)
 	  return FALSE;
 	if (bgrade == '\0')
@@ -1409,7 +1409,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     if (fsend_uucp_cmd (qconn, "OOOOOO"))
       (void) fsend_uucp_cmd (qconn, "OOOOOO");
 
-    iend_time = isysdep_time ((long *) NULL);
+    iend_time = ixsysdep_time ((long *) NULL);
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
 	  iend_time - istart_time);
@@ -1564,7 +1564,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   ulog (LOG_NORMAL, "Incoming call (login %s port %s)", zlogin,
 	zLdevice == NULL ? (char *) "unknown" : zLdevice);
 
-  istart_time = isysdep_time ((long *) NULL);
+  istart_time = ixsysdep_time ((long *) NULL);
 
   /* Figure out protocol parameters determined by the port.  If no
      port was specified we're reading standard input, so try to get
@@ -1808,7 +1808,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
      output the .Status file, so we ignore any errors.  */
   sstat.ttype = STATUS_TALKING;
   sstat.cretries = 0;
-  sstat.ilast = isysdep_time ((long *) NULL);
+  sstat.ilast = ixsysdep_time ((long *) NULL);
   sstat.cwait = 0;
   (void) fsysdep_set_status (qsys, &sstat);
 
@@ -1893,7 +1893,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		  /* The conversation sequence number.  */
 		  iseq = strtol (optarg, (char **) NULL, 10);
 		  if (qsys->uuconf_fsequence
-		      && iseq != isysdep_get_sequence (qsys))
+		      && iseq != ixsysdep_get_sequence (qsys))
 		    {
 		      (void) fsend_uucp_cmd (qconn, "RBADSEQ");
 		      ulog (LOG_ERROR, "Out of sequence call rejected");
@@ -2129,7 +2129,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	       FALSE, zport, iconn_baud (qconn)))
     {
       sstat.ttype = STATUS_FAILED;
-      sstat.ilast = isysdep_time ((long *) NULL);
+      sstat.ilast = ixsysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
       return FALSE;
     }
@@ -2163,7 +2163,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       || ! (*sdaem.qproto->pfstart) (&sdaem, &zlog))
     {
       sstat.ttype = STATUS_FAILED;
-      sstat.ilast = isysdep_time ((long *) NULL);
+      sstat.ilast = ixsysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
       return FALSE;
     }
@@ -2207,7 +2207,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     if (fsend_uucp_cmd (qconn, "OOOOOOO"))
       (void) fsend_uucp_cmd (qconn, "OOOOOOO");
 
-    iend_time = isysdep_time ((long *) NULL);
+    iend_time = ixsysdep_time ((long *) NULL);
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
 	  iend_time - istart_time);
@@ -2320,7 +2320,7 @@ zget_uucp_cmd (qconn, frequired)
   int iolddebug;
 #endif
 
-  iendtime = isysdep_time ((long *) NULL);
+  iendtime = ixsysdep_time ((long *) NULL);
   if (frequired)
     iendtime += CTIMEOUT;
   else
@@ -2340,7 +2340,7 @@ zget_uucp_cmd (qconn, frequired)
   calc = 0;
   cgot = 0;
   fintro = FALSE;
-  while ((ctimeout = (int) (iendtime - isysdep_time ((long *) NULL))) > 0)
+  while ((ctimeout = (int) (iendtime - ixsysdep_time ((long *) NULL))) > 0)
     {
       int b;
       

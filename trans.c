@@ -97,7 +97,7 @@ static struct stransfer *aqTremote[IMAX_CHAN + 1];
 #define CCHECKWAIT (600)
 
 /* The time we last checked the spool directory for work.  This is set
-   from the return value of isysdep_process_time, not isysdep_time,
+   from the return value of ixsysdep_process_time, not ixsysdep_time,
    for convenience in the routines which use it.  */
 static long iTchecktime;
 
@@ -233,7 +233,7 @@ uqueue_receive (qtrans)
      would count dead time against the next transfer to receive
      information.  */
   if (qTreceive == NULL)
-    iTsecs = isysdep_process_time (&iTmicros);
+    iTsecs = ixsysdep_process_time (&iTmicros);
   utdequeue (qtrans);
   utqueue (&qTreceive, qtrans, FALSE);
 }
@@ -492,7 +492,7 @@ fqueue (qdaemon, pfany)
   if (pfany != NULL)
     *pfany = qTlocal != NULL;
 
-  iTchecktime = isysdep_process_time ((long *) NULL);
+  iTchecktime = ixsysdep_process_time ((long *) NULL);
 
   return TRUE;
 }
@@ -668,7 +668,7 @@ floop (qdaemon)
 	  long iendsecs = 0;
 	  long iendmicros;
 
-	  isecs = isysdep_process_time (&imicros);
+	  isecs = ixsysdep_process_time (&imicros);
 	  calcs = q->calcs;
 	  fgottime = FALSE;
 
@@ -746,7 +746,7 @@ floop (qdaemon)
 			 call may make an entry in the statistics
 			 file.  */
 		      q->fsendfile = FALSE;
-		      iendsecs = isysdep_process_time (&iendmicros);
+		      iendsecs = ixsysdep_process_time (&iendmicros);
 		      q->isecs += iendsecs - isecs;
 		      q->imicros += iendmicros - imicros;
 		      fgottime = TRUE;
@@ -766,7 +766,7 @@ floop (qdaemon)
 	     list.  */
 	  if (q->calcs == calcs && ! fgottime)
 	    {
-	      iendsecs = isysdep_process_time (&iendmicros);
+	      iendsecs = ixsysdep_process_time (&iendmicros);
 	      q->isecs += iendsecs - isecs;
 	      q->imicros += iendmicros - imicros;
 	      fgottime = TRUE;
@@ -857,7 +857,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
      packet.  We also reset the time when putting the first entry on
      the receive queue in uqueue_receive.  */
   if (iTsecs == 0 || qTreceive == NULL)
-    iTsecs = isysdep_process_time (&iTmicros);
+    iTsecs = ixsysdep_process_time (&iTmicros);
 
   if (fallacked && qTreceive_ack != NULL)
     uwindow_acked (qdaemon, TRUE);
@@ -934,7 +934,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
       || ! q->frecfile
       || cfirst == 0)
     {
-      inextsecs = isysdep_process_time (&inextmicros);
+      inextsecs = ixsysdep_process_time (&inextmicros);
 
       /* If this is the same transfer structure, add in the time.  We
 	 can only get away with this because we know that the

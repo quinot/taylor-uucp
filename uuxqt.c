@@ -197,7 +197,7 @@ main (argc, argv)
 
   /* Limit the number of uuxqt processes, and make sure we're the only
      uuxqt daemon running for this command.  */
-  iQlock_seq = isysdep_lock_uuxqt (zcmd, cQmaxuuxqts);
+  iQlock_seq = ixsysdep_lock_uuxqt (zcmd, cQmaxuuxqts);
   if (iQlock_seq < 0)
     {
       ulog_close ();

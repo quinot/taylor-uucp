@@ -84,7 +84,7 @@ typedef int wait_status;
    log file at about the right time.  */
 
 int
-iswait (ipid, zreport)
+ixswait (ipid, zreport)
      unsigned long ipid;
      const char *zreport;
 {

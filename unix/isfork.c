@@ -7,7 +7,7 @@
 #include <errno.h>
 
 pid_t
-isfork ()
+ixsfork ()
 {
   int i;
   pid_t iret;

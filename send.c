@@ -809,7 +809,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
       return fremote_rec_fail (FAILURE_SIZE, iremote);
     }
 
-  imode = isysdep_file_mode (zfile);
+  imode = ixsysdep_file_mode (zfile);
 
   e = esysdep_open_send (qsys, zfile, TRUE, (const char *) NULL);
   if (! ffileisopen (e))

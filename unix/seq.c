@@ -42,7 +42,7 @@
    conversation sequence number.  */
 
 long
-isysdep_get_sequence (qsys)
+ixsysdep_get_sequence (qsys)
      const struct uuconf_system *qsys;
 {
   FILE *e;

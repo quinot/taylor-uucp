@@ -683,7 +683,7 @@ uccopy (zfile, zdest)
 
 	  /* Copy a local file to a remote file.  We may have to
 	     copy the local file to the spool directory.  */
-	  imode = isysdep_file_mode (zfile);
+	  imode = ixsysdep_file_mode (zfile);
 	  if (imode == 0)
 	    ucabort ();
 

@@ -224,7 +224,7 @@ fsysdep_cu_init (qconn)
       return FALSE;
     }
 
-  iSchild = isfork ();
+  iSchild = ixsfork ();
   if (iSchild < 0)
     {
       ulog (LOG_ERROR, "fork: %s", strerror (errno));
@@ -490,7 +490,7 @@ fsysdep_cu_finish ()
   iSsend_sig = SIGKILL;
   alarm (2);
 
-  (void) iswait ((unsigned long) iSchild, "child");
+  (void) ixswait ((unsigned long) iSchild, "child");
 
   usset_signal (SIGALRM, SIG_IGN, TRUE, (boolean *) NULL);
   alarm (0);
@@ -1115,16 +1115,16 @@ fsysdep_shell (qconn, zcmd, tcmd)
   if (tcmd == SHELL_STDOUT_TO_PORT || tcmd == SHELL_STDIO_ON_PORT)
     aidescs[1] = owrite;
     
-  ipid = isspawn (azargs, aidescs, FALSE, TRUE, (const char *) NULL,
-		  FALSE, FALSE, (const char *) NULL,
-		  (const char *) NULL, (const char *) NULL);
+  ipid = ixsspawn (azargs, aidescs, FALSE, TRUE, (const char *) NULL,
+		   FALSE, FALSE, (const char *) NULL,
+		   (const char *) NULL, (const char *) NULL);
   if (ipid < 0)
     {
-      ulog (LOG_ERROR, "isspawn (/bin/sh): %s", strerror (errno));
+      ulog (LOG_ERROR, "ixsspawn (/bin/sh): %s", strerror (errno));
       return FALSE;
     }
 
-  return iswait ((unsigned long) ipid, "shell") == 0;
+  return ixswait ((unsigned long) ipid, "shell") == 0;
 }
 
 /* Change directories.  */
