@@ -191,3 +191,30 @@ David Nugent: report characters per second in the stats file.
 Marty Shannon: add an option to direct debugging output to stderr.
 
 31.
+
+David Nugent: add a -C option to uucico to only call the system if
+there was work to do.
+
+32.
+
+It would be nice if uucico could sleep until a line was available.
+This is complicated by the possibility of wanting to wait for any of
+several different lines, and one would really want some sort of
+semaphore function to do it right.  If the available lines could be
+sorted, then each could be assigned to a byte in a line lock file.
+Looking for a line could be done by sleeping on a read lock on all
+possible lines.  Once it came through, write locks would be attempted.
+If they all failed, somebody else snuck in, so you would sleep on a
+read lock again.  This isn't great because a process could be starved,
+but it might be better than nothing.
+
+This could be tied in to uucp and uux, such that they wouldn't
+actually fire up uucico unless a line was known to be available; an
+additional switch would be used to fire up uucico anyhow (or one could
+switch the default behaviour and the switch).
+
+So how do you sort the lines?  You could just use the index in the
+port (or Devices) file, but what if multiple ports used the same
+physical device?  Hmmm.
+
+33.
