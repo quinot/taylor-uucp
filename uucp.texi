@@ -4434,6 +4434,7 @@ Peter Honeyman @file{<honey@@citi.umich.edu>}
 @file{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
 @file{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
 @file{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
+@file{clewis@@ferret.ocunix.on.ca} (Chris Lewis)
 @file{libove@@libove.det.dec.com} (Jay Vassos-Libove)
 @file{bruce%blilly@@Broadcast.Sony.COM} (Bruce Lilly)
 Ted Lindgreen @file{<tlindgreen@@encore.nl>}
