@@ -2600,8 +2600,8 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	 read and write descriptor, but on some systems that would
 	 lead to calling read on each byte, which would be very
 	 inefficient.  Instead, we select only on the write
-	 descriptor.  We use a ten second timeout (perhaps the
-	 protocol should specify this) after which we retry the read.
+	 descriptor.  After the select succeeds or times out, we retry
+	 the read.
 
 	 Of course, some systems don't have select, and on some
 	 systems that have it it doesn't work on terminal devices.  If
@@ -2758,10 +2758,17 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 	  int imask;
 	  int c;
 
-	  /* We didn't write any data.  Call select.  */
+	  /* We didn't write any data.  Call select.  We use a timeout
+             long enough for 1024 bytes to be sent.
+	       secs/kbyte == (1024 bytes/kbyte * 10 bits/byte) / baud bits/sec
+	       usecs/kbyte == (((1024 bytes/kbyte * 1000000 usecs/sec)
+	                        / baud bits/sec)
+			       * 10 bits/byte)
+	     */
+	  stime.tv_sec = (long) 10240 / q->ibaud;
+	  stime.tv_usec = ((((long) 1024000000 / q->ibaud) * (long) 10)
+			   % (long) 1000000);
 
-	  stime.tv_sec = 10;
-	  stime.tv_usec = 0;
 	  imask = 1 << q->o;
 	  if (imask == 0)
 	    ulog (LOG_FATAL, "fsysdep_conn_io: File descriptors too large");
@@ -2831,7 +2838,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
                  we don't need to use the catch stuff, since we know
                  that HAVE_RESTARTABLE_SYSCALLS is 0.  */
 	      usset_signal (SIGALRM, usalarm, TRUE, (boolean *) NULL);
-	      alarm (10);
+	      alarm ((int) ((long) 10240 / q->ibaud) + 1);
 
 	      /* There is a race condition here: on a severely loaded
                  system, we could get the alarm before we start the
