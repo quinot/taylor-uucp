@@ -1,7 +1,7 @@
 /* iniglb.c
    Initialize the global information structure.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -84,6 +84,7 @@ _uuconf_iinit_global (pqglobal)
   qprocess->zdebugfile = DEBUGFILE;
   qprocess->zdebug = "";
   qprocess->cmaxuuxqts = 0;
+  qprocess->zrunuuxqt = NULL;
   qprocess->fv2 = TRUE;
   qprocess->fhdb = TRUE;
   qprocess->pzdialcodefiles = NULL;

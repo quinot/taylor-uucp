@@ -1,7 +1,7 @@
 /* uuconf.h
    Header file for UUCP configuration routines.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -565,6 +565,13 @@ struct uuconf_dialer
    be b1 - b2.  */
 #define UUCONF_GRADE_CMP(b1, b2) (uuconf_grade_cmp ((b1), (b2)))
 
+/* uuconf_runuuxqt returns either a positive number (the number of
+   execution files to receive between uuxqt invocations) or one of
+   these constant values.  */
+#define UUCONF_RUNUUXQT_NEVER (0)
+#define UUCONF_RUNUUXQT_ONCE (-1)
+#define UUCONF_RUNUUXQT_PERCALL (-2)
+
 /* Most of the uuconf functions returns an error code.  A value of
    zero (UUCONF_SUCCESS) indicates success.  */
 
@@ -869,6 +876,13 @@ extern int uuconf_debuglevel (void *uuconf_pglobal,
 extern int uuconf_maxuuxqts (void *uuconf_pglobal,
 			     int *uuconf_pcmaxuuxqt);
 
+/* Get the frequency with which to spawn a uuxqt process.  This
+   returns an integer.  A positive number is the number of execution
+   files that should be received between spawns.  Other values are one
+   of the UUCONF_RUNUUXQT constants listed above.  */
+extern int uuconf_runuuxqt (void *uuconf_pglobal,
+			    int *uuconf_pirunuuxqt);
+
 /* Check a login name and password.  This checks the Taylor UUCP
    password file (not /etc/passwd).  It will work even if
    uuconf_taylor_init was not called.  All comparisons are done via a
@@ -949,6 +963,7 @@ extern int uuconf_statsfile ();
 extern int uuconf_debugfile ();
 extern int uuconf_debuglevel ();
 extern int uuconf_maxuuxqts ();
+extern int uuconf_runuuxqt ();
 extern int uuconf_callin ();
 extern int uuconf_callout ();
 extern int uuconf_remote_unknown ();

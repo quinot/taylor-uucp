@@ -1,7 +1,7 @@
 /* uucnfi.h
    Internal header file for the uuconf package.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -80,6 +80,8 @@ struct sprocess
   const char *zdebug;
   /* The maximum number of simultaneously executing uuxqts.  */
   int cmaxuuxqts;
+  /* How often to spawn a uuxqt process.  */
+  const char *zrunuuxqt;
   /* Whether we are reading the V2 configuration files.  */
   boolean fv2;
   /* Whether we are reading the HDB configuration files.  */
