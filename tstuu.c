@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1991/12/28  03:49:23  ian
+   Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
+
    Revision 1.22  1991/12/22  22:14:19  ian
    Monty Solomon: added HAVE_UNISTD_H configuration parameter
 
@@ -716,6 +719,20 @@ uprepare_test (itest, fcall_uucico, zsys)
   const char *zto;
 
   if (mkdir ("/usr/tmp/tstuu", S_IRWXU | S_IRWXG | S_IRWXO) != 0
+      && errno != EEXIST)
+    {
+      perror ("mkdir");
+      exit (EXIT_FAILURE);
+    }
+
+  if (mkdir ("/usr/tmp/tstuu/spool1", S_IRWXU | S_IRWXG | S_IRWXO) != 0
+      && errno != EEXIST)
+    {
+      perror ("mkdir");
+      exit (EXIT_FAILURE);
+    }
+
+  if (mkdir ("/usr/tmp/tstuu/spool2", S_IRWXU | S_IRWXG | S_IRWXO) != 0
       && errno != EEXIST)
     {
       perror ("mkdir");
