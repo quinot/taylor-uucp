@@ -507,7 +507,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 
       fnever = TRUE;
       if (zdata[2] == '2')
-	zerr = "permission denied";
+	zerr = "permission denied by remote";
       else if (zdata[2] == '4')
 	{
 	  zerr = "remote cannot create work files";
@@ -515,13 +515,13 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	}
       else if (zdata[2] == '6')
 	{
-	  zerr = "too large for receiver now";
+	  zerr = "too large for remote now";
 	  fnever = FALSE;
 	}
       else if (zdata[2] == '7')
 	{
 	  /* The file is too large to ever send.  */
-	  zerr = "too large for receiver";
+	  zerr = "too large for remote";
 	}
       else if (zdata[2] == '8')
 	{
