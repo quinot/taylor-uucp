@@ -33,6 +33,7 @@ sysh.unx
 sysinf.c
 system.h
 tcp.c
+texinfo.tex
 time.c
 tstout.c
 tstuu.c
@@ -44,6 +45,10 @@ uucp.1
 uucp.c
 uucp.h
 uucp.texi
+uucp.info
+uucp.info-1
+uucp.info-2
+uucp.info-3
 uux.1
 uux.c
 uuxqt.8
