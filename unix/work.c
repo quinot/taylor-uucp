@@ -189,7 +189,7 @@ fswork_file (zsystem, zfile, pbgrade)
   *pbgrade = zfile[2];
   return (zfile[0] == 'C'
 	  && zfile[1] == '.'
-	  && strlen (zfile) == 7);
+	  && zfile[2] != '\0');
 #endif /* SPOOLDIR_TAYLOR */
 }
 
@@ -777,10 +777,14 @@ bsgrade (pseq)
 
   zfile = ((struct ssline *) pseq)->qfile->zfile;
 
+#if SPOOLDIR_TAYLOR
+  bgrade = *(strrchr (zfile, '/') + 3);
+#else
 #if ! SPOOLDIR_SVR4
   bgrade = zfile[strlen (zfile) - CSEQLEN - 1];
 #else
   bgrade = *(strchr (zfile, '/') + 1);
+#endif
 #endif
 
   return bgrade;
