@@ -65,28 +65,20 @@ fsend_data (qconn, zsend, csend, fdoread)
 
   while (csend > 0)
     {
-      char *zrec;
       size_t crec, csent;
 
       if (iPrecend < iPrecstart)
-	{
-	  zrec = abPrecbuf + iPrecend;
-	  crec = iPrecstart - iPrecend - 1;
-	}
-      else if (iPrecend < CRECBUFLEN)
-	{
-	  zrec = abPrecbuf + iPrecend;
-	  crec = CRECBUFLEN - iPrecend;
-	}
+	crec = iPrecstart - iPrecend - 1;
       else
 	{
-	  zrec = abPrecbuf;
-	  crec = iPrecstart - 1;
+	  crec = CRECBUFLEN - iPrecend;
+	  if (iPrecstart == 0)
+	    --crec;
 	}
 
       csent = csend;
 
-      if (! fconn_io (qconn, zsend, &csent, zrec, &crec))
+      if (! fconn_io (qconn, zsend, &csent, abPrecbuf + iPrecend, &crec))
 	return FALSE;
 
       csend -= csent;
