@@ -1145,7 +1145,7 @@ fsmodem_open (qconn, ibaud, fwait)
 {
   struct uuconf_modem_port *qm;
 
-  qm = &qconn->qport->uuconf_u.uuconf_smodem.
+  qm = &qconn->qport->uuconf_u.uuconf_smodem;
   if (ibaud == (long) 0)
     ibaud = qm->uuconf_ibaud;
 
