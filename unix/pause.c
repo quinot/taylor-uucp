@@ -83,6 +83,7 @@ usysdep_pause ()
 
   /* We need to pass an unused pollfd structure because poll checks
      the address before checking the number of elements.  */
+  memset (&sdummy, 0, sizeof sdummy);
   poll (&sdummy, 0, 500);
 #endif /* HAVE_POLL */
 #if HAVE_SELECT
