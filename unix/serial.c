@@ -611,13 +611,15 @@ fsserial_lockfile (flok, qconn)
     {
       if (flok)
 	{
-	  if (lockttyexist (z))
+	  if (lockttyexist (z + sizeof "LCK.." - 1))
 	    {
-	      ulog (LOG_NORMAL, "%s: port already locked", z);
+	      ulog (LOG_NORMAL, "%s: port already locked",
+		    z + sizeof "LCK.." - 1);
 	      fret = FALSE;
 	    }
 	  else
-	    fret = fscoherent_disable_tty (z, &qsysdep->zenable);
+	    fret = fscoherent_disable_tty (z + sizeof "LCK.." - 1,
+					   &qsysdep->zenable);
 	}
       else
 	{
