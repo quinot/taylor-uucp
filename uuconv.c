@@ -1753,7 +1753,7 @@ uvwrite_taylor_port (e, qport, zprefix)
 	    else
 	      {
 		sprintf (ab, "%sdialer-sequence", zprefix);
-		uvwrite_string_array (e, qm->uuconf_pzdialer, zprefix);
+		uvwrite_string_array (e, qm->uuconf_pzdialer, ab);
 	      }
 	  }
 	if (qm->uuconf_qdialer != NULL)
