@@ -62,9 +62,11 @@
    concerning the use of creat.  It is very unlikely that there is any
    system which does have POSIX style locking but does not have
    O_CREAT.  */
+#if ! HAVE_BROKEN_SETLKW
 #ifdef F_SETLKW
 #ifdef O_CREAT
 #define USE_POSIX_LOCKS 1
+#endif
 #endif
 #endif
 #ifndef USE_POSIX_LOCKS
@@ -101,6 +103,7 @@ fscmd_seq (zsystem, zseq)
   char *zfree;
   const char *zfile;
   int o;
+  boolean flockfile;
   int i;
   boolean fret;
 
@@ -190,9 +193,13 @@ fscmd_seq (zsystem, zseq)
 	}
     }
 
-#if USE_POSIX_LOCKS
+#if ! USE_POSIX_LOCKS
+  flockfile = TRUE;
+#else
   {
     struct flock slock;
+
+    flockfile = FALSE;
 
     slock.l_type = F_WRLCK;
     slock.l_whence = SEEK_SET;
@@ -201,6 +208,29 @@ fscmd_seq (zsystem, zseq)
     while (fcntl (o, F_SETLKW, &slock) == -1)
       {
 	boolean fagain;
+
+	/* Some systems define F_SETLKW, but it does not work.  We try
+           to catch those systems at runtime, and revert to using a
+           lock file.  */
+	if (errno == EINVAL)
+	  {
+	    boolean ferr;
+
+	    /* Lock the sequence file.  */
+	    while (! fsdo_lock ("LCK..SEQ", TRUE, &ferr))
+	      {
+		if (ferr || FGOT_SIGNAL ())
+		  {
+		    (void) close (o);
+		    return FALSE;
+		  }
+		sleep (5);
+	      }
+
+	    flockfile = TRUE;
+
+	    break;
+	  }
 
 	fagain = FALSE;
 	if (errno == ENOMEM)
@@ -269,9 +299,8 @@ fscmd_seq (zsystem, zseq)
       fret = FALSE;
     }
 
-#if ! USE_POSIX_LOCKS
-  (void) fsdo_unlock ("LCK..SEQ", TRUE);
-#endif
+  if (flockfile)
+    (void) fsdo_unlock ("LCK..SEQ", TRUE);
 
   ubuffree (zfree);
 
