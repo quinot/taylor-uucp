@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1992/01/05  04:41:48  ian
+   Tweaked HAVE_V2_LOGGING output slightly
+
    Revision 1.12  1991/12/29  05:00:27  ian
    Was not allocating enough space in zldate_and_time
 
@@ -279,7 +282,8 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 
 	    zfile = (char *) alloca (strlen (zLogfile)
 				     + strlen (abProgram)
-				     + strlen (zsys));
+				     + strlen (zsys)
+				     + 1);
 	    sprintf (zfile, zLogfile, abProgram, zsys);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	  }
