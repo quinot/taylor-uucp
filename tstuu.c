@@ -83,6 +83,11 @@ typedef union wait wait_status;
 typedef int wait_status;
 #endif
 
+#if HAVE_STREAMS_PTYS
+#include <termio.h>
+extern char *ptsname ();
+#endif
+
 #include "getopt.h"
 
 #include "system.h"
@@ -145,8 +150,13 @@ extern long times ();
 #define SIGCHLD SIGCLD
 #endif
 
+#if 1
 #define ZUUCICO_CMD "login uucp"
 #define UUCICO_EXECL "/bin/login", "login", "uucp"
+#else
+#define ZUUCICO_CMD "su - nuucp"
+#define UUCICO_EXECL "/bin/su", "su", "-", "nuucp"
+#endif
 
 #if ! HAVE_SELECT && ! HAVE_POLL
  #error You need select or poll
@@ -191,13 +201,11 @@ main (argc, argv)
 {
   int iopt;
   const char *zcmd1, *zcmd2;
-  const char *zpty;
   const char *zsys;
   boolean fmake = TRUE;
+  int omaster1, oslave1, omaster2, oslave2;
   char abpty1[sizeof "/dev/ptyp0"];
   char abpty2[sizeof "/dev/ptyp0"];
-  char *zptyname;
-  int omaster1, oslave1, omaster2, oslave2;
 
   zcmd1 = NULL;
   zcmd2 = NULL;
@@ -257,74 +265,170 @@ main (argc, argv)
   oslave1 = -1;
   omaster2 = -1;
   oslave2 = -1;
-  zptyname = abpty1;
 
-  for (zpty = "pqrs"; *zpty != '\0'; ++zpty)
-    {
-      int ipty;
+#if ! HAVE_STREAMS_PTYS
 
-      for (ipty = 0; ipty < 16; ipty++)
-	{
-	  int om, os;
-	  FILE *e;
+  {
+    char *zptyname;
+    const char *zpty;
+
+    zptyname = abpty1;
+
+    for (zpty = "pqrs"; *zpty != '\0'; ++zpty)
+      {
+	int ipty;
+
+	for (ipty = 0; ipty < 16; ipty++)
+	  {
+	    int om, os;
+	    FILE *e;
   
-	  sprintf (zptyname, "/dev/pty%c%c", *zpty,
-		   "0123456789abcdef"[ipty]);
-	  om = open (zptyname, O_RDWR);
-	  if (om < 0)
-	    continue;
-	  zptyname[5] = 't';
-	  os = open (zptyname, O_RDWR);
-	  if (os < 0)
-	    {
-	      (void) close (om);
+	    sprintf (zptyname, "/dev/pty%c%c", *zpty,
+		     "0123456789abcdef"[ipty]);
+	    om = open (zptyname, O_RDWR);
+	    if (om < 0)
 	      continue;
-	    }
+	    zptyname[5] = 't';
+	    os = open (zptyname, O_RDWR);
+	    if (os < 0)
+	      {
+		(void) close (om);
+		continue;
+	      }
 
-	  if (omaster1 == -1)
-	    {
-	      omaster1 = om;
-	      oslave1 = os;
+	    if (omaster1 == -1)
+	      {
+		omaster1 = om;
+		oslave1 = os;
 
-	      e = fopen ("/usr/tmp/tstuu/pty1", "w");
-	      if (e == NULL)
-		{
-		  perror ("fopen");
-		  exit (EXIT_FAILURE);
-		}
-	      fprintf (e, "%s", zptyname + 5);
-	      if (fclose (e) != 0)
-		{
-		  perror ("fclose");
-		  exit (EXIT_FAILURE);
-		}
+		e = fopen ("/usr/tmp/tstuu/pty1", "w");
+		if (e == NULL)
+		  {
+		    perror ("fopen");
+		    exit (EXIT_FAILURE);
+		  }
+		fprintf (e, "%s", zptyname + 5);
+		if (fclose (e) != 0)
+		  {
+		    perror ("fclose");
+		    exit (EXIT_FAILURE);
+		  }
 
-	      zptyname = abpty2;
-	    }
-	  else
-	    {
-	      omaster2 = om;
-	      oslave2 = os;
+		zptyname = abpty2;
+	      }
+	    else
+	      {
+		omaster2 = om;
+		oslave2 = os;
 
-	      e = fopen ("/usr/tmp/tstuu/pty2", "w");
-	      if (e == NULL)
-		{
-		  perror ("fopen");
-		  exit (EXIT_FAILURE);
-		}
-	      fprintf (e, "%s", zptyname + 5);
-	      if (fclose (e) != 0)
-		{
-		  perror ("fclose");
-		  exit (EXIT_FAILURE);
-		}
-	      break;
-	    }
-	}
+		e = fopen ("/usr/tmp/tstuu/pty2", "w");
+		if (e == NULL)
+		  {
+		    perror ("fopen");
+		    exit (EXIT_FAILURE);
+		  }
+		fprintf (e, "%s", zptyname + 5);
+		if (fclose (e) != 0)
+		  {
+		    perror ("fclose");
+		    exit (EXIT_FAILURE);
+		  }
+		break;
+	      }
+	  }
 
-      if (omaster1 != -1 && omaster2 != -1)
-	break;
-    }
+	if (omaster1 != -1 && omaster2 != -1)
+	  break;
+      }
+  }
+
+#else /* HAVE_STREAMS_PTYS */
+
+  {
+    int ipty;
+
+    for (ipty = 0; ipty < 2; ipty++)
+      {
+	int om, os;
+	FILE *e;
+	char *znam;
+	struct termio stio;
+
+	om = open ((char *) "/dev/ptmx", O_RDWR);
+	if (om < 0)
+	  break;
+	znam = ptsname (om);
+	if (znam == NULL)
+	  break;
+	if (unlockpt (om) != 0
+	    || grantpt (om) != 0)
+	  break;
+
+	os = open (znam, O_RDWR);
+	if (os < 0)
+	  {
+	    (void) close (om);
+	    om = -1;
+	    break;
+	  }
+
+	if (ioctl (os, I_PUSH, "ptem") < 0
+	    || ioctl(os, I_PUSH, "ldterm") < 0)
+	  {
+	    perror ("ioctl");
+	    exit (EXIT_FAILURE);
+	  }
+
+	/* Can this really be right? */
+	memset (&stio, 0, sizeof (stio));
+	stio.c_cflag = B9600 | CS8 | CREAD | HUPCL;
+
+	if (ioctl(os, TCSETA, &stio) < 0)
+	  {
+	    perror ("TCSETA");
+	    exit (EXIT_FAILURE);
+	  }
+
+	if (omaster1 == -1)
+	  {
+	    strcpy (abpty1, znam);
+	    omaster1 = om;
+	    oslave1 = os;
+	    e = fopen ("/usr/tmp/tstuu/pty1", "w");
+	    if (e == NULL)
+	      {
+		perror ("fopen");
+		exit (EXIT_FAILURE);
+	      }
+	    fprintf (e, "%s", znam + 5);
+	    if (fclose (e) != 0)
+	      {
+		perror ("fclose");
+		exit (EXIT_FAILURE);
+	      }
+	  }
+	else
+	  {
+	    strcpy (abpty2, znam);
+	    omaster2 = om;
+	    oslave2 = os;
+	    e = fopen ("/usr/tmp/tstuu/pty2", "w");
+	    if (e == NULL)
+	      {
+		perror ("fopen");
+		exit (EXIT_FAILURE);
+	      }
+	    fprintf (e, "%s", znam + 5);
+	    if (fclose (e) != 0)
+	      {
+		perror ("fclose");
+		exit (EXIT_FAILURE);
+	      }
+	  }
+      }
+  }
+
+#endif /* HAVE_STREAMS_PTYS */
 
   if (omaster2 == -1)
     {
