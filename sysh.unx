@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/09  19:07:07  ian
+   Richard Todd: add HAVE_V2_LOCKFILES--binary number in lock file
+
    Revision 1.12  1991/11/30  23:28:26  ian
    Marty Shannon: some systems need a fake version of the rename system call
 
@@ -139,17 +142,66 @@
 
 #endif /* HAVE_TAYLOR_CONFIG */
 
-/* The name of the default log file.  This may be overridden by the
-   `logfile' command in the configuration file.  */
+#if HAVE_TAYLOR_LOGGING
+
+/* The default log file when using HAVE_TAYLOR_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
+   command in the configuration file.  */
 #define LOGFILE "/usr/spool/uucp/Log"
 
-/* The name of the default statistics file.  This may be overridden
-   by the `statfile' command in the configuration file.  */
+/* The default statistics file when using HAVE_TAYLOR_LOGGING.  When
+   using HAVE_TAYLOR_CONFIG, this may be overridden by the
+   ``statfile'' command in the configuration file.  */
 #define STATFILE "/usr/spool/uucp/Stats"
 
-/* The name of the debugging file.  This may be overridden by the
-   `debugfile' command in the configuration file.  */
+/* The default debugging file when using HAVE_TAYLOR_LOGGING.  When
+   using HAVE_TAYLOR_CONFIG, this may be overridden by the
+   ``debugfile'' command in the configuration file.  */
 #define DEBUGFILE "/usr/spool/uucp/Debug"
+
+#endif /* HAVE_TAYLOR_LOGGING */
+
+#if HAVE_V2_LOGGING
+
+/* The default log file when using HAVE_V2_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
+   command in the configuration file.  */
+#define LOGFILE "/usr/spool/uucp/LOGFILE"
+
+/* The default statistics file when using HAVE_V2_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``statfile''
+   command in the configuration file.  */
+#define STATFILE "/usr/spool/uucp/SYSLOG"
+
+/* The default debugging file when using HAVE_V2_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``debugfile''
+   command in the configuration file.  */
+#define DEBUGFILE "/usr/spool/uucp/DEBUG"
+
+#endif /* HAVE_V2_LOGGING */
+
+#if HAVE_BNU_LOGGING
+
+/* The default log file when using HAVE_BNU_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``logfile''
+   command in the configuration file.  The first %s in the string will
+   be replaced by the program name (e.g. uucico); the second %s will
+   be replaced by the system name (if there is no appropriate system,
+   "ANY" will be used).  No other '%' character may appear in the
+   string.  */
+#define LOGFILE "/usr/spool/uucp/.Log/%s/%s"
+
+/* The default statistics file when using HAVE_BNU_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``statfile''
+   command in the configuration file.  */
+#define STATFILE "/usr/spool/uucp/.Admin/xferstats"
+
+/* The default debugging file when using HAVE_BNU_LOGGING.  When using
+   HAVE_TAYLOR_CONFIG, this may be overridden by the ``debugfile''
+   command in the configuration file.  */
+#define DEBUGFILE "/usr/spool/uucp/.Admin/audit.local"
+
+#endif /* HAVE_V2_LOGGING */
 
 /* The default command path, specifying which directories the commands
    to be executed must be located in.  */

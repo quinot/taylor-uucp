@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1991/12/07  02:57:28  ian
+   Allow failure message to be sent from uux test
+
    Revision 1.13  1991/12/01  19:58:01  ian
    Don't use the not-very-portable fd_set typedef at all
 
@@ -688,7 +691,11 @@ uprepare_test (itest, fcall_uucico, zsys)
   fprintf (e, "sysfile /usr/tmp/tstuu/System1\n");
   fprintf (e, "sysfile /usr/tmp/tstuu/System1.2\n");
   (void) remove ("/usr/tmp/tstuu/Log1");
+#if ! HAVE_BNU_LOGGING
   fprintf (e, "logfile /usr/tmp/tstuu/Log1\n");
+#else
+  fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log1/%s/%s");
+#endif
   fprintf (e, "statfile /usr/tmp/tstuu/Stats1\n");
   fprintf (e, "debugfile /usr/tmp/tstuu/Debug1\n");
   fprintf (e, "callfile /usr/tmp/tstuu/Call1\n");
@@ -771,7 +778,11 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "spool /usr/tmp/tstuu/spool2\n");
       fprintf (e, "sysfile /usr/tmp/tstuu/System2\n");
       (void) remove ("/usr/tmp/tstuu/Log2");
+#if ! HAVE_BNU_LOGGING
       fprintf (e, "logfile /usr/tmp/tstuu/Log2\n");
+#else
+      fprintf (e, "%s\n", "logfile /usr/tmp/tstuu/Log2/%s/%s");
+#endif
       fprintf (e, "statfile /usr/tmp/tstuu/Stats2\n");
       fprintf (e, "debugfile /usr/tmp/tstuu/Debug2\n");
       fprintf (e, "passwdfile /usr/tmp/tstuu/Pass2\n");
