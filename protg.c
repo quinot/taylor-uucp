@@ -1337,6 +1337,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       unsigned short ihdrcheck, idatcheck;
       const char *zfirst, *zsecond;
       int cfirst, csecond;
+      boolean fduprr;
 
       /* Look for the DLE which must start a packet.  */
       if (abPrecbuf[iPrecstart] != DLE)
@@ -1564,6 +1565,20 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       /* Store the control byte for the handshake routines.  */
       iGpacket_control = ab[IFRAME_CONTROL] & 0xff;
 
+      /* Annoyingly, some UUCP packages appear to send an RR packet
+	 rather than an RJ packet when they want a packet to be
+	 resent.  If we get a duplicate RR, we treat it as an RJ.  */
+      fduprr = FALSE;
+      if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL
+	  && CONTROL_XXX (ab[IFRAME_CONTROL]) == RR
+	  && iGremote_ack == CONTROL_YYY (ab[IFRAME_CONTROL])
+	  && INEXTSEQ (iGremote_ack) != iGsendseq)
+	{
+	  DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			  "fgprocess_data: Treating duplicate RR as RJ");
+	  fduprr = TRUE;
+	}
+
       /* Update the received sequence number from the yyy field of a
 	 data packet or an RR control packet.  If we've been delaying
 	 sending packets until we received an ack, this may send out
@@ -1731,6 +1746,12 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      (void) fgsend_control (qdaemon, CLOSE, 0);
 	    }
 	  return FALSE;
+	case RR:
+	  /* Acknowledge receipt of a packet.  This was already handled
+	     above, unless we are treating it as RJ.  */
+	  if (! fduprr)
+	    break;
+	  /* Fall through.  */
 	case RJ:
 	  /* The other side dropped a packet.  Begin retransmission with
 	     the packet following the one acknowledged.  We don't
@@ -1780,10 +1801,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			      TRUE))
 	      return FALSE;
 	  }
-	  break;
-	case RR:
-	  /* Acknowledge receipt of a packet.  This was already handled
-	     above.  */
 	  break;
 	case INITC:
 	case INITB:
