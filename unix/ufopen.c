@@ -136,11 +136,16 @@ fsuucp_perms (ieuid)
   return TRUE;
 }
 
-/* Open a file with the permissions of the invoking user.  */
+/* Open a file with the permissions of the invoking user.  Ignore the
+   fbinary argument since Unix has no distinction between text and
+   binary files.  */
 
+/*ARGSUSED*/
 openfile_t
-esysdep_user_fopen (zfile)
+esysdep_user_fopen (zfile, frd, fbinary)
      const char *zfile;
+     boolean frd;
+     boolean fbinary;
 {
   uid_t ieuid;
   openfile_t e;
@@ -153,17 +158,27 @@ esysdep_user_fopen (zfile)
   zerr = NULL;
 
 #if USE_STDIO
-  e = fopen (zfile, BINREAD);
+  e = fopen (zfile, frd ? "r" : "w");
   if (e == NULL)
     zerr = "fopen";
   else
     o = fileno (e);
 #else
-  e = open ((char *) zfile, O_RDONLY | O_NOCTTY, 0);
-  if (e < 0)
-    zerr = "open";
+  if (frd)
+    {
+      e = open ((char *) zfile, O_RDONLY | O_NOCTTY, 0);
+      zerr = "open";
+    }
   else
-    o = e;
+    {
+      e = creat ((char *) zfile, IPUBLIC_FILE_MODE);
+      zerr = "creat";
+    }
+  if (e >= 0)
+    {
+      o = e;
+      zerr = NULL;
+    }
 #endif
 
   if (! fsuucp_perms ((long) ieuid))

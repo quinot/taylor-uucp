@@ -784,7 +784,7 @@ main (argc, argv)
 		{
 		  openfile_t efile;
 
-		  efile = esysdep_user_fopen (zfile);
+		  efile = esysdep_user_fopen (zfile, TRUE, TRUE);
 		  if (! ffileisopen (efile))
 		    uxabort ();
 		  if (! fcopy_open_file (efile, zdata, FALSE, TRUE))

@@ -377,12 +377,16 @@ extern boolean fsysdep_make_dirs P((const char *zfile, boolean fpublic));
 extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
 			      boolean fappend, boolean fmkdirs));
 
-/* Open a file to read, using the access permission of the user who
-   invoked the program.  This returns an openfile_t, not a FILE *.
+/* Open a file, using the access permission of the user who invoked
+   the program.  The frd argument is TRUE if the file should be opened
+   for reading, and the fbinary argument is TRUE if the file should be
+   opened as a binary file (this is ignored on Unix, since there all
+   files are binary files).  This returns an openfile_t, not a FILE *.
    This is supposed to be able to open a file even if it can not be
    read by the uucp user.  This is not possible on some older Unix
    systems.  */
-extern openfile_t esysdep_user_fopen P((const char *zfile));
+extern openfile_t esysdep_user_fopen P((const char *zfile,
+					boolean frd, boolean fbinary));
 
 /* Open a file to send to another system; the qsys argument is the
    system the file is being sent to.  If fcheck is TRUE, it should

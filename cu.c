@@ -1445,7 +1445,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
   char *zfrom;
   char *zto = NULL;
   char *zalc;
-  FILE *e;
+  openfile_t e;
   int cline;
   char *zbuf;
   size_t cbuf;
@@ -1499,8 +1499,8 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 	}
     }
 
-  e = fopen (zfrom, fCuvar_binary ? BINREAD : "r");
-  if (e == NULL)
+  e = esysdep_user_fopen (zfrom, TRUE, fCuvar_binary);
+  if (! ffileisopen (e))
     {
       const char *zerrstr;
 
@@ -1540,7 +1540,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
       ubuffree (zalc);
       if (! fret)
 	{
-	  (void) fclose (e);
+	  (void) ffileclose (e);
 	  if (! fsysdep_cu_copy (TRUE)
 	      || ! fsysdep_terminal_signals (FALSE))
 	    ucuabort ();
@@ -1559,17 +1559,23 @@ icuput (puuconf, argc, argv, pvar, pinfo)
       char abbuf[512];
       size_t c;
 
+#if USE_STDIO
       if (fCuvar_binary)
+#endif
 	{
-	  c = fread (abbuf, sizeof (char), sizeof abbuf, e);
-	  if (c == 0)
+	  if (ffileeof (e))
+	    break;
+	  c = cfileread (e, abbuf, sizeof abbuf);
+	  if (ffilereaderror (e, c))
 	    {
-	      if (ferror (e))
-		ucuputs ("[file read error]");
+	      ucuputs ("[file read error]");
 	      break;
 	    }
+	  if (c == 0)
+	    break;
 	  zbuf = abbuf;
 	}
+#if USE_STDIO
       else
 	{
 	  if (getline (&zbuf, &cbuf, e) <= 0)
@@ -1579,6 +1585,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 	    }
 	  c = strlen (zbuf);
 	}
+#endif
 
       if (fCuvar_verbose)
 	{
@@ -1600,7 +1607,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 	}
     }
 
-  (void) fclose (e);
+  (void) ffileclose (e);
 
   if (pvar == NULL)
     {
@@ -1650,7 +1657,7 @@ icutake (puuconf, argc, argv, pvar, pinfo)
   const char *zeof;
   char *zfrom, *zto, *zcmd;
   char *zalc;
-  FILE *e;
+  openfile_t e;
   char bcr;
   size_t ceoflen;
   char *zlook = NULL;
@@ -1719,8 +1726,8 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 
   ubuffree (zfrom);
 
-  e = fopen (zto, fCuvar_binary ? BINWRITE : "w");
-  if (e == NULL)
+  e = esysdep_user_fopen (zto, FALSE, fCuvar_binary);
+  if (! ffileisopen (e))
     {
       const char *zerrstr;
 
@@ -1776,6 +1783,7 @@ icutake (puuconf, argc, argv, pvar, pinfo)
   ceoflen = strlen (zeof);
   zlook = zbufalc (ceoflen);
   ceofhave = 0;
+  ferr = FALSE;
 
   while (TRUE)
     {
@@ -1804,7 +1812,13 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 	}
 
       if (ceoflen == 0)
-	(void) putc (b, e);
+	{
+	  if (cfilewrite (e, &b, 1) != 1)
+	    {
+	      ferr = TRUE;
+	      break;
+	    }
+	}
       else
 	{
 	  zlook[ceofhave] = b;
@@ -1820,7 +1834,11 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 		  break;
 		}
 
-	      (void) putc (*zlook, e);
+	      if (cfilewrite (e, zlook, 1) != 1)
+		{
+		  ferr = TRUE;
+		  break;
+		}
 
 	      zmove = zlook;
 	      for (cmove = ceoflen - 1, zmove = zlook;
@@ -1835,10 +1853,7 @@ icutake (puuconf, argc, argv, pvar, pinfo)
 
   ubuffree (zlook);
 
-  ferr = FALSE;
-  if (ferror (e))
-    ferr = TRUE;
-  if (fclose (e) == EOF)
+  if (! ffileclose (e))
     ferr = TRUE;
   if (ferr)
     ucuputs ("[file write error]");
