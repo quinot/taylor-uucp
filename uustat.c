@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1992/03/28  22:54:45  ian
+   Allow multiple systems and users or kills and rejuvenates at once
+
    Revision 1.6  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -433,7 +436,7 @@ fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
 {
   boolean fret;
 
-  if (! fsysdep_get_work_init (qsys, BGRADE_LOW))
+  if (! fsysdep_get_work_init (qsys, BGRADE_LOW, TRUE))
     return FALSE;
 
   while (TRUE)
@@ -441,7 +444,7 @@ fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
       struct scmd s;
       long itime;
 
-      if (! fsysdep_get_work (qsys, BGRADE_LOW, &s))
+      if (! fsysdep_get_work (qsys, BGRADE_LOW, TRUE, &s))
 	{
 	  usysdep_get_work_free (qsys);
 	  return FALSE;
@@ -871,7 +874,7 @@ fsquery_system (qsys, pq, inow)
   long ifirstwork;
   boolean fret;
 
-  if (! fsysdep_get_work_init (qsys, BGRADE_LOW))
+  if (! fsysdep_get_work_init (qsys, BGRADE_LOW, TRUE))
     return FALSE;
 
   cwork = 0;
@@ -881,7 +884,7 @@ fsquery_system (qsys, pq, inow)
       struct scmd s;
       long itime;
 
-      if (! fsysdep_get_work (qsys, BGRADE_LOW, &s))
+      if (! fsysdep_get_work (qsys, BGRADE_LOW, TRUE, &s))
 	return FALSE;
       if (s.bcmd == 'H')
 	break;

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.92  1992/04/06  21:10:14  ian
+   Marc Boucher: set *pqsys to NULL in faccept_call
+
    Revision 1.91  1992/03/30  04:07:13  ian
    Dirk Musstopf: remove temporary file if receive fails
 
@@ -2267,7 +2270,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
     fnowork = TRUE;
   else
     {
-      if (! fsysdep_get_work_init (qsys, bgrade))
+      if (! fsysdep_get_work_init (qsys, bgrade, FALSE))
 	return FALSE;
       fnowork = FALSE;
     }
@@ -2333,7 +2336,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 	  else
 	    {
 	      s.zuser = NULL;
-	      if (! fsysdep_get_work (qsys, bgrade, &s))
+	      if (! fsysdep_get_work (qsys, bgrade, FALSE, &s))
 		return FALSE;
 	      ulog_user (s.zuser);
 	    }
@@ -2908,7 +2911,7 @@ fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
 		{
 		  if (fmasterdone)
 		    {
-		      if (! fsysdep_get_work_init (qsys, bgrade))
+		      if (! fsysdep_get_work_init (qsys, bgrade, FALSE))
 			return FALSE;
 		      fnowork = FALSE;
 		    }
