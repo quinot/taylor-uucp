@@ -3,9 +3,9 @@
 noinst_LIBRARIES = libuuconf.a
 
 libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
-	callin.c calout.c chatc.c cmdarg.c cmdfil.c cmdlin.c debfil.c \
-	deblev.c diacod.c dial.c diasub.c dnams.c errno.c errstr.c filnam.c \
-	freblk.c fredia.c free.c freprt.c fresys.c grdcmp.c hdial.c \
+	callin.c calout.c chatc.c cmdarg.c cmdfil.c cmdlin.c cnfnms.c \
+	debfil.c deblev.c diacod.c dial.c diasub.c dnams.c errno.c errstr.c \
+	filnam.c freblk.c fredia.c free.c freprt.c fresys.c grdcmp.c hdial.c \
 	hdnams.c hinit.c hlocnm.c hport.c hrmunk.c hsinfo.c hsnams.c \
 	hsys.c hunk.c iniglb.c init.c int.c lckdir.c lineno.c llocnm.c \
 	local.c locnm.c logfil.c maxuxq.c mrgblk.c paramc.c port.c \

@@ -526,6 +526,44 @@ struct uuconf_dialer
   UUCONF_POINTER uuconf_palloc;
 };
 
+/* Information returned by uuconf_config_files.  Any field in this
+   struct may be NULL, indicating that the corresponding files will
+   not be read.  */
+
+struct uuconf_config_file_names
+{
+  /* Taylor UUCP config file name.  */
+  UUCONF_CONST char *uuconf_ztaylor_config;
+  /* Taylor UUCP sys file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pztaylor_sys;
+  /* Taylor UUCP port file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pztaylor_port;
+  /* Taylor UUCP dial file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pztaylor_dial;
+  /* UUCP dialcode file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pzdialcode;
+  /* Taylor UUCP passwd file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pztaylor_pwd;
+  /* Taylor UUCP call file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pztaylor_call;
+  /* V2 system file name.  */
+  UUCONF_CONST char *uuconf_zv2_systems;
+  /* V2 device file name.  */
+  UUCONF_CONST char *uuconf_zv2_device;
+  /* V2 user permissions file name.  */
+  UUCONF_CONST char *uuconf_zv2_userfile;
+  /* V2 user permitted commands file name.  */
+  UUCONF_CONST char *uuconf_zv2_cmds;
+  /* HDB system file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pzhdb_systems;
+  /* HDB device file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pzhdb_devices;
+  /* HDB dialer file names; NULL terminated.  */
+  UUCONF_CONST char * UUCONF_CONST *uuconf_pzhdb_dialers;
+  /* HDB permissions file name.  */
+  UUCONF_CONST char *uuconf_zhdb_permissions;
+};
+
 /* Reliability bits for the ireliable field of ports and dialers.
    These bits are used to decide which protocol to run.  A given
    protocol will have a set of these bits, and each of them must be
@@ -821,6 +859,11 @@ extern int uuconf_dialer_free (void *uuconf_pglobal,
   (uuconf_free_block ((q)->uuconf_palloc), UUCONF_SUCCESS)
 #endif
 
+/* Get the configuration file names.  The fields in the returned
+   struct should not be freed.  */
+extern int uuconf_config_files (void *uuconf_pglobal,
+				struct uuconf_config_file_names* uuconf_names);
+
 /* Get the local node name.  If the node name is not specified
    (because no ``nodename'' command appeared in the config file) this
    will return UUCONF_NOT_FOUND, and some system dependent function
@@ -968,6 +1011,7 @@ extern int uuconf_port_free ();
 extern int uuconf_dialer_names ();
 extern int uuconf_dialer_info ();
 extern int uuconf_dialer_free ();
+extern int uuconf_config_files ();
 extern int uuconf_localname ();
 extern int uuconf_login_localname ();
 extern int uuconf_spooldir ();

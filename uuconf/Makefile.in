@@ -82,9 +82,9 @@ install_sh = @install_sh@
 noinst_LIBRARIES = libuuconf.a
 
 libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
-	callin.c calout.c chatc.c cmdarg.c cmdfil.c cmdlin.c debfil.c \
-	deblev.c diacod.c dial.c diasub.c dnams.c errno.c errstr.c filnam.c \
-	freblk.c fredia.c free.c freprt.c fresys.c grdcmp.c hdial.c \
+	callin.c calout.c chatc.c cmdarg.c cmdfil.c cmdlin.c cnfnms.c \
+	debfil.c deblev.c diacod.c dial.c diasub.c dnams.c errno.c errstr.c \
+	filnam.c freblk.c fredia.c free.c freprt.c fresys.c grdcmp.c hdial.c \
 	hdnams.c hinit.c hlocnm.c hport.c hrmunk.c hsinfo.c hsnams.c \
 	hsys.c hunk.c iniglb.c init.c int.c lckdir.c lineno.c llocnm.c \
 	local.c locnm.c logfil.c maxuxq.c mrgblk.c paramc.c port.c \
@@ -109,15 +109,16 @@ am_libuuconf_a_OBJECTS = addblk.$(OBJEXT) addstr.$(OBJEXT) \
 	allblk.$(OBJEXT) alloc.$(OBJEXT) base.$(OBJEXT) bool.$(OBJEXT) \
 	callin.$(OBJEXT) calout.$(OBJEXT) chatc.$(OBJEXT) \
 	cmdarg.$(OBJEXT) cmdfil.$(OBJEXT) cmdlin.$(OBJEXT) \
-	debfil.$(OBJEXT) deblev.$(OBJEXT) diacod.$(OBJEXT) \
-	dial.$(OBJEXT) diasub.$(OBJEXT) dnams.$(OBJEXT) errno.$(OBJEXT) \
-	errstr.$(OBJEXT) filnam.$(OBJEXT) freblk.$(OBJEXT) \
-	fredia.$(OBJEXT) free.$(OBJEXT) freprt.$(OBJEXT) \
-	fresys.$(OBJEXT) grdcmp.$(OBJEXT) hdial.$(OBJEXT) \
-	hdnams.$(OBJEXT) hinit.$(OBJEXT) hlocnm.$(OBJEXT) \
-	hport.$(OBJEXT) hrmunk.$(OBJEXT) hsinfo.$(OBJEXT) \
-	hsnams.$(OBJEXT) hsys.$(OBJEXT) hunk.$(OBJEXT) iniglb.$(OBJEXT) \
-	init.$(OBJEXT) int.$(OBJEXT) lckdir.$(OBJEXT) lineno.$(OBJEXT) \
+	cnfnms.$(OBJEXT) debfil.$(OBJEXT) deblev.$(OBJEXT) \
+	diacod.$(OBJEXT) dial.$(OBJEXT) diasub.$(OBJEXT) \
+	dnams.$(OBJEXT) errno.$(OBJEXT) errstr.$(OBJEXT) \
+	filnam.$(OBJEXT) freblk.$(OBJEXT) fredia.$(OBJEXT) \
+	free.$(OBJEXT) freprt.$(OBJEXT) fresys.$(OBJEXT) \
+	grdcmp.$(OBJEXT) hdial.$(OBJEXT) hdnams.$(OBJEXT) \
+	hinit.$(OBJEXT) hlocnm.$(OBJEXT) hport.$(OBJEXT) \
+	hrmunk.$(OBJEXT) hsinfo.$(OBJEXT) hsnams.$(OBJEXT) \
+	hsys.$(OBJEXT) hunk.$(OBJEXT) iniglb.$(OBJEXT) init.$(OBJEXT) \
+	int.$(OBJEXT) lckdir.$(OBJEXT) lineno.$(OBJEXT) \
 	llocnm.$(OBJEXT) local.$(OBJEXT) locnm.$(OBJEXT) \
 	logfil.$(OBJEXT) maxuxq.$(OBJEXT) mrgblk.$(OBJEXT) \
 	paramc.$(OBJEXT) port.$(OBJEXT) prtsub.$(OBJEXT) \
@@ -146,44 +147,44 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/callin.Po $(DEPDIR)/calout.Po \
 @AMDEP_TRUE@	$(DEPDIR)/chatc.Po $(DEPDIR)/cmdarg.Po \
 @AMDEP_TRUE@	$(DEPDIR)/cmdfil.Po $(DEPDIR)/cmdlin.Po \
-@AMDEP_TRUE@	$(DEPDIR)/debfil.Po $(DEPDIR)/deblev.Po \
-@AMDEP_TRUE@	$(DEPDIR)/diacod.Po $(DEPDIR)/dial.Po \
-@AMDEP_TRUE@	$(DEPDIR)/diasub.Po $(DEPDIR)/dnams.Po \
-@AMDEP_TRUE@	$(DEPDIR)/errno.Po $(DEPDIR)/errstr.Po \
-@AMDEP_TRUE@	$(DEPDIR)/filnam.Po $(DEPDIR)/freblk.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fredia.Po $(DEPDIR)/free.Po \
-@AMDEP_TRUE@	$(DEPDIR)/freprt.Po $(DEPDIR)/fresys.Po \
-@AMDEP_TRUE@	$(DEPDIR)/grdcmp.Po $(DEPDIR)/hdial.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hdnams.Po $(DEPDIR)/hinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hlocnm.Po $(DEPDIR)/hport.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hrmunk.Po $(DEPDIR)/hsinfo.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hsnams.Po $(DEPDIR)/hsys.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hunk.Po $(DEPDIR)/iniglb.Po \
-@AMDEP_TRUE@	$(DEPDIR)/init.Po $(DEPDIR)/int.Po \
-@AMDEP_TRUE@	$(DEPDIR)/lckdir.Po $(DEPDIR)/lineno.Po \
-@AMDEP_TRUE@	$(DEPDIR)/llocnm.Po $(DEPDIR)/local.Po \
-@AMDEP_TRUE@	$(DEPDIR)/locnm.Po $(DEPDIR)/logfil.Po \
-@AMDEP_TRUE@	$(DEPDIR)/maxuxq.Po $(DEPDIR)/mrgblk.Po \
-@AMDEP_TRUE@	$(DEPDIR)/paramc.Po $(DEPDIR)/port.Po \
-@AMDEP_TRUE@	$(DEPDIR)/prtsub.Po $(DEPDIR)/pubdir.Po \
-@AMDEP_TRUE@	$(DEPDIR)/rdlocs.Po $(DEPDIR)/rdperm.Po \
-@AMDEP_TRUE@	$(DEPDIR)/reliab.Po $(DEPDIR)/remunk.Po \
-@AMDEP_TRUE@	$(DEPDIR)/runuxq.Po $(DEPDIR)/sinfo.Po \
-@AMDEP_TRUE@	$(DEPDIR)/snams.Po $(DEPDIR)/split.Po \
-@AMDEP_TRUE@	$(DEPDIR)/spool.Po $(DEPDIR)/stafil.Po \
-@AMDEP_TRUE@	$(DEPDIR)/strip.Po $(DEPDIR)/syssub.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tcalou.Po $(DEPDIR)/tdial.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tdialc.Po $(DEPDIR)/tdnams.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tgcmp.Po $(DEPDIR)/thread.Po \
-@AMDEP_TRUE@	$(DEPDIR)/time.Po $(DEPDIR)/tinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tlocnm.Po $(DEPDIR)/tport.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tportc.Po $(DEPDIR)/tsinfo.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tsnams.Po $(DEPDIR)/tsys.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tval.Po $(DEPDIR)/ugtlin.Po \
-@AMDEP_TRUE@	$(DEPDIR)/unk.Po $(DEPDIR)/val.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vinit.Po $(DEPDIR)/vport.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vsinfo.Po $(DEPDIR)/vsnams.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vsys.Po
+@AMDEP_TRUE@	$(DEPDIR)/cnfnms.Po $(DEPDIR)/debfil.Po \
+@AMDEP_TRUE@	$(DEPDIR)/deblev.Po $(DEPDIR)/diacod.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dial.Po $(DEPDIR)/diasub.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dnams.Po $(DEPDIR)/errno.Po \
+@AMDEP_TRUE@	$(DEPDIR)/errstr.Po $(DEPDIR)/filnam.Po \
+@AMDEP_TRUE@	$(DEPDIR)/freblk.Po $(DEPDIR)/fredia.Po \
+@AMDEP_TRUE@	$(DEPDIR)/free.Po $(DEPDIR)/freprt.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fresys.Po $(DEPDIR)/grdcmp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hdial.Po $(DEPDIR)/hdnams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hinit.Po $(DEPDIR)/hlocnm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hport.Po $(DEPDIR)/hrmunk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hsinfo.Po $(DEPDIR)/hsnams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hsys.Po $(DEPDIR)/hunk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/iniglb.Po $(DEPDIR)/init.Po \
+@AMDEP_TRUE@	$(DEPDIR)/int.Po $(DEPDIR)/lckdir.Po \
+@AMDEP_TRUE@	$(DEPDIR)/lineno.Po $(DEPDIR)/llocnm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/local.Po $(DEPDIR)/locnm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/logfil.Po $(DEPDIR)/maxuxq.Po \
+@AMDEP_TRUE@	$(DEPDIR)/mrgblk.Po $(DEPDIR)/paramc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/port.Po $(DEPDIR)/prtsub.Po \
+@AMDEP_TRUE@	$(DEPDIR)/pubdir.Po $(DEPDIR)/rdlocs.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rdperm.Po $(DEPDIR)/reliab.Po \
+@AMDEP_TRUE@	$(DEPDIR)/remunk.Po $(DEPDIR)/runuxq.Po \
+@AMDEP_TRUE@	$(DEPDIR)/sinfo.Po $(DEPDIR)/snams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/split.Po $(DEPDIR)/spool.Po \
+@AMDEP_TRUE@	$(DEPDIR)/stafil.Po $(DEPDIR)/strip.Po \
+@AMDEP_TRUE@	$(DEPDIR)/syssub.Po $(DEPDIR)/tcalou.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tdial.Po $(DEPDIR)/tdialc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tdnams.Po $(DEPDIR)/tgcmp.Po \
+@AMDEP_TRUE@	$(DEPDIR)/thread.Po $(DEPDIR)/time.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tinit.Po $(DEPDIR)/tlocnm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tport.Po $(DEPDIR)/tportc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tsinfo.Po $(DEPDIR)/tsnams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tsys.Po $(DEPDIR)/tval.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ugtlin.Po $(DEPDIR)/unk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/val.Po $(DEPDIR)/vinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vport.Po $(DEPDIR)/vsinfo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vsnams.Po $(DEPDIR)/vsys.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -232,6 +233,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmdarg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmdfil.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmdlin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cnfnms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/debfil.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/deblev.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diacod.Po@am__quote@

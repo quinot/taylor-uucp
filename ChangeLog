@@ -1,3 +1,13 @@
+2002-02-06  Ian Lance Taylor  <ian@airs.com>
+
+	* uuconf/cnfnms.c: New file.
+	* uuconf.h (struct uuconf_config_file_names): Define.
+	(uuconf_config_files): Declare.
+	* uuchk.c (main): Dump configuration file names.
+	(ukshow_names): New static function.
+	* uuconf/Makefile.am (libuuconf_a_SOURCES): Add cnfnms.c.
+	* uuconf/Makefile.in: Rebuild.
+
 2002-01-17  Ian Lance Taylor  <ian@airs.com>
 
 	* Many files: Change types and add casts and attributes to avoid

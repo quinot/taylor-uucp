@@ -37,6 +37,7 @@ const char uuchk_rcsid[] = "$Id$";
 
 static void ukusage P((void));
 static void ukhelp P((void));
+static void ukshow_names P((const char *zheader, const char * const *pznames));
 static void ukshow P((const struct uuconf_system *qsys,
 		      pointer puuconf));
 static int ikshow_port P((struct uuconf_port *qport, pointer pinfo));
@@ -162,9 +163,39 @@ main (argc, argv)
     }
   else
     {
+      struct uuconf_config_file_names snames;
       const char *zstr;
       int iint;
       char **pzsystems;
+
+      iret = uuconf_config_files (puuconf, &snames);
+      if (iret != UUCONF_SUCCESS)
+	ukuuconf_error (puuconf, iret);
+      if (snames.uuconf_ztaylor_config != NULL)
+	printf ("config file: %s\n", snames.uuconf_ztaylor_config);
+      ukshow_names("sys file", snames.uuconf_pztaylor_sys);
+      ukshow_names("port file", snames.uuconf_pztaylor_port);
+      ukshow_names("dial file", snames.uuconf_pztaylor_dial);
+      ukshow_names("dialcode file", snames.uuconf_pzdialcode);
+      ukshow_names("passwd file", snames.uuconf_pztaylor_pwd);
+      ukshow_names("call file", snames.uuconf_pztaylor_call);
+
+      if (snames.uuconf_zv2_systems != NULL)
+	printf ("V2 L.sys file: %s\n", snames.uuconf_zv2_systems);
+      if (snames.uuconf_zv2_device != NULL)
+	printf ("V2 L-devices file: %s\n", snames.uuconf_zv2_device);
+      if (snames.uuconf_zv2_userfile != NULL)
+	printf ("V2 USERFILE file: %s\n", snames.uuconf_zv2_userfile);
+      if (snames.uuconf_zv2_cmds != NULL)
+	printf ("V2 L.cmds file: %s\n", snames.uuconf_zv2_cmds);
+
+      ukshow_names("HDB Systems file", snames.uuconf_pzhdb_systems);
+      ukshow_names("HDB Devices file", snames.uuconf_pzhdb_devices);
+      ukshow_names("HDB Dialers file", snames.uuconf_pzhdb_dialers);
+      if (snames.uuconf_zhdb_permissions != NULL)
+	printf ("HDB Permissions file: %s\n", snames.uuconf_zhdb_permissions);
+      /* FIXME: This doesn't dump the following HDB file names:
+         Sysfiles, Maxuuxqts, remote.unknown.  */
 
       iret = uuconf_localname (puuconf, &zstr);
       if (iret == UUCONF_SUCCESS)
@@ -299,6 +330,26 @@ ukhelp ()
   printf (" -I,--config file: Set configuration file to use\n");
   printf (" -v,--version: Print version and exit\n");
   printf (" --help: Print help and exit\n");
+}
+
+/* Print a list of configuration file names.  */
+static void
+ukshow_names (zheader, pznames)
+     const char *zheader;
+     const char * const *pznames;
+{
+  if (pznames == NULL)
+    return;
+  if (pznames[1] == NULL)
+    printf ("%s: %s\n", zheader, pznames[0]);
+  else
+    {
+      const char * const *pz;
+
+      printf ("%s:\n", zheader);
+      for (pz = pznames; *pz != NULL; ++pz)
+	printf ("  %s\n", *pz);
+    }
 }
 
 /* Dump out the information for a system.  */
