@@ -241,11 +241,6 @@ Support restart of failed transfers a la SVR4 UUCP.  Also support SVR4
 
 Switch between 'M' and 'S' correctly in the BNU log file output.
 
-84.
-
-Doug Evans: Permissions READ and WRITE entries should probably only
-affect remote systems, not the local one.
-
 85.
 
 Les Mikesell: add TLI and TLIS connection ability.
@@ -277,34 +272,6 @@ that it can be retrieved and examined later.
 92.
 
 Include Bob Denny's log file rotation shell script?
-
-93.
-
-Bob Denny: if the log file can not opened, we can't just exit because
-that will leave the LCK.. files around.
-
-94.
-
-Chip Salzenberg: must check that the original user has permission to
-send the file if it was not copied to the spool directory, because
-otherwise they could link to a file which could be read by uucp and
-thus transfer it somewhere else.
-
-95.
-
-Bob Denny: uuxqt should not complain if there is no X. directory in a
-directory in /usr/spool/uucp.
-
-96.
-
-Duane Wessels:
-> (1992-02-03 22:14:38.39 28731) DEBUG: fsserial_io: Blocking write 6, read 16378
-> (1992-02-03 22:14:38.40 28731) DEBUG: fsserial_io: Blocking write 6, read 16378
-> (1992-02-03 22:14:38.41 28731) DEBUG: fsserial_io: Blocking write 6, read 16378
-
-97.
-
-Duane Wessels: better SIGHUP handling.
 
 98.
 
@@ -366,24 +333,10 @@ T. William Wells: when using both HAVE_BNU_CONFIG and
 HAVE_TAYLOR_CONFIG, apparently an empty dial file and an empty sys
 file are needed, and an entry was needed in the port file.
 
-108.
-
-Detach from controlling terminal before execing uucico.
-
-111.
-
-Michael Nolan: have uuxqt detach from the terminal so that the modem
-port is more likely to be dropped.
-
 112.
 
 Franc,ois Pinard: allow defaults to appear at the top of the dial file
 (and presumably of the port file as well).
-
-114.
-
-Michael Nolan: check permissions for transfer in uucp and uux rather
-than waiting for uucico to check them.
 
 115.
 
@@ -393,10 +346,5 @@ T. William Wells: new options for uustat:
 Also, there should perhaps be a configuration option to request uustat
 to only display jobs submitted by the user running uustat, except for
 root and uucp.
-
-116.
-
-T. William Wells: if uuxqt gets a signal, wait for the child to
-complete before dieing?
 
 117.
