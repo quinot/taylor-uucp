@@ -73,6 +73,9 @@ EXTRA_DIST = uusched.in uuto.in \
 	cu.1 uucp.1 uustat.1 uux.1 uucico.8 uuxqt.8 \
 	contrib sample
 
+dist-hook:
+	-rm -rf $(distdir)/contrib/CVS $(distdir)/sample/CVS
+
 install-exec-hook:
 	for f in uucico uuxqt; do \
 	  chown $(OWNER) $(DESTDIR)$(sbindir)/$${f}; \

@@ -1,3 +1,8 @@
+2003-05-29  Ian Lance Taylor  <ian@airs.com>
+
+	* Makefile.am (dist-hook): New target.
+	* Makefile.in: Rebuild.
+
 2003-05-28  Ian Lance Taylor  <ian@airs.com>
 
 	* uucico.c (uhelp): Make capitalization consistent.

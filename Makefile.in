@@ -821,7 +821,7 @@ distdir: $(DISTFILES)
 	done
 	$(MAKE) $(AM_MAKEFLAGS) \
 	  top_distdir="${top_distdir}" distdir="$(distdir)" \
-	  dist-info
+	  dist-info dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -1011,6 +1011,9 @@ uuto: uuto.in Makefile
 	fi
 	chmod 0555 uuto.t
 	mv -f uuto.t $@
+
+dist-hook:
+	-rm -rf $(distdir)/contrib/CVS $(distdir)/sample/CVS
 
 install-exec-hook:
 	for f in uucico uuxqt; do \
