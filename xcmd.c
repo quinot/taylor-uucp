@@ -60,9 +60,7 @@ flocal_xcmd_init (qdaemon, qcmd)
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = flocal_xcmd_request;
 
-  uqueue_local (qtrans);
-
-  return TRUE;
+  return fqueue_local (qdaemon, qtrans);
 }
 
 /* Send the execution request to the remote system.  */
@@ -100,9 +98,7 @@ flocal_xcmd_request (qtrans, qdaemon)
   qtrans->fcmd = TRUE;
   qtrans->precfn = flocal_xcmd_await_reply;
 
-  uqueue_receive (qtrans);
-
-  return TRUE;
+  return fqueue_receive (qdaemon, qtrans);
 }
 
 /* Get a reply to an execution request from the remote system.  */
@@ -213,8 +209,7 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 	      qtrans->psendfn = fremote_xcmd_reply;
 	      qtrans->pinfo = (pointer) "XN";
 	      qtrans->iremote = iremote;
-	      uqueue_remote (qtrans);
-	      return TRUE;
+	      return fqueue_remote (qdaemon, qtrans);
 	    }
 	}
       else if (iuuconf != UUCONF_SUCCESS)
@@ -248,7 +243,12 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
   qtrans->psendfn = fremote_xcmd_reply;
   qtrans->pinfo = (pointer) "XY";
   qtrans->iremote = iremote;
-  uqueue_remote (qtrans);
+  if (! fqueue_remote (qdaemon, qtrans))
+    {
+      ubuffree (zdestfile);
+      ubuffree (zuser);
+      return FALSE;
+    }
 
   /* Now we have to process each source file.  The source
      specification may or may use wildcards.  */

@@ -130,11 +130,11 @@ urrec_free (qtrans)
 
    This is the order of function calls:
 
-   flocal_rec_file_init --> uqueue_local
-   flocal_rec_send_request (send R ...) --> uqueue_receive
-   flocal_rec_await_reply (open file, call pffile) --> uqueue_receive
+   flocal_rec_file_init --> fqueue_local
+   flocal_rec_send_request (send R ...) --> fqueue_receive
+   flocal_rec_await_reply (open file, call pffile) --> fqueue_receive
    receive file
-   frec_file_end (close and move file, call pffile) --> uqueue_send
+   frec_file_end (close and move file, call pffile) --> fqueue_send
    frec_file_send_confirm (send CY)
    */
 
@@ -267,9 +267,7 @@ flocal_rec_file_init (qdaemon, qcmd)
   qtrans->psendfn = flocal_rec_send_request;
   qtrans->pinfo = (pointer) qinfo;
 
-  uqueue_local (qtrans);
-
-  return TRUE;
+  return fqueue_local (qdaemon, qtrans);
 }
 
 /* Report an error for a local receive request.  */
@@ -365,9 +363,7 @@ flocal_rec_send_request (qtrans, qdaemon)
   qtrans->fcmd = TRUE;
   qtrans->precfn = flocal_rec_await_reply;
 
-  uqueue_receive (qtrans);
-
-  return TRUE;
+  return fqueue_receive (qdaemon, qtrans);
 }
 
 /* This is called when a reply is received for the request.  */
@@ -467,9 +463,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
   qtrans->psendfn = frec_file_send_confirm;
   qtrans->precfn = frec_file_end;
 
-  uqueue_receive (qtrans);
-
-  return TRUE;
+  return fqueue_receive (qdaemon, qtrans);
 }
 
 /* Make sure there is still enough disk space available to receive a
@@ -504,10 +498,10 @@ frec_check_free (qtrans, cfree_space)
    until it has received our confirmation.  In that case, the order of
    functions is as follows:
 
-   fremote_send_file_init (open file) --> uqueue_remote
-   fremote_send_reply (send SY, call pffile) --> uqueue_receive
+   fremote_send_file_init (open file) --> fqueue_remote
+   fremote_send_reply (send SY, call pffile) --> fqueue_receive
    receive file
-   frec_file_end (close and move file, call pffile) --> uqueue_send
+   frec_file_end (close and move file, call pffile) --> fqueue_send
    frec_file_send_confirm (send CY)
 
    If the protocol supports multiple channels, then the remote system
@@ -714,9 +708,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   qtrans->zlog = zbufalc (sizeof "Receiving " + strlen (zlog));
   sprintf (qtrans->zlog, "Receiving %s", zlog);
 
-  uqueue_remote (qtrans);
-
-  return TRUE;
+  return fqueue_remote (qdaemon, qtrans);
 }
 
 /* Reply to a send request, and prepare to receive the file.  */
@@ -768,11 +760,9 @@ fremote_send_reply (qtrans, qdaemon)
      first.  */
   qtrans->psendfn = frec_file_send_confirm;
   if (qinfo->freceived)
-    uqueue_send (qtrans);
+    return fqueue_send (qdaemon, qtrans);
   else
-    uqueue_receive (qtrans);
-
-  return TRUE;
+    return fqueue_receive (qdaemon, qtrans);
 }
 
 /* If we can't receive a file, queue up a response to the remote
@@ -802,9 +792,7 @@ fremote_send_fail (qdaemon, qcmd, twhy, iremote)
   qtrans->iremote = iremote;
   qtrans->pinfo = (pointer) qinfo;
 
-  uqueue_remote (qtrans);
-
-  return TRUE;
+  return fqueue_remote (qdaemon, qtrans);
 }
 
 /* Send a failure string for a send command to the remote system;
@@ -854,7 +842,10 @@ fremote_send_fail_send (qtrans, qdaemon)
 
   /* Wait for the end of file marker if we haven't gotten it yet.  */
   if (! qinfo->freceived)
-    uqueue_receive (qtrans);
+    {
+      if (! fqueue_receive (qdaemon, qtrans))
+	fret = FALSE;
+    }
   else
     {
       xfree (qtrans->pinfo);
@@ -1105,7 +1096,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
      the send queue.  The psendfn field will already be set.  */
   qinfo->fmoved = zerr == NULL;
   if (qinfo->freplied)
-    uqueue_send (qtrans);
+    return fqueue_send (qdaemon, qtrans);
 
   return TRUE;
 }

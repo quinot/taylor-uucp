@@ -636,10 +636,9 @@ fffile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
 	  qtrans->pinfo = (pointer) qinfo;
 	  qtrans->fcmd = TRUE;
 
-	  uqueue_receive (qtrans);
-
 	  *pfhandled = TRUE;
-	  return TRUE;
+
+	  return fqueue_receive (qdaemon, qtrans);
 	}
       else
 	{
@@ -654,10 +653,9 @@ fffile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
 	  qtrans->pinfo = (pointer) qinfo;
 	  qtrans->fcmd = TRUE;
 
-	  uqueue_receive (qtrans);
-
 	  *pfhandled = TRUE;
-	  return TRUE;
+
+	  return fqueue_receive (qdaemon, qtrans);
 	}
     }
 }
@@ -708,9 +706,7 @@ ffawait_ack (qtrans, qdaemon, zdata, cdata)
       xfree ((pointer) qinfo);
       qtrans->fsendfile = TRUE;
 
-      uqueue_send (qtrans);
-
-      return TRUE;
+      return fqueue_send (qdaemon, qtrans);
     }
 
   if (*zdata != 'G')
@@ -808,9 +804,7 @@ ffawait_cksum (qtrans, qdaemon, zdata, cdata)
 
   qtrans->psendfn = ffsend_ack;
 
-  uqueue_send (qtrans);
-
-  return TRUE;
+  return fqueue_send (qdaemon, qtrans);
 }
 
 /* Send the acknowledgement, and then possible wait for the resent
@@ -839,8 +833,7 @@ ffsend_ack (qtrans, qdaemon)
   if (ab[0] == 'R')
     {
       qtrans->frecfile = TRUE;
-      uqueue_receive (qtrans);
-      return TRUE;
+      return fqueue_receive (qdaemon, qtrans);
     }
 
   fFacked = TRUE;

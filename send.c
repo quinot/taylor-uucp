@@ -73,7 +73,8 @@ static boolean flocal_send_cancelled P((struct stransfer *qtrans,
 					struct sdaemon *qdaemon));
 static boolean flocal_send_open_file P((struct stransfer *qtrans,
 					struct sdaemon *qdaemon));
-static boolean fremote_rec_fail P((enum tfailure twhy, int iremote));
+static boolean fremote_rec_fail P((struct sdaemon *qdaemon,
+				   enum tfailure twhy, int iremote));
 static boolean fremote_rec_fail_send P((struct stransfer *qtrans,
 					struct sdaemon *qdaemon));
 static boolean fremote_rec_reply P((struct stransfer *qtrans,
@@ -117,12 +118,12 @@ usfree_send (qtrans)
    acknowledgement has been received, the sequence of function calls
    looks like this:
 
-   flocal_send_file_init --> uqueue_local
-   flocal_send_request (sends S request) --> uqueue_receive
-   flocal_send_await_reply (waits for SY) --> uqueue_send
-   flocal_send_open_file (opens file, calls pffile) --> uqueue_send
+   flocal_send_file_init --> fqueue_local
+   flocal_send_request (sends S request) --> fqueue_receive
+   flocal_send_await_reply (waits for SY) --> fqueue_send
+   flocal_send_open_file (opens file, calls pffile) --> fqueue_send
    send file
-   fsend_file_end (calls pffile) --> uqueue_receive
+   fsend_file_end (calls pffile) --> fqueue_receive
    fsend_await_confirm (waits for CY)
 
    If flocal_send_await_reply gets an SN, it deletes the request.  If
@@ -133,14 +134,14 @@ usfree_send (qtrans)
    case, we want to start sending the file data immediately, to avoid
    the round trip delay between flocal_send_request and
    flocal_send_await_reply.  To do this, flocal_send_request calls
-   uqueue_send rather than uqueue_receive.  The main execution
+   fqueue_send rather than fqueue_receive.  The main execution
    sequence looks like this:
 
-   flocal_send_file_init --> uqueue_local
-   flocal_send_request (sends S request) --> uqueue_send
-   flocal_send_open_file (opens file, calls pffile) --> uqueue_send
+   flocal_send_file_init --> fqueue_local
+   flocal_send_request (sends S request) --> fqueue_send
+   flocal_send_open_file (opens file, calls pffile) --> fqueue_send
    send file
-   fsend_file_end (calls pffile) --> uqueue_receive
+   fsend_file_end (calls pffile) --> fqueue_receive
    sometime: flocal_send_await_reply (waits for SY)
    fsend_await_confirm (waits for CY)
 
@@ -288,9 +289,7 @@ flocal_send_file_init (qdaemon, qcmd)
   qtrans->psendfn = flocal_send_request;
   qtrans->pinfo = (pointer) qinfo;
 
-  uqueue_local (qtrans);
-
-  return TRUE;
+  return fqueue_local (qdaemon, qtrans);
 }
 
 /* Clean up after a failing local send request.  If zwhy is not NULL,
@@ -464,11 +463,9 @@ flocal_send_request (qtrans, qdaemon)
   qtrans->precfn = flocal_send_await_reply;
 
   if (qdaemon->qproto->cchans > 1)
-    uqueue_send (qtrans);
+    return fqueue_send (qdaemon, qtrans);
   else
-    uqueue_receive (qtrans);
-
-  return TRUE;
+    return fqueue_receive (qdaemon, qtrans);
 }
 
 /* This is called when a reply is received for the send request.  As
@@ -555,16 +552,17 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	 data.  If we have already sent the entire file, there will be
 	 no confusion.  */
       if (qdaemon->qproto->cchans == 1 || qinfo->fsent)
-	usfree_send (qtrans);
+	{
+	  usfree_send (qtrans);
+	  return TRUE;
+	}
       else
 	{
 	  qtrans->psendfn = flocal_send_cancelled;
 	  qtrans->precfn = NULL;
 	  qtrans->fsendfile = FALSE;
-	  uqueue_send (qtrans);
+	  return fqueue_send (qdaemon, qtrans);
 	}
-
-      return TRUE;
     }
 
   /* A number following the SY or EY is the file position to start
@@ -593,15 +591,15 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
   /* Now queue up to send the file or to wait for the confirmation.
      We already set psendfn at the end of flocal_send_request.  If the
      protocol supports multiple channels, we have already called
-     uqueue_send; calling it again would move the request in the
+     fqueue_send; calling it again would move the request in the
      queue, which would make the log file a bit confusing.  */
   qtrans->precfn = fsend_await_confirm;
   if (qinfo->fsent)
-    uqueue_receive (qtrans);
+    return fqueue_receive (qdaemon, qtrans);
   else if (qdaemon->qproto->cchans <= 1)
-    uqueue_send (qtrans);
-
-  return TRUE;
+    return fqueue_send (qdaemon, qtrans);
+  else
+    return TRUE;
 }
 
 /* Open the file, if any, and prepare to send it.  */
@@ -711,9 +709,7 @@ flocal_send_open_file (qtrans, qdaemon)
       qtrans->psendfn = fsend_file_end;
     }
 
-  uqueue_send (qtrans);
-
-  return TRUE;
+  return fqueue_send (qdaemon, qtrans);
 }
 
 /* Cancel a file send by sending an empty buffer.  This is only called
@@ -747,10 +743,10 @@ flocal_send_cancelled (qtrans, qdaemon)
 /* A remote request to receive a file (meaning that we have to send a
    file).  The sequence of functions calls is as follows:
 
-   fremote_rec_file_init (open file) --> uqueue_remote
-   fremote_rec_reply (send RY, call pffile) --> uqueue_send
+   fremote_rec_file_init (open file) --> fqueue_remote
+   fremote_rec_reply (send RY, call pffile) --> fqueue_send
    send file
-   fsend_file_end (calls pffile) --> uqueue_receive
+   fsend_file_end (calls pffile) --> fqueue_receive
    fsend_await_confirm (waits for CY)
    */
 
@@ -774,13 +770,13 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
     {
       ulog (LOG_ERROR, "%s: not permitted to send files to remote",
 	    qcmd->zfrom);
-      return fremote_rec_fail (FAILURE_PERM, iremote);
+      return fremote_rec_fail (qdaemon, FAILURE_PERM, iremote);
     }
 
   if (fspool_file (qcmd->zfrom))
     {
       ulog (LOG_ERROR, "%s: not permitted to send", qcmd->zfrom);
-      return fremote_rec_fail (FAILURE_PERM, iremote);
+      return fremote_rec_fail (qdaemon, FAILURE_PERM, iremote);
     }
 
   zfile = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir);
@@ -793,7 +789,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
       zfile = zbased;
     }
   if (zfile == NULL)
-    return fremote_rec_fail (FAILURE_PERM, iremote);
+    return fremote_rec_fail (qdaemon, FAILURE_PERM, iremote);
 
   if (! fin_directory_list (zfile, qsys->uuconf_pzremote_send,
 			    qsys->uuconf_zpubdir, TRUE, TRUE,
@@ -801,7 +797,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
     {
       ulog (LOG_ERROR, "%s: not permitted to send", zfile);
       ubuffree (zfile);
-      return fremote_rec_fail (FAILURE_PERM, iremote);
+      return fremote_rec_fail (qdaemon, FAILURE_PERM, iremote);
     }
 
   /* If the file is larger than the amount of space the other side
@@ -817,7 +813,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
     {
       ulog (LOG_ERROR, "%s: too large to send", zfile);
       ubuffree (zfile);
-      return fremote_rec_fail (FAILURE_SIZE, iremote);
+      return fremote_rec_fail (qdaemon, FAILURE_SIZE, iremote);
     }
 
   imode = ixsysdep_file_mode (zfile);
@@ -826,7 +822,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
   if (! ffileisopen (e))
     {
       ubuffree (zfile);
-      return fremote_rec_fail (FAILURE_OPEN, iremote);
+      return fremote_rec_fail (qdaemon, FAILURE_OPEN, iremote);
     }
 
   /* If the remote requested that the file send start from a
@@ -858,9 +854,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
   qtrans->ipos = qcmd->ipos;
   qtrans->s.imode = imode;
 
-  uqueue_remote (qtrans);
-
-  return TRUE;
+  return fqueue_remote (qdaemon, qtrans);
 }
 
 /* Reply to a receive request from the remote system, and prepare to
@@ -906,16 +900,15 @@ fremote_rec_reply (qtrans, qdaemon)
   qtrans->psendfn = fsend_file_end;
   qtrans->precfn = fsend_await_confirm;
 
-  uqueue_send (qtrans);
-
-  return TRUE;
+  return fqueue_send (qdaemon, qtrans);
 }
 
 /* If we can't send a file as requested by the remote system, queue up
    a failure reply which will be sent when possible.  */
 
 static boolean
-fremote_rec_fail (twhy, iremote)
+fremote_rec_fail (qdaemon, twhy, iremote)
+     struct sdaemon *qdaemon;
      enum tfailure twhy;
      int iremote;
 {
@@ -930,9 +923,7 @@ fremote_rec_fail (twhy, iremote)
   qtrans->iremote = iremote;
   qtrans->pinfo = (pointer) ptinfo;
 
-  uqueue_remote (qtrans);
-
-  return TRUE;
+  return fqueue_remote (qdaemon, qtrans);
 }
 
 /* Send a failure string for a receive command to the remote system;
@@ -1000,9 +991,7 @@ fsend_file_end (qtrans, qdaemon)
 
   /* qtrans->precfn should have been set by a previous function.  */
   qtrans->fcmd = TRUE;
-  uqueue_receive (qtrans);
-
-  return TRUE;
+  return fqueue_receive (qdaemon, qtrans);
 }
 
 /* Handle the confirmation string received after sending a file.  */
@@ -1171,9 +1160,7 @@ fsend_exec_file_init (qtrans, qdaemon)
   qtrans->imicros = 0;
   qinfo->fsent = FALSE;
 
-  uqueue_send (qtrans);
-
-  return TRUE;
+  return fqueue_send (qdaemon, qtrans);
 }
 
 /* Add a line to the fake execution file.  */

@@ -1237,7 +1237,7 @@ boolean *pfhandled;
 			}
 			*pfhandled = TRUE;
 			qtrans->fsendfile = TRUE;
-			uqueue_send (qtrans);
+			return fqueue_send (qdaemon, qtrans);
 		}
 	}
 
