@@ -432,6 +432,7 @@ fsysdep_lock_status ()
       int cread;
       int ierr;
       pid_t ipid;
+      int icheck;
 
       if (strncmp (qentry->d_name, "LCK..", sizeof "LCK.." - 1) != 0)
 	continue;
@@ -472,6 +473,12 @@ fsysdep_lock_status ()
 #endif
 
       printf ("%s: %ld\n", qentry->d_name, (long) ipid);
+
+      for (icheck = 0; icheck < cgot; icheck++)
+	if (pai[icheck] == ipid)
+	  break;
+      if (icheck < cgot)
+	continue;
 
       if (cgot >= calc)
 	{
