@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1992/03/12  19:54:43  ian
+   Debugging based on types rather than number
+
    Revision 1.5  1992/03/03  21:34:55  ian
    Handle local execution files
 
@@ -79,13 +82,12 @@ char abProgram[] = "uustat";
 /* Local functions.  */
 
 static void ususage P((void));
-static boolean fsworkfiles P((boolean fall, const char *zsystem,
-			      const char *zuser, long iold,
-			      long iyoung));
-static boolean fsworkfiles_system P((boolean fall,
-				     const struct ssysteminfo *qsys,
-				     const char *zuser, long iold,
-				     long iyoung));
+static boolean fsworkfiles P((int csystems, char **pazsystems,
+			      int cusers, char **pazusers,
+			      long iold, long iyoung));
+static boolean fsworkfiles_system P((const struct ssysteminfo *qsys,
+				     int cusers,  char **pazusers,
+				     long iold, long iyoung));
 static boolean fsworkfile_show P((const struct ssysteminfo *qsys,
 				  const struct scmd *qcmd,
 				  long itime));
@@ -112,7 +114,8 @@ main (argc, argv)
   /* -a: list all jobs.  */
   boolean fall = FALSE;
   /* -k jobid: kill specified job.  */
-  char *zkill = NULL;
+  int ckills = 0;
+  char **pazkills = NULL;
   /* -m: report machine status.  */
   boolean fmachine = FALSE;
   /* -o hour: report jobs older than given number of hours.  */
@@ -122,11 +125,14 @@ main (argc, argv)
   /* -q: list number of jobs for each system.  */
   boolean fquery = FALSE;
   /* -r jobid: rejuvenate specified job.  */
-  char *zrejuvenate = NULL;
+  int crejuvs = 0;
+  char **pazrejuvs = NULL;
   /* -s system: list all jobs for specified system.  */
-  char *zsystem = NULL;
+  int csystems = 0;
+  char **pazsystems = NULL;
   /* -u user: list all jobs for specified user.  */
-  const char *zuser = NULL;
+  int cusers = 0;
+  char **pazusers = NULL;
   /* -y hour: report jobs younger than given number of hours.  */
   int iyounghours = -1;
   /* -I file: set configuration file.  */
@@ -134,6 +140,7 @@ main (argc, argv)
   int ccmds;
   long iold;
   long iyoung;
+  char *azoneuser[1];
   boolean fret;
 
   while ((iopt = getopt (argc, argv, "aI:k:mo:pqr:s:u:x:y:")) != EOF)
@@ -152,7 +159,10 @@ main (argc, argv)
 
 	case 'k':
 	  /* Kill specified job.  */
-	  zkill = optarg;
+	  ++ckills;
+	  pazkills = (char **) xrealloc ((pointer) pazkills,
+					 ckills * sizeof (char *));
+	  pazkills[ckills - 1] = optarg;
 	  break;
 
 	case 'm':
@@ -177,17 +187,26 @@ main (argc, argv)
 
 	case 'r':
 	  /* Rejuvenate specified job.  */
-	  zrejuvenate = optarg;
+	  ++crejuvs;
+	  pazrejuvs = (char **) xrealloc ((pointer) pazrejuvs,
+					  crejuvs * sizeof (char *));
+	  pazrejuvs[crejuvs - 1] = optarg;
 	  break;
 
 	case 's':
 	  /* List jobs for specified system.  */
-	  zsystem = optarg;
+	  ++csystems;
+	  pazsystems = (char **) xrealloc ((pointer) pazsystems,
+					   csystems * sizeof (char *));
+	  pazsystems[csystems - 1] = optarg;
 	  break;
 
 	case 'u':
 	  /* List jobs for specified user.  */
-	  zuser = optarg;
+	  ++cusers;
+	  pazusers = (char **) xrealloc ((pointer) pazusers,
+					 cusers * sizeof (char *));
+	  pazusers[cusers - 1] = optarg;
 	  break;
 
 	case 'x':
@@ -217,32 +236,24 @@ main (argc, argv)
 
   /* To avoid confusion, most options are only permitted by
      themselves.  This restriction might be removed later, but it is
-     imposed by most implementations.  We do permit -s and -u to be
-     specified together.  */
+     imposed by most implementations.  We do permit any combination of
+     -s, -u, -o and -y, and any combination of -k and -r.  */
   ccmds = 0;
   if (fall)
     ++ccmds;
-  if (zkill != NULL)
+  if (ckills > 0 || crejuvs > 0)
     ++ccmds;
   if (fmachine)
-    ++ccmds;
-  if (ioldhours != -1)
     ++ccmds;
   if (fps)
     ++ccmds;
   if (fquery)
     ++ccmds;
-  if (zrejuvenate != NULL)
-    ++ccmds;
-  if (zsystem != NULL)
-    ++ccmds;
-  if (zuser != NULL)
-    ++ccmds;
-  if (iyounghours != -1)
+  if (csystems > 0 || cusers > 0
+      || ioldhours != -1 || iyounghours != -1)
     ++ccmds;
 
-  if (ccmds > 1
-      && (ccmds != 2 || zuser == NULL || zsystem == NULL))
+  if (ccmds > 1)
     {
       fprintf (stderr, "uustat: Too many options\n");
       ususage ();
@@ -255,7 +266,11 @@ main (argc, argv)
   /* If no commands were specified, we list all commands for the given
      user.  */
   if (ccmds == 0)
-    zuser = zsysdep_login_name ();
+    {
+      cusers = 1;
+      azoneuser[0] = xstrdup (zsysdep_login_name ());
+      pazusers = azoneuser;
+    }
 
   if (ioldhours == -1)
     iold = (long) -1;
@@ -278,18 +293,28 @@ main (argc, argv)
 
   if (fall
       || ioldhours != -1
-      || zsystem != NULL
-      || zuser != NULL
+      || csystems > 0
+      || cusers > 0
       || iyounghours != -1)
-    fret = fsworkfiles (fall, zsystem, zuser, iold, iyoung);
+    fret = fsworkfiles (csystems, pazsystems, cusers, pazusers, iold,
+			iyoung);
   else if (fquery)
     fret = fsquery ();
   else if (fmachine)
     fret = fsmachines ();
-  else if (zkill != NULL)
-    fret = fsysdep_kill_job (zkill);
-  else if (zrejuvenate != NULL)
-    fret = fsysdep_rejuvenate_job (zrejuvenate);
+  else if (ckills > 0 || crejuvs > 0)
+    {
+      int i;
+
+      fret = TRUE;
+      for (i = 0; i < ckills; i++)
+	if (! fsysdep_kill_job (pazkills[i]))
+	  fret = FALSE;
+
+      for (i = 0; i < crejuvs; i++)
+	if (! fsysdep_rejuvenate_job (pazrejuvs[i]))
+	  fret = FALSE;
+    }
   else if (fps)
     fret = fsysdep_lock_status ();
   else
@@ -351,49 +376,58 @@ ususage ()
 /* Handle various possible requests to look at work files.  */
 
 static boolean
-fsworkfiles (fall, zsystem, zuser, iold, iyoung)
-     boolean fall;
-     const char *zsystem;
-     const char *zuser;
+fsworkfiles (csystems, pazsystems, cusers, pazusers, iold, iyoung)
+     int csystems;
+     char **pazsystems;
+     int cusers;
+     char **pazusers;
      long iold;
      long iyoung;
 {
-  if (zsystem != NULL)
+  boolean fret;
+  int i;
+
+  fret = TRUE;
+
+  if (csystems > 0)
     {
       struct ssysteminfo ssys;
 
-      if (! fread_system_info (zsystem, &ssys))
+      for (i = 0; i < csystems; i++)
 	{
-	  ulog (LOG_ERROR, "%s: no such system", zsystem);
-	  return FALSE;
+	  if (! fread_system_info (pazsystems[i], &ssys))
+	    {
+	      ulog (LOG_ERROR, "%s: unknown system", pazsystems[i]);
+	      fret = FALSE;
+	      continue;
+	    }
+
+	  if (! fsworkfiles_system (&ssys, cusers, pazusers, iold, iyoung))
+	    fret = FALSE;
 	}
-      return fsworkfiles_system (fall, &ssys, zuser, iold, iyoung);
     }
   else
     {
-      int csystems;
+      int cs;
       struct ssysteminfo *pas;
-      boolean fret;
-      int i;
 
-      uread_all_system_info (&csystems, &pas);
+      uread_all_system_info (&cs, &pas);
 
-      fret = TRUE;
-      for (i = 0; i < csystems; i++)
-	if (! fsworkfiles_system (fall, &pas[i], zuser, iold, iyoung))
+      for (i = 0; i < cs; i++)
+	if (! fsworkfiles_system (&pas[i], cusers, pazusers, iold, iyoung))
 	  fret = FALSE;
-
-      return fret;
     }
+
+  return fret;
 }
 
 /* Look at the work files for a particular system.  */
 
 static boolean
-fsworkfiles_system (fall, qsys, zuser, iold, iyoung)
-     boolean fall;
+fsworkfiles_system (qsys, cusers, pazusers, iold, iyoung)
      const struct ssysteminfo *qsys;
-     const char *zuser;
+     int cusers;
+     char **pazusers;
      long iold;
      long iyoung;
 {
@@ -415,9 +449,16 @@ fsworkfiles_system (fall, qsys, zuser, iold, iyoung)
       if (s.bcmd == 'H')
 	break;
 
-      if (zuser != NULL
-	  && strcmp (s.zuser, zuser) != 0)
-	continue;
+      if (cusers > 0)
+	{
+	  int i;
+
+	  for (i = 0; i < cusers; i++)
+	    if (strcmp (pazusers[i], s.zuser) == 0)
+	      break;
+	  if (i >= cusers)
+	    continue;
+	}
 
       itime = isysdep_work_time (qsys, s.pseq);
 
@@ -995,7 +1036,7 @@ fsmachines ()
       struct tm stime;
 
       usysdep_localtime (sstat.ilast, &stime);
-      printf ("%s %04d-%02d-%02d %02d:%02d:%02d %s", zsystem,
+      printf ("%-14s %04d-%02d-%02d %02d:%02d:%02d %s", zsystem,
 	      stime.tm_year + 1900, stime.tm_mon + 1,
 	      stime.tm_mday, stime.tm_hour,
 	      stime.tm_min, stime.tm_sec,
@@ -1003,11 +1044,17 @@ fsmachines ()
       if (sstat.ttype != STATUS_TALKING
 	  && sstat.cwait > 0)
 	{
-	  usysdep_localtime (sstat.ilast + sstat.cwait, &stime);
-	  printf (" (%d tries, next %04d-%02d-%02d %02d:%02d:%02d)",
-		  sstat.cretries, stime.tm_year + 1900, stime.tm_mon + 1,
-		  stime.tm_mday, stime.tm_hour,
-		  stime.tm_min, stime.tm_sec);
+	  printf (" (%d %s", sstat.cretries,
+		  sstat.cretries == 1 ? "try" : "tries");
+	  if (sstat.ilast + sstat.cwait > isysdep_time ((long *) NULL))
+	    {
+	      usysdep_localtime (sstat.ilast + sstat.cwait, &stime);
+	      printf (", next %04d-%02d-%02d %02d:%02d:%02d",
+		      stime.tm_year + 1900, stime.tm_mon + 1,
+		      stime.tm_mday, stime.tm_hour,
+		      stime.tm_min, stime.tm_sec);
+	    }
+	  printf (")");
 	}
       printf ("\n");
     }
