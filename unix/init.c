@@ -272,16 +272,6 @@ usysdep_initialize (puuconf,iflags)
 	setuid (q->pw_uid);
     }
 
-  if ((iflags & INIT_DAEMON) != 0)
-    {
-      /* Set our uid to our effective uid.  There is no point in
-	 remembering who originally ran the program.  This won't work
-	 on System V, but there's nothing to be done about that and it
-	 doesn't make all that much difference.  */
-      (void) setuid (geteuid ());
-      (void) setgid (getegid ());
-    }
-
   if ((iflags & INIT_GETCWD) != 0)
     {
       const char *zenv;

@@ -343,7 +343,7 @@ main (argc, argv)
   usysdep_signal (SIGPIPE);
 #endif
 
-  usysdep_initialize (puuconf, INIT_DAEMON | INIT_SUID);
+  usysdep_initialize (puuconf, INIT_SUID);
 
   ulog_to_file (puuconf, TRUE);
   ulog_fatal_fn (uabort);

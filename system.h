@@ -53,10 +53,6 @@ extern size_t cSysdep_max_name_len;
    exit.  The flag argument is 0, or a combination of any of the
    following flags.  */
 
-/* This is a daemon program.  This is TRUE when called from uucico or
-   uuxqt.  */
-#define INIT_DAEMON (01)
-
 /* This program needs to know the current working directory.  This is
    used because on Unix it can be expensive to determine the current
    working directory (some versions of getcwd fork a process), but in
@@ -67,15 +63,15 @@ extern size_t cSysdep_max_name_len;
    will need the current working directory, and pass the argument to
    usysdep_initialize appropriately.  There's probably a cleaner way
    to handle this, but this will suffice for now.  */
-#define INIT_GETCWD (02)
+#define INIT_GETCWD (01)
 
 /* This program should not chdir to the spool directory.  This may
    only make sense on Unix.  It is set by cu.  */
-#define INIT_NOCHDIR (04)
+#define INIT_NOCHDIR (02)
 
 /* This program needs special access to the spool directories.  That
    means, on Unix, this program is normally installed setuid.  */
-#define INIT_SUID (010)
+#define INIT_SUID (04)
 
 extern void usysdep_initialize P((pointer puuconf, int iflags));
 
