@@ -348,3 +348,10 @@ to only display jobs submitted by the user running uustat, except for
 root and uucp.
 
 117.
+
+Marc Unangst: provide some way to change the debugging level of a
+running uucico.  T. William Wells suggests having it read a file to
+change arbitrary configuration information, although obviously one has
+to be careful of what gets changed while a connection is active.
+
+118.
