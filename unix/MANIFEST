@@ -4,6 +4,7 @@ dirent.c
 dup2.c
 ftw.c
 epopen.c
+getcwd.c
 isfork.c
 iswait.c
 locfil.c
