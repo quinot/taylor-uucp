@@ -57,6 +57,7 @@ AC_CHECK_HEADERS(fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
 AC_CHECK_HEADERS(sysexits.h poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h)
 AC_CHECK_HEADERS(glob.h sys/param.h sys/types.tcp.h sys/mount.h sys/vfs.h)
 AC_CHECK_HEADERS(sys/filsys.h sys/statfs.h sys/dustat.h sys/fs_types.h ustat.h)
+AC_CHECK_HEADERS(sys/statvfs.h)
 dnl
 # Under Next 3.2 <dirent.h> apparently does not define struct dirent
 # by default.
@@ -257,8 +258,37 @@ if test $uucp_cv_txaddcd = yes; then
   AC_DEFINE([HAVE_TXADDCD])
 fi
 dnl
+dnl On some systems, memset, memcmp, and memcpy must be called with
+dnl the right number of arguments.
+AC_MSG_CHECKING(for memset)
+AC_CACHE_VAL(ac_cv_func_memset,
+[AC_TRY_LINK([], [ char *i; int j, k; memset(i, j, k); ],
+ac_cv_func_memset=yes, ac_cv_func_memset=no)])
+AC_MSG_RESULT($ac_cv_func_memset)
+if test $ac_cv_func_memset = yes; then
+  AC_DEFINE([HAVE_MEMSET])
+fi
+dnl
+AC_MSG_CHECKING(for memcmp)
+AC_CACHE_VAL(ac_cv_func_memcmp,
+[AC_TRY_LINK([], [ char *i, *j; int k; memcmp(i, j, k); ],
+ac_cv_func_memcmp=yes, ac_cv_func_memcmp=no)])
+AC_MSG_RESULT($ac_cv_func_memcmp)
+if test $ac_cv_func_memcmp = yes; then
+  AC_DEFINE([HAVE_MEMCMP])
+fi
+dnl
+AC_MSG_CHECKING(for memcpy)
+AC_CACHE_VAL(ac_cv_func_memcpy,
+[AC_TRY_LINK([], [ char *i, *j; int k; memcpy(i, j, k); ],
+ac_cv_func_memcpy=yes, ac_cv_func_memcpy=no)])
+AC_MSG_RESULT($ac_cv_func_memcpy)
+if test $ac_cv_func_memcpy = yes; then
+  AC_DEFINE([HAVE_MEMCPY])
+fi
+dnl
 undefine([index])
-AC_CHECK_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
+AC_CHECK_FUNCS(memchr bcopy bcmp bzero)
 AC_CHECK_FUNCS(strchr strrchr index rindex strerror strtol strtoul strstr)
 AC_CHECK_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp)
 AC_CHECK_FUNCS(bsearch vfprintf)
