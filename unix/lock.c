@@ -49,6 +49,10 @@ const char lock_rcsid[] = "$Id$";
 #define O_NOCTTY 0
 #endif
 
+#ifndef SEEK_SET
+#define SEEK_SET 0
+#endif
+
 #include "uudefs.h"
 #include "sysdep.h"
 #include "system.h"
