@@ -651,9 +651,11 @@ floop (qdaemon)
 	    }
 	}
 
-      /* Clear any requested hangup.  We may have already hung up
-	 before checking this variable in the block above.  */
-      qdaemon->fhangup_requested = FALSE;
+      /* If we are no long the master, clear any requested hangup.  We
+	 may have already hung up before checking this variable in the
+	 block above.  */
+      if (! qdaemon->fmaster)
+	qdaemon->fhangup_requested = FALSE;
 
       /* Immediately queue up any remote jobs.  We don't need local
 	 channel numbers for them, since we can disambiguate based on
