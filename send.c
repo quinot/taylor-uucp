@@ -304,22 +304,26 @@ flocal_send_fail (qtrans, qcmd, qsys, zwhy)
 {
   if (zwhy != NULL)
     {
+      const char *zfrom;
       char *zfree;
 
       if (qcmd->bcmd != 'E')
-	zfree = NULL;
+	{
+	  zfrom = qcmd->zfrom;
+	  zfree = NULL;
+	}
       else
 	{
-	  zfree = zbufalc (sizeof "Execution of \"\": "
-			   + strlen (qcmd->zcmd)
-			   + strlen (zwhy));
-	  sprintf (zfree, "Execution of \"%s\": %s", qcmd->zcmd, zwhy);
-	  zwhy = zfree;
+	  zfree = zbufalc (strlen (qcmd->zfrom)
+			   + sizeof " (execution of \"\")"
+			   + strlen (qcmd->zcmd));
+	  sprintf (zfree, "%s (execution of \"%s\")", qcmd->zcmd);
+	  zfrom = zfree;
 	}
 
-      ulog (LOG_ERROR, "%s: %s", qcmd->zfrom, zwhy);
+      ulog (LOG_ERROR, "%s: %s", zfrom, zwhy);
       (void) fmail_transfer (FALSE, qcmd->zuser, (const char *) NULL,
-			     zwhy, qcmd->zfrom, (const char *) NULL,
+			     zwhy, zfrom, (const char *) NULL,
 			     qcmd->zto, qsys->uuconf_zname,
 			     zsysdep_save_temp_file (qcmd->pseq));
 
@@ -541,8 +545,8 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
       if (! fnever)
 	{
 	  if (qtrans->s.bcmd == 'E')
-	    ulog (LOG_ERROR, "Execution of \"%s\": %s", qtrans->s.zcmd,
-		  zerr);
+	    ulog (LOG_ERROR, "%s (execution of \"%s\"): %s",
+		  qtrans->s.zfrom, qtrans->s.zcmd, zerr);
 	  else
 	    ulog (LOG_ERROR, "%s: %s", qtrans->s.zfrom, zerr);
 	}
