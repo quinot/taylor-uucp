@@ -793,3 +793,9 @@ directory which is not world-writable.  Note that this would only be a
 convenience feature for remote systems, as any local user can
 effectively use uucico to write to such a directory, which means that
 the directory effectively becomes world writable for local users.
+
+247.
+
+In HDB, if you make a hard link from cu to SYS, cu acts as though you
+ran ``cu SYS'' (presumably you could not use this to call a system
+named ``cu'').  Is this feature worth having?
