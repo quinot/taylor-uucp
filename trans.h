@@ -64,6 +64,8 @@ struct sdaemon
   struct sconnection *qconn;
   /* Protocol being used.  */
   const struct sprotocol *qproto;
+  /* Number of channels being used.  */
+  int cchans;
   /* The largest file size permitted for a local request.  */
   long clocal_size;
   /* The largest file size permitted for a remote request.  */

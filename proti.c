@@ -402,7 +402,7 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
      boolean (*pfreceive) P((struct sconnection *qconn, size_t cneed,
 			     size_t *pcrec, int ctimeout, boolean freport));
 {
-  char ab[CHDRLEN + 3 + CCKSUMLEN];
+  char ab[CHDRLEN + 4 + CCKSUMLEN];
   unsigned long icksum;
   int ctries;
   int csyncs;
@@ -461,14 +461,15 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
 
   ab[IHDR_INTRO] = IINTRO;
   ab[IHDR_LOCAL] = ab[IHDR_REMOTE] = IHDRWIN_SET (0, 0);
-  ab[IHDR_CONTENTS1] = IHDRCON_SET1 (SYNC, qdaemon->fcaller, 3);
-  ab[IHDR_CONTENTS2] = IHDRCON_SET2 (SYNC, qdaemon->fcaller, 3);
+  ab[IHDR_CONTENTS1] = IHDRCON_SET1 (SYNC, qdaemon->fcaller, 4);
+  ab[IHDR_CONTENTS2] = IHDRCON_SET2 (SYNC, qdaemon->fcaller, 4);
   ab[IHDR_CHECK] = IHDRCHECK_VAL (ab);
   ab[CHDRLEN + 0] = (iIrequest_packsize >> 8) & 0xff;
   ab[CHDRLEN + 1] = iIrequest_packsize & 0xff;
   ab[CHDRLEN + 2] = iIrequest_winsize;
-  icksum = icrc (ab + CHDRLEN, 3, ICRCINIT);
-  UCKSUM_SET (ab + CHDRLEN + 3, icksum);
+  ab[CHDRLEN + 3] = qdaemon->cchans;
+  icksum = icrc (ab + CHDRLEN, 4, ICRCINIT);
+  UCKSUM_SET (ab + CHDRLEN + 4, icksum);
 
   /* The static cIsyncs is incremented each time a SYNC packet is
      received.  */
@@ -479,11 +480,11 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
     {
       boolean ftimedout;
 
-      DEBUG_MESSAGE2 (DEBUG_PROTO,
-		      "fistart: Sending SYNC packsize %d winsize %d",
-		      iIrequest_packsize, iIrequest_winsize);
+      DEBUG_MESSAGE3 (DEBUG_PROTO,
+		      "fistart: Sending SYNC packsize %d winsize %d channels %d",
+		      iIrequest_packsize, iIrequest_winsize, qdaemon->cchans);
 
-      if (! (*pfIsend) (qdaemon->qconn, ab, CHDRLEN + 3 + CCKSUMLEN,
+      if (! (*pfIsend) (qdaemon->qconn, ab, CHDRLEN + 4 + CCKSUMLEN,
 			TRUE))
 	return FALSE;
 
@@ -1005,6 +1006,8 @@ ficheck_errors (qdaemon)
 	  char absync[CHDRLEN + 3 + CCKSUMLEN];
 	  unsigned long icksum;
 
+	  /* Don't bother sending the number of channels in this
+	     packet.  */
 	  iIrequest_packsize /= 2;
 	  absync[IHDR_INTRO] = IINTRO;
 	  absync[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
@@ -1467,7 +1470,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 
     case SYNC:
       {
-	int ipack, iwin;
+	int ipack, iwin, cchans;
 
 	/* We accept a SYNC packet to adjust the packet and window
 	   sizes at any time.  */
@@ -1486,9 +1489,25 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	else
 	  iwin = zsecond[2 - cfirst];
 
-	DEBUG_MESSAGE2 (DEBUG_PROTO,
-			"fiprocess_packet: Got SYNC packsize %d winsize %d",
-			ipack, iwin);
+	/* The fourth byte in a SYNC packet is the number of channels
+	   to use.  This is optional.  Switching the number of
+	   channels in the middle of a conversation may cause
+	   problems.  */
+	if (cfirst + csecond <= 3)
+	  cchans = 0;
+	else
+	  {
+	    if (cfirst > 3)
+	      cchans = zfirst[3];
+	    else
+	      cchans = zsecond[3 - cfirst];
+	    if (cchans > 0 && cchans < 8)
+	      qdaemon->cchans = cchans;
+	  }
+
+	DEBUG_MESSAGE3 (DEBUG_PROTO,
+			"fiprocess_packet: Got SYNC packsize %d winsize %d channels %d",
+			ipack, iwin, cchans);
 
 	if (iIforced_remote_packsize == 0
 	    && (iIalc_packsize == 0

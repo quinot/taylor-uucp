@@ -410,6 +410,18 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
 	  zerr = "too large to receive now";
 	  fnever = FALSE;
 	}
+      else if (zdata[2] == '9')
+	{
+	  /* Remote has run out of channels.  */
+	  zerr = "too many channels for remote";
+	  fnever = FALSE;
+
+	  /* Drop one channel; using exactly one channel causes
+	     slightly different behahaviour in a few places, so don't
+	     decrement to one.  */
+	  if (qdaemon->cchans > 1)
+	    --qdaemon->cchans;
+	}
       else
 	zerr = "unknown reason";
 
@@ -824,7 +836,7 @@ fremote_send_fail (qdaemon, qcmd, twhy, iremote)
 
   /* If the protocol does not support multiple channels (cchans <= 1),
      then we have essentially already received the entire file.  */
-  qinfo->freceived = qdaemon->qproto->cchans <= 1;
+  qinfo->freceived = qdaemon->cchans <= 1;
 
   qtrans = qtransalc (qcmd);
   qtrans->psendfn = fremote_send_fail_send;

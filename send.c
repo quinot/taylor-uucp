@@ -495,7 +495,7 @@ flocal_send_request (qtrans, qdaemon)
   qtrans->psendfn = flocal_send_open_file;
   qtrans->precfn = flocal_send_await_reply;
 
-  if (qdaemon->qproto->cchans > 1)
+  if (qdaemon->cchans > 1)
     return fqueue_send (qdaemon, qtrans);
   else
     return fqueue_receive (qdaemon, qtrans);
@@ -561,6 +561,18 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	     is no need to resend the file.  */
 	  zerr = NULL;
 	}
+      else if (zdata[2] == '9')
+	{
+	  /* Remote has run out of channels.  */
+	  zerr = "too many channels for remote";
+	  fnever = FALSE;
+
+	  /* Drop one channel; using exactly one channel causes
+	     slightly different behahaviour in a few places, so don't
+	     decrement to one.  */
+	  if (qdaemon->cchans > 1)
+	    --qdaemon->cchans;
+	}
       else
 	zerr = "unknown reason";
 
@@ -584,7 +596,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	 the remote side knows that we have finished sending the file
 	 data.  If we have already sent the entire file, there will be
 	 no confusion.  */
-      if (qdaemon->qproto->cchans == 1 || qinfo->fsent)
+      if (qdaemon->cchans == 1 || qinfo->fsent)
 	{
 	  /* If we are breaking a 'E' command into two 'S' commands,
 	     and that was for the first 'S' command, we still have to
@@ -647,7 +659,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
   qtrans->precfn = fsend_await_confirm;
   if (qinfo->fsent)
     return fqueue_receive (qdaemon, qtrans);
-  else if (qdaemon->qproto->cchans <= 1)
+  else if (qdaemon->cchans <= 1)
     return fqueue_send (qdaemon, qtrans);
   else
     return TRUE;

@@ -305,7 +305,7 @@ utchanalc (qdaemon, qtrans)
   do
     {
       ++iTchan;
-      if (iTchan > qdaemon->qproto->cchans)
+      if (iTchan > qdaemon->cchans)
 	iTchan = 1;
     }
   while (aqTchan[iTchan] != NULL);
@@ -658,18 +658,12 @@ static boolean
 fcheck_queue (qdaemon)
      struct sdaemon *qdaemon;
 {
-  int cchans;
-
   /* Only check if we are the master, or if there are multiple
      channels, or if we aren't already trying to get the other side to
      hang up.  Otherwise, there's nothing we can do with any new jobs
      we might find.  */
-  if ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) == 0)
-    cchans = 1;
-  else
-    cchans = qdaemon->qproto->cchans;
   if (qdaemon->fmaster
-      || cchans > 1
+      || qdaemon->cchans > 1
       || ! qdaemon->frequest_hangup)
     {
       boolean fany;
@@ -682,7 +676,7 @@ fcheck_queue (qdaemon)
       /* If we found something to do, and we're not the master, and we
 	 don't have multiple channels to send new jobs over, try to
 	 get the other side to hang up.  */
-      if (fany && ! qdaemon->fmaster && cchans <= 1)
+      if (fany && ! qdaemon->fmaster && qdaemon->cchans <= 1)
 	qdaemon->frequest_hangup = TRUE;
     }
 
@@ -696,16 +690,7 @@ boolean
 floop (qdaemon)
      struct sdaemon *qdaemon;
 {
-  int cchans;
   boolean fret;
-
-  /* If we are using a half-duplex line, act as though we have only a
-     single channel; otherwise we might start a send and a receive at
-     the same time.  */
-  if ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) == 0)
-    cchans = 1;
-  else
-    cchans = qdaemon->qproto->cchans;
 
   fret = TRUE;
 
@@ -792,9 +777,9 @@ floop (qdaemon)
 
       /* If we are the master, or if we have multiple channels, try to
 	 queue up additional local jobs.  */
-      if (qdaemon->fmaster || cchans > 1)
+      if (qdaemon->fmaster || qdaemon->cchans > 1)
 	{
-	  while (qTlocal != NULL && cTchans < cchans)
+	  while (qTlocal != NULL && cTchans < qdaemon->cchans)
 	    {
 	      /* We have room for an additional channel.  */
 	      q = qTlocal;

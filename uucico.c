@@ -847,6 +847,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
   sDaemon.zlocalname = NULL;
   sDaemon.qconn = NULL;
   sDaemon.qproto = NULL;
+  sDaemon.cchans = 1;
   sDaemon.clocal_size = -1;
   sDaemon.cremote_size = -1;
   sDaemon.cmax_ever = -2;
@@ -1457,6 +1458,14 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
     qdaemon->qproto = &asProtocols[i];
 
+    /* If we are using a half-duplex line, act as though we have only
+       a single channel; otherwise we might start a send and a receive
+       at the same time.  */
+    if ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) == 0)
+      qdaemon->cchans = 1;
+    else
+      qdaemon->cchans = asProtocols[i].cchans;
+
     sprintf (ab, "U%c", qdaemon->qproto->bname);
     if (! fsend_uucp_cmd (qconn, ab))
       return FALSE;
@@ -1804,6 +1813,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   sDaemon.zlocalname = NULL;
   sDaemon.qconn = qconn;
   sDaemon.qproto = NULL;
+  sDaemon.cchans = 1;
   sDaemon.clocal_size = -1;
   sDaemon.cremote_size = -1;
   sDaemon.cmax_ever = -2;
@@ -2345,6 +2355,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     }
 
   sDaemon.qproto = &asProtocols[i];
+
+  /* If we are using a half-duplex line, act as though we have only a
+     single channel; otherwise we might start a send and a receive at
+     the same time.  */
+  if ((sDaemon.ireliable & UUCONF_RELIABLE_FULLDUPLEX) == 0)
+    sDaemon.cchans = 1;
+  else
+    sDaemon.cchans = asProtocols[i].cchans;
 
   /* Run the chat script for when a call is received.  */
   if (! fchat (qconn, puuconf, &qsys->uuconf_scalled_chat, qsys,
