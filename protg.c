@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/01/19  23:01:21  ian
+   Dave Platt: send small packets to hold a small amount of data
+
    Revision 1.18  1992/01/16  23:46:40  ian
    Zero out unused bytes in short packets
 
@@ -604,7 +607,7 @@ fgsendcmd (z)
 
       zpacket = zggetspace (&cdummy);
 
-      if (clen < iGremote_packsize)
+      if (clen + 1 < iGremote_packsize)
 	{
 	  int csize;
 
@@ -618,7 +621,7 @@ fgsendcmd (z)
 	  else
 	    {
 	      csize = 32;
-	      while (csize < clen)
+	      while (csize < clen + 1)
 		csize <<= 1;
 	    }
 
