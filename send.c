@@ -51,7 +51,9 @@ struct ssendinfo
   boolean flocal;
   /* TRUE if this is a spool directory file.  */
   boolean fspool;
-  /* TRUE if the file has been completely sent.  */
+  /* TRUE if the file has been completely sent.  Also used in
+     flocal_send_cancelled to mean that the file send will never
+     succeed.  */
   boolean fsent;
   /* Execution file for sending an unsupported E request.  */
   char *zexec;
@@ -342,13 +344,7 @@ flocal_send_fail (qtrans, qcmd, qdaemon, zwhy)
       ubuffree (zfree);
     }
 
-  /* We can only mark this job as complete if we are not going to try
-     to send a separate execution file.  */
-  if (qtrans == NULL
-      || qtrans->s.bcmd != 'E'
-      || (qdaemon->ifeatures & FEATURE_EXEC) != 0
-      || ((struct ssendinfo *) qtrans->pinfo)->zexec != NULL)
-    (void) fsysdep_did_work (qcmd->pseq);
+  (void) fsysdep_did_work (qcmd->pseq);
 
   if (qtrans != NULL)
     usfree_send (qtrans);
@@ -584,7 +580,10 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
       else
 	zerr = "unknown reason";
 
-      if (! fnever)
+      if (! fnever
+	  || (qtrans->s.bcmd == 'E'
+	      && (qdaemon->ifeatures & FEATURE_EXEC) == 0
+	      && qinfo->zexec == NULL))
 	{
 	  if (qtrans->s.bcmd == 'E')
 	    ulog (LOG_ERROR, "%s (execution of \"%s\"): %s",
@@ -609,7 +608,8 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	  /* If we are breaking a 'E' command into two 'S' commands,
 	     and that was for the first 'S' command, we still have to
 	     send the second one.  */
-	  if (qtrans->s.bcmd == 'E'
+	  if (fnever
+	      && qtrans->s.bcmd == 'E'
 	      && (qdaemon->ifeatures & FEATURE_EXEC) == 0
 	      && qinfo->zexec == NULL)
 	    return fsend_exec_file_init (qtrans, qdaemon);
@@ -632,6 +632,10 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	    }
 	  qtrans->psendfn = flocal_send_cancelled;
 	  qtrans->precfn = NULL;
+
+	  /* Reuse fsent to pass fnever to flocal_send_cancelled.  */
+	  qinfo->fsent = fnever;
+
 	  return fqueue_send (qdaemon, qtrans);
 	}
     }
@@ -803,11 +807,13 @@ flocal_send_cancelled (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-  
+
   /* If we are breaking a 'E' command into two 'S' commands, and that
-     was for the first 'S' command, we still have to send the second
-     one.  */
-  if (qtrans->s.bcmd == 'E'
+     was for the first 'S' command, and the first 'S' command will
+     never be sent (passed as qinfo->fsent), we still have to send the
+     second one.  */
+  if (qinfo->fsent
+      && qtrans->s.bcmd == 'E'
       && (qdaemon->ifeatures & FEATURE_EXEC) == 0
       && qinfo->zexec == NULL)
     return fsend_exec_file_init (qtrans, qdaemon);
