@@ -51,8 +51,12 @@ const char tstuu_rcsid[] = "$Id$";
 #endif
 
 #if HAVE_POLL
+#if HAVE_STROPTS_H
 #include <stropts.h>
+#endif
+#if HAVE_POLL_H
 #include <poll.h>
+#endif
 #endif
 
 #if HAVE_FCNTL_H
