@@ -111,7 +111,7 @@ flocal_xcmd_await_reply (qtrans, qdaemon, zdata, cdata)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
      const char *zdata;
-     size_t cdata;
+     size_t cdata ATTRIBUTE_UNUSED;
 {
   qtrans->precfn = NULL;
 

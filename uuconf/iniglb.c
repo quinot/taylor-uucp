@@ -156,10 +156,10 @@ _uuconf_iinit_global (pqglobal)
 int
 _uuconf_itimetable (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

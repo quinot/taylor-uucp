@@ -194,7 +194,7 @@ char *
 zsfind_file (zsimple, zsystem, bgrade)
      const char *zsimple;
      const char *zsystem;
-     int bgrade;
+     int bgrade ATTRIBUTE_UNUSED;
 {
   /* zsysdep_spool_commands calls this with TMPXXX which we must treat
      as a C. file.  */

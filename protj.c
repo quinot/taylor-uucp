@@ -154,7 +154,7 @@ fjstart (qdaemon, pzlog)
   int b;
   size_t cbuf, cgot;
   char *zbuf;
-  int i;
+  size_t i;
 
   /* Send the characters we want to avoid to the other side.  */
   clen = strlen (zJavoid_parameter);
@@ -499,7 +499,7 @@ fjreceive_data (qconn, cineed, pcrec, ctimeout, freport)
       if (cnew < 0)
 	cnew += CRECBUFLEN;
 
-      if (cnew > cineed)
+      if ((size_t) cnew > cineed)
 	cineed = 0;
       else
 	cineed -= cnew;

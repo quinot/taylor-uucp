@@ -101,7 +101,7 @@ idcode (pglobal, argc, argv, pvar, pinfo)
      int argc;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pznum = (char **) pvar;

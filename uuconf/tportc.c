@@ -218,7 +218,7 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
   const struct cmdtab_offset *qcmds;
   size_t ccmds;
   struct uuconf_cmdtab as[CCMDS];
-  int i;
+  size_t i;
   int iret;
 
   fgottype = strcasecmp (argv[0], "type") == 0;
@@ -385,10 +385,10 @@ ipproto_param (pglobal, argc, argv, pvar, pinfo)
 static int
 ipbaud_range (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_modem_port *qmodem = (struct uuconf_modem_port *) pvar;
@@ -495,11 +495,11 @@ ipdialer (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 ipcunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }

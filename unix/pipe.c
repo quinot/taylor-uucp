@@ -117,8 +117,8 @@ uspipe_free (qconn)
 /*ARGSUSED*/
 static boolean
 fspipe_open (qconn, ibaud, fwait)
-     struct sconnection *qconn;
-     long ibaud;
+     struct sconnection *qconn ATTRIBUTE_UNUSED;
+     long ibaud ATTRIBUTE_UNUSED;
      boolean fwait;
 {
   /* We don't do incoming waits on pipes.  */
@@ -134,9 +134,9 @@ fspipe_open (qconn, ibaud, fwait)
 static boolean
 fspipe_close (qconn, puuconf, qdialer, fsuccess)
      struct sconnection *qconn;
-     pointer puuconf;
-     struct uuconf_dialer *qdialer;
-     boolean fsuccess;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
+     boolean fsuccess ATTRIBUTE_UNUSED;
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -191,8 +191,8 @@ static boolean
 fspipe_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
      struct sconnection *qconn;
      pointer puuconf;
-     const struct uuconf_system *qsys;
-     const char *zphone;
+     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
+     const char *zphone ATTRIBUTE_UNUSED;
      struct uuconf_dialer *qdialer;
      enum tdialerfound *ptdialer;
 {

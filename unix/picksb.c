@@ -70,7 +70,7 @@ static char *zSsysdir;
 /*ARGSUSED*/
 boolean
 fsysdep_uupick_init (zsystem, zpubdir)
-     const char *zsystem;
+     const char *zsystem ATTRIBUTE_UNUSED;
      const char *zpubdir;
 {
   const char *zuser;
@@ -101,7 +101,7 @@ fsysdep_uupick_init (zsystem, zpubdir)
 char *
 zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
      const char *zsysarg;
-     const char *zpubdir;
+     const char *zpubdir ATTRIBUTE_UNUSED;
      char **pzfrom;
      char **pzfull;
 {
@@ -180,8 +180,8 @@ zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
 /*ARGSUSED*/
 boolean
 fsysdep_uupick_free (zsystem, zpubdir)
-     const char *zsystem;
-     const char *zpubdir;
+     const char *zsystem ATTRIBUTE_UNUSED;
+     const char *zpubdir ATTRIBUTE_UNUSED;
 {
   xfree ((pointer) zStopdir);
   if (qStopdir != NULL)

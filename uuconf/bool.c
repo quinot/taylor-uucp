@@ -35,10 +35,9 @@ const char _uuconf_bool_rcsid[] = "$Id$";
    error code, including both UUCONF_CMDTABRET_KEEP and
    UUCONF_CMDTABRET_EXIT if appropriate.  */
 
-/*ARGSIGNORED*/
 int
 _uuconf_iboolean (qglobal, zval, pi)
-     struct sglobal *qglobal;
+     struct sglobal *qglobal ATTRIBUTE_UNUSED;
      const char *zval;
      boolean *pi;
 {

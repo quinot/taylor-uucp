@@ -139,7 +139,7 @@ utcp_free (qconn)
 static boolean
 ftcp_open (qconn, ibaud, fwait)
      struct sconnection *qconn;
-     long ibaud;
+     long ibaud ATTRIBUTE_UNUSED;
      boolean fwait;
 {
   struct ssysdep_conn *qsysdep;
@@ -292,9 +292,9 @@ ftcp_open (qconn, ibaud, fwait)
 static boolean
 ftcp_close (qconn, puuconf, qdialer, fsuccess)
      struct sconnection *qconn;
-     pointer puuconf;
-     struct uuconf_dialer *qdialer;
-     boolean fsuccess;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
+     boolean fsuccess ATTRIBUTE_UNUSED;
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;

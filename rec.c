@@ -384,7 +384,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
      const char *zdata;
-     size_t cdata;
+     size_t cdata ATTRIBUTE_UNUSED;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   const char *zlog;
@@ -927,8 +927,8 @@ fremote_send_fail_send (qtrans, qdaemon)
 static boolean
 fremote_discard (qtrans, qdaemon, zdata, cdata)
      struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+     const char *zdata ATTRIBUTE_UNUSED;
      size_t cdata;
 {
   struct srecfailinfo *qinfo = (struct srecfailinfo *) qtrans->pinfo;
@@ -960,8 +960,8 @@ static boolean
 frec_file_end (qtrans, qdaemon, zdata, cdata)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata;
+     const char *zdata ATTRIBUTE_UNUSED;
+     size_t cdata ATTRIBUTE_UNUSED;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   char *zalc;

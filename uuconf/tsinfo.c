@@ -349,11 +349,11 @@ uiset_call (qsys)
 
 static int
 iisystem (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   return UUCONF_CMDTABRET_EXIT;
 }
@@ -364,9 +364,9 @@ iisystem (pglobal, argc, argv, pvar, pinfo)
 static int
 iialias (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -392,7 +392,7 @@ iialternate (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -459,9 +459,9 @@ iialternate (pglobal, argc, argv, pvar, pinfo)
 static int
 iidefault_alternates (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -547,10 +547,10 @@ iitimegrade (pglobal, argc, argv, pvar, pinfo)
 static int
 iibaud_range (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_system *qsys = (struct uuconf_system *) pvar;
@@ -573,7 +573,7 @@ iibaud_range (pglobal, argc, argv, pvar, pinfo)
 static int
 iisize (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
      pointer pinfo;
@@ -621,7 +621,7 @@ iiport (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -750,11 +750,11 @@ iidebug (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iicalled_login (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
+     pointer pglobal ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   char **pz = (char **) pvar;
 
@@ -792,9 +792,9 @@ iiproto_param (pglobal, argc, argv, pvar, pinfo)
 static int
 iirequest (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -816,9 +816,9 @@ iirequest (pglobal, argc, argv, pvar, pinfo)
 static int
 iitransfer (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -842,7 +842,7 @@ iiforward (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -877,11 +877,11 @@ iiforward (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iiunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }

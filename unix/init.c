@@ -369,7 +369,7 @@ usysdep_exit (fsuccess)
 
 /*ARGSUSED*/
 boolean fsysdep_other_config (z)
-     const char *z;
+     const char *z ATTRIBUTE_UNUSED;
 {
   (void) setuid (getuid ());
   (void) setgid (getgid ());

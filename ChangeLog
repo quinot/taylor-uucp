@@ -1,3 +1,20 @@
+2002-01-17  Ian Lance Taylor  <ian@airs.com>
+
+	* Many files: Change types and add casts and attributes to avoid
+	warnings.
+
+	* uudefs.h: Use attribute macro in ulog declaration.
+
+	* uucp.h: Add GCC attribute macros.
+
+	* configure.in: Add --enable-build-warnings option.
+	* Makefile.am (AM_CFLAGS): Add $(WARN_CFLAGS).
+	* lib/Makefile.am (AM_CFLAGS): Likewise.
+	* unix/Makefile.am (AM_CFLAGS): Likewise.
+	* uuconf/Makefile.am (AM_CFLAGS): Likewise.
+	* configure, Makefile.in: Rebuild.
+	* lib/Makefile.in, unix/Makefile.in, uuconf/Makefile.in: Rebuild.
+
 2002-01-16  Ian Lance Taylor  <ian@airs.com>
 
 	* Makefile.am: New file.

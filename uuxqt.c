@@ -521,11 +521,11 @@ static const struct uuconf_cmdtab asQcmds[] =
 /*ARGSUSED*/
 static int
 iqcmd (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   int i;
   size_t clen;
@@ -559,11 +559,11 @@ iqcmd (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iqout (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   if (argc > 1)
     zQoutfile = zbufcpy (argv[1]);
@@ -578,11 +578,11 @@ iqout (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iqfile (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   if (argc < 2)
     return UUCONF_CMDTABRET_CONTINUE;
@@ -611,11 +611,11 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iqrequestor (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   /* We normally have a single argument, which is the ``requestor''
      address, to which we should send any success or error messages.
@@ -638,11 +638,11 @@ iqrequestor (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iquser (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   if (argc > 1)
     zQuser = argv[1];
@@ -656,11 +656,11 @@ iquser (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 iqset (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
-     char **argv;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
      pointer pvar;
-     pointer pinfo;     
+     pointer pinfo ATTRIBUTE_UNUSED; 
 {
   boolean *pf = (boolean *) pvar;
 

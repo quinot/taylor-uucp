@@ -62,7 +62,7 @@ openfile_t
 esysdep_user_fopen (zfile, frd, fbinary)
      const char *zfile;
      boolean frd;
-     boolean fbinary;
+     boolean fbinary ATTRIBUTE_UNUSED;
 {
   uid_t ieuid;
   openfile_t e;

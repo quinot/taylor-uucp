@@ -141,7 +141,7 @@ zswork_directory (zsystem)
 /*ARGSUSED*/
 static boolean
 fswork_file (zsystem, zfile, pbgrade)
-     const char *zsystem;
+     const char *zsystem ATTRIBUTE_UNUSED;
      const char *zfile;
      char *pbgrade;
 {
@@ -435,7 +435,7 @@ fsysdep_get_work_init (qsys, bgrade)
 boolean
 fsysdep_get_work (qsys, bgrade, qcmd)
      const struct uuconf_system *qsys;
-     int bgrade;
+     int bgrade ATTRIBUTE_UNUSED;
      struct scmd *qcmd;
 {
   char *zdir;
@@ -671,7 +671,7 @@ fsysdep_did_work (pseq)
 /*ARGSUSED*/
 void
 usysdep_get_work_free (qsys)
-     const struct uuconf_system *qsys;
+     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
 {
   if (asSwork_files != NULL)
     {
@@ -714,7 +714,7 @@ zsysdep_save_temp_file (pseq)
   char *zto, *zslash;
   size_t cwant;
   static char *zbuf;
-  static int cbuf;
+  static size_t cbuf;
 
   if (! fsysdep_file_exists (qline->ztemp))
     return NULL;

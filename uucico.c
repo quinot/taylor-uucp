@@ -1511,7 +1511,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   /* Now decide which protocol to use.  The system and the port may
      have their own list of protocols.  */
   {
-    int i;
+    size_t i;
     char ab[5];
 
     i = CPROTOCOLS;
@@ -1866,7 +1866,7 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
   char *zloc;
   struct sstatus sstat;
   boolean fgotseq, fgotn;
-  int i;
+  size_t i;
   char *zlog;
   char *zgrade;
 
@@ -2665,7 +2665,7 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
 
 static void
 uaccept_call_cleanup (puuconf, qfreesys, qport, qfreeport, zloc)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      struct uuconf_system *qfreesys;
      struct uuconf_port *qport;
      struct uuconf_port *qfreeport;

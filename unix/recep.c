@@ -89,7 +89,7 @@ zsreceived_name (qsys, ztemp)
 boolean
 fsysdep_remember_reception (qsys, zto, ztemp)
      const struct uuconf_system *qsys;
-     const char *zto;
+     const char *zto ATTRIBUTE_UNUSED;
      const char *ztemp;
 {
   char *zfile;
@@ -146,7 +146,7 @@ fsysdep_remember_reception (qsys, zto, ztemp)
 boolean
 fsysdep_already_received (qsys, zto, ztemp)
      const struct uuconf_system *qsys;
-     const char *zto;
+     const char *zto ATTRIBUTE_UNUSED;
      const char *ztemp;
 {
   char *zfile;
@@ -182,7 +182,7 @@ fsysdep_already_received (qsys, zto, ztemp)
 boolean
 fsysdep_forget_reception (qsys, zto, ztemp)
      const struct uuconf_system *qsys;
-     const char *zto;
+     const char *zto ATTRIBUTE_UNUSED;
      const char *ztemp;
 {
   char *zfile;

@@ -594,7 +594,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 /*ARGSIGNORED*/
 static int
 ihadd_machine_perm (qglobal, qsys, qperm)
-     struct sglobal *qglobal;
+     struct sglobal *qglobal ATTRIBUTE_UNUSED;
      struct uuconf_system *qsys;
      struct shpermissions *qperm;
 {
@@ -617,7 +617,7 @@ ihadd_machine_perm (qglobal, qsys, qperm)
 /*ARGSIGNORED*/
 static int
 ihadd_logname_perm (qglobal, qsys, qperm)
-     struct sglobal *qglobal;
+     struct sglobal *qglobal ATTRIBUTE_UNUSED;
      struct uuconf_system *qsys;
      struct shpermissions *qperm;
 {

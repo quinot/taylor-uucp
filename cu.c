@@ -1258,11 +1258,11 @@ fcuset_var (puuconf, zline)
 /*ARGSUSED*/
 static int
 icuunrecogvar (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   char abescape[5];
 
@@ -1425,11 +1425,11 @@ fcudo_subcmd (puuconf, qconn, zline)
 /*ARGSUSED*/
 static int
 icuunrecogfn (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   char abescape[5];
 
@@ -1453,10 +1453,10 @@ icuunrecogfn (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icubreak (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
-     char **argv;
-     pointer pvar;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sconnection *qconn = (struct sconnection *) pinfo;
@@ -1471,11 +1471,11 @@ icubreak (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icuchdir (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   const char *zarg;
 
@@ -1492,11 +1492,11 @@ icuchdir (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icudebug (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
 #if DEBUG > 1
   if (iDebug != 0)
@@ -1515,9 +1515,9 @@ icudebug (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icunostop (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
-     char **argv;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
      pointer pvar;
      pointer pinfo;
 {
@@ -1541,7 +1541,7 @@ icunostop (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icuput (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
      pointer pvar;
@@ -1753,7 +1753,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icutake (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
      pointer pvar;

@@ -451,7 +451,7 @@ static const char *azZframe_types[] = {
 #define min(a, b)	((a) < (b) ? (a) : (b))
 #endif
 #define ZZHEADER_NAME(itype) \
-		azZframe_types[min((itype) + FTOFFSET, FTNUMBER - 1)]
+		azZframe_types[min((size_t) ((itype) + FTOFFSET), FTNUMBER - 1)]
 
 /*
  * Local functions ...
@@ -672,8 +672,8 @@ boolean
 fzsendcmd(qdaemon, z, ilocal, iremote)
 struct sdaemon *qdaemon;
 const char *z;
-int ilocal;
-int iremote;
+int ilocal ATTRIBUTE_UNUSED;
+int iremote ATTRIBUTE_UNUSED;
 {
 	size_t n,clen;
 	long lredo;
@@ -720,7 +720,7 @@ int iremote;
 /*ARGSUSED*/
 char *
 zzgetspace(qdaemon, pclen)
-struct sdaemon *qdaemon;
+struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
 size_t *pclen;
 {
 	*pclen = cZblklen;
@@ -739,9 +739,9 @@ fzsenddata(qdaemon, zdata, cdata, ilocal, iremote, ipos)
 struct sdaemon *qdaemon;
 char *zdata;
 size_t cdata;
-int ilocal;
-int iremote;
-long ipos;
+int ilocal ATTRIBUTE_UNUSED;
+int iremote ATTRIBUTE_UNUSED;
+long ipos ATTRIBUTE_UNUSED;
 {
 	DEBUG_MESSAGE1 (DEBUG_PROTO, "fzsenddata: %d bytes", cdata);
 
@@ -784,7 +784,7 @@ boolean fendofmessage;
 		iZlast_tx_data_packet = ZCRCW;
 	else if (wpZtxpos == wpZlastsync)
 		iZlast_tx_data_packet = ZCRCW;
-	else if (cZrx_buf_len && (cZrxwcnt += n) >= cZrx_buf_len)
+	else if (cZrx_buf_len && (cZrxwcnt += n) >= (size_t) cZrx_buf_len)
 		iZlast_tx_data_packet = ZCRCW;
 	else if ((cZtxwcnt += n) >= cZtxwspac) {
 		iZlast_tx_data_packet = ZCRCQ;
@@ -802,7 +802,7 @@ boolean fendofmessage;
 #endif
 		if (cZblklen > 1024)
 			cZblklen = 1024;
-		if (cZrx_buf_len && cZblklen > cZrx_buf_len)
+		if (cZrx_buf_len && cZblklen > (size_t) cZrx_buf_len)
 			cZblklen = cZrx_buf_len;
 	}
 
@@ -868,7 +868,7 @@ boolean fendofmessage;
 	 * I use (cZtx_window - 2048) to play it safe.
 	 */
 
-	while (wpZtxpos - wpZlrxpos >= cZtx_window - 2048) {
+	while (wpZtxpos - wpZlrxpos >= (size_t) cZtx_window - 2048) {
 		if (iZlast_tx_data_packet != ZCRCQ) {
 		    if (!fzsend_data_packet (qdaemon, zdata, (size_t) 0,
 					     iZlast_tx_data_packet = ZCRCQ,
@@ -1213,7 +1213,7 @@ struct sdaemon *qdaemon;
 struct stransfer *qtrans;
 boolean fstart;
 boolean fsend;
-long cbytes;
+long cbytes ATTRIBUTE_UNUSED;
 boolean *pfhandled;
 {
 	long iredo;

@@ -37,7 +37,7 @@ char *
 zsfile_to_jobid (qsys, zfile, bgrade)
      const struct uuconf_system *qsys;
      const char *zfile;
-     int bgrade;
+     int bgrade ATTRIBUTE_UNUSED;
 {
   size_t clen;
   char *zret;

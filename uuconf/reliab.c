@@ -37,10 +37,10 @@ const char _uuconf_reliab_rcsid[] = "$Id$";
 int
 _uuconf_iseven_bit (pglobal,argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int *pi = (int *) pvar;
@@ -68,10 +68,10 @@ _uuconf_iseven_bit (pglobal,argc, argv, pvar, pinfo)
 int
 _uuconf_ireliable (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int *pi = (int *) pvar;
@@ -99,10 +99,10 @@ _uuconf_ireliable (pglobal, argc, argv, pvar, pinfo)
 int
 _uuconf_ihalf_duplex (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int *pi = (int *) pvar;

@@ -89,7 +89,7 @@ fsuser_perms (pieuid)
 /*ARGSUSED*/
 boolean
 fsuucp_perms (ieuid)
-     long ieuid;
+     long ieuid ATTRIBUTE_UNUSED;
 {
 #if HAVE_SETREUID
   /* Swap effective and real user id's back to what they were.  */

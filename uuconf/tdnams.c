@@ -102,10 +102,10 @@ uuconf_taylor_dialer_names (pglobal, ppzdialers)
 static int
 indialer (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char ***ppzdialers = (char ***) pvar;

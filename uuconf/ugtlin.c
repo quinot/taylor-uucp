@@ -70,7 +70,7 @@ _uuconf_getline (qglobal, pzline, pcline, e)
 	ctot = cchars;
       else
 	{
-	  if (*pcline <= ctot + cchars)
+	  if (*pcline <= (size_t) (ctot + cchars))
 	    {
 	      char *znew;
 

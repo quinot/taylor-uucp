@@ -112,7 +112,7 @@ zremove_local_sys (qlocalsys, z)
   while (zexclam != NULL)
     {
       if (z == zexclam
-	  || (zexclam - z == clen
+	  || ((size_t) (zexclam - z) == clen
 	      && strncmp (z, qlocalsys->uuconf_zname, clen) == 0))
 	;
       else if (qlocalsys->uuconf_pzalias == NULL)
@@ -122,7 +122,7 @@ zremove_local_sys (qlocalsys, z)
 	  char **pzal;
 
 	  for (pzal = qlocalsys->uuconf_pzalias; *pzal != NULL; pzal++)
-	    if (strlen (*pzal) == zexclam - z
+	    if (strlen (*pzal) == (size_t) (zexclam - z)
 		&& strncmp (z, *pzal, (size_t) (zexclam - z)) == 0)
 	      break;
 	  if (*pzal == NULL)

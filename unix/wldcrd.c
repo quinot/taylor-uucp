@@ -45,7 +45,7 @@
 
 #if HAVE_GLOB
 static glob_t sSglob;
-static int iSglob;
+static unsigned int iSglob;
 #else
 static char *zSwildcard_alloc;
 static char *zSwildcard;
@@ -156,7 +156,7 @@ fsysdep_wildcard_start (zfile)
 /*ARGSUSED*/
 char *
 zsysdep_wildcard (zfile)
-     const char *zfile;
+     const char *zfile ATTRIBUTE_UNUSED;
 {
 #if HAVE_GLOB
 

@@ -40,7 +40,7 @@ uuconf_v2_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
      pointer pglobal;
      const char *zname;
      long ibaud;
-     long ihighbaud;
+     long ihighbaud ATTRIBUTE_UNUSED;
      int (*pifn) P((struct uuconf_port *, pointer));
      pointer pinfo;
      struct uuconf_port *qport;

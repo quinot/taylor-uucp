@@ -186,7 +186,7 @@ _uuconf_iread_locations (qglobal)
 static int
 itsystem (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
      pointer pinfo;
@@ -239,7 +239,7 @@ itcalled_login (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -293,10 +293,10 @@ itcalled_login (pglobal, argc, argv, pvar, pinfo)
 static int
 itmyname (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

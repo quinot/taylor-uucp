@@ -221,7 +221,7 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
      const struct uuconf_system *qsys;
      const char *zuser;
      const char **pazargs;
-     const char *zfullcmd;
+     const char *zfullcmd ATTRIBUTE_UNUSED;
      const char *zinput;
      const char *zoutput;
      boolean fshell;
@@ -442,7 +442,7 @@ boolean
 fsysdep_unlock_uuxqt (iseq, zcmd, cmaxuuxqts)
      int iseq;
      const char *zcmd;
-     int cmaxuuxqts;
+     int cmaxuuxqts ATTRIBUTE_UNUSED;
 {
   char ab[sizeof "LCK.XQT.9999"];
   boolean fret;

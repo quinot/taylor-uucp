@@ -73,7 +73,7 @@ fcopy_open_file (efrom, zto, fpublic, fmkdirs, fsignals)
 {
   FILE *eto;
   char ab[8192];
-  int c;
+  size_t c;
 
   eto = esysdep_fopen (zto, fpublic, FALSE, fmkdirs);
   if (eto == NULL)

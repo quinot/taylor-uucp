@@ -740,11 +740,11 @@ usxqt_file_free ()
 /*ARGSUSED*/
 static int
 isxqt_cmd (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   size_t clen;
   int i;
@@ -775,11 +775,11 @@ isxqt_cmd (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 isxqt_file (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
+     pointer puuconf ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   if (argc != 2 && argc != 3)
     return UUCONF_CMDTABRET_CONTINUE;
@@ -802,11 +802,11 @@ isxqt_file (puuconf, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 isxqt_user (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf;
-     int argc;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   zSxqt_user = zbufcpy (argv[1]);
   zSxqt_system = zbufcpy (argv[2]);

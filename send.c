@@ -514,7 +514,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
      const char *zdata;
-     size_t cdata;
+     size_t cdata ATTRIBUTE_UNUSED;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char bcmd;
@@ -1108,7 +1108,7 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
      const char *zdata;
-     size_t cdata;
+     size_t cdata ATTRIBUTE_UNUSED;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   boolean fnever;

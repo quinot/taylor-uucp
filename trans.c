@@ -187,7 +187,7 @@ utdequeue (q)
 /*ARGSIGNORED*/
 boolean
 fqueue_local (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      struct stransfer *qtrans;
 {
   utdequeue (qtrans);
@@ -202,7 +202,7 @@ fqueue_local (qdaemon, qtrans)
 
 boolean
 fqueue_remote (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      struct stransfer *qtrans;
 {
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fqueue_remote: Channel %d",
@@ -218,7 +218,7 @@ fqueue_remote (qdaemon, qtrans)
 
 boolean
 fqueue_send (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      struct stransfer *qtrans;
 {
 #if DEBUG > 0
@@ -267,7 +267,7 @@ fqueue_send (qdaemon, qtrans)
 
 boolean
 fqueue_receive (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      struct stransfer *qtrans;
 {
 #if DEBUG > 0
@@ -1142,7 +1142,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	  while (cfirst > 0)
 	    {
 	      cwrote = cfilewrite (q->e, (char *) zfirst, cfirst);
-	      if (cwrote == cfirst)
+	      if (cwrote >= 0 && (size_t) cwrote == cfirst)
 		{
 #if FREE_SPACE_DELTA > 0
 		  long cfree_space;
@@ -1153,7 +1153,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 		     in progress.  */
 		  cfree_space = qdaemon->qsys->uuconf_cfree_space;
 		  if (cfree_space > 0
-		      && ((q->cbytes / FREE_SPACE_DELTA)
+		      && ((size_t) (q->cbytes / FREE_SPACE_DELTA)
 			  != (q->cbytes + cfirst) / FREE_SPACE_DELTA)
 		      && ! frec_check_free (q, cfree_space))
 		    {
@@ -1351,7 +1351,7 @@ static struct sreceive_ack *qTfree_receive_ack;
 
 void
 usent_receive_ack (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      struct stransfer *qtrans;
 {
   struct sreceive_ack *q;
@@ -1480,7 +1480,7 @@ ufailed (qdaemon)
 static boolean
 flocal_poll_file (qtrans, qdaemon)
      struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
 {
   boolean fret;
 

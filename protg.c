@@ -740,8 +740,8 @@ boolean
 fgsendcmd (qdaemon, z, ilocal, iremote)
      struct sdaemon *qdaemon;
      const char *z;
-     int ilocal;
-     int iremote;
+     int ilocal ATTRIBUTE_UNUSED;
+     int iremote ATTRIBUTE_UNUSED;
 {
   size_t clen;
   boolean fagain;
@@ -858,7 +858,7 @@ fginit_sendbuffers (fallocate)
 /*ARGSUSED*/
 char *
 zggetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      size_t *pclen;
 {
   *pclen = iGremote_packsize;
@@ -875,9 +875,9 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
-     int ilocal;
-     int iremote;
-     long ipos;
+     int ilocal ATTRIBUTE_UNUSED;
+     int iremote ATTRIBUTE_UNUSED;
+     long ipos ATTRIBUTE_UNUSED;
 {
   char *z;
   int itt, iseg;

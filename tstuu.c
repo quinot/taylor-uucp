@@ -644,7 +644,7 @@ main (argc, argv)
 
 static RETSIGTYPE
 uchild (isig)
-     int isig;
+     int isig ATTRIBUTE_UNUSED;
 {
   struct tms sbase, s1, s2;
 
@@ -1379,7 +1379,7 @@ cread (o, pqbuf)
       int cgot;
 
       if (*pqbuf != NULL
-	  && (*pqbuf)->cend >= sizeof (*pqbuf)->ab)
+	  && (size_t) (*pqbuf)->cend >= sizeof (*pqbuf)->ab)
 	pqbuf = &(*pqbuf)->qnext;
 
       if (*pqbuf == NULL)

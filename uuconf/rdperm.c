@@ -308,10 +308,10 @@ _uuconf_ihread_permissions (qglobal)
 static int
 ihcolon (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char ***ppz = (char ***) pvar;
@@ -366,11 +366,11 @@ ihcolon (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 ihsendfiles (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   int *pi = (int *) pvar;
 
@@ -399,11 +399,11 @@ ihsendfiles (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 ihunknownperm (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }

@@ -142,7 +142,7 @@ fsysdep_get_xqt_init (zsystem)
 /*ARGSUSED*/
 char *
 zsysdep_get_xqt (zsystem, pzsystem, pferr)
-     const char *zsystem;
+     const char *zsystem ATTRIBUTE_UNUSED;
      char **pzsystem;
      boolean *pferr;
 {
@@ -276,7 +276,7 @@ zsysdep_get_xqt (zsystem, pzsystem, pferr)
 /*ARGSUSED*/
 void
 usysdep_get_xqt_free (zsystem)
-     const char *zsystem;
+     const char *zsystem ATTRIBUTE_UNUSED;
 {
   if (qSxqt_topdir != NULL)
     {

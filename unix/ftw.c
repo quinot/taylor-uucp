@@ -63,7 +63,7 @@ ftw_dir (dirs, level, descriptors, dir, len, func)
      int descriptors;
      char *dir;
      size_t len;
-     int (*func) P((const char *file, struct stat *status, int flag));
+     int (*func) P((const char *file, const struct stat *status, int flag));
 {
   int got;
   struct dirent *entry;
@@ -177,7 +177,7 @@ ftw_dir (dirs, level, descriptors, dir, len, func)
 int
 ftw (dir, func, descriptors)
      const char *dir;
-     int (*func) P((const char *file, struct stat *status, int flag));
+     int (*func) P((const char *file, const struct stat *status, int flag));
      int descriptors;
 {
   DIR **dirs;

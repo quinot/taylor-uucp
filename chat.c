@@ -490,7 +490,7 @@ fcsend_debug (fquote, clen, zbuf)
     }
   else
     {
-      int i;
+      size_t i;
 
       if (! fquote)
 	ulog (LOG_DEBUG_CONTINUE, " \"");

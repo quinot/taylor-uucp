@@ -174,10 +174,10 @@ uuconf_callin (pglobal, pcmpfn, pinfo)
 
 static int
 ipcheck (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
+     pointer pglobal ATTRIBUTE_UNUSED;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sinfo *q = (struct sinfo *) pinfo;

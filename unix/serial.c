@@ -358,7 +358,7 @@ volatile sig_atomic_t fSalarm;
 
 static RETSIGTYPE
 usalarm (isig)
-     int isig;
+     int isig ATTRIBUTE_UNUSED;
 {
 #if ! HAVE_SIGACTION && ! HAVE_SIGVEC && ! HAVE_SIGSET
   (void) signal (isig, usalarm);
@@ -981,7 +981,7 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
   ib = B0;
   if (ibaud != 0)
     {
-      int i;
+      size_t i;
 
       for (i = 0; i < CBAUD_TABLE; i++)
 	if (asSbaud_table[i].ibaud == ibaud)
@@ -1181,7 +1181,7 @@ fsserial_open (qconn, ibaud, fwait, tlocal)
     q->ibaud = ibaud;
   else
     {
-      int i;
+      size_t i;
 
       q->ibaud = (long) 1200;
       for (i = 0; i < CBAUD_TABLE; i++)
@@ -1399,9 +1399,9 @@ fsserial_close (q)
 static boolean
 fsstdin_close (qconn, puuconf, qdialer, fsuccess)
      struct sconnection *qconn;
-     pointer puuconf;
-     struct uuconf_dialer *qdialer;
-     boolean fsuccess;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
+     boolean fsuccess ATTRIBUTE_UNUSED;
 {
   struct ssysdep_conn *qsysdep;
 
@@ -1567,9 +1567,9 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
 static boolean
 fsdirect_close (qconn, puuconf, qdialer, fsuccess)
      struct sconnection *qconn;
-     pointer puuconf;
-     struct uuconf_dialer *qdialer;
-     boolean fsuccess;
+     pointer puuconf ATTRIBUTE_UNUSED;
+     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
+     boolean fsuccess ATTRIBUTE_UNUSED;
 {
   return fsserial_close ((struct ssysdep_conn *) qconn->psysdep);
 }
@@ -2315,7 +2315,7 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 	}
 
       cwant -= cgot;
-      if (cgot >= cmin)
+      if ((size_t) cgot >= cmin)
 	cmin = 0;
       else
 	cmin -= cgot;
@@ -2972,8 +2972,8 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 {
   register struct ssysdep_conn *q;
   boolean fchanged, fdo;
-  int iset = 0;
-  int iclear = 0;
+  unsigned int iset = 0;
+  unsigned int iclear = 0;
 
   q = (struct ssysdep_conn *) qconn->psysdep;
 

@@ -175,7 +175,7 @@ icchat (pglobal, argc, argv, pvar, pinfo)
 static int
 icchat_fail (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
      pointer pinfo;
@@ -192,11 +192,11 @@ icchat_fail (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 icunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   return UUCONF_SYNTAX_ERROR;
 }

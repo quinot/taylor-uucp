@@ -150,7 +150,7 @@ udebug_buffer (zhdr, zbuf, clen)
      size_t clen;
 {
   char *z, *zalc;
-  int i;
+  size_t i;
 
   zalc = zbufalc (clen * 4 + 1);
 

@@ -130,7 +130,7 @@ iddtr_toggle (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
@@ -160,7 +160,7 @@ iddtr_toggle (pglobal, argc, argv, pvar, pinfo)
 static int 
 idcomplete (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
-     int argc;
+     int argc ATTRIBUTE_UNUSED;
      char **argv;
      pointer pvar;
      pointer pinfo;
@@ -201,11 +201,11 @@ idproto_param (pglobal, argc, argv, pvar, pinfo)
 /*ARGSUSED*/
 static int
 idcunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+     pointer pglobal ATTRIBUTE_UNUSED;
+     int argc ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
+     pointer pvar ATTRIBUTE_UNUSED;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }

@@ -244,7 +244,7 @@ itdebug (pglobal, argc, argv, pvar, pinfo)
      int argc;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pzdebug = (char **) pvar;
@@ -262,7 +262,7 @@ itaddfile (pglobal, argc, argv, pvar, pinfo)
      int argc;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char ***ppz = (char ***) pvar;
@@ -312,7 +312,7 @@ itunknown (pglobal, argc, argv, pvar, pinfo)
      int argc;
      char **argv;
      pointer pvar;
-     pointer pinfo;
+     pointer pinfo ATTRIBUTE_UNUSED;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sunknown **pq = (struct sunknown **) pvar;
@@ -360,7 +360,7 @@ itprogram (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
-     pointer pvar;
+     pointer pvar ATTRIBUTE_UNUSED;
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;

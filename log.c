@@ -624,7 +624,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fcaller)
      long cbytes;
      long csecs;
      long cmicros;
-     boolean fcaller;
+     boolean fcaller ATTRIBUTE_UNUSED;
 {
   long cbps;
 

@@ -124,7 +124,7 @@ adjust_blocks (blocks, fromsize, tosize)
 
 int
 get_fs_usage (path, disk, fsp)
-     char *path, *disk;
+     char *path, *disk ATTRIBUTE_UNUSED;
      struct fs_usage *fsp;
 {
 #if STAT_NONE

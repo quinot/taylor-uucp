@@ -799,7 +799,7 @@ fiwindow_wait (qdaemon)
 /*ARGSUSED*/
 char *
 zigetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon;
+     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
      size_t *pclen;
 {
   *pclen = iIremote_packsize;

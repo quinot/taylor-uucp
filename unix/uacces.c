@@ -62,7 +62,7 @@ fsuser_access (q, imode, zuser)
   static gid_t igid_hold;
   static int cgroups_hold;
   static gid_t *paigroups_hold;
-  int ir, iw, ix, iand;
+  unsigned int ir, iw, ix, iand;
 
   if (imode == F_OK)
     return TRUE;
