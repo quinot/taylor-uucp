@@ -249,3 +249,16 @@ Right now the slave uucico gives an error if there is no port file.
 The documentation says that this is permitted, and it should be.
 
 55.
+
+If the system returned by zsysdep_get_xqt is unknown, we may crash
+examining the zcmds element at the top of uqdo_xqt_file.
+
+56.
+
+The code in sys4.unx is not really correct, because it sorts each new
+group of files independently.  This means that the bsearch will not
+return the correct answer if we add new files more than once.  Nothing
+really terrible will happen--we'll just process a given command file
+more times than we really have to--but it should be fixed.
+
+57.
