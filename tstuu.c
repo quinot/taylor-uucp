@@ -85,6 +85,8 @@ typedef int wait_status;
 
 #include "getopt.h"
 
+#include "system.h"
+
 /* Get definitions for both O_NONBLOCK and O_NDELAY.  */
 
 #ifndef O_NDELAY
@@ -208,6 +210,7 @@ main (argc, argv)
 	  break;
 	case 'p':
 	  iPercent = (int) strtol (optarg, (char **) NULL, 10);
+	  srand ((unsigned int) isysdep_time ((long *) NULL));
 	  break;
 	case 's':
 	  zsys = optarg;
@@ -1166,7 +1169,7 @@ utransfer (ofrom, oto, otoslave, pc)
       c = 0;
       for (i = 0; i < cread; i++)
 	{
-	  if (rand () % 100 < iPercent)
+	  if (rand () % 1000 < iPercent)
 	    {
 	      ++abbuf[i];
 	      ++c;
