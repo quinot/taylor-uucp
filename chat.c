@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.12  1992/02/02  06:38:22  ian
    Michael Nolan: chat script strings might be separated by more than just ' '
 
@@ -261,8 +264,11 @@ fchat (qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
       zchat += cchatlen;
       zchat += strspn (zchat, " \t");
 
-      if (! fcsend (zbuf, qsys, qdial, zphone, ftranslate))
-	return FALSE;
+      if (*zbuf != '\0')
+	{
+	  if (! fcsend (zbuf, qsys, qdial, zphone, ftranslate))
+	    return FALSE;
+	}
     }
 
   /* The chat sequence has been completed.  */
