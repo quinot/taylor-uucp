@@ -1,7 +1,7 @@
 /* xqtsub.c
    System dependent functions used only by uuxqt.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -545,7 +545,8 @@ fsysdep_lock_uuxqt_dir (iseq)
     }
 
   if (mkdir (zxqtdir, S_IRWXU) < 0
-      && errno != EEXIST)
+      && errno != EEXIST
+      && errno != EISDIR)
     {
       ulog (LOG_ERROR, "mkdir (%s): %s", zxqtdir, strerror (errno));
       return FALSE;
