@@ -99,7 +99,7 @@ DVITPS = dvips
 
 SHELL = /bin/sh
 
-VERSION = beta1.05
+VERSION = gamma1.05
 
 MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
