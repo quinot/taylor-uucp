@@ -221,6 +221,7 @@ static const struct option asCulongopts[] =
   { "speed", required_argument, NULL, 's' },
   { "baud", required_argument, NULL, 's' },
   { "mapcr", no_argument, NULL, 't' },
+  { "nostop", no_argument, NULL, 3 },
   { "system", required_argument, NULL, 'z' },
   { "config", required_argument, NULL, 'I' },
   { "debug", required_argument, NULL, 'x' },
@@ -252,6 +253,8 @@ main (argc, argv)
   boolean fmapcr = FALSE;
   /* -z: system.  */
   const char *zsystem = NULL;
+  /* --nostop: turn off XON/XOFF.  */
+  enum txonxoffsetting txonxoff = XONXOFF_ON;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
   int iopt;
@@ -393,6 +396,11 @@ main (argc, argv)
 		       zProgram);
 	      ucuusage ();
 	    }
+	  break;
+
+	case 3:
+	  /* --nostop.  */
+	  txonxoff = XONXOFF_OFF:
 	  break;
 
 	case 1:
@@ -697,7 +705,7 @@ main (argc, argv)
 	  tstrip = STRIPSETTING_DEFAULT;
 	}
 
-      if (! fconn_set (&sconn, tparity, tstrip, XONXOFF_ON))
+      if (! fconn_set (&sconn, tparity, tstrip, txonxoff))
 	ucuabort ();
 
       if (qsys != NULL)
@@ -839,6 +847,8 @@ ucuhelp ()
 	   " --parity={odd,even}: Set parity\n");
   fprintf (stderr,
 	   " -h,--halfduplex: Echo locally\n");
+  fprintf (stderr,
+	   " --nostop: Turn off XON/XOFF handling\n");
   fprintf (stderr,
 	   " -t,--mapcr: Map carriage return to carriage return/linefeed\n");
   fprintf (stderr,
