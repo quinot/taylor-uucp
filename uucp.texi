@@ -8202,6 +8202,7 @@ Andrew Herbert @code{<andrew@@werple.pub.uu.oz.au>}
 @code{kherron@@ms.uky.edu} (Kenneth Herron)
 Peter Honeyman @code{<honey@@citi.umich.edu>}
 @code{jhood@@smoke.marlboro.vt.us} (John Hood)
+Mark Horsburgh @code{<markh@@kcbbs.gen.nz>}
 John Hughes @code{<john@@Calva.COM>}
 Mike Ipatow @code{<mip@@fido.itc.e-burg.su>}
 Bill Irwin @code{<bill@@twg.bc.ca>}
