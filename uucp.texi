@@ -4464,6 +4464,7 @@ Jarmo Raiha @file{<jarmo@@ksvltd.FI>}
 @file{mcr@@Sandelman.OCUnix.On.Ca} (Michael Richardson)
 @file{ross@@sun490.fdu.edu} (Jeff Ross)
 Aleksey P. Rudnev @file{<alex@@kiae.su>}
+"Heiko W.Rupp" @file{<hwr@@pilhuhn.ka.sub.org>}
 @file{wolfgang@@wsrcc.com} (Wolfgang S. Rupprecht)
 @file{tbr@@tfic.bc.ca} (Tom Rushworth)
 @file{rsalz@@bbn.com} (Rich Salz)
