@@ -1,5 +1,9 @@
 2002-02-07  Ian Lance Taylor  <ian@airs.com>
 
+	* John Hughes: uuxqt.c (uqcleanup): Don't unlock the execution
+	file until after it has been removed, to avoid a race which may
+	lead to it's being executed twice.
+
 	* unix/xqtsub.c (fsysdep_lock_uuxqt_dir): Call fclean_uuxqt_dir.
 	(fsysdep_unlock_uuxqt_dir): Move directory cleaning code into
 	fclean_uuxqt_dir, and call it.

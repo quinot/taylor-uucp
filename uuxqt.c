@@ -1660,12 +1660,6 @@ uqcleanup (zfile, iflags)
   DEBUG_MESSAGE2 (DEBUG_SPOOLDIR,
 		  "uqcleanup: %s, %d", zfile, iflags);
 
-  if (zQunlock_file != NULL)
-    {
-      (void) fsysdep_unlock_uuxqt_file (zQunlock_file);
-      zQunlock_file = NULL;
-    }
-
   if ((iflags & REMOVE_FILE) != 0)
     (void) remove (zfile);
 
@@ -1678,6 +1672,12 @@ uqcleanup (zfile, iflags)
 	}
       if ((iflags & REMOVE_QINPUT) != 0)
 	(void) remove (zQinput);
+    }
+
+  if (zQunlock_file != NULL)
+    {
+      (void) fsysdep_unlock_uuxqt_file (zQunlock_file);
+      zQunlock_file = NULL;
     }
 
   if ((iflags & FREE_QINPUT) != 0)
