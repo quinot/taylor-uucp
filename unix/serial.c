@@ -1024,7 +1024,7 @@ fsserial_open (qconn, ibaud, fwait)
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
   cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
-  q->snew.c_cc[VTIME] = 0;
+  q->snew.c_cc[VTIME] = 1;
 
 #ifdef TCFLSH
   /* Flush pending input.  */
@@ -1045,7 +1045,7 @@ fsserial_open (qconn, ibaud, fwait)
   q->snew.c_lflag &=~ ICLEAR_LFLAG;
   cSmin = 1;
   q->snew.c_cc[VMIN] = cSmin;
-  q->snew.c_cc[VTIME] = 0;
+  q->snew.c_cc[VTIME] = 1;
 
   (void) cfsetospeed (&q->snew, ib);
   (void) cfsetispeed (&q->snew, ib);
