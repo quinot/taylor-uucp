@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.45  1992/03/04  01:40:51  ian
+   Thomas Fischer: tweaked a bit for the NeXT
+
    Revision 1.44  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -174,8 +177,16 @@ char tstuu_rcsid[] = "$Id$";
 #include "sysdep.h"
 
 #include <sys/ioctl.h>
-#include <sys/time.h>
 #include <sys/times.h>
+
+#if HAVE_SELECT
+#include <sys/time.h>
+#endif
+
+#if HAVE_POLL
+#include <stropts.h>
+#include <poll.h>
+#endif
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -191,7 +202,7 @@ char tstuu_rcsid[] = "$Id$";
 #define O_RDWR 2
 #endif
 
-#if HAVE_TIME_H && HAVE_SYS_TIME_AND_TIME_H
+#if HAVE_TIME_H && (HAVE_SYS_TIME_AND_TIME_H || ! HAVE_SELECT)
 #include <time.h>
 #endif
 
@@ -259,11 +270,23 @@ char tstuu_rcsid[] = "$Id$";
 #define ZUUCICO_CMD "login uucp"
 #define UUCICO_EXECL "/bin/login", "login", "uucp"
 
+#if ! HAVE_SELECT && ! HAVE_POLL
+ #error You need select or poll
+#endif
+
 /* External functions.  */
-extern int select (), close (), dup2 (), access ();
+extern int close (), dup2 (), access ();
 extern int read (), write (), unlink ();
 extern int fclose (), fflush (), rand (), system ();
 extern pid_t fork ();
+
+#if HAVE_SELECT
+extern int select ();
+#endif
+
+#if HAVE_POLL
+extern int poll ();
+#endif
 
 #if ! HAVE_WAITPID && HAVE_WAIT4
 extern pid_t wait4 ();
@@ -284,6 +307,8 @@ static void ucheck_test P((int itest, boolean fcall_uucico));
 static void utransfer P((int ofrom, int oto, int otoslave, int *pc));
 static SIGtype uchild P((int isig));
 static int cpshow P((char *z, int bchar));
+static void uchoose P((int *po1, int *po2));
+static boolean fwritable P((int o));
 static void xsystem P((const char *zcmd));
 
 static int cDebug;
@@ -309,8 +334,6 @@ main (argc, argv)
   char abpty2[sizeof "/dev/ptyp0"];
   char *zptyname;
   int omaster1, oslave1, omaster2, oslave2;
-  struct timeval stime;
-  struct timeval spoll;
 
   zcmd1 = NULL;
   zcmd2 = NULL;
@@ -549,61 +572,28 @@ main (argc, argv)
   (void) fcntl (omaster1, F_SETFL, FILE_UNBLOCKED);
   (void) fcntl (omaster2, F_SETFL, FILE_UNBLOCKED);
 
-  stime.tv_sec = 5;
-  stime.tv_usec = 0;
-
-  spoll.tv_sec = 0;
-  spoll.tv_usec = 0;
-
   while (TRUE)
     {
-      int iread;
-      int iwrite;
-      int cfds;
+      int o1, o2;
 
-      iread = (1 << omaster1) | (1 << omaster2);
+      o1 = omaster1;
+      o2 = omaster2;
+      uchoose (&o1, &o2);
 
-      cfds = select ((omaster1 > omaster2 ? omaster1 : omaster2) + 1,
-		     &iread, (int *) NULL, (int *) NULL, &stime);
-      if (cfds < 0)
-	{
-	  perror ("select");
-	  uchild (SIGCHLD);
-	}
-
-      if (cfds == 0)
+      if (o1 == -1 && o2 == -1)
 	{
 	  if (cDebug > 0)
 	    fprintf (stderr, "Five second pause\n");
 	  continue;
 	}
 
-      if ((iread & (1 << omaster1)) != 0)
-	{
-	  iwrite = 1 << omaster2;
-	  cfds = select (omaster2 + 1, (int *) NULL, &iwrite, (int *) NULL,
-			 &spoll);
-	  if (cfds < 0)
-	    {
-	      perror ("select");
-	      uchild (SIGCHLD);
-	    }
-	  if (cfds > 0)
-	    utransfer (omaster1, omaster2, oslave2, &cFrom1);
-	}
-      if ((iread & (1 << omaster2)) != 0)
-	{
-	  iwrite = 1 << omaster1;
-	  cfds = select (omaster1 + 1, (int *) NULL, &iwrite, (int *) NULL,
-			 &spoll);
-	  if (cfds < 0)
-	    {
-	      perror ("select");
-	      uchild (SIGCHLD);
-	    }
-	  if (cfds > 0)
-	    utransfer (omaster2, omaster1, oslave1, &cFrom2);
-	}
+      if (o1 != -1
+	  && fwritable (omaster2))
+	utransfer (omaster1, omaster2, oslave2, &cFrom1);
+
+      if (o2 != - 1
+	  && fwritable (omaster1))
+	utransfer (omaster2, omaster1, oslave1, &cFrom2);
     }
 
   /*NOTREACHED*/
@@ -1388,6 +1378,113 @@ xsystem (zcmd)
       fprintf (stderr, "%s\n", zcmd);
       exit (EXIT_FAILURE);
     }
+}
+
+/* Pick one of two file descriptors which is ready for reading, or
+   return in five seconds.  If the argument is ready for reading,
+   leave it alone; otherwise set it to -1.  */
+
+static void
+uchoose (po1, po2)
+     int *po1;
+     int *po2;
+{
+#if HAVE_SELECT
+
+  int iread;
+  struct timeval stime;
+
+  iread = (1 << *po1) | (1 << *po2);
+  stime.tv_sec = 5;
+  stime.tv_usec = 0;
+
+  if (select ((*po1 > *po2 ? *po1 : *po2) + 1, &iread, (int *) NULL,
+	      (int *) NULL, &stime) < 0)
+    {
+      perror ("select");
+      uchild (SIGCHLD);
+    }
+
+  if ((iread & (1 << *po1)) == 0)
+    *po1 = -1;
+
+  if ((iread & (1 << *po2)) == 0)
+    *po2 = -1;
+
+#else /* ! HAVE_SELECT */
+
+#if HAVE_POLL
+
+  struct pollfd as[2];
+
+  as[0].fd = *po1;
+  as[0].events = POLLIN;
+  as[1].fd = *po2;
+  as[1].events = POLLIN;
+
+  if (poll (as, 2, 5 * 1000) < 0)
+    {
+      perror ("poll");
+      uchild (SIGCHLD);
+    }
+
+  if ((as[0].revents & POLLIN) == 0)
+    *po1 = -1;
+  
+  if ((as[1].revents & POLLIN) == 0)
+    *po2 = -1;
+
+#endif /* HAVE_POLL */
+#endif /* ! HAVE_SELECT */
+}
+
+/* Check whether a file descriptor can be written to.  */
+
+static boolean
+fwritable (o)
+     int o;
+{
+#if HAVE_SELECT
+
+  int iwrite;
+  struct timeval stime;
+  int cfds;
+
+  iwrite = 1 << o;
+
+  stime.tv_sec = 0;
+  stime.tv_usec = 0;
+
+  cfds = select (o + 1, (int *) NULL, &iwrite, (int *) NULL, &stime);
+  if (cfds < 0)
+    {
+      perror ("select");
+      uchild (SIGCHLD);
+    }
+
+  return cfds > 0;
+
+#else /* ! HAVE_SELECT */
+
+#if HAVE_POLL
+
+  struct pollfd s;
+  int cfds;
+
+  s.fd = o;
+  s.events = POLLOUT;
+
+  cfds = poll (&s, 1, 0);
+  if (cfds < 0)
+    {
+      perror ("poll");
+      uchild (SIGCHLD);
+    }
+
+  return cfds > 0;
+
+#endif /* HAVE_POLL */
+#endif /* ! HAVE_SELECT */
 }
 
 /* We don't want to link in util.c, since that would bring in the log
