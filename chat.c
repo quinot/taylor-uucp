@@ -878,12 +878,6 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 		}
 	      break;
 	    case 'M':
-	      if (qdial == NULL)
-		{
-		  ucsend_debug_end (fquote, TRUE);
-		  ulog (LOG_ERROR, "Illegal use of \\M");
-		  return FALSE;
-		}
 	      fquote = fcsend_debug (fquote, (size_t) 0, "ignore-carrier");
 	      if (! fconn_carrier (qconn, FALSE))
 		{
@@ -892,13 +886,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 		}
 	      break;
 	    case 'm':
-	      if (qdial == NULL)
-		{
-		  ucsend_debug_end (fquote, TRUE);
-		  ulog (LOG_ERROR, "Illegal use of \\m");
-		  return FALSE;
-		}
-	      if (qdial->uuconf_fcarrier)
+	      if (qdial == NULL || qdial->uuconf_fcarrier)
 		{
 		  fquote = fcsend_debug (fquote, (size_t) 0, "need-carrier");
 		  if (! fconn_carrier (qconn, TRUE))

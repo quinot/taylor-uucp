@@ -3402,9 +3402,13 @@ disable echo checking
 @item \E
 enable echo checking
 @item \K
-same as @samp{BREAK} (for HDB compatibility)
+same as @samp{BREAK}
 @item \p
 pause sending for a fraction of a second
+@item \M
+do not require carrier signal
+@item \m
+require carrier signal (fail if not present)
 @end table
 
 Some specific types of chat scripts also define additional escape
@@ -3421,6 +3425,12 @@ wait until the character is echoed.  Echo checking must be turned on
 separately for each send string for which it is desired; it will be
 turned on for characters following @kbd{\E} and turned off for characters
 following @kbd{\e}.
+
+When used with a port which does not support the carrier signal, as set
+by the @code{carrier} command in the port file, @kbd{\M} and @kbd{\m}
+are ignored.  Similarly, when used in a dialer chat script with a dialer
+which does not support the carrier signal, as set by the @code{carrier}
+command in the dial file, @kbd{\M} and @kbd{\m} are ignored.
 
 @item chat-timeout @var{number}
 @findex chat-timeout
@@ -5305,20 +5315,17 @@ strings:
 send phone number without dialcode translation
 @item \T
 send phone number with dialcode translation
-@item \M
-do not require carrier
-@item \m
-require carrier (fail if not present)
 @end table
 
 See the description of the dialcodes file (@pxref{Configuration File
-Names}) for a description of dialcode translation.  If the port does not
-support carrier, as set by the @code{carrier} command in the port file,
-@kbd{\M} and @kbd{\m} are ignored.  If both the port and the dialer
-support carrier, as set by the @code{carrier} command in the port file
-and the @code{carrier} command in the dialer file, then every chat
-script implicitly begins with @kbd{\M} and ends with @kbd{\m}.  There is
-no default chat script for dialers.
+Names}) for a description of dialcode translation.
+
+If both the port and the dialer support carrier, as set by the
+@code{carrier} command in the port file and the @code{carrier} command
+in the dialer file, then every chat script implicitly begins with
+@kbd{\M} and ends with @kbd{\m}.
+
+There is no default chat script for dialers.
 
 The following additional escape sequences may be used in
 @code{chat-program}:

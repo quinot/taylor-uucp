@@ -11,6 +11,9 @@ Changes in version 1.07:
     --with-oldconfigdir.
 
     TCP ports now support IPv6 on modern systems.
+
+    \M and \m may now be used in any chat script, not just a dialer
+    chat script.
 
 Changes in version 1.06:
 

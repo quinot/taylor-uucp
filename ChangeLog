@@ -1,5 +1,9 @@
 2002-02-14  Ian Lance Taylor  <ian@airs.com>
 
+	* chat.c (fcsend): Permit \M and \m in any type of chat script.
+	* uucp.texi (Chat Scripts): Document \M and \m here.
+	(dial File): Don't document \M and \m here.
+
 	* uuconf/chatc.c (_uuconf_ichat_cmd): Treat chat-program used with
 	no arguments as specifying no chat-program.
 
