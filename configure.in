@@ -41,7 +41,7 @@ dnl
 AC_HAVE_HEADERS(stddef.h string.h strings.h unistd.h stdlib.h limits.h)
 AC_HAVE_HEADERS(time.h sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
-AC_HAVE_HEADERS(poll.h tiuser.h xti.h stropts.h ftw.h glob.h)
+AC_HAVE_HEADERS(poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h glob.h)
 AC_HAVE_HEADERS(sys/types.tcp.h)
 dnl
 AC_COMPILE_CHECK([sys/select.h],

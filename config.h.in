@@ -33,6 +33,7 @@
 #define HAVE_POLL_H 0 /* <poll.h> */
 #define HAVE_TIUSER_H 0 /* <tiuser.h> */
 #define HAVE_XTI_H 0 /* <xti.h> */
+#define HAVE_SYS_TLI_H 0 /* <sys/tli.h> */
 #define HAVE_STROPTS_H 0 /* <stropts.h> */
 #define HAVE_FTW_H 0 /* <ftw.h> */
 #define HAVE_GLOB_H 0 /* <glob.h> */
