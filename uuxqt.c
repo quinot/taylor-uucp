@@ -203,15 +203,28 @@ main (argc, argv)
 
   fsys = FALSE;
 
-  /* If we were given a system name, canonicalize it, since the system
-     dependent layer will not be returning aliases.  */
+  /* If we were given a system name, canonicalize it.  */
   if (zdosys != NULL)
     {
       iuuconf = uuconf_system_info (puuconf, zdosys, &ssys);
-      if (iuuconf == UUCONF_NOT_FOUND)
-	ulog (LOG_FATAL, "%s: System not found", zdosys);
-      else if (iuuconf != UUCONF_SUCCESS)
-	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+      if (iuuconf != UUCONF_SUCCESS)
+	{
+	  if (iuuconf != UUCONF_NOT_FOUND)
+	    ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+
+	  if (strcmp (zdosys, zlocalname) == 0)
+	    {
+	      iuuconf = uuconf_system_local (puuconf, &ssys);
+	      if (iuuconf != UUCONF_SUCCESS)
+		ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
+	      ssys.uuconf_zname = (char *) zlocalname;
+	    }
+	  else
+	    {
+	      if (! funknown_system (puuconf, zdosys, &ssys))
+		ulog (LOG_FATAL, "%s: system not found", zdosys);
+	    }
+	}
 
       zdosys = zbufcpy (ssys.uuconf_zname);
       fsys = TRUE;
@@ -247,15 +260,8 @@ main (argc, argv)
 	  boolean fprocessed;
 	  char *zbase;
 
-	  /* It would be more efficient to pass zdosys down to the
-	     routines which retrieve execute files.  */
-	  if (zdosys != NULL && strcmp (zdosys, zgetsys) != 0)
-	    {
-	      ubuffree (z);
-	      ubuffree (zgetsys);
-	      continue;
-	    }
-
+	  /* Get the system information for the system returned by
+	     zsysdep_get_xqt.  */
 	  if (! fsys || strcmp (ssys.uuconf_zname, zgetsys) != 0)
 	    {
 	      if (fsys)
@@ -282,6 +288,7 @@ main (argc, argv)
 			  ubuffree (zgetsys);
 			  continue;
 			}
+		      ssys.uuconf_zname = (char *) zlocalname;
 		    }
 		  else
 		    {
@@ -307,6 +314,15 @@ main (argc, argv)
 	      ubuffree (z);
 	      ubuffree (zgetsys);
 	      break;
+	    }
+
+	  /* Make sure we are supposed to be executing jobs for this
+	     system.  */
+	  if (zdosys != NULL && strcmp (zdosys, ssys.uuconf_zname) != 0)
+	    {
+	      ubuffree (z);
+	      ubuffree (zgetsys);
+	      continue;
 	    }
 
 	  zloc = ssys.uuconf_zlocalname;
