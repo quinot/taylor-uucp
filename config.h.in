@@ -1,7 +1,8 @@
-/* Configuration header file for Taylor UUCP.  */
+/* Configuration header file for Taylor UUCP.  -*- C -*-  */
 
-/* Set MAIL_PROGRAM to a program which takes a mail address as an argument
-   and accepts a mail message to send to that address on stdin.  */
+/* Set MAIL_PROGRAM to a program which takes a mail address as an
+   argument and accepts a mail message to send to that address on
+   stdin (e.g. "/bin/mail").  */
 #define MAIL_PROGRAM undefined
 
 /* Set ECHO_PROGRAM to a program which echoes its arguments; if echo
@@ -30,6 +31,7 @@
 #define HAVE_SYSEXITS_H 0 /* <sysexits.h> */
 #define HAVE_POLL_H 0 /* <poll.h> */
 #define HAVE_STROPTS_H 0 /* <stropts.h> */
+#define HAVE_FTW_H 0 /* <ftw.h> */
 
 /* If major and minor are not defined in <sys/types.h>, but are in
    <sys/mkdev.h>, set MAJOR_IN_MKDEV to 1.  If they are in
@@ -196,6 +198,7 @@
 #define HAVE_DUP2 0
 #define HAVE_WAITPID 0
 #define HAVE_WAIT4 0
+#define HAVE_FTW 0
 
 /* If you have either sigsetjmp or setret, it will be used instead of
    setjmp.  These functions will only be used if your system restarts
@@ -273,7 +276,7 @@
    directory.  If getcwd is available it will be used, otherwise if
    getwd is available it will be used.  Otherwise, set PWD_PROGRAM to
    the name of the program which will print the name of the current
-   working directory.  */
+   working directory (e.g., "/bin/pwd").  */
 #define HAVE_GETCWD 0
 #define HAVE_GETWD 0
 #define PWD_PROGRAM unused
@@ -284,9 +287,16 @@
    according to the variable UUDIR).  Otherwise, set HAVE_MKDIR to 0,
    remove @UUDIR@ from Makefile.in, and set MKDIR_PROGRAM to the name
    of the program which will create a directory named on the command
-   line.  */
+   line (e.g., "/bin/mkdir").  */
 #define HAVE_MKDIR 0
 #define MKDIR_PROGRAM unused
+
+/* The code also needs to know how to remove directories.  If you have
+   the rmdir function, set HAVE_RMDIR to 1.  Otherwise, set
+   RMDIR_PROGRAM to the name of the program which will remove a
+   directory named on the command line (e.g., "/bin/rmdir").  */
+#define HAVE_RMDIR 0
+#define RMDIR_PROGRAM unused
 
 /* That's the end of the list of the functions.  Now there are a few
    last miscellaneous items.  */
