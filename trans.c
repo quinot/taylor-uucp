@@ -792,8 +792,6 @@ floop (qdaemon)
 
   (void) (*qdaemon->qproto->pfshutdown) (qdaemon);
 
-  usysdep_get_work_free (qdaemon->qsys);
-
   if (fret)
     uwindow_acked (qdaemon, TRUE);
   else
