@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/03/12  19:56:10  ian
+   Debugging based on types rather than number
+
    Revision 1.18  1992/03/11  19:53:55  ian
    Improved chat script debugging
 
@@ -424,7 +427,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
       udebug_buffer ("icexpect: Looking for", azstrings[0],
 		     aclens[0]);
       ulog (LOG_DEBUG_START, "icexpect: Got \"");
-      iDebug &=~ DEBUG_INCOMING;
+      iDebug &=~ (DEBUG_INCOMING | DEBUG_PORT);
     }
 #endif
 
@@ -652,7 +655,7 @@ fcsend (z, qsys, qdial, zphone, ftranslate)
       fquote = FALSE;
       cCsend_chars = 0;
       iColddebug = iDebug;
-      iDebug &=~ DEBUG_OUTGOING;
+      iDebug &=~ (DEBUG_OUTGOING | DEBUG_PORT);
     }
 #endif
 
