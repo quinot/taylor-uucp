@@ -433,6 +433,28 @@ ILT_HEADER_COMMENT([
    Also, the (non-portable) tstuu program requires either select or
    poll.  */])
 ILT_FUNC_CHECK(napms nap usleep poll select)
+echo '#include <stdio.h>
+#include "conf.h"
+main ()
+{
+#if ! HAVE_NAPMS
+#if ! HAVE_NAP
+#if ! HAVE_USLEEP
+#if ! HAVE_POLL
+#if ! HAVE_SELECT
+  fprintf (stderr, "WARNING: No way to sleep for less than one second\n");
+  fprintf (stderr, "         \\p in chat scripts will sleep for a full second\n");
+#endif
+#endif
+#endif
+#endif
+#endif
+}' > conftest.c
+eval $compile
+if test -s ./conftest; then
+  ./conftest
+fi
+rm -f conftest conftest.c
 
 ILT_HEADER_COMMENT([
 /* If the getgrent function is available, it will be used to determine
