@@ -4398,6 +4398,7 @@ Brian W. Antoine @file{<briana@@tau-ceti.isc-br.com>}
 @file{magus!dolphin!zack} (Zacharias Beckman)
 @file{mike@@mbsun.ann-arbor.mi.us} (Mike Bernson)
 @file{bob@@usixth.sublink.org} (Roberto Biancardi)
+Marc Boucher @file{<marc@@CAM.ORG>}
 @file{dean@@coplex.com} (Dean Brooks)
 @file{dave@@dlb.com} (Dave Buck)
 @file{gordon@@sneaky.lonestar.org} (Gordon Burditt)
