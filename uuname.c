@@ -51,8 +51,8 @@ main (argc, argv)
      int argc;
      char **argv;
 {
-  /* -a: don't display aliases.  */
-  boolean falias = TRUE;
+  /* -a: display aliases.  */
+  boolean falias = FALSE;
   /* -l: if true, output local node name.  */
   boolean flocal = FALSE;
   /* -I: configuration file name.  */
@@ -67,8 +67,8 @@ main (argc, argv)
       switch (iopt)
 	{
 	case 'a':
-	  /* Don't display aliases.  */
-	  falias = FALSE;
+	  /* Display aliases.  */
+	  falias = TRUE;
 	  break;
 
 	case 'l':
@@ -162,9 +162,9 @@ unusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uuname [-a]  [-l] [-I file]\n");
+	   "Usage: uuname [-a] [-l] [-I file]\n");
   fprintf (stderr,
-	   " -a: don't display aliases\n");
+	   " -a: display aliases\n");
   fprintf (stderr,
 	   " -l: print local name\n");
 #if HAVE_TAYLOR_CONFIG
