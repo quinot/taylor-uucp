@@ -49,6 +49,8 @@ static boolean ftadd_cmd P((struct sdaemon *qdaemon, const char *z,
 			    size_t cdata, int iremote, boolean flast));
 static boolean fremote_hangup_reply P((struct stransfer *qtrans,
 				       struct sdaemon *qdaemon));
+static boolean flocal_poll_file P((struct stransfer *qtrans,
+				   struct sdaemon *qdaemon));
 
 /* Queue of transfer structures that are ready to start which have
    been requested by the local system.  These are only permitted to
@@ -412,20 +414,32 @@ fqueue (qdaemon, pfany)
   if (bgrade == '\0')
     return TRUE;
 
-  if (! fsysdep_get_work_init (qsys, bgrade, FALSE))
+  if (! fsysdep_get_work_init (qsys, bgrade))
     return FALSE;
 
   while (TRUE)
     {
       struct scmd s;
 
-      if (! fsysdep_get_work (qsys, bgrade, FALSE, &s))
+      if (! fsysdep_get_work (qsys, bgrade, &s))
 	return FALSE;
 
       if (s.bcmd == 'H')
 	{
 	  ulog_user ((const char *) NULL);
 	  break;
+	}
+
+      if (s.bcmd == 'P')
+	{
+	  struct stransfer *qtrans;
+
+	  /* A poll file.  */
+	  ulog_user ((const char *) NULL);
+	  qtrans = qtransalc (&s);
+	  qtrans->psendfn = flocal_poll_file;
+	  uqueue_local (qtrans);
+	  continue;
 	}
 
       ulog_user (s.zuser);
@@ -1195,4 +1209,23 @@ ustats_failed (qsys)
 	}
       while (q != qTreceive);
     }
+}
+
+/* When a local poll file is found, it is entered on the queue like
+   any other job.  When it is pulled off the queue, this function is
+   called.  It just calls fsysdep_did_work, which will remove the poll
+   file.  This ensures that poll files are only removed if the system
+   is actually called.  */
+
+/*ARGSUSED*/
+boolean
+flocal_poll_file (qtrans, qdaemon)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+{
+  boolean fret;
+
+  fret = fsysdep_did_work (qtrans->s.pseq);
+  utransfree (qtrans);
+  return fret;
 }

@@ -260,10 +260,9 @@ fsysdep_has_work (qsys)
 #define CWORKFILES (10)
 
 boolean
-fsysdep_get_work_init (qsys, bgrade, fcheck)
+fsysdep_get_work_init (qsys, bgrade)
      const struct uuconf_system *qsys;
      int bgrade;
-     boolean fcheck;
 {
   char *zdir;
   DIR *qdir;
@@ -403,10 +402,9 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
    calling fsysdep_get_work_init to rescan.  */
 
 boolean
-fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
+fsysdep_get_work (qsys, bgrade, qcmd)
      const struct uuconf_system *qsys;
      int bgrade;
-     boolean fcheck;
      struct scmd *qcmd;
 {
   char *zdir;
@@ -436,13 +434,12 @@ fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
 	  char *zname;
 
 	  /* Read all the lines of a command file into memory.  */
-
 	  do
 	    {
 	      if (iSwork_file >= cSwork_files)
 		{
 		  /* Rescan the work directory.  */
-		  if (! fsysdep_get_work_init (qsys, bgrade, fcheck))
+		  if (! fsysdep_get_work_init (qsys, bgrade))
 		    {
 		      ubuffree (zdir);
 		      return FALSE;
@@ -510,24 +507,18 @@ fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
 
 	  if (iline == 0)
 	    {
-	      /* There was nothing in the file; remove it and look
-		 for the next one.  */
-	      xfree ((pointer) qfile);
-	      if (! fcheck)
-		{
-		  if (remove (zname) != 0)
-		    ulog (LOG_ERROR, "remove (%s): %s", zname,
-			  strerror (errno));
-		}
-	      ubuffree (zname);
+	      /* There were no lines in the file; this is a poll file,
+		 for which we return a 'P' command.  */
+	      qfile->aslines[0].zline = zbufcpy ("P");
+	      qfile->aslines[0].qfile = NULL;
+	      qfile->aslines[0].ztemp = NULL;
+	      iline = 1;
 	    }
-	  else
-	    {
-	      qfile->zfile = zname;
-	      qfile->clines = iline;
-	      qfile->cdid = 0;
-	      qSwork_file = qfile;
-	    }
+
+	  qfile->zfile = zname;
+	  qfile->clines = iline;
+	  qfile->cdid = 0;
+	  qSwork_file = qfile;
 	}
 
       /* This loop continues until all the lines from the current file

@@ -284,27 +284,26 @@ extern boolean fsysdep_has_work P((const struct uuconf_system *qsys));
 /* Initialize the work scan.  This will be called before
    fsysdep_get_work.  The bgrade argument is the minimum grade of
    execution files that should be considered (e.g. a bgrade of 'd'
-   will allow all grades from 'A' to 'Z' and 'a' to 'd').  The fcheck
-   argument is TRUE if the work will not actually be done (i.e. this
-   is being called by uustat).  This function should return FALSE on
-   error.  */
+   will allow all grades from 'A' to 'Z' and 'a' to 'd').  This
+   function should return FALSE on error.  */
 extern boolean fsysdep_get_work_init P((const struct uuconf_system *qsys,
-					int bgrade, boolean fcheck));
+					int bgrade));
 
 /* Get the next command to be executed for a remote system.  The
-   bgrade and fcheck arguments will be the same as for
-   fsysdep_get_work_init; probably only one of these functions will
-   use them, namely the function for which it is more convenient.
-   This should return FALSE on error.  The structure pointed to by
-   qcmd should be filled in.  The strings may point into a static
-   buffer; they will be copied out if necessary.  If there is no more
-   work, this should set qcmd->bcmd to 'H' and return TRUE.  This
-   should set qcmd->pseq to something which can be passed to
-   fsysdep_did_work to remove the job from the queue when it has been
-   completed.  */
+   bgrade argument will be the same as for fsysdep_get_work_init;
+   probably only one of these functions will use it, namely the
+   function for which it is more convenient.  This should return FALSE
+   on error.  The structure pointed to by qcmd should be filled in.
+   The strings may point into a static buffer; they will be copied out
+   if necessary.  If there is no more work, this should set qcmd->bcmd
+   to 'H' and return TRUE.  This should set qcmd->pseq to something
+   which can be passed to fsysdep_did_work to remove the job from the
+   queue when it has been completed.  This may set qcmd->bcmd to 'P'
+   to represent a poll file; the main code will just pass the pseq
+   element of such a structure to fsysdep_did_work if the system is
+   called.  */
 extern boolean fsysdep_get_work P((const struct uuconf_system *qsys,
-				   int bgrade, boolean fcheck,
-				   struct scmd *qcmd));
+				   int bgrade, struct scmd *qcmd));
 
 /* Remove a job from the work queue.  This must also remove the
    temporary file used for a send command, if there is one.  It should
