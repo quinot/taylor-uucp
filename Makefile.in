@@ -152,6 +152,7 @@ dist: uucp.info
 	-rm -rf uucp-$(VERSION)
 	mkdir uucp-$(VERSION)
 	ln `cat MANIFEST` uucp-$(VERSION)
+	cp conf.h sysh.unx Makefile uucp-$(VERSION)
 	chmod 0644 uucp-$(VERSION)/conf.h uucp-$(VERSION)/sysh.unx
 	chmod 0644 uucp-$(VERSION)/Makefile
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
