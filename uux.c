@@ -759,8 +759,14 @@ main (argc, argv)
 
 	      if (! fdid)
 		{
-		  if (! fcopy_file (zfile, zdata, FALSE, TRUE))
+		  openfile_t efile;
+
+		  efile = esysdep_user_fopen (zfile);
+		  if (! ffileisopen (efile))
 		    uxabort ();
+		  if (! fcopy_open_file (efile, zdata, FALSE, TRUE))
+		    uxabort ();
+		  (void) ffileclose (efile);
 		}
 
 	      zuse = abtname;

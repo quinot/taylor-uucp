@@ -621,6 +621,8 @@ uccopy (zfile, zdest)
 
   if (zexclam == NULL)
     {
+      openfile_t efrom;
+
       /* Copy from a local file.  Make sure the user has access to
 	 this file, since we are running setuid.  */
       if (! fsysdep_access (zfile))
@@ -663,8 +665,13 @@ uccopy (zfile, zdest)
 	  zto = zsysdep_add_base (zdest, zfile);
 	  if (zto == NULL)
 	    ucabort ();
-	  if (! fcopy_file (zfile, zto, FALSE, fCmkdirs))
+
+	  efrom = esysdep_user_fopen (zfile);
+	  if (! ffileisopen (efrom))
 	    ucabort ();
+	  if (! fcopy_open_file (efrom, zto, FALSE, fCmkdirs))
+	    ucabort ();
+	  (void) ffileclose (efrom);
 	  ubuffree (zto);
 	}
       else
@@ -710,9 +717,13 @@ uccopy (zfile, zdest)
 	    }
 	  else
 	    {
-	      ucrecord_file (ztemp);
-	      if (! fcopy_file (zfile, ztemp, FALSE, TRUE))
+	      efrom = esysdep_user_fopen (zfile);
+	      if (! ffileisopen (efrom))
 		ucabort ();
+	      ucrecord_file (ztemp);
+	      if (! fcopy_open_file (efrom, ztemp, FALSE, TRUE))
+		ucabort ();
+	      (void) ffileclose (efrom);
 	    }
 
 	  if (zCforward == NULL)

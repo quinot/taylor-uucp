@@ -28,8 +28,8 @@ OBJS = access.o addbas.o app3.o app4.o basnam.o cwd.o chmod.o cusub.o \
 	picksb.o portnm.o proctm.o recep.o run.o seq.o serial.o \
 	signal.o sindir.o sleep.o spawn.o splcmd.o splnam.o spool.o \
 	srmdir.o statsb.o status.o time.o tmpfil.o trunc.o uacces.o \
-	ultspl.o uuto.o walk.o wldcrd.o work.o xqtfil.o xqtsub.o \
-	@UNIXOBJS@
+	ufopen.o ultspl.o uuto.o walk.o wldcrd.o work.o xqtfil.o \
+	xqtsub.o @UNIXOBJS@
 
 all: libunix.a
 
@@ -111,6 +111,7 @@ time.o: $(srcdir)/../system.h
 tmpfil.o: $(srcdir)/../uuconf.h $(srcdir)/../system.h
 trunc.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uacces.o: $(srcdir)/../uudefs.h
+ufopen.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 ultspl.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uuto.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 walk.o: $(srcdir)/../system.h

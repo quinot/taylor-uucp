@@ -60,6 +60,7 @@ time.c
 tmpfil.c
 trunc.c
 uacces.c
+ufopen.c
 ultspl.c
 uuto.c
 walk.c
