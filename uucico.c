@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.82  1992/03/16  04:38:00  ian
+   Turn off DEBUG_PORT for handshake debugging
+
    Revision 1.81  1992/03/15  04:51:17  ian
    Keep an array of signals we've received rather than a single variable
 
@@ -331,7 +334,7 @@ static boolean flogin_prompt P((struct sport *qport));
 static boolean faccept_call P((const char *zlogin, struct sport *qport,
 			       const struct ssysteminfo **pqsys));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
-			int bgrade, boolean fnew));
+			int bgrade, boolean fnew, long cmax_receive));
 static boolean fdo_xcmd P((const struct ssysteminfo *qsys,
 			   boolean fcaller,
 			   const struct scmd *qcmd));
@@ -1304,7 +1307,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   {
     boolean fret;
 
-    fret = fuucp (TRUE, qsys, '\0', fnew);
+    fret = fuucp (TRUE, qsys, '\0', fnew, (long) -1);
     ulog_user ((const char *) NULL);
     usysdep_get_work_free (qsys);
 
@@ -1457,6 +1460,8 @@ faccept_call (zlogin, qport, pqsys)
   char bgrade;
   const char *zuse_local;
   struct sstatus sstat;
+  long cmax_receive;
+  boolean frestart;
 #if HAVE_TAYLOR_CONFIG
   struct sport sportinfo;
 #endif
@@ -1729,10 +1734,15 @@ faccept_call (zlogin, qport, pqsys)
      on a sequence number.  The -p and -vgrade= arguments are taken to
      specify the lowest job grade that we should transfer; I think
      this is the traditional meaning, but I don't know.  The -N switch
-     means that we are talking to another instance of ourselves.  */
+     means that we are talking to another instance of ourselves.  The
+     -U switch specifies the ulimit of the remote system, which we
+     treat as the maximum file size that may be sent.  The -R switch
+     means that the remote system supports file restart; we don't.  */
 
   fnew = FALSE;
   bgrade = BGRADE_LOW;
+  cmax_receive = (long) -1;
+  frestart = FALSE;
 
   if (zspace == NULL)
     {
@@ -1817,6 +1827,20 @@ faccept_call (zlogin, qport, pqsys)
 		case 'N':
 		  frecognized = TRUE;
 		  fnew = TRUE;
+		  break;
+		case 'U':
+		  frecognized = TRUE;
+		  {
+		    long c;
+
+		    c = strtol (zspace + 2, (char **) NULL, 0);
+		    if (c > 0)
+		      cmax_receive = c * (long) 512;
+		  }
+		  break;
+		case 'R':
+		  frecognized = TRUE;
+		  frestart = TRUE;
 		  break;
 		default:
 		  break;
@@ -2021,7 +2045,7 @@ faccept_call (zlogin, qport, pqsys)
   {
     boolean fret;
 
-    fret = fuucp (FALSE, qsys, bgrade, fnew);
+    fret = fuucp (FALSE, qsys, bgrade, fnew, cmax_receive);
     ulog_user ((const char *) NULL);
     usysdep_get_work_free (qsys);
 
@@ -2149,11 +2173,12 @@ faccept_call (zlogin, qport, pqsys)
      vice-versa.  */
 
 static boolean
-fuucp (fmaster, qsys, bgrade, fnew)
+fuucp (fmaster, qsys, bgrade, fnew, cmax_receive)
      boolean fmaster;
      const struct ssysteminfo *qsys;
      int bgrade;
      boolean fnew;
+     long cmax_receive;
 {
   boolean fcaller, fmasterdone, fnowork;
   const char *zlocal_size, *zremote_size;
@@ -2332,8 +2357,23 @@ fuucp (fmaster, qsys, bgrade, fnew)
 
 	      if (s.cbytes != -1)
 		{
-		  if (clocal_size != -1 && clocal_size < s.cbytes)
+		  boolean fsmall;
+		  const char *zerr;
+
+		  fsmall = FALSE;
+		  fnever = FALSE;
+		  zerr = NULL;
+
+		  if (cmax_receive != -1 && cmax_receive < s.cbytes)
 		    {
+		      fsmall = TRUE;
+		      fnever = TRUE;
+		      zerr = "too large for receiver";
+		    }
+		  else if (clocal_size != -1 && clocal_size < s.cbytes)
+		    {
+		      fsmall = TRUE;
+
 		      if (cmax_ever == -2)
 			{
 			  long c1, c2;
@@ -2345,24 +2385,34 @@ fuucp (fmaster, qsys, bgrade, fnew)
 			  else
 			    cmax_ever = c2;
 			}
+		      
 		      if (cmax_ever == -1 || cmax_ever >= s.cbytes)
-			ulog (LOG_ERROR, "File %s is too large to send now",
-			      s.zfrom);
+			zerr = "too large to send now";
 		      else
+			{
+			  fnever = TRUE;
+			  zerr = "too large to send";
+			}
+		    }
+
+		  if (fsmall)
+		    {
+		      ulog (LOG_ERROR, "File %s is %s", s.zfrom, zerr);
+
+		      if (fnever)
 			{
 			  const char *zsaved;
 
-			  ulog (LOG_ERROR, "File %s is too large to send",
-				s.zfrom);
 			  zsaved = zsysdep_save_temp_file (s.pseq);
 			  (void) fmail_transfer (FALSE, s.zuser,
 						 (const char *) NULL,
-						 "too large to send",
+						 zerr,
 						 s.zfrom, zLocalname,
 						 s.zto, qsys->zname,
 						 zsaved);
 			  (void) fsysdep_did_work (s.pseq);
 			}
+
 		      (void) ffileclose (e);
 		      break;
 		    }
@@ -2723,7 +2773,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		 the other side reported, we can't send it.  */
 	      if (cbytes != -1
 		  && ((s.cbytes != -1 && s.cbytes < cbytes)
-		      || (cremote_size != -1 && cremote_size < cbytes)))
+		      || (cremote_size != -1 && cremote_size < cbytes)
+		      || (cmax_receive != -1 && cmax_receive < cbytes)))
 		{
 		  ulog (LOG_ERROR, "%s is too large to send", zuse);
 		  if (! ftransfer_fail ('R', FAILURE_SIZE))
