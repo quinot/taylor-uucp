@@ -1,5 +1,8 @@
 2002-03-05  Ian Lance Taylor  <ian@airs.com>
 
+	* Makefile.am (EXTRA_DIST): Define.
+	* Makefile.in: Rebuild.
+
 	* Makefile.am (UUHEADERS): Add sysdep.h.
 	* unix/Makefile.am (libunix_a_SOURCES): Add fsusg.h.
 	* uuconf/Makefile.am (libuuconf_a_SOURCES): Add alloc.h, syshdr.h,

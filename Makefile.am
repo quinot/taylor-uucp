@@ -68,6 +68,7 @@ uuto: uuto.in Makefile
 	mv -f uuto.t $@
 
 CLEANFILES = uusched uuto
+EXTRA_DIST = uusched.in uuto.in
 
 install-exec-hook:
 	for f in uucico uuxqt; do \
