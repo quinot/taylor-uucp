@@ -56,6 +56,7 @@ uudir.c
 uulog.c
 uuname.c
 uustat.c
+uutime.h
 uux.1
 uux.c
 uuxqt.8

@@ -84,20 +84,20 @@ UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o config.o v2.o bnu.o \
 	file.o util.o sysinf.o prtinf.o time.o log.o chat.o port.o tcp.o \
 	parse.o copy.o sys1.o sys2.o sys3.o sys4.o version.o getopt.o \
 	$(ALLOCA)
-XQTOBJS = uuxqt.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
+XQTOBJS = uuxqt.o config.o v2.o bnu.o util.o sysinf.o prtinf.o log.o \
 	copy.o sys1.o sys3.o sys5.o version.o getopt.o $(ALLOCA)
-UUXOBJS = uux.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
+UUXOBJS = uux.o config.o v2.o bnu.o util.o sysinf.o prtinf.o log.o \
 	copy.o sys1.o sys3.o sys6.o version.o getopt.o $(ALLOCA)
-UUCPOBJS = uucp.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o log.o \
+UUCPOBJS = uucp.o config.o v2.o bnu.o util.o sysinf.o prtinf.o log.o \
 	copy.o sys1.o sys3.o sys6.o version.o getopt.o $(ALLOCA)
 UUCHKOBJS = uuchk.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
 	log.o sys1.o version.o getopt.o $(ALLOCA)
-UUSTATOBJS = uustat.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
+UUSTATOBJS = uustat.o config.o v2.o bnu.o util.o sysinf.o prtinf.o \
 	log.o parse.o copy.o sys1.o sys3.o sys4.o sys5.o sys7.o version.o \
 	getopt.o $(ALLOCA)
-UUNAMEOBJS = uuname.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
+UUNAMEOBJS = uuname.o config.o v2.o bnu.o util.o sysinf.o prtinf.o \
 	log.o sys1.o version.o getopt.o $(ALLOCA)
-UULOGOBJS = uulog.o config.o v2.o bnu.o util.o sysinf.o prtinf.o time.o \
+UULOGOBJS = uulog.o config.o v2.o bnu.o util.o sysinf.o prtinf.o \
 	log.o sys1.o version.o getopt.o $(ALLOCA)
 TSTOBJS = tstuu.o version.o getopt.o $(ALLOCA)
 
@@ -284,11 +284,12 @@ TAGS:
 
 # Header file depedencies.  These are maintained by hand.
 
-uucico.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h getopt.h
+uucico.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h uutime.h
+uucico.o: getopt.h
 uuxqt.o: uucp.h conf.h policy.h system.h getopt.h sysdep.h
 uux.o: uucp.h conf.h policy.h system.h getopt.h sysdep.h
 uucp.o: uucp.h conf.h policy.h system.h getopt.h sysdep.h
-uuchk.o: uucp.h conf.h policy.h port.h sysdep.h system.h getopt.h
+uuchk.o: uucp.h conf.h policy.h port.h sysdep.h system.h uutime.h getopt.h
 uustat.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
 uuname.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
 uulog.o: uucp.h conf.h policy.h system.h sysdep.h getopt.h
@@ -304,8 +305,8 @@ v2.o: uucp.h conf.h policy.h port.h sysdep.h
 bnu.o: uucp.h conf.h policy.h port.h sysdep.h
 file.o: uucp.h conf.h policy.h system.h
 util.o: uucp.h conf.h policy.h
-sysinf.o: uucp.h conf.h policy.h system.h port.h sysdep.h
-time.o: uucp.h conf.h policy.h
+sysinf.o: uucp.h conf.h policy.h system.h port.h sysdep.h uutime.h
+time.o: uucp.h conf.h policy.h uutime.h
 log.o: uucp.h conf.h policy.h system.h
 chat.o: uucp.h conf.h policy.h system.h port.h sysdep.h
 port.o: uucp.h conf.h policy.h port.h sysdep.h

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.7  1992/01/11  17:30:10  ian
    John Antypas: use memcpy instead of relying on structure assignment
 
@@ -64,63 +67,181 @@ char time_rcsid[] = "$Id$";
 #endif /* HAVE_SYS_TIME_T */
 #endif /* ! HAVE_TIME_T */
 
+#include "uutime.h"
+
 /* External functions.  */
 extern int strncasecmp ();
 extern time_t time ();
 extern struct tm *localtime ();
 
-/* Timetables are kept in a array of pairs of strings.  */
+/* A helper function to create a new time span with the specified
+   arguments.  */
 
-struct stimetable
+static struct sspan *
+qtnew (qnext, ival, istart, iend, cretry)
+     struct sspan *qnext;
+     long ival;
+     int istart;
+     int iend;
+     int cretry;
 {
-  const char *zname;
-  const char *ztime;
-};
+  struct sspan *q;
 
-static int cTtable;
-static struct stimetable *pasTtable;
-
-/* Initialize the table of timetables as advertised in the
-   documentation.  */
-
-static void utinit_timetable P((void));
-
-static void
-utinit_timetable ()
-{
-  pasTtable = (struct stimetable *) xmalloc (3 * sizeof (struct stimetable));
-  pasTtable[0].zname = "Evening";
-  pasTtable[0].ztime = "Wk1705-0755,Sa,Su";
-  pasTtable[1].zname = "Night";
-  pasTtable[1].ztime = "Wk2305-0755,Sa,Su2305-1655";
-  pasTtable[2].zname = "NonPeak";
-  pasTtable[2].ztime = "Wk1805-0655,Sa,Su";
-  cTtable = 3;
+  q = (struct sspan *) xmalloc (sizeof (struct sspan));
+  q->qnext = qnext;
+  q->ival = ival;
+  q->istart = istart;
+  q->iend = iend;
+  q->cretry = cretry;
+  return q;
 }
 
-/* Add a new timetable entry.  This assumes it can take control of the
-   strings it is passed, so they must not be on the stack and if they
-   have been allocated they must not be freed.  */
+/* A simple function to free a list of time spans.  */
 
 void
-uaddtimetable (zname, ztime)
-     const char *zname;
-     const char *ztime;
+utimespan_free (q)
+     struct sspan *q;
 {
-  if (pasTtable == NULL)
-    utinit_timetable ();
+  while (q != NULL)
+    {
+      struct sspan *qnext;
 
-  pasTtable = ((struct stimetable *)
-	       xrealloc ((pointer) pasTtable,
-			 (cTtable + 1) * sizeof (struct stimetable)));
-  pasTtable[cTtable].zname = zname;
-  pasTtable[cTtable].ztime = ztime;
-  ++cTtable;
+      qnext = q->qnext;
+      xfree ((pointer) q);
+      q = qnext;
+    }
 }
 
-/* An array of weekday abbreviations.  */
+/* Add a time span to an existing list of time spans.  We keep the
+   list sorted by time to make this operation easier.  This modifies
+   the existing list, and returns the modified version.  It takes a
+   comparison function which should return < 0 if the first argument
+   should take precedence over the second argument and == 0 if they
+   are the same (for grades this is igradecmp; for sizes it is minus
+   (the binary operator)).  */
 
-static struct
+static struct sspan *
+qtadd_span (qlist, ival, istart, iend, picmp, cretry)
+     struct sspan *qlist;
+     long ival;
+     int istart;
+     int iend;
+     boolean (*picmp) P((long, long));
+     int cretry;
+{
+  struct sspan **pq;
+
+  /* istart < iend  */
+  for (pq = &qlist; *pq != NULL; pq = &(*pq)->qnext)
+    {
+      int icmp;
+
+      /* Invariant: PREV (*pq) == NULL || PREV (*pq)->iend <= istart  */
+      /* istart < iend && (*pq)->istart < (*pq)->iend  */
+
+      if (iend <= (*pq)->istart)
+	{
+	  /* istart < iend <= (*pq)->istart < (*pq)->iend  */
+	  /* No overlap, and we're at the right spot.  See if we can
+	     combine these spans.  */
+	  if (iend == (*pq)->istart
+	      && cretry == (*pq)->cretry
+	      && (*picmp) (ival, (*pq)->ival) == 0)
+	    {
+	      (*pq)->istart = istart;
+	      return qlist;
+	    }
+	  /* We couldn't combine them.  */
+	  break;
+	}
+
+      if ((*pq)->iend <= istart)
+	{
+	  /* (*pq)->istart < (*pq)->iend <= istart < iend  */
+	  /* No overlap.  Try attaching this span.  */
+	  if ((*pq)->iend == istart
+	      && (*pq)->cretry == cretry
+	      && ((*pq)->qnext == NULL
+		  || iend <= (*pq)->qnext->istart)
+	      && (*picmp) (ival, (*pq)->ival) == 0)
+	    {
+	      (*pq)->iend = iend;
+	      return qlist;
+	    }
+	  /* Couldn't attach; keep looking for the right spot.  We
+	     might be able to combine part of the new span onto an
+	     existing span, but it's probably not worth it.  */
+	  continue;
+	}
+
+      /* istart < iend
+	 && (*pq)->istart < (*pq)->iend
+	 && istart < (*pq)->iend
+	 && (*pq)->istart < iend  */
+      /* Overlap.  */
+
+      icmp = (*picmp) (ival, (*pq)->ival);
+
+      if (icmp == 0)
+	{
+	  /* Just expand the old span to include the new span.  */
+	  if (istart < (*pq)->istart)
+	    (*pq)->istart = istart;
+	  if ((*pq)->iend < iend)
+	    (*pq)->iend = iend;
+	}
+      else if (icmp < 0)
+	{
+	  /* Replace the old span with the new span.  */
+	  if ((*pq)->istart < istart)
+	    {
+	      /* Save the initial portion of the old span.  */
+	      *pq = qtnew (*pq, (*pq)->ival, (*pq)->istart, istart,
+			   (*pq)->cretry);
+	      pq = &(*pq)->qnext;
+	    }
+	  if (iend < (*pq)->iend)
+	    {
+	      /* Save the final portion of the old span.  */
+	      (*pq)->qnext = qtnew ((*pq)->qnext, (*pq)->ival, iend,
+				    (*pq)->iend, (*pq)->cretry);
+	    }
+	  (*pq)->ival = ival;
+	  (*pq)->istart = istart;
+	  (*pq)->iend = iend;
+	  (*pq)->cretry = cretry;
+	}
+      else
+	{
+	  /* Leave the old span untouched.  */
+	  if (istart < (*pq)->istart)
+	    {
+	      /* Put in the initial portion of the new span.  */
+	      *pq = qtnew (*pq, ival, istart, (*pq)->istart, cretry);
+	      pq = &(*pq)->qnext;
+	    }
+	  if ((*pq)->iend < iend)
+	    {
+	      /* Put in the final portion of the new span.  */
+	      (*pq)->qnext = qtnew ((*pq)->qnext, ival, (*pq)->iend,
+				    iend, cretry);
+	    }
+	}
+
+      return qlist;
+    }
+
+  /* This is the spot for the new span, and there's no overlap.  */
+
+  *pq = qtnew (*pq, ival, istart, iend, cretry);
+
+  return qlist;
+}
+
+/* An array of weekday abbreviations.  The code below assumes that
+   each one starts with a lower case letter.  */
+
+static const struct
 {
   const char *zname;
   int imin;
@@ -136,41 +257,44 @@ static struct
   { "th", 4, 4 },
   { "fr", 5, 5 },
   { "sa", 6, 6 },
-  { "never", -1, -1 },
+  { "never", -1, -2 },
   { NULL, 0, 0 }
 };
 
-/* Check whether a broken-down time matches a time string.
-   The time string continues to a null byte, a space or a semicolon.
-   On success, return the retry time.  On failure, return -1. */
+/* Parse a time string and add it to a span list.  This function is
+   given the value and comparison function to use.  The time string
+   continues to a null byte, a space or a semicolon.  This returns the
+   new span list, or NULL on error.  If no time matches, it will wind
+   up returning qlist, which may itself be NULL.  */
 
-static int cttime_ok P((const struct tm *, const char *ztime));
-
-static int
-cttime_ok (q, ztime)
-     const struct tm *q;
+static struct sspan *
+qttime_parse (ztime, qlist, ival, picmp, cretry)
      const char *ztime;
+     struct sspan *qlist;
+     long ival;
+     int (*picmp) P((long, long));
+     int cretry;
 {
-  int i, cretry;
   const char *zend;
+  char bfirst;
+  int i;
 
   zend = ztime + strcspn (ztime, "; ");
 
-  cretry = 0;
-  if (*zend == ';')
-    cretry = atoi (zend + 1);
-
   if (pasTtable == NULL)
-    utinit_timetable ();
+    uinittimetables ();
 
-  /* Expand the time string using a timetable.  */
+  /* Expand the string using a timetable.  */
+  bfirst = tolower (BUCHAR (*ztime));
   for (i = 0; i < cTtable; i++)
     {
-      if (strncasecmp (ztime, pasTtable[i].zname, zend - ztime) == 0)
+      if (bfirst == tolower (BUCHAR (pasTtable[i].zname[0]))
+	  && strncasecmp (ztime, pasTtable[i].zname, zend - ztime) == 0)
 	{
 	  ztime = pasTtable[i].ztime;
 	  zend = ztime + strlen (ztime);
-	  break;
+	  /* Now search the table for this string.  */
+	  i = -1;
 	}
     }
 
@@ -179,30 +303,39 @@ cttime_ok (q, ztime)
 
   for (; ztime < zend; ztime += strcspn (ztime, ",|"))
     {
+      int iday;
+      boolean afday[7];
       const char *z;
-      boolean fmatch;
+      int istart, iend;
 
       if (*ztime == ',' || *ztime == '|')
 	++ztime;
 
-      /* Look through the days.  */
+      for (iday = 0; iday < 7; iday++)
+	afday[iday] = FALSE;
 
-      fmatch = FALSE;
+      /* Get the days.  */
+
       z = ztime;
       do
 	{
-	  int iday;
-
+	  bfirst = tolower (BUCHAR (*z));
 	  for (iday = 0; asTdays[iday].zname != NULL; iday++)
 	    {
 	      int clen;
 
+	      if (bfirst != asTdays[iday].zname[0])
+		continue;
+
 	      clen = strlen (asTdays[iday].zname);
 	      if (strncasecmp (z, asTdays[iday].zname, clen) == 0)
 		{
-		  if (q->tm_wday >= asTdays[iday].imin
-		      && q->tm_wday <= asTdays[iday].imax)
-		    fmatch = TRUE;
+		  int iset;
+
+		  for (iset = asTdays[iday].imin;
+		       iset <= asTdays[iday].imax;
+		       iset++)
+		    afday[iset] = TRUE;
 		  z += clen;
 		  break;
 		}
@@ -210,21 +343,27 @@ cttime_ok (q, ztime)
 	  if (asTdays[iday].zname == NULL)
 	    {
 	      ulog (LOG_ERROR, "%s: unparseable time string", ztime);
-	      return -1;
+	      return NULL;
 	    }
 	}
       while (isalpha (BUCHAR (*z)));
 
-      if (isdigit (BUCHAR (*z)))
+      /* Get the hours.  */
+
+      if (! isdigit (BUCHAR (*z)))
+	{
+	  istart = 0;
+	  iend = 24 * 60;
+	}
+      else
 	{
 	  char *zendnum;
-	  int istart, iend;
 
 	  istart = (int) strtol (z, &zendnum, 10);
 	  if (*zendnum != '-' || ! isdigit (BUCHAR (zendnum[1])))
 	    {
 	      ulog (LOG_ERROR, "%s: unparseable time string", ztime);
-	      return -1;
+	      return NULL;
 	    }
 	  z = zendnum + 1;
 	  iend = (int) strtol (z, &zendnum, 10);
@@ -235,66 +374,116 @@ cttime_ok (q, ztime)
 	      && *zendnum != '|')
 	    {
 	      ulog (LOG_ERROR, "%s: unparseable time string", ztime);
-	      return -1;
+	      return NULL;
 	    }
 
-	  if (fmatch)
-	    {
-	      int ihour;
+	  istart = (istart / 100) * 60 + istart % 100;
+	  iend = (iend / 100) * 60 + iend % 100;
+	}
 
-	      ihour = q->tm_hour * 100 + q->tm_min;
+      /* Add the times we've found onto the list.  */
+
+      for (iday = 0; iday < 7; iday++)
+	{
+	  if (afday[iday])
+	    {
+	      int iminute;
+
+	      iminute = iday * 24 * 60;
 	      if (istart < iend)
-		{
-		  if (ihour < istart || ihour > iend)
-		    fmatch = FALSE;
-		}
+		qlist = qtadd_span (qlist, ival, iminute + istart,
+				    iminute + iend, picmp, cretry);
 	      else
 		{
-		  if (ihour < istart && ihour > iend)
-		    fmatch = FALSE;
+		  /* Wrap around midnight.  */
+		  qlist = qtadd_span (qlist, ival, iminute,
+				      iminute + iend, picmp, cretry);
+		  qlist = qtadd_span (qlist, ival, iminute + istart,
+				      iminute + 24 * 60, picmp,
+				      cretry);
 		}
 	    }
 	}
-
-      if (fmatch)
-	return cretry;
     }
 
-  return -1;
+  return qlist;
+}
+
+/* See if a given broken down time matches a time span.  If it does,
+   return TRUE, set *pival to the value for the matching span, and set
+   *pcretry to the retry for the matching span.  Otherwise return
+   FALSE.  */
+
+static boolean
+ftmatch_span (qspan, qtm, pival, pcretry)
+     struct sspan *qspan;
+     struct tm *qtm;
+     long *pival;
+     int *pcretry;
+{
+  int itm;
+  struct sspan *q;
+
+  /* Get the number of minutes since Sunday for the time.  */
+  itm = qtm->tm_wday * 24 * 60 + qtm->tm_hour * 60 + qtm->tm_min;
+
+  for (q = qspan; q != NULL; q = q->qnext)
+    {
+      if (q->istart <= itm && itm <= q->iend)
+	{
+	  *pival = q->ival;
+	  *pcretry = q->cretry;
+	  return TRUE;
+	}
+    }
+
+  return FALSE;
+}
+
+/* Compare two work grades.  */
+
+static int
+itgradecmp (i1, i2)
+     long i1;
+     long i2;
+{
+  return igradecmp ((int) i1, (int) i2);
 }
 
-/* Check whether we can call a system now, given a grade of work to
-   be done.  Return retry time, or -1 if failure.  */
+/* Parse a time grade string into a time span.  A time grade string is
+   a series of single character work grades followed by time strings.
+   The time string may end with a semicolon and a retry time.  Each
+   grade/time/retry tuple is separated by a single space.  This
+   function returns a time span, or NULL if no time matches or an
+   error occurs. */
 
-int
-ccheck_time (bgrade, ztimegrade)
-     int bgrade;
+struct sspan *
+qtimegrade_parse (ztimegrade)
      const char *ztimegrade;
 {
-  struct tm *q;
-  time_t itime;
-  int cretry;
+  struct sspan *qret;
 
-  /* Get the time.  */
-  time (&itime);
-  q = localtime (&itime);
+  if (ztimegrade == NULL)
+    return NULL;
 
-  /* The format of ztime is a series of single character grades
-     followed by time strings.  The time string may end with a
-     semicolon and a retry time in minutes.  Each grade/time/retry
-     tuple is separated by a space.  */
+  qret = NULL;
 
   while (TRUE)
     {
-      /* Make sure this grade/time pair applies to this grade.  It
-	 doesn't if the grade from ztimegrade is executed before the
-	 grade from bgrade.  */
-      if (igradecmp (*ztimegrade, bgrade) >= 0)
-	{
-	  cretry = cttime_ok (q, ztimegrade + 1);
-	  if (cretry >= 0)
-	    return cretry;
-	}
+      const char *zretry;
+      int cretry;
+      struct sspan *qnext;
+
+      zretry = ztimegrade + strcspn (ztimegrade, "; ");
+      if (*zretry == ';')
+	cretry = atoi (zretry + 1);
+      else
+	cretry = 0;
+
+      qnext = qttime_parse (ztimegrade + 1, qret, *ztimegrade,
+			    itgradecmp, cretry);
+      if (qnext != NULL)
+	qret = qnext;
 
       ztimegrade += strcspn (ztimegrade, " ");
 
@@ -303,65 +492,193 @@ ccheck_time (bgrade, ztimegrade)
 
       ++ztimegrade;
     }
-      
-  return -1;
+
+  return qret;
+}
+
+/* Compare sizes when putting them into a timestring.  */
+
+static int
+itsizecmp (i1, i2)
+     long i1;
+     long i2;
+{
+  /* We can't just return i1 - i2 because that would be a long.  */
+  if (i1 < i2)
+    return -1;
+  else if (i1 == i2)
+    return 0;
+  else
+    return 1;
 }
 
-/* Determine the lowest grade of work we are permitted to do at the
-   current time, given a time/grade string.  Return a null byte if
-   no grades are legal.  */
+/* Parse a time size string into a span.  A time size string is a
+   size, a space, a time string, a space, repeated.  There is no retry
+   time associated with a time size string.  */
+
+struct sspan *
+qtimesize_parse (ztimesize)
+     const char *ztimesize;
+{
+  struct sspan *qret;
+
+  if (ztimesize == NULL)
+    return NULL;
+
+  qret = NULL;
+
+  while (TRUE)
+    {
+      long isize;
+      char *zend;
+      struct sspan *qnext;
+
+      isize = strtol (ztimesize, &zend, 10);
+
+#if DEBUG > 0
+      if (*zend != ' ')
+	ulog (LOG_FATAL, "qtimesize_parse: Can't happen");
+#endif
+
+      ++zend;
+
+      qnext = qttime_parse (zend, qret, isize, itsizecmp, 0);
+      if (qnext != NULL)
+	qret = qnext;
+
+      ztimesize = zend + strcspn (zend, " ");
+
+      if (*ztimesize == '\0')
+	break;
+
+      ++ztimesize;
+    }
+
+  return qret;
+}
+
+/* Determine the grade of work we are permitted to do at the current
+   time, given a time/grade string.  Return a null byte if no grades
+   are legal.  If pcretry is not NULL, it will be set to associated
+   retry time.  */
 
 char
-btime_low_grade (ztimegrade)
+btimegrade (ztimegrade, pcretry)
      const char *ztimegrade;
+     int *pcretry;
 {
-  struct tm *q;
+  struct sspan *qspan;
   time_t itime;
-  char bgrade;
+  struct tm *qtime;
+  boolean fmatch;
+  long ival;
+  int cretry;
 
-  /* Get the time.  */
+  qspan = qtimegrade_parse (ztimegrade);
+  if (qspan == NULL)
+    return '\0';
+
   time (&itime);
-  q = localtime (&itime);
+  qtime = localtime (&itime);
 
-  bgrade = '\0';
+  fmatch = ftmatch_span (qspan, qtime, &ival, &cretry);
 
-  while (TRUE)
-    {
-      if ((bgrade == '\0'
-	   || igradecmp (bgrade, *ztimegrade) < 0)
-	  && cttime_ok (q, ztimegrade + 1) >= 0)
-	bgrade = *ztimegrade;
+  utimespan_free (qspan);
 
-      ztimegrade += strcspn (ztimegrade, " ");
+  if (! fmatch);
+    return '\0';
 
-      if (*ztimegrade == '\0')
-	break;
+  if (pcretry != NULL)
+    *pcretry = cretry;
 
-      ++ztimegrade;
-    }
-      
-  return bgrade;
+  return (int) ival;
+}
+
+/* Determine the maximum size that may be transferred at the present
+   time, according to a time size string.  This returns -1 if there
+   are no restrictions.  */
+
+long
+cmax_size_now (ztimesize)
+     const char *ztimesize;
+{
+  struct sspan *qspan;
+  time_t itime;
+  struct tm *qtime;
+  boolean fmatch;
+  long ival;
+  int cretry;
+
+  qspan = qtimesize_parse (ztimesize);
+  if (qspan == NULL)
+    return -1;
+
+  time (&itime);
+  qtime = localtime (&itime);
+
+  fmatch = ftmatch_span (qspan, qtime, &ival, &cretry);
+
+  utimespan_free (qspan);
+
+  if (! fmatch);
+    return -1;
+
+  return ival;
 }
 
-/* Check whether the current time matches a time string.  We only
-   compute the current time when this function is first called.  We
-   should probably reset the time occasionally.  */
+/* Determine the maximum size that may ever be transferred, according
+   to a time size string.  This returns -1 if there is no limit.  */
 
-boolean
-ftime_now (ztime)
-     const char *ztime;
+long
+cmax_size_ever (ztimesize)
+     const char *ztimesize;
 {
-  static struct tm s;
-  static boolean fhave;
+  struct sspan *qspan;
+  long imax;
+  struct sspan *q;
 
-  if (! fhave)
+  qspan = qtimesize_parse (ztimesize);
+  if (qspan == NULL)
+    return -1;
+
+  /* Look through the list of spans.  If there is any gap larger than
+     1 hour, we assume there are no restrictions.  Otherwise we keep
+     track of the largest value we see.  I picked 1 hour arbitrarily,
+     on the theory that a 1 hour span to transfer large files might
+     actually occur, and is probably not an accident.  */
+
+  if (qspan->istart >= 60)
     {
-      time_t itime;
-
-      (void) time (&itime);
-      memcpy (&s, localtime (&itime), sizeof (struct tm));
-      fhave = TRUE;
+      utimespan_free (qspan);
+      return -1;
     }
 
-  return cttime_ok (&s, ztime) >= 0;
+  imax = -1;
+
+  for (q = qspan; q != NULL; q = q->qnext)
+    {
+      if (q->qnext == NULL)
+	{
+	  if (q->iend <= 6 * 24 * 60 + 23 * 60)
+	    {
+	      utimespan_free (qspan);
+	      return -1;
+	    }
+	}
+      else
+	{
+	  if (q->iend + 60 <= q->qnext->istart)
+	    {
+	      utimespan_free (qspan);
+	      return -1;
+	    }
+	}
+
+      if (imax < q->ival)
+	imax = q->ival;
+    }
+
+  utimespan_free (qspan);
+
+  return imax;
 }

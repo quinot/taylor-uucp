@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/02/27  05:40:54  ian
+   T. William Wells: detach from controlling terminal, handle signals safely
+
    Revision 1.22  1992/02/23  19:50:50  ian
    Handle READ and WRITE in Permissions correctly
 
@@ -102,6 +105,7 @@ char uuchk_rcsid[] = "$Id$";
 #include "port.h"
 #include "system.h"
 #include "sysdep.h"
+#include "uutime.h"
 
 /* External functions.  */
 extern int strcasecmp ();
@@ -120,6 +124,8 @@ static void ukshow_chat P((const struct schat_info *qchat,
 static void ukshow_size P((const char *z, boolean fcall, boolean flocal));
 static void ukshow_proto_params P((int c, struct sproto_param *pas,
 				   int cindent));
+static void ukshow_time P((const struct sspan *));
+static struct sspan *qcompress_span P((struct sspan *));
 
 /* Long getopt options.  */
 
@@ -230,8 +236,8 @@ ukshow (qsys)
   qlast = NULL;
   for (i = 0; qsys != NULL; qlast = qsys, qsys = qsys->qalternate, i++)
     {
-      char *z;
-      boolean fcall, fcalled, fend;
+      boolean fcall, fcalled;
+      struct sspan *qtime, *qspan;
 
       if (i != 0 || qsys->qalternate != NULL)
 	printf ("Alternate %d\n", i);
@@ -247,8 +253,14 @@ ukshow (qsys)
 	       || qsys->schat.zprogram != qlast->schat.zprogram
 	       || qsys->schat.zchat != qlast->schat.zchat);
 
-      if (fcall && strcasecmp (qsys->ztime, "zNever") == 0)
-	fcall = FALSE;
+      if (! fcall)
+	qtime = NULL;
+      else
+	{
+	  qtime = qtimegrade_parse (qsys->ztime);
+	  if (qtime == NULL)
+	    fcall = FALSE;
+	}
 
       /* If this is the first alternate, it can be used to accept
 	 a call.  Otherwise it can be used if it specifies a different
@@ -391,60 +403,61 @@ ukshow (qsys)
 		}
 	    }
 
-	  z = alloca (strlen (qsys->ztime) + 1);
-	  strcpy (z, qsys->ztime);
-	  do
+	  qtime = qcompress_span (qtime);
+
+	  for (qspan = qtime; qspan != NULL; qspan = qspan->qnext)
 	    {
-	      int c;
-
-	      c = strcspn (z, " ");
-	      fend = z[c] == '\0';
-	      z[c] = '\0';
-
-	      if (strcasecmp (z + 1, "never") != 0)
-		{
-		  char *zsemi;
-
-		  printf (" If there is ");
-		  if (*z == BGRADE_LOW)
-		    printf ("any work");
-		  else
-		    printf ("work of grade %c or higher", *z);
-		  zsemi = strchr (z, ';');
-		  if (zsemi != NULL)
-		    *zsemi = '\0';
-		  printf (" may call at time %s", z + 1);
-		  if (zsemi != NULL)
-		    printf (" (retry time %d)", atoi (zsemi + 1));
-		  printf ("\n");
-		}
-
-	      z += c + 1;
+	      printf (" ");
+	      ukshow_time (qspan);
+	      printf (" may call if ");
+	      if ((char) qspan->ival == BGRADE_LOW)
+		printf ("any work");
+	      else
+		printf ("work grade %c or higher", (char) qspan->ival);
+	      if (qspan->cretry != 0)
+		printf (" (retry %d)", qspan->cretry);
+	      printf ("\n");
 	    }
-	  while (! fend);
+
+	  utimespan_free (qtime);
 
 	  if (qsys->zcalltimegrade != NULL)
 	    {
-	      z = alloca (strlen (qsys->zcalltimegrade) + 1);
-	      strcpy (z, qsys->zcalltimegrade);
-	      do
+	      boolean fprint, fother;
+
+	      qtime = qtimegrade_parse (qsys->zcalltimegrade);
+	      qtime = qcompress_span (qtime);
+	      fprint = FALSE;
+	      fother = FALSE;
+	      if (qtime->istart != 0)
+		fother = TRUE;
+	      for (qspan = qtime; qspan != NULL; qspan = qspan->qnext)
 		{
-		  int c;
-
-		  c = strcspn (z, " ");
-		  fend = z[c] == '\0';
-		  z[c] = '\0';
-
-		  printf (" If calling at time %s will accept ", z + 1);
-		  if (*z == BGRADE_LOW)
-		    printf ("any work");
+		  if ((char) qspan->ival == BGRADE_LOW)
+		    {
+		      fother = TRUE;
+		      continue;
+		    }
+		  fprint = TRUE;
+		  printf (" ");
+		  ukshow_time (qspan);
+		  printf (" may accept work grade %c or higher\n",
+			  (char) qspan->ival);
+		  if (qspan->qnext == NULL)
+		    {
+		      if (qspan->iend != 7 * 24 * 60)
+			fother = TRUE;
+		    }
 		  else
-		    printf ("work of grade %c or higher", *z);
-		  printf ("\n");
-
-		  z += c + 1;
+		    {
+		      if (qspan->iend != qspan->qnext->istart)
+			fother = TRUE;
+		    }
 		}
-	      while (! fend);
+	      if (fprint && fother)
+		printf (" (At other times may accept any work)\n");
+
+	      utimespan_free (qtime);
 	    }
 	}
 
@@ -716,41 +729,41 @@ ukshow_size (zstring, fcall, flocal)
      boolean fcall;
      boolean flocal;
 {
-  char *z;
-  boolean fend;
+  struct sspan *qspan, *q;
+  boolean fother;
 
-  if (zstring == NULL)
+  qspan = qcompress_span (qtimesize_parse (zstring));
+  if (qspan == NULL)
     return;
 
-  z = (char *) alloca (sizeof (zstring) + 1);
-  strcpy (z, zstring);
-  do
+  printf (" If call%s the following applies to a %s request:\n",
+	  fcall ? "ing" : "ed", flocal ? "local" : "remote");
+
+  fother = FALSE;
+  if (qspan->istart >= 60)
+    fother = TRUE;
+
+  for (q = qspan; q != NULL; q = q->qnext)
     {
-      long isize;
-      int c;
-
-      isize = strtol (z, &z, 10);
-
-      ++z;
-      c = strcspn (z, " ");
-      fend = z[c] == '\0';
-      z[c] = '\0';
-
-      printf (" If call");
-      if (fcall)
-	printf ("ing");
+      printf ("  ");
+      ukshow_time (q);
+      printf (" may transfer files %ld bytes or smaller\n", q->ival);
+      if (q->qnext == NULL)
+	{
+	  if (q->iend <= 6 * 24 * 60 + 23 * 60)
+	    fother = TRUE;
+	}
       else
-	printf ("ed");
-      printf (" at time %s permit ", z);
-      if (flocal)
-	printf ("local");
-      else
-	printf ("remote");
-      printf ("ly request transfers of up to %ld bytes\n", isize);
-
-      z += c + 1;
+	{
+	  if (q->iend + 60 <= q->qnext->istart)
+	    fother = TRUE;
+	}
     }
-  while (! fend);
+
+  if (fother)
+    printf ("  (At other times may send files of any size)\n");
+
+  utimespan_free (qspan);
 }
 
 /* Show protocol parameters.  */
@@ -784,4 +797,68 @@ ukshow_proto_params (c, pas, cindent)
 	  printf ("\n");
 	}
     }
+}
+
+/* Display a time span.  */
+
+static void
+ukshow_time (q)
+     const struct sspan *q;
+{
+  int idaystart, idayend;
+  int ihourstart, ihourend;
+  int iminutestart, iminuteend;
+  const char * const zdays = "Sun\0Mon\0Tue\0Wed\0Thu\0Fri\0Sat\0Sun";
+
+  if (q->istart == 0 && q->iend == 7 * 24 * 60)
+    {
+      printf ("At any time");
+      return;
+    }
+
+  idaystart = q->istart / (24 * 60);
+  ihourstart = (q->istart % (24 * 60)) / 60;
+  iminutestart = q->istart % 60;
+  idayend = q->iend / (24 * 60);
+  ihourend = (q->iend % (24 * 60)) / 60;
+  iminuteend = q->iend % 60;
+
+  if (idaystart == idayend)
+    printf ("%s from %02d:%02d to %02d:%02d", zdays + idaystart * 4,
+	    ihourstart, iminutestart, ihourend, iminuteend);
+  else
+    printf ("From %s %02d:%02d to %s %02d:%02d",
+	    zdays + idaystart * 4, ihourstart, iminutestart,
+	    zdays + idayend * 4, ihourend, iminuteend);
+}
+
+/* Compress a time span by merging any two adjacent spans with
+   identical values.  This isn't necessary for uucico, but it looks
+   nicer when printed out.  */
+
+static struct sspan *
+qcompress_span (qlist)
+     struct sspan *qlist;
+{
+  struct sspan **pq;
+
+  pq = &qlist;
+  while (*pq != NULL)
+    {
+      if ((*pq)->qnext != NULL
+	  && (*pq)->iend == (*pq)->qnext->istart
+	  && (*pq)->ival == (*pq)->qnext->ival)
+	{
+	  struct sspan *qfree;
+
+	  qfree = (*pq)->qnext;
+	  (*pq)->qnext = qfree->qnext;
+	  (*pq)->iend = qfree->iend;
+	  xfree ((pointer) qfree);
+	}
+      else
+	pq = &(*pq)->qnext;
+    }
+
+  return qlist;
 }

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.46  1992/03/04  01:40:51  ian
+   Thomas Fischer: tweaked a bit for the NeXT
+
    Revision 1.45  1992/03/04  00:36:44  ian
    Michael Richardson: better chat script debugging
 
@@ -756,26 +759,6 @@ extern enum tcmdtabret tprocess_one_cmd P((int cargs, char **azargs,
 /* Translate an unknown system name into something acceptable for the
    spool directory stuff.  */
 extern const char *ztranslate_system P((const char *zsystem));     
-
-/* Check whether the we may call a system now if we have work of a
-   given grade.  This returns the retry time, which may be zero to
-   indicate use of the default retry backoff, or -1 if the system may
-   not be called.  */
-extern int ccheck_time P((int bgrade, const char *ztime));
-
-/* Get the lowest grade of work we are permitted to do at the current
-   time according to a time string.  Returns a null byte if no grades
-   are legal.  */
-extern char btime_low_grade P((const char *ztime));     
-
-/* Check whether the current time matches a time string.  This
-   routine actually doesn't use the current time, but computes
-   a time when it is first called and uses it thereafter.  */
-extern boolean ftime_now P((const char *ztime));
-
-/* Add a new timetable.  This takes control over both its arguments;
-   they must not be freed up or on the stack.  */
-extern void uaddtimetable P((const char *zname, const char *ztime));
 
 /* Check login name and password.  */
 extern boolean fcheck_login P((const char *zuser, const char *zpass));

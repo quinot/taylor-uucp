@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.65  1992/03/04  15:05:51  ian
+   Michael Haberler: some systems send \n after Shere
+
    Revision 1.64  1992/03/04  00:36:44  ian
    Michael Richardson: better chat script debugging
 
@@ -230,6 +233,7 @@ char uucico_rcsid[] = "$Id$";
 #include "port.h"
 #include "prot.h"
 #include "system.h"
+#include "uutime.h"
 
 /* The program name.  */
 char abProgram[] = "uucico";
@@ -293,11 +297,6 @@ static boolean fok_to_receive P((const char *zto, boolean flocal,
 static boolean frequest_ok P((boolean flocal, boolean fcaller,
 			      const struct ssysteminfo *qsys,
 			      const char *zuser));
-static long cmax_size P((const struct ssysteminfo *qsys,
-			 boolean flocal, boolean fcaller, boolean fsend));
-static long cmax_size_ever P((const struct ssysteminfo *qsys,
-			      boolean flocal, boolean fsend));
-static long cmax_size_string P((const char *z));
 static boolean fsend_uucp_cmd P((const char *z));
 static const char *zget_uucp_cmd P((boolean frequired));
 static const char *zget_typed_line P((void));
@@ -801,11 +800,13 @@ static boolean fcall (qsys, qport, fforce, bgrade)
 
   do
     {
-      const struct ssysteminfo *qnext;
+      int blowgrade;
       int cretry;
+      const struct ssysteminfo *qnext;
 
-      cretry = ccheck_time (bgrade, qsys->ztime);
-      if (cretry >= 0)
+      blowgrade = btimegrade (qsys->ztime, &cretry);
+      if (blowgrade != '\0'
+	  && igradecmp (bgrade, blowgrade) <= 0)
 	{
 	  boolean fret, fcalled;
 	  struct sport sportinfo;
@@ -1005,8 +1006,9 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       bgrade = '\0';
     else
       {
-	bgrade = btime_low_grade (qsys->zcalltimegrade);
-	/* A \0 in this case means that no restrictions have been made.  */
+	bgrade = btimegrade (qsys->zcalltimegrade, (int *) NULL);
+	/* A \0 in this case means that no restrictions have been
+	   made.  */
       }
 
     if (qsys->zlocalname != NULL)
@@ -2004,7 +2006,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
      boolean fnew;
 {
   boolean fcaller, fmasterdone, fnowork;
-  long cmax;
+  const char *zlocal_size, *zremote_size;
+  long clocal_size, cremote_size, cmax_ever;
 
   fcaller = fmaster;
 
@@ -2021,7 +2024,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
      function so that we can recompute if time has passed.  */
 
   if (fcaller)
-    bgrade = btime_low_grade (qsys->ztime);
+    bgrade = btimegrade (qsys->ztime, (int *) NULL);
 
   if (bgrade == '\0')
     fnowork = TRUE;
@@ -2031,6 +2034,26 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	return FALSE;
       fnowork = FALSE;
     }
+
+  /* Determine the maximum sizes we can send and receive.  */
+
+  if (fcaller)
+    {
+      zlocal_size = qsys->zcall_local_size;
+      zremote_size = qsys->zcall_remote_size;
+    }
+  else
+    {
+      zlocal_size = qsys->zcalled_local_size;
+      zremote_size = qsys->zcalled_remote_size;
+    }
+
+  clocal_size = cmax_size_now (zlocal_size);
+  cremote_size = cmax_size_now (zremote_size);
+  cmax_ever = (long) -2;
+
+  /* Loop while we have local commands to execute and while we receive
+     remote commands.  */
 
   while (TRUE)
     {
@@ -2147,11 +2170,20 @@ fuucp (fmaster, qsys, bgrade, fnew)
 
 	      if (s.cbytes != -1)
 		{
-		  cmax = cmax_size (qsys, TRUE, fcaller, TRUE);
-		  if (cmax != -1 && cmax < s.cbytes)
+		  if (clocal_size != -1 && clocal_size < s.cbytes)
 		    {
-		      cmax = cmax_size_ever (qsys, TRUE, TRUE);
-		      if (cmax == -1 || cmax >= s.cbytes)
+		      if (cmax_ever == -2)
+			{
+			  long c1, c2;
+
+			  c1 = cmax_size_ever (qsys->zcall_local_size);
+			  c2 = cmax_size_ever (qsys->zcalled_local_size);
+			  if (c1 > c2)
+			    cmax_ever = c1;
+			  else
+			    cmax_ever = c2;
+			}
+		      if (cmax_ever == -1 || cmax_ever >= s.cbytes)
 			ulog (LOG_ERROR, "File %s is too large to send now",
 			      s.zfrom);
 		      else
@@ -2291,10 +2323,9 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		    s.cbytes = 0;
 		}
 
-	      cmax = cmax_size (qsys, TRUE, fcaller, FALSE);
-	      if (cmax != -1
-		  && (s.cbytes == -1 || cmax < s.cbytes))
-		s.cbytes = cmax;
+	      if (clocal_size != -1
+		  && (s.cbytes == -1 || clocal_size < s.cbytes))
+		s.cbytes = clocal_size;
 
 	      ulog (LOG_NORMAL, "Receiving %s", zuse);
 	      s.zto = zuse;
@@ -2446,10 +2477,9 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		    cbytes = 0;
 		}
 	      
-	      cmax = cmax_size (qsys, FALSE, fcaller, FALSE);
-	      if (cmax != -1
-		  && (cbytes == -1 || cmax < cbytes))
-		cbytes = cmax;
+	      if (cremote_size != -1
+		  && (cbytes == -1 || cremote_size < cbytes))
+		cbytes = cremote_size;
 
 	      /* If the number of bytes we are prepared to receive
 		 is less than the file size, we must fail.  */
@@ -2516,14 +2546,11 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		  break;
 		}
 
-	      /* Get the maximum size we are prepared to send.  */
-	      cmax = cmax_size (qsys, FALSE, fcaller, TRUE);
-
 	      /* If the file is larger than the amount of space
 		 the other side reported, we can't send it.  */
 	      if (cbytes != -1
 		  && ((s.cbytes != -1 && s.cbytes < cbytes)
-		      || (cmax != -1 && cmax < cbytes)))
+		      || (cremote_size != -1 && cremote_size < cbytes)))
 		{
 		  ulog (LOG_ERROR, "%s is too large to send", zuse);
 		  if (! ftransfer_fail ('R', FAILURE_SIZE))
@@ -2570,7 +2597,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		 We recheck the grades allowed at this time, since a
 		 lot of time may have passed.  */
 	      if (fcaller)
-		bgrade = btime_low_grade (qsys->ztime);
+		bgrade = btimegrade (qsys->ztime, (int *) NULL);
 	      if (bgrade != '\0'
 		  && fsysdep_has_work (qsys, &bhave_grade)
 		  && igradecmp (bgrade, bhave_grade) >= 0)
@@ -2587,6 +2614,11 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		  if (! fhangup_reply (FALSE))
 		      return FALSE;
 		  fmaster = TRUE;
+
+		  /* Recalculate the maximum sizes we can send, since
+		     the time might have changed significantly.  */
+		  clocal_size = cmax_size_now (zlocal_size);
+		  cremote_size = cmax_size_now (zremote_size);
 		}
 	      else
 		{
@@ -2893,150 +2925,6 @@ frequest_ok (flocal, fcaller, qsys, zuser)
       else
 	return qsys->fcalled_request;
     }
-}
-
-/* Get the maximum size we are permitted to transfer now.  */
-
-/*ARGSUSED*/
-static long
-cmax_size (qsys, flocal, fcaller, fsend)
-     const struct ssysteminfo *qsys;
-     boolean flocal;
-     boolean fcaller;
-     boolean fsend;
-{
-  const char *z;
-  char *zcopy;
-  char *znext;
-  long cret;
-
-  if (flocal)
-    {
-      if (fcaller)
-	z = qsys->zcall_local_size;
-      else
-	z = qsys->zcalled_local_size;
-    }
-  else
-    {
-      if (fcaller)
-	z = qsys->zcall_remote_size;
-      else
-	z = qsys->zcalled_remote_size;
-    }
-
-  if (z == NULL)
-    return (long) -1;
-
-  zcopy = (char *) alloca (strlen (z) + 1);
-  strcpy (zcopy, z);
-
-  znext = strtok (zcopy, " ");
-  cret = 0;
-
-  while (znext != NULL)
-    {
-      char *ztime;
-
-      ztime = strtok ((char *) NULL, " ");
-#if DEBUG > 0
-      if (ztime == NULL)
-	ulog (LOG_FATAL, "cmax_size: Can't happen");
-#endif
-      if (ftime_now (ztime))
-	{
-	  long c;
-
-	  c = strtol (znext, (char **) NULL, 10);
-	  if (c > cret)
-	    cret = c;
-	}
-      znext = strtok ((char *) NULL, " ");
-    }
-
-  return cret;
-}
-	  
-/* Get the maximum size we are ever permitted to transfer.  */
-
-/*ARGSUSED*/
-static long
-cmax_size_ever (qsys, flocal, fsend)
-     const struct ssysteminfo *qsys;
-     boolean flocal;
-     boolean fsend;
-{
-  const char *z1, *z2;
-  long cret;
-  long c;
-
-  if (flocal)
-    {
-      z1 = qsys->zcall_local_size;
-      z2 = qsys->zcalled_local_size;
-    }
-  else
-    {
-      z1 = qsys->zcall_remote_size;
-      z2 = qsys->zcalled_remote_size;
-    }
-
-  cret = (long) -1;
-
-  if (z1 != NULL)
-    {
-      c = cmax_size_string (z1);
-      if (c > cret)
-	cret = c;
-    }
-
-  if (z2 != NULL)
-    {
-      c = cmax_size_string (z2);
-      if (c > cret)
-	cret = c;
-    }
-
-  return cret;
-}
-
-/* Get the maximum size which can be found in a time size string.  */
-
-static long
-cmax_size_string (z)
-     const char *z;
-{
-  char *zcopy;
-  char *znext;
-  long cret;
-
-  zcopy = (char *) alloca (strlen (z) + 1);
-  strcpy (zcopy, z);
-
-  znext = strtok (zcopy, " ");
-  cret = 0;
-
-  while (znext != NULL)
-    {
-      char *ztime;
-      long c;
-
-      ztime = strtok ((char *) NULL, " ");
-#if DEBUG > 0
-      if (ztime == NULL)
-	ulog (LOG_FATAL, "cmax_size_string: Can't happen");
-#endif
-      /* We probably should check whether the time string can
-	 ever occur.  */
-
-      c = strtol (znext, (char **) NULL, 10);
-      if (c > cret)
-	cret = c;
-
-      znext = strtok ((char *) NULL, " ");
-    }
-
-  return cret;
 }
 
 /* Send a string to the other system beginning with a DLE
