@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1992/04/14  17:34:03  ian
+   Zacharias Beckman: minor touchups for NeXT
+
    Revision 1.8  1992/04/01  21:58:35  ian
    Added CLOSE_LOGFILES configuration parameter
 
@@ -171,16 +174,19 @@
 /* If you use other programs that also lock devices, such as cu or
    uugetty, the other programs and UUCP must agree on whether a device
    is locked.  This is typically done by creating a lock file in a
-   specific directory.  The lock file is named LCK.. followed by the
-   name of the device (UUCP and some versions of cu also lock systems
-   this way).  If the LOCKDIR macro is defined, these lock files will
-   be placed in the named directory; otherwise they will be placed in
-   the default spool directory.  On some BNU systems the lock files
-   are in /etc/locks; on others they may be in /usr/spool/locks.  On
-   the NeXT they are in /usr/spool/uucp/LCK.  */
+   specific directory; the lock files are generally named
+   LCK..something or LK.something.  The LOCKDIR macro specifies which
+   directory to put these lock files in.  On older systems this is
+   generally /usr/spool/uucp.  On some BNU systems the lock files are
+   in /etc/locks; on others they may be in /usr/spool/locks.  On the
+   NeXT they are in /usr/spool/uucp/LCK.  If no other programs use
+   devices, then it doesn't really matter what you set LOCKDIR to, but
+   you must set it to some existing directory.  */
+#define LOCKDIR "/usr/spool/uucp"
 /* #define LOCKDIR "/etc/locks" */
 /* #define LOCKDIR "/usr/spool/locks" */
 /* #define LOCKDIR "/usr/spool/uucp/LCK" */
+/* #define LOCKDIR SPOOLDIR */
 
 /* You must also specify the format of the lock files by setting
    exactly one of the following macros to 1.  Check an existing lock
