@@ -467,6 +467,11 @@ extern boolean fsysdep_change_mode P((const char *zfile,
    closing the original file, removing it and reopening it.  This
    should return FALSE on error.  */
 extern openfile_t esysdep_truncate P((openfile_t e, const char *zname));
+
+/* Sync a file to disk.  If this fails it should log an error using
+   the zmsg parameter, and return FALSE.  This is controlled by the
+   FSYNC_ON_CLOSE macro in policy.h.  */
+extern boolean fsysdep_sync P((openfile_t e, const char *zmsg));
 
 /* It is possible for the acknowledgement of a received file to be
    lost.  The sending system will then now know that the file was
