@@ -1,7 +1,7 @@
 /* uuxqt.c
    Run uux commands.
 
-   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -20,7 +20,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    The author of the program may be contacted at ian@airs.com or
-   c/o Cygnus Support, Building 200, 1 Kendall Square, Cambridge, MA 02139.
+   c/o Cygnus Support, 48 Grove Street, Somerville, MA 02144.
    */
 
 #include "uucp.h"
@@ -59,6 +59,8 @@ static void uqdo_xqt_file P((pointer puuconf, const char *zfile,
 			     const char *zlocalname,
 			     const char *zcmd, boolean *pfprocessed));
 static void uqcleanup P((const char *zfile, int iflags));
+static int isave_files P((const struct uuconf_system *, const char *zmail,
+			  const char *zfile, int iclean));
 static boolean fqforward P((const char *zfile, char **pzallowed,
 			    const char *zlog, const char *zmail));
 
@@ -1072,6 +1074,8 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	      (void) fsysdep_mail (zmail, "Execution failed", i, az);
 	    }
 
+	  iclean = isave_files (qsys, zmail, zfile, iclean);
+
 	  uqcleanup (zfile, iclean);
 	  return;
 	}
@@ -1117,6 +1121,8 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
 	      (void) fsysdep_mail (zmail, "Execution failed", i, az);
 	    }
+
+	  iclean = isave_files (qsys, zmail, zfile, iclean);
 
 	  uqcleanup (zfile, iclean);
 	  return;
@@ -1345,6 +1351,11 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     {
       ubuffree (zfullcmd);
 
+      (void) fsysdep_move_uuxqt_files (cQfiles, (const char **) azQfiles,
+				       (const char **) azQfiles_to,
+				       FALSE, iQlock_seq,
+				       (char **) NULL);
+
       if (ftemp)
 	{
 	  ulog (LOG_NORMAL, "Will retry later (%s)", zbase);
@@ -1355,10 +1366,6 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	      (void) remove (zerror);
 	      ubuffree (zerror);
 	    }
-	  (void) fsysdep_move_uuxqt_files (cQfiles, (const char **) azQfiles,
-					   (const char **) azQfiles_to,
-					   FALSE, iQlock_seq,
-					   (char **) NULL);
 	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
 	  *pfprocessed = FALSE;
 	  return;
@@ -1424,6 +1431,8 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 
       if (qoutsys != NULL)
 	(void) remove (zoutput);
+
+      iclean = isave_files (qsys, zmail, zfile, iclean);
     }
   else
     {
@@ -1484,6 +1493,104 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
     }
 
   uqcleanup (zfile, iclean);
+}
+
+/* If we have enough disk space, save the data files so that the UUCP
+   administrator can examine them.  Send a mail message listing the
+   saved files.  */
+
+static int
+isave_files (qsys, zmail, zfile, iclean)
+     const struct uuconf_system *qsys;
+     const char *zmail;
+     const char *zfile;
+     int iclean;
+{
+  long cspace;
+  char *zsavecmd;
+  char **pzsave;
+  int c;
+  int ifile;
+  const char **pz;
+  int i;
+
+  /* Save the files if there is 1.5 times the amount of required free
+     space.  */
+  cspace = csysdep_bytes_free (zfile);
+  if (cspace == -1)
+    cspace = FREE_SPACE_DELTA;
+  cspace -= qsys->uuconf_cfree_space + qsys->uuconf_cfree_space / 2;
+  if (cspace < 0)
+    return iclean;
+
+  zsavecmd = zsysdep_save_failed_file (zfile);
+  if (zsavecmd == NULL)
+    return iclean;
+
+  c = 1;
+
+  pzsave = (char **) xmalloc (cQfiles * sizeof (char *));
+  for (ifile = 0; ifile < cQfiles; ifile++)
+    {
+      if (azQfiles[ifile] != NULL)
+	{
+	  ++c;
+	  pzsave[ifile] = zsysdep_save_failed_file (azQfiles[ifile]);
+	  if (pzsave[ifile] == NULL)
+	    {
+	      ubuffree (zsavecmd);
+	      for (i = 0; i < ifile; i++)
+		if (azQfiles[i] != NULL)
+		  ubuffree (pzsave[i]);
+	      xfree ((pointer) pzsave);
+	      return iclean;
+	    }
+	}
+    }
+
+  pz = (const char **) xmalloc ((20 + 2 * cQfiles) * sizeof (char *));
+  i = 0;
+
+  pz[i++] = "A UUCP execution request failed:\n\t";
+  pz[i++] = zQcmd;
+  if (zmail != NULL)
+    {
+      pz[i++] = "\nThe request was made by\n\t";
+      pz[i++] = zmail;
+    }
+  else
+    {
+      pz[i++] = "\nThe request came from system\n\t";
+      pz[i++] = qsys->uuconf_zname;
+    }
+  if (c == 1)
+    pz[i++] = "\nThe following file has been saved:\n\t";
+  else
+    pz[i++] = "\nThe following files have been saved:\n\t";
+  pz[i++] = zsavecmd;
+  for (ifile = 0; ifile < cQfiles; ifile++)
+    {
+      if (azQfiles[ifile] != NULL)
+	{
+	  pz[i++] = "\n\t";
+	  pz[i++] = pzsave[ifile];
+	}
+    }
+  pz[i++] = "\n";
+
+  (void) fsysdep_mail (OWNER,
+		       "UUCP execution files saved after failure",
+		       i, pz);
+
+  xfree ((pointer) pz);
+
+  ubuffree (zsavecmd);
+  for (ifile = 0; ifile < cQfiles; ifile++)
+    if (azQfiles[ifile] != NULL)
+      ubuffree (pzsave[ifile]);
+  xfree ((pointer) pzsave);
+
+  return iclean &~ (REMOVE_FILE | REMOVE_NEEDED);
 }
 
 /* Clean up the results of uqdo_xqt_file.  */
