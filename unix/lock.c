@@ -317,6 +317,7 @@ fsdo_lock (zlock, fspooldir, pferr)
 	  (void) close (o);
 	  o = -1;
 	  (void) remove (zpath);
+	  fret = TRUE;
 	  continue;
 	}
 
