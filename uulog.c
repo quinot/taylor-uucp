@@ -42,15 +42,27 @@ const char uulog_rcsid[] = "$Id$";
    is a very useful program anyhow.  It only takes a single -s and/or
    -u switch.  When using HAVE_HDB_LOGGING it requires a system.  */
 
-/* The program name.  */
-char abProgram[] = "uulog";
-
 /* Local functions.  */
 
 static void ulusage P((void));
+static void ulhelp P((void));
 
 /* Long getopt options.  */
-static const struct option asLlongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asLlongopts[] =
+{
+  { "debuglog", no_argument, NULL, 'D' },
+  { "follow", optional_argument, NULL, 2 },
+  { "lines", required_argument, NULL, 'n' },
+  { "system", required_argument, NULL, 's' },
+  { "statslog", no_argument, NULL, 'S' },
+  { "user", required_argument, NULL, 'u' },
+  { "uuxqtlog", no_argument, NULL, 'x' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'X' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
@@ -89,6 +101,8 @@ main (argc, argv)
   char *zline;
   size_t cline;
 
+  zProgram = argv[0];
+
   /* Look for a straight number argument, and convert it to -n before
      passing the arguments to getopt.  */
   for (i = 0; i < argc; i++)
@@ -107,7 +121,7 @@ main (argc, argv)
 	}
     }
 
-  while ((iopt = getopt_long (argc, argv, "Df:FI:n:s:Su:xX:", asLlongopts,
+  while ((iopt = getopt_long (argc, argv, "Df:FI:n:s:Su:vxX:", asLlongopts,
 			      (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -170,13 +184,37 @@ main (argc, argv)
 #endif
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 2:
+	  /* --follow.  */
+	  fforever = TRUE;
+	  if (cshow == 0)
+	    cshow = 10;
+	  if (optarg != NULL)
+	    zsystem = optarg;
+	  break;
+
+	case 1:
+	  /* --help.  */
+	  ulhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  ulusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -421,31 +459,50 @@ ulusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uulog [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n");
+	   "Usage: %s [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n",
+	   zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
+  exit (EXIT_FAILURE);
+}
+
+/* Print a help message.  */
+
+static void
+ulhelp ()
+{
   fprintf (stderr,
-	   " -n: show given number of lines from end of log\n");
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	   VERSION);
   fprintf (stderr,
-	   " -s: print entries for named system\n");
+	   "Usage: %s [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n",
+	   zProgram);
   fprintf (stderr,
-	   " -f: follow entries for named system\n");
+	   " -n,--lines: show given number of lines from end of log\n");
   fprintf (stderr,
-	   " -u: print entries for named user\n");
+	   " -s,--system: print entries for named system\n");
+  fprintf (stderr,
+	   " -f system,--follow=system: follow entries for named system\n");
+  fprintf (stderr,
+	   " -u,--user user: print entries for named user\n");
 #if HAVE_HDB_LOGGING
   fprintf (stderr,
-	   " -x: print uuxqt log rather than uucico log\n");
+	   " -x,--uuxqt: print uuxqt log rather than uucico log\n");
 #else
   fprintf (stderr,
-	   " -F: follow entries for any system\n");
+	   " -F,--follow: follow entries for any system\n");
 #endif
   fprintf (stderr,
-	   " -S: show statistics file\n");
+	   " -S,--statslog: show statistics file\n");
   fprintf (stderr,
-	   " -D: show debugging file\n");
+	   " -D,--debuglog: show debugging file\n");
   fprintf (stderr,
-	   " -X debug: Set debugging level (0 for none, 9 is max)\n");
+	   " -X,--debug debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
+	   " -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  exit (EXIT_FAILURE);
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help and exit\n");
 }
