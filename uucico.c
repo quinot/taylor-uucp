@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.89  1992/03/28  20:52:11  ian
+   Petri Helenius: must dump controlling terminal when going to next alternate
+
    Revision 1.88  1992/03/28  20:31:55  ian
    Franc,ois Pinard: allow a name to be given to an alternate
 
@@ -347,8 +350,8 @@ static boolean fdo_call P((const struct ssysteminfo *qsys,
 			   struct sstatus *qstat, int cretry,
 			   boolean *pfcalled, struct sport *quse));
 static boolean fcall_failed P((const struct ssysteminfo *qsys,
-			       enum tstatus twhy, struct sstatus *qstat,
-			       int cretry));
+			       enum tstatus_type twhy,
+			       struct sstatus *qstat, int cretry));
 static boolean flogin_prompt P((struct sport *qport));
 static boolean faccept_call P((const char *zlogin, struct sport *qport,
 			       const struct ssysteminfo **pqsys));
@@ -1409,7 +1412,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 static boolean
 fcall_failed (qsys, twhy, qstat, cretry)
      const struct ssysteminfo *qsys;
-     enum tstatus twhy;
+     enum tstatus_type twhy;
      struct sstatus *qstat;
      int cretry;
 {

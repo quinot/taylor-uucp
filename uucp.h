@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.64  1992/03/28  20:31:55  ian
+   Franc,ois Pinard: allow a name to be given to an alternate
+
    Revision 1.63  1992/03/28  04:23:46  ian
    Gerben Wierda: don't always declare bzero
 
@@ -689,11 +692,11 @@ enum tlog
 #endif
 };
 
-/* The tstatus enumeration holds the kinds of status information we
-   put in the status file.  The order of entries here corresponds to
-   the order of entries in the azStatus array.  */
+/* The tstatus_type enumeration holds the kinds of status information
+   we put in the status file.  The order of entries here corresponds
+   to the order of entries in the azStatus array.  */
 
-enum tstatus
+enum tstatus_type
 {
   /* Conversation complete.  */
   STATUS_COMPLETE,
@@ -724,7 +727,7 @@ extern const char *azStatus[];
 struct sstatus
 {
   /* Current status of conversation.  */
-  enum tstatus ttype;
+  enum tstatus_type ttype;
   /* Number of failed retries.  */
   int cretries;
   /* Time of last call in seconds since epoch (determined by
