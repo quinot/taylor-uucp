@@ -16,7 +16,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 @end format
 
-This file documents Taylor UUCP, version 1.06.
+This file documents Taylor UUCP, version 1.07.
 
 Copyright @copyright{} 1992, 1993, 1994, 1995, 2002 Ian Lance Taylor
 
@@ -45,7 +45,7 @@ translation approved by the author instead of in the original English.
 
 @titlepage
 @title Taylor UUCP
-@subtitle Version 1.06
+@subtitle Version 1.07
 @author Ian Lance Taylor @code{<ian@@airs.com>}
 
 @page
@@ -71,9 +71,9 @@ translation approved by the author instead of in the original English.
 @end titlepage
 
 @node Top, Copying, (dir), (dir)
-@top Taylor UUCP 1.06
+@top Taylor UUCP 1.07
 
-This is the documentation for the Taylor UUCP package, version 1.06.
+This is the documentation for the Taylor UUCP package, version 1.07.
 The programs were written by Ian Lance Taylor.  The author can be
 reached at @code{<ian@@airs.com>}.
 

@@ -1,5 +1,7 @@
 2002-03-05  Ian Lance Taylor  <ian@zembu.com>
 
+	* uucp.texi: Update version number to 1.07.
+
 	* cu.1: Remove FILES section.  Update version number to 1.07.
 	* uucp.1: Likewise.
 	* uustat.1: Likewise.
