@@ -123,6 +123,10 @@ const char serial_rcsid[] = "$Id$";
 #include <sys/dev.h>
 #endif
 
+#if HAVE_SYS_TERMIOX_H
+#include <sys/termiox.h>
+#endif
+
 /* Get definitions for both O_NONBLOCK and O_NDELAY.  */
 #ifndef O_NDELAY
 #ifdef FNDELAY
@@ -1823,9 +1827,9 @@ fsmodem_carrier (qconn, fcarrier)
 /* Tell the port to use hardware flow control.  There is no standard
    mechanism for controlling this.  This implementation supports
    CRTSCTS on SunOS, RTS/CTSFLOW on 386(ish) unix, CTSCD on the 3b1,
-   CCTS_OFLOW/CRTS_IFLOW on BSDI, TXADDCD/TXDELCD on AIX, and IRTS on
-   NCR Tower.  If you know how to do it on other systems, please
-   implement it and send me the patches.  */
+   CCTS_OFLOW/CRTS_IFLOW on BSDI, TXADDCD/TXDELCD on AIX, IRTS on NCR
+   Tower, and TCGETX/TCSETX on HP/UX.  If you know how to do it on
+   other systems, please implement it and send me the patches.  */
 
 static boolean
 fsserial_hardflow (qconn, fhardflow)
@@ -1895,6 +1899,29 @@ fsserial_hardflow (qconn, fhardflow)
 		strerror (errno));
 	  return FALSE;
 	}
+#if HAVE_SYS_TERMIOX
+#ifdef TCGETX
+      {
+	struct termiox tx;
+
+	if (ioctl (q->o, TCGETX, &tx) < 0)
+	  {
+	    ulog (LOG_ERROR,
+		  "Can't enable hardware flow control: ioctl (TCGETX): %s",
+		  strerror (errno));
+	    return FALSE;
+	  }
+	tx.x_hflag |= RTSXOFF | CTSXON;
+	if (ioctl (q->o, TCSETX, &tx) < 0)
+	  {
+	    ulog (LOG_ERROR,
+		  "Can't enable hardware flow control: ioctl (TCSETX): %s",
+		  strerror (errno));
+	    return FALSE;
+	  }
+      }
+#endif /* TCGETX */
+#endif /* HAVE_SYS_TERMIOX */
 #endif /* ! HAVE_TXADDCD */
     }
   else
@@ -1928,6 +1955,29 @@ fsserial_hardflow (qconn, fhardflow)
 		strerror (errno));
 	  return FALSE;
 	}
+#if HAVE_SYS_TERMIOX
+#ifdef TCGETX
+      {
+	struct termiox tx;
+
+	if (ioctl (q->o, TCGETX, &tx) < 0)
+	  {
+	    ulog (LOG_ERROR,
+		  "Can't disable hardware flow control: ioctl (TCGETX): %s",
+		  strerror (errno));
+	    return FALSE;
+	  }
+	tx.x_hflag &=~ (RTSXOFF | CTSXON);
+	if (ioctl (q->o, TCSETX, &tx) < 0)
+	  {
+	    ulog (LOG_ERROR,
+		  "Can't disable hardware flow control: ioctl (TCSETX): %s",
+		  strerror (errno));
+	    return FALSE;
+	  }
+      }
+#endif /* TCGETX */
+#endif /* HAVE_SYS_TERMIOX */
 #endif /* ! HAVE_TXADDCD */
     }
 #endif /* HAVE_HARDFLOW */

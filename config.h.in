@@ -306,6 +306,9 @@
 /* Define if you have the <sys/statvfs.h> header file.  */
 #undef HAVE_SYS_STATVFS_H
 
+/* Define if you have the <sys/termiox.h> header file.  */
+#undef HAVE_SYS_TERMIOX_H
+
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
 

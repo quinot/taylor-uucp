@@ -101,7 +101,7 @@ AC_CHECK_HEADERS(fcntl.h sys/file.h sys/time.h sys/times.h libc.h)
 AC_CHECK_HEADERS(sysexits.h poll.h tiuser.h xti.h sys/tli.h stropts.h ftw.h)
 AC_CHECK_HEADERS(glob.h sys/param.h sys/types.tcp.h sys/mount.h sys/vfs.h)
 AC_CHECK_HEADERS(sys/filsys.h sys/statfs.h sys/dustat.h sys/fs_types.h ustat.h)
-AC_CHECK_HEADERS(sys/statvfs.h)
+AC_CHECK_HEADERS(sys/statvfs.h sys/termiox.h)
 dnl
 # Under Next 3.2 <dirent.h> apparently does not define struct dirent
 # by default.

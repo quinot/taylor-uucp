@@ -1,5 +1,12 @@
 2002-02-16  Ian Lance Taylor  <ian@airs.com>
 
+	Raymond Nijssen: Support for hardware flow control on HP/UX.
+	* unix/serial.c: Include <sys/termiox.h> if the system has it.
+	(fsserial_hardflow): If HAVE_SYS_TERMIOX_H, use TCGETX/TCSETX to
+	enable and disable hardware flow control.
+	* configure.in: Check for existence of <sys/termiox.h>.
+	* configure, config.h.in: Rebuild.
+
 	* uucp.c (main): Check for unsupported whitespace in notification
 	address.
 	* uux.c (main): Likewise.
