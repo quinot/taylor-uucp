@@ -7,7 +7,7 @@ pointer
 memcpy (ptoarg, pfromarg, c)
      pointer ptoarg;
      constpointer pfromarg;
-     int c;
+     size_t c;
 {
   char *pto = (char *) ptoarg;
   const char *pfrom = (const char *) pfromarg;

@@ -7,7 +7,7 @@ int
 memcmp (p1arg, p2arg, c)
      constpointer p1arg;
      constpointer p2arg;
-     int c;
+     size_t c;
 {
   const char *p1 = (const char *) p1arg;
   const char *p2 = (const char *) p2arg;
