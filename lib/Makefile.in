@@ -34,7 +34,7 @@ realclean: distclean
 
 libuucp.a: $(OBJS)
 	rm -f libuucp.a
-	ar rc libuucp.a $(OBJS)
+	ar qc libuucp.a $(OBJS)
 	-$(RANLIB) libuucp.a
 
 .c.o:

@@ -41,7 +41,7 @@ all: libuuconf.a
 
 libuuconf.a: $(OBJS)
 	rm -f libuuconf.a
-	ar rc libuuconf.a $(OBJS)
+	ar qc libuuconf.a $(OBJS)
 	-$(RANLIB) libuuconf.a
 
 .c.o:

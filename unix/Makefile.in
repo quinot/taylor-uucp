@@ -44,7 +44,7 @@ realclean: distclean
 
 libunix.a: $(OBJS)
 	rm -f libunix.a
-	ar rc libunix.a $(OBJS)
+	ar qc libunix.a $(OBJS)
 	-$(RANLIB) libunix.a
 
 .c.o:
