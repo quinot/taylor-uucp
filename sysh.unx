@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1992/02/09  02:41:58  ian
+   Added HAVE_DUP2 configuration parameter and dup2 emulation function
+
    Revision 1.32  1992/02/08  23:34:41  ian
    If we have neither getcwd nor getwd, fork /bin/pwd to get the cwd
 
@@ -345,12 +348,20 @@
 #define SPOOLDIR_TAYLOR 1
 
 /* Set exactly one of the following macros to 1 to determine how
-   directories should be read.
+   directories should be read.  If you have do not have the
+   opendir/readdir/closedir functions, I recommend that you find Doug
+   Gwyn's public domain implementation (among other places, it is
+   available from uunet in ~/packages/gnu/dirent.tar.Z).  However, if
+   you have the original Unix directory format (a two byte inode
+   followed by a 14 byte filename) you can set HAVE_OLD_DIRECTORIES to
+   1 to use a somewhat simplistic emulation.
 
    HAVE_POSIX_DIRENT -- Use POSIX (and System V) dirent structure
-   HAVE_BSD_DIRECT -- Use BSD direct structure  */
+   HAVE_BSD_DIRECT -- Use BSD direct structure
+   HAVE_OLD_DIRECTORIES -- Read old style directories directly.  */
 #define HAVE_POSIX_DIRENT 1
 #define HAVE_BSD_DIRECT 0
+#define HAVE_OLD_DIRECTORIES 0
 
 /* If you have the dup2 call, set HAVE_DUP2 to 1.  */
 #define HAVE_DUP2 0
@@ -475,7 +486,7 @@
  #error Spool directory define not set or duplicated
 #endif
 
-#if HAVE_POSIX_DIRENT + HAVE_BSD_DIRECT != 1
+#if HAVE_POSIX_DIRENT + HAVE_BSD_DIRECT + HAVE_OLD_DIRECTORIES != 1
  #error No way to read directories
 #endif
 
@@ -623,6 +634,29 @@ typedef int wait_status_t;
 #define WTERMSIG(i) ((i) & 0x7f)
 #endif
 #endif /* ! HAVE_UNION_WAIT */
+
+#if HAVE_OLD_DIRECTORIES
+
+/* Define some structures to use if we don't have opendir, etc.  */
+
+#include <sys/dir.h>
+
+struct dirent
+{
+  char d_name[DIRSIZ + 1];
+};
+
+typedef struct
+{
+  int o;
+  struct dirent s;
+} DIR;
+
+extern DIR *opendir P((const char *zdir));
+extern struct dirent readdir P((DIR *));
+extern int closedir P((DIR *));
+
+#endif /* HAVE_OLD_DIRECTORIES */
 
 /* Information we need for a UNIX serial port.  */
 
