@@ -4688,6 +4688,7 @@ Mark Towfiq @file{<justice!towfiq@@Eingedi.Newton.MA.US>}
 Peter Wemm @file{<Peter_Wemm@@zeus.dialix.oz.au>}
 @file{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
 @file{jon@@console.ais.org} (Jon Zeeff)
+Matthias Zepf @file{<agnus@@amylnd.stgt.sub.org>}
 Eric Ziegast @file{<uunet!ziegast>}
 @end example
 
