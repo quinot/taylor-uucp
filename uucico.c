@@ -2762,7 +2762,6 @@ zget_uucp_cmd (qconn, frequired, fstrip)
      boolean frequired;
      boolean fstrip;
 {
-  int istrip;
   char *zalc;
   size_t calc;
   size_t cgot;
