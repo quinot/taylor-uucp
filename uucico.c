@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.94  1992/04/14  20:15:59  ian
+   Petri Helenius: must relock system after detach
+
    Revision 1.93  1992/04/14  19:03:17  ian
    Marty Shannon: uustat would remove empty command files
 
@@ -1088,8 +1091,8 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
 
   cdial_proto_params = 0;
   qdial_proto_params = NULL;
-  if (! fport_dial (qsys, &cdial_proto_params, &qdial_proto_params,
-		    &idial_reliable))
+  if (! fport_dial (qsys, qsys->zphone, &cdial_proto_params,
+		    &qdial_proto_params, &idial_reliable))
     {
       (void) fcall_failed (qsys, STATUS_DIAL_FAILED, qstat, cretry);
       return FALSE;
