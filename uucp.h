@@ -233,6 +233,8 @@ typedef FILE *openfile_t;
 #endif
 #define ffileclose(e) (fclose (e) == 0)
 
+#define fstdiosync(e, z) (fsysdep_sync (e, z))
+
 #else /* ! USE_STDIO */
 
 #if ! USE_TYPES_H
@@ -270,6 +272,8 @@ typedef int openfile_t;
 #define ffileseekend(e) (lseek ((e), (off_t) 0, 2) >= 0)
 #endif
 #define ffileclose(e) (close (e) >= 0)
+
+#define fstdiosync(e, z) (fsysdep_sync (fileno (e), z))
 
 #endif /* ! USE_STDIO */
 
