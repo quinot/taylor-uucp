@@ -2067,6 +2067,7 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
   boolean fret;
   register struct ssysdep_conn * const q
     = (struct ssysdep_conn *) qconn->psysdep;
+  int cwouldblock;
 
   cwant = *pclen;
   *pclen = 0;
@@ -2105,6 +2106,7 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 
   fret = FALSE;
 
+  cwouldblock = 0;
   while (TRUE)
     {
       int cgot;
@@ -2221,10 +2223,26 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 	 (normally we would have received SIGHUP, but we can't count
 	 on that).  We turn off the signals before calling ulog to
 	 reduce problems with interrupted system calls.  */
-      if (cgot <= 0)
+      if (cgot > 0)
+	cwouldblock = 0;
+      else
 	{
 	  if (cgot < 0 && errno == EINTR)
 	    cgot = 0;
+	  else if (cgot < 0
+		   && (errno == EAGAIN || errno == EWOULDBLOCK)
+		   && cwouldblock < 2)
+	    {
+	      /* Incomprehensibly, on some systems the read will
+		 return EWOULDBLOCK even though the descriptor has
+		 been set to blocking mode.  We permit the read call
+		 to do this twice in a row, and then error out.  We
+		 don't want to permit an arbitrary number of
+		 EWOULDBLOCK errors, since that could hang us up
+		 indefinitely.  */
+	      ++cwouldblock;
+	      cgot = 0;
+	    }
 	  else
 	    {
 	      int ierr;
