@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/02/14  21:32:50  ian
+   Niels Baggesen: under HAVE_BNU_LOGGING, don't lost system name when dieing
+
    Revision 1.22  1992/02/08  22:33:32  ian
    Only get the current working directory if it's going to be needed
 
@@ -643,6 +646,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   struct ssysteminfo soutsys;
   const struct ssysteminfo *qoutsys;
   boolean fshell;
+  char *zfullcmd;
 
   *pfprocessed = FALSE;
 
@@ -1082,9 +1086,21 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
   fshell = FALSE;
 #endif
 
+  /* Get a shell command which uses the full path of the command to
+     execute.  */
+  zfullcmd = (char *) alloca (strlen (zQcmd) + strlen (zabsolute) + 2);
+  strcpy (zfullcmd, zabsolute);
+  strcat (zfullcmd, " ");
+  for (i = 1; azQargs[i] != NULL; i++)
+    {
+      strcat (zfullcmd, azQargs[i]);
+      strcat (zfullcmd, " ");
+    }
+  zfullcmd[strlen (zfullcmd) - 1] = '\0';
+
   if (! fsysdep_execute (qsys,
 			 zQuser == NULL ? (const char *) "uucp" : zQuser,
-			 zabsolute, azQargs, zQcmd, zQinput, zoutput,
+			 zabsolute, azQargs, zfullcmd, zQinput, zoutput,
 			 fshell, &zerror))
     {
       ulog (LOG_NORMAL, "Execution failed (%s)", zfile);
