@@ -187,3 +187,7 @@ around whereever news batches are created.
 David Nugent: report characters per second in the stats file.
 
 30.
+
+Marty Shannon: add an option to direct debugging output to stderr.
+
+31.
