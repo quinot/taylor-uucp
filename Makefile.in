@@ -285,7 +285,7 @@ clean:
 	(cd uuconf; $(MAKE) $(MDEFINES) clean)
 	(cd lib; $(MAKE) $(MDEFINES) clean)
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
-	rm -f uucp-$(VERSION).tar.Z
+	rm -f uucp-$(VERSION).tar.gz
 	rm -rf uucp-$(VERSION)
 
 distclean:
@@ -293,7 +293,7 @@ distclean:
 	(cd uuconf; $(MAKE) $(MDEFINES) distclean)
 	(cd lib; $(MAKE) $(MDEFINES) distclean)
 	rm -f $(ALLOBJS) $(PROGRAMS) tstuu sysdep.h
-	rm -f uucp-$(VERSION).tar.Z
+	rm -f uucp-$(VERSION).tar.gz
 	rm -rf uucp-$(VERSION)
 	rm -f Makefile config.h config.status
 
@@ -306,7 +306,7 @@ realclean: distclean
 
 dist:
 	-rm -rf uucp-$(VERSION)
-	-rm -f uucp-$(VERSION).tar uucp-$(VERSION).tar.Z
+	-rm -f uucp-$(VERSION).tar uucp-$(VERSION).tar.gz
 	mkdir uucp-$(VERSION)
 	ln `cat MANIFEST` uucp-$(VERSION)
 	rm -f uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
@@ -321,11 +321,11 @@ dist:
 	(cd uuconf; $(MAKE) $(MDEFINES) dist)
 	(cd lib; $(MAKE) $(MDEFINES) dist)
 	tar -cvf uucp-$(VERSION).tar uucp-$(VERSION)
-	compress uucp-$(VERSION).tar
+	gzip --best uucp-$(VERSION).tar
 
 doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 	-rm -rf uucp-doc-$(VERSION) uucp-doc-dist
-	-rm -f uucp-doc-$(VERSION).tar uucp-doc-$(VERSION).tar.Z
+	-rm -f uucp-doc-$(VERSION).tar uucp-doc-$(VERSION).tar.gz
 	mkdir uucp-doc-$(VERSION)
 	ln README-DOC uucp-doc-$(VERSION)
 	ln $(srcdir)/uucp.texi uucp-doc-$(VERSION)
@@ -336,7 +336,7 @@ doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 	mkdir uucp-doc-dist
 	mv uucp-doc-$(VERSION) uucp-doc-dist/uucp-$(VERSION)
 	cd uucp-doc-dist; tar -cvf ../uucp-doc-$(VERSION).tar uucp-$(VERSION)
-	compress uucp-doc-$(VERSION).tar
+	gzip --best uucp-doc-$(VERSION).tar
 	-rm -rf uucp-doc-dist
 
 info: uucp.info
