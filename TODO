@@ -224,3 +224,9 @@ system, such that calls to that system are not made more frequently
 than, say, once an hour.
 
 34.
+
+Bob Izenberg: HDB UUCP will retry a call once if it fails.  I might
+want some sort of configuration parameter to allow calls to be
+retried.
+
+35.
