@@ -852,6 +852,8 @@ ucuhelp ()
   fprintf (stderr,
 	   " --parity={odd,even}: Set parity\n");
   fprintf (stderr,
+	   " -E,--escape char: Set escape character\n");
+  fprintf (stderr,
 	   " -h,--halfduplex: Echo locally\n");
   fprintf (stderr,
 	   " --nostop: Turn off XON/XOFF handling\n");
@@ -1030,7 +1032,7 @@ fcudo_cmd (puuconf, qconn, bcmd)
     {
     default:
       if (! isprint (*zCuvar_escape))
-	sprintf (abescape, "\\%03o", (unsigned int) *zCuvar_escape);
+	sprintf (abescape, "\\%03o", BUCHAR (*zCuvar_escape));
       else
 	{
 	  abescape[0] = *zCuvar_escape;
@@ -1128,7 +1130,7 @@ fcudo_cmd (puuconf, qconn, bcmd)
 
     case '?':
       if (! isprint (*zCuvar_escape))
-	sprintf (abescape, "\\%03o", (unsigned int) *zCuvar_escape);
+	sprintf (abescape, "\\%03o", BUCHAR (*zCuvar_escape));
       else
 	{
 	  abescape[0] = *zCuvar_escape;
@@ -1265,7 +1267,7 @@ icuunrecogvar (puuconf, argc, argv, pvar, pinfo)
   char abescape[5];
 
   if (! isprint (*zCuvar_escape))
-    sprintf (abescape, "\\%03o", (unsigned int) *zCuvar_escape);
+    sprintf (abescape, "\\%03o", BUCHAR (*zCuvar_escape));
   else
     {
       abescape[0] = *zCuvar_escape;
@@ -1320,7 +1322,7 @@ uculist_vars ()
 
 		if (! isprint (*z))
 		  {
-		    sprintf (abchar, "\\%03o", (unsigned int) *z);
+		    sprintf (abchar, "\\%03o", BUCHAR (*z));
 		    cchar = 4;
 		  }
 		else
@@ -1432,7 +1434,7 @@ icuunrecogfn (puuconf, argc, argv, pvar, pinfo)
   char abescape[5];
 
   if (! isprint (*zCuvar_escape))
-    sprintf (abescape, "\\%03o", (unsigned int) *zCuvar_escape);
+    sprintf (abescape, "\\%03o", BUCHAR (*zCuvar_escape));
   else
     {
       abescape[0] = *zCuvar_escape;
