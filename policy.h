@@ -89,8 +89,9 @@
 
    If writes to a serial port always block even when requested not to,
    you should set HAVE_UNBLOCKED_WRITES to 0; otherwise you should set
-   it to 1.  In general on System V HAVE_UNBLOCKED_WRITES should be 0
-   and on BSD it should be 1.
+   it to 1.  In general on System V releases without STREAMS-based
+   ttys (e.g., before SVR4) HAVE_UNBLOCKED_WRITES should be 0 and on
+   BSD or SVR4 it should be 1.
 
    If HAVE_UNBLOCKED_WRITES is set to 1 when it should be 0 you may
    see an unexpectedly large number of transmission errors, or, if you
@@ -104,12 +105,15 @@
 /* When the code does do a blocking write, it wants to write the
    largest amount of data which the kernel will accept as a single
    unit.  On BSD this is typically the value of OBUFSIZ in
-   <sys/tty.h>, usually 100.  On System V this is typically the size
-   of a clist, CLSIZE in <sys/tty.h>, which is usually 64.  Define
-   SINGLE_WRITE to the correct value for your system.  If SINGLE_WRITE
-   is too large, data loss may occur.  If SINGLE_WRITE is too small,
-   file transfer will use more CPU time than necessary.  If you have
-   no idea, 64 should work on most modern systems.  */
+   <sys/tty.h>, usually 100.  On System V before SVR4 this is
+   typically the size of a clist, CLSIZE in <sys/tty.h>, which is
+   usually 64.  On SVR4, which uses STREAMS-based ttys, 2048 is
+   reasonable.  Define SINGLE_WRITE to the correct value for your
+   system.  If SINGLE_WRITE is too large, data loss may occur.  If
+   SINGLE_WRITE is too small, file transfer will use more CPU time
+   than necessary.  If you have no idea, 64 should work on most modern
+   systems.  */
+
 #define SINGLE_WRITE 64
 
 /* Some tty drivers, such as those from SCO and AT&T's Unix PC, have a
@@ -261,7 +265,7 @@
 #define HAVE_HDB_CONFIG 0
 
 /* Exactly one of the following macros must be set to 1.  The exact
-   format of the spool directories is explained in sys3.unx.
+   format of the spool directories is explained in unix/spool.c.
 
    SPOOLDIR_V2 -- Use a Version 2 (original UUCP) style spool directory
    SPOOLDIR_BSD42 -- Use a BSD 4.2 style spool directory
