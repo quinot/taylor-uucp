@@ -1,7 +1,7 @@
 /* picksb.c
    System dependent routines for uupick.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -203,10 +203,14 @@ fsysdep_uupick_free (zsystem, zpubdir)
 /* Expand a local file name for uupick.  */
 
 char *
-zsysdep_uupick_local_file (zfile)
+zsysdep_uupick_local_file (zfile, pfbadname)
      const char *zfile;
+     boolean *pfbadname;
 {
   struct passwd *q;
+
+  if (pfbadname != NULL)
+    *pfbadname = FALSE;
 
   /* If this does not start with a simple ~, pass it to
      zsysdep_local_file_cwd; as it happens, zsysdep_local_file_cwd
@@ -214,7 +218,7 @@ zsysdep_uupick_local_file (zfile)
      ~, so it doesn't really matter what we pass for zpubdir.  */
   if (zfile[0] != '~'
       || (zfile[1] != '/' && zfile[1] != '\0'))
-    return zsysdep_local_file_cwd (zfile, (const char *) NULL);
+    return zsysdep_local_file_cwd (zfile, (const char *) NULL, pfbadname);
   
   q = getpwuid (getuid ());
   if (q == NULL)

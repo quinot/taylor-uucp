@@ -159,7 +159,8 @@ zsysdep_xqt_local_file (qsys, zfile)
       memcpy (zret, zfile + 1, clen);
       return zret;
     }
-  return zsysdep_local_file (zfile, qsys->uuconf_zpubdir);
+  return zsysdep_local_file (zfile, qsys->uuconf_zpubdir,
+			     (boolean *) NULL);
 }
 
 #if ! ALLOW_FILENAME_ARGUMENTS

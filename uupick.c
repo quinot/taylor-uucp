@@ -152,6 +152,8 @@ main (argc, argv)
 
       do
 	{
+	  boolean fbadname;
+
 	  fcontinue = FALSE;
 
 	  if (zallsys == NULL
@@ -196,9 +198,15 @@ main (argc, argv)
 	    case 'a':
 	      zto = ab + 1 + strspn (ab + 1, " \t");
 	      zto[strcspn (zto, " \t\n")] = '\0';
-	      zlocal = zsysdep_uupick_local_file (zto);
+	      zlocal = zsysdep_uupick_local_file (zto, &fbadname);
 	      if (zlocal == NULL)
-		usysdep_exit (FALSE);
+		{
+		  if (! fbadname)
+		    usysdep_exit (FALSE);
+		  ulog (LOG_ERROR, "%s: bad local file name", zto);
+		  fcontinue = TRUE;
+		  break;
+		}
 	      zto = zsysdep_in_dir (zlocal, zfile);
 	      ubuffree (zlocal);
 	      if (zto == NULL)

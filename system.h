@@ -172,9 +172,13 @@ extern const char *zsysdep_port_name P((boolean *pftcp_port));
    desirable on other systems.  This should always return an absolute
    path name, probably in the public directory.  It should return NULL
    on error; otherwise the return value should be allocated using
-   zbufcpy or zbufalc.  */
+   zbufcpy or zbufalc.  If pfbadname is not NULL, then if the function
+   returns NULL *pfbadname should be set to TRUE if the error is just
+   that the file name is badly specified; *pfbadname should be set to
+   FALSE for some sort of internal error.  */
 extern char *zsysdep_local_file P((const char *zname,
-				   const char *zpubdir));
+				   const char *zpubdir,
+				   boolean *pfbadname));
 
 /* Return whether a file name is in a directory, and check for read or
    write access.  This should check whether zfile is within zdir (or
@@ -675,7 +679,8 @@ extern boolean fsysdep_move_uuxqt_files P((int cfiles,
    started in rather than in the public directory.  This should return
    NULL on error.  */
 extern char *zsysdep_local_file_cwd P((const char *zname,
-				       const char *zpubdir));
+				       const char *zpubdir,
+				       boolean *pfbadname));
 
 /* Add the working directory to a file name.  The named file is
    actually on a remote system.  If the file already has a directory,
@@ -942,7 +947,8 @@ extern boolean fsysdep_uupick_free P((const char *zsystem,
    zsysdep_local_file_cwd except that a file beginning with ~/ is
    placed in the user's home directory rather than in the public
    directory.  */
-extern char *zsysdep_uupick_local_file P((const char *zfile));
+extern char *zsysdep_uupick_local_file P((const char *zfile,
+					  boolean *pfbadname));
 
 /* Remove a directory and all the files in it.  */
 extern boolean fsysdep_rmdir P((const char *zdir));

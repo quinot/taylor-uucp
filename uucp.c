@@ -445,7 +445,8 @@ main (argc, argv)
   /* Turn the destination into an absolute path, unless it is on a
      remote system and -W was used.  */
   if (fClocaldest)
-    zdestfile = zsysdep_local_file_cwd (zdestfile, sCdestsys.uuconf_zpubdir);
+    zdestfile = zsysdep_local_file_cwd (zdestfile, sCdestsys.uuconf_zpubdir,
+					(boolean *) NULL);
   else if (fCexpand)
     zdestfile = zsysdep_add_cwd (zdestfile);
   if (zdestfile == NULL)
@@ -476,7 +477,8 @@ main (argc, argv)
 	  if (fsysdep_needs_cwd (argv[i]))
 	    fCneeds_cwd = TRUE;
 	  zfrom = zsysdep_local_file_cwd (argv[i],
-					  sCdestsys.uuconf_zpubdir);
+					  sCdestsys.uuconf_zpubdir,
+					  (boolean *) NULL);
 	  if (zfrom == NULL)
 	    ucabort ();
 	}

@@ -179,7 +179,8 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
       else
 	zconst = zexclam + 1;
 
-      zdestfile = zsysdep_local_file (zconst, qsys->uuconf_zpubdir);
+      zdestfile = zsysdep_local_file (zconst, qsys->uuconf_zpubdir,
+				      (boolean *) NULL);
       if (zdestfile == NULL)
 	return FALSE;
 
@@ -252,7 +253,8 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 
   /* Now we have to process each source file.  The source
      specification may or may use wildcards.  */
-  zfrom = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir);
+  zfrom = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir,
+			      (boolean *) NULL);
   if (zfrom == NULL)
     {
       ubuffree (zdestfile);

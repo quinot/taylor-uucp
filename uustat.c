@@ -1677,7 +1677,8 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       if (fspool)
 	zfile = zsysdep_spool_file_name (qsys, zstdin, pstdinseq);
       else
-	zfile = zsysdep_local_file (zstdin, qsys->uuconf_zpubdir);
+	zfile = zsysdep_local_file (zstdin, qsys->uuconf_zpubdir,
+				    (boolean *) NULL);
 
       if (zfile != NULL
 	  && (fspool

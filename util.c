@@ -1,7 +1,7 @@
 /* util.c
    A couple of UUCP utility functions.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -118,7 +118,7 @@ fin_directory_list (zfile, pzdirs, zpubdir, fcheck, freadable, zuser)
 
       if (pz[0][0] == '!')
 	{
-	  zuse = zsysdep_local_file (*pz + 1, zpubdir);
+	  zuse = zsysdep_local_file (*pz + 1, zpubdir, (boolean *) NULL);
 	  if (zuse == NULL)
 	    return FALSE;
 
@@ -128,7 +128,7 @@ fin_directory_list (zfile, pzdirs, zpubdir, fcheck, freadable, zuser)
 	}
       else
 	{
-	  zuse = zsysdep_local_file (*pz, zpubdir);
+	  zuse = zsysdep_local_file (*pz, zpubdir, (boolean *) NULL);
 	  if (zuse == NULL)
 	    return FALSE;
 

@@ -653,7 +653,8 @@ main (argc, argv)
 
       /* Turn the file into an absolute path.  */
       if (flocal)
-	zfile = zsysdep_local_file_cwd (zfile, sxqtsys.uuconf_zpubdir);
+	zfile = zsysdep_local_file_cwd (zfile, sxqtsys.uuconf_zpubdir,
+					(boolean *) NULL);
       else if (fexpand)
 	zfile = zsysdep_add_cwd (zfile);
       if (zfile == NULL)

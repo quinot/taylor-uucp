@@ -770,6 +770,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
 {
   const struct uuconf_system *qsys;
   char *zfile;
+  boolean fbadname;
   long cbytes;
   unsigned int imode;
   openfile_t e;
@@ -791,7 +792,12 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
       return fremote_rec_fail (qdaemon, FAILURE_PERM, iremote);
     }
 
-  zfile = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir);
+  zfile = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir, &fbadname);
+  if (zfile == NULL && fbadname)
+    {
+      ulog (LOG_ERROR, "%s: bad local file name", qcmd->zfrom);
+      return fremote_rec_fail (qdaemon, FAILURE_PERM, iremote);
+    }
   if (zfile != NULL)
     {
       char *zbased;

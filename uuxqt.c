@@ -680,6 +680,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
   const char *zmail;
   char *zoutput;
   char *zinput;
+  boolean fbadname;
   char abtemp[CFILE_NAME_LEN];
   char abdata[CFILE_NAME_LEN];
   char *zerror;
@@ -1067,11 +1068,14 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
       char *zreal;
 
       fspool = fspool_file (zQinput);
-      if (fspool)
-	zreal = zsysdep_spool_file_name (qsys, zQinput, (pointer) NULL);
+      if (! fspool)
+	zreal = zsysdep_local_file (zQinput, qsys->uuconf_zpubdir, &fbadname);
       else
-	zreal = zsysdep_local_file (zQinput, qsys->uuconf_zpubdir);
-      if (zreal == NULL)
+	{
+	  zreal = zsysdep_spool_file_name (qsys, zQinput, (pointer) NULL);
+	  fbadname = FALSE;
+	}
+      if (zreal == NULL && ! fbadname)
 	{
 	  /* If we get an error, try again later.  */
 	  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
@@ -1079,13 +1083,17 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	  return;
 	}
 
-      zQinput = zreal;
-      iclean |= FREE_QINPUT;
+      if (zreal != NULL)
+	{
+	  zQinput = zreal;
+	  iclean |= FREE_QINPUT;
+	}
 
-      if (! fspool
-	  && ! fin_directory_list (zQinput, qsys->uuconf_pzremote_send,
-				   qsys->uuconf_zpubdir, TRUE, TRUE,
-				   (const char *) NULL))
+      if (zreal == NULL
+	  || (! fspool
+	      && ! fin_directory_list (zQinput, qsys->uuconf_pzremote_send,
+				       qsys->uuconf_zpubdir, TRUE, TRUE,
+				       (const char *) NULL)))
 	{
 	  ulog (LOG_ERROR, "Not permitted to read %s", zQinput);
 	      
@@ -1176,22 +1184,30 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	fok = FALSE;
       else
 	{
-	  zoutput = zsysdep_local_file (zQoutfile, qsys->uuconf_zpubdir);
+	  zoutput = zsysdep_local_file (zQoutfile, qsys->uuconf_zpubdir,
+					&fbadname);
 	  if (zoutput == NULL)
 	    {
-	      /* If we get an error, try again later.  */
-	      uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
-	      *pfprocessed = FALSE;
-	      return;
+	      if (! fbadname)
+		{
+		  /* If we get an error, try again later.  */
+		  uqcleanup (zfile, iclean &~ (REMOVE_FILE | REMOVE_NEEDED));
+		  *pfprocessed = FALSE;
+		  return;
+		}
+	      fok = FALSE;
 	    }
-	  ubuffree (zQoutfile);
-	  zQoutfile = zoutput;
+	  else
+	    {
+	      ubuffree (zQoutfile);
+	      zQoutfile = zoutput;
 
-	  /* Make sure it's OK to receive this file.  */
-	  fok = fin_directory_list (zQoutfile,
-				    qsys->uuconf_pzremote_receive,
-				    qsys->uuconf_zpubdir, TRUE, FALSE,
-				    (const char *) NULL);
+	      /* Make sure it's OK to receive this file.  */
+	      fok = fin_directory_list (zQoutfile,
+					qsys->uuconf_pzremote_receive,
+					qsys->uuconf_zpubdir, TRUE, FALSE,
+					(const char *) NULL);
+	    }
 	}
 
       if (! fok)

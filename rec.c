@@ -570,7 +570,15 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
     }
   else
     {
-      zfile = zsysdep_local_file (qcmd->zto, qsys->uuconf_zpubdir);
+      boolean fbadname;
+
+      zfile = zsysdep_local_file (qcmd->zto, qsys->uuconf_zpubdir,
+				  &fbadname);
+      if (zfile == NULL && fbadname)
+	{
+	  ulog (LOG_ERROR, "%s: bad local file name", qcmd->zto);
+	  return fremote_send_fail (qdaemon, qcmd, FAILURE_PERM, iremote);
+	}
       if (zfile != NULL)
 	{
 	  char *zadd;
