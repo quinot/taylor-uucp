@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.33  1992/04/23  01:35:28  ian
+   Michael Haberler: make slow start after error not shrink window
+
    Revision 1.32  1992/04/21  04:21:35  ian
    Give fport_set independent control over parity and XON/XOFF
 
@@ -1166,11 +1169,9 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	}
       else
 	{
-	  /* The read timed out.  If we're looking for a control
-	     packet, assume we're looking for an ack and send the last
-	     unacknowledged packet again.  Otherwise, send an RJ with
-	     the last packet we received correctly.  */
-
+	  /* The read timed out.  If we have an unacknowledged packet,
+	     send it again.  Otherwise, send an RJ with the last
+	     packet we received correctly.  */
 	  ++ctimeouts;
 	  if (ctimeouts > cretries)
 	    {
@@ -1179,8 +1180,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	      return FALSE;
 	    }
 
-	  if (freturncontrol
-	      && INEXTSEQ (iGremote_ack) != iGsendseq)
+	  if (INEXTSEQ (iGremote_ack) != iGsendseq)
 	    {
 	      int inext;
 
