@@ -107,7 +107,6 @@ The compilation instructions are in uucp.texi.  Here is a summary.
         LDFLAGS: Flags to pass to $CC when only linking; default none
         LIBS: Library arguments to pass to $CC; default none
         INSTALL: Install program; default install -c or cp
-        INSTALLDATA: Install data; default install -c -m 0644 or cp
     The configure script will compile a number of test programs to see
     what is available on your system, so if your system is at all
     unusual you will need to pass in $CC and $LIBS correctly.
