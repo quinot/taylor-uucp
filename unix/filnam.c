@@ -397,6 +397,37 @@ zsysdep_data_file_name (qsys, zlocalname, bgrade, fxqt, ztname, zdname,
 		      ztname, zdname, zxname);
 }
 
+#if SPOOLDIR_TAYLOR
+
+/* Write out a number in base 62 into a given number of characters,
+   right justified with zero fill.  This is used by zscmd_file if
+   SPOOLDIR_TAYLOR.  */
+
+static void usput62 P((long i, char *, int c));
+
+static void
+usput62 (i, z, c)
+     long i;
+     char *z;
+     int c;
+{
+  for (--c; c >= 0; --c)
+    {
+      int d;
+
+      d = i % 62;
+      i /= 62;
+      if (d < 26)
+	z[c] = 'A' + d;
+      else if (d < 52)
+	z[c] = 'a' + d - 26;
+      else
+	z[c] = '0' + d - 52;
+    }
+}
+
+#endif /* SPOOLDIR_TAYLOR */
+
 /* Get a command file name.  */
 
 char *
@@ -404,9 +435,84 @@ zscmd_file (qsys, bgrade)
      const struct uuconf_system *qsys;
      int bgrade;
 {
+#if ! SPOOLDIR_TAYLOR
   return zsfile_name ('C', qsys->uuconf_zname, (const char *) NULL,
 		      bgrade, FALSE, (char *) NULL, (char *) NULL,
 		      (char *) NULL);
+#else
+  char *zname;
+  long isecs, imicros;
+  pid_t ipid;
+
+  /* This file name is never seen by the remote system, so we don't
+     actually need to get a sequence number for it.  We just need to
+     get a file name which is unique for this system.  We don't try
+     this optimization for other spool directory formats, mainly due
+     to compatibility concerns.  It would be possible for HDB and SVR4
+     spool directory formats.
+
+     We get a unique name by combining the process ID and the current
+     time.  The file name must start with C.g, where g is the grade.
+     Note that although it is likely that this name will be unique, it
+     is not guaranteed, so the caller must be careful.  */
+
+  isecs = ixsysdep_time (&imicros);
+  ipid = getpid ();
+
+  /* We are going to represent the file name as a series of numbers in
+     base 62 (using the alphanumeric characters).  The maximum file
+     name length is 14 characters, so we may use 11.  We use 3 for the
+     seconds within the day, 3 for the microseconds, and 5 for the
+     process ID.  */
+
+  /* Cut the seconds down to a number within a day (maximum value
+     86399 < 62 ** 3 == 238328).  */
+  isecs %= (long) 24 * (long) 60 * (long) 60;
+  /* Divide the microseconds (max 999999) by 5 to make sure they are
+     less than 62 ** 3.  */
+  imicros %= 1000000;
+  imicros /= 5;
+
+  while (TRUE)
+    {
+      char ab[15];
+
+      ab[0] = 'C';
+      ab[1] = '.';
+      ab[2] = bgrade;
+      usput62 (isecs, ab + 3, 3);
+      usput62 (imicros, ab + 6, 3);
+      usput62 ((long) ipid, ab + 9, 5);
+      ab[14] = '\0';
+
+      zname = zsfind_file (ab, qsys->uuconf_zname, bgrade);
+      if (zname == NULL)
+	return NULL;
+
+      if (! fsysdep_file_exists (zname))
+	break;
+
+      ubuffree (zname);
+
+      /* We hit a duplicate.  Move backward in time until we find an
+         available name.  Note that there is still a theoretical race
+         condition, since 5 base 62 digits might not be enough for the
+         process ID, and some other process might be running these
+         checks at the same time as we are.  The caller must deal with
+         this.  */
+      if (imicros == 0)
+	{
+	  imicros = (long) 62 * (long) 62 * (long) 62;
+	  if (isecs == 0)
+	    isecs = (long) 62 * (long) 62 * (long) 62;
+	  --isecs;
+	}
+      --imicros;
+    }
+
+  return zname;
+
+#endif
 }
 
 /* Return a name for an execute file to be created locally.  This is
