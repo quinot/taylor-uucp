@@ -213,10 +213,6 @@ permit shell execution.
 Mike Park: we should accept and Shere=foo message with an alias of the
 system we are calling.
 
-78.
-
-Support XCLUDE for port locking.
-
 79.
 
 Support Internet addressing when mailing uuxqt messages.
@@ -244,19 +240,10 @@ Les Mikesell: add TLI and TLIS connection ability.
 Les Mikesell: allow a separate program to be specified to handle the
 communications with a particular system.
 
-90.
-
-Rupert Mohr: it is possible that cmax_size_ever fails if there are
-some times for which no size restriction is made.
-
 91.
 
 If a file cannot be sent for some reason, save it off somewhere so
 that it can be retrieved and examined later.
-
-92.
-
-Include Bob Denny's log file rotation shell script?
 
 99.
 
@@ -267,10 +254,6 @@ Marty Shannon: some sort of Maxuuxqts?
 Franc,ois Pinard: if fork fails, retry or do something useful.
 Currently if it fails in fsysdep_execute, the work file will be thrown
 away, which is about as stupid as possible.
-
-101.
-
-Franc,ois Pinard: sleep for a second after closing a modem.
 
 105.
 
@@ -306,15 +289,6 @@ running uucico.  T. William Wells suggests having it read a file to
 change arbitrary configuration information, although obviously one has
 to be careful of what gets changed while a connection is active.
 
-118.
-
-Michael Richardson: allowing remote system to turn on debugging can
-lead to a denial of service attack.
-
-119.
-
-Support CTSFLOW.
-
 120.
 
 Jarmo Raiha: new chat-fail commands: one to not update the status file
@@ -328,3 +302,34 @@ readable, because they are running under the wrong euid.  They should
 switch back and forth as necessary.
 
 122.
+
+Include Michael Richardson's debugging information somewhere in the
+documentation.  Or implement a better debugging scheme which allows
+individual control over each type of debugging command.
+
+123.
+
+Change the new chat script debugging to have a maximum number of
+characters before starting a new line.  Applies to zget_uucp_cmd and
+zget_typed_line as well.
+
+124.
+
+Peter da Silva: perhaps there should be a ``chat-end-program'' command
+to let a program be run after the initial handshake has been completed
+and the protocol has been selected and turned on.  This would let
+people run stty to change their terminal parameters.
+
+125.
+
+Support the NeXT statfs command.
+
+126.
+
+Neils Baggesen: if we're out of disk space, the last thing we want to
+do is keep accepting file sends, failing to write them locally, and
+then telling the other side that we couldn't handle the file.  We
+should probably drop the connection if we run out of disk space.
+There may also be uses for a non permanent file send failure message.
+
+127.
