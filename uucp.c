@@ -578,7 +578,7 @@ main (argc, argv)
 
       zsys = zcone_system (&fany);
       if (zsys != NULL)
-	fexit = fsysdep_run ("uucico", "-s", zsys);
+	fexit = fsysdep_run ("uucico", "-Cs", zsys);
       else if (fany)
 	fexit = fsysdep_run ("uucico", "-r1", (const char *) NULL);
       else
