@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.27  1992/02/28  05:06:15  ian
    T. William Wells: fsysdep_catch must be a macro
 
@@ -787,6 +790,7 @@ main (argc, argv)
 	  char abdname[CFILE_NAME_LEN];
 	  char *ztemp;
 	  struct scmd s;
+	  const char *zjobid;
 
 	  /* We need to request a remote file.  Make sure we have a
 	     spool directory for the remote system.  */
@@ -836,8 +840,12 @@ main (argc, argv)
 	  s.znotify = "";
 	  s.cbytes = -1;
 
-	  if (! fsysdep_spool_commands (qfromsys, bgrade, 1, &s))
+	  zjobid = zsysdep_spool_commands (qfromsys, bgrade, 1, &s);
+	  if (zjobid == NULL)
 	    uxabort ();
+
+	  if (fjobid)
+	    printf ("%s\n", zjobid);
 
 	  if (fcall_any)
 	    zcall_system = NULL;
@@ -1021,11 +1029,17 @@ main (argc, argv)
 
   if (cXcmds > 0)
     {
-      if (! fsysdep_spool_commands (qxqtsys, bgrade, cXcmds, pasXcmds))
+      const char *zjobid;
+
+      zjobid = zsysdep_spool_commands (qxqtsys, bgrade, cXcmds, pasXcmds);
+      if (zjobid == NULL)
 	{
 	  ulog_close ();
 	  usysdep_exit (FALSE);
 	}
+
+      if (fjobid)
+	printf ("%s\n", zjobid);
 
       if (fcall_any)
 	zcall_system = NULL;

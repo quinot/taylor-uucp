@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.4  1992/01/20  23:52:23  ian
+''' Change to version 1.02
+'''
 ''' Revision 1.3  1991/12/18  04:37:01  ian
 ''' Clarified -z switch somewhat
 '''
@@ -141,6 +144,16 @@ Do not start the
 (8) daemon immediately; merely queue up the execution request for later
 processing.
 .TP5
+.B \-j
+Print jobids on standard output.  A jobid will be generated for each
+file copy operation required to perform the operation.  These file
+copies may be cancelled by
+passing the jobid to the
+.B \-k
+switch of
+.I uustat
+(1), which will make the execution impossible to complete.
+.TP5
 .B \-a address
 Report job status to the specified e-mail address.
 .TP5
@@ -185,6 +198,10 @@ Many remote systems only permit the execution of
 .I rmail
 and
 .I rnews.
+
+Some of the options are dependent on the capabilities of the
+.I uuxqt
+(8) daemon on the remote system.
 .SH FILES
 The file names may be changed at compilation time or by the
 configuration file, so these are only approximations.
@@ -205,9 +222,10 @@ mail(1), uucp(1), uucico(8), uuxqt(8)
 .SH BUGS
 Files can not be referenced across multiple systems.
 
-Some of the options are dependent on the capabilities of the
-.I uuxqt
-(8) daemon on the remote system.
+Too many jobids are output by
+.B \-j,
+and there is no good way to cancel a local execution requiring remote
+files.
 .SH AUTHOR
 Ian Lance Taylor
 (ian@airs.com or uunet!airs!ian)

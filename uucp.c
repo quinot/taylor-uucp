@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.20  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -113,7 +116,7 @@ const struct option *_getopt_long_options = asClongopts;
 static void ucusage P((void));
 static void ucadd_cmd P((const struct ssysteminfo *qsys,
 			 const struct scmd *qcmd));
-static void ucspool_cmds P((int bgrade));
+static void ucspool_cmds P((int bgrade, boolean fjobid));
 static const char *zcone_system P((boolean *pfany));
 static void ucrecord_file P((const char *zfile));
 static void ucabort P((void));
@@ -595,7 +598,7 @@ main (argc, argv)
   ulog_to_file (TRUE);
   ulog_user (zuser);
 
-  ucspool_cmds (bgrade);
+  ucspool_cmds (bgrade, fjobid);
 
   ulog_close ();
 
@@ -700,16 +703,19 @@ ucadd_cmd (qsys, qcmd)
 }
 
 static void
-ucspool_cmds (bgrade)
+ucspool_cmds (bgrade, fjobid)
      int bgrade;
+     boolean fjobid;
 {
   struct sjob *qjob;
+  const char *zjobid;
 
   for (qjob = qCjobs; qjob != NULL; qjob = qjob->qnext)
     {
       ulog_system (qjob->qsys->zname);
-      if (fsysdep_spool_commands (qjob->qsys, bgrade, qjob->ccmds,
-				  qjob->pascmds))
+      zjobid = zsysdep_spool_commands (qjob->qsys, bgrade, qjob->ccmds,
+				       qjob->pascmds);
+      if (zjobid != NULL)
 	{
 	  int i;
 	  struct scmd *qcmd;
@@ -726,6 +732,9 @@ ucspool_cmds (bgrade)
 		ulog (LOG_NORMAL, "Queuing execution (%s to %s)",
 		      qcmd->zfrom, qcmd->zto);
 	    }
+
+	  if (fjobid)
+	    printf ("%s\n", zjobid);
 	}
     }
 }

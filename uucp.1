@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.2  1992/01/20  23:52:23  ian
+''' Change to version 1.02
+'''
 ''' Revision 1.1  1991/12/14  19:05:20  ian
 ''' Initial revision
 '''
@@ -90,6 +93,24 @@ Do not start
 .I uucico
 (8) daemon immediately; merely queue up the file transfer for later
 execution.
+.TP5
+.B \-j
+Print jobid on standard output.  The job may be
+later cancelled by passing the jobid to the
+.B \-k
+switch of
+.I uustat
+(1).
+It is possible for some complex operations to produce more than one
+jobid, in which case each will be printed on a separate line.  For
+example
+.EX
+uucp sys1!~user1/file1 sys2!~user2/file2 /usr/spool/uucppublic
+.EE
+will generate two separate jobs, one for the system
+.I sys1
+and one for the system
+.I sys2.
 .TP5
 .B \-x number
 Set debugging level.  Level 0 is no debugging output, level 9 is full

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.24  1992/02/28  05:06:15  ian
    T. William Wells: fsysdep_catch must be a macro
 
@@ -475,10 +478,12 @@ extern boolean fsysdep_wildcard_end P((void));
    is started up it will transfer these files.  The bgrade argument
    specifies the grade of the commands.  The commands themselves are
    in the pascmds array, which has ccmds entries.  The function should
-   return FALSE on error.  */
- extern boolean fsysdep_spool_commands P((const struct ssysteminfo *qsys,
-					  int bgrade, int ccmds,
-					  const struct scmd *pascmds));
+   return NULL on error, or the jobid on success.  The jobid is a
+   string that may be printed or passed to fsysdep_kill_job and
+   related functions, but is otherwise uninterpreted.  */
+ extern const char *zsysdep_spool_commands P((const struct ssysteminfo *qsys,
+					      int bgrade, int ccmds,
+					      const struct scmd *pascmds));
 
 /* Get a file name to use for a data file to be copied to another
    system.  A file which will become an execute file will use a grade
@@ -653,7 +658,7 @@ extern boolean fsysdep_daemon_access P((const char *zfile));
 /* Return the jobid of a work file, given the sequence value.  On
    error this should log an error and return NULL.  The jobid is a
    string which may be printed out and read in and passed to
-   zsysdep_kill_job, etc., but is not otherwise interpreted.  The
+   fsysdep_kill_job, etc., but is not otherwise interpreted.  The
    return value may point to a common statis buffer.  */
 extern const char *zsysdep_jobid P((const struct ssysteminfo *qsys,
 				    pointer pseq));

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.29  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -1237,7 +1240,7 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	     actually sent.  */
 	  s.cbytes = -1;
 
-	  (void) fsysdep_spool_commands (qoutsys, bgrade, 1, &s);
+	  (void) zsysdep_spool_commands (qoutsys, bgrade, 1, &s);
 	}
     }
 

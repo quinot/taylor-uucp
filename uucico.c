@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.60  1992/02/29  01:06:59  ian
+   Chip Salzenberg: recheck file permissions before sending
+
    Revision 1.59  1992/02/27  05:40:54  ian
    T. William Wells: detach from controlling terminal, handle signals safely
 
@@ -1593,7 +1596,7 @@ static boolean faccept_call (zlogin, qport)
     {
       (void) fsend_uucp_cmd ("RCB");
       ulog (LOG_NORMAL, "Will call back");
-      (void) fsysdep_spool_commands (qsys, BGRADE_HIGH, 0,
+      (void) zsysdep_spool_commands (qsys, BGRADE_HIGH, 0,
 				     (const struct scmd *) NULL);
       return TRUE;
     }
@@ -2783,8 +2786,8 @@ fdo_xcmd (qsys, fcaller, q)
 	  ssend.znotify = "";
 	  ssend.cbytes = -1;
 
-	  if (! fsysdep_spool_commands (qdestsys, BDEFAULT_UUCP_GRADE,
-					1, &ssend))
+	  if (zsysdep_spool_commands (qdestsys, BDEFAULT_UUCP_GRADE,
+				      1, &ssend) == NULL)
 	    {
 	      (void) fsysdep_wildcard_end ();
 	      return FALSE;
