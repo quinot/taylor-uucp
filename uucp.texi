@@ -4410,6 +4410,7 @@ Brian Campbell @file{<brianc@@quantum.on.ca>}
 @file{fenner@@jazz.psu.edu} (Bill Fenner)
 "David J. Fiander" @file{<golem!david@@news.lsuc.on.ca>}
 Thomas Fischer @file{<batman@@olorin.dark.sub.org>}
+@file{erik@@eab.retix.com} (Erik Forsberg)
 Lele Gaifax @file{<piggy@@idea.sublink.org>}
 @file{Peter.Galbavy@@micromuse.co.uk}
 @file{hunter@@phoenix.pub.uu.oz.au} (James Gardiner [hunter])
