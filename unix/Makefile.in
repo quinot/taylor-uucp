@@ -21,11 +21,11 @@ VPATH = @srcdir@
 
 MORECFLAGS = -I$(srcdir)/.. -I.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
-OBJS = access.o addbas.o app3.o app4.o basnam.o bytfre.o cwd.o \
-	chmod.o cohtty.o cusub.o detach.o efopen.o epopen.o exists.o \
-	filnam.o fsusg.o indir.o init.o isdir.o isfork.o iswait.o \
-	jobid.o lcksys.o link.o locfil.o lock.o loctim.o mail.o \
-	mkdirs.o mode.o move.o opensr.o pause.o picksb.o pipe.o \
+OBJS = access.o addbas.o app3.o app4.o basnam.o bytfre.o corrup.o \
+	chmod.o cohtty.o cusub.o cwd.o detach.o efopen.o epopen.o \
+	exists.o filnam.o fsusg.o indir.o init.o isdir.o isfork.o \
+	iswait.o jobid.o lcksys.o link.o locfil.o lock.o loctim.o \
+	mail.o mkdirs.o mode.o move.o opensr.o pause.o picksb.o pipe.o \
 	portnm.o proctm.o recep.o run.o seq.o serial.o signal.o \
 	sindir.o size.o sleep.o spawn.o splcmd.o splnam.o spool.o \
 	srmdir.o statsb.o status.o time.o tmpfil.o trunc.o uacces.o \
@@ -68,6 +68,7 @@ app3.o: $(srcdir)/../uudefs.h
 app4.o: $(srcdir)/../uudefs.h
 basnam.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 chmod.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
+corrup.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 cusub.o: $(srcdir)/../cu.h $(srcdir)/../uudefs.h $(srcdir)/../conn.h
 cusub.o: $(srcdir)/../prot.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 cwd.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h

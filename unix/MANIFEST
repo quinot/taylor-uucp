@@ -8,8 +8,9 @@ basnam.c
 bytfre.c
 chmod.c
 cohtty.c
-cwd.c
+corrup.c
 cusub.c
+cwd.c
 detach.c
 dirent.c
 dup2.c
