@@ -4363,10 +4363,10 @@ was a direct inspiration for this somewhat larger project.  Chip
 Salzenberg @file{<chip@@tct.com>} contributed many early patches.
 Franc,ois Pinard @file{<pinard@@iro.umontreal.ca>} tirelessly tested the
 code and suggested many improvements.  He also put together the initial
-version of this document.  Finally, Verbus M. Counts
-@file{<verbus@@westmark.com>} and Centel Federal Systems, Inc. deserve
-special thanks, since they actually paid me money to port this code to
-System III.
+version of this document.  Doug Evans contributed the zmodem protocol.
+Finally, Verbus M. Counts @file{<verbus@@westmark.com>} and Centel
+Federal Systems, Inc. deserve special thanks, since they actually paid
+me money to port this code to System III.
 @end ifinfo
 @iftex
 First of all, I would like to thank the people at Infinity Development
