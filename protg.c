@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.28  1992/03/13  22:59:25  ian
+   Have breceive_char go through freceive_data
+
    Revision 1.27  1992/03/12  19:56:10  ian
    Debugging based on types rather than number
 
@@ -413,6 +416,12 @@ static long cGbad_order;
 /* Number of packets rejected by receiver (number of RJ packets
    received).  */
 static long cGremote_rejects;
+
+#if DEBUG > 1
+/* Control packet names used for debugging.  */
+static const char * const azGcontrol[] =
+{"?0?", "CLOSE", "RJ", "SRJ", "RR", "INITC", "INITB", "INITA"};
+#endif
 
 /* Local functions.  */
 
@@ -843,8 +852,6 @@ fgsenddata (zdata, cdata)
   int itt, iseg, csize;
   unsigned short icheck;
 
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "fgsenddata: Sending %d bytes", cdata);
-
   /* Set the initial length bytes.  See the description at the definition
      of SHORTDATA, above.  */
 
@@ -962,6 +969,10 @@ fgsenddata (zdata, cdata)
       return TRUE;
     }
 
+  DEBUG_MESSAGE2 (DEBUG_PROTO,
+		  "fgsenddata: Sending packet %d (%d bytes)",
+		  CONTROL_XXX (z[IFRAME_CONTROL]), cdata);
+
   return fsend_data (z, CFRAMELEN + csize, TRUE);
 }
 
@@ -1020,8 +1031,8 @@ fgsend_control (ixxx, iyyy)
   unsigned short icheck;
 
   DEBUG_MESSAGE2 (DEBUG_PROTO,
-		  "fgsend_control: Sending control %d, %d",
-		  ixxx, iyyy);
+		  "fgsend_control: Sending control %s %d",
+		  azGcontrol[ixxx], iyyy);
 
   ab[IFRAME_DLE] = DLE;
   ab[IFRAME_K] = KCONTROL;
@@ -1163,6 +1174,11 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	      int inext;
 
 	      inext = INEXTSEQ (iGremote_ack);
+
+	      DEBUG_MESSAGE1 (DEBUG_PROTO,
+			      "fgwait_for_packet: Resending packet %d",
+			      inext);
+
 	      ugadjust_ack (inext);
 	      ++cGresent_packets;
 	      if (! fsend_data (azGsendbuffers[inext],
@@ -1224,6 +1240,9 @@ fggot_ack (iack)
     iGretransmit_seq = -1;
   else
     {
+      DEBUG_MESSAGE1 (DEBUG_PROTO,
+		      "fggot_ack: Sending packet %d", inext);
+
       ugadjust_ack (inext);
       ++cGresent_packets;
       if (! fsend_data (azGsendbuffers[inext],
@@ -1235,6 +1254,9 @@ fggot_ack (iack)
 	iGretransmit_seq = -1;
       else
 	{
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "fggot_ack: Sending packet %d", inext);
+
 	  ugadjust_ack (inext);
 	  ++cGresent_packets;
 	  if (! fsend_data (azGsendbuffers[inext],
@@ -1305,7 +1327,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
   if (pffound != NULL)
     *pffound = FALSE;
 
-  for (; iPrecstart != iPrecend; iPrecstart = (iPrecstart + 1) % CRECBUFLEN)
+  while (iPrecstart != iPrecend)
     {
       char ab[CFRAMELEN];
       int i, iget, cwant;
@@ -1316,7 +1338,25 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
       /* Look for the DLE which must start a packet.  */
 
       if (abPrecbuf[iPrecstart] != DLE)
-	continue;
+	{
+	  char *zdle;
+
+	  cfirst = iPrecend - iPrecstart;
+	  if (cfirst < 0)
+	    cfirst = CRECBUFLEN - iPrecstart;
+
+	  zdle = memchr (abPrecbuf + iPrecstart, DLE, cfirst);
+
+	  if (zdle == NULL)
+	    {
+	      iPrecstart = (iPrecstart + cfirst) % CRECBUFLEN;
+	      continue;
+	    }
+
+	  /* We don't need % CRECBUFLEN here because zdle - (abPrecbuf
+	     + iPrecstart) < cfirst <= CRECBUFLEN - iPrecstart.  */
+	  iPrecstart += zdle - (abPrecbuf + iPrecstart);
+	}
 
       /* Get the first six bytes into ab.  */
 
@@ -1334,8 +1374,11 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  return TRUE;
 	}
 
-      /* Make sure these six bytes start a packet.  If they don't,
-	 loop around to bump iGrecstart and look for another DLE.  */
+      /* Make sure these six bytes start a packet.  The check on
+	 IFRAME_DLE is basically a debugging check, since the above
+	 code should have ensured that it will never fail.  If this is
+	 not the start of a packet, bump iPrecstart and loop around to
+	 look for another DLE.  */
 
       if (ab[IFRAME_DLE] != DLE
 	  || ab[IFRAME_K] < 1
@@ -1345,8 +1388,20 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  || CONTROL_TT (ab[IFRAME_CONTROL]) == ALTCHAN)
 	{
 	  ++cGbad_hdr;
+
+	  DEBUG_MESSAGE4
+	    (DEBUG_PROTO,
+	     "fgprocess_data: Bad header: K %d TT %d XOR byte %d calc %d",
+	     ab[IFRAME_K] & 0xff,
+	     CONTROL_TT (ab[IFRAME_CONTROL]),
+	     ab[IFRAME_XOR] & 0xff,
+	     (ab[IFRAME_K] ^ ab[IFRAME_CHECKLOW]
+	      ^ ab[IFRAME_CHECKHIGH] ^ ab[IFRAME_CONTROL]) & 0xff);
+
 	  if (! fgcheck_errors ())
 	    return FALSE;
+
+	  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 	  continue;
 	}
 
@@ -1365,8 +1420,15 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	    {
 	      ++cGbad_hdr;
+
+	      DEBUG_MESSAGE0
+		(DEBUG_PROTO,
+		 "fgprocess_data: Bad header: control packet with data");
+
 	      if (! fgcheck_errors ())
 		return FALSE;
+
+	      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 	      continue;
 	    }
 
@@ -1383,15 +1445,21 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL)
 	    {
 	      ++cGbad_hdr;
+
+	      DEBUG_MESSAGE0
+		(DEBUG_PROTO,
+		 "fgprocess_data: Bad header: data packet is type CONTROL");
+
 	      if (! fgcheck_errors ())
 		return FALSE;
+
+	      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 	      continue;
 	    }
 
-	  if (iPrecend >= iPrecstart)
-	    cinbuf = iPrecend - iPrecstart;
-	  else
-	    cinbuf = CRECBUFLEN - (iPrecstart - iPrecend);
+	  cinbuf = iPrecend - iPrecstart;
+	  if (cinbuf < 0)
+	    cinbuf += CRECBUFLEN;
 	  cinbuf -= CFRAMELEN;
 
 	  /* Make sure we have enough data.  If we don't, wait for
@@ -1485,21 +1553,22 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* We can't skip the packet data after this, because if we
 	     have lost incoming bytes the next DLE will be somewhere
 	     in what we thought was the packet data.  */
+
+	  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 	  continue;
 	}
 
       /* We have a packet; remove the processed bytes from the receive
-	 buffer.  Note that if we go around the loop again after this
-	 assignment, we must decrement iPrecstart first to account for
-	 the increment which will be done by the loop control.  */
+	 buffer.  */
       iPrecstart = (iPrecstart + cwant + CFRAMELEN) % CRECBUFLEN;
 
-      /* Store the control byte for the use of calling functions.  */
+      /* Store the control byte for the handshake routines.  */
       iGpacket_control = ab[IFRAME_CONTROL] & 0xff;
 
       /* Update the received sequence number from the yyy field of a
-	 data packet or an RR control packet.  */
-
+	 data packet or an RR control packet.  If we've been delaying
+	 sending packets until we received an ack, this may send out
+	 some packets.  */
       if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
 	  || CONTROL_XXX (ab[IFRAME_CONTROL]) == RR)
 	{
@@ -1531,10 +1600,6 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		 since the other side will probably just ignore it
 		 anyhow (that's what this code does).  */
 
-	      /* As noted above, we must decrement iPrecstart because
-		 the loop control will increment it.  */
-
-	      --iPrecstart;
 	      continue;
 	    }
 
@@ -1543,6 +1608,9 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  ++cGrec_packets;
 
 	  iGrecseq = INEXTSEQ (iGrecseq);
+
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "fgprocess_data: Got packet %d", iGrecseq);
 
 	  /* Tell the caller that we found something.  */
 	  if (pffound != NULL)
@@ -1581,10 +1649,9 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		  cmove = 2;
 		}
 
-	      DEBUG_MESSAGE3
-		(DEBUG_PROTO,
-		 "fgprocess_data: Short by %d (first %d, second %d)",
-		 cshort, cfirst, csecond);
+	      DEBUG_MESSAGE1 (DEBUG_PROTO,
+			      "fgprocess_data: Packet short by %d",
+			      cshort);
 
 	      /* Adjust the start of the buffer for the bytes used
 		 by the count.  */
@@ -1611,9 +1678,11 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		  csecond = 0;
 		}
 
+#if DEBUG > 0
 	      /* This should not happen, but just in case.  */
 	      if (cfirst < 0)
 		cfirst = 0;
+#endif
 	    }
 
 	  /* If *pfexit gets set by the first batch of data, and there
@@ -1641,14 +1710,15 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      return TRUE;
 	    }
 
-	  /* As noted above, we must decrement iPrecstart because
-	     the loop control will increment it.  */
-
-	  --iPrecstart;
 	  continue;
 	}
 
       /* Handle control messages here. */
+
+      DEBUG_MESSAGE2 (DEBUG_PROTO,
+		      "fgprocess_data: Got control %s %d",
+		      azGcontrol[CONTROL_XXX (ab[IFRAME_CONTROL])],
+		      CONTROL_YYY (ab[IFRAME_CONTROL]));
 
       switch (CONTROL_XXX (ab[IFRAME_CONTROL]))
 	{
@@ -1677,6 +1747,11 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      char *zpack;
 
+	      DEBUG_MESSAGE2
+		(DEBUG_PROTO,
+		 "fgprocess_data: Remote reject: next %d resending %d",
+		 iGsendseq, iGretransmit_seq);
+
 	      ugadjust_ack (iGretransmit_seq);
 	      ++cGresent_packets;
 	      ++cGremote_rejects;
@@ -1690,6 +1765,9 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	case SRJ:
 	  /* Selectively reject a particular packet.  This is not used
 	     by UUCP, but it's easy to support.  */
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "fgprocess_data: Selective reject of %d",
+			  CONTROL_YYY (ab[IFRAME_CONTROL]));
 	  {
 	    char *zpack;
 
@@ -1719,11 +1797,7 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  return TRUE;
 	}
 
-      /* Loop around to look for the next packet, if any.  As noted
-	 above, we must decrement iPrecstart since the loop control
-	 will increment it.  */
-
-      --iPrecstart;
+      /* Loop around to look for the next packet, if any.  */
     }
 
   /* There is no data left in the receive buffer.  */
@@ -1775,9 +1849,6 @@ igchecksum (z, c)
 	ichk1 ^= ichk2;
     }
   while (--c > 0);
-
-  DEBUG_MESSAGE1 (DEBUG_PROTO,
-		  "igchecksum: Returning 0x%x", ichk1 & 0xffff);
 
   return ichk1 & 0xffff;
 }
@@ -1837,9 +1908,6 @@ igchecksum2 (zfirst, cfirst, zsecond, csecond)
 	ichk1 ^= ichk2;
     }
   while (--c > 0);
-
-  DEBUG_MESSAGE1 (DEBUG_PROTO,
-		  "igchecksum2: Returning 0x%x", ichk1 & 0xffff);
 
   return ichk1 & 0xffff;
 }
