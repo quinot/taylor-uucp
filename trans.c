@@ -80,9 +80,19 @@ static struct stransfer *aqTchan[IMAX_CHAN + 1];
 /* Number of local channel numbers currently allocated.  */
 static int cTchans;
 
+/* Next channel number to allocate.  */
+static int iTchan;
+
 /* Array of transfer structures indexed by remote channel number.
    This is maintained for remote jobs.  */
 static struct stransfer *aqTremote[IMAX_CHAN + 1];
+
+/* The stored time of the last received data.  */
+static long iTsecs;
+static long iTmicros;
+
+/* The size of the command we have read so far in ftadd_cmd.  */
+static size_t cTcmdlen;
 
 /* Queue up a transfer structure before *pq.  This puts it at the head
    or the fail of the list headed by *pq.  */
@@ -197,18 +207,16 @@ utchanalc (qdaemon, qtrans)
      struct sdaemon *qdaemon;
      struct stransfer *qtrans;
 {
-  static int ichan;
-
   do
     {
-      ++ichan;
-      if (ichan > qdaemon->qproto->cchans)
-	ichan = 1;
+      ++iTchan;
+      if (iTchan > qdaemon->qproto->cchans)
+	iTchan = 1;
     }
-  while (aqTchan[ichan] != NULL);
+  while (aqTchan[iTchan] != NULL);
 
-  qtrans->ilocal = ichan;
-  aqTchan[ichan] = qtrans;
+  qtrans->ilocal = iTchan;
+  aqTchan[iTchan] = qtrans;
   ++cTchans;
 }
 
@@ -444,7 +452,33 @@ boolean
 floop (qdaemon)
      struct sdaemon *qdaemon;
 {
+  int i;
+  int cchans;
   boolean fret;
+
+  /* Clear all the variables in case this is not the first call.  */
+  qTlocal = NULL;
+  qTremote = NULL;
+  qTsend = NULL;
+  qTreceive = NULL;
+  cTchans = 0;
+  iTchan = 0;
+  iTsecs = 0;
+  iTmicros = 0;
+  cTcmdlen = 0;
+  for (i = 0; i < IMAX_CHAN + 1; i++)
+    {
+      aqTchan[i] = NULL;
+      aqTremote[i] = NULL;
+    }
+
+  /* If we are using a half-duplex line, act as though we have only a
+     single channel; otherwise we might start a send and a receive at
+     the same time.  */
+  if ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) == 0)
+    cchans = 1;
+  else
+    cchans = qdaemon->qproto->cchans;
 
   fret = TRUE;
 
@@ -498,14 +532,11 @@ floop (qdaemon)
 	  utqueue (&qTsend, q, TRUE);
 	}
 
-      /* If we are the master, or if we are running fullduplex on a
-	 protocol which supports multiple channels, try to queue up
-	 additional local jobs.  */
-      if (qdaemon->fmaster ||
-	  ((qdaemon->ireliable & UUCONF_RELIABLE_FULLDUPLEX) != 0
-	   && qdaemon->qproto->cchans > 1))
+      /* If we are the master, or if we have multiple channels, try to
+	 queue up additional local jobs.  */
+      if (qdaemon->fmaster || cchans > 1)
 	{
-	  while (qTlocal != NULL && cTchans < qdaemon->qproto->cchans)
+	  while (qTlocal != NULL && cTchans < cchans)
 	    {
 	      /* We have room for an additional channel.  */
 	      q = qTlocal;
@@ -663,15 +694,14 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
      long ipos;
      boolean *pfexit;
 {
-  static long isecs, imicros;
   long inextsecs, inextmicros;
   struct stransfer *q;
   int cwrote;
   int calcs;
   boolean fret;
 
-  if (isecs == 0)
-    isecs = isysdep_process_time (&imicros);
+  if (iTsecs == 0)
+    iTsecs = isysdep_process_time (&iTmicros);
 
   /* Now we have to decide which transfer structure gets the data.  If
      ilocal is -1, it means that the protocol does not know where to
@@ -717,7 +747,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 
       /* The time spent to gather a new command does not get charged
 	 to any one command.  */
-      isecs = isysdep_process_time (&imicros);
+      iTsecs = isysdep_process_time (&iTmicros);
 
       return fret;
     }
@@ -884,12 +914,12 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
      list).  */
   if (q->calcs == calcs)
     {
-      q->isecs += inextsecs - isecs;
-      q->imicros += inextmicros - imicros;
+      q->isecs += inextsecs - iTsecs;
+      q->imicros += inextmicros - iTmicros;
     }
 
-  isecs = inextsecs;
-  imicros = inextmicros;
+  iTsecs = inextsecs;
+  iTmicros = inextmicros;
 
   return fret;
 }
@@ -907,28 +937,27 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
 {
   static char *zbuf;
   static size_t cbuf;
-  static size_t chave;
   size_t cneed;
   struct scmd s;
 
-  cneed = chave + clen + 1;
+  cneed = cTcmdlen + clen + 1;
   if (cneed > cbuf)
     {
       zbuf = (char *) xrealloc ((pointer) zbuf, cneed);
       cbuf = cneed;
     }
 
-  memcpy (zbuf + chave, z, clen);
-  zbuf[chave + clen] = '\0';
+  memcpy (zbuf + cTcmdlen, z, clen);
+  zbuf[cTcmdlen + clen] = '\0';
 
   if (! flast)
     {
-      chave += clen;
+      cTcmdlen += clen;
       return TRUE;
     }
 
   /* Don't save this string for next time.  */
-  chave = 0;
+  cTcmdlen = 0;
 
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO,
 		  "ftadd_cmd: Got command \"%s\"", zbuf);
@@ -1049,8 +1078,8 @@ ustats_failed (qsys)
       q = qTsend;
       do
 	{
-	  if (q->fsendfile)
-	    ustats (FALSE, q->s.zuser, qsys->uuconf_zname, TRUE,
+	  if (q->fsendfile || q->frecfile)
+	    ustats (FALSE, q->s.zuser, qsys->uuconf_zname, q->fsendfile,
 		    q->cbytes, q->isecs, q->imicros);
 	  q = q->qnext;
 	}
@@ -1062,8 +1091,8 @@ ustats_failed (qsys)
       q = qTreceive;
       do
 	{
-	  if (q->frecfile)
-	    ustats (FALSE, q->s.zuser, qsys->uuconf_zname, FALSE,
+	  if (q->fsendfile || q->frecfile)
+	    ustats (FALSE, q->s.zuser, qsys->uuconf_zname, q->fsendfile,
 		    q->cbytes, q->isecs, q->imicros);
 	  q = q->qnext;
 	}
