@@ -15,12 +15,22 @@ fsysdep_link (zfrom, zto, pfworked)
      const char *zto;
      boolean *pfworked;
 {
+  *pfworked = FALSE;
   if (link (zfrom, zto) == 0)
     {
       *pfworked = TRUE;
       return TRUE;
     }
-  *pfworked = FALSE;
+  if (errno == ENOENT)
+    {
+      if (! fsysdep_make_dirs (zto, TRUE))
+	return FALSE;
+      if (link (zfrom, zto) == 0)
+	{
+	  *pfworked = TRUE;
+	  return TRUE;
+	}
+    }
   if (errno == EXDEV)
     return TRUE;
   ulog (LOG_ERROR, "link (%s, %s): %s", zfrom, zto, strerror (errno));
