@@ -29,11 +29,12 @@ man8dir = $(prefix)/man/man8
 man8ext = .8
 
 # Where to install the info files.
-infodir = $(prefix)/emacs/info
+infodir = $(prefix)/info
 
 # The directory to look in for new style configuration files (when
-# using HAVE_TAYLOR_CONFIG).
-newconfigdir = $(libdir)
+# using HAVE_TAYLOR_CONFIG).  Note that by default this is different
+# from libdir, unlike traditional UUCP packages.
+newconfigdir = $(prefix)/conf/uucp
 
 # The directory to look in for BNU (when using HAVE_BNU_CONFIG) or
 # V2 (when using HAVE_V2_CONFIG) style configuration files.
@@ -58,15 +59,22 @@ TSTUU = tstuu
 @UUDIR@uudirdir = $(libdir)/util
 @UUDIR@UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(uudirdir)/$(UUDIR)\"
 
+# Source directory and, if necessary, VPATH
+srcdir = @srcdir@
+@VPATH@
+
 # Define programs and flags
 CC = @CC@
 CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 ALLOCA = @ALLOCA@
 
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = @INSTALLDATA@
+
+LN_S = @LN_S@
 
 #
 # Nothing else to configure
@@ -76,7 +84,7 @@ SHELL = /bin/sh
 
 VERSION = beta1.03
 
-CONFIG = -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" $(UUDIRFLAGS)
+MORECFLAGS = -I$(srcdir) -I. -DLIBDIR=\"$(libdir)\" -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\" -DOWNER=\"$(owner)\" $(UUDIRFLAGS)
 
 PROGRAMS = uucico uuxqt uux uucp uuchk uustat uuname uulog
 
@@ -136,108 +144,69 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	chown $(owner) $(bindir)/uuname
 	chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
 	chmod 4555 $(bindir)/uuname
-	$(INSTALL_DATA) uucico.8 $(man8dir)/uucico$(man8ext)
-	$(INSTALL_DATA) uuxqt.8 $(man8dir)/uuxqt$(man8ext)
-	$(INSTALL_DATA) uux.1 $(man1dir)/uux$(man1ext)
-	$(INSTALL_DATA) uucp.1 $(man1dir)/uucp$(man1ext)
-	-$(INSTALL_DATA) uucp.info $(infodir)/uucp.info
-	-$(INSTALL_DATA) uucp.info-1 $(infodir)/uucp.info-1
-	-$(INSTALL_DATA) uucp.info-2 $(infodir)/uucp.info-2
-	-$(INSTALL_DATA) uucp.info-3 $(infodir)/uucp.info-3
+	cd $(srcdir); $(INSTALL_DATA) uucico.8 $(man8dir)/uucico$(man8ext)
+	cd $(srcdir); $(INSTALL_DATA) uuxqt.8 $(man8dir)/uuxqt$(man8ext)
+	cd $(srcdir); $(INSTALL_DATA) uux.1 $(man1dir)/uux$(man1ext)
+	cd $(srcdir); $(INSTALL_DATA) uucp.1 $(man1dir)/uucp$(man1ext)
+	-cd $(srcdir); $(INSTALL_DATA) uucp.info $(infodir)/uucp.info
+	-cd $(srcdir); $(INSTALL_DATA) uucp.info-1 $(infodir)/uucp.info-1
+	-cd $(srcdir); $(INSTALL_DATA) uucp.info-2 $(infodir)/uucp.info-2
+	-cd $(srcdir); $(INSTALL_DATA) uucp.info-3 $(infodir)/uucp.info-3
 
 uninstall:
 	rm -f $(libdir)/uucico $(libdir)/uuxqt
-	cp $(libdir)/uucico.old $(libdir)/uucico
-	cp $(libdir)/uuxqt.old $(libdir)/uuxqt
-	rm -f $(bindir)/uux $(bindir)/uucp
-	cp $(bindir)/uux.old $(bindir)/uux
-	cp $(bindir)/uucp.old $(bindir)/uucp
+	-cp $(libdir)/uucico.old $(libdir)/uucico
+	-cp $(libdir)/uuxqt.old $(libdir)/uuxqt
+	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uustat
+	rm -f $(bindir)/uuname $(bindir)/uulog
+	-cp $(bindir)/uux.old $(bindir)/uux
+	-cp $(bindir)/uucp.old $(bindir)/uucp
+	-cp $(bindir)/uustat.old $(bindir)/uustat
+	-cp $(bindir)/uuname.old $(bindir)/uuname
+	-cp $(bindir)/uulog.old $(bindir)/uulog
 
 uucico: $(UUOBJS)
-	$(CC) $(CFLAGS) -o uucico $(UUOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uucico $(UUOBJS) $(LIBS)
 
 uuxqt: $(XQTOBJS)
-	$(CC) $(CFLAGS) -o uuxqt $(XQTOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uuxqt $(XQTOBJS) $(LIBS)
 
 uux: $(UUXOBJS)
-	$(CC) $(CFLAGS) -o uux $(UUXOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uux $(UUXOBJS) $(LIBS)
 
 uucp: $(UUCPOBJS)
-	$(CC) $(CFLAGS) -o uucp $(UUCPOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uucp $(UUCPOBJS) $(LIBS)
 
 uuchk: $(UUCHKOBJS)
-	$(CC) $(CFLAGS) -o uuchk $(UUCHKOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uuchk $(UUCHKOBJS) $(LIBS)
 
 uustat: $(UUSTATOBJS)
-	$(CC) $(CFLAGS) -o uustat $(UUSTATOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uustat $(UUSTATOBJS) $(LIBS)
 
 uuname: $(UUNAMEOBJS)
-	$(CC) $(CFLAGS) -o uuname $(UUNAMEOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uuname $(UUNAMEOBJS) $(LIBS)
 
 uulog: $(UULOGOBJS)
-	$(CC) $(CFLAGS) -o uulog $(UULOGOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o uulog $(UULOGOBJS) $(LIBS)
 
 tstuu: $(TSTOBJS)
-	$(CC) $(CFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o tstuu $(TSTOBJS) $(LIBS)
 
 uudir: uudir.o
-	$(CC) $(CFLAGS) -o uudir uudir.o $(LIBS)
+	$(CC) $(LDFLAGS) -o uudir uudir.o $(LIBS)
 
-uucico.o: uucico.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uucico.c
-uuxqt.o: uuxqt.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uuxqt.c
-uux.o: uux.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uux.c
-uucp.o: uucp.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uucp.c
-uuchk.o: uuchk.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uuchk.c
-uustat.o: uustat.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uustat.c
-uuname.o: uuname.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uuname.c
-uulog.o: uulog.c
-	$(CC) -c $(CFLAGS) $(CONFIG) uulog.c
-config.o: config.c
-	$(CC) -c $(CFLAGS) $(CONFIG) config.c
-v2.o: v2.c
-	$(CC) -c $(CFLAGS) $(CONFIG) v2.c
-bnu.o: bnu.c
-	$(CC) -c $(CFLAGS) $(CONFIG) bnu.c
-sysinf.o: sysinf.c
-	$(CC) -c $(CFLAGS) $(CONFIG) sysinf.c
-prtinf.o: prtinf.c
-	$(CC) -c $(CFLAGS) $(CONFIG) prtinf.c
-sys1.o: sys1.c
-	$(CC) -c $(CFLAGS) $(CONFIG) -DOWNER=\"$(owner)\" sys1.c
-uudir.o: uudir.c
-	$(CC) -c $(CFLAGS) $(CONFIG) -DOWNER=\"$(owner)\" uudir.c
+.c.o:
+	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
 
-sysdep.h: sysh.unx
-	rm -f sysdep.h
-	ln sysh.unx sysdep.h
-sys1.c: sys1.unx
-	rm -f sys1.c
-	ln sys1.unx sys1.c
-sys2.c: sys2.unx
-	rm -f sys2.c
-	ln sys2.unx sys2.c
-sys3.c: sys3.unx
-	rm -f sys3.c
-	ln sys3.unx sys3.c
-sys4.c: sys4.unx
-	rm -f sys4.c
-	ln sys4.unx sys4.c
-sys5.c: sys5.unx
-	rm -f sys5.c
-	ln sys5.unx sys5.c
-sys6.c: sys6.unx
-	rm -f sys6.c
-	ln sys6.unx sys6.c
-sys7.c: sys7.unx
-	rm -f sys7.c
-	ln sys7.unx sys7.c
+.SUFFIXES: .unx
+
+.unx.h:
+	rm -f $@
+	$(LN_S) $< $@
+
+.unx.c:
+	rm -f  $@
+	$(LN_S) $< $@
 
 clean:
 	rm -f $(ALLOBJS) uucico uuxqt uux uucp uuchk tstuu
@@ -282,7 +251,7 @@ realclean: clean
 TAGS:
 	etags *.h *.c
 
-# Header file depedencies.  These are maintained by hand.
+# Header file dependencies.  These are maintained by hand.
 
 uucico.o: uucp.h conf.h policy.h system.h prot.h port.h sysdep.h uutime.h
 uucico.o: getopt.h
