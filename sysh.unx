@@ -1,7 +1,7 @@
 /* sysh.unx -*- C -*-
    The header file for the UNIX system dependent routines.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -470,6 +470,14 @@ extern boolean fsdo_unlock P((const char *, boolean fspooldir));
    for any user.  */
 extern boolean fsuser_access P((const struct stat *, int imode,
 				const char *zuser));
+
+/* Switch to the permissions of the invoking user.  This sets the
+   argument to a value to pass to fsuucp_perms.  */
+extern boolean fsuser_perms P((uid_t *));
+
+/* Switch back to the permissions of the UUCP user ID.  This should be
+   passed the value returned by fsuser_perms in its argument.  */
+extern boolean fsuucp_perms P((long));
 
 /* Stick two directories and a file name together.  */
 extern char *zsappend3 P((const char *zdir1, const char *zdir2,
