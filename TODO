@@ -216,3 +216,10 @@ Franc,ois Pinard:
 > ----------------------------------------------------------------------<
 
 68.
+
+Francois Pinard: attach a name to each alternate and then indicate
+which one was used when the connection succeeded.  The name could
+simply be an argument to the ``alternate'' command.  Except for the
+first alternate, that is.
+
+69.
