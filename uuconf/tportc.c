@@ -225,6 +225,10 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	  break;
 	case UUCONF_PORTTYPE_TCP:
 	  qport->uuconf_u.uuconf_stcp.uuconf_zport = (char *) "uucp";
+	  qport->uuconf_ireliable = (UUCONF_RELIABLE_SPECIFIED
+				     | UUCONF_RELIABLE_ENDTOEND
+				     | UUCONF_RELIABLE_RELIABLE
+				     | UUCONF_RELIABLE_EIGHT);
 	  break;
 	}
 
