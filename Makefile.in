@@ -115,8 +115,8 @@ PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uusched \
 	uulog uuto uupick cu
 
 UUOBJS = uucico.o trans.o send.o rec.o xcmd.o prot.o protg.o protf.o \
-	prott.o prote.o proti.o protj.o protz.o time.o log.o chat.o \
-	conn.o util.o copy.o
+	prott.o prote.o proti.o protj.o proty.o protz.o time.o log.o \
+	chat.o conn.o util.o copy.o
 XQTOBJS = uuxqt.o util.o log.o copy.o
 UUXOBJS = uux.o util.o log.o copy.o
 UUCPOBJS = uucp.o util.o log.o copy.o
@@ -132,7 +132,8 @@ TSTOBJS = tstuu.o
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uuconv.o uustat.o \
 	uuname.o uulog.o uupick.o cu.o uudir.o tstuu.o trans.o send.o \
 	rec.o xcmd.o prot.o protg.o protf.o prott.o prote.o proti.o \
-	protj.o protz.o util.o time.o log.o chat.o conn.o copy.o
+	protj.o proty.o protz.o util.o time.o log.o chat.o conn.o \
+	copy.o
 
 UULIBS = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 
@@ -423,6 +424,7 @@ prott.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 prote.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 proti.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 protj.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
+proty.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 protz.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 log.o: uudefs.h uuconf.h system.h
 chat.o: uudefs.h uuconf.h system.h prot.h conn.h
