@@ -559,6 +559,8 @@ ikshow_port (qport, pinfo)
       if (qport->uuconf_u.uuconf_sdirect.uuconf_zdevice != NULL)
 	printf ("   Device %s\n",
 		qport->uuconf_u.uuconf_sdirect.uuconf_zdevice);
+      else
+	printf ("   Using port name as device name\n");
       printf ("   Speed %ld\n", qport->uuconf_u.uuconf_sdirect.uuconf_ibaud);
       printf ("   Carrier %savailable\n",
 	      qport->uuconf_u.uuconf_sdirect.uuconf_fcarrier ? "" : "not ");
@@ -570,6 +572,8 @@ ikshow_port (qport, pinfo)
       printf ("   Port type modem\n");
       if (qmodem->uuconf_zdevice != NULL)
 	printf ("   Device %s\n", qmodem->uuconf_zdevice);
+      else
+	printf ("   Using port name as device name\n");
       if (qmodem->uuconf_zdial_device != NULL)
 	printf ("   Dial device %s\n", qmodem->uuconf_zdial_device);
       printf ("   Speed %ld\n", qmodem->uuconf_ibaud);
@@ -659,6 +663,8 @@ ikshow_port (qport, pinfo)
 	      qtli->uuconf_fstream ? "S" : "");
       if (qtli->uuconf_zdevice != NULL)
 	printf ("   Device %s\n", qtli->uuconf_zdevice);
+      else
+	printf ("   Using port name as device name\n");
       if (qtli->uuconf_pzpush != NULL)
 	{
 	  printf ("   Push");
