@@ -1573,7 +1573,8 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL
 	  && CONTROL_XXX (ab[IFRAME_CONTROL]) == RR
 	  && iGremote_ack == CONTROL_YYY (ab[IFRAME_CONTROL])
-	  && INEXTSEQ (iGremote_ack) != iGsendseq)
+	  && INEXTSEQ (iGremote_ack) != iGsendseq
+	  && iGretransmit_seq != -1)
 	{
 	  DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			  "fgprocess_data: Treating duplicate RR as RJ");
@@ -1585,7 +1586,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	 sending packets until we received an ack, this may send out
 	 some packets.  */
       if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
-	  || CONTROL_XXX (ab[IFRAME_CONTROL]) == RR)
+	  || (CONTROL_XXX (ab[IFRAME_CONTROL]) == RR && ! fduprr))
 	{
 	  if (! fggot_ack (qdaemon, CONTROL_YYY (ab[IFRAME_CONTROL])))
 	    return FALSE;
