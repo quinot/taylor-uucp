@@ -69,7 +69,7 @@ char enable_device[16];			/* this will hold our device name
 
 	if( (infp = fopen("/etc/ttys","r")) == NULL){
 		ulog(LOG_ERROR,"Error: check_disable_tty: failed to open /etc/ttys\n");
-		return TRUE;
+		return FALSE;
 	}
 
 	while (NULL !=(fgets(&sought_tty, sizeof (sought_tty), infp ))){
