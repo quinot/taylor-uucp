@@ -70,7 +70,7 @@ Makefile: Makefile.in
 
 # Header file dependencies
 
-$(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h ../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+$(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h ../config.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
 
 addblk.o: alloc.h
 allblk.o: alloc.h
