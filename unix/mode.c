@@ -25,7 +25,7 @@ ixsysdep_file_mode (zfile)
  #error Files modes need to be translated
 #endif
 
-  /* We can't return 0, since that indicate an error.  */
+  /* We can't return 0, since that indicates an error.  */
   if ((s.st_mode & 0777) == 0)
     return 0400;
 
