@@ -474,6 +474,12 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 #endif /* HAVE_HDB_LOGGING */
 	    }
 
+#if QNX_LOG_NODE_ID
+	  fprintf (e, " %ld", (long) getnid ());
+	  if (edebug != NULL)
+	    fprintf (edebug, " %ld", (long) getnid ());
+#endif
+
 	  fprintf (e, ") ");
 	  if (edebug != NULL)
 	    fprintf (edebug, ") ");

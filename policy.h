@@ -523,6 +523,17 @@
 #define HAVE_V2_LOGGING 0
 #define HAVE_HDB_LOGGING 0
 
+/* If QNX_LOG_NODE_ID is set to 1, log messages will include the QNX
+   node ID just after the process ID.  This is a policy decision
+   because it changes the log file entry format, which can break other
+   programs (e.g., some of the ones in the contrib directory) which
+   expect to read the standard log file format.  */
+#ifdef __QNX__
+#define QNX_LOG_NODE_ID 1
+#else
+#define QNX_LOG_NODE_ID 0
+#endif
+
 /* If you would like the log, debugging and statistics files to be
    closed after each message, set CLOSE_LOGFILES to 1.  This will
    permit the log files to be easily moved.  If a log file does not
