@@ -237,3 +237,9 @@ Mike Park: we should accept and Shere=foo message with an alias of the
 system we are calling.
 
 76.
+
+Niels Baggesen: the code should be more consistent about when it sends
+mail for failures.  Right now a send failure may not generate a mail
+message, but it should.
+
+77.
