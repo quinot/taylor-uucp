@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.35  1992/05/18  18:52:01  ian
+   Set iGremote_segsize for each INITB packet we receive
+
    Revision 1.34  1992/04/28  19:04:40  ian
    Heiko Rupp: only send RJ packet if there are no unacknowledged packets
 
@@ -1411,14 +1414,15 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	{
 	  ++cGbad_hdr;
 
-	  DEBUG_MESSAGE4
-	    (DEBUG_PROTO | DEBUG_ABNORMAL,
-	     "fgprocess_data: Bad header: K %d TT %d XOR byte %d calc %d",
-	     ab[IFRAME_K] & 0xff,
-	     CONTROL_TT (ab[IFRAME_CONTROL]),
-	     ab[IFRAME_XOR] & 0xff,
-	     (ab[IFRAME_K] ^ ab[IFRAME_CHECKLOW]
-	      ^ ab[IFRAME_CHECKHIGH] ^ ab[IFRAME_CONTROL]) & 0xff);
+	  DEBUG_MESSAGE4 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			  "fgprocess_data: Bad header: K %d TT %d XOR byte %d calc %d",
+			  ab[IFRAME_K] & 0xff,
+			  CONTROL_TT (ab[IFRAME_CONTROL]),
+			  ab[IFRAME_XOR] & 0xff,
+			  (ab[IFRAME_K]
+			   ^ ab[IFRAME_CHECKLOW]
+			   ^ ab[IFRAME_CHECKHIGH]
+			   ^ ab[IFRAME_CONTROL]) & 0xff);
 
 	  if (! fgcheck_errors ())
 	    return FALSE;
@@ -1443,9 +1447,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      ++cGbad_hdr;
 
-	      DEBUG_MESSAGE0
-		(DEBUG_PROTO | DEBUG_ABNORMAL,
-		 "fgprocess_data: Bad header: control packet with data");
+	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			      "fgprocess_data: Bad header: control packet with data");
 
 	      if (! fgcheck_errors ())
 		return FALSE;
@@ -1468,9 +1471,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      ++cGbad_hdr;
 
-	      DEBUG_MESSAGE0
-		(DEBUG_PROTO | DEBUG_ABNORMAL,
-		 "fgprocess_data: Bad header: data packet is type CONTROL");
+	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			      "fgprocess_data: Bad header: data packet is type CONTROL");
 
 	      if (! fgcheck_errors ())
 		return FALSE;
@@ -1535,10 +1537,9 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       if (ihdrcheck != idatcheck)
 	{
-	  DEBUG_MESSAGE2
-	    (DEBUG_PROTO | DEBUG_ABNORMAL,
-	     "fgprocess_data: Bad checksum: header 0x%x, data 0x%x",
-	     ihdrcheck, idatcheck);
+	  DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			  "fgprocess_data: Bad checksum: header 0x%x, data 0x%x",
+			  ihdrcheck, idatcheck);
 
 	  ++cGbad_checksum;
 	  if (! fgcheck_errors ())
@@ -1773,10 +1774,9 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      char *zpack;
 
-	      DEBUG_MESSAGE2
-		(DEBUG_PROTO | DEBUG_ABNORMAL,
-		 "fgprocess_data: Remote reject: next %d resending %d",
-		 iGsendseq, iGretransmit_seq);
+	      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			      "fgprocess_data: Remote reject: next %d resending %d",
+			      iGsendseq, iGretransmit_seq);
 
 	      ugadjust_ack (iGretransmit_seq);
 	      ++cGresent_packets;
