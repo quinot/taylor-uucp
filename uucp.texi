@@ -761,6 +761,19 @@ to any unknown systems that may call in, probably to set file transfer
 permissions and the like.  If the @code{unknown} command is not used,
 unknown systems are not permitted to call in.
 
+@item max-uuxqts @var{number}
+@findex max-uuxqts
+
+Specify the maximum number of @code{uuxqt} processes which may run at
+the same time.  Having several @code{uuxqt} processes running at once
+can significantly slow down a system, but since @code{uuxqt} is
+automatically started by @code{uucico}, it can happen quite easily.  The
+default for @code{max-uuxqts} is 0, which means that there is no limit.
+If BNU configuration files are being read and the code was compiled
+without @code{HAVE_TAYLOR_CONFIG}, then if the file @file{Maxuuxqts} in
+the configuration directory contains a readable number it will be used as
+the value for @code{max-uuxqts}.
+
 @item v2-files @var{boolean}
 @findex v2-files
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/03/11  17:04:53  ian
+   Jon Zeeff: retry execution later if temporary failure
+
    Revision 1.33  1992/03/11  02:09:19  ian
    Correct bug in previous change
 
@@ -146,6 +149,7 @@ char abProgram[] = "uuxqt";
 
 /* Static variables used to unlock things if we get a fatal error.  */
 
+static int iQunlock_seq = -1;
 static const char *zQunlock_cmd;
 static const char *zQunlock_file;
 static boolean fQunlock_directory;
@@ -249,16 +253,15 @@ main (argc, argv)
   ulog_to_file (TRUE);
   ulog_fatal_fn (uqabort);
 
-  /* Make sure we're the only uuxqt daemon running for this command.  */
-  if (zcmd != NULL)
+  /* Limit the number of uuxqt processes, and make sure we're the only
+     uuxqt daemon running for this command.  */
+  iQunlock_seq = isysdep_lock_uuxqt (zcmd);
+  if (iQunlock_seq < 0)
     {
-      if (! fsysdep_lock_uuxqt (zcmd))
-	{
-	  ulog_close ();
-	  usysdep_exit (TRUE);
-	}
-      zQunlock_cmd = zcmd;
+      ulog_close ();
+      usysdep_exit (TRUE);
     }
+  zQunlock_cmd = zcmd;
 
   /* Keep scanning the execute files until we don't process any of
      them.  */
@@ -343,11 +346,8 @@ main (argc, argv)
     }
   while (fany && iSignal == 0);
 
-  if (zcmd != NULL)
-    {
-      (void) fsysdep_unlock_uuxqt (zcmd);
-      zQunlock_cmd = NULL;
-    }
+  (void) fsysdep_unlock_uuxqt (iQunlock_seq, zcmd);
+  iQunlock_seq = -1;
 
   ulog_close ();
 
@@ -400,8 +400,8 @@ uqabort ()
   if (zQunlock_file != NULL)
     (void) fsysdep_unlock_uuxqt_file (zQunlock_file);
 
-  if (zQunlock_cmd != NULL)
-    (void) fsysdep_unlock_uuxqt (zQunlock_cmd);
+  if (iQunlock_seq >= 0)
+    (void) fsysdep_unlock_uuxqt (iQunlock_seq, zQunlock_cmd);
 
   ulog_close ();
 

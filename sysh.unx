@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.46  1992/03/11  02:09:57  ian
+   Franc,ois Pinard: retry fork several times before giving up
+
    Revision 1.45  1992/03/11  00:18:50  ian
    Save temporary file if file send fails
 
@@ -337,6 +340,7 @@ typedef struct termios sterminal;
 #define BNU_DEVICES "/Devices"
 #define BNU_PERMISSIONS "/Permissions"
 #define BNU_DIALCODES "/Dialcodes"
+#define BNU_MAXUUXQTS "/Maxuuxqts"
 
 #endif /* HAVE_BNU_CONFIG */
 

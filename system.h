@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.29  1992/03/11  17:04:53  ian
+   Jon Zeeff: retry execution later if temporary failure
+
    Revision 1.28  1992/03/11  00:18:50  ian
    Save temporary file if file send fails
 
@@ -608,15 +611,26 @@ extern boolean fsysdep_execute P((const struct ssysteminfo *qsys,
    FALSE if the command is already locked.  This is used to make sure
    only one uuxqt process is handling a particular command.  There is
    no way to return error.  */
-extern boolean fsysdep_lock_uuxqt P((const char *zcmd));
 
-/* Unlock a particular uuxqt command.  This should return FALSE on
-   error.  */
-extern boolean fsysdep_unlock_uuxqt P((const char *zcmd));
+/* Lock for uuxqt execution.  If the global variable cMaxuuxqts is not
+   zero, this should make sure that no more than cMaxuuxqts uuxqt
+   processes are running at once.  Also, only one uuxqt may execute a
+   particular command (specified by the -c option) at a time.  If zcmd
+   is not NULL, it is a command that must be locked.  This should
+   return a nonegative number which will be passed to
+   fsysdep_unlock_uuxqt, or -1 on error.  */
+extern int isysdep_lock_uuxqt P((const char *zcmd));
+
+/* Unlock a uuxqt process.  This is passed the return value of
+   isysdep_lock_uuxqt, as well as the zcmd argument passed to
+   isysdep_lock_uuxqt.  It may return FALSE on error, but at present
+   the return value is ignored.  */
+extern boolean fsysdep_unlock_uuxqt P((int iseq, const char *zcmd));
 
 /* See whether a particular uuxqt command is locked.  This should
-   return TRUE if the command is locked (because fsysdep_lock_uuxqt
-   was called), FALSE otherwise.  There is no way to return error.  */
+   return TRUE if the command is locked (because isysdep_lock_uuxqt
+   was called with it as an argument), FALSE otherwise.  There is no
+   way to return error.  */
 extern boolean fsysdep_uuxqt_locked P((const char *zcmd));
 
 /* Lock an execute file in order to execute it.  This should return

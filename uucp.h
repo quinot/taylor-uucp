@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.53  1992/03/11  01:18:15  ian
+   Niels Baggesen: drop the connection on a write failure
+
    Revision 1.52  1992/03/11  00:18:50  ian
    Save temporary file if file send fails
 
@@ -1186,6 +1189,10 @@ extern struct ssysteminfo sUnknown;
 
 /* The ssysteminfo structure we use for the local system.  */
 extern struct ssysteminfo sLocalsys;
+
+/* The maximum number of uuxqt processes which may be running at one
+   time.  */
+extern int cMaxuuxqts;
 
 /* This gets set to the signal which is causing us to abort.  It is
    only set by an asynchronous signal.  At various appropriate points
