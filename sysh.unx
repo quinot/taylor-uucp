@@ -457,7 +457,7 @@ extern char *zsfind_file P((const char *zsimple, const char *zsystem,
 			    int bgrade));
 
 /* Return the grade given a sequence number.  */
-extern char bsgrade P((pointer pseq));
+extern int bsgrade P((pointer pseq));
 
 /* Lock a string.  */
 extern boolean fsdo_lock P((const char *, boolean fspooldir,

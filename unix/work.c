@@ -775,7 +775,7 @@ zsysdep_jobid (qsys, pseq)
    this is a remote file; returning -1 will cause zsfind_file to do
    the right thing.  */
 
-char
+int
 bsgrade (pseq)
      pointer pseq;
 {
