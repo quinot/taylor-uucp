@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1992/03/12  19:56:10  ian
+   Debugging based on types rather than number
+
    Revision 1.12  1992/02/08  19:55:32  ian
    Shifts of integers by more than 15 are not portable
 
@@ -328,7 +331,7 @@ ftwait ()
       if (fexit)
 	return TRUE;
 
-      if (! freceive_data (cneed, &crec, cTtimeout))
+      if (! freceive_data (cneed, &crec, cTtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)

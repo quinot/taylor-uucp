@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/03/12  19:56:10  ian
+   Debugging based on types rather than number
+
    Revision 1.11  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -523,7 +526,7 @@ ffwait ()
 	 half a second and get all available characters again, and
 	 keep this up until we don't get anything after sleeping.  */
 
-      if (! freceive_data (cneed, &crec, cFtimeout))
+      if (! freceive_data (cneed, &crec, cFtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/03/12  19:56:10  ian
+   Debugging based on types rather than number
+
    Revision 1.16  1992/03/11  01:18:15  ian
    Niels Baggesen: drop the connection on a write failure
 
@@ -1126,39 +1129,43 @@ fsend_data (zsend, csend, fdoread)
    argument cneed is the amount of data the caller wants, and ctimeout
    is the timeout in seconds.  The function sets *pcrec to the amount
    of data which was actually received, which may be less than cneed
-   if there isn't enough room in the recieve buffer.  If no data is
+   if there isn't enough room in the receive buffer.  If no data is
    received before the timeout expires, *pcrec will be returned as 0.
-   If an error occurs, the function returns FALSE.  */
+   If an error occurs, the function returns FALSE.  If the freport
+   argument is FALSE, no error should be reported.  */
 
 boolean
-freceive_data (cneed, pcrec, ctimeout)
+freceive_data (cneed, pcrec, ctimeout, freport)
      int cneed;
      int *pcrec;
      int ctimeout;
+     boolean freport;
 {
-  char *zrec;
-
+  /* Set *pcrec to the maximum amount of data we can read.  fport_read
+     expects *pcrec to be the buffer size, and sets it to the amount
+     actually received.  */
   if (iPrecend < iPrecstart)
-    {
-      zrec = abPrecbuf + iPrecend;
-      *pcrec = iPrecstart - iPrecend - 1;
-    }
-  else if (iPrecend > 0)
-    {
-      zrec = abPrecbuf + iPrecend;
-      *pcrec = CRECBUFLEN - iPrecend;
-    }
+    *pcrec = iPrecstart - iPrecend - 1;
   else
     {
-      /* iPrecstart == iPrecend == 0 */
-      zrec = abPrecbuf;
-      *pcrec = CRECBUFLEN - 1;
+      *pcrec = CRECBUFLEN - iPrecend;
+      if (iPrecstart == 0)
+	--(*pcrec);
     }
-  
+
+#if DEBUG > 0
+  /* If we have no room in the buffer, we're in trouble.  The
+     protocols must be written to ensure that this can't happen.  */
+  if (*pcrec == 0)
+    ulog (LOG_FATAL, "freceive_data: No room in buffer");
+#endif
+
+  /* If we don't have room for all the data the caller wants, we
+     simply have to expect less.  We'll get the rest later.  */
   if (*pcrec < cneed)
     cneed = *pcrec;
 
-  if (! fport_read (zrec, pcrec, cneed, ctimeout, TRUE))
+  if (! fport_read (abPrecbuf + iPrecend, pcrec, cneed, ctimeout, freport))
     return FALSE;
 
   iPrecend = (iPrecend + *pcrec) % CRECBUFLEN;
@@ -1167,12 +1174,15 @@ freceive_data (cneed, pcrec, ctimeout)
 }
 
 /* Read a single character.  Get it out of the receive buffer if it's
-   there, otherwise read directly from the port.  This is used because
-   the freceive_data may read ahead and eat characters that should be
-   read outside the protocol routines.  The ctimeout argument is the
-   timeout in seconds; the freport argument is FALSE if no error
-   should be reported.  This returns a character, or -1 on timeout or
-   -2 on error.  */
+   there, otherwise ask freceive_data for at least one character.
+   This is used because as a protocol is shutting down freceive_data
+   may read ahead and eat characters that should be read outside the
+   protocol routines.  We call freceive_data rather than fport_read
+   with an argument of 1 so that we can get all the available data in
+   a single system call.  The ctimeout argument is the timeout in
+   seconds; the freport argument is FALSE if no error should be
+   reported.  This returns a character, or -1 on timeout or -2 on
+   error.  */
 
 int
 breceive_char (ctimeout, freport)
@@ -1181,24 +1191,19 @@ breceive_char (ctimeout, freport)
 {
   char b;
 
-  if (iPrecstart != iPrecend)
+  if (iPrecstart == iPrecend)
     {
-      b = abPrecbuf[iPrecstart];
-      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
-      return BUCHAR (b);
-    }
-  else
-    {
-      int cread;
+      int crec;
 
-      cread = 1;
-      if (! fport_read (&b, &cread, 1, ctimeout, freport))
+      if (! freceive_data (1, &crec, ctimeout, freport))
 	return -2;
-      if (cread == 1)
-	return BUCHAR (b);
-      else
+      if (crec == 0)
 	return -1;
     }
+
+  b = abPrecbuf[iPrecstart];
+  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
+  return BUCHAR (b);
 }
 
 /* This routine is called when an error occurred and we are crashing

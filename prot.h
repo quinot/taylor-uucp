@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/03/07  15:00:28  ian
+   prot.h is never included more than once
+
    Revision 1.10  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -223,7 +226,8 @@ extern boolean fsend_data P((const char *zsend, int csend,
    argument is the timeout in seconds.  This will set *pcrec to the
    amount of data received.  It will return FALSE on error.  If a
    timeout occurs, it will return TRUE with *pcrec set to zero.  */
-extern boolean freceive_data P((int cneed, int *pcrec, int ctimeout));
+extern boolean freceive_data P((int cneed, int *pcrec, int ctimeout,
+				boolean freport));
 
 /* Protocol in use.  */
 extern const struct sprotocol *qProto;

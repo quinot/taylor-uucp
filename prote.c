@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1992/03/12  19:56:10  ian
+   Debugging based on types rather than number
+
    Revision 1.3  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -320,7 +323,7 @@ fewait ()
       if (fexit)
 	return TRUE;
 
-      if (! freceive_data (cneed, &crec, cEtimeout))
+      if (! freceive_data (cneed, &crec, cEtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1992/03/12  19:56:10  ian
+   Debugging based on types rather than number
+
    Revision 1.26  1992/03/03  21:18:31  ian
    Aleksey P. Rudnev: added remote-window and packsize 'g' protocol parameters
 
@@ -1114,7 +1117,7 @@ fgwait_for_packet (freturncontrol, ctimeout, cretries)
 	    }
 	}
 
-      if (! freceive_data (cneed, &crec, ctimeout))
+      if (! freceive_data (cneed, &crec, ctimeout, TRUE))
 	return FALSE;
 
       cgarbage += crec;
