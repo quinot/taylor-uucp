@@ -381,6 +381,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   const char *zlog;
+  char *zend;
 
   if (zdata[0] != 'R'
       || (zdata[1] != 'Y' && zdata[1] != 'N'))
@@ -425,9 +426,18 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
   /* The mode should have been sent as "RY 0%o".  If it wasn't, we use
      0666.  */
   qtrans->s.imode = (unsigned int) strtol ((char *) (zdata + 2),
-					   (char **) NULL, 8);
+					   &zend, 8);
   if (qtrans->s.imode == 0)
     qtrans->s.imode = 0666;
+
+  /* If there is an M after the mode, the remote has requested a
+     hangup.  */
+  if (*zend == 'M' && qdaemon->fmaster)
+    {
+      DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+		      "flocal_rec_await_reply: Remote has requested transfer of control");
+      qdaemon->fhangup_requested = TRUE;
+    }
 
   /* Open the file to receive into.  We just ignore any restart count,
      since we have no way to tell it to the other side.  SVR4 may have

@@ -930,8 +930,17 @@ fremote_rec_reply (qtrans, qdaemon)
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char absend[50];
 
-  sprintf (absend, "RY 0%o 0x%lx", qtrans->s.imode,
-	   (unsigned long) qinfo->cbytes);
+  /* We send the file size because SVR4 UUCP does.  We don't look for
+     it.  We send a trailing M if we want to request a hangup.  We
+     send it both after the mode and at the end of the entire string;
+     I don't know where programs look for it.  */
+  if (qdaemon->frequest_hangup)
+    DEBUG_MESSAGE0 (DEBUG_UUCP_PROTO,
+		    "fremote_rec_reply: Requesting remote to transfer control");
+  sprintf (absend, "RY 0%o%s 0x%lx%s", qtrans->s.imode,
+	   qdaemon->frequest_hangup ? "M" : "",
+	   (unsigned long) qinfo->cbytes,
+	   qdaemon->frequest_hangup ? "M" : "");
   if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, absend, qtrans->ilocal,
 				       qtrans->iremote))
     {
