@@ -34,10 +34,11 @@ OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o callin.o \
 	hsys.o hunk.o iniglb.o init.o int.o lckdir.o lineno.o llocnm.o \
 	local.o locnm.o logfil.o maxuxq.o mrgblk.o paramc.o port.o \
 	prtsub.o pubdir.o rdlocs.o rdperm.o reliab.o remunk.o runuxq.o \
-	sinfo.o snams.o split.o spool.o stafil.o syssub.o tcalou.o \
-	tdial.o tdialc.o tdnams.o tgcmp.o thread.o time.o tinit.o \
-	tlocnm.o tport.o tportc.o tsinfo.o tsnams.o tsys.o tval.o \
-	ugtlin.o unk.o val.o vinit.o vport.o vsinfo.o vsnams.o vsys.o
+	sinfo.o snams.o split.o spool.o stafil.o strip.o syssub.o \
+	tcalou.o tdial.o tdialc.o tdnams.o tgcmp.o thread.o time.o \
+	tinit.o tlocnm.o tport.o tportc.o tsinfo.o tsnams.o tsys.o \
+	tval.o ugtlin.o unk.o val.o vinit.o vport.o vsinfo.o vsnams.o \
+	vsys.o
 
 all: libuuconf.a
 
