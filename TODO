@@ -228,12 +228,6 @@ original UUCP programs, and add an uninstall target to restore them.
 Terry Gardner: on some systems O_NONBLOCK and O_NDELAY can not be used
 together, for some reason.
 
-42.
-
-David Nugent: uucico and uuxqt should detach themselves from the
-controlling terminal.  This should fix the problem of uuxqt getting a
-SIGHUP when the modem line closes down.
-
 43.
 
 David Nugent: it would be nice to be able to debugging levels, as well

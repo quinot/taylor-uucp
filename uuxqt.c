@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.8  1991/12/09  18:49:06  ian
+   Richard Todd: the requestor address is relative to the requesting system
+
    Revision 1.7  1991/12/06  23:42:18  ian
    Don't acknowledge success by default
 
@@ -152,8 +155,7 @@ main (argc, argv)
     (void) signal (SIGINT, uqcatch);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGHUP, uqcatch);
+  (void) signal (SIGHUP, SIG_IGN);
 #endif
 #ifdef SIGQUIT
   if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)

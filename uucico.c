@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1991/12/15  03:42:33  ian
+   Added tprocess_chat_cmd for all chat commands, and added CMDTABTYPE_PREFIX
+
    Revision 1.22  1991/12/11  03:59:19  ian
    Create directories when necessary; don't just assume they exist
 
@@ -305,8 +308,7 @@ main (argc, argv)
     (void) signal (SIGINT, ucatch);
 #endif
 #ifdef SIGHUP
-  if (signal (SIGHUP, SIG_IGN) != SIG_IGN)
-    (void) signal (SIGHUP, ucatch);
+  (void) signal (SIGHUP, SIG_IGN);
 #endif
 #ifdef SIGQUIT
   if (signal (SIGQUIT, SIG_IGN) != SIG_IGN)
@@ -531,9 +533,7 @@ ucatch (isig)
 
   (void) signal (isig, SIG_DFL);
 
-  /* We expect a SIGHUP when the line is closed.  */
-
-  if (isig == SIGHUP || fAborting)
+  if (fAborting)
     usysdep_exit (FALSE);
   else
     raise (isig);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1991/12/11  04:21:37  ian
+   Arne Ludwig: merge in Arne Ludwig's patches for V2 and BNU style logging
+
    Revision 1.14  1991/12/07  02:57:28  ian
    Allow failure message to be sent from uux test
 
@@ -381,7 +384,7 @@ main (argc, argv)
   if (iPid2 < 0)
     {
       perror ("fork");
-      kill (iPid1, SIGHUP);
+      kill (iPid1, SIGTERM);
       exit (EXIT_FAILURE);
     }
   else if (iPid2 == 0)
@@ -495,8 +498,8 @@ uchild (isig)
 
   signal (SIGCHLD, SIG_DFL);
 
-  (void) kill (iPid1, SIGHUP);
-  (void) kill (iPid2, SIGHUP);
+  (void) kill (iPid1, SIGTERM);
+  (void) kill (iPid2, SIGTERM);
 
   (void) times (&sbase);
   (void) waitpid (iPid1, (int *) NULL, 0);
