@@ -43,7 +43,7 @@ infodir = $(prefix)/info
 newconfigdir = $(prefix)/conf/uucp
 #newconfigdir = /etc/uucp
 
-# The directory to look in for BNU (when using HAVE_BNU_CONFIG) or
+# The directory to look in for HDB (when using HAVE_HDB_CONFIG) or
 # V2 (when using HAVE_V2_CONFIG) style configuration files.
 oldconfigdir = /usr/lib/uucp
 
