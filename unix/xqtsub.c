@@ -273,12 +273,26 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
       aidescs[1] = creat ((char *) zoutput, IPRIVATE_FILE_MODE);
       if (aidescs[1] < 0)
 	{
-	  ulog (LOG_ERROR, "creat (%s): %s", zoutput, strerror (errno));
-	  *pftemp = TRUE;
-	  ferr = TRUE;
+	  if (errno == ENOENT && zoutput[0] != '/')
+	    {
+	      if (! fsysdep_make_dirs (zoutput, FALSE))
+		{
+		  *pftemp = TRUE;
+		  ferr = TRUE;
+		}
+	      else
+		aidescs[1] = creat ((char *) zoutput, IPRIVATE_FILE_MODE);
+	    }
+	  if (! ferr && aidescs[1] < 0)
+	    {
+	      ulog (LOG_ERROR, "creat (%s): %s", zoutput, strerror (errno));
+	      *pftemp = TRUE;
+	      ferr = TRUE;
+	    }
 	}
-      else if (fcntl (aidescs[1], F_SETFD,
-		      fcntl (aidescs[1], F_GETFD, 0) | FD_CLOEXEC) < 0)
+      if (! ferr
+	  && fcntl (aidescs[1], F_SETFD,
+		    fcntl (aidescs[1], F_GETFD, 0) | FD_CLOEXEC) < 0)
 	{
 	  ulog (LOG_ERROR, "fcntl (FD_CLOEXEC): %s", strerror (errno));
 	  ferr = TRUE;
