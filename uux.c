@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.15  1991/12/21  21:16:05  ian
    Franc,ois Pinard: remove parentheses from ZSHELLSEPS
 
@@ -1007,7 +1010,7 @@ main (argc, argv)
   ulog_system (qxqtsys->zname);
   ulog_user (zuser);
 
-  clen = strlen (zcmd) + 1;
+  clen = strlen (zcmd) + 2;
   for (i = 0; i < cargs; i++)
     if (pzargs[i] != NULL)
       clen += strlen (pzargs[i]) + 1;
