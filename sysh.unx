@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.29  1992/01/15  21:06:11  ian
    Mike Park: some systems can't include <sys/time.h> and <time.h> together
 
@@ -292,8 +295,11 @@
 #define HAVE_USLEEP 0
 
 /* Set HAVE_SIGSETJMP to 1 if you have the sigsetjmp and siglongjmp
-   calls, and they should be used to jump out of a signal handler.  */
+   calls, and they should be used to jump out of a signal handler.
+   Otherwise if you don't have setjmp and longjmp but you do have
+   setret and longret, set HAVE_SETRET to 1.  */
 #define HAVE_SIGSETJMP 1
+#define HAVE_SETRET 0
 
 /* Set HAVE_EUID to 1 if it makes sense to call setuid (geteuid ()).
    This is mainly done to avoid running with root permissions, which
