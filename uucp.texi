@@ -2171,9 +2171,10 @@ John Theus @file{<john@@theus.rain.com>}
 Len Tower @file{<tower-prep@@ai.mit.edu>}
 @file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
 @file{jv@@mh.nl} (Johan Vromans)
-rna-nl!gerben@@relay.nluug.nl (Drs. Gerben C. Th. Wierda)
+@file{rna-nl!gerben@@relay.nluug.nl} (Drs. Gerben C. Th. Wierda)
 @file{frnkmth!twwells.com!bill} (T. William Wells)
 @file{mauxci!eci386!woods@@apple.com} (Greg A. Woods)
+@file{jon@@console.ais.org} (Jon Zeeff)
 Eric Ziegast @file{<uunet!ziegast>}
 @end example
 
