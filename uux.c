@@ -1255,7 +1255,10 @@ main (argc, argv)
   ulog_system (sxqtsys.uuconf_zname);
   ulog_user (zuser);
 
-  ulog (LOG_NORMAL, "Queuing %s (%s)", zfullcmd, zXnames);
+  if (zXnames == NULL)
+    ulog (LOG_NORMAL, "Queuing %s", zfullcmd);
+  else
+    ulog (LOG_NORMAL, "Queuing %s (%s)", zfullcmd, zXnames);
 
   ulog_close ();
 
