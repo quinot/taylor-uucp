@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/01  19:41:00  ian
+   Don't read V2 or BNU configuration files while testing
+
    Revision 1.11  1991/12/01  03:29:30  ian
    Bob Izenberg: get definitions for EAGAIN and EWOULDBLOCK
 
@@ -120,20 +123,6 @@ char tstuu_rcsid[] = "$Id$";
 #endif /* ! defined (EWOULDBLOCK) */
 #endif /* defined (EAGAIN) */
 
-/* Apparently some systems support fd_set but not FD_SET, although
-   this is hard to imagine.  This implementation assumes that no file
-   descriptor is larger than 16 (32 on normal systems), which should
-   be true for this program.  */
-#ifndef FD_SET
-#define FD_SET(o, p) ((p)->fd_bits[0] |= (1 << (o)))
-#endif
-#ifndef FD_ZERO
-#define FD_ZERO(o, p) ((p)->fd_bits[0] = 0)
-#endif
-#ifndef FD_ISSET
-#define FD_ISSET(o, p) (((p)->fd_bits[0] & (1 << (o))) != 0)
-#endif
-
 /* Make sure we have a CLK_TCK definition, even if it makes no sense.  */
 #ifndef CLK_TCK
 #define CLK_TCK (60)
@@ -165,7 +154,6 @@ static void utransfer P((int ofrom, int oto, int otoslave, int *pc,
 static sigret_t uchild P((int isig));
 static int cpshow P((char *z, int bchar));
 static void xsystem P((const char *zcmd));
-static void bzero P((pointer p, int c));
 
 static int cDebug;
 static int iTest;
@@ -323,6 +311,15 @@ main (argc, argv)
       exit (EXIT_FAILURE);
     }
 
+  /* Make sure we can or these into an int for the select call.  Most
+     systems could use 31 instead of 15, but it should never be a
+     problem.  */
+  if (omaster1 > 15 || omaster2 > 15)
+    {
+      fprintf (stderr, "File descriptors are too large\n");
+      exit (EXIT_FAILURE);
+    }
+
   /* Prepare to log out the command if it is a login command.  On
      Ultrix 4.0 uucico can only be run from login for some reason.  */
 
@@ -430,16 +427,14 @@ main (argc, argv)
 
   while (TRUE)
     {
-      fd_set sread;
-      fd_set swrite;
+      int iread;
+      int iwrite;
       int cfds;
 
-      FD_ZERO (&sread);
-      FD_SET (omaster1, &sread);
-      FD_SET (omaster2, &sread);
+      iread = (1 << omaster1) | (1 << omaster2);
 
       cfds = select ((omaster1 > omaster2 ? omaster1 : omaster2) + 1,
-		     &sread, (int *) NULL, (int *) NULL, &stime);
+		     &iread, (int *) NULL, (int *) NULL, &stime);
       if (cfds < 0)
 	{
 	  perror ("select");
@@ -453,11 +448,10 @@ main (argc, argv)
 	  continue;
 	}
 
-      if (FD_ISSET (omaster1, &sread))
+      if ((iread & (1 << omaster1)) != 0)
 	{
-	  FD_ZERO (&swrite);
-	  FD_SET (omaster2, &swrite);
-	  cfds = select (omaster2 + 1, (int *) NULL, &swrite, (int *) NULL,
+	  iwrite = 1 << omaster2;
+	  cfds = select (omaster2 + 1, (int *) NULL, &iwrite, (int *) NULL,
 			 &spoll);
 	  if (cfds < 0)
 	    {
@@ -467,11 +461,10 @@ main (argc, argv)
 	  if (cfds > 0)
 	    utransfer (omaster1, omaster2, oslave2, &cFrom1, &cSleep1);
 	}
-      if (FD_ISSET (omaster2, &sread))
+      if ((iread & (1 << omaster2)) != 0)
 	{
-	  FD_ZERO (&swrite);
-	  FD_SET (omaster1, &swrite);
-	  cfds = select (omaster1 + 1, (int *) NULL, &swrite, (int *) NULL,
+	  iwrite = 1 << omaster1;
+	  cfds = select (omaster1 + 1, (int *) NULL, &iwrite, (int *) NULL,
 			 &spoll);
 	  if (cfds < 0)
 	    {
@@ -1227,18 +1220,3 @@ alloca (isize)
 }
 
 #endif /* HAVE_ALLOCA */
-
-/* SCO 3.2.2 defines FD_ZERO to use bzero, but doesn't provide bzero
-   int the system library.  */
-
-static void
-bzero (p, c)
-     pointer p;
-     int c;
-{
-  char *z;
-
-  z = (char *) p;
-  while (c-- != 0)
-    *z++ = '\0';
-}
