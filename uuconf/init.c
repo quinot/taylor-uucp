@@ -29,16 +29,6 @@
 const char _uuconf_init_rcsid[] = "$Id$";
 #endif
 
-/* When setting system information, we need to be able to distinguish
-   between a value that is not set and a value that has been set to
-   NULL.  We do this by initializing the value to point to the
-   variable _uuconf_unset, and then correcting it in the function
-   _uuconf_isystem_basic_default.  This variable is declared in this
-   file because some linkers will apparently not pull in an object file
-   which merely declarates a variable.  */
-
-char _uuconf_unset;
-
 /* Initialize the UUCP configuration file reading routines.  This is
    just a generic routine which calls the type specific routines.  */
 

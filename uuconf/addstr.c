@@ -31,6 +31,17 @@ const char _uuconf_addstr_rcsid[] = "$Id$";
 
 #include <errno.h>
 
+/* When setting system information, we need to be able to distinguish
+   between a value that is not set and a value that has been set to
+   NULL.  We do this by initializing the value to point to the
+   variable _uuconf_unset, and then correcting it in the function
+   _uuconf_isystem_basic_default.  This variable is declared in this
+   file because some linkers will apparently not pull in an object
+   file which merely declarates a variable.  This functions happens to
+   be pulled in by almost everything.  */
+
+char _uuconf_unset;
+
 /* Add a string to a list of strings.  The list is maintained as an
    array of elements ending in NULL.  The total number of available
    slots is always a multiple of CSLOTS, so by counting the current
