@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.30  1992/01/05  03:18:54  ian
+   Avoid redefining SEEK_SET
+
    Revision 1.29  1992/01/05  03:09:17  ian
    Changed abProgram and abVersion to non const to avoid compiler bug
 
@@ -488,7 +491,8 @@ enum tlog
 };
 
 /* The tstatus enumeration holds the kinds of status information we
-   put in the status file.  */
+   put in the status file.  The order of entries here corresponds to
+   the order of entries in the azStatus array.  */
 
 enum tstatus
 {
@@ -505,7 +509,9 @@ enum tstatus
   /* Failed after logging in.  */
   STATUS_FAILED,
   /* Talking to remote system.  */
-  STATUS_TALKING
+  STATUS_TALKING,
+  /* Number of status values.  */
+  STATUS_VALUES
 };
 
 /* An array to convert status entries to strings.  If more status entries
