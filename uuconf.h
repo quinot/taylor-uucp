@@ -17,7 +17,7 @@
 
    You should have received a copy of the GNU Library General Public
    License along with this library; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
 
    The use of an object file which uses material from this header
    file, and from no other portion of the uuconf library, is
@@ -25,8 +25,7 @@
    of the GNU Library General Public License (this sentence is merely
    informative, and does not modify the License in any way).
 
-   The author of the program may be contacted at ian@airs.com or
-   c/o Cygnus Support, 48 Grove Street, Somerville, MA 02144.
+   The author of the program may be contacted at ian@airs.com.
    */
 
 #ifndef UUCONF_H
