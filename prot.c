@@ -1,7 +1,7 @@
 /* prot.c
    Protocol support routines to move commands and data around.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1992/01/18  22:48:53  ian
+   Reworked sending of mail and general handling of failed transfers
+
    Revision 1.10  1992/01/16  18:16:58  ian
    Niels Baggesen: add some debugging messages
 
@@ -61,13 +64,12 @@
 char prot_rcsid[] = "$Id$";
 #endif
 
-#include <string.h>
 #include <errno.h>
 
 #include "system.h"
 #include "port.h"
 #include "prot.h"
-
+
 /* This file implements the generic UUCP protocol for making and
    confirming file transfer requests.  This involves sending ASCII
    strings back and forth between the communicating daemons.  It would

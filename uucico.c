@@ -1,7 +1,7 @@
 /* uucico.c
    This is the main UUCP communication program.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.47  1992/02/07  17:08:15  ian
+   Bob Denny: retry time not reached is not an error
+
    Revision 1.46  1992/01/29  18:37:27  ian
    Patrick Smith: only wait a short time for the hangup message
 
@@ -169,7 +172,6 @@
 char uucico_rcsid[] = "$Id$";
 #endif
 
-#include <string.h>
 #include <ctype.h>
 #include <signal.h>
 
@@ -605,7 +607,7 @@ static void
 uusage ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
 	   "Usage: uucico [options] [port]\n");

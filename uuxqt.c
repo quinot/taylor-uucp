@@ -1,7 +1,7 @@
 /* uuxqt.c
    Run uux commands.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/01/16  17:48:41  ian
+   Niels Baggesen: was checking strcmp return incorrectly
+
    Revision 1.18  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -86,7 +89,6 @@ char uuxqt_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
-#include <string.h>
 #include <errno.h>
 #include <ctype.h>
 #include <signal.h>
@@ -312,7 +314,7 @@ static void
 uqusage ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
 	   "Usage: uuxqt [-c cmd] [-I file] [-s system] [-x debug]\n");

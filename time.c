@@ -1,7 +1,7 @@
 /* time.c
    Routines to deal with UUCP time strings.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1992/01/11  17:30:10  ian
+   John Antypas: use memcpy instead of relying on structure assignment
+
    Revision 1.6  1991/12/29  04:04:18  ian
    Added a bunch of extern definitions
 
@@ -50,7 +53,6 @@ char time_rcsid[] = "$Id$";
 #endif
 
 #include <ctype.h>
-#include <string.h>
 
 #if HAVE_TIME_H
 #include <time.h>
@@ -62,10 +64,10 @@ char time_rcsid[] = "$Id$";
 #endif /* HAVE_SYS_TIME_T */
 #endif /* ! HAVE_TIME_T */
 
-/* Externs.  These may be in <string.h>, but putting them here won't
-   hurt.  */
+/* External functions.  */
 extern int strncasecmp ();
 extern time_t time ();
+extern struct tm *localtime ();
 
 /* Timetables are kept in a array of pairs of strings.  */
 

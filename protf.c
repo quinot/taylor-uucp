@@ -1,7 +1,7 @@
 /* protf.c
    The 'f' protocol.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1992/01/16  18:16:58  ian
+   Niels Baggesen: add some debugging messages
+
    Revision 1.9  1992/01/14  04:35:23  ian
    Chip Salzenberg: implement this patch correctly
 
@@ -58,14 +61,13 @@
 char protf_rcsid[] = "$Id$";
 #endif
 
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 
 #include "prot.h"
 #include "port.h"
 #include "system.h"
-
+
 /* This implementation is based on code by Piet Beertema, CWI,
    Amsterdam, Sep 1984.
 

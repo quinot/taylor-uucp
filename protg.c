@@ -1,7 +1,7 @@
 /* protg.c
    The 'g' protocol.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/01  00:56:20  ian
+   Chip Salzenberg: change default window size to 7
+
    Revision 1.21  1992/01/28  16:06:24  ian
    Correct previous patch
 
@@ -94,14 +97,13 @@
 char protg_rcsid[] = "$Id$";
 #endif
 
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 
 #include "prot.h"
 #include "system.h"
 #include "port.h"
-
+
 /* Each 'g' protocol packet begins with six bytes.  They are:
 
    <DLE><k><c0><c1><C><x>

@@ -1,7 +1,7 @@
 /* uux.c
    Prepare to execute a command on a remote system.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/02/02  20:34:36  ian
+   Niels Baggesen: must check user permissions on access to local files
+
    Revision 1.20  1992/01/21  19:39:12  ian
    Chip Salzenberg: uucp and uux start uucico for right system, not any
 
@@ -92,7 +95,6 @@ char uux_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
@@ -1103,7 +1105,7 @@ static void
 uxusage ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
 	   "Usage: uux [options] [-] command\n");

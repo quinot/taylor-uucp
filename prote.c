@@ -1,7 +1,7 @@
 /* prote.c
    The 'e' protocol.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1992/01/16  18:16:58  ian
+   Niels Baggesen: add some debugging messages
+
    Revision 1.1  1991/12/31  19:43:30  ian
    Initial revision
 
@@ -34,12 +37,10 @@
 char prote_rcsid[] = "$Id$";
 #endif
 
-#include <string.h>
-
 #include "prot.h"
 #include "port.h"
 #include "system.h"
-
+
 /* This implementation is based on my implementation of the 't'
    protocol, which is fairly similar.  The main difference between the
    protocols seems to be that 't' breaks the file into packets and

@@ -1,7 +1,7 @@
 /* uuchk.c
    Display what we think the permissions of systems are.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/01/15  07:06:29  ian
+   Set configuration directory in Makefile rather than sysdep.h
+
    Revision 1.16  1992/01/14  04:04:17  ian
    Chip Salzenberg: strcmp is a macro on AIX
 
@@ -80,7 +83,6 @@ char uuchk_rcsid[] = "$Id$";
 #endif
 
 #include <signal.h>
-#include <string.h>
 
 #include "getopt.h"
 
@@ -194,7 +196,7 @@ static void
 ukusage ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 	   abVersion);
   fprintf (stderr,
 	   "Usage: uuchk [-I file] [-x debug]\n");

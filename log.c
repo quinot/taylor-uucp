@@ -1,7 +1,7 @@
 /* log.c
    Routines to add entries to the log files.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/02/01  00:51:28  ian
+   Michael Nolan: call abort if SIGABRT is not defined
+
    Revision 1.16  1992/01/28  04:51:34  ian
    Marty Shannon: don't report failed transfers with BNU logging
 
@@ -80,7 +83,6 @@ char log_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
-#include <string.h>
 #include <signal.h>
 #include <errno.h>
 

@@ -1,7 +1,7 @@
 /* uucp.h
    Header file for the UUCP package.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.36  1992/01/19  21:30:21  ian
+   Matthew Lyle: some systems don't declare errno in <errno.h>
+
    Revision 1.35  1992/01/19  18:29:05  ian
    Added HAVE_BSEARCH configuration parameter
 
@@ -199,6 +202,29 @@ extern void uclear_alloca P((void));
 #endif /* ! HAVE_ALLOCA */
 #endif /* ! __GNUC__ */
 
+/* Get the string functions, which are used throughout the code.  On
+   some older systems, the memory functions are defined in <memory.h>
+   rather than <string.h>.  The only memory function we really need a
+   return value for is memchr, so we just declare it ourselves before
+   including <string.h>.  */
+
+extern pointer memchr ();
+
+#if HAVE_STRING_H
+#include <string.h>
+#else /* ! HAVE_STRING_H */
+#if HAVE_STRINGS_H
+#include <strings.h>
+#else /* ! HAVE_STRINGS_H */
+extern int strcmp (), strncmp (), memcmp ();
+extern char *strcpy (), *strncpy (), *strchr (), *strrchr (), *strtok ();
+extern char *strcat (), *strerror (), *strstr ();
+extern pointer memcpy (), memmove ();
+/* These should be size_t, but there's no declaration to conflict with.  */
+extern int strlen (), strspn (), strcspn ();
+#endif /* ! HAVE_STRINGS_H */
+#endif /* ! HAVE_STRING_H */
+
 /* Get what we need from <stdlib.h>.  */
 
 #if HAVE_STDLIB_H
@@ -211,9 +237,6 @@ extern void free (), exit (), perror (), abort (), qsort ();
 extern long atol (), strtol ();
 extern int atoi ();
 extern char *getenv ();
-#if HAVE_MEMORY_H
-#include <memory.h>
-#endif
 #endif /* ! HAVE_STDLIB_H */
 
 /* If we need to declare errno, do so.  I don't want to always do

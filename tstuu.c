@@ -1,7 +1,7 @@
 /* tstuu.c
    Test the uucp package on a UNIX system.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.39  1992/01/29  04:27:11  ian
+   Jay Vassos-Libove: removed some conflicting declarations
+
    Revision 1.38  1992/01/19  02:53:05  ian
    Mike Park: don't sleep when buffer is full; it's too slow
 
@@ -148,7 +151,6 @@ char tstuu_rcsid[] = "$Id$";
 #include <stdio.h>
 #include <signal.h>
 #include <ctype.h>
-#include <string.h>
 #include <errno.h>
 
 #if USE_STDIO && HAVE_UNISTD_H
@@ -219,7 +221,6 @@ char tstuu_rcsid[] = "$Id$";
 #define UUCICO_EXECL "/bin/login", "login", "uucp"
 
 /* External functions.  */
-
 extern int select (), close (), dup2 (), access ();
 extern int read (), write (), unlink ();
 extern int fclose (), fflush (), rand (), system ();
@@ -307,7 +308,7 @@ main (argc, argv)
 	  break;
 	default:
 	  fprintf (stderr,
-		   "Taylor UUCP version %s, copyright (C) 1991 Ian Lance Taylor\n",
+		   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
 		   abVersion);
 	  fprintf (stderr,
 		   "Usage: tstuu [-x] [-t #] [-u] [-1 cmd] [-2 cmd]\n");

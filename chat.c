@@ -1,7 +1,7 @@
 /* chat.c
    Chat routine for the UUCP package.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1992/02/02  06:38:22  ian
+   Michael Nolan: chat script strings might be separated by more than just ' '
+
    Revision 1.11  1992/01/05  03:11:06  ian
    Made fcsend static
 
@@ -64,7 +67,6 @@
 char chat_rcsid[] = "$Id$";
 #endif
 
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 

@@ -2,7 +2,7 @@
    Header file for system dependent stuff in the Taylor UUCP package.
    This file is not itself system dependent.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.17  1992/02/02  20:34:36  ian
+   Niels Baggesen: must check user permissions on access to local files
+
    Revision 1.16  1992/01/21  19:39:12  ian
    Chip Salzenberg: uucp and uux start uucico for right system, not any
 

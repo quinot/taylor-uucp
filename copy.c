@@ -1,7 +1,7 @@
 /* copy.c
    Copy one file to another for the UUCP package.
 
-   Copyright (C) 1991 Ian Lance Taylor
+   Copyright (C) 1991, 1992 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.4  1991/12/11  03:59:19  ian
    Create directories when necessary; don't just assume they exist
 
@@ -44,7 +47,6 @@ char copy_rcsid[] = "$Id$";
 #endif
 
 #include <stdio.h>
-#include <string.h>
 #include <errno.h>
 
 #include "system.h"
