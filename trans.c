@@ -1,7 +1,7 @@
 /* trans.c
    Routines to handle file transfers.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -517,6 +517,7 @@ fqueue (qdaemon, pfany)
      boolean *pfany;
 {
   const struct uuconf_system *qsys;
+  long ival;
   int bgrade;
   struct uuconf_timespan *qlocal_size, *qremote_size;
 
@@ -526,13 +527,18 @@ fqueue (qdaemon, pfany)
   qsys = qdaemon->qsys;
 
   /* If we are not the caller, the grade will be set during the
-     initial handshake.  */
+     initial handshake, although this may be overridden by the
+     calledtimegrade configuration option.  */
   if (! qdaemon->fcaller)
-    bgrade = qdaemon->bgrade;
+    {
+      if (! ftimespan_match (qsys->uuconf_qcalledtimegrade, &ival,
+			     (int *) NULL))
+	bgrade = qdaemon->bgrade;
+      else
+	bgrade = (char) ival;
+    }
   else
     {
-      long ival;
-
       if (! ftimespan_match (qsys->uuconf_qtimegrade, &ival,
 			     (int *) NULL))
 	bgrade = '\0';
