@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.37  1992/01/16  16:32:44  ian
+   Mike Park: ioctl is sometimes declared varadic, so we can't declare it
+
    Revision 1.36  1992/01/15  21:06:11  ian
    Mike Park: some systems can't include <sys/time.h> and <time.h> together
 
@@ -240,8 +243,7 @@ static void uprepare_test P((int itest, boolean fcall_uucico,
 static void ucheck_file P((const char *zfile, const char *zerr,
 			   int cextra));
 static void ucheck_test P((int itest, boolean fcall_uucico));
-static void utransfer P((int ofrom, int oto, int otoslave, int *pc,
-			 int *pcsleep));
+static void utransfer P((int ofrom, int oto, int otoslave, int *pc));
 static sigret_t uchild P((int isig));
 static int cpshow P((char *z, int bchar));
 static void xsystem P((const char *zcmd));
@@ -252,7 +254,6 @@ static boolean fCall_uucico;
 static int iPercent;
 static pid_t iPid1, iPid2;
 static int cFrom1, cFrom2;
-static int cSleep1, cSleep2;
 static char abLogout1[sizeof "tstout /dev/ptyp0"];
 static char abLogout2[sizeof "tstout /dev/ptyp0"];
 static char *zProtocols;
@@ -550,7 +551,7 @@ main (argc, argv)
 	      uchild (SIGCHLD);
 	    }
 	  if (cfds > 0)
-	    utransfer (omaster1, omaster2, oslave2, &cFrom1, &cSleep1);
+	    utransfer (omaster1, omaster2, oslave2, &cFrom1);
 	}
       if ((iread & (1 << omaster2)) != 0)
 	{
@@ -563,7 +564,7 @@ main (argc, argv)
 	      uchild (SIGCHLD);
 	    }
 	  if (cfds > 0)
-	    utransfer (omaster2, omaster1, oslave1, &cFrom2, &cSleep2);
+	    utransfer (omaster2, omaster1, oslave1, &cFrom2);
 	}
     }
 
@@ -636,10 +637,8 @@ uchild (isig)
       (void) system (abLogout2);
     }
 
-  fprintf (stderr, "Wrote %d bytes from 1 to 2 (slept %d)\n",
-	   cFrom1, cSleep1);
-  fprintf (stderr, "Wrote %d bytes from 2 to 1 (slept %d)\n",
-	   cFrom2, cSleep2);
+  fprintf (stderr, "Wrote %d bytes from 1 to 2\n", cFrom1);
+  fprintf (stderr, "Wrote %d bytes from 2 to 1\n", cFrom2);
 
   if (access ("/usr/tmp/tstuu/spool1/core", R_OK) == 0)
     fprintf (stderr, "core file 1 exists\n");
@@ -1215,12 +1214,11 @@ cpshow (z, ichar)
 /* Transfer data from one pseudo-terminal to the other.  */
 
 static void
-utransfer (ofrom, oto, otoslave, pc, pcsleep)
+utransfer (ofrom, oto, otoslave, pc)
      int ofrom;
      int oto;
      int otoslave;
      int *pc;
-     int *pcsleep;
 {
   int cread;
 #ifdef FIONREAD
@@ -1304,11 +1302,7 @@ utransfer (ofrom, oto, otoslave, pc, pcsleep)
 	{
 	  cdo = 256 - cunread;
 	  if (cdo == 0)
-	    {
-	      ++*pcsleep;
-	      (void) sleep (1);
-	      continue;
-	    }
+	    continue;
 	}
 
       cwrote = write (oto, zwrite, cdo);
