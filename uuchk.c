@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.17  1992/01/15  07:06:29  ian
    Set configuration directory in Makefile rather than sysdep.h
 
@@ -164,11 +167,18 @@ main (argc, argv)
 
   /* The only signal we need to catch is SIGABRT, and we only need to
      catch it so that we can behave sensibly on a LOG_FATAL error.
-     There are no cleanup actions to take, so we can let other signals
-     do whatever they like.  */
+     Actually, sometimes abort generates SIGILL or SIGIOT, so we must
+     catch those as well.  There are no cleanup actions to take, so we
+     can let other signals do whatever they like.  */
 
 #ifdef SIGABRT
   (void) signal (SIGABRT, ukcatch);
+#endif
+#ifdef SIGILL
+  (void) signal (SIGILL, ukcatch);
+#endif
+#ifdef SIGIOT
+  (void) signal (SIGIOT, ukcatch);
 #endif
 
   usysdep_initialize (FALSE);

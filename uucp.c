@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.13  1992/02/02  20:56:25  ian
    Do local copy to zsysdep_real_file_name, not zsysdep_in_dir
 
@@ -257,6 +260,12 @@ main (argc, argv)
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, uccatch);
+#endif
+#ifdef SIGILL
+  (void) signal (SIGILL, uccatch);
+#endif
+#ifdef SIGIOT
+  (void) signal (SIGIOT, uccatch);
 #endif
 
   usysdep_initialize (FALSE);

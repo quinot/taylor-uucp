@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.20  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.19  1992/01/16  17:48:41  ian
    Niels Baggesen: was checking strcmp return incorrectly
 
@@ -209,6 +212,12 @@ main (argc, argv)
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, uqcatch);
+#endif
+#ifdef SIGILL
+  (void) signal (SIGILL, uqcatch);
+#endif
+#ifdef SIGIOT
+  (void) signal (SIGIOT, uqcatch);
 #endif
 
   usysdep_initialize (FALSE);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.48  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.47  1992/02/07  17:08:15  ian
    Bob Denny: retry time not reached is not an error
 
@@ -408,6 +411,12 @@ main (argc, argv)
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, ucatch);
+#endif
+#ifdef SIGILL
+  (void) signal (SIGILL, ucatch);
+#endif
+#ifdef SIGIOT
+  (void) signal (SIGIOT, ucatch);
 #endif
 
   usysdep_initialize (TRUE);

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.21  1992/02/02  20:34:36  ian
    Niels Baggesen: must check user permissions on access to local files
 
@@ -372,6 +375,12 @@ main (argc, argv)
 #endif
 #ifdef SIGABRT
   (void) signal (SIGABRT, uxcatch);
+#endif
+#ifdef SIGILL
+  (void) signal (SIGILL, uxcatch);
+#endif
+#ifdef SIGIOT
+  (void) signal (SIGIOT, uxcatch);
 #endif
 
   usysdep_initialize (FALSE);

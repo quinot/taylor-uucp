@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.17  1992/02/01  00:51:28  ian
    Michael Nolan: call abort if SIGABRT is not defined
 
@@ -426,17 +429,10 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (edebug != NULL)
     (void) fflush (edebug);
 
-  /* We should be able to just call abort here, but on Ultrix abort
-     raises the wrong signal, and raise (SIGABRT) is just as good.  */
-
   if (ttype == LOG_FATAL)
     {
       fAborting = TRUE;
-#ifdef SIGABRT
-      raise (SIGABRT);
-#else
       abort ();
-#endif
     }
 }
 
