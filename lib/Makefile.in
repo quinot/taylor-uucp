@@ -23,7 +23,8 @@ OBJS = buffer.o crc.o debug.o escape.o getopt.o getop1.o spool.o \
 
 all: libuucp.a
 
-clean: rm -f $(OBJS) libuucp.a
+clean:
+	rm -f $(OBJS) libuucp.a
 
 distclean: clean
 	rm -f Makefile

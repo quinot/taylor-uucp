@@ -33,7 +33,8 @@ OBJS = access.o addbas.o app3.o app4.o basnam.o cwd.o chmod.o cusub.o \
 
 all: libunix.a
 
-clean: rm -f $(OBJS) libunix.a
+clean:
+	rm -f $(OBJS) libunix.a
 
 distclean: clean
 	rm -f Makefile
