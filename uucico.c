@@ -145,7 +145,7 @@ static int iuport_lock P((struct uuconf_port *qport, pointer pinfo));
 static boolean flogin_prompt P((pointer puuconf, const char *zconfig,
 				boolean fuuxqt, struct sconnection *qconn,
 				const char *zlogin));
-static int icallin_cmp P((int iwhich, void *pinfo, const char *zfile));
+static int icallin_cmp P((int iwhich, pointer pinfo, const char *zfile));
 static boolean faccept_call P((pointer puuconf, const char *zconfig,
 			       boolean fuuxqt, const char *zlogin,
 			       struct sconnection *qconn,
@@ -1768,7 +1768,7 @@ flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin)
 static int
 icallin_cmp (iwhich, pinfo, zfile)
      int iwhich;
-     void *pinfo;
+     pointer pinfo;
      const char *zfile;
 {
   struct scallin_info *qinfo = (struct scallin_info *) pinfo;

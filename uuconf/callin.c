@@ -36,8 +36,8 @@ static int ipcheck P((pointer pglobal, int argc, char **argv,
 
 struct sinfo
 {
-  int (*pcmpfn) P((int, void *, const char *));
-  void *pinfo;
+  int (*pcmpfn) P((int, pointer, const char *));
+  pointer pinfo;
   boolean ffound;
   boolean fmatched;
 };
@@ -50,8 +50,8 @@ struct sinfo
 int
 uuconf_callin (pglobal, pcmpfn, pinfo)
      pointer pglobal;
-     int (*pcmpfn) P((int, void *, const char *));
-     void *pinfo;
+     int (*pcmpfn) P((int, pointer, const char *));
+     pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;
