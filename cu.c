@@ -1,7 +1,7 @@
 /* cu.c
    Call up a remote system.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -584,7 +584,7 @@ main (argc, argv)
 	      sport.uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
 	      sport.uuconf_u.uuconf_sdirect.uuconf_ibaud = ibaud;
 
-	      if (! fconn_init (&sport, &sconn))
+	      if (! fconn_init (&sport, &sconn, UUCONF_PORTTYPE_UNKNOWN))
 		ucuabort ();
 
 	      if (! fconn_lock (&sconn, FALSE))
@@ -609,7 +609,8 @@ main (argc, argv)
 		continue;
 	      if (qsys->uuconf_qport != NULL)
 		{
-		  if (fconn_init (qsys->uuconf_qport, &sconn))
+		  if (fconn_init (qsys->uuconf_qport, &sconn,
+				  UUCONF_PORTTYPE_UNKNOWN))
 		    {
 		      if (fconn_lock (&sconn, FALSE))
 			{
@@ -950,7 +951,7 @@ icuport_lock (qport, pinfo)
 
   q->fmatched = TRUE;
 
-  if (! fconn_init (qport, q->qconn))
+  if (! fconn_init (qport, q->qconn, UUCONF_PORTTYPE_UNKNOWN))
     return UUCONF_NOT_FOUND;
   else if (! fconn_lock (q->qconn, FALSE))
     {

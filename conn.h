@@ -1,7 +1,7 @@
 /* conn.h
    Header file for routines which manipulate connections.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -168,9 +168,11 @@ struct sconncmds
 
 /* Initialize a connection.  This must be called before any of the
    other connection functions are called.  It initializes the fields
-   of qconn.  It returns FALSE on error.  */
+   of qconn.  If qport is NULL, this opens standard input as a port
+   using type ttype.  This function returns FALSE on error.  */
 extern boolean fconn_init P((struct uuconf_port *qport,
-			     struct sconnection *qconn));
+			     struct sconnection *qconn,
+			     enum uuconf_porttype ttype));
 
 /* Free up connection data.  */
 extern void uconn_free P((struct sconnection *qconn));

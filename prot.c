@@ -1,7 +1,7 @@
 /* prot.c
    Protocol support routines to move commands and data around.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -32,6 +32,7 @@ const char prot_rcsid[] = "$Id$";
 #include <errno.h>
 
 #include "uudefs.h"
+#include "uuconf.h"
 #include "system.h"
 #include "conn.h"
 #include "prot.h"

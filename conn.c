@@ -1,7 +1,7 @@
 /* conn.c
    Connection routines for the Taylor UUCP package.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -37,15 +37,17 @@ const char conn_rcsid[] = "$Id$";
 
 /* Create a new connection.  This relies on system dependent functions
    to set the qcmds and psysdep fields.  If qport is NULL, it opens a
-   standard input port.  */
+   standard input port, in which case ttype is the type of port to
+   use.  */
 
 boolean
-fconn_init (qport, qconn)
+fconn_init (qport, qconn, ttype)
      struct uuconf_port *qport;
      struct sconnection *qconn;
+     enum uuconf_porttype ttype;
 {
   qconn->qport = qport;
-  switch (qport == NULL ? UUCONF_PORTTYPE_STDIN : qport->uuconf_ttype)
+  switch (qport == NULL ? ttype : qport->uuconf_ttype)
     {
     case UUCONF_PORTTYPE_STDIN:
       return fsysdep_stdin_init (qconn);
@@ -64,7 +66,7 @@ fconn_init (qport, qconn)
     case UUCONF_PORTTYPE_PIPE:
       return fsysdep_pipe_init (qconn);
     default:
-      ulog (LOG_ERROR, "Unknown port type");
+      ulog (LOG_ERROR, "Unknown or unsupported port type");
       return FALSE;
     }
 }

@@ -1,7 +1,7 @@
 /* protj.c
    The 'j' protocol.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -33,6 +33,7 @@ const char protj_rcsid[] = "$Id$";
 #include <errno.h>
 
 #include "uudefs.h"
+#include "uuconf.h"
 #include "conn.h"
 #include "trans.h"
 #include "system.h"

@@ -399,13 +399,13 @@ trans.o: uudefs.h uuconf.h system.h prot.h trans.h
 send.o: uudefs.h uuconf.h system.h prot.h trans.h
 rec.o: uudefs.h uuconf.h system.h prot.h trans.h
 xcmd.o: uudefs.h uuconf.h system.h prot.h trans.h
-prot.o: uudefs.h system.h prot.h conn.h
+prot.o: uudefs.h uuconf.h system.h prot.h conn.h
 protg.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 protf.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 prott.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 prote.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 proti.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
-protj.o: uudefs.h prot.h conn.h system.h trans.h
+protj.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 protz.o: uudefs.h uuconf.h prot.h conn.h system.h trans.h
 log.o: uudefs.h uuconf.h system.h
 chat.o: uudefs.h uuconf.h system.h prot.h conn.h

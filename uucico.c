@@ -172,6 +172,7 @@ static const struct option asLongopts[] =
   { "nodetach", no_argument, NULL, 'D' },
   { "loop", no_argument, NULL, 'e' },
   { "force", no_argument, NULL, 'f'},
+  { "stdin", required_argument, NULL, 'i' },
   { "prompt", no_argument, NULL, 'l' },
   { "port", required_argument, NULL, 'p' },
   { "nouuxqt", no_argument, NULL, 'q' },
@@ -202,6 +203,8 @@ main (argc, argv)
   boolean fendless = FALSE;
   /* -f: Whether to force a call despite status of previous call.  */
   boolean fforce = FALSE;
+  /* -i type: type of port to use for stdin.  */
+  enum uuconf_porttype tstdintype = UUCONF_PORTTYPE_STDIN;
   /* -I file: configuration file name.  */
   const char *zconfig = NULL;
   /* -l: Whether to give a single login prompt.  */
@@ -235,9 +238,9 @@ main (argc, argv)
   zProgram = argv[0];
 
 #if COHERENT_C_OPTION
-  zopts = "c:CDefI:lp:qr:s:S:u:x:X:vw";
+  zopts = "c:CDefi:I:lp:qr:s:S:u:x:X:vw";
 #else
-  zopts = "cCDefI:lp:qr:s:S:u:x:X:vw";
+  zopts = "cCDefi:I:lp:qr:s:S:u:x:X:vw";
 #endif
 
   while ((iopt = getopt_long (argc, argv, zopts,
@@ -277,6 +280,25 @@ main (argc, argv)
 	  /* Force a call even if it hasn't been long enough since the last
 	     failed call.  */
 	  fforce = TRUE;
+	  break;
+
+	case 'i':
+	  /* Type of port to use for standard input.  Only TLI is
+	     supported here, and only if HAVE_TLI is true.  This
+	     permits the Network Listener to tell uucico to use TLI
+	     I/O calls.  */
+	  if (strcasecmp (optarg, "tli") != 0)
+	    fprintf (stderr, "%s: unsupported port type \"%s\"\n",
+		     zProgram, optarg);
+	  else
+	    {
+#if HAVE_TLI
+	      tstdintype = UUCONF_PORTTYPE_TLI;
+#else
+	      fprintf (stderr, "%s: not compiled with TLI support\n",
+		       zProgram);
+#endif
+	    }
 	  break;
 
 	case 'l':
@@ -617,7 +639,7 @@ main (argc, argv)
       fret = TRUE;
       zsystem = NULL;
 
-      if (! fconn_init (qport, &sconn))
+      if (! fconn_init (qport, &sconn, tstdintype))
 	fret = FALSE;
 
       if (qport != NULL)
@@ -765,6 +787,7 @@ uhelp ()
   printf (" -C,--ifwork: Only call named system if there is work\n");
   printf (" -D,--nodetach: Don't detach from controlling terminal\n");
   printf (" -u,--login: Set login name (privileged users only)\n");
+  printf (" -i,--stdin type: Type of standard input (only TLI supported)\n");
   printf (" -x,-X,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   printf (" -I,--config file: Set configuration file to use\n");
@@ -1022,7 +1045,7 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
     qport = qsys->uuconf_qport;
   if (qport != NULL)
     {
-      if (! fconn_init (qport, &sconn))
+      if (! fconn_init (qport, &sconn, UUCONF_PORTTYPE_UNKNOWN))
 	return FALSE;
       if (! fconn_lock (&sconn, FALSE))
 	{
@@ -1613,7 +1636,7 @@ iuport_lock (qport, pinfo)
 
   q->fmatched = TRUE;
 
-  if (! fconn_init (qport, q->qconn))
+  if (! fconn_init (qport, q->qconn, UUCONF_PORTTYPE_UNKNOWN))
     return UUCONF_NOT_FOUND;
   else if (! fconn_lock (q->qconn, FALSE))
     {
