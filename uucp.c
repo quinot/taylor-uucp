@@ -164,7 +164,7 @@ main (argc, argv)
 
   zProgram = argv[0];
 
-  while ((iopt = getopt_long (argc, argv, "cCdfg:I:jmn:prRs:tu:Wx:",
+  while ((iopt = getopt_long (argc, argv, "cCdfg:I:jmn:prRs:tu:Wvx:",
 			      asClongopts, (int *) NULL)) != EOF)
     {
       switch (iopt)
@@ -255,10 +255,8 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -595,49 +593,29 @@ ucusage ()
 static void
 uchelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
-  fprintf (stderr,
-	   "Usage: %s [options] file1 [file2 ...] dest\n", zProgram);
-  fprintf (stderr,
-	   " -c,--nocopy: Do not copy local files to spool directory\n");
-  fprintf (stderr,
-	   " -C,-p,--copy: Copy local files to spool directory (default)\n");
-  fprintf (stderr,
-	   " -d,--directories: Create necessary directories (default)\n");
-  fprintf (stderr,
-	   " -f,--nodirectories: Do not create directories (fail if they do not exist)\n");
-  fprintf (stderr,
-	   " -g,--grade grade: Set job grade (must be alphabetic)\n");
-  fprintf (stderr,
-	   " -m,--mail: Report status of copy by mail\n");
-  fprintf (stderr,
-	   " -n,--notify user: Report status of copy by mail to remote user\n");
-  fprintf (stderr,
-	   " -R,--recursive: Copy directories recursively\n");
-  fprintf (stderr,
-	   " -r,--nouucico: Do not start uucico daemon\n");
-  fprintf (stderr,
-	   " -s,--status file: Report completion status to file\n");
-  fprintf (stderr,
-	   " -j,--jobid: Report job id\n");
-  fprintf (stderr,
-	   " -W,--noexpand: Do not add current directory to remote filenames\n");
-  fprintf (stderr,
-	   " -t,--uuto: Emulate uuto\n");
-  fprintf (stderr,
-	   " -u,--usage name: Set user name\n");
-  fprintf (stderr,
-	   " -x,--debug debug: Set debugging level\n");
+  printf ("Usage: %s [options] file1 [file2 ...] dest\n", zProgram);
+  printf (" -c,--nocopy: Do not copy local files to spool directory\n");
+  printf (" -C,-p,--copy: Copy local files to spool directory (default)\n");
+  printf (" -d,--directories: Create necessary directories (default)\n");
+  printf (" -f,--nodirectories: Do not create directories (fail if they do not exist)\n");
+  printf (" -g,--grade grade: Set job grade (must be alphabetic)\n");
+  printf (" -m,--mail: Report status of copy by mail\n");
+  printf (" -n,--notify user: Report status of copy by mail to remote user\n");
+  printf (" -R,--recursive: Copy directories recursively\n");
+  printf (" -r,--nouucico: Do not start uucico daemon\n");
+  printf (" -s,--status file: Report completion status to file\n");
+  printf (" -j,--jobid: Report job id\n");
+  printf (" -W,--noexpand: Do not add current directory to remote filenames\n");
+  printf (" -t,--uuto: Emulate uuto\n");
+  printf (" -u,--usage name: Set user name\n");
+  printf (" -x,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
+  printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
 }
 
 /* This is called for each file in a directory heirarchy.  */
