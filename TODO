@@ -247,3 +247,12 @@ Doug Evans: Permissions READ and WRITE entries should probably only
 affect remote systems, not the local one.
 
 85.
+
+Les Mikesell: add TLI and TLIS connection ability.
+
+86.
+
+Les Mikesell: allow a separate program to be specified to handle the
+communications with a particular system.
+
+87.
