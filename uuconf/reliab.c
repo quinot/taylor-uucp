@@ -90,3 +90,34 @@ _uuconf_ireliable (pglobal, argc, argv, pvar, pinfo)
 
   return iret;
 }
+
+/* Handle the "half-duplex" command for a port or a dialer.  The pvar
+   argument points to an integer which should be set to hold
+   reliability information.  */
+
+/*ARGSUSED*/
+int
+_uuconf_ihalf_duplex (pglobal, argc, argv, pvar, pinfo)
+     pointer pglobal;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+  int *pi = (int *) pvar;
+  int fval;
+  int iret;
+
+  iret = _uuconf_iboolean (qglobal, argv[1], &fval);
+  if ((iret &~ UUCONF_CMDTABRET_KEEP) != UUCONF_SUCCESS)
+    return iret;
+
+  *pi |= UUCONF_RELIABLE_SPECIFIED;
+  if (fval)
+    *pi &=~ UUCONF_RELIABLE_FULLDUPLEX;
+  else
+    *pi |= UUCONF_RELIABLE_FULLDUPLEX;
+
+  return iret;
+}

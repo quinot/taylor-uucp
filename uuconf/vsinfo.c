@@ -249,7 +249,8 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	  qset->uuconf_qport->uuconf_ttype = UUCONF_PORTTYPE_TCP;
 	  qset->uuconf_qport->uuconf_ireliable
 	    = (UUCONF_RELIABLE_ENDTOEND | UUCONF_RELIABLE_RELIABLE
-	       | UUCONF_RELIABLE_EIGHT | UUCONF_RELIABLE_SPECIFIED);
+	       | UUCONF_RELIABLE_EIGHT | UUCONF_RELIABLE_FULLDUPLEX
+	       | UUCONF_RELIABLE_SPECIFIED);
 	  if (ctoks < 4)
 	    qset->uuconf_qport->uuconf_u.uuconf_stcp.uuconf_zport
 	      = (char *) "uucp";

@@ -46,7 +46,8 @@ _uuconf_uclear_port (qport)
      defaults, so that ``seven-bit true'' does not imply ``reliable
      false''.  */
   qport->uuconf_ireliable = (UUCONF_RELIABLE_RELIABLE
-			    | UUCONF_RELIABLE_EIGHT);
+			     | UUCONF_RELIABLE_EIGHT
+			     | UUCONF_RELIABLE_FULLDUPLEX);
 
   qport->uuconf_zlockname = NULL;
   qport->uuconf_palloc = NULL;

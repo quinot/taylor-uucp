@@ -69,6 +69,9 @@ static const struct cmdtab_offset asDialer_cmds[] =
       offsetof (struct uuconf_dialer, uuconf_ireliable), _uuconf_iseven_bit },
   { "reliable", UUCONF_CMDTABTYPE_FN | 2,
       offsetof (struct uuconf_dialer, uuconf_ireliable), _uuconf_ireliable },
+  { "half-duplex", UUCONF_CMDTABTYPE_FN | 2,
+      offsetof (struct uuconf_dialer, uuconf_ireliable),
+      _uuconf_ihalf_duplex },
   { NULL, 0, 0, NULL }
 };
 

@@ -208,7 +208,8 @@ uuconf_hdb_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 	      qport->uuconf_ttype = UUCONF_PORTTYPE_TCP;
 	      qport->uuconf_ireliable
 		= (UUCONF_RELIABLE_ENDTOEND | UUCONF_RELIABLE_RELIABLE
-		   | UUCONF_RELIABLE_EIGHT | UUCONF_RELIABLE_SPECIFIED);
+		   | UUCONF_RELIABLE_EIGHT | UUCONF_RELIABLE_FULLDUPLEX
+		   | UUCONF_RELIABLE_SPECIFIED);
 	      qport->uuconf_u.uuconf_stcp.uuconf_zport = pzsplit[1];
 	    }
 	  else

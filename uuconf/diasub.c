@@ -57,6 +57,7 @@ _uuconf_uclear_dialer (qdialer)
      defaults, so that ``seven-bit true'' does not imply ``reliable
      false''.  */
   qdialer->uuconf_ireliable = (UUCONF_RELIABLE_RELIABLE
-			       | UUCONF_RELIABLE_EIGHT);
+			       | UUCONF_RELIABLE_EIGHT
+			       | UUCONF_RELIABLE_FULLDUPLEX);
   qdialer->uuconf_palloc = NULL;
 }

@@ -479,6 +479,13 @@ struct uuconf_dialer
 
 /* Set if the connection is end-to-end reliable (e.g. TCP).  */
 #define UUCONF_RELIABLE_ENDTOEND (010)
+
+/* Set if the connection is full-duplex; that is, no time consuming
+   line turnaround is required before sending data in the reverse
+   direction.  If the connection is truly half-duplex, in the sense
+   that communication can only flow in one direction, UUCP can not be
+   used.  */
+#define UUCONF_RELIABLE_FULLDUPLEX (020)
 
 /* UUCP grades range from 0 to 9, A to Z, a to z in order from highest
    to lowest (work of higher grades is done before work of lower

@@ -270,13 +270,15 @@ extern int _uuconf_iadd_proto_param P((struct sglobal *qglobal,
 				       struct uuconf_proto_param **pq,
 				       pointer pblock));
 
-/* Handle a "seven-bit" or "reliable" command from a Taylor UUCP port
-   or dialer file.  The pvar field should point to the ireliable
-   element of the structure.  */
+/* Handle a "seven-bit", "reliable", or "half-duplex" command from a
+   Taylor UUCP port or dialer file.  The pvar field should point to
+   the ireliable element of the structure.  */
 extern int _uuconf_iseven_bit P((pointer pglobal, int argc, char **argv,
 				 pointer pvar, pointer pinfo));
 extern int _uuconf_ireliable P((pointer pglobal, int argc, char **argv,
 				pointer pvar, pointer pinfo));
+extern int _uuconf_ihalf_duplex P((pointer pglobal, int argc, char **argv,
+				   pointer pvar, pointer pinfo));
 
 /* Internal function to read a system from the V2 configuration files.
    This does not apply the basic defaults.  */

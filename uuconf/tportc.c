@@ -66,6 +66,9 @@ static const struct cmdtab_offset asPort_cmds[] =
       offsetof (struct uuconf_port, uuconf_ireliable), _uuconf_iseven_bit },
   { "reliable", UUCONF_CMDTABTYPE_FN | 2,
       offsetof (struct uuconf_port, uuconf_ireliable), _uuconf_ireliable },
+  { "half-duplex", UUCONF_CMDTABTYPE_FN | 2,
+      offsetof (struct uuconf_port, uuconf_ireliable),
+      _uuconf_ihalf_duplex },
   { "lockname", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_port, uuconf_zlockname), NULL },
   { NULL, 0, 0, NULL }
@@ -228,7 +231,8 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	  qport->uuconf_ireliable = (UUCONF_RELIABLE_SPECIFIED
 				     | UUCONF_RELIABLE_ENDTOEND
 				     | UUCONF_RELIABLE_RELIABLE
-				     | UUCONF_RELIABLE_EIGHT);
+				     | UUCONF_RELIABLE_EIGHT
+				     | UUCONF_RELIABLE_FULLDUPLEX);
 	  break;
 	}
 

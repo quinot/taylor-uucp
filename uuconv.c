@@ -1642,6 +1642,11 @@ uvwrite_taylor_port (e, qport, zprefix)
       sprintf (ab, "%sreliable", zprefix);
       uvwrite_boolean (e,
 		       ((qport->uuconf_ireliable & UUCONF_RELIABLE_RELIABLE)
+			!= 0),
+		       ab);
+      sprintf (ab, "%shalf-duplex", zprefix);
+      uvwrite_boolean (e,
+		       ((qport->uuconf_ireliable & UUCONF_RELIABLE_FULLDUPLEX)
 			== 0),
 		       ab);
     }
@@ -1876,7 +1881,12 @@ uvwrite_taylor_dialer (e, qdialer, zprefix)
       sprintf (ab, "%sreliable", zprefix);
       uvwrite_boolean (e,
 		       ((qdialer->uuconf_ireliable & UUCONF_RELIABLE_RELIABLE)
-			== 0),
+			!= 0),
+		       ab);
+      sprintf (ab, "%shalf-duplex", zprefix);
+      uvwrite_boolean (e,
+		       ((qdialer->uuconf_ireliable
+			 & UUCONF_RELIABLE_FULLDUPLEX) == 0),
 		       ab);
     }
 }
