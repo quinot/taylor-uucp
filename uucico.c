@@ -45,6 +45,14 @@ const char uucico_rcsid[] = "$Id$";
 #include "prot.h"
 #include "trans.h"
 #include "system.h"
+
+/* Coherent already had a different meaning for the -c option.  What a
+   pain.  */
+#ifdef __COHERENT__
+#define COHERENT_C_OPTION 1
+#else
+#define COHERENT_C_OPTION 0
+#endif
 
 /* The program name.  */
 char abProgram[] = "uucico";
@@ -156,6 +164,8 @@ main (argc, argv)
 {
   /* -c: Whether to warn if a call is attempted at a bad time.  */
   boolean ftimewarn = TRUE;
+  /* -C: Only call the system if there is work.  */
+  boolean fifwork = FALSE;
   /* -D: don't detach from controlling terminal.  */
   boolean fdetach = TRUE;
   /* -e: Whether to do an endless loop of accepting calls.  */
@@ -179,6 +189,7 @@ main (argc, argv)
   const char *zsystem = NULL;
   /* -w: Whether to wait for a call after doing one.  */
   boolean fwait = FALSE;
+  const char *zopts;
   int iopt;
   struct uuconf_port *qport;
   struct uuconf_port sport;
@@ -189,15 +200,31 @@ main (argc, argv)
   int iholddebug;
 #endif
 
-  while ((iopt = getopt_long (argc, argv,
-			      "cDefI:lp:qr:s:S:u:x:X:w",
+#if COHERENT_C_OPTION
+  zopts = "c:CDefI:lp:qr:s:S:u:x:X:w";
+#else
+  zopts = "cCDefI:lp:qr:s:S:u:x:X:w";
+#endif
+
+  while ((iopt = getopt_long (argc, argv, zopts,
 			      asLongopts, (int *) NULL)) != EOF)
     {
+#if COHERENT_C_OPTION
+      if (iopt == 'c')
+	{
+	  iopt = 's';
+	  fifwork = TRUE;
+	}
+#endif
       switch (iopt)
 	{
 	case 'c':
 	  /* Don't warn if a call is attempted at a bad time.  */
 	  ftimewarn = FALSE;
+	  break;
+
+	case 'C':
+	  fifwork = TRUE;
 	  break;
 
 	case 'D':
@@ -389,7 +416,7 @@ main (argc, argv)
 	  else
 	    {
 	      fLocked_system = TRUE;
-	      fret = fcall (puuconf, &sLocked_system, qport, FALSE,
+	      fret = fcall (puuconf, &sLocked_system, qport, fifwork,
 			    fforce, fdetach, ftimewarn);
 	      if (fLocked_system)
 		{
@@ -666,6 +693,8 @@ uusage ()
 	   " -q: Don't start uuxqt when done\n");
   fprintf (stderr,
 	   " -c: Don't warn if call is attempted at a bad time\n");
+  fprintf (stderr,
+	   " -C: Only call named system if there is work\n");
   fprintf (stderr,
 	   " -D: Don't detach from controlling terminal\n");
   fprintf (stderr,
