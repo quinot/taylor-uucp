@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/09/19  03:06:04  ian
+   Chip Salzenberg: put BNU temporary files in system's directory
+
    Revision 1.5  1991/09/19  02:30:37  ian
    From Chip Salzenberg: check whether signal is ignored differently
 
@@ -502,11 +505,16 @@ static boolean fcall (qsys, qport, fforce, bgrade)
   /* Make sure it's been long enough since the last failed call.  */
   if (! fforce)
     {
+#ifdef CMAXRETRIES
+#if CMAXRETRIES > 0
       if (sstat.cretries >= CMAXRETRIES)
 	{
 	  ulog (LOG_ERROR, "Too many retries");
 	  return FALSE;
 	}
+#endif /* CMAXRETRIES > 0 */
+#endif /* defined (CMAXRETRIES) */
+
       if (sstat.ttype != STATUS_COMPLETE
 	  && sstat.ilast + sstat.cwait > isysdep_time ())
 	{
