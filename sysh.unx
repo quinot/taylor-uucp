@@ -230,6 +230,9 @@ typedef struct termios sterminal;
    failed.  */
 #define PRESERVEDIR ".Preserve"
 
+/* The name of the directory to which we move corrupt files.  */
+#define CORRUPTDIR ".Corrupt"
+
 /* The length of the sequence number used in a file name.  */
 #define CSEQLEN (4)
 
