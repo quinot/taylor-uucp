@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.32  1992/03/15  04:51:17  ian
+   Keep an array of signals we've received rather than a single variable
+
    Revision 1.31  1992/03/12  19:54:43  ian
    Debugging based on types rather than number
 
@@ -452,11 +455,13 @@ main (argc, argv)
   /* Now look through the arguments to see if we are going to need the
      current working directory.  We don't try to make a precise
      determination, just a conservative one.  The basic idea is that
-     we don't want to get the cwd for 'rmail - foo!user' (note that we
+     we don't want to get the cwd for 'foo!rmail - user' (note that we
      don't examine the command itself).  */
   fgetcwd = FALSE;
   for (i = 0; i < cargs; i++)
     {
+      if (pzargs[i][0] == '(')
+	continue;
       zexclam = strrchr (pzargs[i], '!');
       if (zexclam != NULL && fsysdep_needs_cwd (zexclam + 1))
 	{
