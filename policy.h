@@ -72,14 +72,19 @@
    figure out what's happening if something goes wrong.  */
 
 #if HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS == 0
+#ifdef __QNX__
+#undef HAVE_POSIX_TERMIOS
+#define HAVE_POSIX_TERMIOS 1
+#else /* ! defined (__QNX__) */
 #if HAVE_CBREAK
 #undef HAVE_BSD_TTY
 #define HAVE_BSD_TTY 1
-#else
+#else /* ! HAVE_CBREAK */
 #undef HAVE_SYSV_TERMIO
 #define HAVE_SYSV_TERMIO 1
-#endif
-#endif
+#endif /* ! HAVE_CBREAK */
+#endif /* ! defined (__QNX__) */
+#endif /* HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS == 0 */
 
 /* On some systems a write to a serial port will block even if the
    file descriptor has been set to not block.  File transfer can be
@@ -285,9 +290,27 @@
 
 /* If your system supports Internet mail addresses (which look like
    user@host.domain rather than system!user), HAVE_INTERNET_MAIL
-   should be set to 1.  This is checked by uuxqt when sending error
-   (or success, if requested) notifications to the person who
-   submitted the job.  */
+   should be set to 1.  This is checked by uuxqt and uustat when
+   sending notifications to the person who submitted the job.
+
+   If your system does not understand addresses of the form user@host,
+   you must set HAVE_INTERNET_MAIL to 0.
+
+   If your system does not understand addresses of the form host!user,
+   which is unlikely, you must set HAVE_INTERNET_MAIL to 1.
+
+   If your system sends mail addressed to "A!B@C" to host C (i.e., it
+   parses the address as "(A!B)@C"), you must set HAVE_INTERNET_MAIL
+   to 1.
+
+   If your system sends mail addressed to "A!B@C" to host A (i.e., it
+   parses the address as "A!(B@C)"), you must set HAVE_INTERNET_MAIL
+   to 0.
+
+   Note that in general it is best to avoid addresses of the form
+   "A!B@C" because of this ambiguity of precedence.  UUCP will not
+   intentionally generate addresses of this form, but it can occur in
+   certain rather complex cases.  */
 #define HAVE_INTERNET_MAIL 1
 
 /* Adminstrative decisions.  */
