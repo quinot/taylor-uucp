@@ -1,5 +1,7 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* uucico.c (fspawn_uuxqt): Ignore the zsys parameter.
+
 	* Godfrey van der Linden: unix/serial.c (fsysdep_conn_io): Limit
 	the delay waiting for a write to the number of bytes we are
 	prepared to read.

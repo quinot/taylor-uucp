@@ -3032,25 +3032,18 @@ zget_typed_line (qconn, fstrip)
 }
 
 /* Spawn a uuxqt job.  This probably belongs in some other file, but I
-   don't have a good place for it.  */
+   don't have a good place for it.  We used to spawn uuxqt with a -s
+   option for zsys, but that doesn't help much, and when max-uuxqts is
+   used it permits one system to hog the uuxqt jobs.  */
 
 boolean
 fspawn_uuxqt (ffork, zsys, zconfig)
      boolean ffork;
-     const char *zsys;
+     const char *zsys ATTRIBUTE_UNUSED;
      const char *zconfig;
 {
-  char *zsysarg;
   char *zconfigarg;
   boolean fret;
-
-  if (zsys == NULL)
-    zsysarg = NULL;
-  else
-    {
-      zsysarg = zbufalc (sizeof "-s" + strlen (zsys));
-      sprintf (zsysarg, "-s%s", zsys);
-    }
 
   if (zconfig == NULL)
     zconfigarg = NULL;
@@ -3058,16 +3051,10 @@ fspawn_uuxqt (ffork, zsys, zconfig)
     {
       zconfigarg = zbufalc (sizeof "-I" + strlen (zconfig));
       sprintf (zconfigarg, "-I%s", zconfig);
-      if (zsysarg == NULL)
-	{
-	  zsysarg = zconfigarg;
-	  zconfigarg = NULL;
-	}
     }
 
-  fret = fsysdep_run (ffork, "uuxqt", zsysarg, zconfigarg);
+  fret = fsysdep_run (ffork, "uuxqt", zconfigarg, (const char *) NULL);
 
-  ubuffree (zsysarg);
   ubuffree (zconfigarg);
 
   return fret;
