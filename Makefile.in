@@ -38,7 +38,7 @@ man8ext = .8
 
 # Where to install the info files.
 infodir = $(prefix)/info
-#infodir = $(prefix)/share/doc
+#infodir = $(prefix)/share/info
 
 # The directory to look in for new style configuration files (when
 # using HAVE_TAYLOR_CONFIG).  Note that by default this is different
