@@ -327,7 +327,7 @@ doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 	-rm -rf uucp-doc-$(VERSION) uucp-doc-dist
 	-rm -f uucp-doc-$(VERSION).tar uucp-doc-$(VERSION).tar.gz
 	mkdir uucp-doc-$(VERSION)
-	ln README-DOC uucp-doc-$(VERSION)
+	ln $(srcdir)/README-DOC uucp-doc-$(VERSION)
 	ln $(srcdir)/uucp.texi uucp-doc-$(VERSION)
 	for i in uucp.info*; do ln $$i uucp-doc-$(VERSION); done
 	ln uucp.dvi uucp-doc-$(VERSION)
@@ -342,7 +342,7 @@ doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 info: uucp.info
 
 uucp.info: uucp.texi
-	$(MAKEINFO) $<
+	$(MAKEINFO) -o uucp.info $<
 
 install-info: uucp.info
 	if test -d $(infodir); then true; else mkdir $(infodir); fi
