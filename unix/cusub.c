@@ -915,7 +915,7 @@ boolean
 fsysdep_terminal_puts (zline)
      const char *zline;
 {
-  char *zalc;
+  char *zalc, *zprint;
   size_t clen;
 
   if (zline == NULL)
@@ -938,11 +938,12 @@ fsysdep_terminal_puts (zline)
   zalc[clen] = '\n';
   ++clen;
 
+  zprint = zalc;
   while (clen > 0)
     {
       int c;
 
-      c = write (1, zalc, clen);
+      c = write (1, zprint, clen);
       if (c <= 0)
 	{
 	  ubuffree (zalc);
@@ -950,7 +951,7 @@ fsysdep_terminal_puts (zline)
 	  return FALSE;
 	}
       clen -= c;
-      zalc += c;
+      zprint += c;
     }
 
   ubuffree (zalc);
