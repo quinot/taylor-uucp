@@ -144,7 +144,7 @@ static boolean fsnotify P((pointer puuconf, int icmd, const char *zcomment,
 			   const char *zstdin, pointer pstdinseq,
 			   const char *zrequestor));
 static boolean fsquery P((pointer puuconf));
-static void usunits_show P((long idiff));
+static int csunits_show P((long idiff));
 static boolean fsmachines P((void));
 
 /* Long getopt options.  */
@@ -2096,6 +2096,7 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
   struct sstatus sstat;
   boolean fnostatus;
   struct tm stime;
+  int cpad;
 
   flocal = strcmp (qsys->uuconf_zname, zlocalname) == 0;
 
@@ -2105,22 +2106,29 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
 	return FALSE;
     }
 
-  printf ("%-14s %3dC (", qsys->uuconf_zname, cwork);
+  printf ("%-10s %3dC (", qsys->uuconf_zname, cwork);
 
   if (cwork == 0)
-    printf ("0 secs");
+    {
+      printf ("0 secs");
+      cpad = 3;
+    }
   else
-    usunits_show (inow - ifirstwork);
+    cpad = csunits_show (inow - ifirstwork);
 
   printf (") ");
+  while (cpad-- != 0)
+    printf (" ");
 
   if (qxqt == NULL)
-    printf ("  0X (0 secs)");
+    printf ("  0X (0 secs)  ");
   else
     {
       printf ("%3dX (", qxqt->cxqts);
-      usunits_show (inow - qxqt->ifirst);
+      cpad = csunits_show (inow - qxqt->ifirst);
       printf (")");
+      while (cpad-- != 0)
+	printf (" ");
     }
 
   if (flocal || fnostatus)
@@ -2141,35 +2149,48 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
 
 /* Print a time difference in the largest applicable units.  */
 
-static void
-usunits_show (idiff)
+static int
+csunits_show (idiff)
      long idiff;
 {
   const char *zunit;
   long iunits;
+  int cpad;
 
   if (idiff > (long) 24 * (long) 60 * (long) 60)
     {
       iunits = idiff / ((long) 24 * (long) 60 * (long) 60);
       zunit = "day";
+      cpad = 4;
     }
   else if (idiff > (long) 60 * 60)
     {
       iunits = idiff / (long) (60 * 60);
       zunit = "hour";
+      cpad = 3;
     }
   else if (idiff > (long) 60)
     {
       iunits = idiff / (long) 60;
       zunit = "min";
+      cpad = 4;
     }
   else
     {
       iunits = idiff;
       zunit = "sec";
+      cpad = 4;
     }
 
   printf ("%ld %s%s", iunits, zunit, iunits == 1 ? "" : "s");
+
+  if (iunits != 1)
+    --cpad;
+  if (iunits > 99)
+    --cpad;
+  if (iunits > 9)
+    --cpad;
+  return cpad;
 }
 
 /* Give a list of all status entries for all machines that we have
