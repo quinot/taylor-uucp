@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/06  23:42:18  ian
+   Don't acknowledge success by default
+
    Revision 1.6  1991/12/01  01:28:44  ian
    Mitch Mitchell: fixed comment listing supported commands
 
@@ -703,28 +706,26 @@ uqdo_xqt_file (zfile, qsys, zcmd)
 
   iclean |= REMOVE_FILE | REMOVE_NEEDED;
 
-  /* Get the address to mail results to.  */
+  /* Get the address to mail results to.  Prepend the system from
+     which the execute file originated, since mail addresses are
+     relative to it.  */
 
   if (zQrequestor != NULL)
     zmail = zQrequestor;
-  else if (zQuser == NULL)
-    zmail = NULL;
-  else
+  else if (zQuser != NULL)
+    zmail = zQuser;
+  if (zmail != NULL
+      && zQsystem != NULL
+      && strcmp (zQsystem, zLocalname) == 0)
     {
-      if (zQsystem == NULL
-	  || strcmp (zQsystem, zLocalname) == 0)
-	zmail = zQuser;
-      else
-	{
-	  char *zset;
+      char *zset;
 
-	  zset = (char *)  alloca (strlen (zQsystem) + strlen (zQuser) + 2);
+      zset = (char *) alloca (strlen (zQsystem) + strlen (zmail) + 2);
 
-	  /* We should permit Internet addressing here.  */
+      /* We should permit Internet addressing here.  */
 
-	  sprintf (zset, "%s!%s", zQsystem, zQuser);
-	  zmail = zset;
-	}
+      sprintf (zset, "%s!%s", zQsystem, zmail);
+      zmail = zset;
     }
 
   /* Get the pathname to execute.  */
