@@ -150,6 +150,7 @@ clean:
 
 dist: uucp.info
 	-rm -rf uucp-$(VERSION)
+	-rm -f taylor-uucp-$(VERSION).tar taylor-uucp-$(VERSION).tar.Z
 	mkdir uucp-$(VERSION)
 	ln `cat MANIFEST` uucp-$(VERSION)
 	rm -f uucp-$(VERSION)/conf.h uucp-$(VERSION)/sysh.unx
