@@ -71,7 +71,6 @@ main (argc, argv)
   int iopt;
   pointer puuconf;
   int iuuconf;
-  struct uuconf_system ssys;
   const char *zpubdir;
   char *zfile, *zfrom, *zfull;
   char *zallsys;
@@ -140,14 +139,17 @@ main (argc, argv)
   zpubdir = NULL;
   if (zsystem != NULL)
     {
+      struct uuconf_system ssys;
+
+      /* Get the public directory for the system.  If we can't find
+         the system information, just use the standard public
+         directory, since uupick is not setuid.  */
       iuuconf = uuconf_system_info (puuconf, zsystem, &ssys);
       if (iuuconf == UUCONF_SUCCESS)
 	{
 	  zpubdir = zbufcpy (ssys.uuconf_zpubdir);
 	  (void) uuconf_system_free (puuconf, &ssys);
 	}
-      else if (iuuconf != UUCONF_NOT_FOUND)
-	(void) ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
     }
   if (zpubdir == NULL)
     {
