@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.32  1992/01/15  07:06:29  ian
+   Set configuration directory in Makefile rather than sysdep.h
+
    Revision 1.31  1992/01/14  03:46:55  ian
    Chip Salzenberg: handle invalid status values in status files
 
@@ -168,7 +171,9 @@ typedef const char *constpointer;
 /* Use builtin alloca if we can, and only use inline with gcc.  */
 
 #ifdef __GNUC__
+#if HAVE_ALLOCA
 #define alloca __builtin_alloca
+#endif
 #undef HAVE_ALLOCA
 #define HAVE_ALLOCA 1
 #else /* ! __GNUC__ */
