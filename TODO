@@ -775,3 +775,8 @@ uuconf_dialer_names for the latter.
 
 Kai Michael Kretschmann: Add a configure option to drop the connection
 if jobs are coming in too slowly, indicating a bad connection.
+
+244.
+
+John Plate: Have uustat -k make a entry in the Log file when a job is
+removed, for symmetry with when a job is inserted.
