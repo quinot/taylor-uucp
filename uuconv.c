@@ -1924,6 +1924,8 @@ ivwrite_hdb_port (qport, pinfo)
     }
   else if (qport->uuconf_ttype == UUCONF_PORTTYPE_TCP)
     {
+      char **pz;
+
       fprintf (e, "TCP");
       if (qport->uuconf_zprotocols != NULL)
 	fprintf (e, ",%s", qport->uuconf_zprotocols);
