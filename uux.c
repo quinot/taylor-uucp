@@ -66,6 +66,10 @@ static int cXcmds;
 
 /* A file to close if we're forced to exit.  */
 static FILE *eXclose;
+
+/* A list of file names which will match the file names which appear
+   in the uucico logs.  */
+static char *zXnames;
 
 /* Local functions.  */
 static void uxusage P((void));
@@ -80,6 +84,7 @@ static void uxadd_send_file P((const char *zfrom, const char *zto,
 static void uxcopy_stdin P((FILE *e));
 static void uxrecord_file P((const char *zfile));
 static void uxabort P((void));
+static void uxadd_name P((const char *));
 
 /* Long getopt options.  */
 static const struct option asXlongopts[] =
@@ -1170,6 +1175,8 @@ main (argc, argv)
       pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
 					   cXcmds * sizeof (struct scmd));
       pasXcmds[cXcmds - 1] = s;
+
+      uxadd_name (zinput_from);
     }
   else
     {
@@ -1248,7 +1255,7 @@ main (argc, argv)
   ulog_system (sxqtsys.uuconf_zname);
   ulog_user (zuser);
 
-  ulog (LOG_NORMAL, "Queuing %s", zfullcmd);
+  ulog (LOG_NORMAL, "Queuing %s (%s)", zfullcmd, zXnames);
 
   ulog_close ();
 
@@ -1404,6 +1411,8 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
 					   cXcmds * sizeof (struct scmd));
       pasXcmds[cXcmds - 1] = s;
 
+      uxadd_name (abtname);
+
       /* Send the data file to abdname where the execution file will
 	 expect it.  */
       zto = abdname;
@@ -1427,6 +1436,8 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
   pasXcmds = (struct scmd *) xrealloc ((pointer) pasXcmds,
 				       cXcmds * sizeof (struct scmd));
   pasXcmds[cXcmds - 1] = s;
+
+  uxadd_name (zfrom);
 }
 
 /* Copy stdin to a file.  This is a separate function because it may
@@ -1521,4 +1532,32 @@ uxabort ()
     (void) remove (pXaz[i]);
   ulog_close ();
   usysdep_exit (FALSE);
+}
+
+/* Add a name to the list of file names we are going to log.  We log
+   all the file names which will appear in the uucico log file.  This
+   permits people to associate the file send in the uucico log with
+   the uux entry which created the file.  Normally only one file name
+   will appear.  */
+
+static void
+uxadd_name (z)
+     const char *z;
+{
+  if (zXnames == NULL)
+    zXnames = zbufcpy (z);
+  else
+    {
+      size_t cold, cadd;
+      char *znew;
+
+      cold = strlen (zXnames);
+      cadd = strlen (z);
+      znew = zbufalc (cold + 2 + cadd);
+      memcpy (znew, zXnames, cold);
+      znew[cold] = ' ';
+      memcpy (znew + cold + 1, z, cadd + 1);
+      ubuffree (zXnames);
+      zXnames = znew;
+    }
 }
