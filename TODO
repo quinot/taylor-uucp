@@ -807,3 +807,8 @@ the other system sends a SYNC, but the other system doesn't get my
 SYNC, then I will proceed but the other system will not.  The correct
 fix is probably to notice that we've never gotten an ACK, and to send
 another SYNC to encourage the other system to get going.
+
+249.
+
+Allow some way to specify which alternate to use when calling another
+system.
