@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.42  1992/03/03  21:01:20  ian
+   Use strict timeout in fsserial_read, eliminate all race conditions
+
    Revision 1.41  1992/03/02  04:53:07  ian
    Marc Unangst: added HAVE_SCO_LOCKFILES configuration parameter
 
@@ -250,6 +253,7 @@ extern volatile jmp_buf sSjmp_buf;
 typedef struct sgttyb sterminal;
 #define fgetterminfo(o, q) (ioctl ((o), TIOCGETP, (q)) == 0)
 #define fsetterminfo(o, q) (ioctl ((o), TIOCSETN, (q)) == 0)
+#define fsetterminfodrain(o, q) (ioctl ((o), TIOCSETP, (q)) == 0)
 #endif /* HAVE_BSD_TTY */
 
 #if HAVE_SYSV_TERMIO
@@ -257,6 +261,7 @@ typedef struct sgttyb sterminal;
 typedef struct termio sterminal;
 #define fgetterminfo(o, q) (ioctl ((o), TCGETA, (q)) == 0)
 #define fsetterminfo(o, q) (ioctl ((o), TCSETA, (q)) == 0)
+#define fsetterminfodrain(o, q) (ioctl ((o), TCSETAW, (q)) == 0)
 #endif /* HAVE_SYSV_TERMIO */
 
 #if HAVE_POSIX_TERMIOS
@@ -264,6 +269,7 @@ typedef struct termio sterminal;
 typedef struct termios sterminal;
 #define fgetterminfo(o, q) (tcgetattr ((o), (q)) == 0)
 #define fsetterminfo(o, q) (tcsetattr ((o), TCSANOW, (q)) == 0)
+#define fsetterminfodrain(o, q) (tcsetattr ((o), TCSADRAIN, (q)) == 0)
 #endif /* HAVE_POSIX_TERMIOS */
 
 /* The root directory (this is needed by the system independent stuff).  */
