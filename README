@@ -161,6 +161,60 @@ You can install by suing to root and typing make install.  Or you can
 look at what make install does and do it by hand.  It's pretty
 simplistic.
 
+TCP
+
+If your system has a Berkeley style socket library, you can compile
+the code to permit making connections over TCP.  Specifying that a
+system should be reached via TCP is easy, but nonobvious.
+
+If you are using the new style configuration files, see CONFIG;
+basically when definining the system put in the line ``port type tcp''
+and, if necessary, ``port service xxx'' where xxx is the port number
+to use (the default is to look up "uucp" in /etc/services and if not
+found to use port 540).  You can specify the address of the remote
+host with ``address a.b.c''.  If you don't specify an address, the
+system name will be used.
+
+If you are using V2 configuration files, add a line like this to
+L.sys:
+
+	foo Any TCP uucp foo.domain chat-script
+
+This will make an entry for system foo, to be called at any time, over
+TCP, using port number "uucp" (as found in /etc/services; this may be
+specified as a number), using remote host "foo.domain", with some chat
+script.
+
+If you are using BNU configuration files, add a line like this to
+Systems:
+
+	foo Any TCP - foo.domain chat-script
+
+and a line like this to Devices:
+
+	TCP uucp - -
+
+You only need one line in Devices regardless of how many systems you
+contact over TCP.  This will make an entry for system foo, to be
+called at any time, over TCP, using port number "uucp" (as found in
+/etc/services; this may be specified as a number), using remote host
+"foo.domain", with some chat script.
+
+The uucico daemon can also be run as a TCP server.  This code is
+probably not completely solid, although it does work.  I don't
+recommend investigating it unless you are willing to tinker a bit.
+Basically, you must define a port, either using the port file as
+described in CONFIG if you are using the new configuration methord or
+with an entry in Devices if you are using BNU (there is no way to
+define a port using V2).  If you are using BNU the port must be named
+"TCP" (a line as shown above will suffice).  You can then start uucico
+as "uucico -p TCP" (after the -p, name the port; in BNU it must be
+"TCP").  This will wait for incoming connections, and fork off a child
+for each one.  Each connection will be prompted with "login: " and
+"Password:", and the results will be checked against the call in login
+file (see CONFIG for details).  Of course, you can get a similar
+effect by using the BSD uucpd program.
+
 COMMENTS
 
 First of all, let me know about any comments you have.

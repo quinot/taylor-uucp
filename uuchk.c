@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/12  19:47:04  ian
+   Add called-chat set of commands to run a chat script on an incoming call
+
    Revision 1.4  1991/11/11  23:47:24  ian
    Added chat-program to run a program to do a chat script
 
@@ -307,7 +310,17 @@ ukshow (qsys)
 	    }
 
 	  if (qsys->zphone != NULL)
-	    printf (" Phone number %s\n", qsys->zphone);
+	    {
+#if HAVE_TCP
+	      if ((qsys->zport != NULL
+		   && strcmp (qsys->zport, "TCP") == 0)
+		  || (qsys->qport != NULL
+		      && qsys->qport->ttype == PORTTYPE_TCP))
+		printf (" Remote address %s\n", qsys->zphone);
+	      else
+#endif /* HAVE_TCP */
+		printf (" Phone number %s\n", qsys->zphone);
+	    }
 
 	  if (qsys->zchat_program != NULL)
 	    printf (" Chat program %s\n", qsys->zchat_program);
@@ -535,6 +548,12 @@ fkshow_port (qport, fin)
 	    ukshow_dialer (&sdial);
 	}
       break;
+#if HAVE_TCP
+    case PORTTYPE_TCP:
+      printf ("   Port type tcp\n");
+      printf ("   TCP service %s\n", qport->u.stcp.zport);
+      break;
+#endif /* HAVE_TCP */
     default:
       printf ("   CAN'T HAPPEN\n");
       break;
