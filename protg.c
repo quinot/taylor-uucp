@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/20  03:02:01  ian
+   Oleg Tabarovsky: added statistical messages to 'g' and 'f' protocols
+
    Revision 1.8  1991/12/17  22:13:14  ian
    David Nugent: zero out garbage before sending data
 
@@ -225,6 +228,9 @@ static int cGretries = 6;
 /* Amount of garbage data we are prepared to see before giving up.  */
 static int cGgarbage_data = 10000;
 
+/* Maximum number of errors we are prepared to see before giving up.  */
+static int cGmax_errors = 100;
+
 /* Protocol parameter commands.  */
 
 struct scmdtab asGproto_params[] =
@@ -239,6 +245,7 @@ struct scmdtab asGproto_params[] =
   { "timeout", CMDTABTYPE_INT, (pointer) &cGtimeout, NULL },
   { "retries", CMDTABTYPE_INT, (pointer) &cGretries, NULL },
   { "garbage", CMDTABTYPE_INT, (pointer) &cGgarbage_data, NULL },
+  { "errors", CMDTABTYPE_INT, (pointer) &cGmax_errors, NULL },
   { NULL, 0, NULL, NULL }
 };
 
@@ -281,6 +288,7 @@ static boolean fgprocess_data P((boolean fdoacks, boolean freturncontrol,
 				 boolean *pfexit, int *pcneed,
 				 boolean *pffound));
 static boolean fginit_sendbuffers P((boolean fallocate));
+static boolean fgcheck_errors P((void));
 static int igchecksum P((const char *zdata, int clen));
 static int igchecksum2 P((const char *zfirst, int cfirst,
 			  const char *zsecond, int csecond));
@@ -1010,6 +1018,24 @@ fggot_ack (iack)
   return TRUE;
 }
 
+/* See if we've overflowed the permitted number of errors.  */
+
+static boolean
+fgcheck_errors ()
+{
+  if ((cGbad_hdr
+       + cGbad_checksum
+       + cGbad_order
+       + cGresent_packets - cGdelayed_packets)
+      > cGmax_errors)
+    {
+      ulog (LOG_ERROR, "Too many 'g' protocol errors");
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 /* Process the receive buffer into a data packet, if possible.  All
    control packets are handled here.  When a data packet is received,
    fgprocess_data calls fgot_data with the data; if that sets its
@@ -1021,11 +1047,11 @@ fggot_ack (iack)
    not enough data to form a complete packet, then *pfexit will be set
    to FALSE, *pcneed will be set to the number of bytes needed to form
    a complete packet (unless pcneed is NULL) and fgprocess_data will
-   return TRUE.  If this function found a packet, and pffound is not
-   NULL, it will set *pffound to TRUE; this can be used to tell valid
-   control packets from an endless stream of garbage.  If fdoacks is
-   TRUE, received packets will be acknowledged; otherwise they must be
-   acknowledged later.  */
+   return TRUE.  If this function found a data packet, and pffound is
+   not NULL, it will set *pffound to TRUE; this can be used to tell
+   valid data from an endless stream of garbage and control packets.
+   If fdoacks is TRUE, received packets will be acknowledged;
+   otherwise they must be acknowledged later.  */
 
 static boolean
 fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
@@ -1035,9 +1061,13 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
      int *pcneed;
      boolean *pffound;
 {
+  boolean freplied;
+
   *pfexit = FALSE;
   if (pffound != NULL)
     *pffound = FALSE;
+
+  freplied = FALSE;
 
   for (; iPrecstart != iPrecend; iPrecstart = (iPrecstart + 1) % CRECBUFLEN)
     {
@@ -1079,6 +1109,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  || CONTROL_TT (ab[IFRAME_CONTROL]) == ALTCHAN)
 	{
 	  ++cGbad_hdr;
+	  if (! fgcheck_errors ())
+	    return FALSE;
 	  continue;
 	}
 
@@ -1097,6 +1129,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	    {
 	      ++cGbad_hdr;
+	      if (! fgcheck_errors ())
+		return FALSE;
 	      continue;
 	    }
 
@@ -1113,6 +1147,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL)
 	    {
 	      ++cGbad_hdr;
+	      if (! fgcheck_errors ())
+		return FALSE;
 	      continue;
 	    }
 
@@ -1173,8 +1209,6 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       if (ihdrcheck != idatcheck)
 	{
-	  ++cGbad_checksum;
-
 #if DEBUG > 4
 	  if (iDebug > 4)
 	    ulog (LOG_DEBUG,
@@ -1182,11 +1216,18 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		  ihdrcheck, idatcheck);
 #endif
 
+	  ++cGbad_checksum;
+	  if (! fgcheck_errors ())
+	    return FALSE;
+
 	  /* If the checksum failed for a data packet, then if it was
 	     the one we were expecting send an RJ, otherwise
-	     acknowledge the last packet received again.  */
+	     acknowledge the last packet received again.  If we've
+	     already responded to some packet in this batch of data,
+	     don't repond again.  */
 
-	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
+	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
+	      && ! freplied)
 	    {
 	      boolean facked;
 	      
@@ -1208,6 +1249,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		  if (! fgsend_control (RR, iGrecseq))
 		    return FALSE;
 		}  
+
+	      freplied = TRUE;
 	    }
 
 	  /* We can't skip the packet data after this, because if we
@@ -1224,10 +1267,6 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
       /* Store the control byte for the use of calling functions.  */
       iGpacket_control = ab[IFRAME_CONTROL] & 0xff;
-
-      /* Tell the caller that we found something.  */
-      if (pffound != NULL)
-	*pffound = TRUE;
 
       /* Update the received sequence number from the yyy field of a
 	 data packet or an RR control packet.  */
@@ -1247,8 +1286,6 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	{
 	  if (CONTROL_XXX (ab[IFRAME_CONTROL]) != INEXTSEQ (iGrecseq))
 	    {
-	      ++cGbad_order;
-
 #if DEBUG > 7
 	      if (iDebug > 7)
 		ulog (LOG_DEBUG, "fgprocess_data: Got packet %d; expected %d",
@@ -1256,18 +1293,29 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		      INEXTSEQ (iGrecseq));
 #endif
 
-	      /* We got the wrong packet number.  Send an RR to
-		 try to get us back in synch.  */
+	      ++cGbad_order;
+	      if (! fgcheck_errors ())
+		return FALSE;
 
-	      if (iGrecseq != iGlocal_ack)
+	      /* We got the wrong packet number.  Send an RR to try to
+		 get us back in synch.  If we've already
+		 responded to a bad packet in this group, though,
+		 don't respond again.  */
+
+	      if (! freplied)
 		{
-		  if (! fgsend_acks ())
-		    return FALSE;
-		}
-	      else
-		{
-		  if (! fgsend_control (RR, iGrecseq))
-		    return FALSE;
+		  if (iGrecseq != iGlocal_ack)
+		    {
+		      if (! fgsend_acks ())
+			return FALSE;
+		    }
+		  else
+		    {
+		      if (! fgsend_control (RR, iGrecseq))
+			return FALSE;
+		    }
+
+		  freplied = TRUE;
 		}
 
 	      /* As noted above, we must decrement iPrecstart because
@@ -1282,6 +1330,14 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  ++cGrec_packets;
 
 	  iGrecseq = INEXTSEQ (iGrecseq);
+
+	  /* Tell the caller that we found something.  */
+	  if (pffound != NULL)
+	    *pffound = TRUE;
+
+	  /* Since we something with no errors, pretend that we
+	     haven't replied to anything.  */
+	  freplied = FALSE;
 
 	  /* If we are supposed to do acknowledgements here, send back
 	     an RR packet.  */
@@ -1385,6 +1441,10 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  continue;
 	}
 
+      /* We got a valid control message, so be prepared to reply
+	 to any future errors.  */
+      freplied = FALSE;
+
       /* Handle control messages here. */
 
       switch (CONTROL_XXX (ab[IFRAME_CONTROL]))
@@ -1414,6 +1474,8 @@ fgprocess_data (fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    {
 	      ugadjust_ack (iGretransmit_seq);
 	      ++cGresent_packets;
+	      if (! fgcheck_errors ())
+		return FALSE;
 	      if (! fsend_data (azGsendbuffers[iGretransmit_seq],
 				CFRAMELEN + iGremote_packsize,
 				TRUE))
