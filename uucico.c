@@ -2000,6 +2000,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   /* We only permit one call at a time from a remote system.  Lock it.  */
   if (! fsysdep_lock_system (qsys))
     {
+      if (qsys->uuconf_fsequence)
+	{
+	  /* At this point the calling system has already incremented
+	     its sequence number, so we increment ours.  This will
+	     only cause a mismatch if the other system is not what it
+	     says it is.  */
+	  (void) ixsysdep_get_sequence (qsys);
+	}
       (void) fsend_uucp_cmd (qconn, "RLCK");
       ulog (LOG_ERROR, "System already locked");
       ubuffree (zstr);
