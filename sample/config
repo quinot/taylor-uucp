@@ -16,7 +16,7 @@
 # name, and then search the UUCP maps (in the newsgroup
 # comp.mail.maps) to see whether it has already been taken.  See the
 # README posting in comp.mail.maps for more information.  If the name
-# of your system as returned by "uuname -n" or "hostname" is the name
+# of your system as returned by "uuname -l" or "hostname" is the name
 # you want to use, you do not need to set the name in this file.
 # Otherwise uncomment and edit the following line.
 # nodename uucp				# The UUCP name of this system
