@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.7  1992/04/01  21:11:19  ian
+''' Cleaned up a bit, updated -x switch
+'''
 ''' Revision 1.6  1992/03/28  04:34:11  ian
 ''' David J. MacKenzie: change .TP5 to .TP 5; also updated to 1.03
 '''
@@ -173,6 +176,15 @@ Do not start the
 .I uuxqt
 (8) daemon when finished.
 .TP 5
+.B \-c
+If no calls are permitted at this time, then don't make the call, but
+also do not put an error message in the log file and do not update the
+system status (as reported by
+.I uustat
+(1)).  This can be convenient for automated polling scripts, which may
+want to simply attempt to call every system rather than worry about
+which particular systems may be called at the moment.
+.TP 5
 .B \-D
 Do not detach from the controlling terminal.  Normally
 .I uucico
@@ -230,7 +242,7 @@ Default UUCP public directory.
 /usr/spool/uucp/Debug -
 Debugging file.
 .SH SEE ALSO
-kill(1), uucp(1), uux(1), uuxqt(8)
+kill(1), uucp(1), uux(1), uustat(1), uuxqt(8)
 .SH AUTHOR
 Ian Lance Taylor
 (ian@airs.com or uunet!airs!ian)

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.97  1992/04/22  23:29:24  ian
+   Changed arguments to usysdep_initialize
+
    Revision 1.96  1992/04/22  02:20:56  ian
    Chris Lewis: successful call in should clear number of retries
 
@@ -365,7 +368,7 @@ static void uabort P((void));
 static boolean fcall P((const struct ssysteminfo *qsys,
 			struct sport *qport,
 			boolean fforce, int bgrade,
-			boolean fnodetach));
+			boolean fnodetach, boolean ftimewarn));
 static boolean fdo_call P((const struct ssysteminfo *qsys,
 			   struct sport *qport,
 			   struct sstatus *qstat, int cretry,
@@ -436,16 +439,23 @@ main (argc, argv)
   boolean floop = FALSE;
   /* Whether to wait for an inbound call after doing an outbound call  */
   boolean fwait = FALSE;
+  /* Whether to warn if a call is attempted at a bad time.  */
+  boolean ftimewarn = TRUE;
   boolean fret = TRUE;
 #if DEBUG > 1
   int iholddebug;
 #endif
 
   while ((iopt = getopt (argc, argv,
-			 "DefI:lp:qr:s:S:u:x:X:w")) != EOF)
+			 "cDefI:lp:qr:s:S:u:x:X:w")) != EOF)
     {
       switch (iopt)
 	{
+	case 'c':
+	  /* Don't warn if a call is attempted at a bad time.  */
+	  ftimewarn = FALSE;
+	  break;
+
 	case 'D':
 	  /* Don't detach from controlling terminal.  */
 	  fnodetach = TRUE;
@@ -615,7 +625,7 @@ main (argc, argv)
 	    {
 	      fLocked_system = TRUE;
 	      fret = fcall (&sLocked_system, qport, fforce, BGRADE_HIGH,
-			    fnodetach);
+			    fnodetach, ftimewarn);
 	      if (fLocked_system)
 		{
 		  (void) fsysdep_unlock_system (&sLocked_system);
@@ -671,7 +681,7 @@ main (argc, argv)
 		      sLocked_system = pas[i];
 		      fLocked_system = TRUE;
 		      if (! fcall (&pas[i], qport, fforce, bgrade,
-				   fnodetach))
+				   fnodetach, ftimewarn))
 			fret = FALSE;
 
 		      /* Now ignore any SIGHUP that we got.  */
@@ -882,20 +892,22 @@ uabort ()
 }
 
 /* Call another system, trying all the possible sets of calling
-   instructions.  The fprepare_call function should already have been
-   called.  The qsys argument is the system to call.  The qport
+   instructions.  The qsys argument is the system to call.  The qport
    argument is the port to use, and may be NULL.  If the fforce
    argument is TRUE, a call is forced even if not enough time has
    passed since the last failed call.  The bgrade argument is the
    highest grade of work to be done for the system.  The qstat
-   argument holds the status of the system.  */
+   argument holds the status of the system.  If the ftimewarn argument
+   is TRUE (the normal case), then a warning is given if calls are not
+   permitted at this time.  */
 
-static boolean fcall (qsys, qport, fforce, bgrade, fnodetach)
+static boolean fcall (qsys, qport, fforce, bgrade, fnodetach, ftimewarn)
      const struct ssysteminfo *qsys;
      struct sport *qport;
      boolean fforce;
      int bgrade;
      boolean fnodetach;
+     boolean ftimewarn;
 {
   boolean fbadtime, fnevertime;
   const struct ssysteminfo *qorigsys;
@@ -1006,7 +1018,7 @@ static boolean fcall (qsys, qport, fforce, bgrade, fnodetach)
     }
   while (qsys != NULL);
 
-  if (fbadtime)
+  if (fbadtime && ftimewarn)
     {
       ulog (LOG_ERROR, "Wrong time to call");
 
