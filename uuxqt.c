@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/12/19  03:52:07  ian
+   David Nugent: rescan the list of execute files until nothing can be done
+
    Revision 1.10  1991/12/18  03:54:14  ian
    Made error messages to terminal appear more normal
 
@@ -236,6 +239,14 @@ main (argc, argv)
 		qreadsys = &sreadsys;
 	      else
 		{
+		  if (! fUnknown_ok)
+		    {
+		      ulog (LOG_ERROR,
+			    "%s: Execute file for unknown system %s",
+			    z, zgetsys);
+		      (void) remove (z);
+		      continue;
+		    }
 		  qreadsys = &sUnknown;
 		  sUnknown.zname = xstrdup (zgetsys);
 		}
@@ -850,7 +861,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 		  ulog (LOG_ERROR,
 			"Can't send standard output to unknown system %s",
 			zQoutsys);
-		  /* We should probably send mail here.  */
+		  /* We don't send mail to unknown systems, either.
+		     Maybe we should.  */
 		  uqcleanup (zfile, iclean);
 		  return;
 		}
