@@ -336,7 +336,7 @@ doc-dist: uucp.texi uucp.info uucp.dvi uucp.ps
 	ln $(srcdir)/README-DOC uucp-doc-$(VERSION)
 	ln $(srcdir)/uucp.texi uucp-doc-$(VERSION)
 	for i in uucp.info*; do ln $$i uucp-doc-$(VERSION); done
-	ln uucp.dvi uucp-doc-$(VERSION)
+	ln uucp.dvi uucp.ps uucp-doc-$(VERSION)
 	ln uucp.cp uucp.fn uucp.aux uucp-doc-$(VERSION)
 	ln texinfo.tex uucp-doc-$(VERSION)
 	mkdir uucp-doc-dist
