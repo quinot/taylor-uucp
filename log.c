@@ -91,9 +91,6 @@ static FILE *eLdebug;
 
 /* Whether we've tried to open the debugging file.  */
 static boolean fLdebug_tried;
-
-/* Whether we've written out any debugging information.  */
-static boolean fLdebugging;
 #endif
 
 /* Statistics file name.  */
@@ -281,11 +278,10 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
   if (fLfile
       && eLdebug == NULL
       && ! fLdebug_tried
-      && (fLdebugging || (int) ttype >= (int) LOG_DEBUG))
+      && iDebug != 0)
     {
       fLdebug_tried = TRUE;
       eLdebug = esysdep_fopen (zLdebugfile, FALSE, TRUE, TRUE);
-      fLdebugging = TRUE;
     }
 #endif /* DEBUG > 1 */
 
