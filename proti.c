@@ -251,6 +251,11 @@ static int cIerrors = CERRORS;
    the error level by one (protocol parameter ``error-decay'').  */
 static int cIerror_decay = CERROR_DECAY;
 
+/* The number of packets we should wait to receive before sending an
+   ACK; this is set by default to half the window size we have
+   requested (protocol parameter ``ack-frequency'').  */
+static int cIack_frequency = 0;
+
 /* The set of characters to avoid (protocol parameter ``avoid'').
    This is actually part of the 'j' protocol; it is defined in this
    file because the 'i' and 'j' protocols use the same protocol
@@ -342,6 +347,7 @@ struct uuconf_cmdtab asIproto_params[] =
   { "retries", UUCONF_CMDTABTYPE_INT, (pointer) &cIretries, NULL },
   { "errors", UUCONF_CMDTABTYPE_INT, (pointer) &cIerrors, NULL },
   { "error-decay", UUCONF_CMDTABTYPE_INT, (pointer) &cIerror_decay, NULL },
+  { "ack-frequency", UUCONF_CMDTABTYPE_INT, (pointer) &cIack_frequency, NULL },
   /* The ``avoid'' protocol parameter is part of the 'j' protocol, but
      it is convenient for the 'i' and 'j' protocols to share the same
      protocol parameter table.  */
@@ -448,6 +454,10 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
 	    qdaemon->qproto->bname, IREQUEST_WINSIZE);
       iIrequest_winsize = IREQUEST_WINSIZE;
     }
+
+  /* The default for the ACK frequency is half the window size.  */
+  if (cIack_frequency <= 0 || cIack_frequency >= iIrequest_winsize)
+    cIack_frequency = iIrequest_winsize / 2;
 
   ab[IHDR_INTRO] = IINTRO;
   ab[IHDR_LOCAL] = ab[IHDR_REMOTE] = IHDRWIN_SET (0, 0);
@@ -598,6 +608,7 @@ fishutdown (qdaemon)
   cIretries = CRETRIES;
   cIerrors = CERRORS;
   cIerror_decay = CERROR_DECAY;
+  cIack_frequency = 0;
   zJavoid_parameter = ZAVOID;
 
   return TRUE;
@@ -1389,7 +1400,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	 However, it can happen if we receive a burst of short
 	 packets, such as a set of command acknowledgements.  */
       if (iIrequest_winsize > 0
-	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= iIrequest_winsize / 2)
+	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= cIack_frequency)
 	{
 	  char aback[CHDRLEN];
 
