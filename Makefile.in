@@ -202,25 +202,25 @@ uninstall:
 	-chmod 4555 $(bindir)/uuname $(bindir)/cu
 
 uucico: $(UUOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uucico $(UUOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uucico $(UUOBJS) $(UULIBS) $(LIBS)
 
 uuxqt: $(XQTOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uuxqt $(XQTOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uuxqt $(XQTOBJS) $(UULIBS) $(LIBS)
 
 uux: $(UUXOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uux $(UUXOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uux $(UUXOBJS) $(UULIBS) $(LIBS)
 
 uucp: $(UUCPOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uucp $(UUCPOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uucp $(UUCPOBJS) $(UULIBS) $(LIBS)
 
 uustat: $(UUSTATOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uustat $(UUSTATOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uustat $(UUSTATOBJS) $(UULIBS) $(LIBS)
 
 uuname: $(UUNAMEOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uuname $(UUNAMEOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uuname $(UUNAMEOBJS) $(UULIBS) $(LIBS)
 
 uulog: $(UULOGOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uulog $(UULOGOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uulog $(UULOGOBJS) $(UULIBS) $(LIBS)
 
 uusched: uusched.in Makefile
 	-rm -f uusched
@@ -241,22 +241,22 @@ uuto: uuto.in Makefile
 	chmod 0555 uuto
 
 uupick: $(UUPICKOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uupick $(UUPICKOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uupick $(UUPICKOBJS) $(UULIBS) $(LIBS)
 
 cu: $(CUOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o cu $(CUOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o cu $(CUOBJS) $(UULIBS) $(LIBS)
 
 uuchk: $(UUCHKOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uuchk $(UUCHKOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uuchk $(UUCHKOBJS) $(UULIBS) $(LIBS)
 
 uuconv: $(UUCONVOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o uuconv $(UUCONVOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uuconv $(UUCONVOBJS) $(UULIBS) $(LIBS)
 
 tstuu: $(TSTOBJS) $(UULIBS)
-	$(CC) $(LDFLAGS) -o tstuu $(TSTOBJS) $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o tstuu $(TSTOBJS) $(UULIBS) $(LIBS)
 
 uudir: uudir.o $(UULIBS)
-	$(CC) $(LDFLAGS) -o uudir uudir.o $(UULIBS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o uudir uudir.o $(UULIBS) $(LIBS)
 
 .c.o:
 	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
