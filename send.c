@@ -1142,15 +1142,15 @@ usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2)
      const char *z1;
      const char *z2;
 {
-  size_t cadd;
+  size_t c1, c2;
+  char *znew;
 
-  cadd = 4 + strlen (z1) + strlen (z2);
+  c1 = strlen (z1);
+  c2 = strlen (z2);
 
-  if (*pclen + cadd + 1 >= *pcalc)
+  if (*pclen + c1 + c2 + 4 >= *pcalc)
     {
-      char *znew;
-
-      *pcalc += cadd + 100;
+      *pcalc += c1 + c2 + 100;
       znew = zbufalc (*pcalc);
       if (*pclen > 0)
 	{
@@ -1160,14 +1160,29 @@ usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2)
       *pz = znew;
     }
 
+  znew = *pz + *pclen;
+  *znew++ = bcmd;
+  if (*z1 != '\0')
+    {
+      *znew++ = ' ';
+      memcpy (znew, z1, c1);
+      znew += c1;
+      if (*z2 != '\0')
+	{
+	  *znew++ = ' ';
+	  memcpy (znew, z2, c2);
+	  znew += c2;
+	}
+    }
+
   /* In some bizarre non-Unix case we might have to worry about the
      newline here.  We don't know how a newline is normally written
      out to a file, but whatever is written to a file is what we will
      normally transfer.  If that is not simply \n then this fake
      execution file will not look like other execution files.  */
-  sprintf (*pz + *pclen, "%c %s %s\n", bcmd, z1, z2);
+  *znew++ = '\n';
 
-  *pclen += cadd;
+  *pclen = znew - *pz;
 }
 
 /* This routine is called to send the contents of the fake execution
