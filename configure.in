@@ -685,4 +685,5 @@ else
  AC_SYS_LONG_FILE_NAMES
 fi
 dnl
-AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)
+AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile,
+[echo > stamp-h])
