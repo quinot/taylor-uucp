@@ -129,11 +129,30 @@ static const struct uuconf_cmdtab asCuvars[] =
 /* The program name.  */
 char abProgram[] = "cu";
 
+/* The string printed at the initial connect.  */
+#if ANSI_C
+#define ZCONNMSG "\aConnected."
+#else
+#define ZCONNMSG "Connected."
+#endif
+
+/* The string printed when disconnecting.  */
+#if ANSI_C
+#define ZDISMSG "\aDisconnected."
+#else
+#define ZDISMSG "Disconnected."
+#endif
+
 /* Local variables.  */
 
 /* The string we print when the user is once again connected to the
    port after transferring a file or taking some other action.  */
-static const char abCuconnected[] = "[connected]";
+static const char abCuconnected[]
+#if ANSI_C
+  = "\a[connected]";
+#else
+  = "[connected]";
+#endif
 
 /* Global uuconf pointer.  */
 static pointer *pCuuuconf;
@@ -633,8 +652,7 @@ main (argc, argv)
      program spends most of its time in system dependent code, and
      only comes out when a special command is received from the
      terminal.  */
-
-  printf ("Connected.\n");
+  printf ("%s\n", ZCONNMSG);
 
   if (! fsysdep_terminal_raw (fCulocalecho))
     ucuabort ();
@@ -661,7 +679,7 @@ main (argc, argv)
   (void) fconn_unlock (&sconn);
   uconn_free (&sconn);
 
-  printf ("\nDisconnected.\n");
+  printf ("\n%s\n", ZDISMSG);
 
   ulog_close ();
 
@@ -747,7 +765,7 @@ ucuabort ()
 
   ulog_close ();
 
-  printf ("\nDisconnected.\n");
+  printf ("\n%s\n", ZDISMSG);
 
   usysdep_exit (FALSE);
 }
