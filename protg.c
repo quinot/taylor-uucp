@@ -66,7 +66,6 @@ const char protg_rcsid[] = "$Id$";
    into iGpacket_control.  */
 
 /* Names for the bytes in the frame header.  */
-
 #define IFRAME_DLE (0)
 #define IFRAME_K (1)
 #define IFRAME_CHECKLOW (2)
@@ -78,7 +77,6 @@ const char protg_rcsid[] = "$Id$";
 #define CFRAMELEN (6)
 
 /* Macros to break apart the control bytes.  */
-
 #define CONTROL_TT(b) ((int)(((b) >> 6) & 03))
 #define CONTROL_XXX(b) ((int)(((b) >> 3) & 07))
 #define CONTROL_YYY(b) ((int)((b) & 07))
@@ -110,7 +108,6 @@ const char protg_rcsid[] = "$Id$";
    byte of the data segment is <u> >> 7, and the data follows.  The
    maximum possible data segment size is 2**12, so this handles all
    possible cases.  */
-
 #define CONTROL (0)
 #define ALTCHAN (1)
 #define DATA (2)
@@ -129,7 +126,6 @@ const char protg_rcsid[] = "$Id$";
 
    The yyy value for RR is the same as the yyy value for an ordinary
    data packet.  */
-
 #define CLOSE (1)
 #define RJ (2)
 #define SRJ (3)
@@ -147,7 +143,6 @@ const char protg_rcsid[] = "$Id$";
 #define CMAXDATA (1 << (CMAXDATAINDEX + 4))
 
 /* Maximum window size.  */
-
 #define CMAXWINDOW (7)
 
 /* Defaults for the protocol parameters.  These may all be changed by
@@ -198,6 +193,11 @@ const char protg_rcsid[] = "$Id$";
 /* If we see more than this many protocol errors, we drop the
    connection.  Protocol parameter ``errors''.  */
 #define CERRORS (100)
+
+/* Default decay rate.  Each time we receive this many packets
+   succesfully, we decrement the error level by one (protocol
+   parameter ``error-decay'').  */
+#define CERROR_DECAY (10)
 
 /* If this value is non-zero, it will be used as the remote window
    size regardless of what the other side requested.  This can be
@@ -283,12 +283,15 @@ static int cGgarbage_data = CGARBAGE;
    Protocol parameter ``errors''.  */
 static int cGmax_errors = CERRORS;
 
+/* Each time we receive this many packets succesfully, we decrement
+   the error level by one (protocol parameter ``error-decay'').  */
+static int cGerror_decay = CERROR_DECAY;
+
 /* Whether to use shorter packets when possible.  Protocol parameter
    ``short-packets''.  */
 static boolean fGshort_packets = TRUE;
 
 /* Protocol parameter commands.  */
-
 struct uuconf_cmdtab asGproto_params[] =
 {
   { "window", UUCONF_CMDTABTYPE_INT, (pointer) &iGrequest_winsize, NULL },
@@ -304,6 +307,7 @@ struct uuconf_cmdtab asGproto_params[] =
   { "retries", UUCONF_CMDTABTYPE_INT, (pointer) &cGretries, NULL },
   { "garbage", UUCONF_CMDTABTYPE_INT, (pointer) &cGgarbage_data, NULL },
   { "errors", UUCONF_CMDTABTYPE_INT, (pointer) &cGmax_errors, NULL },
+  { "error-decay", UUCONF_CMDTABTYPE_INT, (pointer) &cGerror_decay, NULL },
   { "remote-window", UUCONF_CMDTABTYPE_INT,
       (pointer) &iGforced_remote_winsize, NULL },
   { "remote-packet-size", UUCONF_CMDTABTYPE_INT,
@@ -349,7 +353,6 @@ static const char * const azGcontrol[] =
 #endif
 
 /* Local functions.  */
-
 static boolean fgexchange_init P((struct sdaemon *qdaemon, int ictl,
 				  int ival, int *piset));
 static boolean fgsend_control P((struct sdaemon *qdaemon, int ictl,
@@ -408,7 +411,6 @@ fgstart (qdaemon, pzlog)
   /* We must determine the segment size based on the packet size
      which may have been modified by a protocol parameter command.
      A segment size of 2^n is passed as n - 5.  */
-
   i = iGrequest_packsize;
   iseg = -1;
   while (i > 0)
@@ -671,6 +673,7 @@ fgshutdown (qdaemon)
   cGretries = CRETRIES;
   cGgarbage_data = CGARBAGE;
   cGmax_errors = CERRORS;
+  cGerror_decay = CERROR_DECAY;
   iGforced_remote_winsize = IREMOTE_WINDOW;
   iGforced_remote_packsize = IREMOTE_PACKSIZE;
   fGshort_packets = TRUE;
@@ -771,7 +774,6 @@ fginit_sendbuffers (fallocate)
   int i;
 
   /* Free up any remaining old buffers.  */
-
   for (i = 0; i < CSENDBUFFERS; i++)
     {
       xfree ((pointer) azGsendbuffers[i]);
@@ -1268,7 +1270,8 @@ fgcheck_errors (qdaemon)
   if (corder < 0)
     corder = 0;
 
-  if ((cGbad_hdr + cGbad_checksum + corder + cGremote_rejects)
+  if (((cGbad_hdr + cGbad_checksum + corder + cGremote_rejects)
+       - (cGrec_packets / cGerror_decay))
       > cGmax_errors)
     {
       ulog (LOG_ERROR, "Too many '%c' protocol errors",
@@ -1318,7 +1321,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       int cfirst, csecond;
 
       /* Look for the DLE which must start a packet.  */
-
       if (abPrecbuf[iPrecstart] != DLE)
 	{
 	  char *zdle;
@@ -1341,14 +1343,12 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	}
 
       /* Get the first six bytes into ab.  */
-
       for (i = 0, iget = iPrecstart;
 	   i < CFRAMELEN && iget != iPrecend;
 	   i++, iget = (iget + 1) % CRECBUFLEN)
 	ab[i] = abPrecbuf[iget];
 
       /* If there aren't six bytes, there is no packet.  */
-
       if (i < CFRAMELEN)
 	{
 	  if (pcneed != NULL)
@@ -1398,7 +1398,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       if (ab[IFRAME_K] == KCONTROL)
 	{
 	  /* This is a control packet.  It should not have any data.  */
-
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	    {
 	      ++cGbad_hdr;
@@ -1422,7 +1421,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  unsigned short icheck;
 
 	  /* This is a data packet.  It should not be type CONTROL.  */
-
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == CONTROL)
 	    {
 	      ++cGbad_hdr;
@@ -1531,7 +1529,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	  /* We can't skip the packet data after this, because if we
 	     have lost incoming bytes the next DLE will be somewhere
 	     in what we thought was the packet data.  */
-
 	  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 	  continue;
 	}
@@ -1557,7 +1554,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       /* If this isn't a control message, make sure we have received
 	 the expected packet sequence number, acknowledge the packet
 	 if it's the right one, and process the data.  */
-
       if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	{
 	  if (CONTROL_XXX (ab[IFRAME_CONTROL]) != INEXTSEQ (iGrecseq))
@@ -1577,12 +1573,10 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		 Telebit modems and does little good in any case,
 		 since the other side will probably just ignore it
 		 anyhow (that's what this code does).  */
-
 	      continue;
 	    }
 
 	  /* We got the packet we expected.  */
-
 	  ++cGrec_packets;
 
 	  iGrecseq = INEXTSEQ (iGrecseq);
@@ -1596,7 +1590,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	  /* If we are supposed to do acknowledgements here, send back
 	     an RR packet.  */
-
 	  if (fdoacks)
 	    {
 	      if (! fgsend_acks (qdaemon))
@@ -1605,7 +1598,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	  /* If this is a short data packet, adjust the data pointers
 	     and lengths.  */
-
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) == SHORTDATA)
 	    {
 	      int cshort, cmove;
@@ -1686,7 +1678,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	}
 
       /* Handle control messages here. */
-
 #if DEBUG > 1
       if (FDEBUGGING (DEBUG_PROTO)
 	  || (FDEBUGGING (DEBUG_ABNORMAL)
@@ -1776,7 +1767,6 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
     }
 
   /* There is no data left in the receive buffer.  */
-
   if (pcneed != NULL)
     *pcneed = CFRAMELEN;
   return TRUE;
