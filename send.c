@@ -681,11 +681,20 @@ flocal_send_cancelled (qtrans, qdaemon)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
 {
+  char *zdata;
+  size_t cdata;
   boolean fret;
   
-  fret = (*qdaemon->qproto->pfsenddata) (qdaemon, (char *) NULL,
-					 (size_t) 0, qtrans->ilocal,
-					 qtrans->iremote, qtrans->ipos);
+  zdata = (*qdaemon->qproto->pzgetspace) (qdaemon, &cdata);
+  if (zdata == NULL)
+    {
+      usfree_send (qtrans);
+      return FALSE;
+    }
+
+  fret = (*qdaemon->qproto->pfsenddata) (qdaemon, zdata, (size_t) 0,
+					 qtrans->ilocal, qtrans->iremote,
+					 qtrans->ipos);
   usfree_send (qtrans);
   return fret;
 }
