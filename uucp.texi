@@ -1319,7 +1319,7 @@ send a break character (may not work on all systems)
 @item \c
 suppress trailing carriage return at end of send string
 @item \d
-delay sending for 1 second
+delay sending for 1 or 2 seconds
 @item \e
 disable echo checking
 @item \E
@@ -1898,8 +1898,12 @@ after each failure the next retry period is longer.  A retry time
 specified in the @code{time} command is always a fixed amount of time.
 
 The @code{time} command may appear multiple times in a single alternate,
-in which case if any time string matches the system may be called.  The
-default time string is @samp{Never}.
+in which case if any time string matches the system may be called.  When
+the @code{time} command is used for a particular system, any @code{time}
+or @code{timegrade} commands that appeared in the system defaults are
+ignored.
+
+The default time string is @samp{Never}.
 
 @item timegrade @var{character} @var{string} [@var{number}]
 @findex timegrade
@@ -1929,8 +1933,12 @@ transferred (but see @code{call-timegrade} below).  Also, the
 transferring any job it chooses, regardless of who placed the call.
 
 The @code{timegrade} command may appear multiple times without using
-@code{alternate}.  If this command does not appear, there are no
-restrictions on what grade of work may be done at what time.
+@code{alternate}.  When the @code{timegrade} command is used for a
+particular system, any @code{time} or @code{timegrade} commands that
+appeared in the system defaults are ignored.
+
+If this command does not appear, there are no restrictions on what grade
+of work may be done at what time.
 
 @item call-timegrade @var{character} @var{string}
 @findex call-timegrade
@@ -4410,9 +4418,11 @@ Marc Boucher @file{<marc@@CAM.ORG>}
 Brian Campbell @file{<brianc@@quantum.on.ca>}
 @file{verbus@@westmark.westmark.com} (Verbus M. Counts)
 @file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
+@file{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @file{denny@@dakota.alisa.com} (Bob Denny)
 @file{dje@@ersys.edmonton.ab.ca} (Doug Evans)
 Marc Evans @file{<marc@@synergytics.com>}
+@file{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
 @file{fenner@@jazz.psu.edu} (Bill Fenner)
 "David J. Fiander" @file{<golem!david@@news.lsuc.on.ca>}
 Thomas Fischer @file{<batman@@olorin.dark.sub.org>}
@@ -4428,6 +4438,7 @@ Michael Haberler @file{<mah@@parrot.prv.univie.ac.at>}
 @file{jh@@moon.nbn.com} (John Harkin)
 @file{guy@@auspex.auspex.com} (Guy Harris)
 Petri Helenius @file{<pete@@fidata.fi>}
+Andrew Herbert @file{<andrew@@werple.pub.uu.oz.au>}
 Peter Honeyman @file{<honey@@citi.umich.edu>}
 @file{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
 @file{bei@@dogface.austin.tx.us} (Bob Izenberg)
@@ -4459,12 +4470,14 @@ Yanek Martinson @file{<yanek@@mthvax.cs.miami.edu>}
 @file{les@@chinet.chi.il.us} (Leslie Mikesell)
 @file{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
 @file{rmohr@@infoac.rmi.de} (Rupert Mohr)
+@file{brian@@ilinx.wimsey.bc.ca} (Brian J. Murrell)
 @file{service@@infohh.rmi.de} (Dirk Musstopf)
 @file{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
 @file{rolf@@saans.north.de} (Rolf Nerstheimer)
 @file{nolan@@helios.unl.edu} (Michael Nolan)
 david nugent @file{<david@@csource.oz.au>}
 @file{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
+@file{don@@blkhole.resun.com} (Don Phillips)
 "Mark Pizzolato 415-369-9366" @file{<mark@@infocomm.com>}
 @file{dplatt@@ntg.com} (Dave Platt)
 @file{eldorado@@tharr.UUCP} (Mark Powell)
@@ -4493,6 +4506,7 @@ Oleg Tabarovsky @file{<olg@@olghome.pccentre.msk.su>}
 John Theus @file{<john@@theus.rain.com>}
 @file{rmtodd@@servalan.servalan.com} (Richard Todd)
 Len Tower @file{<tower-prep@@ai.mit.edu>}
+Mark Towfiq @file{<justice!towfiq@@Eingedi.Newton.MA.US>}
 @file{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
 @file{vogel@@omega.ssw.de} (Andreas Vogel)
 @file{jv@@mh.nl} (Johan Vromans)
