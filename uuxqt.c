@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/01/04  04:12:54  ian
+   David J. Fiander: make sure execution arguments are not bad file names
+
    Revision 1.14  1991/12/29  04:22:41  ian
    The mailing address was not getting initialized
 
@@ -828,6 +831,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
     zabsolute = zcopy;
   }
 
+#if ! ALLOW_FILENAME_ARGUMENTS
+
   /* Check all the arguments to make sure they don't try to specify
      files they are not permitted to access.  */
 
@@ -857,6 +862,8 @@ uqdo_xqt_file (zfile, qsys, zcmd, pfprocessed)
 	  return;
 	}
     }
+
+#endif /* ! ALLOW_FILENAME_ARGUMENTS */
 
   ulog (LOG_NORMAL, "Executing %s (%s)", zfile, zQcmd);
 

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/01/04  04:12:54  ian
+   David J. Fiander: make sure execution arguments are not bad file names
+
    Revision 1.13  1991/12/29  02:59:50  ian
    Lele Gaifax: put full year in log file
 
@@ -431,6 +434,7 @@ extern const char *zsysdep_find_command P((const char *zcmd,
 					   const char *zpath,
 					   boolean *pferr));
 
+#if ! ALLOW_FILENAME_ARGUMENTS
 /* Check an argument to an execution command to make sure that it
    doesn't refer to a file name that may not be accessed.  This should
    check the argument to see if it is a filename.  If it is, it should
@@ -440,6 +444,7 @@ extern const char *zsysdep_find_command P((const char *zcmd,
    Otherwise it should return TRUE.  */
 extern boolean fsysdep_xqt_check_file P((const struct ssysteminfo *qsys,
 					 const char *zfile));
+#endif /* ! ALLOW_FILENAME_ARGUMENTS */
 
 /* Run an execute file.  The arguments are:
 
