@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.34  1992/04/28  19:04:40  ian
+   Heiko Rupp: only send RJ packet if there are no unacknowledged packets
+
    Revision 1.33  1992/04/23  01:35:28  ian
    Michael Haberler: make slow start after error not shrink window
 
@@ -691,6 +694,14 @@ fgexchange_init (fmaster, ictl, ival, piset)
 		 start the whole handshake over again.  */
 	      if (CONTROL_XXX (iGpacket_control) == INITA && ictl == INITC)
 		return FALSE;
+
+	      /* As a special hack, if we are sending INITC and we
+		 receive INITB, we update the segment size from the
+		 packet.  This permits a second INITB to override the
+		 first one.  It would be nice to do this in a cleaner
+		 way.  */
+	      if (CONTROL_XXX (iGpacket_control) == INITB && ictl == INITC)
+		iGremote_segsize = CONTROL_YYY (iGpacket_control);
 	    }
 
 	  inewtime = isysdep_time ((long *) NULL);
