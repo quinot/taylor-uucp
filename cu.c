@@ -1651,7 +1651,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 	  if (ffileeof (e))
 	    break;
 	  c = cfileread (e, abbuf, sizeof abbuf);
-	  if (ffilereaderror (e, c))
+	  if (ffileioerror (e, c))
 	    {
 	      ucuputs ("[file read error]");
 	      break;
