@@ -21,7 +21,7 @@ a taylor.texi file.  Many things remain to do, among which:
 @end ignore
 
 @ifinfo
-This file documents Taylor UUCP, beta version 1.03.
+This file documents Taylor UUCP, version 1.03.
 
 Copyright @copyright{} 1992 Free Software Foundation, Inc.
 
@@ -78,8 +78,8 @@ translation approved by the author instead of in the original English.
 @node Top, Copying, (dir), (dir)
 @top Taylor UUCP 1.03
 
-This is the documentation for the Taylor UUCP package, beta version
-1.03.  The programs were written by Ian Lance Taylor.  The author can be
+This is the documentation for the Taylor UUCP package, version 1.03.
+The programs were written by Ian Lance Taylor.  The author can be
 reached at @file{<ian@@airs.com>}, or, equivalently,
 @file{<uunet!airs!ian>}, or @cite{c/o Infinity Development, P.O. Box
 520, Waltham MA, 02254}.
@@ -94,8 +94,9 @@ send it to @file{<taylor-uucp@@gnu.ai.mit.edu>}.
 * Copying::                     Taylor UUCP copying conditions
 * Introduction::                Introduction to Taylor UUCP
 * Overall Installation::        Taylor UUCP installation
-* Configuration files::         Taylor UUCP configuration files
+* Configuration Files::         Taylor UUCP configuration files
 * Protocols::                   UUCP protocol internals
+* Hacking::                     Hacking Taylor UUCP
 * Acknowledgements::            Acknowledgements
 
 * Index (concepts)::            Concept index
@@ -114,45 +115,78 @@ Taylor UUCP Overall Installation
 
 Taylor UUCP Configuration Files
 
-* Configuration examples::      Examples of Configuration Files
-* config file::                 The main configuration file
-* sys file::                    The system configuration file
-* port file::                   The port configuration files
-* dial file::                   The dialer configuration files
+* Configuration File Format::   Configuration file format
+* Configuration Examples::      Examples of configuration files
+* Time Strings::                How to write time strings
+* Chat Scripts::                How to write chat scripts
+* config File::                 The main configuration file
+* sys File::                    The system configuration file
+* port File::                   The port configuration files
+* dial File::                   The dialer configuration files
 * Security::                    Security issues
 
 Examples of Configuration Files
 
-* config file examples::        Examples of the main configuration file
-* Leaf example::                Call a single remote site
-* Gateway example::             The gateway for several local systems
+* config File Examples::        Examples of the main configuration file
+* Leaf Example::                Call a single remote site
+* Gateway Example::             The gateway for several local systems
+
+The Main Configuration File
+
+* Miscellaneous (config)::      Miscellaneous config file commands
+* Configuration File Names::    Using different configuration files
+* Log File Names::              Using different log files
+* Debugging Levels::            Debugging levels
+
+The System Configuration File
+
+* Defaults and Alternates::     Using defaults and alternates
+* Naming the System::           Naming the system
+* Calling Out::                 Calling out
+* Accepting a Call::            Accepting a call
+* Protocol Selection::          Protocol selection
+* File Transfer Control::       File transfer control
+* Miscellaneous (sys)::         Miscellaneous sys file commands
+* Default sys File Values::     Default values
+
+Calling Out
+
+* When to Call::                When to call
+* Placing the Call::            Placing the call
+* Logging In::                  Logging in
 
 UUCP protocol internals
 
-* Grades::                      Various UUCP grades
-* Lock files::                  UUCP lock file format
-* Common protocol::             The common UUCP protocol
-* g protocol::                  The UUCP @samp{g} protocol
-* f protocol::                  The UUCP @samp{f} protocol
-* t protocol::                  The UUCP @samp{t} protocol
-* e protocol::                  The UUCP @samp{e} protocol
-* x protocol::                  The UUCP @samp{x} protocol
-* d protocol::                  The UUCP @samp{d} protocol
-* Capital G protocol::          The UUCP @samp{G} protocol
-* Documentation references::    Documentation references
+* Grades::                      UUCP grades
+* Lock Files::                  UUCP lock file format
+* UUCP Protocol::               The common UUCP protocol
+* g Protocol::                  The UUCP @samp{g} protocol
+* f Protocol::                  The UUCP @samp{f} protocol
+* t Protocol::                  The UUCP @samp{t} protocol
+* e Protocol::                  The UUCP @samp{e} protocol
+* x Protocol::                  The UUCP @samp{x} protocol
+* d Protocol::                  The UUCP @samp{d} protocol
+* Capital G Protocol::          The UUCP @samp{G} protocol
+* Documentation References::    Documentation references
 
-The common UUCP protocol
+The Common UUCP Protocol
 
-* Initial Handshake::           Initial Handshake
-* File Requests::               File Requests
-* Final Handshake::             Final Handshake
+* Initial Handshake::           Initial handshake
+* File Requests::               File requests
+* Final Handshake::             Final handshake
 
 File Requests
 
-* S Request::                   S Request
-* R Request::                   R Request
-* X Request::                   X Request
-* H Request::                   H Request
+* S Request::                   S request
+* R Request::                   R request
+* X Request::                   X request
+* H Request::                   H request
+
+Hacking Taylor UUCP
+
+* System Dependence::           System Dependence
+* Naming Conventions::          Naming Conventions
+* Patches::                     Patches
 @end menu
 
 @node Copying, Introduction, Top, Top
@@ -360,7 +394,7 @@ initially installing Taylor UUCP.
 
 @end table
 
-@node Overall Installation, Configuration files, Introduction, Top
+@node Overall Installation, Configuration Files, Introduction, Top
 @chapter Taylor UUCP Overall Installation
 
 These are the installation instructions for the Taylor UUCP package.
@@ -392,10 +426,11 @@ configuration files can be used with a new style dialer file
 
 Use of BNU configuration files has two known bugs.  A blank line in the
 middle of an entry in the @file{Permissions} file will not be ignored as
-it should be.  Dialer programs are not recognized directly; if you must
+it should be.  Dialer programs are not recognized directly.  If you must
 use a dialer program, rather than an entry in @file{Devices}, you must
-use the @code{chat-program} command in a new style dialer file;
-@xref{dial file}.
+use the @code{chat-program} command in a new style dialer file; see
+@ref{dial file}.  You will have to invoke the dialer program via a shell
+script, since an exit code of 0 is required to recognize success.
 
 If you are installing a new system, or you want to use the new form of
 configuration files, you must write the configuration files.
@@ -537,9 +572,9 @@ be no errors in the log file.
 
 Assuming you compiled the code with debugging enabled, the @samp{-x}
 switch can be used to set debugging modes; see the @code{debug} command
-for details (@pxref{config file}).  Use @samp{-x all} to turn on all
-debugging and generate far more output than you will ever want to see.
-The @code{uucico} daemons will put debugging output in
+for details (@pxref{Debugging Levels}).  Use @samp{-x all} to turn on
+all debugging and generate far more output than you will ever want to
+see.  The @code{uucico} daemons will put debugging output in
 @file{/usr/tmp/tstuu/Debug1} and @file{/usr/tmp/tstuu/Debug2}.  At this
 point you're pretty much on your own.
 
@@ -574,8 +609,8 @@ you what happens.
 If you compiled the code with debugging enabled, you can use debugging
 mode to get a great deal of information about what sort of data is
 flowing back and forth; the various possibilities are described under
-the @code{debug} command (@pxref{sys file}).  When initially setting up
-a connection @samp{-x chat} is probably the most useful (e.g.
+the @code{debug} command (@pxref{Debugging Levels}).  When initially
+setting up a connection @samp{-x chat} is probably the most useful (e.g.
 @samp{uucico -s uunet -x chat}); you may also want to use @samp{-x
 handshake,incoming,outgoing}.  You can use @samp{-x} multiple times on
 one command line, or you can give it comma separated arguments as in the
@@ -714,16 +749,16 @@ a port using V2.  If you are using BNU the port must be named
 port; in BNU it must be @samp{TCP}).  This will wait for incoming
 connections, and fork off a child for each one.  Each connection will be
 prompted with @samp{login:} and @samp{Password:}; the results will be
-checked against the UUCP (not the system) password file (@pxref{config
-file}).  Of course, you can get a similar effect by using the BSD
-@code{uucpd} program.
+checked against the UUCP (not the system) password file
+(@pxref{Configuration File Names}).  Of course, you can get a similar
+effect by using the BSD @code{uucpd} program.
 
 You can also have @code{inetd} start up @code{uucico} with the @samp{-l}
 switch, which will cause it to prompt with @samp{login:} and
 @samp{Password:} and check the results against the UUCP (not the system)
 password file.  This may be used in place of @code{uucpd}.
 
-@node Configuration files, Protocols, Overall Installation, Top
+@node Configuration Files, Protocols, Overall Installation, Top
 @chapter Taylor UUCP Configuration Files
 
 This chapter describes the configuration files accepted by the Taylor
@@ -740,6 +775,21 @@ may run any of the UUCP programs with a different main configuration
 file by using the @samp{-I} option; this can be useful when testing a
 new configuration.  When you use the @samp{-I} option the programs will
 revoke their setuid privileges.
+
+@menu
+* Configuration File Format::   Configuration file format
+* Configuration Examples::      Examples of configuration files
+* Time Strings::                How to write time strings
+* Chat Scripts::                How to write chat scripts
+* config File::                 The main configuration file
+* sys File::                    The system configuration file
+* port File::                   The port configuration files
+* dial File::                   The dialer configuration files
+* Security::                    Security issues
+@end menu
+
+@node Configuration File Format, Configuration Examples, Configuration Files, Configuration Files
+@section Configuration File Format
 
 All the configuration files follow a simple line-oriented
 @samp{@var{keyword} @var{value}} format.  Empty lines are ignored, as
@@ -770,16 +820,7 @@ may be specified as @kbd{y}, @kbd{Y}, @kbd{t}, or @kbd{T} for true and
 @kbd{n}, @kbd{N}, @kbd{f}, or @kbd{F} for false; any trailing characters
 are ignored, so @code{true}, @code{false}, etc., are also acceptable.
 
-@menu
-* Configuration examples::      Examples of Configuration Files
-* config file::                 The main configuration file
-* sys file::                    The system configuration file
-* port file::                   The port configuration files
-* dial file::                   The dialer configuration files
-* Security::                    Security issues
-@end menu
-
-@node Configuration examples, config file, Configuration files, Configuration files
+@node Configuration Examples, Time Strings, Configuration File Format, Configuration Files
 @section Examples of Configuration Files
 
 All the configuration commands are explained in the following sections.
@@ -788,12 +829,12 @@ For a more complete description of any of the commands used here see the
 appropriate section of this chapter.
 
 @menu
-* config file examples::        Examples of the main configuration file
-* Leaf example::                Call a single remote site
-* Gateway example::             The gateway for several local systems
+* config File Examples::        Examples of the main configuration file
+* Leaf Example::                Call a single remote site
+* Gateway Example::             The gateway for several local systems
 @end menu
 
-@node config file examples, Leaf example, Configuration examples, Configuration examples
+@node config File Examples, Leaf Example, Configuration Examples, Configuration Examples
 @subsection config File Examples
 @cindex config file examples
 
@@ -841,11 +882,11 @@ are running while you change @file{config} and move the spool directory.
 @cindex anonymous UUCP
 Suppose you wanted to permit any system to call in to your system and
 request files.  This is generally known as @dfn{anonymous UUCP}, since
-the systems which call in are effectively anonymous.  By default unknown
-systems are not permitted to call in.  To permit this you must use the
-@code{unknown} command in @file{config}.  The @code{unknown} command is
-followed by any command that may appear in the system file; for full
-details, see @ref{sys file}.
+the systems which call in are effectively anonymous.  By default,
+unknown systems are not permitted to call in.  To permit this you must
+use the @code{unknown} command in @file{config}.  The @code{unknown}
+command is followed by any command that may appear in the system file;
+for full details, see @ref{sys file}.
 
 I will show two possible anonymous UUCP configurations.  The first will
 let any system call in and download files, but will not permit them to
@@ -887,7 +928,7 @@ unknown remote-send ~ !~/upload
 unknown remote-receive ~/upload
 @end example
 
-@node Leaf example, Gateway example, config file examples, Configuration examples
+@node Leaf Example, Gateway Example, config File Examples, Configuration Examples
 @subsection Leaf Example
 
 @cindex leaf site
@@ -907,7 +948,7 @@ file for simple cases.  It also shows the use of the following:
 @item call-login
 Using @code{call-login} and @code{call-password} allows the default
 login chat script to be used.  In this case, the login name is specified
-in the call-out login file (@pxref{config file}).
+in the call-out login file (@pxref{Configuration File Names}).
 
 @item call-timegrade
 @file{uunet} is requested to not send us news during the daytime.
@@ -967,16 +1008,14 @@ protocol-parameter g timeout 20
 protocol-parameter g retries 10
 @end example
 
-@node Gateway example,  , Leaf example, Configuration examples
+@node Gateway Example,  , Leaf Example, Configuration Examples
 @subsection Gateway Example
 
 @cindex gateway
 @cindex sys file example (gateway)
 Many organizations have several local machines which are connected by
 UUCP, and a single machine which connects to the outside world.  This
-single machine is often referred to as a @dfn{gateway} machine
-(Internet literature uses the term gateway in a related but slightly
-different sense).
+single machine is often referred to as a @dfn{gateway} machine.
 
 For this example I will assume a fairly simple case.  It should still
 provide a good general example.  There are three machines, @file{elmer},
@@ -1129,7 +1168,259 @@ complete \d\d+++\d\dATH\r\c
 abort \d\d+++\d\dATH\r\c
 @end example
 
-@node config file, sys file, Configuration examples, Configuration files
+@node Time Strings, Chat Scripts, Configuration Examples, Configuration Files
+@section Time Strings
+@cindex time strings
+
+Several commands use time strings to specify a range of times.  This
+section describes how to write time strings.
+
+A time string may be a list of simple time strings separated with a
+vertical bar @kbd{|} or a command @kbd{,}.
+
+Each simple time string must begin with @samp{Su}, @samp{Mo}, @samp{Tu},
+@samp{We}, @samp{Th}, @samp{Fr}, or @samp{Sa}, or @samp{Wk} for any
+weekday, or @samp{Any} for any day.
+
+Following the day may be a range of hours separated with a hyphen using
+24 hour time.  The range of hours may cross 0; for example
+@samp{2300-0700} means any time except 7 AM to 11 PM.  If no time is
+given, calls may be made at any time on the specified day(s).  
+
+The time string may also consist of the single word @samp{Never}, which
+does not match any time, or a single word with a name defined in a
+previous @code{timetable} command (@pxref{Miscellaneous (sys)}).
+
+Here are a few sample time strings with an explanation of what they
+mean.
+
+@table @samp
+
+@item Wk2305-0855,Sa,Su2305-1655
+
+This means weekdays before 8:55 AM or after 11:05 PM, any time Saturday,
+or Sunday before 4:55 PM or after 11:05 PM.  These are approximately the
+times during which night rates apply to phone calls in the U.S.A.  Note
+that this time string uses, for example, @samp{2305} rather than
+@samp{2300}; this will ensure a cheap rate phone call even if the
+computer clock is running up to five minutes ahead of the real time.
+
+@item Wk0905-2255,Su1705-2255
+
+This means weekdays from 9:05 AM to 10:55 PM, or Sunday from 5:05 PM to
+10:55 PM.  This is approximately the opposite of the previous example.
+
+@item Any
+
+Since no time is specified, this means any time on any day.
+
+@end table
+
+@node Chat Scripts, config File, Time Strings, Configuration Files
+@section Chat Scripts
+@cindex chat scripts
+
+Chat scripts are used in several different places, such as dialing out
+on modems or logging in to remote systems.  Chat scripts are made up of
+pairs of strings.  The program waits until it sees the first string,
+known as the @dfn{expect} string, and then sends out the second string,
+the @dfn{send} string.
+
+Each chat script is defined using a set of commands.  These commands
+always end in a string beginning with @code{chat}, but may start with
+different strings.  For example, in the @file{sys} file there is one set
+of commands beginning with @code{chat} and another set beginning with
+@code{called-chat}.  The prefixes are only used to disambiguate
+different types of chat scripts, and this section ignores the prefixes
+when describing the commands.
+
+@table @code
+
+@item chat @var{strings}
+@findex chat
+
+Specify a chat script.  The arguments to the @code{chat} command are
+pairs of strings separated by whitespace.  The first string of each pair
+is an expect string, the second is a send string.  The program will wait
+for the expect string to appear; when it does, the program will send the
+send string.  If the expect string does not appear within a certain
+number of seconds (as set by the @code{chat-timeout} command) the chat
+script fails and, typically, the call is aborted.  If the final expect
+string is seen (and the optional final send string has been sent), the
+chat script is successful.
+
+An expect string may contain additional subsend and subexpect strings,
+separated by hyphens.  If the expect string is not seen, the subsend
+string is sent and the chat script continues by waiting for the
+subexpect string.  This means that a hyphen may not appear in an expect
+string; use @samp{\055} instead.
+
+An expect string may simply be @samp{""}, meaning to skip the expect
+phase.  Otherwise, the following escape characters may appear in expect
+strings:
+
+@table @samp
+@item \b
+a backspace character
+@item \n
+a newline or line feed character
+@item \N
+a null character (for BNU compatibility)
+@item \r
+a carriage return character
+@item \s
+a space character
+@item \t
+a tab character
+@item \\
+a backslash character
+@item \@var{ddd}
+character @var{ddd}, where @var{ddd} are up to three octal digits
+@item \x@var{ddd}
+character @var{ddd}, where @var{ddd} are hexadecimal digits.
+@end table
+
+As in C, there may be up to three octal digits following a backslash,
+but the hexadecimal escape sequence continues as far as possible.  To
+follow a hexadecimal escape sequence with a hex digit, interpose a send
+string of @samp{""}.
+
+A send string may also simply be @samp{""} to skip the send phase.
+Otherwise, all of the escape characters legal for expect strings may be
+used, and the following escape characters are also permitted:
+
+@table @samp
+@item EOT
+send an end of transmission character (@kbd{^D})
+@item BREAK
+send a break character (may not work on all systems)
+@item \c
+suppress trailing carriage return at end of send string
+@item \d
+delay sending for 1 second
+@item \e
+disable echo checking
+@item \E
+enable echo checking (wait for echo before continuing)
+@item \K
+same as @kbd{BREAK} (for BNU compatibility)
+@item \p
+pause sending for a fraction of a second
+@end table
+
+Some specific types of chat scripts also define additional escape
+sequences that may appear in the send string.  For example, the login
+chat script defines @samp{\L} and @samp{\P} to send the login name and
+password, respectively.
+
+A carriage return will be sent at the end of each send string, unless
+the @kbd{\c} escape sequence appears in the string.  Note that some UUCP
+packages use @kbd{\b} for break, but here it means backspace.
+
+Echo checking means that after writing each character the program will
+wait until the character is echoed.  Echo checking must be turned on
+separately for each send string for which it is desired; it will be
+turned on for characters following @kbd{\E} and turned off for characters
+following @kbd{\e}.
+
+@item chat-timeout @var{number}
+@findex chat-timeout
+
+The number of seconds to wait for an expect string in the chat script
+before timing out and sending the next subsend or failing the chat
+script entirely.  The default value is 10 for a login chat or 60 for
+any other type of chat.
+
+@item chat-fail @var{string}
+@findex chat-fail
+
+If the @var{string} is seen at any time during a chat script, the chat
+script is aborted.  The string may not contain any whitespace
+characters; escape sequences must be used for them.  Multiple
+@code{chat-fail} commands may appear in a single chat script.  The
+default is to have none.
+
+This permits a chat script to be quickly aborted if an error string is
+seen.  For example, a script used to dial out on a modem might use the
+command @samp{chat-fail BUSY} to stop the chat script immediately if the
+string @samp{BUSY} was seen.
+
+@item chat-seven-bit @var{boolean}
+@findex chat-seven-bit
+
+If the argument is true, all incoming characters are stripped to seven
+bits when being compared to the expect string.  Otherwise all eight bits
+are used in the comparison.  The default is true because some Unix
+systems generate parity bits during the login prompt which must be
+ignored while running a chat script.  This has no effect on any
+@code{chat-program}, which must ignore parity by itself if necessary.
+
+@item chat-program @var{strings}
+@findex chat-program in sys file
+
+Specify a program to run before executing the chat script.  This program
+could run its own version of a chat script, or it could do whatever it
+wants.  If both @code{chat-program} and @code{chat} are specified, the
+program is executed first followed by the chat script.
+
+The first argument to the @code{chat-program} command is the program
+name to run.  The remaining arguments are passed to the program.  The
+following escape sequences are recognized in the arguments:
+
+@table @kbd
+@item \Y
+port device name
+@item \S
+port speed
+@item \\
+backslash
+@end table
+
+Some specific uses of @code{chat-program} define additional escape
+sequences.
+
+Arguments other than escape sequences are passed exactly as they appear
+in the configuration file, except that sequences of whitespace are
+compressed to a single space character; this exception may be removed in
+the future.
+
+If the @code{chat-program} command is not used, no program is run.
+
+On Unix, the standard input and standard output of the program will be
+attached to the port in use.  Anything the program writes to standard
+error will be written to the UUCP log file.  No other file descriptors
+will be open.  If the program does not exit with a status of 0, it will
+be assumed to have failed; this means that the dialing programs used by
+some versions of BNU may not be used directly, although of course a
+shell script could be used as an interface.
+
+The program will be run as the @code{uucp} user, and the environment
+will be that of the process that started @code{uucico}, so care must be
+taken to maintain security.
+
+No search path is used to find the program; a full path name must be
+given.  If the program is an executable shell script, it will be passed
+to @file{/bin/sh} even on systems which are unable to execute shell
+scripts.  It is also easy to invoke @file{/bin/sh} directly.
+
+@end table
+
+Here is a simple example of a chat script that might be used to reset a
+Hayes compatible modem.
+
+@example
+chat "" ATZ OK-ATZ-OK
+@end example
+
+The first expect string is @samp{""}, so it is ignored.  The chat script
+then sends @samp{ATZ}.  If the modem responds with @samp{OK}, the chat
+script finishes.  If 60 seconds (the default timeout) pass before seeing
+@samp{OK}, the chat script sends another @samp{ATZ}.  If it then sees
+@samp{OK}, the chat script succeeds.  Otherwise, the chat script fails.
+
+For a more complex chat script example, see @ref{Logging In}.
+
+@node config File, sys File, Chat Scripts, Configuration Files
 @section The Main Configuration File
 @cindex config file
 @cindex main configuration file
@@ -1140,6 +1431,16 @@ The main configuration file is named @file{config}.
 Since all the values that may be specified in the main configuration
 file also have defaults, there need not be a main configuration file at
 all.
+
+@menu
+* Miscellaneous (config)::      Miscellaneous config file commands
+* Configuration File Names::    Using different configuration files
+* Log File Names::              Using different log files
+* Debugging Levels::            Debugging levels
+@end menu
+
+@node Miscellaneous (config), Configuration File Names, config File, config File
+@subsection Miscellaneous config File Commands
 
 @table @code
 
@@ -1165,6 +1466,62 @@ Specify the spool directory.  The default is from @file{policy.h}.
 Command files, work files, temporary files, etc., are stored in this
 directory and in subdirectories of it.
 
+@item pubdir @var{string}
+@findex pubdir in config file
+@cindex public directory
+@cindex uucppublic
+@cindex /usr/spool/uucppublic
+
+Specify the public directory.  The default is from @file{policy.h}.  On
+Unix, when a file is named using a leading @kbd{~/}, it is taken from or
+to the public directory.  Each system may use a separate public
+directory by using the @code{pubdir} command in the system configuration
+file; see @ref{Miscellaneous (sys)}.
+
+@item unknown @var{string} @dots{}
+@findex unknown
+@cindex unknown systems
+
+The @var{string} and subsequent arguments are treated as though they
+appeared in the system file (@pxref{sys file}).  They are used to apply
+to any unknown systems that may call in, probably to set file transfer
+permissions and the like.  If the @code{unknown} command is not used,
+unknown systems are not permitted to call in.
+
+@item max-uuxqts @var{number}
+@findex max-uuxqts
+
+Specify the maximum number of @code{uuxqt} processes which may run at
+the same time.  Having several @code{uuxqt} processes running at once
+can significantly slow down a system, but since @code{uuxqt} is
+automatically started by @code{uucico}, it can happen quite easily.  The
+default for @code{max-uuxqts} is 0, which means that there is no limit.
+If BNU configuration files are being read and the code was compiled
+without @code{HAVE_TAYLOR_CONFIG}, then if the file @file{Maxuuxqts} in
+the configuration directory contains a readable number it will be used as
+the value for @code{max-uuxqts}.
+
+@item v2-files @var{boolean}
+@findex v2-files
+
+If the code was compiled to be able to read V2 configuration files, a
+false argument to this command will prevent them from being read.
+This can be useful while testing.  The default is true.
+
+@item bnu-files @var{boolean}
+@findex bnu-files
+
+If the code was compiled to be able to read BNU configuration files, a
+false argument to this command will prevent them from being read.
+This can be useful while testing.  The default is true.
+
+@end table
+
+@node Configuration File Names, Log File Names, Miscellaneous (config), config File
+@subsection Configuration File Names
+
+@table @code
+
 @item sysfile @var{strings}
 @findex sysfile
 
@@ -1178,8 +1535,8 @@ command may be repeated; each system file has its own set of defaults.
 @findex portfile
 
 Specify the port file(s).  The default is the file @file{port} in the
-directory @var{newconfigdir}.  These files describe ports which are used to
-call other systems and accept calls from other systems; @xref{port
+directory @var{newconfigdir}.  These files describe ports which are used
+to call other systems and accept calls from other systems; see @ref{port
 file}.  No port files need be named at all.  Multiple port files may be
 given on the line, and the @code{portfile} command may be repeated.
 
@@ -1213,18 +1570,6 @@ used.  Multiple dialcode files may be specified on the line, and the
 @code{dialcodefile} command may be repeated; all the dialcode files will
 be read in turn until a dialcode is located.
 
-@item pubdir @var{string}
-@findex pubdir in config file
-@cindex public directory
-@cindex uucppublic
-@cindex /usr/spool/uucppublic
-
-Specify the public directory.  The default is from @file{policy.h}.  On
-Unix, when a file is named using a leading @kbd{~/}, it is taken from or
-to the public directory.  Each system may use a separate public
-directory by using the @code{pubdir} command in the system configuration
-file; see @ref{sys file}.
-
 @item callfile @var{strings}
 @findex callfile
 @cindex call out file
@@ -1235,17 +1580,17 @@ file; see @ref{sys file}.
 
 Specify the call out login name and password file(s).  The default is
 the file @file{call} in the directory @var{newconfigdir}.  If the call
-out login name or password for a system are given as @kbd{*} (@pxref{sys
-file}), these files are read to get the real login name or password.
-Each line in the file(s) has three words: the system name, the login
-name, and the password.  This file is only used when placing calls to
-remote systems; the password file described under @code{passwdfile}
-below is used for incoming calls.  The intention of the call out file is
-to permit the system file to be publically readable; the call out files
-must obviously be kept secure.  These files need not be used.  Multiple
-call out files may be specified on the line, and the @code{callfile}
-command may be repeated; all the files will be read in turn until the
-system is found.
+out login name or password for a system are given as @kbd{*}
+(@pxref{Logging In}), these files are read to get the real login name or
+password.  Each line in the file(s) has three words: the system name,
+the login name, and the password.  This file is only used when placing
+calls to remote systems; the password file described under
+@code{passwdfile} below is used for incoming calls.  The intention of
+the call out file is to permit the system file to be publically
+readable; the call out files must obviously be kept secure.  These files
+need not be used.  Multiple call out files may be specified on the line,
+and the @code{callfile} command may be repeated; all the files will be
+read in turn until the system is found.
 
 @item passwdfile @var{strings}
 @findex passwdfile
@@ -1263,11 +1608,18 @@ file(s) has two words: the login name and the password (e.g. @code{Ufoo
 foopas}).  The login name is accepted before the system name is known,
 so these are independent of which system is calling in; a particular
 login may be required for a system by using the @code{called-login}
-command in the system file (@pxref{sys file}).  These password files are
-optional, although one must exist if @code{uucico} is to present its own
-login prompts.  Multiple password files may be specified on the line,
-and the @code{passwdfile} command may be repeated; all the files will be
-read in turn until the login name is found.
+command in the system file (@pxref{Accepting a Call}).  These password
+files are optional, although one must exist if @code{uucico} is to
+present its own login prompts.  Multiple password files may be specified
+on the line, and the @code{passwdfile} command may be repeated; all the
+files will be read in turn until the login name is found.
+
+@end table
+
+@node Log File Names, Debugging Levels, Configuration File Names, config File
+@subsection Log File Names
+
+@table @code
 
 @item logfile @var{string}
 @findex logfile
@@ -1299,6 +1651,13 @@ written to the debugging file to make it easier to keep the order of
 actions straight.  The debugging file is different from the log file
 because information such as passwords can appear in it, so it must be
 not be publically readable.
+
+@end table
+
+@node Debugging Levels,  , Log File Names, config File
+@subsection Debugging Levels
+
+@table @code
 
 @item debug @var{string} @dots{}
 @findex debug in config file
@@ -1352,51 +1711,14 @@ debugging types will be turned on.  The @samp{-x} debugging is in
 addition to any debugging specified by the @code{debug} command; there
 is no way to cancel debugging information.  The debugging level may also
 be set specifically for calls to or from a specific system with the
-@code{debug} command in the system file (@pxref{sys file}).
+@code{debug} command in the system file (@pxref{Miscellaneous (sys)}).
 
 The debugging messages are somewhat idiosyncratic; it may be necessary
 to refer to the source code for additional information in some cases.
 
-@item unknown @var{string} @dots{}
-@findex unknown
-@cindex unknown systems
-
-The @var{string} and subsequent arguments are treated as though they
-appeared in the system file (@pxref{sys file}).  They are used to apply
-to any unknown systems that may call in, probably to set file transfer
-permissions and the like.  If the @code{unknown} command is not used,
-unknown systems are not permitted to call in.
-
-@item max-uuxqts @var{number}
-@findex max-uuxqts
-
-Specify the maximum number of @code{uuxqt} processes which may run at
-the same time.  Having several @code{uuxqt} processes running at once
-can significantly slow down a system, but since @code{uuxqt} is
-automatically started by @code{uucico}, it can happen quite easily.  The
-default for @code{max-uuxqts} is 0, which means that there is no limit.
-If BNU configuration files are being read and the code was compiled
-without @code{HAVE_TAYLOR_CONFIG}, then if the file @file{Maxuuxqts} in
-the configuration directory contains a readable number it will be used as
-the value for @code{max-uuxqts}.
-
-@item v2-files @var{boolean}
-@findex v2-files
-
-If the code was compiled to be able to read V2 configuration files, a
-false argument to this command will prevent them from being read.
-This can be useful while testing.  The default is true.
-
-@item bnu-files @var{boolean}
-@findex bnu-files
-
-If the code was compiled to be able to read BNU configuration files, a
-false argument to this command will prevent them from being read.
-This can be useful while testing.  The default is true.
-
 @end table
 
-@node sys file, port file, config file, Configuration files
+@node sys File, port File, config File, Configuration Files
 @section The System Configuration File
 @cindex sys file
 @cindex system configuration file
@@ -1404,10 +1726,24 @@ This can be useful while testing.  The default is true.
 
 By default there is a single system configuration, named @file{sys} in
 the directory @var{newconfigdir}.  This may be overridden by the
-@code{sysfile} command in the main configuration file; @ref{config
-file}.
+@code{sysfile} command in the main configuration file; see
+@ref{Configuration File Names}.
 
 These files describe all remote systems known to the UUCP package.
+
+@menu
+* Defaults and Alternates::     Using defaults and alternates
+* Naming the System::           Naming the system
+* Calling Out::                 Calling out
+* Accepting a Call::            Accepting a call
+* Protocol Selection::          Protocol selection
+* File Transfer Control::       File transfer control
+* Miscellaneous (sys)::         Miscellaneous sys file commands
+* Default sys File Values::     Default values
+@end menu
+
+@node Defaults and Alternates, Naming the System, sys File, sys File
+@subsection Defaults and Alternates
 
 The first set of commands in the file, up to the first @code{system}
 command, specify defaults to be used for all systems in that file.  Each
@@ -1462,6 +1798,9 @@ This can all get rather confusing, although it's easier to use than to
 describe concisely; the @code{uuchk} program may be used to ensure that
 you are getting what you want.
 
+@node Naming the System, Calling Out, Defaults and Alternates, sys File
+@subsection Naming the System
+
 @table @code
 
 @item system @var{string}
@@ -1470,14 +1809,14 @@ you are getting what you want.
 Specify the remote system name.  Subsequent commands up to the next
 @code{system} command refer to this system.
 
-@item alternate [@var{STRING}]
+@item alternate [@var{string}]
 @findex alternate
 
-Start an alternate set of commands, as described above.  An optional
-argument may be used to name the alternate.  This name will be put in
-the log file if the alternate is used to call the system.  There is no
-way to name the first alternate (the commands before the first
-@code{alternate} command).
+Start an alternate set of commands (@pxref{Defaults and Alternates}).
+An optional argument may be used to name the alternate.  This name will
+be put in the log file if the alternate is used to call the system.
+There is no way to name the first alternate (the commands before the
+first @code{alternate} command).
 
 @item default-alternates @var{boolean}
 @findex default-alternates
@@ -1492,75 +1831,70 @@ used.  The default is true.
 Specify an alias for the current system.  The alias may be used by local
 @code{uucp} and @code{uux} commands.  The default is to have no aliases.
 
-@item debug @var{string} @dots{}
-@findex debug in sys file
+@item myname @var{string}
+@findex myname
 
-Set additional debugging for calls to or from the system.  This may be
-used to debug a connection with a specific system.  It is particularly
-useful when debugging incoming calls, since debugging information will
-be generated whenever the call comes in.  See the @code{debug} command
-in the main configuration file (@pxref{config file}) for more details.
-The debugging information specified here is in addition to that
-specified in the main configuration file or on the command line.
+Specifies a different system name to use when calling the remote system.
+Also, if @code{called-login} is used and is not @samp{ANY}, then, when a
+system logs in with that login name, @var{string} is used as the system
+name.  Because the local system name must be determined before the
+remote system has identified itself, using @code{myname} and
+@code{called-login} together for any system will set the local name for
+that login; this means that each locally used system name must have a
+unique login name associated with it.  This allows a system to have
+different names for an external and an internal network.  The default is
+to not use a special local name.
 
-@item max-remote-debug @var{string} @dots{}
-@findex max-remote-debug
+@end table
 
-When the system calls in, it may request that the debugging level be set
-to a certain value.  This command may be used to put a limit on the
-debugging level which the system may request, to avoid filling up the
-disk with debugging information.  Only the debugging types named in the
-@code{max-remote-debug} command may be turned on by the remote system.
-To prohibit any debugging, use @samp{max-remote-debug none}.  The
-default is @samp{chat,handshake}; to turn off these default entries, you
-must use @samp{max-remote-debug none} followed by other
-@code{max-remote-debug} commands specifying the settings you want.
+@node Calling Out, Accepting a Call, Naming the System, sys File
+@subsection Calling Out
+
+This section describes commands used when placing a call to another
+system.
+
+@menu
+* When to Call::                When to call
+* Placing the Call::            Placing the call
+* Logging In::                  Logging in
+@end menu
+
+@node When to Call, Placing the Call, Calling Out, Calling Out
+@subsubsection When to Call
+
+@table @code
 
 @item time @var{string} [@var{number}]
 @findex time
 
-Specify when the system may be called.  Each time specification must
-begin with a list containing @samp{Su}, @samp{Mo}, @samp{Tu}, @samp{We},
-@samp{Th}, @samp{Fr}, @samp{Sa} or @samp{Wk} for any weekday or
-@samp{Any} for any day.  Following the day may be a range of hours
-separated with a hyphen using 24 hour time.  The range of hours may
-cross 0; for example @samp{2300-0700} means any time except 7 AM to 11
-PM.  If no time is given, calls may be made at any time on the specified
-day(s).  Multiple time specifications may be separated with a vertical
-bar @kbd{|} or a comma @kbd{,}.
-
-The time specification may also consist of the single word @samp{Never},
-which means to never call the system (although the system may be able to
-call in) or a single word with a name defined in a previous
-@code{timetable} command.
-
-The optional second argument specifies a retry time in minutes.  If a
-call made during a time that matches the time string fails, no more
-calls are permitted until the retry time has passed.  By default an
-exponentially increasing retry time is used: after each failure the next
-retry period is longer.  A retry time specified in the @code{time}
-command is always a fixed amount of time.
+Specify when the system may be called.  The first argument is a time
+string; see @ref{Time Strings}.  The optional second argument specifies
+a retry time in minutes.  If a call made during a time that matches the
+time string fails, no more calls are permitted until the retry time has
+passed.  By default an exponentially increasing retry time is used:
+after each failure the next retry period is longer.  A retry time
+specified in the @code{time} command is always a fixed amount of time.
 
 The @code{time} command may appear multiple times in a single alternate,
 in which case if any time string matches the system may be called.  The
-default value is @samp{Never}.
+default time string is @samp{Never}.
 
 @item timegrade @var{character} @var{string} [@var{number}]
 @findex timegrade
 
 The @var{character} specifies a grade.  It must be a single letter or
-digit.  The @var{string} is a time string as described under the
-@code{time} command.  All jobs of grade @var{character} or higher (where
-@kbd{0} > @kbd{9} > @kbd{A} > @kbd{Z} > @kbd{a} > @kbd{z}) may be run at
-the specified time.  An ordinary @code{time} command is equivalent to
-using @code{timegrade} with a grade of @kbd{z}, permitting all jobs.  If
-there are no jobs of a sufficiently high grade according to the time
-string, the system will not be called.  Giving the @samp{-s} switch to
-@code{uucico} to force it to call a system causes it to assume there is
-a job of grade @kbd{0} waiting to be run.
+digit.  The @var{string} is a time string (@pxref{Time Strings}).  All
+jobs of grade @var{character} or higher (where @kbd{0} > @kbd{9} >
+@kbd{A} > @kbd{Z} > @kbd{a} > @kbd{z}) may be run at the specified time.
+An ordinary @code{time} command is equivalent to using @code{timegrade}
+with a grade of @kbd{z}, permitting all jobs.  If there are no jobs of a
+sufficiently high grade according to the time string, the system will
+not be called.  Giving the @samp{-s} switch to @code{uucico} to force it
+to call a system causes it to assume there is a job of grade @kbd{0}
+waiting to be run.
 
 The optional third argument specifies a retry time in minutes.  See the
-@code{time} command for more details.
+@code{time} command, above, for more details.
 
 Note that the @code{timegrade} command serves two purposes: 1) if there
 is no job of sufficiently high grade the system will not be called, and
@@ -1597,68 +1931,12 @@ using @code{alternate}.  If this command does not appear, or if none of
 the time strings match, the remote system will be allowed to send
 whatever grades of work it chooses.
 
-@item call-local-size @var{number} @var{string}
-@findex call-local-size
+@end table
 
-The @var{string} is a time string as described under the @code{time}
-command.  The @var{number} is the size in bytes of the largest file that
-should be transferred at a time matching the time string if the local
-system placed the call and the request was made by the local system.
-This command may appear multiple times in a single alternate.  If this
-command does not appear, or if none of the time strings match, there are
-no size restrictions.
+@node Placing the Call, Logging In, When to Call, Calling Out
+@subsubsection Placing the Call
 
-With all the size control commands, the size of a file from the remote
-system (as opposed to a file from the local system) will only be checked
-if the other system is running this package; other UUCP packages will
-not understand a maximum size request, nor will they inform this package
-of the size of remote files.
-
-@item call-remote-size @var{number} @var{string}
-@findex call-remote-size
-
-Specify the size in bytes of the largest file that should be
-transferred at a given time by remote request when the local system
-placed the call.  This command may appear multiple times in a single
-alternate.  If this command does not appear, there are no size
-restrictions.
-
-@item called-local-size @var{number} @var{string}
-@findex called-local-size
-
-Specify the size in bytes of the largest file that should be transferred
-at a given time by local request when the remote system placed the call.
-This command may appear multiple times in a single alternate. If this
-command does not appear, there are no size restrictions.
-
-@item called-remote-size @var{number} @var{string}
-@findex called-remote-size
-
-Specify the size in bytes of the largest file that should be transferred
-at a given time by remote request when the remote system placed the
-call.  This command may appear multiple times in a single alternate. If
-this command does not appear, there are no size restrictions.
-
-@item timetable @var{string} @var{string}
-@findex timetable
-
-This is actually not specific to a system; it can appear anywhere in the
-file.  It defines a timetable that may be used in subsequently appearing
-@code{time} commands.  The first string names the timetable entry; the
-second is a time string as described in the @code{time} command.
-
-The following @code{timetable} commands are predefined.  The NonPeak
-timetable is for compatibility, and no longer has any particular
-meaning.
-
-@example
-timetable Evening Wk1705-0755,Sa,Su
-timetable Night Wk2305-0755,Sa,Su2305-1655
-timetable NonPeak Wk1805-0655,Sa,Su
-@end example
-
-If this command does not appear, then obviously no additional timetables
-will be defined.
+@table @code
 
 @item baud @var{number}
 @findex baud in sys file
@@ -1671,12 +1949,13 @@ available ports with that baud rate until an unlocked port is found.
 The ports are defined in the port file.  If both @code{baud} and
 @code{port} commands appear, both are used when selecting a port.  To
 allow calls at more than one baud rate, the @code{alternate} command
-must be used.  If this command does not appear, there is no default; the
-baud rate may be specified in the port file, but if it is not then the
-natural baud rate of the port will be used (whatever that means on the
-system).  Specifying an explicit baud rate of 0 will request the natural
-baud rate of the port, overriding any default baud rate from the
-defaults at the top of the file.
+must be used (@pxref{Defaults and Alternates}).  If this command does
+not appear, there is no default; the baud rate may be specified in the
+port file, but if it is not then the natural baud rate of the port will
+be used (whatever that means on the system).  Specifying an explicit
+baud rate of 0 will request the natural baud rate of the port,
+overriding any default baud rate from the defaults at the top of the
+file.
 
 @item port @var{string}
 @findex port in sys file
@@ -1723,96 +2002,42 @@ When used with a TCP port, the string names the host to contact.  It may
 be a domain name or a numeric Internet address.  If no address is
 specified, the system name is used.
 
-When used with a port that neither a modem nor TCP, this command is
+When used with a port that neither is a modem nor TCP, this command is
 ignored.
+
+@end table
+
+@node Logging In,  , Placing the Call, Calling Out
+@subsubsection Logging In
+@table @code
 
 @item chat @var{strings}
 @findex chat in sys file
+@item chat-timeout @var{number}
+@findex chat-timeout in sys file
+@item chat-fail @var{string}
+@findex chat-fail in sys file
+@item chat-seven-bit @var{boolean}
+@findex chat-seven-bit in sys file
+@item chat-program @var{strings}
+@findex chat-program in sys file
 
-This command is used to specify a chat script to use when logging on to
-a remote system; see the @code{chat-program} command as well.  The
-@code{chat} command specifies a sequence of pairs of strings separated
-by whitespace.  The first string of each pair is an @dfn{expect} string,
-the second is a @dfn{send} string.  The @code{uucico} program will wait
-for the expect string to appear from a port; when it does, @code{uucico}
-will send the send string.  If the expect string does not appear within
-a certain number of seconds (as set by the @code{chat-timeout} command)
-the chat script fails and the call is aborted.  If the final expect
-string is seen (and the optional final send string has been sent), the
-chat script is successful and protocol negotiation begins.
+These commands describe a chat script to use when logging on to a remote
+system.  Chat scripts are explained in @ref{Chat Scripts}.
 
-An expect string may contain additional subsend and subexpect strings,
-separated by hyphens.  If the expect string is not seen, the subsend
-string is sent and the chat script continues by waiting for the
-subexpect string.  This means that a hyphen may not appear in an expect
-string; use @kbd{\055} instead.
+Two additional escape sequences may be used in send strings.
 
-An expect string may simply be @kbd{""}, meaning to skip the expect
-phase.  Otherwise, the following escape characters may appear in expect
-strings:
-
-@table @kbd
-@item \b
-a backspace character
-@item \n
-a newline or line feed character
-@item \N
-a null character (for BNU compatibility)
-@item \r
-a carriage return character
-@item \s
-a space character
-@item \t
-a tab character
-@item \\
-a backslash character
-@item \@var{ddd}
-character @var{ddd}, where @var{ddd} are up to three octal digits
-@item \x@var{ddd}
-character @var{ddd}, where @var{ddd} are hexadecimal digits.
-@end table
-
-As in C, there may be up to three octal digits following a backslash,
-but the hexadecimal escape sequence continues as far as possible.  To
-follow a hexadecimal escape sequence with a hex digit, interpose a send
-string of @kbd{""}.
-
-A send string may also simply be @kbd{""} to skip the send phase.
-Otherwise, all of the escape characters legal for expect strings may be
-used, and the following escape characters are also permitted:
-
-@table @kbd
-@item EOT
-send an end of transmission character (@kbd{^D})
-@item BREAK
-send a break character (may not work on all systems)
-@item \c
-suppress trailing carriage return at end of send string
-@item \d
-delay sending for 1 second
-@item \e
-disable echo checking
-@item \E
-enable echo checking (wait for echo before continuing)
-@item \K
-same as @kbd{BREAK} (for BNU compatibility)
-@item \p
-pause sending for a fraction of a second
+@table @samp
 @item \L
-send the login name
+Send the login name, as set by the @code{call-login} command.
 @item \P
-send the password
+Send the passowrd, as set by the @code{call-password} command.
 @end table
 
-A carriage return will be sent at the end of each send string, unless
-the @kbd{\c} escape sequence appears in the string.  Note that some UUCP
-packages use @kbd{\b} for break, but here it means backspace.
-
-Echo checking means that after writing each character the program will
-wait until the character is echoed.  Echo checking must be turned on
-separately for each send string for which it is desired; it will be
-turned on for characters following @kbd{\E} and turned off for characters
-following @kbd{\e}.
+Three additional escape sequences may be used with the
+@code{chat-program} command.  These are @samp{\L} and @samp{\P}, which
+become the login name and password, respectively, and @samp{\Z}, which
+becomes the name of the system of being called.
 
 The default chat script is:
 
@@ -1840,114 +2065,36 @@ This chat script will work for most systems, so you will only be
 required to use the @code{call-login} and @code{call-password} commands.
 In fact, in the file-wide defaults you could set defaults of
 @samp{call-login *} and @samp{call-password *}; you would then just have
-to make an entry for each system in the call-out login file.  Some
-systems seem to flush input after the @samp{login:} prompt, so they may
-need a version of this chat script with a @kbd{\d} before the @kbd{\L}.
-When using UUCP over TCP, some servers will not be handle the initial
-carriage return sent by this chat script; in this case you may have to
-specify the simple chat script @samp{ogin: \L word: \P}.
+to make an entry for each system in the call-out login file.
 
-@item chat-timeout @var{number}
-@findex chat-timeout in sys file
-
-The number of seconds to wait for an expect string in the chat script
-before timing out and sending the next subsend or failing the chat
-script entirely.  The default value is 10 for a login chat or 60 for
-any other type of chat.
-
-@item chat-fail @var{string}
-@findex chat-fail in sys file
-
-If the @var{string} is seen at any time during a chat script, the chat
-script is aborted.  The string may not contain any whitespace
-characters; escape sequences must be used for them.  Multiple
-@code{chat-fail} commands may appear in a single alternate.  The default
-is to have none.
-
-@item chat-seven-bit @var{boolean}
-@findex chat-seven-bit in sys file
-
-If the argument is true, all incoming characters are stripped to seven
-bits when being compared to the expect string.  Otherwise all eight bits
-are used in the comparison.  The default is true because some Unix
-systems generate parity bits during the login prompt which must be
-ignored while running the chat script.  This has no effect on any
-@code{chat-program}, which must ignore parity by itself if necessary.
-
-@item chat-program @var{strings}
-@findex chat-program in sys file
-
-Specify a program to run when calling up the system.  This program is
-expected to run its own version of a chat script, but it may do whatever
-it wants.  If both @code{chat-program} and @code{chat} are specified,
-the program is executed first followed by the chat script.
-
-The first argument to the @code{chat-program} command is the program
-name to run.  The remaining arguments are passed to the program.  The
-following escape sequences are recognized in the arguments:
-
-@table @kbd
-@item \L
-login name
-@item \P
-password
-@item \Y
-port name
-@item \Z
-system name
-@item \S
-port speed
-@item \\
-backslash
-@end table
-
-Arguments other than escape sequences are passed exactly as they appear
-in the configuration file, except that sequences of whitespace are
-compressed to a single space character; this exception may be removed in
-the future.
-
-If the @code{chat-program} command is not used, no program is run.
-
-On Unix, the standard input and standard output of the program will be
-attached to the port which is being used to call out on.  Anything the
-program writes to standard error will be written to the UUCP log file.
-No other file descriptors will be open.  If the program does not exit
-with a status of 0, it will be assumed to have failed and the call will
-be aborted; this means that the dialing programs used by some versions
-of BNU may not be used directly, although of course a shell script could
-be used as an interface.
-
-The program will be run as the @code{uucp} user, and the environment
-will be that of the process that started @code{uucico}, so care must be
-taken to maintain security.
-
-No search path is used to find the program; a full path name must be
-given.  If the program is an executable shell script, it will be passed
-to @file{/bin/sh} even on systems which are unable to execute shell
-scripts.  It is also easy to invoke @file{/bin/sh} directly.
-
-For example, a shell script intended to record when each system was
-called might be specified in the file-wide defaults as:
-
-@example
-chat-program /bin/sh /usr/lib/uucp/called \Z
-@end example
+Some systems seem to flush input after the @samp{login:} prompt, so they
+may need a version of this chat script with a @kbd{\d} before the
+@kbd{\L}.  When using UUCP over TCP, some servers will not be handle the
+initial carriage return sent by this chat script; in this case you may
+have to specify the simple chat script @samp{ogin: \L word: \P}.
 
 @item call-login @var{string}
 @findex call-login
 
 Specify the login name to send with @kbd{\L} in the chat script.  If the
-string is @kbd{*} (e.g. @samp{call-login *}) the login name will be
-fetched from the call out login name and password file.  There is no
-default.
+string is @samp{*} (e.g. @samp{call-login *}) the login name will be
+fetched from the call out login name and password file
+(@pxref{Configuration File Names}).  There is no default.
 
 @item call-password @var{string}
 @findex call-password
 
 Specify the password to send with @kbd{\P} in the chat script.  If the
-string is @kbd{*} (e.g. @samp{call-password *}) the password will be
-fetched from the call-out login name and password file.  There is no
-default.
+string is @samp{*} (e.g. @samp{call-password *}) the password will be
+fetched from the call-out login name and password file
+(@pxref{Configuration File Names}).  There is no default.
+
+@end table
+
+@node Accepting a Call, Protocol Selection, Calling Out, sys File
+@subsection Accepting a Call
+
+@table @code
 
 @item called-login @var{strings}
 @findex called-login
@@ -1956,25 +2103,27 @@ The first @var{string} specifies the login name that the system must use
 when calling in.  If it is @samp{ANY} (e.g. @samp{called-login ANY}) any
 login name may be used; this is useful to override a file-wide default
 and to indicate that future alternates may have different login names.
-Case is significant.  The default value is @samp{ANY}.  Different
-alternates may use different @code{called-login} commands, in which case
-the login name will be used to select which alternate is in effect; this
-will only work if the first alternate (before the first @code{alternate}
-command) uses the @code{called-login} command.
+Case is significant.  The default value is @samp{ANY}.  
+
+Different alternates (@pxref{Defaults and Alternates}) may use different
+@code{called-login} commands, in which case the login name will be used
+to select which alternate is in effect; this will only work if the first
+alternate (before the first @code{alternate} command) uses the
+@code{called-login} command.
 
 Additional strings may be specified after the login name; they are a
 list of which systems are permitted to use this login name.  If this
 feature is used, then normally the login name will only be given in a
 single @code{called-login} command.  Only systems which appear on the
-list will be permitted to use that login name (well, actually, any
-system which uses an explicit @code{called-login} command will also be
-permitted to use the name).  If the same login name is used more than
-once with a list of systems, all the lists are concatenated together.
-This feature permits you to restrict a login name to a particular set of
-systems without requiring you to use the @code{called-login} command for
-every single system; you can achieve a similar effect by using a
-different system file for each permitted login name with an appropriate
-@code{called-login} command in the file-wide defaults.
+list, or which use an explicit @code{called-login} command, will be
+permitted to use that login name.  If the same login name is used more
+than once with a list of systems, all the lists are concatenated
+together.  This feature permits you to restrict a login name to a
+particular set of systems without requiring you to use the
+@code{called-login} command for every single system; you can achieve a
+similar effect by using a different system file for each permitted login
+name with an appropriate @code{called-login} command in the file-wide
+defaults.
 
 @item callback @var{boolean}
 @findex callback
@@ -1983,13 +2132,35 @@ If @var{boolean} is true, then when the remote system calls
 @code{uucico} will hang up the connection and prepare to call it back.
 This is false by default.
 
-@item sequence @var{boolean}
-@findex sequence
+@item called-chat @var{strings}
+@findex called-chat
+@item called-chat-timeout @var{number}
+@findex called-chat-timeout
+@item called-chat-fail @var{string}
+@findex called-chat-fail
+@item called-chat-seven-bit @var{boolean}
+@findex called-chat-seven-bit
+@item called-chat-program @var{strings}
+@findex called-chat-program
+  
+These commands may be used to define a chat script (@pxref{Chat
+Scripts}) that is run whenever the local system is called by the system
+being defined.  The chat script defined by the @code{chat} command
+(@pxref{Logging In}), on the other hand, is used when the remote system
+is called.  This called chat script might be used to set special modem
+parameters that are appropriate to a particular system.  It is run after
+protocol negotiation is complete, but before the protocol has been
+started.  See @ref{Logging In} for additional escape sequence which may
+be used besides those defined for all chat scripts.  There is no default
+called chat script.  If the called chat script fails, the incoming call
+will be aborted.
 
-If @var{boolean} is true, then conversation sequencing is automatically
-used for the remote system, so that if somebody manages to spoof as the
-remote system, it will be detected the next time the remote system
-actually calls.  This is false by default.
+@end table
+
+@node Protocol Selection, File Transfer Control, Accepting a Call, sys File
+@subsection Protocol Selection
+
+@table @code
 
 @item protocol @var{string}
 @findex protocol in sys file
@@ -2114,27 +2285,15 @@ takes a numeric argument:
 The timeout in seconds before giving up.  The default is 120.
 @end table
 
-@item called-chat @var{strings}
-@findex called-chat
-@item called-chat-timeout @var{number}
-@findex called-chat-timeout
-@item called-chat-fail @var{string}
-@findex called-chat-fail
-@item called-chat-seven-bit @var{boolean}
-@findex called-chat-seven-bit
-@item called-chat-program @var{strings}
-@findex called-chat-program
-  
-These commands may be used to define a chat script that is run whenever
-the local system is called by the system being defined.  The chat script
-defined by the @code{chat} command, on the other hand, is used when the
-remote system is called.  This called chat script might be used to set
-special modem parameters that are appropriate to a particular system.
-It is run after protocol negotiation is complete, but before the
-protocol has been started.  See the @code{chat} command for details of
-how the chat script is defined, and what the various commands mean.
-There is no default called chat script.  If the called chat script
-fails, the call will be aborted.
+The protocol parameters are reset to their default values after each
+call.
+
+@end table
+
+@node File Transfer Control, Miscellaneous (sys), Protocol Selection, sys File
+@subsection File Transfer Control
+
+@table @code
 
 @item call-request @var{boolean}
 @findex call-request
@@ -2175,6 +2334,48 @@ the remote system.  The default is yes.
 
 Equivalent to specifying both @samp{call-transfer @var{boolean}}
 @samp{called-transfer @var{boolean}}.
+
+@item call-local-size @var{number} @var{string}
+@findex call-local-size
+
+The @var{string} is a time string (@pxref{Time Strings}).  The
+@var{number} is the size in bytes of the largest file that should be
+transferred at a time matching the time string if the local system
+placed the call and the request was made by the local system.  This
+command may appear multiple times in a single alternate.  If this
+command does not appear, or if none of the time strings match, there are
+no size restrictions.
+
+With all the size control commands, the size of a file from the remote
+system (as opposed to a file from the local system) will only be checked
+if the other system is running this package; other UUCP packages will
+not understand a maximum size request, nor will they inform this package
+of the size of remote files.
+
+@item call-remote-size @var{number} @var{string}
+@findex call-remote-size
+
+Specify the size in bytes of the largest file that should be
+transferred at a given time by remote request when the local system
+placed the call.  This command may appear multiple times in a single
+alternate.  If this command does not appear, there are no size
+restrictions.
+
+@item called-local-size @var{number} @var{string}
+@findex called-local-size
+
+Specify the size in bytes of the largest file that should be transferred
+at a given time by local request when the remote system placed the call.
+This command may appear multiple times in a single alternate. If this
+command does not appear, there are no size restrictions.
+
+@item called-remote-size @var{number} @var{string}
+@findex called-remote-size
+
+Specify the size in bytes of the largest file that should be transferred
+at a given time by remote request when the remote system placed the
+call.  This command may appear multiple times in a single alternate. If
+this command does not appear, there are no size restrictions.
 
 @item local-send @var{strings}
 @findex local-send
@@ -2227,6 +2428,21 @@ requested by the remote system.  The default is @kbd{~}.  On Unix, the
 remote system may only request that files be received into directories
 that are writeable by the world, regardless of how this is set.
 
+@end table
+
+@node Miscellaneous (sys), Default sys File Values, File Transfer Control, sys File
+@subsection Miscellaneous sys File Commands
+
+@table @code
+
+@item sequence @var{boolean}
+@findex sequence
+
+If @var{boolean} is true, then conversation sequencing is automatically
+used for the remote system, so that if somebody manages to spoof as the
+remote system, it will be detected the next time the remote system
+actually calls.  This is false by default.
+
 @item command-path @var{string}
 @findex command-path
 
@@ -2266,21 +2482,59 @@ the public directory specified in the main configuration file for this
 system only.  The default is the public directory specified in the main
 configuration file (which defaults to a value from @file{policy.h}).
 
-@item myname @var{string}
-@findex myname
+@item debug @var{string} @dots{}
+@findex debug in sys file
 
-Specifies the system name to use when calling the remote system.  Also,
-if @code{called-login} is used and is not @samp{ANY}, then, when a
-system logs in with that login name, @var{string} is used as the system
-name.  Because the local system name must be determined before the remote
-system has identified itself, using @code{myname} and
-@code{called-login} together for any system will set the local name for
-that login; this means that each locally used system name must have a
-unique login name associated with it.  This allows a system to have
-different names for an external and an internal network.  The default is
-to not use a special local name.
+Set additional debugging for calls to or from the system.  This may be
+used to debug a connection with a specific system.  It is particularly
+useful when debugging incoming calls, since debugging information will
+be generated whenever the call comes in.  See the @code{debug} command
+in the main configuration file (@pxref{Debugging Levels}) for more
+details.  The debugging information specified here is in addition to
+that specified in the main configuration file or on the command line.
+
+@item max-remote-debug @var{string} @dots{}
+@findex max-remote-debug
+
+When the system calls in, it may request that the debugging level be set
+to a certain value.  This command may be used to put a limit on the
+debugging level which the system may request, to avoid filling up the
+disk with debugging information.  Only the debugging types named in the
+@code{max-remote-debug} command may be turned on by the remote system.
+To prohibit any debugging, use @samp{max-remote-debug none}.  The
+default is @samp{abnormal,chat,handshake}; to turn off these default
+entries, you must use @samp{max-remote-debug none} followed by other
+@code{max-remote-debug} commands specifying the settings you want.
+
+@item timetable @var{string} @var{string}
+@findex timetable
+
+This is actually not specific to a system; it can appear anywhere in the
+file(s).  In a future release this command will probably be moved to the
+main configuration file.
+
+The @code{timetable} defines a timetable that may be used in
+subsequently appearing time strings; @ref{Time Strings}.  The first
+string names the timetable entry; the second is a time string.
+
+The following @code{timetable} commands are predefined.  The NonPeak
+timetable is included for compatibility.  It originally described the
+offpeak hours of Tymnet and Telenet, but both have since changed their
+schedules.
+
+@example
+timetable Evening Wk1705-0755,Sa,Su
+timetable Night Wk2305-0755,Sa,Su2305-1655
+timetable NonPeak Wk1805-0655,Sa,Su
+@end example
+
+If this command does not appear, then obviously no additional timetables
+will be defined.
 
 @end table
+
+@node Default sys File Values,  , Miscellaneous (sys), sys File
+@subsection Default sys File Values
 
 The following are used as default values for all systems; they can be
 considered as appearing before the start of the file.
@@ -2302,9 +2556,10 @@ local-receive ~
 remove-receive ~
 command-path [ from @file{policy.h} ]
 commands rnews rmail
+max-remote-debug abnormal,chat,handshake
 @end example
 
-@node port file, dial file, sys file, Configuration files
+@node port File, dial File, sys File, Configuration Files
 @section The Port Configuration File
 @cindex port file
 @cindex port configuration file
@@ -2348,14 +2603,14 @@ For a connection using TCP.
 @findex protocol in port file
 
 Specify a list of protocols to use for this port.  This is just like the
-corresponding command for a system (@pxref{sys file}).  A protocol list
-for a system takes precedence over a list for a port.
+corresponding command for a system (@pxref{Protocol Selection}).  A
+protocol list for a system takes precedence over a list for a port.
 
 @item protocol-parameter @var{character} @var{strings} [ any type ]
 @findex protocol-parameter in port file
 
 The same command as the @code{protocol-parameter} command used for
-systems.  This one takes precedence.
+systems (@pxref{Protocol Selection}).  This one takes precedence.
 
 @item seven-bit @var{boolean} [ any type ]
 @findex seven-bit in port file
@@ -2479,7 +2734,7 @@ used.
 
 @end table
 
-@node dial file, Security, port file, Configuration files
+@node dial File, Security, port File, Configuration Files
 @section The Dialer Configuration File
 @cindex dial file
 @cindex dialer configuration file
@@ -2499,13 +2754,27 @@ Introduces and names a dialer.
 
 @item chat @var{strings}
 @findex chat in dial file
+@item chat-timeout @var{number}
+@findex chat-timeout in dial file
+@item chat-fail @var{string}
+@findex chat-fail in dial file
+@item chat-seven-bit @var{boolean}
+@findex chat-seven-bit in dial file
+@item chat-program @var{strings}
+@findex chat-program in dial file
 
-Specify a chat script to be used to dial the phone.  This will be read
-from and sent to the port specified by the @code{dial-device} command
-for the port, if there is one.  The chat script is specified just like
-that for the system file (@pxref{sys file}) except that in send strings
-the escape sequences @kbd{\L} and @kbd{\P} may not appear and the
-following escape sequences may appear:
+Specify a chat script to be used to dial the phone.  See @ref{Chat
+Scripts} for full details on chat scripts.
+
+Taylor UUCP will sleep for one second between attempts to dial out on a
+modem.  If your modem requires a longer wait period, you must start your
+chat script with delays (@samp{\d} in a send string).
+
+The chat script will be read from and sent to the port specified by the
+@code{dial-device} command for the port, if there is one.
+
+The following escape addition escape sequences may appear in send
+strings:
 
 @table @kbd
 @item \D
@@ -2518,55 +2787,28 @@ do not require carrier
 require carrier (fail if not present)
 @end table
 
-See the description of the dialcodes file (@pxref{config file}) for a
-description of dialcode translation.  If the port does not support
-carrier (as set by the @code{carrier} command in the port file) @kbd{\M}
-and @kbd{\m} are ignored.  If both the port and the dialer support
-carrier (as set by the @code{carrier} command in the port file and the
-@code{carrier} command in the dialer file), then every chat script
-implicitly begins with @kbd{\M} and ends with @kbd{\m}.  There is no
-default chat script for dialers.
+See the description of the dialcodes file (@pxref{Configuration File
+Names}) for a description of dialcode translation.  If the port does not
+support carrier (as set by the @code{carrier} command in the port file)
+@kbd{\M} and @kbd{\m} are ignored.  If both the port and the dialer
+support carrier (as set by the @code{carrier} command in the port file
+and the @code{carrier} command in the dialer file), then every chat
+script implicitly begins with @kbd{\M} and ends with @kbd{\m}.  There is
+no default chat script for dialers.
 
-@item chat-timeout @var{number}
-@findex chat-timeout in dial file
-@item chat-fail @var{string}
-@findex chat-fail in dial file
-@item chat-seven-bit @var{boolean}
-@findex chat-seven-bit in dial file
-
-These commands work just like the corresponding commands in the system
-file.  The @code{chat-fail} command is useful for strings such as
-@samp{chat-fail BUSY} or @samp{chat-fail NO\sDIALTONE}.
-
-@item chat-program @var{strings}
-@findex chat-program in dial file
-
-Specify a program to run when dialing out on a phone.  See the
-@code{chat-program} command in the system file for more details.  The
-following escape sequences may be used:
+The following additional escape sequences may be used in
+@code{chat-program}:
 
 @table @kbd
 @item \D
 phone number without dialcode translation
 @item \T
 phone number with dialcode translation
-@item \Y
-port name
-@item \S
-port speed
-@item \\
-backslash
 @end table
 
-In other words, @kbd{\L}, @kbd{\P} and @kbd{\Z} may not be used, but
-@kbd{\D} and @kbd{\T} may be.  If the program changes the port in any
-way (e.g., sets parity) the changes will be preserved during protocol
-negotiation, but once the protocol is selected it will change the port
-settings.
-
-If both @code{chat-program} and @code{chat} are specified, the program is
-run before the chat script.  If @code{chat-program} is not used, no
-program is run.
+If the program changes the port in any way (e.g., sets parity) the
+changes will be preserved during protocol negotiation, but once the
+protocol is selected it will change the port settings.
 
 @item dialtone @var{string}
 @findex dialtone
@@ -2618,11 +2860,9 @@ The default is not to toggle DTR.
 @item complete-chat-program @var{strings}
 @findex complete-chat-program
 
-These commands define a chat script which is run when a call is finished
-normally.  This allows the modem to be reset.  There is no default.  The
-chat script may use any of the normal escape sequences, but not
-@kbd{\L}, @kbd{\P}, @kbd{\D}, @kbd{\T}, @kbd{\M} or @kbd{\m}.  The
-program string may use only @kbd{\Y}, @kbd{\S}, and @kbd{\\}.
+These commands define a chat script (@pxref{Chat Scripts}) which is run
+when a call is finished normally.  This allows the modem to be reset.
+There is no default.  No additional escape sequences may be used.
 
 @item complete @var{string}
 @findex complete
@@ -2642,10 +2882,10 @@ This is a simple use of @code{complete-chat}.  It is equivalent to
 @item abort-chat-program @var{strings}
 @findex abort-chat-program
 
-These commands define a chat script to be run when a call is aborted.
-They may be used to interrupt and reset the modem.  There is no default.
-The set of escape sequences permitted are those that are permitted for
-the @code{complete-chat} set of commands.
+These commands define a chat script (@pxref{Chat Scripts}) to be run
+when a call is aborted.  They may be used to interrupt and reset the
+modem.  There is no default.  No additional escape sequences may be
+used.
 
 @item abort @var{string}
 @findex abort
@@ -2658,9 +2898,9 @@ This is a simple use of @code{abort-chat}.  It is equivalent to
 @findex protocol-parameter in dial file
 
 Set protocol parameters, just like the @code{protocol-parameter} command
-in the system configuration file or the port configuration file.  These
-parameters take precedence, then those for the port, then those for the
-system.
+in the system configuration file or the port configuration file; see
+@ref{Protocol Selection}.  These parameters take precedence, then those
+for the port, then those for the system.
 
 @item seven-bit @var{boolean}
 @findex seven-bit in dial file
@@ -2680,7 +2920,7 @@ communication link.  The default is @samp{true}.
 
 @end table
 
-@node Security,  , dial file, Configuration files
+@node Security,  , dial File, Configuration Files
 @section Security
 
 This discussion of UUCP security applies only to Unix.  It is a bit
@@ -2695,9 +2935,9 @@ outside world is a potential security risk.
 
 By default Taylor UUCP provides few mechanisms to secure local users of
 the system from each other.  You can allow increased security by putting
-the owner of the UUCP programs (normally @file{uucp}) into a separate
+the owner of the UUCP programs (normally @code{uucp}) into a separate
 group; the use of this is explained in the following paragraphs, which
-refer to this separate group as @file{uucp-group}.
+refer to this separate group as @code{uucp-group}.
 
 When the @code{uucp} program is invoked to copy a file to a remote
 system, it will by default copy the file into the UUCP spool directory.
@@ -2705,15 +2945,15 @@ When the @code{uux} program is used, the @samp{-C} switch must be used
 to copy the file into the UUCP spool directory.  In any case, once the
 file has been copied into the spool directory, other local users will
 not be able to access it.  In version 1.03 there is a security hole in
-that for the file to be copied it must be readable by @file{uucp}.
-Changing the group of the file to @file{uucp-group} and making it group
+that for the file to be copied it must be readable by @code{uucp}.
+Changing the group of the file to @code{uucp-group} and making it group
 readable will permit UUCP to read it without granting access to other
 users.
 
 When a file is requested from a remote system, UUCP will only permit it
 to be placed in a directory which is writable by the requesting user.
 The directory must also be writable by UUCP.  A local user can create a
-directory with a group of @file{uucp-group} and set the mode to permit
+directory with a group of @code{uucp-group} and set the mode to permit
 group write access.  This will allow the file be requested without
 permitting it to be viewed by any other user.
 
@@ -2733,24 +2973,25 @@ from anybody who reads the source code, but they are somewhat technical
 and difficult (but scarcely impossible) to exploit.  Suffice it to say
 that even under the best of conditions UUCP is not completely secure.
 
-For many sites security from remote sites is a more important
+For many sites, security from remote sites is a more important
 consideration.  Fortunately, Taylor UUCP does provide some support in
 this area.
 
 The greatest security is provided by always dialing out to the other
-site.  This prevents anybody from pretending to be the other site.
+site.  This prevents anybody from pretending to be the other site.  Of
+course, only one side of the connection can do this.
 
 If remote dialins must be permitted, then it is best if the dialin line
 is used only for UUCP.  If this is the case, then you should create a
-call-in password file (@pxref{config file}) and let @code{uucico} do its
-own login prompting.  For example, to let remote sites log in on a port
-named @samp{entry} in the port file (@pxref{port file}) you might invoke
-@samp{uucico -p entry}.  This would cause @code{uucico} to enter an
-endless loop of login prompts and daemon executions.  The advantage of
-this approach is that even if remote users break into the system by
-guessing or learning the password, they will only be able to do whatever
-@code{uucico} permits them to do.  They will not be able to start a
-shell on your system.
+call-in password file (@pxref{Configuration File Names}) and let
+@code{uucico} do its own login prompting.  For example, to let remote
+sites log in on a port named @samp{entry} in the port file (@pxref{port
+file}) you might invoke @samp{uucico -p entry}.  This would cause
+@code{uucico} to enter an endless loop of login prompts and daemon
+executions.  The advantage of this approach is that even if remote users
+break into the system by guessing or learning the password, they will
+only be able to do whatever @code{uucico} permits them to do.  They will
+not be able to start a shell on your system.
 
 If remote users can dial in and log on to your system, then you have a
 security hazard more serious than that posed by UUCP.  But then, you
@@ -2764,7 +3005,7 @@ remote UUCP from making any requests of your system at all; however, if
 you do this it will not even be able to send you mail or news.  If you
 do permit remote requests, you should be careful to restrict what
 commands may be executed at the remote system's request.  The default is
-@code{rmail} and @code{rnews} which will suffice for most systems.
+@code{rmail} and @code{rnews}, which will suffice for most systems.
 
 If different remote systems call in and they must be granted different
 privileges (perhaps some systems are within the same organization and
@@ -2776,7 +3017,7 @@ used to detect when one system pretended to be another, but since the
 sequence numbers must be reset manually after a failed handshake this
 can sometimes be more trouble than it's worth.
 
-@node Protocols, Acknowledgements, Configuration files, Top
+@node Protocols, Hacking, Configuration Files, Top
 @chapter UUCP protocol internals
 
 This chapter describes how the various UUCP protocols work, and
@@ -2793,21 +3034,21 @@ the Taylor UUCP source code, for those who are extremely interested in
 actual UUCP implementation.
 
 @menu
-* Grades::                      Various UUCP grades
-* Lock files::                  UUCP lock file format
-* Common protocol::             The common UUCP protocol
-* g protocol::                  The UUCP @samp{g} protocol
-* f protocol::                  The UUCP @samp{f} protocol
-* t protocol::                  The UUCP @samp{t} protocol
-* e protocol::                  The UUCP @samp{e} protocol
-* x protocol::                  The UUCP @samp{x} protocol
-* d protocol::                  The UUCP @samp{d} protocol
-* Capital G protocol::          The UUCP @samp{G} protocol
-* Documentation references::    Documentation references
+* Grades::                      UUCP grades
+* Lock Files::                  UUCP lock file format
+* UUCP Protocol::               The common UUCP protocol
+* g Protocol::                  The UUCP @samp{g} protocol
+* f Protocol::                  The UUCP @samp{f} protocol
+* t Protocol::                  The UUCP @samp{t} protocol
+* e Protocol::                  The UUCP @samp{e} protocol
+* x Protocol::                  The UUCP @samp{x} protocol
+* d Protocol::                  The UUCP @samp{d} protocol
+* Capital G Protocol::          The UUCP @samp{G} protocol
+* Documentation References::    Documentation references
 @end menu
 
-@node Grades, Lock files, Protocols, Protocols
-@section Various UUCP grades
+@node Grades, Lock Files, Protocols, Protocols
+@section UUCP Grades
 @cindex grades
 
 Modern UUCP packages support grades for each command.  The grades
@@ -2837,11 +3078,15 @@ The remote system name will be truncated to seven characters, to ensure
 that the command file name will fit in the 14 character file name limit
 of the traditional Unix file system.  UUCP packages which have no other
 means of distinguishing which command files are intended for which
-systems thus require all systems @emph{they connect to} to have names
+systems thus require all @emph{systems they connect to} to have names
 that are unique in the first seven characters.  Some UUCP packages use a
 variant of this format which truncates the system name to six
-characters.  HDB and Taylor UUCP use a different spool directory format,
-which allows up to fourteen characters to be used for each system name.
+characters.  BNU uses a different spool directory format, which allows
+up to fourteen characters to be used for each system name.  The Taylor
+UUCP spool directory format is configurable.  The new Taylor spool
+directory format permits system names to be as long as file names; the
+maximum length of a file name depends on the particular Unix file system
+being used.
 
 The sequence number in the command file name may be a decimal integer,
 or it may be a hexadecimal integer, or it may contain any alphanumeric
@@ -2871,8 +3116,8 @@ this grade restriction applies to local commands as well as to remote
 commands, but I am not sure.  It may only apply if the UUCP package
 places the call, not if it is called by the remote system.  Taylor UUCP
 can use the @code{timegrade} and @code{call-timegrade} commands
-(@pxref{sys file}) to achieve the same effect (and supports the above
-format when reading @file{Systems} or @file{L.sys}).
+(@pxref{When to Call}) to achieve the same effect (and supports the
+above format when reading @file{Systems} or @file{L.sys}).
 
 This sort of grade restriction is most useful if you know what grades
 are being used at the remote site.  The default grades used depend on
@@ -2889,32 +3134,32 @@ uux -gd - airs!rnews <article
 @samp{d}.  The example above would allow mail to be received at any
 time, but would only permit news to be transferred at night.
 
-@node Lock files, Common protocol, Grades, Protocols
-@section UUCP lock file format
+@node Lock Files, UUCP Protocol, Grades, Protocols
+@section UUCP Lock File Format
 @cindex lock files
 
 This discussion applies only to Unix.  I have no idea how UUCP locks
 ports on other systems.
 
-UUCP creates files to lock serial ports and systems.  On most if not
-all systems these same lock files are also used by cu to coordinate
+UUCP creates files to lock serial ports and systems.  On most (if not
+all) systems, these same lock files are also used by cu to coordinate
 access to serial ports.  On some systems getty also uses these lock
 files.
 
-The lock file always contains the process ID of the locking process.
+The lock file normally contains the process ID of the locking process.
 This makes it easy to determine whether a lock is still valid.  The
 algorithm is to create a temporary file and then link it to the name
 that must be locked.  If the link fails because a file with that name
-already exists, the existing file is read to get the process ID.  If
-the process still exists, the lock attempt fails.  Otherwise the lock
-file is deleted and the locking algorithm is retried.
+already exists, the existing file is read to get the process ID.  If the
+process still exists, the lock attempt fails.  Otherwise the lock file
+is deleted and the locking algorithm is retried.
 
 Older UUCP packages put the lock files in the main UUCP spool
-directory, /usr/spool/uucp.  HDB UUCP generally puts the lock files in
+directory, /usr/spool/uucp.  BNU UUCP generally puts the lock files in
 a directory of their own, usually /usr/spool/locks or /etc/locks.
 
 The original UUCP lock file format encoded the process ID as a four byte
-binary number.  The order of the bytes was host-dependent.  HDB UUCP
+binary number.  The order of the bytes was host-dependent.  BNU UUCP
 stores the process ID as a ten byte ASCII decimal number, with a
 trailing newline.  For example, if process 1570 holds a lock file, it
 would contain the eleven characters space, space, space, space, space,
@@ -2934,8 +3179,8 @@ using the major and minor device numbers rather than the device name
 Taylor UUCP can be configured to use various different types of locking.
 The actual locking code is in the function @code{fsdo_lock}.
 
-@node Common protocol, g protocol, Lock files, Protocols
-@section The common UUCP protocol
+@node UUCP Protocol, g Protocol, Lock Files, Protocols
+@section The Common UUCP Protocol
 @cindex UUCP protocol
 @cindex handshake
 @cindex protocol (UUCP)
@@ -2950,12 +3195,12 @@ is normally done by setting the shell of the login name used to
 @file{uucico}.
 
 @menu
-* Initial Handshake::           Initial Handshake
-* File Requests::               File Requests
-* Final Handshake::             Final Handshake
+* Initial Handshake::           Initial handshake
+* File Requests::               File requests
+* Final Handshake::             Final handshake
 @end menu
 
-@node Initial Handshake, File Requests, Common protocol, Common protocol
+@node Initial Handshake, File Requests, UUCP Protocol, UUCP Protocol
 @subsection Initial Handshake
 
 All messages in the initial handshake begin with a @samp{^P} (a byte
@@ -2984,13 +3229,15 @@ Report sequence number for this conversation.  The sequence number is
 stored at both sites, and incremented after each call.  If there is a
 sequence number mismatch, something has gone wrong (somebody may have
 broken security by pretending to be one of the machines) and the call is
-denied.
+denied.  If the sequence number changes on one of the machines, perhaps
+because of an attempted breakin or because a disk backup was restored,
+the sequence numbers on the two machines must be reconciled manually.
 
 @item -x@var{level}
 Requests the called system to set its debugging level to the specified
 value.  This is not supported by all systems.  Taylor UUCP currently
 never generates this switch.  When it sees it, it restricts the value
-according to @code{max-remote-debug} (@pxref{sys file}).
+according to @code{max-remote-debug} (@pxref{Miscellaneous (sys)}).
 
 @item -p@var{grade}
 @itemx -vgrade=@var{grade}
@@ -3004,7 +3251,7 @@ transmissions.  Supported only by System V Release 4 UUCP.
 
 @item -U@var{limit}
 Reports the @code{ulimit} value of the calling UUCP.  The limit is
-specified as a base 16 number in C notation (e.g. @samp{-U0x1000000}).
+specified as a base 16 number in C notation (e.g., @samp{-U0x1000000}).
 This number is the number of 512 byte blocks in the largest file which
 the calling UUCP can create.  The called UUCP may not transfer a file
 larger than this.  Supported by System V Release 4 UUCP.  Taylor UUCP
@@ -3066,7 +3313,8 @@ blocks in the largest file which the called UUCP can create.  The
 calling UUCP may not send a file larger than this.
 
 @item -x@var{level}
-I'm not sure about this one.  It may request the calling UUCP to set its
+I'm told that this is sometimes sent by SVR4 UUCP, but I'm not sure
+exactly what it means.  It may request the calling UUCP to set its
 debugging level to the specified value.
 
 @end table
@@ -3092,14 +3340,15 @@ calling UUCP sends something like @samp{\020Ug\000}.
 
 Most UUCP packages will consider each locally supported protocol in turn
 and select the first one supported by the called UUCP.  With some
-versions of HDB UUCP, this can be modified by giving a list of protocols
+versions of BNU UUCP, this can be modified by giving a list of protocols
 after the device name in the Devices file or the @file{Systems} file.
 Taylor UUCP provides the @code{protocol} command which may be used
-either for a system (@pxref{sys file}) or a port (@pxref{port file}).
+either for a system (@pxref{Protocol Selection}) or a port (@pxref{port
+file}).
 
-After the protocol has been selected the initial handshake has been
-completed, and both sides turn on the selected protocol.  For some
-protocols (notably @samp{g}) a further handshake is done at this point.
+After the protocol has been selected and the initial handshake has been
+completed, both sides turn on the selected protocol.  For some protocols
+(notably @samp{g}) a further handshake is done at this point.
 
 Each protocol supports a method for sending a command to the remote
 system.  This method is used to transmit a series of commands between
@@ -3109,7 +3358,7 @@ other is the slave.  Initially, the calling UUCP is the master.
 If a protocol error occurs during the exchange of commands, both sides
 move immediately to the final handshake.
 
-@node File Requests, Final Handshake, Initial Handshake, Common protocol
+@node File Requests, Final Handshake, Initial Handshake, UUCP Protocol
 @subsection File Requests
 
 The master will send one of four commands: @samp{S}, @samp{R}, @samp{X}
@@ -3132,10 +3381,10 @@ Taylor UUCP chooses which request to send next in the function
 commands from the remote system.
 
 @menu
-* S Request::                   S Request
-* R Request::                   R Request
-* X Request::                   X Request
-* H Request::                   H Request
+* S Request::                   S request
+* R Request::                   R request
+* X Request::                   X request
+* H Request::                   H request
 @end menu
 
 @node S Request, R Request, File Requests, File Requests
@@ -3161,12 +3410,12 @@ data file created for or by an execution, and must begin with @samp{D.}.
 
 @item to
 The name to give the file on the slave.  If this field names a directory
-(a name ending in @samp{/} is taken to name a directory even if one does
-not already exist with that name) the file is placed within that
-directory with the basename of @var{from}.  If @var{to} begins with
+the file is placed within that directory with the basename of
+@var{from}.  A name ending in @samp{/} is taken to be a directory even
+if one does not already exist with that name.  If @var{to} begins with
 @samp{X.}, an execution file will be created on the slave.  Otherwise,
 if @var{to} begins with @samp{D.} it names a data file to be used by
-some execution file.  Otherwise, @var{to} may not be in the spool
+some execution file.  Otherwise, @var{to} should not be in the spool
 directory.
 
 @item user
@@ -3254,7 +3503,7 @@ permitted.  It implies that the file transfer will never succeed.
 
 @item SN4
 The slave is unable to create the necessary temporary file.  This
-implies that the file transfer may succeed later.
+implies that the file transfer might succeed later.
 
 @item SN6
 This is only used by Taylor UUCP size negotiation.  It means that the
@@ -3362,8 +3611,8 @@ file request will never succeed.
 This is only used by Taylor UUCP size negotiation.  It means that the
 file is too large to send, either because of the size limit specifies by
 the master or because the slave considers it too large.  The file
-transfer may succeed later, or it may not (this will be cleared up in a
-later release of Taylor UUCP).
+transfer might succeed later, or it might not (this will be cleared up
+in a later release of Taylor UUCP).
 
 @end table
 
@@ -3403,10 +3652,11 @@ generates the @samp{X} request in @code{fxcmd} and handles it in
 
 @item from
 This is the name of the file or files on the slave which the master
-wishes to transfer.  It will often contain wildcard characters, since
-otherwise an @samp{R} command will normally suffice (however, this
-command can also be used to request the transfer of a file on the slave
-to a third system).  Any wildcards should be expanded on the slave.
+wishes to transfer.  Any wildcards are expanded on the slave.  If the
+master is requesting that the files be transferred to itself, the
+request would normally contain wildcard characters, since otherwise an
+@samp{R} command would suffice.  The master can also use this command to
+request that the slave transfer files to a third system.
 
 @item to
 This is the name of the file or directory to which the files should be
@@ -3466,7 +3716,7 @@ during a single connection.
 
 @end table
 
-@node Final Handshake,  , File Requests, Common protocol
+@node Final Handshake,  , File Requests, UUCP Protocol
 @subsection Final Handshake
 
 After the protocol has been shut down, the final handshake is
@@ -3486,11 +3736,11 @@ side unless it is in @samp{handshake} debugging mode.
 
 @end table
 
-That is, the calling UUCP sends six O's and the called UUCP replies
-with seven O's.  Some UUCP packages always send six O's.
+That is, the calling UUCP sends six letter O's and the called UUCP
+replies with seven letter O's.  Some UUCP packages always send six O's.
 
-@node g protocol, f protocol, Common protocol, Protocols
-@section The UUCP @samp{g} protocol
+@node g Protocol, f Protocol, UUCP Protocol, Protocols
+@section The UUCP @samp{g} Protocol
 @cindex g protocol
 @cindex protocol (g)
 
@@ -3614,11 +3864,11 @@ correctly received packet.
 
 Each communication direction uses a window which indicates how many
 unacknowledged packets may be transmitted before waiting for an
-acknowledgement (the window may be different in each direction).  The
-window may range from 1 to 7 packets. For example, if the window is 3
-and the last packet acknowledged was packet number 6, packet numbers 7,
-0 and 1 may be sent but the sender must wait for an acknowledgement
-before sending packet number 2.  This acknowledgement could come as the
+acknowledgement.  The window may range from 1 to 7 packets, and may be
+different in each direction. For example, if the window is 3 and the
+last packet acknowledged was packet number 6, packet numbers 7, 0 and 1
+may be sent but the sender must wait for an acknowledgement before
+sending packet number 2.  This acknowledgement could come as the
 @var{yyy} field of a data packet or as the @var{yyy} field of a
 @code{RJ} or @code{RR} control packet (described below).
 
@@ -3685,11 +3935,11 @@ header) @code{c}.
 
 The checksum of a control packet is simply @code{0xaaaa - c}.
 
-The checksum of a data packet is @code{0xaaaa - (@var{check} ^ c)},
+The checksum of a data packet is @code{0xaaaa - (@var{check} ^ c)}
 (@code{^} denotes exclusive or, as in C), and @code{@var{check}} is the
 result of the following routine run on the contents of the data field
 (every byte in the data field participates in the checksum, even for a
-short data packet).  This is the routine used by Taylor UUCP, and is a
+short data packet).  Below is the routine used by Taylor UUCP; it is a
 slightly modified version of a routine which John Gilmore patched from
 G.L.  Chesson's original paper.  The @code{z} argument points to the
 data and the @code{c} argument indicates how much data there is.
@@ -3765,8 +4015,8 @@ including both command and file data.
 When the protocol is shut down, each UUCP package sends a @code{CLOSE}
 control packet.
 
-@node f protocol, t protocol, g protocol, Protocols
-@section The UUCP @samp{f} protocol
+@node f Protocol, t Protocol, g Protocol, Protocols
+@section The UUCP @samp{f} Protocol
 @cindex f protocol
 @cindex protocol (f)
 
@@ -3814,8 +4064,8 @@ of \176 followed by four ASCII bytes of the checksum as printed in base
 16 followed by a carriage return.  For example, if the checksum was
 0x1234, this would be sent: "\176\1761234\r".
 
-The checksum is initialized to 0xffff.  For each byte that is sent it
-is modified as follows (where b is the byte before it has been
+The checksum is initialized to 0xffff.  For each byte that is sent it is
+modified as follows (where @code{b} is the byte before it has been
 transformed as described above):
 
 @example
@@ -3853,8 +4103,8 @@ communication session should be abandoned.
 
 The sending UUCP checks the returned character and acts accordingly.
 
-@node t protocol, e protocol, f protocol, Protocols
-@section The UUCP @samp{t} protocol
+@node t Protocol, e Protocol, f Protocol, Protocols
+@section The UUCP @samp{t} Protocol
 @cindex t protocol
 @cindex protocol (t)
 
@@ -3878,15 +4128,15 @@ the same format as used by the Unix function @code{htonl}) followed by
 that amount of data.  The end of the file is signalled by a block
 containing zero bytes of data.
 
-@node e protocol, x protocol, t protocol, Protocols
-@section The UUCP @samp{e} protocol
+@node e Protocol, x Protocol, t Protocol, Protocols
+@section The UUCP @samp{e} Protocol
 @cindex e protocol
 @cindex protocol (e)
 
 The @samp{e} protocol is similar to the @samp{t} protocol.  It does no
 flow control or error checking and is intended for use over TCP.
 
-The @samp{e} protocol originated in versions of HDB UUCP.
+The @samp{e} protocol originated in versions of BNU UUCP.
 
 The Taylor UUCP code for the @samp{e} protocol is in @file{prote.c}.
 
@@ -3899,8 +4149,8 @@ bytes with null bytes (i.e., if the file is 1000 bytes long, it sends
 @samp{1000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0}).  It then sends the entire
 file.
 
-@node x protocol, d protocol, e protocol, Protocols
-@section The UUCP @samp{x} protocol
+@node x Protocol, d Protocol, e Protocol, Protocols
+@section The UUCP @samp{x} Protocol
 
 I believe that the @samp{x} protocol was intended for use over X.25
 virtual circuits.  It relies on a write of zero bytes being read as zero
@@ -3908,16 +4158,16 @@ bytes without stopping communication.  I have heard that it does not
 work correctly.  If someone would care to fill this in more, I would be
 grateful.  Taylor UUCP does not implement the @samp{x} protocol.
 
-@node d protocol, Capital G protocol, x protocol, Protocols
-@section The UUCP @samp{d} protocol
+@node d Protocol, Capital G Protocol, x Protocol, Protocols
+@section The UUCP @samp{d} Protocol
 
 This is apparently used for DataKit connections, and relies on a write
 of zero bytes being read as zero bytes, much as the @samp{x} protocol
 does.  I don't really know anything else about it.  Taylor UUCP does not
 implement the @samp{d} protocol.
 
-@node Capital G protocol, Documentation references, d protocol, Protocols
-@section The UUCP @samp{G} protocol
+@node Capital G Protocol, Documentation References, d Protocol, Protocols
+@section The UUCP @samp{G} Protocol
 
 The @samp{G} protocol is apparently simply the @samp{g} protocol, except
 that it is known to support all possible window and packet sizes.  It
@@ -3926,21 +4176,14 @@ protocol is apparently fixed at a packet size of 64 and a window size of
 7.  Taylor UUCP does not recognize the @samp{G} protocol.  It does
 support all window and packet sizes for the @samp{g} protocol.
 
-@node Documentation references,  , Capital G protocol, Protocols
-@section Documentation references
+@node Documentation References,  , Capital G Protocol, Protocols
+@section Documentation References
 
 I took a lot of the information from Jamie E. Hanrahan's paper in the
 Fall 1990 DECUS Symposium, and from Managing UUCP and Usenet by Tim
-O'Reilly and Grace Todino (with contributions by several other
-people).  The latter includes most of the former, and is published by
-
-@display
-O'Reilly & Associates, Inc.
-632 Petaluma Avenua
-Sebastopol, CA 95472
-@end display
-
-It is currently in its tenth edition.  The ISBN number is 0-937175-48-X.
+O'Reilly and Grace Todino (with contributions by several other people).
+The latter includes most of the former, and is published by O'Reilly &
+Associates, Inc.
 
 Some information is originally due to a Usenet article by Chuck Wegrzyn.
 The information on the @samp{g} protocol comes partially from a paper by
@@ -3951,7 +4194,133 @@ The information on the @samp{t} protocol comes from the source code by
 Rick Adams.  The information on the @samp{e} protocol comes from a
 Usenet article by Matthias Urlichs.
 
-@node Acknowledgements, Index (concepts), Protocols, Top
+@node Hacking, Acknowledgements, Protocols, Top
+@chapter Hacking Taylor UUCP
+
+This chapter provides the briefest of guides to the Taylor UUCP source
+code itself.
+
+@menu
+* System Dependence::           System Dependence
+* Naming Conventions::          Naming Conventions
+* Patches::                     Patches
+@end menu
+
+@node System Dependence, Naming Conventions, Hacking, Hacking
+@section System Dependence
+
+The code is carefully segregated into a system independent portion and a
+system dependent portion.  The system dependent code is in @file{sys?.*}
+and @file{tcp.c}.  Note that @file{sysh.*} is included as
+@file{sysdep.h}.  Currently the only system dependent files are for
+Unix, and the file name for all of them ends in @file{.unx}.  Hopefully
+the code will eventually be ported to other systems.
+
+With the right configuration parameters, the system independent code
+calls only ANSI C functions.  Some of the less common ANSI C functions
+are also provided in @file{util.c}.  The replacement function
+@code{strtol} in @file{util.c} assumes that the characters @kbd{A} to
+@kbd{F} and @kbd{a} to @kbd{f} appear in strictly sequential order.  The
+function @code{igradecmp} in @file{config.c} assumes that the upper and
+lower case letters appear in order.  Both assumptions are true for ASCII
+and EBCDIC, but neither is guaranteed by ANSI C.  The replacement
+function @code{memmove} in @file{util.c} assumes that two arbitrary
+pointers may be safely compared.  Disregarding these caveats, I believe
+that the system independent portion of the code is strictly conforming.
+
+That's not too exciting, since all the work is done in the system
+dependent code.  I think that this code can conform to POSIX 1003.1,
+given the right compilation parameters.  I'm a bit less certain about
+this, though.
+
+The code is in use on a 16 bit segmented system with no function
+prototypes, so I'm certain that all casts to long and pointers are done
+when necessary.
+
+The code uses alloca extensively.  It comes with a simple replacement,
+in @file{alloca.c} (otherwise I would lost ANSI C conformance, after
+all).  Using a real @code{alloca} function will be considerably more
+efficient.  It will also cause significant stack usage, which may be a
+problem on systems without virtual memory.
+
+@node Naming Conventions, Patches, System Dependence, Hacking
+@section Naming Conventions
+
+I use a modified Hungarian naming convention for my variables and
+functions.  As with all naming conventions, the code is rather opaque if
+you are not familiar with it, but becomes clear and easy to use with
+time.
+
+The first character indicates the type of the variable (or function
+return value).  Sometimes additional characters are used.  I use the
+following type prefixes:
+
+@table @samp
+@item a
+array; the next character is the type of an element
+@item b
+byte or character
+@item c
+count of something
+@item e
+stdio FILE *
+@item f
+boolean
+@item i
+generic integer
+@item l
+double
+@item o
+file descriptor (as returned by open, creat, etc.)
+@item p
+generic pointer
+@item q
+pointer to structure
+@item s
+structure
+@item u
+void (function return values only)
+@item z
+character string
+@end table
+
+A generic pointer ('p') is sometimes a @code{void *}, sometimes a
+function pointer in which case the prefix is pf, and sometimes a pointer
+to another type, in which case the next character is the type to which
+it points (pf is overloaded).
+
+An array of strings (@code{char *[]}) would be named @code{az} (array of
+string).  If this array were passed to a function, the function
+parameter would be named @code{paz} (pointer to array of string).
+
+Note that the variable name prefixes do not necessarily indicate the
+type of the variable.  For example, a variable prefixed with i may be
+int, long or short.  Similarly, a variable prefixed with b may be a char
+or an int; for example, the return value of getchar would be caught in
+an int variable prefixed with b.
+
+For a non-local variable (extern or file static), the first character
+after the type prefix is capitalized.
+
+Most static variables and functions use another letter after the type
+prefix to indicate which module they come from.  This is to help
+distinguish different names in the debugger.  For example, all static
+functions in @file{protg.c}, the @samp{g} protocol source code, use a
+module prefix of @samp{g}.  This isn't too useful, as a number of
+modules use a module prefix of @samp{s}.
+
+@node Patches,  , Naming Conventions, Hacking
+@section Patches
+
+I am always grateful for any patches sent in.  Much of the flexibility
+and portability of the code is due to other people.  Please do not
+hesitate to send me any changes you have found necessary or useful.
+
+I rarely apply the patches directly.  Instead I work my way through them
+and apply each one separately.  This ensures that the naming remains
+consistent and that I understand all the code.
+
+@node Acknowledgements, Index (concepts), Hacking, Top
 @chapter Acknowledgements
 
 This is a list of people who gave help or suggestions while I was
@@ -3986,7 +4355,10 @@ for founding the Free Software Foundation and John Gilmore
 @file{<gnu@@cygnus.com>} for writing the initial version of gnuucp which
 was a direct inspiration for this somewhat larger project.  Chip
 Salzenberg @file{<chip@@tct.com>} contributed many early patches.
-Fran\c cois Pinard @file{<pinard@@iro.umontreal.ca>} tirelessly tested
+@tex
+Fran\c cois Pinard
+@end tex
+@file{<pinard@@iro.umontreal.ca>} tirelessly tested
 the code and suggested many improvements.  He also put together the
 initial version of this document.  Finally, Verbus M. Counts
 @file{<verbus@@westmark.com>} and Centel Federal Systems, Inc. deserve
