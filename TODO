@@ -780,3 +780,8 @@ if jobs are coming in too slowly, indicating a bad connection.
 
 John Plate: Have uustat -k make a entry in the Log file when a job is
 removed, for symmetry with when a job is inserted.
+
+245.
+
+Joerg Dorchain: Provide a mechanism to permit the system name to be
+interpolated into the command used for port type pipe.
