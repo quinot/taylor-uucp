@@ -92,11 +92,6 @@ UUCP protocols to do file transfers.  This would allow ftp work to be
 done late at night, and allow neighbors of cooperative Internet sites
 to use UUCP forwarding for anonymous FTP.
 
-31.
-
-David Nugent: add a -C option to uucico to only call the system if
-there is work to do.
-
 32.
 
 It would be nice if uucico could sleep until a line was available.
@@ -335,7 +330,7 @@ the following values which determine when uuxqt should be run:
 
 163.
 
-Sort jobs in the send queue by size.  Pretty easy.
+Sort jobs in the send queue by size.  Pretty easy.  How about grade?
 
 164.
 
@@ -571,3 +566,36 @@ Bill Foote: have uuchk check whether a system is defined more than
 once.
 
 203.
+
+Eric Ziegast: allow specification of the minimum grade to receive, as
+well as the maximum grade.  Probably sending a second character after
+the -pM argument would work fine.
+
+204.
+
+Tom Rushworth: perhaps there should be some program which can be used
+to retrieve the current spool directory.  Perhaps on option on uustat.
+
+205.
+
+Should the -c option to uucico also suppress the ``No work'' message?
+
+206.
+
+Joe Wells: pass the -I option from uucico down to uuxqt.
+
+207.
+
+James B. O'Connor: use additional messages in the status file when
+placing a call, such as Dialing, Chatting, and the like.  Slightly
+less efficient.
+
+208.
+
+When checking whether a file may be received into a directory, perhaps
+uucico should check using the real user ID rather than insisting that
+the directory be world writable.  This should be a policy.h parameter.
+This would enable sites which use different uids for each incoming
+UUCP login to have better control over security.
+
+209.
