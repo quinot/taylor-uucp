@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/12/20  00:17:38  ian
+   Don't process execute files for unknown systems
+
    Revision 1.11  1991/12/19  03:52:07  ian
    David Nugent: rescan the list of execute files until nothing can be done
 
@@ -74,6 +77,9 @@ char uuxqt_rcsid[] = "$Id$";
 
 #include "system.h"
 #include "sysdep.h"
+
+/* External functions.  */
+extern int fclose ();
 
 /* The program name.  */
 const char abProgram[] = "uuxqt";

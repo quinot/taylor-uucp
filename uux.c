@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1991/12/21  21:16:05  ian
+   Franc,ois Pinard: remove parentheses from ZSHELLSEPS
+
    Revision 1.14  1991/12/20  03:07:54  ian
    Added space and tab to ZSHELLSEPS to stop command at whitespace
 
@@ -83,6 +86,9 @@ char uux_rcsid[] = "$Id$";
 
 #include "system.h"
 #include "sysdep.h"
+
+/* External functions.  */
+extern int fclose ();
 
 /* These character lists should, perhaps, be in sysdep.h.  */
 

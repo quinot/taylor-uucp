@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1991/12/29  02:59:50  ian
+   Lele Gaifax: put full year in log file
+
    Revision 1.9  1991/12/21  23:10:43  ian
    Terry Gardner: record failed file transfers in statistics file
 
@@ -78,6 +81,12 @@ char log_rcsid[] = "$Id$";
 #endif /* ! HAVE_TIME_T */
 
 #include "system.h"
+
+/* External functions.  */
+extern int fflush (), fclose ();
+#if HAVE_VPRINTF
+extern int vfprintf ();
+#endif
 
 /* Static functions.  */
 

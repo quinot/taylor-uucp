@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.26  1991/12/28  06:10:50  ian
+   Added HAVE_STRCHR and HAVE_INDEX to conf.h
+
    Revision 1.25  1991/12/28  03:49:23  ian
    Added HAVE_MEMFNS and HAVE_BFNS; changed uses of memset to bzero
 
@@ -204,8 +207,16 @@ typedef FILE *openfile_t;
 #define cfileread(e, z, c) fread ((z), 1, (c), (e))
 #define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
+#ifndef SEEK_SET
+#define SEEK_SET 0
+#endif
 #define ffilerewind(e) (fseek (e, (long) 0, SEEK_SET) == 0)
 #define ffileclose(e) (fclose (e) == 0)
+
+extern int fclose (), fseek ();
+/* The ferror function is often a macro, so we can't safely define it.
+   The fread and fwrite functions may return int or may return size_t,
+   so we can't safely define them.  */
 
 #else /* ! USE_STDIO */
 
@@ -225,6 +236,10 @@ typedef int openfile_t;
 #define cfilewrite(e, z, c) write ((e), (z), (c))
 #define ffilerewind(e) (lseek (e, (long) 0, SEEK_SET) >= 0)
 #define ffileclose(e) (close (e) >= 0)
+
+extern int read (), write (), close ();
+/* The lseek function should return off_t, but we don't want to
+   include sysdep.h here.  */
 
 #endif /* ! USE_STDIO */
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/12/11  03:59:19  ian
+   Create directories when necessary; don't just assume they exist
+
    Revision 1.3  1991/12/01  02:23:12  ian
    Niels Baggesen: don't multiply include <unistd.h>
 
@@ -47,6 +50,9 @@ char copy_rcsid[] = "$Id$";
 #include "system.h"
 #include "sysdep.h"
 
+/* External functions.  */
+extern int fclose ();
+
 /* Copy one file to another.  */
 
 #if USE_STDIO

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/12/22  20:57:57  ian
+   Added externs for strcasecmp or strncasecmp
+
    Revision 1.4  1991/09/19  02:22:44  ian
    Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
 
@@ -59,6 +62,7 @@ char time_rcsid[] = "$Id$";
 /* Externs.  These may be in <string.h>, but putting them here won't
    hurt.  */
 extern int strncasecmp ();
+extern time_t time ();
 
 /* Timetables are kept in a array of pairs of strings.  */
 

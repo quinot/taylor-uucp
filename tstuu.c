@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.27  1991/12/29  00:55:23  ian
+   Monty Solomon: added HAVE_UNION_WAIT
+
    Revision 1.26  1991/12/28  06:35:05  ian
    Use TIMES_TICK rather than CLK_TCK
 
@@ -123,7 +126,6 @@ char tstuu_rcsid[] = "$Id$";
 #include "sysdep.h"
 
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/times.h>
@@ -187,15 +189,17 @@ char tstuu_rcsid[] = "$Id$";
 /* External functions.  */
 
 extern int select (), ioctl (), close (), dup2 (), execl (), access ();
-extern int read (), write ();
+extern int read (), write (), unlink (), open (), kill (), fcntl ();
+extern int mkdir ();
+extern int fclose (), fflush (), rand ();
 extern unsigned int sleep ();
-extern pid_t fork ();
+extern pid_t fork (), waitpid ();
 extern clock_t times ();
 
 #if ! HAVE_REMOVE
 #define remove unlink
 #endif
-
+
 /* Local functions.  */
 
 static void umake_file P((const char *zfile, int cextra));
