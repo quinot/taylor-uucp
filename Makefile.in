@@ -84,7 +84,7 @@ LN_S = @LN_S@
 
 SHELL = /bin/sh
 
-VERSION = 1.04
+VERSION = beta1.04
 
 MORECFLAGS = -I$(srcdir) -I. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\" -DVERSION=\"$(VERSION)\" $(UUDIRFLAGS)
 
@@ -251,13 +251,13 @@ sysdep.h: sysh.unx
 	$(LN_S) sysh.unx sysdep.h
 
 uuconf/libuuconf.a: FORCE
-	(cd uuconf; make $(MDEFINES) libuuconf.a)
+	(cd uuconf; $(MAKE) $(MDEFINES) libuuconf.a)
 
 unix/libunix.a: FORCE sysdep.h
-	(cd unix; make $(MDEFINES) libunix.a)
+	(cd unix; $(MAKE) $(MDEFINES) libunix.a)
 
 lib/libuucp.a: FORCE
-	(cd lib; make $(MDEFINES) libuucp.a)
+	(cd lib; $(MAKE) $(MDEFINES) libuucp.a)
 
 FORCE:
 
@@ -279,9 +279,9 @@ dist:
 	chmod 0644 uucp-$(VERSION)/policy.h uucp-$(VERSION)/Makefile.in
 	mkdir uucp-$(VERSION)/contrib
 	ln contrib/* uucp-$(VERSION)/contrib
-	(cd unix; make $(MDEFINES) dist)
-	(cd uuconf; make $(MDEFINES) dist)
-	(cd lib; make $(MDEFINES) dist)
+	(cd unix; $(MAKE) $(MDEFINES) dist)
+	(cd uuconf; $(MAKE) $(MDEFINES) dist)
+	(cd lib; $(MAKE) $(MDEFINES) dist)
 	tar -cvf taylor-uucp-$(VERSION).tar uucp-$(VERSION)
 	compress taylor-uucp-$(VERSION).tar
 
