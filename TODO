@@ -355,3 +355,18 @@ and packet size to use, overriding the (presumably stupid) request by
 the other system.
 
 104.
+
+T. William Wells: the sh -c fallback doesn't use the file located via
+the path, it uses the unadorned command.
+
+105.
+
+T. William Wells: close and open the Debug file after each file
+transfer.
+
+106.
+
+Marty Shannon: add a time command for ports, to specify when they may
+be used.
+
+107.
