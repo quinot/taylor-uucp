@@ -210,7 +210,7 @@ sysinf.o: sysinf.c
 prtinf.o: prtinf.c
 	$(CC) -c $(CFLAGS) $(CONFIG) prtinf.c
 sys1.o: sys1.c
-	$(CC) -c $(CFLAGS) $(CONFIG) sys1.c
+	$(CC) -c $(CFLAGS) $(CONFIG) -DOWNER=\"$(owner)\" sys1.c
 uudir.o: uudir.c
 	$(CC) -c $(CFLAGS) $(CONFIG) -DOWNER=\"$(owner)\" uudir.c
 
