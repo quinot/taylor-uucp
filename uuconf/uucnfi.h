@@ -1,7 +1,7 @@
 /* uucnfi.h
    Internal header file for the uuconf package.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -333,6 +333,12 @@ extern int _uuconf_itime_parse P((struct sglobal *qglobal, char *ztime,
 
 /* A grade comparison function to pass to _uuconf_itime_parse.  */
 extern int _uuconf_itime_grade_cmp P((long, long));
+
+/* Parse a debugging string.  */
+
+extern int _uuconf_idebug_cmd P((struct sglobal *qglobal,
+				 char **pzdebug, int argc,
+				 char **argv, pointer pblock));
 
 /* Add a string to a NULL terminated list of strings.  */
 extern int _uuconf_iadd_string P((struct sglobal *qglobal,

@@ -35,6 +35,8 @@ const char _uuconf_tinit_rcsid[] = "$Id$";
 
 static int itset_default P((struct sglobal *qglobal, char ***ppzvar,
 			    const char *zfile));
+static int itdebug P((pointer pglobal, int argc, char **argv, pointer pvar,
+		      pointer pinfo));
 static int itaddfile P((pointer pglobal, int argc, char **argv, pointer pvar,
 			pointer pinfo));
 static int itunknown P((pointer pglobal, int argc, char **argv, pointer pvar,
@@ -62,8 +64,8 @@ static const struct cmdtab_offset asCmds[] =
       offsetof (struct sprocess, zstatsfile), NULL },
   { "debugfile", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct sprocess, zdebugfile), NULL },
-  { "debug", UUCONF_CMDTABTYPE_STRING,
-      offsetof (struct sprocess, zdebug), NULL },
+  { "debug", UUCONF_CMDTABTYPE_FN | 0,
+      offsetof (struct sprocess, zdebug), itdebug },
   { "max-uuxqts", UUCONF_CMDTABTYPE_INT,
       offsetof (struct sprocess, cmaxuuxqts), NULL },
   { "sysfile", UUCONF_CMDTABTYPE_FN | 0,
@@ -227,6 +229,24 @@ uuconf_taylor_init (ppglobal, zprogram, zname)
   return UUCONF_SUCCESS;
 }
 
+/* Local interface to the _uuconf_idebug_cmd function, which handles
+   the "debug" command.  */
+
+static int
+itdebug (pglobal, argc, argv, pvar, pinfo)
+     pointer pglobal;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+  char **pzdebug = (char **) pvar;
+
+  return _uuconf_idebug_cmd (qglobal, pzdebug, argc, argv,
+			     qglobal->pblock);
+}
+
 /* Add new filenames to a list of files.  */
 
 /*ARGSUSED*/
@@ -379,4 +399,61 @@ itset_default (qglobal, ppzvar, zfile)
 
   return _uuconf_iadd_string (qglobal, zadd, FALSE, FALSE, ppzvar,
 			      qglobal->pblock);
+}
+
+/* Handle the "debug" command which is documented to take multiple
+   arguments.  This is also called by the ``debug'' command in a sys
+   file.  It returns a CMDTABRET code.  This should probably be in its
+   own file, but the only other place it is called is from tsinfo.c,
+   and any user of tsinfo.c it sure to link in this file as well.  */
+
+int
+_uuconf_idebug_cmd (qglobal, pzdebug, argc, argv, pblock)
+     struct sglobal *qglobal;
+     char **pzdebug;
+     int argc;
+     char **argv;
+     pointer pblock;
+{
+  if (argc == 1)
+    {
+      *pzdebug = NULL;
+      return UUCONF_CMDTABRET_CONTINUE;
+    }
+  else if (argc == 2)
+    {
+      *pzdebug = argv[1];
+      return UUCONF_CMDTABRET_KEEP;
+    }
+  else
+    {
+      size_t cdebug;
+      int i;
+      char *zdebug;
+
+      cdebug = 0;
+      for (i = 1; i < argc; i++)
+	cdebug += strlen (argv[i]) + 1;
+      zdebug = (char *) uuconf_malloc (pblock, cdebug);
+      if (zdebug == NULL)
+	{
+	  qglobal->ierrno = errno;
+	  return (UUCONF_MALLOC_FAILED
+		  | UUCONF_ERROR_ERRNO
+		  | UUCONF_CMDTABRET_EXIT);
+	}
+      cdebug = 0;
+      for (i = 1; i < argc; i++)
+	{
+	  size_t clen;
+
+	  clen = strlen (argv[i]);
+	  memcpy (zdebug + cdebug, argv[i], clen);
+	  zdebug[cdebug + clen] = ' ';
+	  cdebug += clen + 1;
+	}
+      zdebug[cdebug - 1] = '\0';
+      *pzdebug = zdebug;
+      return UUCONF_CMDTABRET_CONTINUE;
+    }
 }

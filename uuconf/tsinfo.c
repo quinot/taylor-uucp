@@ -1,7 +1,7 @@
 /* tsinfo.c
    Get information about a system from the Taylor UUCP configuration files.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -54,6 +54,7 @@ CMDTABFN (iisize);
 CMDTABFN (iibaud_range);
 CMDTABFN (iiport);
 CMDTABFN (iichat);
+CMDTABFN (iidebug);
 CMDTABFN (iicalled_login);
 CMDTABFN (iiproto_param);
 CMDTABFN (iirequest);
@@ -136,8 +137,8 @@ static const struct cmdtab_offset asIcmds[] =
       offsetof (struct uuconf_system, uuconf_qproto_params), iiproto_param },
   { "called-chat", UUCONF_CMDTABTYPE_PREFIX | 0,
       offsetof (struct uuconf_system, uuconf_scalled_chat), iichat },
-  { "debug", UUCONF_CMDTABTYPE_STRING,
-      offsetof (struct uuconf_system, uuconf_zdebug), NULL },
+  { "debug", UUCONF_CMDTABTYPE_FN | 0,
+      offsetof (struct uuconf_system, uuconf_zdebug), iidebug },
   { "max-remote-debug", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_system, uuconf_zmax_remote_debug), NULL },
   { "send-request", UUCONF_CMDTABTYPE_BOOLEAN,
@@ -706,6 +707,25 @@ iichat (pglobal, argc, argv, pvar, pinfo)
   if (UUCONF_ERROR_VALUE (iret) != UUCONF_SUCCESS)
     iret |= UUCONF_CMDTABRET_EXIT;
   return iret;
+}
+
+/* Local interface to the _uuconf_idebug_cmd function, which handles
+   the "debug" command.  */
+
+static int
+iidebug (pglobal, argc, argv, pvar, pinfo)
+     pointer pglobal;
+     int argc;
+     char **argv;
+     pointer pvar;
+     pointer pinfo;
+{
+  struct sglobal *qglobal = (struct sglobal *) pglobal;
+  struct sinfo *qinfo = (struct sinfo *) pinfo;
+  char **pzdebug = (char **) pvar;
+
+  return _uuconf_idebug_cmd (qglobal, pzdebug, argc, argv,
+			     qinfo->qsys->uuconf_palloc);
 }
 
 /* Handle the "called-login" command.  This only needs to be in a
