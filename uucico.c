@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.75  1992/03/09  20:14:37  ian
+   Ted Lindgreen: added max-remote-debug command
+
    Revision 1.74  1992/03/09  19:52:50  ian
    Ted Lindgreen: strip parity from initial handshake strings
 
@@ -1169,18 +1172,22 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       return FALSE;
     }
 
-  /* Now decide which protocol to use.  The system entry may have its
-     own list of protocols.  */
+  /* Now decide which protocol to use.  The system and the port may
+     have their own list of protocols.  */
   {
     int i;
     char ab[5];
 
     i = CPROTOCOLS;
-    if (qsys->zprotocols != NULL)
+    if (qsys->zprotocols != NULL || qPort->zprotocols != NULL)
       {
 	const char *zproto;
 
-	for (zproto = qsys->zprotocols; *zproto != '\0'; zproto++)
+	if (qsys->zprotocols != NULL)
+	  zproto = qsys->zprotocols;
+	else
+	  zproto = qPort->zprotocols;
+	for (; *zproto != '\0'; zproto++)
 	  {
 	    if (strchr (zstr + 1, *zproto) != NULL)
 	      {
@@ -1196,10 +1203,11 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       {
 	int ir;
 
-	/* If the system did not specify a list of protocols, we want
-	   only protocols that match the known reliability of the
-	   dialer and the port.  If we have no information, we default
-	   to a reliable eight bit connection.  */
+	/* If neither the system nor the port specified a list of
+	   protocols, we want only protocols that match the known
+	   reliability of the dialer and the port.  If we have no
+	   reliability information, we default to a reliable eight bit
+	   connection.  */
 
 	ir = 0;
 	if ((qPort->ireliable & RELIABLE_SPECIFIED) != 0)
@@ -1823,10 +1831,17 @@ faccept_call (zlogin, qport, pqsys)
   {
     int i;
    
-    if (qsys->zprotocols != NULL)
+    if (qsys->zprotocols != NULL ||
+	(qport != NULL && qport->zprotocols != NULL))
       {
-	zsend = (char *) alloca (strlen (qsys->zprotocols) + 2);
-	sprintf (zsend, "P%s", qsys->zprotocols);
+	const char *zprotos;
+
+	if (qsys->zprotocols != NULL)
+	  zprotos = qsys->zprotocols;
+	else
+	  zprotos = qport->zprotocols;
+	zsend = (char *) alloca (strlen (zprotos) + 2);
+	sprintf (zsend, "P%s", zprotos);
       }
     else
       {

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.25  1992/03/09  18:10:26  ian
+   Zacharias Beckman: put acceptable commands and path on different lines
+
    Revision 1.24  1992/03/07  02:56:30  ian
    Rewrote time routines
 
@@ -129,6 +132,9 @@ static void ukshow_proto_params P((int c, struct sproto_param *pas,
 				   int cindent));
 static void ukshow_time P((const struct sspan *));
 static struct sspan *qcompress_span P((struct sspan *));
+
+/* Local variables.  */
+static boolean fKgot_port;
 
 /* Long getopt options.  */
 
@@ -348,9 +354,12 @@ ukshow (qsys)
 	      struct sport sdummy;
 
 	      printf (" The possible ports are:\n");
+	      fKgot_port = FALSE;
 	      (void) ffind_port (qsys->zport, qsys->ibaud,
 				 qsys->ihighbaud, &sdummy,
 				 fkshow_port, FALSE);
+	      if (! fKgot_port)
+		printf (" *** There are no matching ports\n");
 	    }
 
 	  if (qsys->zphone != NULL)
@@ -586,6 +595,8 @@ fkshow_port (qport, fin)
      struct sport *qport;
      boolean fin;
 {
+  fKgot_port = TRUE;
+
   printf ("  Port name %s\n", qport->zname);
   switch (qport->ttype)
     {
@@ -626,9 +637,13 @@ fkshow_port (qport, fin)
 	  zc = qport->u.smodem.zdialer;
 	  if (zc[strcspn (zc, " \t")] == '\0')
 	    {
-	      printf ("   Dialer %s\n", qport->u.smodem.zdialer);
-	      if (fread_dialer_info (qport->u.smodem.zdialer, &sdial))
-		ukshow_dialer (&sdial);
+	      if (! fread_dialer_info (qport->u.smodem.zdialer, &sdial))
+		printf ("   *** No dialer %s\n", qport->u.smodem.zdialer);
+	      else
+		{
+		  printf ("   Dialer %s\n", qport->u.smodem.zdialer);
+		  ukshow_dialer (&sdial);
+		}
 	    }
 	  else
 	    {
@@ -644,7 +659,9 @@ fkshow_port (qport, fin)
 		{
 		  char *ztoken;
 	       
-		  if (fread_dialer_info (zdialer, &sdial))
+		  if (! fread_dialer_info (zdialer, &sdial))
+		    printf ("   *** No dialer %s\n", zdialer);
+		  else
 		    {
 		      printf ("   Dialer %s\n", zdialer);
 		      ukshow_dialer (&sdial);
@@ -658,6 +675,8 @@ fkshow_port (qport, fin)
 		}
 	    }
 	}
+      else
+	printf ("   *** No dialer information\n");
       break;
 #if HAVE_TCP
     case PORTTYPE_TCP:
@@ -669,6 +688,9 @@ fkshow_port (qport, fin)
       printf ("   CAN'T HAPPEN\n");
       break;
     }
+
+  if (qport->zprotocols != NULL)
+    printf ("   Will use protocols %s\n", qport->zprotocols);
 
   if (qport->cproto_params != 0)
     ukshow_proto_params (qport->cproto_params, qport->qproto_params, 3);

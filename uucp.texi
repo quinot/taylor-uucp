@@ -258,11 +258,9 @@ not know how to read @file{acucap} or @file{modemcap}); however, V2
 configuration files can be used with a new style dialer file
 (@pxref{dial file}), or with a BNU @file{Dialers} file.
 
-Use of BNU configuration file has two known bugs.  A protocol string on
-the device name in the Devices file will not work; however, a protocol
-string may appear after the device in the @file{Systems} file.  A blank
-line in the middle of an entry in the @file{Permissions} file will not
-be ignored as it should be.
+Use of BNU configuration file has one known bug.  A blank line in the
+middle of an entry in the @file{Permissions} file will not be ignored as
+it should be.
 
 If you are installing a new system, or you want to use the new form of
 configuration files, you must write the configuration files.
@@ -1329,7 +1327,7 @@ remote system, it will be detected the next time the remote system
 actually calls.  This is false by default.
 
 @item protocol @var{string}
-@findex protocol
+@findex protocol in sys file
 
 Specifies which protocols to use for the other system, and in which
 order to use them.  This would not normally be used.  For example,
@@ -1370,6 +1368,10 @@ Note that currently specifying both @samp{seven-bit true} and
 through a combination of port and dialer specifications, you will have
 to use the @code{protocol} command for the system or no protocol will be
 selected at all (the only reasonable choice would be @samp{protocol f}).
+
+A protocol list may also be specified for a port (@pxref{port file}) but
+if there is a list for the system it is used and the list for the port
+is ignored.
 
 @item protocol-parameter @var{character} @var{string} @dots{}
 @findex protocol-parameter in sys file
@@ -1663,6 +1665,13 @@ what commands are subsequently allowed.  Currently the types are
 through stdin and stdout, as when @code{uucico} is run as a login
 shell), @samp{direct} (for a direct connection to another system) and
 @samp{tcp} (for a connection using TCP).
+
+@item protocol @var{string}
+@findex protocol in port file
+
+Specify a list of protocols to use for this port.  This is just like the
+corresponding command for a system (@pxref{sys file}).  A protocol list
+for a system takes precedence over a list for a port.
 
 @item protocol-parameter @var{character} @var{strings} [ any type ]
 @findex protocol-parameter in port file
