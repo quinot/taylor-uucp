@@ -38,7 +38,9 @@ COMPILATION
 1) Take a look at the top of Makefile to make sure the definitions are
 reasonable for your system.  I highly recommend using gcc, but it is
 not required; if you don't have it, change CC and CFLAGS accordingly.
-On some systems, you may want to make entries for LIBS.
+On some systems, you may want to make entries for LIBS.  I'm told that
+on some systems uucico will crash within realloc unless -lmalloc is
+added to LIBS.
 
 2) This package uses the alloca function.  When compiled with gcc, it
 will automatically use the builtin function.  If your system has
@@ -48,20 +50,23 @@ to alloca.o.  If you have no alloca, you can indicate this in conf.h;
 a simplistic substitute will be used.  You may also be able to use the
 public domain alloca available with the emacs distribution.
 
-2) Type ``make configure-unix'' to prepare to compile for a Unix
+3) Type ``make configure-unix'' to prepare to compile for a Unix
 system (there are no other choices now, but someday there may be).
+This will link the sys?.unx files to sysdep.h and sys?.c.  Separating
+the system dependent files into *.unx is intended to be the start of
+supporting several systems with this package.
 
-3) Edit conf.h for your local system.  The comments should explain the
+4) Edit conf.h for your local system.  The comments should explain the
 various choices.
 
-4) Edit sysdep.h for your local system.  Again, the comments should
+5) Edit sysdep.h for your local system.  Again, the comments should
 explain the various choices.  The intent is that system dependent
 definitions are kept in sysdep.h whereas general, system independent
 definitions are kept in conf.h.
 
-5) Type ``make'' to compile everything.
+6) Type ``make'' to compile everything.
 
-6) I've tested compilation on a DECSystem 3100 running Ultrix 4.0, a
+7) I've tested compilation on a DECSystem 3100 running Ultrix 4.0, a
 VAXStation II/GPX running Ultrix 3.1, and a 386 box running SCO Unix
 3.2.2 (I have only tested under real world conditions on the VAX,
 although I have run my test programs on all the machines).  On all of
