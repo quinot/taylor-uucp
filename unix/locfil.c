@@ -48,7 +48,7 @@ zsysdep_local_file (zfile, zpubdir, pfbadname)
 {
   const char *zdir;
 
-  if (*pfbadname != NULL)
+  if (pfbadname != NULL)
     *pfbadname = FALSE;
 
   if (*zfile == '/')
