@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/31  19:34:19  ian
+   Added number of bytes to pffile protocol entry point
+
    Revision 1.6  1991/12/20  03:02:01  ian
    Oleg Tabarovsky: added statistical messages to 'g' and 'f' protocols
 
@@ -418,6 +421,7 @@ ffprocess_data (pfexit, pcneed)
 		{
 		  switch (bFspecial)
 		    {
+		    default:
 		    case 0172:
 		      bnext = b - 0100;
 		      break;
