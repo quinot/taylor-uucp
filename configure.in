@@ -30,6 +30,7 @@ M_DEFINE([PWD_PROGRAM],
 dnl
 ILT_HEADER_CHECK(string.h strings.h unistd.h stdlib.h limits.h time.h)
 ILT_HEADER_CHECK(sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
+ILT_HEADER_CHECK(utime.h)
 dnl
 ILT_SIGTYPE
 ILT_LIBTHING_CHECK([time_t in time.h],
@@ -173,6 +174,10 @@ dnl
 ILT_LIBTHING_CHECK([union wait], [#include <sys/wait.h>],
 [union wait u; wait (&u);], [HAVE_UNION_WAIT],
 [/* Set HAVE_UNION_WAIT to 1 if union wait is defined in <sys/wait.h>.  */])
+dnl
+ILT_HEADER_COMMENT([/* Define UTIME_NULL_MISSING if utime with a NULL second argument does not
+   set the file times to the current time.  */])
+M_UTIME_NULL
 dnl
 echo checking for long file names
 (echo "1" > 123456789012345) 2>/dev/null
