@@ -422,6 +422,9 @@ fsysdep_lock_status ()
   calc = 0;
   pai = NULL;
   cgot = 0;
+#if HAVE_QNX_LOCKFILES
+  painid = NULL;
+#endif
   while ((qentry = readdir (qdir)) != NULL)
     {
       char *zname;
