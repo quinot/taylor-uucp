@@ -283,3 +283,74 @@ that it can be retrieved and examined later.
 Include Bob Denny's log file rotation shell script?
 
 93.
+
+Bob Denny: if the log file can not opened, we can't just exit because
+that will leave the LCK.. files around.
+
+94.
+
+Chip Salzenberg: must check that the original user has permission to
+send the file if it was not copied to the spool directory, because
+otherwise they could link to a file which could be read by uucp and
+thus transfer it somewhere else.
+
+95.
+
+Bob Denny: uuxqt should not complain if there is no X. directory in a
+directory in /usr/spool/uucp.
+
+96.
+
+Duane Wessels:
+> (1992-02-03 22:14:38.39 28731) DEBUG: fsserial_io: Blocking write 6, read 16378
+> (1992-02-03 22:14:38.40 28731) DEBUG: fsserial_io: Blocking write 6, read 16378
+> (1992-02-03 22:14:38.41 28731) DEBUG: fsserial_io: Blocking write 6, read 16378
+
+97.
+
+Duane Wessels: better SIGHUP handling.
+
+98.
+
+Jeff Putsch:
+> 
+> The diff between 1.02 (patchlevel 1) and my v2.c is:
+> *** v2.c        Wed Feb  5 13:00:38 1992
+> --- v2.c.orig   Wed Feb  5 12:59:56 1992
+> ***************
+> *** 202,208 ****
+>             {
+>               qset->ztime = NULL;
+> 
+> ! /*          while (TRUE) */
+>                 {
+>                   char *zcomma;
+> 
+> --- 202,208 ----
+>             {
+>               qset->ztime = NULL;
+> 
+> !             while (TRUE)
+>                 {
+>                   char *zcomma;
+
+99.
+
+Marty Shannon: some sort of Maxuuxqts?
+
+100.
+
+Franc,ois Pinard: if fork fails, retry or do something useful.
+Currently if it fails in fsysdep_execute, the work file will be thrown
+away, which is about as stupid as possible.
+
+101.
+
+Franc,ois Pinard: sleep for a second after closing a modem.
+
+102.
+
+Bob Denny: fmail_transfer calls refer to strings after they've been
+freed up.
+
+103.
