@@ -88,12 +88,6 @@ Should there be a way for chat scripts to specify the parity to
 generate?  I don't think there's much point to specifying what parity
 to accept.
 
-16.
-
-The -j switch to uucp and uux does nothing.  It should print out the
-sequence number of the file, and uustat should be written to take that
-sequence number and delete the file.
-
 17.
 
 The -b and -s switches to uux are not implemented by uuxqt.
@@ -311,12 +305,6 @@ away, which is about as stupid as possible.
 
 Franc,ois Pinard: sleep for a second after closing a modem.
 
-103.
-
-Rudnev Aleksey: add 'g' protocol parameters to force the local window
-and packet size to use, overriding the (presumably stupid) request by
-the other system.
-
 105.
 
 T. William Wells: close and open the Debug file after each file
@@ -326,12 +314,6 @@ transfer.
 
 Marty Shannon: add a time command for ports, to specify when they may
 be used.
-
-107.
-
-T. William Wells: when using both HAVE_BNU_CONFIG and
-HAVE_TAYLOR_CONFIG, apparently an empty dial file and an empty sys
-file are needed, and an entry was needed in the port file.
 
 112.
 
@@ -345,7 +327,10 @@ T. William Wells: new options for uustat:
 	-K interactively kill jobs
 Also, there should perhaps be a configuration option to request uustat
 to only display jobs submitted by the user running uustat, except for
-root and uucp.
+root and uucp (there's no point to doing this until there's some way
+to configure things so that the UUCP spool directory is not publically
+readable; right now anybody could just compile their own version of
+uustat and get all the information anyhow).
 
 117.
 
@@ -355,3 +340,8 @@ change arbitrary configuration information, although obviously one has
 to be careful of what gets changed while a connection is active.
 
 118.
+
+Michael Richardson: allowing remote system to turn on debugging can
+lead to a denial of service attack.
+
+119.
