@@ -186,10 +186,8 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -249,7 +247,7 @@ main (argc, argv)
   if (iuuconf != UUCONF_SUCCESS)
     ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
 
-  usysdep_initialize (puuconf, 0);
+  usysdep_initialize (puuconf, INIT_NOCHDIR);
 
   if (zsystem != NULL)
     {
@@ -470,39 +468,25 @@ ulusage ()
 static void
 ulhelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
-  fprintf (stderr,
-	   "Usage: %s [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n",
+  printf ("Usage: %s [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n",
 	   zProgram);
-  fprintf (stderr,
-	   " -n,--lines: show given number of lines from end of log\n");
-  fprintf (stderr,
-	   " -s,--system: print entries for named system\n");
-  fprintf (stderr,
-	   " -f system,--follow=system: follow entries for named system\n");
-  fprintf (stderr,
-	   " -u,--user user: print entries for named user\n");
+  printf (" -n,--lines: show given number of lines from end of log\n");
+  printf (" -s,--system: print entries for named system\n");
+  printf (" -f system,--follow=system: follow entries for named system\n");
+  printf (" -u,--user user: print entries for named user\n");
 #if HAVE_HDB_LOGGING
-  fprintf (stderr,
-	   " -x,--uuxqt: print uuxqt log rather than uucico log\n");
+  printf (" -x,--uuxqt: print uuxqt log rather than uucico log\n");
 #else
-  fprintf (stderr,
-	   " -F,--follow: follow entries for any system\n");
+  printf (" -F,--follow: follow entries for any system\n");
 #endif
-  fprintf (stderr,
-	   " -S,--statslog: show statistics file\n");
-  fprintf (stderr,
-	   " -D,--debuglog: show debugging file\n");
-  fprintf (stderr,
-	   " -X,--debug debug: Set debugging level (0 for none, 9 is max)\n");
+  printf (" -S,--statslog: show statistics file\n");
+  printf (" -D,--debuglog: show debugging file\n");
+  printf (" -X,--debug debug: Set debugging level (0 for none, 9 is max)\n");
 #if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
+  printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
 }

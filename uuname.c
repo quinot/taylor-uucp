@@ -99,10 +99,8 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -141,7 +139,7 @@ main (argc, argv)
   }
 #endif
 
-  usysdep_initialize (puuconf, INIT_SUID);
+  usysdep_initialize (puuconf, INIT_SUID | INIT_NOCHDIR);
 
   if (flocal)
     {
@@ -194,21 +192,14 @@ unusage ()
 
 static void unhelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
-  fprintf (stderr,
-	   "Usage: %s [-a] [-l] [-I file]\n", zProgram);
-  fprintf (stderr,
-	   " -a,--aliases: display aliases\n");
-  fprintf (stderr,
-	   " -l,--local: print local name\n");
+  printf ("Usage: %s [-a] [-l] [-I file]\n", zProgram);
+  printf (" -a,--aliases: display aliases\n");
+  printf (" -l,--local: print local name\n");
 #if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
+  printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
 }
