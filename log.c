@@ -253,7 +253,12 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    if (afLog_signal[isig])
 	      {
 		afLog_signal[isig] = FALSE;
-		if (isig != INDEXSIG_SIGHUP || fLog_sighup)
+
+		/* Apparently SunOS sends SIGINT rather than SIGHUP
+		   when hanging up, so we don't log either signal if
+		   fLog_sighup is FALSE.  */
+		if ((isig != INDEXSIG_SIGHUP && isig != INDEXSIG_SIGINT)
+		    || fLog_sighup)
 		  ulog (LOG_ERROR, "Got %s signal", azSignal_names[isig]);
 	      }
 	  }
