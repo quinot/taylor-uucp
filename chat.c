@@ -659,7 +659,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 	      break;
 	    case 'd':
 	      fquote = fcsend_debug (fquote, (size_t) 0, "sleep");
-	      usysdep_sleep (2);
+	      usysdep_sleep (1);
 	      break;
 	    case 'e':
 	      fquote = fcsend_debug (fquote, (size_t) 0, "echo-check-off");
