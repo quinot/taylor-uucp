@@ -510,7 +510,7 @@ uscu_child_handler (isig)
      int isig;
 {
 #if ! HAVE_SIGACTION && ! HAVE_SIGVEC && ! HAVE_SIGSET
-  (void) signal (isig, ussignal);
+  (void) signal (isig, uscu_child_handler);
 #endif
 
   iSchild_sig = isig;
