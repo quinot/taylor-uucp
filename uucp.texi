@@ -4577,6 +4577,7 @@ Ed Carp @file{<erc@@apple.com>}
 @file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
 @file{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @file{denny@@dakota.alisa.com} (Bob Denny)
+@file{gert@@greenie.gold.sub.org} (Gert Doering)
 @file{dje@@ersys.edmonton.ab.ca} (Doug Evans)
 Marc Evans @file{<marc@@synergytics.com>}
 @file{kksys!kegworks!lfahnoe@@cs.umn.edu} (Larry Fahnoe)
