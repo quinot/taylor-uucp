@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.51  1992/03/28  04:29:19  ian
+   Roberto Biancardi: define SIGCHLD as SIGCLD if necessary
+
    Revision 1.50  1992/03/16  22:22:35  ian
    Adjusted external declarations
 
@@ -293,6 +296,10 @@ typedef int wait_status;
 #if TIMES_TICK == 0
 #undef TIMES_TICK
 #define TIMES_TICK CLK_TCK
+#endif
+
+#if TIMES_DECLARATION_OK
+extern long times ();
 #endif
 
 #ifndef SIGCHLD
