@@ -1,5 +1,8 @@
 2002-02-06  Ian Lance Taylor  <ian@airs.com>
 
+	* MANIFEST, */MANIFEST: Remove.  These files are not used by
+	automake.
+
 	* uuconf/cnfnms.c: New file.
 	* uuconf.h (struct uuconf_config_file_names): Define.
 	(uuconf_config_files): Declare.
