@@ -4575,6 +4575,7 @@ Brian Campbell @file{<brianc@@quantum.on.ca>}
 Ed Carp @file{<erc@@apple.com>}
 @file{verbus@@westmark.westmark.com} (Verbus M. Counts)
 @file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
+Bob Cunningham @file{<bob@@soest.hawaii.edu>}
 @file{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @file{denny@@dakota.alisa.com} (Bob Denny)
 @file{gert@@greenie.gold.sub.org} (Gert Doering)
