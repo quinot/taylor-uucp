@@ -2482,7 +2482,8 @@ zget_uucp_cmd (qconn, frequired)
 
 	  calc += CINCREMENT;
 	  znew = zbufalc (calc);
-	  memcpy (znew, zalc, cgot);
+	  if (cgot > 0)
+	    memcpy (znew, zalc, cgot);
 	  ubuffree (zalc);
 	  zalc = znew;
 	}
@@ -2592,7 +2593,8 @@ zget_typed_line (qconn)
 
 	  calc += CINCREMENT;
 	  znew = zbufalc (calc);
-	  memcpy (znew, zalc, cgot);
+	  if (cgot > 0)
+	    memcpy (znew, zalc, cgot);
 	  ubuffree (zalc);
 	  zalc = znew;
 	}

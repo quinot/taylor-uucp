@@ -1014,7 +1014,8 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	  else
 	    cnew = cfirst;
 	  znew = zbufalc (q->ccmd + cnew + 1);
-	  memcpy (znew, q->zcmd, q->ccmd);
+	  if (q->ccmd > 0)
+	    memcpy (znew, q->zcmd, q->ccmd);
 	  memcpy (znew + q->ccmd, zfirst, cnew);
 	  znew[q->ccmd + cnew] = '\0';
 	  ubuffree (q->zcmd);
