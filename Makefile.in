@@ -205,6 +205,10 @@ v2.o: v2.c
 	$(CC) -c $(CFLAGS) $(CONFIG) v2.c
 bnu.o: bnu.c
 	$(CC) -c $(CFLAGS) $(CONFIG) bnu.c
+sysinf.o: sysinf.c
+	$(CC) -c $(CFLAGS) $(CONFIG) sysinf.c
+prtinf.o: prtinf.c
+	$(CC) -c $(CFLAGS) $(CONFIG) prtinf.c
 sys1.o: sys1.c
 	$(CC) -c $(CFLAGS) $(CONFIG) sys1.c
 uudir.o: uudir.c

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/02/19  19:36:07  ian
+   Rearranged time functions
+
    Revision 1.14  1992/02/19  05:24:07  ian
    Bob Denny: if no trailing send string, don't send a carriage return
 
@@ -822,6 +825,12 @@ fctranslate (zphone, pzprefix, pzsuffix)
   char *zdialcode, *zto;
   const char *zfrom;
 
+  *pzprefix = zphone;
+  *pzsuffix = NULL;
+
+  if (zDialcodefile == NULL)
+    return TRUE;
+
   zdialcode = (char *) alloca (strlen (zphone) + 1);
   zfrom = zphone;
   zto = zdialcode;
@@ -829,15 +838,11 @@ fctranslate (zphone, pzprefix, pzsuffix)
     *zto++ = *zfrom++;
   *zto = '\0';
 
-  if (*zdialcode == '\0')
-    {
-      *pzprefix = zphone;
-      *pzsuffix = NULL;
-    }
-  else
+  if (*zdialcode != '\0')
     {
       struct smulti_file *qmulti;
       struct scmdtab as[2];
+      char *zpre;
 
       qmulti = qmulti_open (zDialcodefile);
       if (qmulti == NULL)
@@ -845,24 +850,23 @@ fctranslate (zphone, pzprefix, pzsuffix)
 
       as[0].zcmd = zdialcode;
       as[0].itype = CMDTABTYPE_STRING;
-      as[0].pvar = (pointer) pzprefix;
+      as[0].pvar = (pointer) &zpre;
       as[0].ptfn = NULL;
       as[1].zcmd = NULL;
 
-      *pzprefix = NULL;
+      zpre = NULL;
 
       uprocesscmds ((FILE *) NULL, qmulti, as, (const char *) NULL, 0);
 
       (void) fmulti_close (qmulti);
 
-      if (*pzprefix == NULL)
-	{
-	  ulog (LOG_ERROR, "Unknown dial code %s", zdialcode);
-	  *pzprefix = zphone;
-	  *pzsuffix = NULL;
-	}
+      if (zpre == NULL)
+	ulog (LOG_ERROR, "Unknown dial code %s", zdialcode);
       else
-	*pzsuffix = zfrom;
+	{
+	  *pzprefix = zpre;
+	  *pzsuffix = zfrom;
+	}
     }
 
   return TRUE;

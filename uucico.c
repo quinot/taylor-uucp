@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.61  1992/02/29  04:07:08  ian
+   Added -j option to uucp and uux
+
    Revision 1.60  1992/02/29  01:06:59  ian
    Chip Salzenberg: recheck file permissions before sending
 
@@ -1367,38 +1370,17 @@ static boolean faccept_call (zlogin, qport)
     {
       zport = zsysdep_port_name (&ftcp_port);
 
-      /* If the ``portfile'' command was not used to change the
-	 default portfile, and the default portfile does not exist,
-	 then don't try to look up the port.  This keeps a slave
-	 uucico from putting an error message in the log file saying
-	 that the port file does not exist.  The information we want
-	 from the port is only known for HAVE_TAYLOR_CONFIG, so if we
-	 don't have that don't even bother to look up the port.  */
+      /* We want to get the protocol parameters for the port.  If we
+	 aren't using HAVE_TAYLOR_CONFIG, that information isn't
+	 stored anyhow, so we don't bother to look it up.  */
 
 #if HAVE_TAYLOR_CONFIG
 
-      if (zport != NULL)
+      if (zport != NULL && zPortfile != NULL)
 	{
-	  boolean fcheck;
-
-	  fcheck = FALSE;
-	  if (fsysdep_file_exists (zPortfile))
-	    fcheck = TRUE;
-	  else
-	    {
-	      char *zportfile;
-
-	      zportfile = (char *) alloca (sizeof NEWCONFIGLIB
-					   + sizeof PORTFILE);
-	      sprintf (zportfile, "%s%s", NEWCONFIGLIB, PORTFILE);
-	      if (strcmp (zportfile, zPortfile) != 0)
-		fcheck = TRUE;
-	    }
-
-	  if (fcheck
-	      && ffind_port (zport, (long) 0, (long) 0, &sportinfo,
-			     (boolean (*) P((struct sport *, boolean))) NULL,
-			     FALSE))
+	  if (ffind_port (zport, (long) 0, (long) 0, &sportinfo,
+			  (boolean (*) P((struct sport *, boolean))) NULL,
+			  FALSE))
 	    qport = &sportinfo;
 	}
 
