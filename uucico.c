@@ -164,8 +164,9 @@ static void uapply_proto_params P((pointer puuconf, int bproto,
 static boolean fsend_uucp_cmd P((struct sconnection *qconn,
 				 const char *z));
 static char *zget_uucp_cmd P((struct sconnection *qconn,
-			      boolean frequired));
-static char *zget_typed_line P((struct sconnection *qconn));
+			      boolean frequired, boolean fstrip));
+static char *zget_typed_line P((struct sconnection *qconn,
+				boolean fstrip));
 
 /* Long getopt options.  */
 static const struct option asLongopts[] =
@@ -1209,8 +1210,10 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   pointer puuconf;
   const struct uuconf_system *qsys;
   struct sconnection *qconn;
-  const char *zport;
   int iuuconf;
+  int istrip;
+  boolean fstrip;
+  const char *zport;
   char *zstr;
   long istart_time;
   char *zlog;
@@ -1218,6 +1221,14 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   puuconf = qdaemon->puuconf;
   qsys = qdaemon->qsys;
   qconn = qdaemon->qconn;
+
+  iuuconf = uuconf_strip (puuconf, &istrip);
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      return FALSE;
+    }
+  fstrip = (istrip & UUCONF_STRIP_PROTO) != 0;
 
   *pterr = STATUS_LOGIN_FAILED;
 
@@ -1238,7 +1249,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
   /* We should now see "Shere" from the other system.  Newer systems
      send "Shere=foo" where foo is the remote name.  */
-  zstr = zget_uucp_cmd (qconn, TRUE);
+  zstr = zget_uucp_cmd (qconn, TRUE, fstrip);
   if (zstr == NULL)
     return FALSE;
 
@@ -1389,7 +1400,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
   /* Now we should see ROK or Rreason where reason gives a cryptic
      reason for failure.  If we are talking to a counterpart, we will
      get back ROKN, possibly with a feature bitfield attached.  */
-  zstr = zget_uucp_cmd (qconn, TRUE);
+  zstr = zget_uucp_cmd (qconn, TRUE, fstrip);
   if (zstr == NULL)
     return FALSE;
 
@@ -1464,7 +1475,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 
   /* The slave should now send \020Pprotos\0 where protos is a list of
      supported protocols.  Each protocol is a single character.  */
-  zstr = zget_uucp_cmd (qconn, TRUE);
+  zstr = zget_uucp_cmd (qconn, TRUE, fstrip);
   if (zstr == NULL)
     return FALSE;
 
@@ -1622,7 +1633,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	   before the hangup string.  */
 	for (i = 0; i < 25; i++)
 	  {
-	    zstr = zget_uucp_cmd (qconn, FALSE);
+	    zstr = zget_uucp_cmd (qconn, FALSE, fstrip);
 	    if (zstr == NULL)
 	      break;
 	    fdone = strstr (zstr, "OOOOOO") != NULL;
@@ -1704,12 +1715,22 @@ flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin)
      struct sconnection *qconn;
      const char *zlogin;
 {
+  int iuuconf;
+  int istrip;
+  boolean fstrip;
   char *zuser, *zpass;
   boolean fret;
-  int iuuconf;
   struct scallin_info s;
 
   DEBUG_MESSAGE0 (DEBUG_HANDSHAKE, "flogin_prompt: Waiting for login");
+
+  iuuconf = uuconf_strip (puuconf, &istrip);
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      return FALSE;
+    }
+  fstrip = (istrip & UUCONF_STRIP_LOGIN) != 0;
 
   zuser = NULL;
   if (zlogin == NULL)
@@ -1719,7 +1740,7 @@ flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin)
 	  ubuffree (zuser);
 	  if (! fconn_write (qconn, "login: ", sizeof "login: " - 1))
 	    return FALSE;
-	  zuser = zget_typed_line (qconn);
+	  zuser = zget_typed_line (qconn, fstrip);
 	}
       while (zuser != NULL && *zuser == '\0');
 
@@ -1735,7 +1756,7 @@ flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin)
       return FALSE;
     }
 
-  zpass = zget_typed_line (qconn);
+  zpass = zget_typed_line (qconn, fstrip);
   if (zpass == NULL)
     {
       ubuffree (zuser);
@@ -1823,10 +1844,12 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
      const char **pzsystem;
 {
   long istart_time;
+  int iuuconf;
+  int istrip;
+  boolean fstrip;
   const char *zport;
   struct uuconf_port *qport;
   struct uuconf_port sport;
-  int iuuconf;
   struct uuconf_dialer *qdialer;
   struct uuconf_dialer sdialer;
   boolean ftcp_port;
@@ -1850,6 +1873,17 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
 	zLdevice == NULL ? (char *) "unknown" : zLdevice);
 
   istart_time = ixsysdep_time ((long *) NULL);
+
+  iuuconf = uuconf_strip (puuconf, &istrip);
+  if (iuuconf != UUCONF_SUCCESS)
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
+			    (struct uuconf_port *) NULL,
+			    &sport, (char *) NULL);
+      return FALSE;
+    }
+  fstrip = (istrip & UUCONF_STRIP_PROTO) != 0;
 
   /* Figure out protocol parameters determined by the port.  If no
      port was specified we're reading standard input, so try to get
@@ -1985,7 +2019,7 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
-  zstr = zget_uucp_cmd (qconn, TRUE);
+  zstr = zget_uucp_cmd (qconn, TRUE, fstrip);
   if (zstr == NULL)
     {
       uaccept_call_cleanup (puuconf, (struct uuconf_system *) NULL,
@@ -2433,7 +2467,7 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
     }
     
   /* The master will now send back the selected protocol.  */
-  zstr = zget_uucp_cmd (qconn, TRUE);
+  zstr = zget_uucp_cmd (qconn, TRUE, fstrip);
   if (zstr == NULL)
     {
       sstat.ttype = STATUS_FAILED;
@@ -2585,7 +2619,7 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
 	   string.  */
 	for (i = 0; i < 25; i++)
 	  {
-	    zstr = zget_uucp_cmd (qconn, FALSE);
+	    zstr = zget_uucp_cmd (qconn, FALSE, fstrip);
 	    if (zstr == NULL)
 	      break;
 	    fdone = strstr (zstr, "OOOOOO") != NULL;
@@ -2723,10 +2757,12 @@ fsend_uucp_cmd (qconn, z)
 #define CINCREMENT (100)
 
 static char *
-zget_uucp_cmd (qconn, frequired)
+zget_uucp_cmd (qconn, frequired, fstrip)
      struct sconnection *qconn;
      boolean frequired;
+     boolean fstrip;
 {
+  int istrip;
   char *zalc;
   size_t calc;
   size_t cgot;
@@ -2781,10 +2817,8 @@ zget_uucp_cmd (qconn, frequired)
 	}
 
       /* Apparently some systems use parity on these strings, so we
-	 strip the parity bit.  This may need to be configurable at
-	 some point, although only if system names can have eight bit
-	 characters.  */
-      if (! isprint (BUCHAR (b)))
+	 optionally strip the parity bit.  */
+      if (fstrip)
 	b &= 0x7f;
 
 #if DEBUG > 1
@@ -2874,8 +2908,9 @@ zget_uucp_cmd (qconn, frequired)
    did, ignore a leading \n to account for \r\n pairs.  */
 
 static char *
-zget_typed_line (qconn)
+zget_typed_line (qconn, fstrip)
      struct sconnection *qconn;
+     boolean fstrip;
 {
   static boolean flastcr; 
   char *zalc;
@@ -2925,6 +2960,10 @@ zget_typed_line (qconn)
 	  flastcr = FALSE;
 	  continue;
 	}
+
+      /* Optionally strip the parity bit.  */
+      if (fstrip)
+	b &= 0x7f;
 
 #if DEBUG > 1
       if (FDEBUGGING (DEBUG_CHAT))
