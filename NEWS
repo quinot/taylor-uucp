@@ -1,6 +1,6 @@
 Changes in version 1.07:
 
-    As usual, various bugs were fixed.
+    As usual, many bugs were fixed.
 
     uuchk now reports the configuration file names which it uses.
     This makes it easier to figure out how to configure a binary
