@@ -478,23 +478,25 @@ static int iquser P((pointer puuconf, int argc, char **argv, pointer pvar,
 static int iqset P((pointer puuconf, int argc, char **argv, pointer pvar,
 		    pointer pinfo));
 
+/* We are lax about the number of arguments the functions accept,
+   because there is a lot of variation in what other (buggy) UUCP
+   packages generate.  Unused arguments are ignored.  */
+
 static const struct uuconf_cmdtab asQcmds[] =
 {
   { "C", UUCONF_CMDTABTYPE_FN | 0, NULL, iqcmd },
   { "I", UUCONF_CMDTABTYPE_STRING, (pointer) &zQinput, NULL },
   { "O", UUCONF_CMDTABTYPE_FN | 0, NULL, iqout },
   { "F", UUCONF_CMDTABTYPE_FN | 0, NULL, iqfile },
-  { "R", UUCONF_CMDTABTYPE_FN, NULL, iqrequestor },
-  { "U", UUCONF_CMDTABTYPE_FN | 3, NULL, iquser },
-  { "N", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQno_ack, iqset },
-  { "n", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQsuccess_ack, iqset },
-  /* Some systems create execution files in which B takes an argument;
-     I don't know what it means, so I just ignore it.  */
+  { "R", UUCONF_CMDTABTYPE_FN | 0, NULL, iqrequestor },
+  { "U", UUCONF_CMDTABTYPE_FN | 0, NULL, iquser },
+  { "N", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQno_ack, iqset },
+  { "n", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQsuccess_ack, iqset },
   { "B", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQsend_input, iqset },
 #if ALLOW_SH_EXECUTION
-  { "e", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQuse_sh, iqset },
+  { "e", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQuse_sh, iqset },
 #endif
-  { "E", UUCONF_CMDTABTYPE_FN | 1, (pointer) &fQuse_exec, iqset },
+  { "E", UUCONF_CMDTABTYPE_FN | 0, (pointer) &fQuse_exec, iqset },
   { "M", UUCONF_CMDTABTYPE_STRING, (pointer) &zQstatus_file, NULL },
   { NULL, 0, NULL, NULL }
 };
@@ -550,15 +552,9 @@ iqout (puuconf, argc, argv, pvar, pinfo)
 {
   const char *zbase = (const char *) pinfo;
 
-  if (argc != 2 && argc != 3)
-    {
-      ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zbase, argv[0]);
-      return UUCONF_CMDTABRET_CONTINUE;
-    }
-
-  zQoutfile = zbufcpy (argv[1]);
-  if (argc == 3)
+  if (argc > 1)
+    zQoutfile = zbufcpy (argv[1]);
+  if (argc > 2)
     zQoutsys = zbufcpy (argv[2]);
 
   return UUCONF_CMDTABRET_CONTINUE;
@@ -577,12 +573,8 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
 {
   const char *zbase = (const char *) pinfo;
 
-  if (argc != 2 && argc != 3)
-    {
-      ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zbase, argv[0]);
-      return UUCONF_CMDTABRET_CONTINUE;
-    }
+  if (argc < 2)
+    return UUCONF_CMDTABRET_CONTINUE;
 
   /* If this file is not in the spool directory, just ignore it.  */
   if (! fspool_file (argv[1]))
@@ -595,7 +587,7 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
 				    cQfiles * sizeof (char *));
 
   azQfiles[cQfiles - 1] = zbufcpy (argv[1]);
-  if (argc == 3)
+  if (argc > 2)
     azQfiles_to[cQfiles - 1] = zbufcpy (argv[2]);
   else
     azQfiles_to[cQfiles - 1] = NULL;
@@ -616,20 +608,13 @@ iqrequestor (puuconf, argc, argv, pvar, pinfo)
 {
   const char *zbase = (const char *) pinfo;
 
-  if (argc != 2 && argc != 3)
-    {
-      ulog (LOG_ERROR, "%s: %s: Wrong number of arguments",
-	    zbase, argv[0]);
-      return UUCONF_CMDTABRET_CONTINUE;
-    }
-
   /* We normally have a single argument, which is the ``requestor''
      address, to which we should send any success or error messages.
      Apparently the DOS program UUPC sends two arguments, which are
      the username and the host.  */
   if (argc == 2)
     zQrequestor = zbufcpy (argv[1]);
-  else
+  else if (argc > 2)
     {
       zQrequestor = zbufalc (strlen (argv[1]) + strlen (argv[2])
 			     + sizeof "!");
@@ -650,8 +635,10 @@ iquser (puuconf, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  zQuser = argv[1];
-  zQsystem = argv[2];
+  if (argc > 1)
+    zQuser = argv[1];
+  if (argc > 2)
+    zQsystem = argv[2];
   return UUCONF_CMDTABRET_KEEP;
 }
 
