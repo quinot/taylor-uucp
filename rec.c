@@ -534,7 +534,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   const struct uuconf_system *qsys;
   boolean fspool;
   char *zfile;
-  openfile_t *e;
+  openfile_t e;
   char *ztemp;
   long cbytes, cbytes2;
   long crestart;
