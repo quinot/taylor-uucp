@@ -7,6 +7,8 @@
 #include "sysdep.h"
 #include "system.h"
 
+#include <errno.h>
+
 boolean
 fsysdep_sync (e, zmsg)
      openfile_t e;
