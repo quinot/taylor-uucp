@@ -420,6 +420,7 @@ utransfree (q)
     }
 
 #if DEBUG > 0
+  q->e = EFILECLOSED;
   q->zcmd = NULL;
   q->s.zfrom = NULL;
   q->s.zto = NULL;
@@ -853,11 +854,14 @@ floop (qdaemon)
 		  q->zlog = NULL;
 		}
 
-	      /* We can read the file in a tight loop until qTremote
-		 changes or until we have transferred the entire file.
-		 We can disregard any changes to qTlocal since we
-		 already have something to send anyhow.  */
-	      while (qTremote == NULL)
+	      /* We can read the file in a tight loop until we have a
+		 command to send, or the file send has been cancelled,
+		 or we have a remote job to deal with.  We can
+		 disregard any changes to qTlocal since we already
+		 have something to send anyhow.  */
+	      while (q == qTsend
+		     && q->fsendfile
+		     && qTremote == NULL)
 		{
 		  char *zdata;
 		  size_t cdata;
@@ -896,11 +900,6 @@ floop (qdaemon)
 		      fret = FALSE;
 		      break;
 		    }
-
-		  /* It is possible that this transfer has just been
-		     cancelled.  */
-		  if (q != qTsend || ! q->fsendfile)
-		    break;
 
 		  if (cdata == 0)
 		    {
