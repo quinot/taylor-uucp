@@ -576,7 +576,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	  /* Drop one channel; using exactly one channel causes
 	     slightly different behahaviour in a few places, so don't
 	     decrement to one.  */
-	  if (qdaemon->cchans > 1)
+	  if (qdaemon->cchans > 2)
 	    --qdaemon->cchans;
 	}
       else
