@@ -1271,7 +1271,25 @@ main (argc, argv)
 
   if (! fuucico
       || (zcall_system == NULL && ! fcall_any))
-    fexit = TRUE;
+    {
+      if (! fXxqtlocal || ! fuucico)
+	fexit = TRUE;
+      else
+	{
+	  char *zconfigarg;
+
+	  if (zconfig == NULL)
+	    zconfigarg = NULL;
+	  else
+	    {
+	      zconfigarg = zbufalc (sizeof "-I" + strlen (zconfig));
+	      sprintf (zconfigarg, "-I%s", zconfig);
+	    }
+
+	  fexit = fsysdep_run (FALSE, "uuxqt", zconfigarg,
+			       (const char *) NULL);
+	}
+    }
   else
     {
       const char *zcicoarg;
