@@ -44,7 +44,8 @@ struct sinfo
 
 /* Check a login name and password against the UUCP password file.
    This looks at the Taylor UUCP password file, but will work even if
-   uuconf_taylor_init was not called.  */
+   uuconf_taylor_init was not called.  It accepts either spaces or
+   colons as field delimiters.  */
 
 int
 uuconf_callin (pglobal, pcmpfn, pinfo)
@@ -57,6 +58,8 @@ uuconf_callin (pglobal, pcmpfn, pinfo)
   char **pz;
   struct uuconf_cmdtab as[1];
   struct sinfo s;
+  char *zline;
+  size_t cline;
 
   /* If we have no password file names, fill in the default name.  */
   if (qglobal->qprocess->pzpwdfiles == NULL)
@@ -81,6 +84,9 @@ uuconf_callin (pglobal, pcmpfn, pinfo)
   s.ffound = FALSE;
   s.fmatched = FALSE;
 
+  zline = NULL;
+  cline = 0;
+
   iret = UUCONF_SUCCESS;
 
   for (pz = qglobal->qprocess->pzpwdfiles; *pz != NULL; pz++)
@@ -97,13 +103,47 @@ uuconf_callin (pglobal, pcmpfn, pinfo)
 	  break;
 	}
 
-      iret = uuconf_cmd_file (pglobal, e, as, (pointer) &s,
-			      ipcheck, 0, (pointer) NULL);
+      qglobal->ilineno = 0;
+
+      iret = UUCONF_SUCCESS;
+
+      while (getline (&zline, &cline, e) > 0)
+	{
+	  char *zcolon;
+
+	  ++qglobal->ilineno;
+
+	  /* Turn the first two colon characters into spaces.  This is
+	     a hack to make Unix style passwd files work.  */
+	  zcolon = strchr (zline, ':');
+	  if (zcolon != NULL)
+	    {
+	      *zcolon = ' ';
+	      zcolon = strchr (zcolon, ':');
+	      if (zcolon != NULL)
+		*zcolon = ' ';
+	    }		  
+	  iret = uuconf_cmd_line (pglobal, zline, as, (pointer) &s,
+				  ipcheck, 0, (pointer) NULL);
+	  if ((iret & UUCONF_CMDTABRET_EXIT) != 0)
+	    {
+	      iret &=~ UUCONF_CMDTABRET_EXIT;
+	      if (iret != UUCONF_SUCCESS)
+		iret |= UUCONF_ERROR_LINENO;
+	      break;
+	    }
+
+	  iret = UUCONF_SUCCESS;
+	}
+
       (void) fclose (e);
 
       if (iret != UUCONF_SUCCESS || s.ffound)
 	break;
     }
+
+  if (zline != NULL)
+    free ((pointer) zline);
 
   if (iret != UUCONF_SUCCESS)
     {
