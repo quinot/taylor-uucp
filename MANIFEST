@@ -1,11 +1,8 @@
-CONFIG
 COPYING
 ChangeLog
-INSTALL
 MANIFEST
 Makefile
 README
-THANKS
 TODO
 bnu.c
 chat.c
@@ -46,6 +43,7 @@ uucico.c
 uucp.1
 uucp.c
 uucp.h
+uucp.texi
 uux.1
 uux.c
 uuxqt.8
