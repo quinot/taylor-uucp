@@ -702,7 +702,8 @@ flocal_send_open_file (qtrans, qdaemon)
       boolean fhandled;
 
       if (! (*qdaemon->qproto->pffile) (qdaemon, qtrans, TRUE, TRUE,
-					qinfo->cbytes, &fhandled))
+					qinfo->cbytes - qtrans->ipos,
+					&fhandled))
 	{
 	  usfree_send (qtrans);
 	  return FALSE;
