@@ -383,7 +383,7 @@ main (argc, argv)
 
   if (fwait && zport == NULL)
     {
-      fprintf (stderr, "%s: -w requires -e", zProgram);
+      fprintf (stderr, "%s: -w requires -p", zProgram);
       uusage ();
     }
 
