@@ -575,6 +575,14 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 	 no confusion.  */
       if (qdaemon->qproto->cchans == 1 || qinfo->fsent)
 	{
+	  /* If we are breaking a 'E' command into two 'S' commands,
+	     and that was for the first 'S' command, we still have to
+	     send the second one.  */
+	  if (qtrans->s.bcmd == 'E'
+	      && (qdaemon->ifeatures & FEATURE_EXEC) == 0
+	      && qinfo->zexec == NULL)
+	    return fsend_exec_file_init (qtrans, qdaemon);
+
 	  usfree_send (qtrans);
 	  return TRUE;
 	}
@@ -745,6 +753,7 @@ flocal_send_cancelled (qtrans, qdaemon)
      struct stransfer *qtrans;
      struct sdaemon *qdaemon;
 {
+  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char *zdata;
   size_t cdata;
   boolean fret;
@@ -759,6 +768,16 @@ flocal_send_cancelled (qtrans, qdaemon)
   fret = (*qdaemon->qproto->pfsenddata) (qdaemon, zdata, (size_t) 0,
 					 qtrans->ilocal, qtrans->iremote,
 					 qtrans->ipos);
+
+  /* If we are breaking a 'E' command into two 'S' commands, and that
+     was for the first 'S' command, we still have to send the second
+     one.  */
+  if (fret
+      && qtrans->s.bcmd == 'E'
+      && (qdaemon->ifeatures & FEATURE_EXEC) == 0
+      && qinfo->zexec == NULL)
+    return fsend_exec_file_init (qtrans, qdaemon);
+
   usfree_send (qtrans);
   return fret;
 }
