@@ -393,9 +393,10 @@ expect it to do.
 
 The @code{tstuu} program is a test harness for the UUCP package, which
 will help ensure that it has been configured and compiled correctly.  It
-does not test everything, however, and it only runs on Unix systems
-which support Berkeley style pseudo-terminals.  It can be useful when
-initially installing Taylor UUCP.
+does not test everything, however.  It only runs on Unix systems which
+support Berkeley style pseudo-terminals or STREAMS style
+pseudo-terminals.  It can be useful when initially installing Taylor
+UUCP.
 
 @end table
 
@@ -534,8 +535,10 @@ so you may not have to make any changes.
 @item
 Type @samp{make} to compile everything.  The @file{tstuu.c} file is not
 particularly portable; if you can't figure out how to compile it you can
-safely ignore it, as it is only used for testing.  If you have any other
-problems there is probably a bug in the @code{configure} script.
+safely ignore it, as it is only used for testing (to use STREAMS
+pseudo-terminals, tstuu.c must be compiled with -DHAVE_STREAMS_PTYS;
+this is not automatically determined at the moment).  If you have any
+other problems there is probably a bug in the @code{configure} script.
 
 @item
 Please report any problems you have.  That is the only way they will get
@@ -558,18 +561,21 @@ particularly important if you are using V2 or HDB configuration files,
 because there may be bugs in how they are read.  This program should not
 be made suid, because it will display passwords if it can read them.
 
-If your system supports BSD style pseudo-terminals, and you compiled the
-code to support the new style of configuration files, you should be able
-to use the @code{tstuu} program to test the @code{uucico} daemon.  Just
-type @samp{tstuu} with no arguments while logged in to the compilation
-directory (since it runs @file{./uucp}, @file{./uux} and
-@file{./uucico}) to run a lengthy series of tests (it takes over ten
-minutes on a slow VAX).  You will need a fair amount of space available
-in @file{/usr/tmp}.  You will probably want to put it in the background.
-Do not use @kbd{^Z}, because the program traps on @code{SIGCHLD} and
-winds up dying.  It will create a directory @file{/usr/tmp/tstuu} and
-fill it with configuration files, and create spool directories
-@file{/usr/tmp/tstuu/spool1} and @file{/usr/tmp/tstuu/spool2}.
+If your system supports pseudo-terminals, and you compiled the code to
+support the new style of configuration files, you should be able to use
+the @code{tstuu} program to test the @code{uucico} daemon (if your
+system supports STREAMS based pseudo-terminals, you must compile tstuu.c
+with -DHAVE_STREAMS_PTYS, at least at the moment; the STREAMS based code
+was contributed by Marc Boucher).  Just type @samp{tstuu} with no
+arguments while logged in to the compilation directory (since it runs
+@file{./uucp}, @file{./uux} and @file{./uucico}) to run a lengthy series
+of tests (it takes over ten minutes on a slow VAX).  You will need a
+fair amount of space available in @file{/usr/tmp}.  You will probably
+want to put it in the background.  Do not use @kbd{^Z}, because the
+program traps on @code{SIGCHLD} and winds up dying.  It will create a
+directory @file{/usr/tmp/tstuu} and fill it with configuration files,
+and create spool directories @file{/usr/tmp/tstuu/spool1} and
+@file{/usr/tmp/tstuu/spool2}.
 
 For the beta release of 1.04, the @samp{tstuu} program does not appear
 work with the @code{i} protocol on SCO Unix, and probably other systems.
