@@ -379,6 +379,8 @@ struct uuconf_modem_port
   long uuconf_ihighbaud;
   /* Non-zero if the port supports carrier detect.  */
   int uuconf_fcarrier;
+  /* Non-zero if the port supports hardware flow control.  */
+  int uuconf_fhardflow;
   /* A NULL terminated sequence of dialer/token pairs (element 0 is a
      dialer name, element 1 is a token, etc.)  May be NULL, in which
      case qdialer should not be NULL.  */
@@ -396,6 +398,8 @@ struct uuconf_direct_port
   char *uuconf_zdevice;
   /* The baud rate (speed).  */
   long uuconf_ibaud;
+  /* Non-zero if the port supports hardware flow control.  */
+  int uuconf_fhardflow;
 };
 
 /* Additional information for a TCP port.  */

@@ -140,6 +140,7 @@ uuconf_v2_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 	  qport->uuconf_ttype = UUCONF_PORTTYPE_DIRECT;
 	  qport->uuconf_u.uuconf_sdirect.uuconf_zdevice = pzsplit[1];
 	  qport->uuconf_u.uuconf_sdirect.uuconf_ibaud = ilow;
+	  qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow = TRUE;
 	}
       else
 	{
@@ -162,6 +163,7 @@ uuconf_v2_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
 	      qport->uuconf_u.uuconf_smodem.uuconf_ihighbaud = ihigh;
 	    }
 	  qport->uuconf_u.uuconf_smodem.uuconf_fcarrier = TRUE;
+	  qport->uuconf_u.uuconf_smodem.uuconf_fhardflow = TRUE;
 	  if (ctoks < 5)
 	    qport->uuconf_u.uuconf_smodem.uuconf_pzdialer = NULL;
 	  else

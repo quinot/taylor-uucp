@@ -251,6 +251,8 @@ static boolean fsstdin_set P((struct sconnection *qconn,
 			       enum txonxoffsetting txonxoff));
 static boolean fsmodem_carrier P((struct sconnection *qconn,
 				  boolean fcarrier));
+static boolean fsserial_hardflow P((struct sconnection *qconn,
+				    boolean fhardflow));
 static boolean fsrun_chat P((int oread, int owrite, char **pzprog));
 static long isserial_baud P((struct sconnection *qconn));
 
@@ -1117,7 +1119,10 @@ fsmodem_open (qconn, ibaud, fwait)
 {
   if (ibaud == (long) 0)
     ibaud = qconn->qport->uuconf_u.uuconf_smodem.uuconf_ibaud;
-  return fsserial_open (qconn, ibaud, fwait);
+  if (! fsserial_open (qconn, ibaud, fwait))
+    return FALSE;
+  return fsserial_hardflow
+    (qconn, qconn->qport->uuconf_u.uuconf_smodem.uuconf_fhardflow);
 }
 
 /* Open a direct port.  */
@@ -1130,7 +1135,10 @@ fsdirect_open (qconn, ibaud, fwait)
 {
   if (ibaud == (long) 0)
     ibaud = qconn->qport->uuconf_u.uuconf_sdirect.uuconf_ibaud;
-  return fsserial_open (qconn, ibaud, fwait);
+  if (! fsserial_open (qconn, ibaud, fwait))
+    return FALSE;
+  return fsserial_hardflow
+    (qconn, qconn->qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow);
 }
 
 /* Change the blocking status of the port.  We keep track of the
@@ -1695,6 +1703,82 @@ fsmodem_carrier (qconn, fcarrier)
 
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
     }
+
+  return TRUE;
+}
+
+/* Tell the port to use hardware flow control.  There is no standard
+   mechanism for controlling this.  This implementation supports
+   CRTSCTS on SunOS and RTS/CTSFLOW on 386(ish) unix.  If you know how
+   to do it on other systems, please implement it and send me the
+   patches.  */
+
+static boolean
+fsserial_hardflow (qconn, fhardflow)
+     struct sconnection *qconn;
+     boolean fhardflow;
+{
+  register struct ssysdep_conn *q;
+
+  q = (struct ssysdep_conn *) qconn->psysdep;
+
+  if (! q->fterminal)
+    return TRUE;
+
+  /* Don't do anything if we don't know what to do.  */
+#if HAVE_BSD_TTY
+#define HAVE_HARDFLOW 0
+#endif
+#if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
+#ifndef CRTSFL
+#ifndef CRTSCTS
+#define HAVE_HARDFLOW 0
+#endif
+#endif
+#endif
+
+#ifndef HAVE_HARDFLOW
+#define HAVE_HARDFLOW 1
+#endif
+
+#if HAVE_HARDFLOW
+  if (fhardflow)
+    {
+#if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
+#ifdef CRTSFL
+      q->snew.c_cflag |= CRTSFL;
+      q->snew.c_cflag &=~ (RTSFLOW | CTSFLOW);
+#endif /* defined (CRTSFL) */
+#ifdef CRTSCTS
+      q->snew.c_cflag |= CRTSCTS;
+#endif /* defined (CRTSCTS) */
+#endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
+      if (! fsetterminfo (q->o, &q->snew))
+	{
+	  ulog (LOG_ERROR, "Can't enable hardware flow control: %s",
+		strerror (errno));
+	  return FALSE;
+	}
+    }
+  else
+    {
+#if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
+#ifdef CRTSFL
+      q->snew.c_cflag &=~ CRTSFL;
+      q->snew.c_cflag &=~ (RTSFLOW | CTSFLOW);
+#endif /* defined (CRTSFL) */
+#ifdef CRTSCTS
+      q->snew.c_cflag &=~ CRTSCTS;
+#endif /* defined (CRTSCTS) */
+#endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
+      if (! fsetterminfo (q->o, &q->snew))
+	{
+	  ulog (LOG_ERROR, "Can't disable hardware flow control: %s",
+		strerror (errno));
+	  return FALSE;
+	}
+    }
+#endif /* HAVE_HARDFLOW */
 
   return TRUE;
 }
@@ -2790,6 +2874,22 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 	}
 #endif /* HAVE_POSIX_TERMIOS */
 #endif /* defined (CRTSCTS) */
+#ifdef CRTSFL
+      if ((q->snew.c_cflag & CRTSFL) != 0)
+	{
+	  iset = IXON;
+	  iclear = IXOFF;
+	  /* SCO says we cant have CRTSFL **and** RTSFLOW/CTSFLOW */
+#ifdef RTSFLOW
+	  iclear |= RTSFLOW;
+#endif
+#ifdef CTSFLOW
+	  iclear |= CTSFLOW;
+#endif
+	  fdo = TRUE;
+	  break;
+	}
+#endif /* defined(CRTSFL) */
       iset = IXON | IXOFF;
       iclear = 0;
       fdo = TRUE;

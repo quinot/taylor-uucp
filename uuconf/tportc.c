@@ -105,6 +105,9 @@ static const struct cmdtab_offset asPmodem_cmds[] =
   { "carrier", UUCONF_CMDTABTYPE_BOOLEAN,
       offsetof (struct uuconf_port, uuconf_u.uuconf_smodem.uuconf_fcarrier),
       NULL },
+  { "hardflow", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_smodem.uuconf_fhardflow),
+      NULL },
   { "dial-device", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_port,
 		uuconf_u.uuconf_smodem.uuconf_zdial_device),
@@ -130,6 +133,9 @@ static const struct cmdtab_offset asPdirect_cmds[] =
       NULL },
   { "speed", UUCONF_CMDTABTYPE_LONG,
       offsetof (struct uuconf_port, uuconf_u.uuconf_sdirect.uuconf_ibaud),
+      NULL },
+  { "hardflow", UUCONF_CMDTABTYPE_BOOLEAN,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_sdirect.uuconf_fhardflow),
       NULL },
   { NULL, 0, 0, NULL }
 };
@@ -255,12 +261,14 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	  qport->uuconf_u.uuconf_smodem.uuconf_ilowbaud = 0L;
 	  qport->uuconf_u.uuconf_smodem.uuconf_ihighbaud = 0L;
 	  qport->uuconf_u.uuconf_smodem.uuconf_fcarrier = TRUE;
+	  qport->uuconf_u.uuconf_smodem.uuconf_fhardflow = TRUE;
 	  qport->uuconf_u.uuconf_smodem.uuconf_pzdialer = NULL;
 	  qport->uuconf_u.uuconf_smodem.uuconf_qdialer = NULL;
 	  break;
 	case UUCONF_PORTTYPE_DIRECT:
 	  qport->uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
 	  qport->uuconf_u.uuconf_sdirect.uuconf_ibaud = -1;
+	  qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow = TRUE;
 	  break;
 	case UUCONF_PORTTYPE_TCP:
 	  qport->uuconf_u.uuconf_stcp.uuconf_zport = (char *) "uucp";

@@ -1684,6 +1684,8 @@ uvwrite_taylor_port (e, qport, zprefix)
 		   qm->uuconf_ihighbaud);
 	if (! qm->uuconf_fcarrier)
 	  fprintf (e, "%scarrier false\n", zprefix);
+	if (! qm->uuconf_fhardflow)
+	  fprintf (e, "%shardflow false\n", zprefix);
 	if (qm->uuconf_pzdialer != NULL)
 	  {
 	    if (qm->uuconf_pzdialer[1] == NULL)
@@ -1710,6 +1712,8 @@ uvwrite_taylor_port (e, qport, zprefix)
 	  fprintf (e, "%sdevice %s\n", zprefix, qd->uuconf_zdevice);
 	if (qd->uuconf_ibaud != 0)
 	  fprintf (e, "%sbaud %ld\n", zprefix, qd->uuconf_ibaud);
+	if (! qd->uuconf_fhardflow)
+	  fprintf (e, "%shardflow false\n", zprefix);
       }
       break;
     case UUCONF_PORTTYPE_TCP:
