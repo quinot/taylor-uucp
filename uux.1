@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.6  1992/03/28  04:34:11  ian
+''' David J. MacKenzie: change .TP5 to .TP 5; also updated to 1.03
+'''
 ''' Revision 1.5  1992/02/29  04:07:08  ian
 ''' Added -j option to uucp and uux
 '''
@@ -28,7 +31,7 @@ The
 command is used to execute a command on a remote system, or to execute
 a command on the local system using files from remote systems.
 The command
-is not executed immediately; the request is stored until the
+is not executed immediately; the request is queued until the
 .I uucico
 (8) daemon calls the system and executes it.  The daemon is
 started automatically unless the
@@ -44,7 +47,7 @@ system, as can standard input.  Standard output may be directed to a
 file on a remote system.
 
 The command name may be preceded by a system name followed by an
-exclamation point if it is to be executed on a remote system.  A
+exclamation point if it is to be executed on a remote system.  An
 empty system name is taken as the local system.
 
 Each argument that contains an exclamation point is treated as naming
@@ -70,7 +73,7 @@ not work.
 
 All specified files are gathered together into a single directory
 before execution of the command begins.  This means that each file
-must have a distinct base name.  For example
+must have a distinct base name.  For example,
 .EX
 uux 'sys1!diff sys2!~user1/foo sys3!~user2/foo >!foo.diff'
 .EE
@@ -95,7 +98,10 @@ If they are
 removed before being processed by the
 .I uucico
 (8) daemon, the copy will fail.  The files must be readable by the
-world.
+.I uucico
+(8) daemon,
+as well as the by the invoker of
+.I uux.
 .TP 5
 .B \-C
 Copy local files to the spool directory.
@@ -114,7 +120,10 @@ to
 If the files are changed before being processed by the
 .I uucico
 (8) daemon, the changed versions will be used.  The files must be
-readable by the world.
+readable by the
+.I uucico
+(8) daemon, as well as by the invoker of
+.I uux.
 .TP 5
 .B \-g grade
 Set the grade of the file transfer command.  Jobs of a higher grade
@@ -160,9 +169,20 @@ switch of
 .B \-a address
 Report job status to the specified e-mail address.
 .TP 5
-.B \-x number
-Set debugging level.  Level 0 is no debugging output, level 9 is full
-debugging output.
+.B \-x type
+Turn on particular debugging types.  The following types are
+recognized: abnormal, chat, handshake, uucp-proto, proto, port,
+config, spooldir, execute, incoming, outgoing.  Only abnormal, config,
+spooldir and execute are meaningful for
+.I uux.
+
+Multiple types may be given, separated by commas, and the
+.B \-x
+option may appear multiple times.  A number may also be given, which
+will turn on that many types from the foregoing list; for example,
+.B \-x 2
+is equivalent to
+.B \-x abnormal,chat.
 .TP 5
 .B \-I file
 Set configuration file to use.  This option may not be available,
@@ -221,7 +241,7 @@ UUCP log file.
 /usr/spool/uucppublic -
 Default UUCP public directory.
 .SH SEE ALSO
-mail(1), uucp(1), uucico(8), uuxqt(8)
+mail(1), uustat(1), uucp(1), uucico(8), uuxqt(8)
 .SH BUGS
 Files can not be referenced across multiple systems.
 

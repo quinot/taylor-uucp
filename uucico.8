@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.6  1992/03/28  04:34:11  ian
+''' David J. MacKenzie: change .TP5 to .TP 5; also updated to 1.03
+'''
 ''' Revision 1.5  1992/03/08  17:08:20  ian
 ''' Ted Lindgreen: ignore -u option
 '''
@@ -65,7 +68,7 @@ option is given;
 (8) executes any work orders created by
 .I uux
 (1) on a remote system, and any work orders created locally which have
-received remote files they were waiting for.
+received remote files for which they were waiting.
 
 If a call fails,
 .I uucico
@@ -84,17 +87,32 @@ or
 option may be used to force
 .I uucico
 to produce its own prompts of "login: " and "Password:".  When another
-daemon calls in, it will see these prompts and login as usual; the
+daemon calls in, it will see these prompts and log in as usual; the
 login name and password will be checked against a separate list kept
 specially for
 .I uucico
-rather than the /etc/passwd file.  The
+rather than the
+.I /etc/passwd
+file.  The
 .B \-l
 option will prompt once and then exit.  The
 .B \-e
 option will prompt again after the first session is over; in this mode
 .I uucico
 will permanently control a port.
+
+If
+.I uucico
+receives a SIGQUIT, SIGTERM or SIGPIPE signal, it will cleanly abort
+any current conversation with a remote system and exit.  If it
+receives a SIGHUP signal it will abort any current conversation, but
+will continue to place calls to (if invoked with
+.B \-r1)
+and accept calls from (if invoked with
+.B \-e)
+other systems.  If it receives a
+SIGINT signal it will finish the current conversation, but will not
+place or accept any more calls.
 .SH OPTIONS
 The following options may be given to
 .I uucico.
@@ -126,7 +144,8 @@ This allows
 to be easily run from
 .I inetd
 (8).  The login name and password are checked against the UUCP
-password file, which has no connection to the file /etc/passwd.
+password file, which has no connection to the file
+.I /etc/passwd.
 .TP 5
 .B \-p port
 Specify a port to call out on or to listen to.  In slave mode, this
@@ -162,10 +181,22 @@ before invoking
 .I uuxqt.
 This option prevents this.
 .TP 5
-.B \-x number, \-X number
-Set debugging level.  Level 0 is no debugging output, level 9 is full
-debugging output.  The debugging output is sent to the debugging file,
-usually /usr/spool/uucp/Debug.
+.B \-x type, \-X type
+Turn on particular debugging types.  The following types are
+recognized: abnormal, chat, handshake, uucp-proto, proto, port,
+config, spooldir, execute, incoming, outgoing.  
+
+Multiple types may be given, separated by commas, and the
+.B \-x
+option may appear multiple times.  A number may also be given, which
+will turn on that many types from the foregoing list; for example,
+.B \-x 2
+is equivalent to
+.B \-x abnormal,chat.
+
+The debugging output is sent to the debugging file, usually one of
+/usr/spool/uucp/Debug, /usr/spool/uucp/DEBUG, or
+/usr/spool/uucp/.Admin/audit.local.
 .TP 5
 .B \-I file
 Set configuration file to use.  This option may not be available,
