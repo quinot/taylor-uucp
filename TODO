@@ -785,3 +785,11 @@ removed, for symmetry with when a job is inserted.
 
 Joerg Dorchain: Provide a mechanism to permit the system name to be
 interpolated into the command used for port type pipe.
+
+246.
+
+Michael Ju. Tokarev: Add a way for uucico to receive a file into a
+directory which is not world-writable.  Note that this would only be a
+convenience feature for remote systems, as any local user can
+effectively use uucico to write to such a directory, which means that
+the directory effectively becomes world writable for local users.
