@@ -454,16 +454,15 @@ fsserial_init (qconn, qcmds, zdevice)
   if (zdevice == NULL
       && qconn->qport != NULL
       && qconn->qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN)
+    zdevice = qconn->qport->uuconf_zname;
+  if (zdevice != NULL
+      && *zdevice != '/')
     {
-      zdevice = qconn->qport->uuconf_zname;
-      if (*zdevice != '/')
-	{
-	  char *z;
+      char *z;
 
-	  z = (char *) xmalloc (sizeof "/dev/" + strlen (zdevice));
-	  sprintf (z, "/dev/%s", zdevice);
-	  zdevice = z;
-	}
+      z = (char *) xmalloc (sizeof "/dev/" + strlen (zdevice));
+      sprintf (z, "/dev/%s", zdevice);
+      zdevice = z;
     }
   q->zdevice = zdevice;
   q->o = -1;
