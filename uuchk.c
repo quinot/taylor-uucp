@@ -390,8 +390,8 @@ ukshow (qsys, puuconf)
       if (qsys->uuconf_zdebug != NULL)
 	printf (" Debugging level %s\n", qsys->uuconf_zdebug);
       if (qsys->uuconf_zmax_remote_debug != NULL)
-	printf (" Max remote debugging level 0%o\n",
-		(unsigned int) qsys->uuconf_zmax_remote_debug);
+	printf (" Max remote debugging level %s\n",
+		qsys->uuconf_zmax_remote_debug);
 
       if (fcall)
 	{

@@ -46,6 +46,9 @@ idebug_parse (z)
   int i, iret;
   char *zcopy, *ztok;
 
+  if (strncasecmp (z, DEBUG_NONE, sizeof DEBUG_NONE - 1) == 0)
+    return 0;
+
   i = (int) strtol ((char *) z, &zend, 0);
   if (*zend == '\0')
     {
