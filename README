@@ -36,9 +36,9 @@ described in sys3.unx.
 COMPILATION
 
 1) Take a look at the top of Makefile to make sure the definitions are
-reasonable for your system.  If you don't have gcc, get it.  In the
-meantime, change CC and CFLAGS accordingly.  On some systems, you may
-want to make entries for LIBS.
+reasonable for your system.  I highly recommend using gcc, but it is
+not required; if you don't have it, change CC and CFLAGS accordingly.
+On some systems, you may want to make entries for LIBS.
 
 2) This package uses the alloca function.  When compiled with gcc, it
 will automatically use the builtin function.  If your system has
