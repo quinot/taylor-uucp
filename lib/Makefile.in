@@ -1,0 +1,65 @@
+# This is the Makefile for the lib subdirectory of Taylor UUCP
+#
+# The file Makefile.in should be processed by configure to generate
+# Makefile.  If you want to generate Makefile by hand, you must find
+# all variables surrounded by @ and replace them with the correct
+# value (e.g. @CC@ must be replaced by something like cc or gcc).
+
+SHELL=/bin/sh
+
+# These are overridden by the call from the top level Makefile
+CC = @CC@
+CFLAGS = @CFLAGS@
+RANLIB = @RANLIB@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+MORECFLAGS=-I$(srcdir)/..
+
+OBJS = xfree.o xmall.o xreall.o xstrdp.o @LIBOBJS@
+
+all: libuucp.a
+
+clean: rm -f $(OBJS) libuucp.a
+
+distclean: clean
+	rm -f Makefile
+
+mostlyclean: clean
+realclean: clean
+
+libuucp.a: $(OBJS)
+	rm -f libuucp.a
+	ar rc libuucp.a $(OBJS)
+	-$(RANLIB) libuucp.a
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+
+Makefile: Makefile.in
+	(cd ..; sh config.status)
+
+# Header file dependencies.
+
+HDRS = $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+
+bsrch.o: $(HDRS)
+bzero.o: $(HDRS)
+getlin.o: $(HDRS)
+memchr.o: $(HDRS)
+memcmp.o: $(HDRS)
+memcpy.o: $(HDRS)
+memmov.o: $(HDRS)
+strcas.o: $(HDRS)
+strchr.o: $(HDRS)
+strdup.o: $(HDRS)
+strlwr.o: $(HDRS)
+strncs.o: $(HDRS)
+strrch.o: $(HDRS)
+strstr.o: $(HDRS)
+strtol.o: $(HDRS)
+xfree.o: $(HDRS)
+xmall.o: $(HDRS)
+xreall.o: $(HDRS)
+xstrdp.o: $(HDRS)
