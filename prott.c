@@ -133,7 +133,8 @@ ftsendcmd (qdaemon, z, ilocal, iremote)
 
   zalc = zbufalc (csend);
   memcpy (zalc, z, clen);
-  bzero (zalc + clen, csend - clen);
+  if (csend > clen)
+    bzero (zalc + clen, csend - clen);
 
   fret = fsend_data (qdaemon->qconn, zalc, csend, TRUE);
   ubuffree (zalc);

@@ -741,7 +741,8 @@ fgsendcmd (qdaemon, z, ilocal, iremote)
 	    }
 
 	  memcpy (zpacket, z, clen);
-	  bzero (zpacket + clen, csize - clen);
+	  if (csize > clen)
+	    bzero (zpacket + clen, csize - clen);
 	  fagain = FALSE;
 
 	  if (! fgsenddata (qdaemon, zpacket, csize, 0, 0, (long) 0))
@@ -896,7 +897,8 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 	      --zdata;
 	      zdata[0] = (char) cshort;
 	      zdata[-1] = '\0';
-	      bzero (zdata + cdata + 1, cshort - 1);
+	      if (cshort > 1)
+		bzero (zdata + cdata + 1, cshort - 1);
 	    }
 	  else
 	    {
