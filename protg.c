@@ -1613,10 +1613,11 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	}
 
       /* Update the received sequence number from the yyy field of a
-	 data packet or an RR control packet.  If we've been delaying
-	 sending packets until we received an ack, this may send out
-	 some packets.  */
-      if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
+	 data packet (if it is the one we are expecting) or an RR
+	 control packet.  If we've been delaying sending packets until
+	 we received an ack, this may send out some packets.  */
+      if ((CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
+	   && CONTROL_XXX (ab[IFRAME_CONTROL]) == INEXTSEQ (iGrecseq))
 	  || (CONTROL_XXX (ab[IFRAME_CONTROL]) == RR && ! fduprr))
 	{
 	  if (! fggot_ack (qdaemon, CONTROL_YYY (ab[IFRAME_CONTROL])))
