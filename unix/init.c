@@ -86,11 +86,15 @@
 #ifndef getlogin
 extern char *getlogin ();
 #endif
+#if GETPWNAM_DECLARATION_OK
 #ifndef getpwnam
 extern struct passwd *getpwnam ();
 #endif
+#endif
+#if GETPWUID_DECLARATION_OK
 #ifndef getpwuid
 extern struct passwd *getpwuid ();
+#endif
 #endif
 #if HAVE_GETCWD
 #ifndef getcwd
@@ -230,7 +234,11 @@ usysdep_initialize (puuconf,iflags)
      systems truncate the getlogin return value to 8 characters, but
      keep the full name in the password file, so we prefer the name in
      the password file.  */
-  z = getlogin ();
+  z = getenv ("LOGNAME");
+  if (z == NULL)
+    z = getenv ("USER");
+  if (z == NULL)
+    z = getlogin ();
   if (z == NULL)
     q = NULL;
   else

@@ -32,8 +32,10 @@ const char uudir_rcsid[] = "$Id$";
 #include <pwd.h>
 
 /* External functions.  */
+#if GETPWNAM_DECLARATION_OK
 #ifndef getpwnam
 extern struct passwd *getpwnam ();
+#endif
 #endif
 
 /* This is a simple program which sets its real uid to uucp and then

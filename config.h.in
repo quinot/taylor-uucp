@@ -383,13 +383,20 @@
 /* That's the end of the list of the functions.  Now there are a few
    last miscellaneous items.  */
 
-/* On some systems times is declared in <sys/times.h> as returning
-   int, so the code cannot safely declare it as returning long.  On
-   the other hand, on some systems times will not work unless it is
-   declared as returning long.  Set TIMES_DECLARATION_OK to 1 if times
-   can be safely declared as returning long.  If you will not be using
-   times, it doesn't matter what you set this to.  */
+/* On some systems the following functions are declared in such a way
+   that the code cannot make a simple extern.  On other systems, these
+   functions are not declared at all, and the extern is required.  If
+   a declaration of the function, as shown, compiles on your system,
+   set the value to 1.  Not all functions declared externally are
+   listed here, only the ones with which I have had trouble.  */
+/* extern long times (); */
 #define TIMES_DECLARATION_OK 0
+/* extern struct passwd *getpwnam (); */
+#define GETPWNAM_DECLARATION_OK 0
+/* extern struct passwd *getpwuid (); */
+#define GETPWUID_DECLARATION_OK 0
+/* extern struct group *getgrent (); */
+#define GETGRENT_DECLARATION_OK 0
 
 /* Set HAVE_BSD_PGRP to 1 if your getpgrp call takes 1 argument and
    your setpgrp calls takes 2 arguments (on System V they generally

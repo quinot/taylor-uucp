@@ -45,8 +45,10 @@ const char picksb_rcsid[] = "$Id$";
 #include "system.h"
 #include "sysdep.h"
 
+#if GETPWUID_DECLARATION_OK
 #ifndef getpwuid
 extern struct passwd *getpwuid ();
+#endif
 #endif
 
 /* Local variables.  */

@@ -317,17 +317,28 @@ case $DEFS in
   AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])) ;;
 esac
 dnl
-AC_COMPILE_CHECK([times declared as long],
+dnl See whether we can make an extern declaration
+define(ILT_CHECK_DECLARATION,
+[changequote(,)dnl
+trfrom='[a-z]' trto='[A-Z]'
+changequote([,])dnl
+AC_COMPILE_CHECK([$1 declared as "$2"],
 [#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 #ifdef HAVE_LIBC_H
 #include <libc.h>
 #endif
 #ifdef HAVE_SYS_TIMES_H
 #include <sys/times.h>
 #endif
-extern long times ();],
-[],
-AC_DEFINE([TIMES_DECLARATION_OK]))
+extern $2 $1 ();], ,
+AC_DEFINE(`echo $1 | tr "$trfrom" "$trto"`_DECLARATION_OK))])
+dnl
+ILT_CHECK_DECLARATION(times, long)
+ILT_CHECK_DECLARATION(getpwnam, struct passwd *)
+ILT_CHECK_DECLARATION(getpwuid, struct passwd *)
+ILT_CHECK_DECLARATION(getgrent, struct group *)
 dnl
 AC_COMPILE_CHECK([BSD setpgrp],
 [#ifdef HAVE_UNISTD_H

@@ -31,8 +31,10 @@
 #include "sysdep.h"
 #include "system.h"
 
+#if GETPWNAM_DECLARATION_OK
 #ifndef getpwnam
 extern struct passwd *getpwnam ();
+#endif
 #endif
 
 /* Turn a file name into an absolute path, by doing tilde expansion

@@ -33,13 +33,17 @@
 
 #if HAVE_GETGRENT
 #include <grp.h>
+#if GETGRENT_DECLARATION_OK
 #ifndef getgrent
 extern struct group *getgrent ();
 #endif
+#endif
 #endif /* HAVE_GETGRENT */
 
+#if GETPWNAM_DECLARATION_OK
 #ifndef getpwnam
 extern struct passwd *getpwnam ();
+#endif
 #endif
 
 /* Do access(2) on a stat structure, except that the user name is
