@@ -1,0 +1,59 @@
+# This is the Makefile for the unix subdirectory of Taylor UUCP.
+# This subdirectory contains Unix specific support functions.
+#
+# The file Makefile.in should be processed by configure to generate
+# Makefile.  If you want to generate Makefile by hand, you must find
+# all variables surrounded by @ and replace them with the correct
+# value (e.g. @CC@ must be replaced by something like cc or gcc).
+
+SHELL=/bin/sh
+
+# These are overridden by the call from the top level Makefile
+CC = @CC@
+CFLAGS = @CFLAGS@
+RANLIB = @RANLIB@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+MORECFLAGS=-I$(srcdir)/.. -DOWNER=\"$(owner)\"
+
+OBJS = epopen.o isfork.o iswait.o spawn.o @UNIXOBJS@
+
+all: libunix.a
+
+clean: rm -f $(OBJS) libunix.a
+
+distclean: clean
+	rm -f Makefile
+
+mostlyclean: clean
+realclean: clean
+
+libunix.a: $(OBJS)
+	rm -f libunix.a
+	ar rc libunix.a $(OBJS)
+	-$(RANLIB) libunix.a
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(MORECFLAGS) $<
+
+Makefile: Makefile.in
+	(cd ..; sh config.status)
+
+# Header file dependencies.
+
+HDRS = $(srcdir)/../uucp.h $(srcdir)/../conf.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+
+dirent.o: $(HDRS) $(srcdir)/../sysdep.h
+dup2.o: $(HDRS) $(srcdir)/../sysdep.h
+epopen.o: $(HDRS) $(srcdir)/../sysdep.h
+ftw.o: $(HDRS) $(srcdir)/../sysdep.h
+isfork.o: $(HDRS) $(srcdir)/../sysdep.h
+iswait.o: $(HDRS) $(srcdir)/../sysdep.h
+mkdir.o: $(HDRS) $(srcdir)/../sysdep.h
+remove.o: $(HDRS)
+rename.o: $(HDRS) $(srcdir)/../sysdep.h
+rmdir.o: $(HDRS) $(srcdir)/../sysdep.h
+spawn.o: $(HDRS) $(srcdir)/../sysdep.h
+strerr.o: $(HDRS)

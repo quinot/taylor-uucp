@@ -1,0 +1,14 @@
+Makefile.in
+MANIFEST
+dirent.c
+dup2.c
+ftw.c
+epopen.c
+isfork.c
+iswait.c
+mkdir.c
+remove.c
+rename.c
+rmdir.c
+spawn.c
+strerr.c
