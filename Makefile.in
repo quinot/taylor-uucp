@@ -119,7 +119,7 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	$(INSTALL_PROGRAM) uuchk $(libdir)/uuchk
 	chown $(owner) $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
 	chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
-	-if test "$(UUDIR)X" != "X"; then if test ! -d $(uudirdir) then mkdir $(uudirdir); fi; chown $(owner) $(uudirdir); chmod 100 $(uudirdir); $(INSTALL_PROGRAM) uudir $(uudirdir)/uudir; chown root $(uudirdir)/uudir; chmod 4555 $(uudirdir)/uudir; else true; fi
+	-if test "$(UUDIR)X" != "X"; then if test ! -d $(uudirdir); then mkdir $(uudirdir); fi; chown $(owner) $(uudirdir); chmod 100 $(uudirdir); $(INSTALL_PROGRAM) uudir $(uudirdir)/uudir; chown root $(uudirdir)/uudir; chmod 4555 $(uudirdir)/uudir; else true; fi
 	-ln $(bindir)/uux $(bindir)/uux.old
 	-ln $(bindir)/uucp $(bindir)/uucp.old
 	-ln $(bindir)/uustat $(bindir)/uustat.old
