@@ -1,7 +1,7 @@
 /* hsinfo.c
    Get information about a system from the HDB configuration files.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
