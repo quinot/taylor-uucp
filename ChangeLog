@@ -1,5 +1,7 @@
 2002-02-07  Ian Lance Taylor  <ian@airs.com>
 
+	* protz.c (fzwait): Remove unreachable return statement.
+
 	* unix/lock.c (fsdo_lock): Test for error when removing read only
 	stale lock file.
 

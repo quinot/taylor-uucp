@@ -1194,8 +1194,6 @@ moredata:
 			return FALSE;
 		}
 	}
-
-	return TRUE;
 }
 
 /*
