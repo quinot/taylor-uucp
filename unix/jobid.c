@@ -63,6 +63,11 @@ zsjobid_to_file (zid, pzsystem)
   char *zret;
 
   clen = strlen (zid);
+  if (clen <= CSEQLEN)
+    {
+      ulog (LOG_ERROR, "%s: Bad job id", zid);
+      return NULL;
+    }
 
   zend = zid + clen - CSEQLEN - 1;
 

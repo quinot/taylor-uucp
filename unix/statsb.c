@@ -157,6 +157,8 @@ fskill_or_rejuv (puuconf, zid, fkill)
   int isys;
 
   zfile = zsjobid_to_file (zid, &zsys);
+  if (zfile == NULL)
+    return FALSE;
 
   if (! fkill)
     inow = time ((time_t *) NULL);
@@ -284,6 +286,8 @@ isysdep_work_time (qsys, pseq)
 
   zjobid = zsysdep_jobid (qsys, pseq);
   zfile = zsjobid_to_file (zjobid, (char **) NULL);
+  if (zfile == NULL)
+    return 0;
   ubuffree (zjobid);
   iret = isysdep_file_time (zfile);
   ubuffree (zfile);
