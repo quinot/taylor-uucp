@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.1  1991/09/10  19:45:50  ian
+   Initial revision
+
    */
 
 #ifndef SYSH_UNX_H
@@ -341,7 +344,7 @@ extern const char *zstilde_expand P((const struct ssysteminfo *qsys,
 extern const char *zsappend P((const char *zdir, const char *zfile));
 
 /* Get a temporary file name.  */
-extern const char *zstemp_file P((void));
+extern const char *zstemp_file P((const struct ssysteminfo *qsys));
 
 #if SPOOLDIR_ULTRIX
 /* See whether there is a spool directory for a system.  */

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/11  02:33:14  ian
+   Added ffork argument to fsysdep_run
+
  * Revision 1.1  1991/09/10  19:47:55  ian
  * Initial revision
  *
@@ -219,31 +222,35 @@ extern boolean fsysdep_make_dirs P((const char *zfile));
    */
 extern FILE *esysdep_fopen P((const char *zfile, boolean flog));
 
-/* Open a file to send to another system.  This should set *pimode to
-   the mode that should be sent over (this should be a UNIX style file
+/* Open a file to send to another system; the qsys argument is the
+   system the file is being sent to.  This should set *pimode to the
+   mode that should be sent over (this should be a UNIX style file
    mode number).  This should set *pcbytes to the number of bytes
    contained in the file.  It should return EFILECLOSED on error.  */
-extern openfile_t esysdep_open_send P((const char *zname,
+extern openfile_t esysdep_open_send P((const struct ssysteminfo *qsys,
+				       const char *zname,
 				       unsigned int *pimode,
 				       long *pcbytes));
 
 /* Open a file to receive from another system.  Receiving a file is
    done in two steps.  First esysdep_open_receive is called.  This
    should open a temporary file and return the file name in *pztemp.
-   It may ignore zto (the file to be created) although is passed in
-   case it is useful.  The file mode is not available at this point.
-   The *pztemp return value may point to a common static buffer.  The
-   amount of free space should be returned in *pcbytes; ideally it
-   should be the lesser of the amount of free space on the file system
-   of the temporary file and the amount of free space on the file
-   system of the final destination.  If the amount of free space is
-   not available, *pcbytes should be set to -1.  The function should
+   It may ignore qsys (the system the file is coming from) and zto
+   (the file to be created) although they are passed in case they are
+   useful.  The file mode is not available at this point.  The *pztemp
+   return value may point to a common static buffer.  The amount of
+   free space should be returned in *pcbytes; ideally it should be the
+   lesser of the amount of free space on the file system of the
+   temporary file and the amount of free space on the file system of
+   the final destination.  If the amount of free space is not
+   available, *pcbytes should be set to -1.  The function should
    return EFILECLOSED on error.
 
    After the file is written, fsysdep_move_file will be called to move
    the file to its final destination, and to set the correct file
    mode.  */
-extern openfile_t esysdep_open_receive P((const char *zto,
+extern openfile_t esysdep_open_receive P((const struct ssysteminfo *qsys,
+					  const char *zto,
 					  const char **pztemp,
 					  long *pcbytes));
 

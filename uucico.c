@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/09/19  02:30:37  ian
+   From Chip Salzenberg: check whether signal is ignored differently
+
    Revision 1.4  1991/09/19  02:22:44  ian
    Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
 
@@ -1597,7 +1600,8 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		  if (strchr (s.zoptions, 'C') != NULL)
 		    fspool = TRUE;
 		  else
-		    e = esysdep_open_send (zuse, &s.imode, &s.cbytes);
+		    e = esysdep_open_send (qsys, zuse, &s.imode,
+					   &s.cbytes);
 		}
 
 	      if (fspool)
@@ -1610,7 +1614,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
-		  e = esysdep_open_send (zuse, &idummy, &s.cbytes);
+		  e = esysdep_open_send (qsys, zuse, &idummy, &s.cbytes);
 		}
 
 	      if (! ffileisopen (e))
@@ -1692,7 +1696,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		    }
 		}
 
-	      e = esysdep_open_receive (zuse, &s.ztemp, &s.cbytes);
+	      e = esysdep_open_receive (qsys, zuse, &s.ztemp, &s.cbytes);
 	      if (! ffileisopen (e))
 		{
 		  (void) fsysdep_did_work (s.pseq);
@@ -1845,7 +1849,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		    }
 		}
 
-	      e = esysdep_open_receive (zuse, &s.ztemp, &cbytes);
+	      e = esysdep_open_receive (qsys, zuse, &s.ztemp, &cbytes);
 	      if (! ffileisopen (e))
 		{
 		  if (! (*qproto->pffail) ('S', FAILURE_OPEN))
@@ -1925,7 +1929,7 @@ fuucp (fmaster, qsys, qproto, bgrade, fnew)
 		  break;
 		}
 
-	      e = esysdep_open_send (zuse, &s.imode, &cbytes);
+	      e = esysdep_open_send (qsys, zuse, &s.imode, &cbytes);
 	      if (! ffileisopen (e))
 		{
 		  if (! (*qproto->pffail) ('R', FAILURE_OPEN))
