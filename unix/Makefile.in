@@ -12,13 +12,16 @@ SHELL=/bin/sh
 CC = @CC@
 CFLAGS = @CFLAGS@
 RANLIB = @RANLIB@
+prefix = /usr/local
+sbindir = $(prefix)/lib/uucp
 
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-MORECFLAGS=-I$(srcdir)/.. -DOWNER=\"$(owner)\"
+MORECFLAGS=-I$(srcdir)/.. -DSBINDIR=\"$(sbindir)\" -DOWNER=\"$(owner)\"
 
-OBJS = epopen.o isfork.o iswait.o locfil.o mail.o spawn.o srmdir.o @UNIXOBJS@
+OBJS = epopen.o isfork.o iswait.o locfil.o mail.o run.o spawn.o srmdir.o \
+	@UNIXOBJS@
 
 all: libunix.a
 

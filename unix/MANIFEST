@@ -13,6 +13,7 @@ mkdir.c
 remove.c
 rename.c
 rmdir.c
+run.c
 spawn.c
 srmdir.c
 strerr.c
