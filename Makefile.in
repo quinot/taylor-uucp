@@ -208,12 +208,12 @@ uudir: uudir.o
 
 .SUFFIXES: .unx
 
-.unx.h:
-	rm -f $@
-	$(LN_S) $< $@
+sysdep.h: sysh.unx
+	rm -f sysdep.h
+	$(LN_S) sysh.unx sysdep.h
 
 .unx.c:
-	rm -f  $@
+	rm -f $@
 	$(LN_S) $< $@
 
 clean:
