@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.32  1991/12/23  05:15:54  ian
+   David Nugent: set debugging level for a specific system
+
    Revision 1.31  1991/12/21  23:10:43  ian
    Terry Gardner: record failed file transfers in statistics file
 
@@ -1808,6 +1811,8 @@ fuucp (fmaster, qsys, bgrade, fnew)
   fcaller = fmaster;
 
   fmasterdone = FALSE;
+  if (! qProto->ffullduplex && ! fmaster)
+    fmasterdone = TRUE;
 
   /* Make sure we have a spool directory for this system.  */
   if (! fsysdep_make_spool_dir (qsys))
