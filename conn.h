@@ -275,6 +275,15 @@ extern boolean fconn_carrier P((struct sconnection *qconn,
 extern boolean fconn_run_chat P((struct sconnection *qconn,
 				 char **pzprog));
 
+/* Run through a dialer sequence.  This is a support routine for the
+   port type specific dialing routines.  */
+extern boolean fconn_dial_sequence P((struct sconnection *qconn,
+				      pointer puuconf, char **pzdialer,
+				      const struct uuconf_system *qsys,
+				      const char *zphone,
+				      struct uuconf_dialer *qdialer,
+				      enum tdialerfound *ptdialerfound));
+
 /* Dialing out on a modem is partially system independent.  This is
    the modem dialing routine.  */
 extern boolean fmodem_dial P((struct sconnection *qconn, pointer puuconf,

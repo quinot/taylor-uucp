@@ -1769,6 +1769,13 @@ uvwrite_taylor_port (e, qport, zprefix)
       if (qport->uuconf_u.uuconf_stcp.uuconf_zport != NULL)
 	fprintf (e, "%sservice %s\n", zprefix,
 		 qport->uuconf_u.uuconf_stcp.uuconf_zport);
+      if (qport->uuconf_u.uuconf_stcp.uuconf_pzdialer != NULL)
+	{
+	  sprintf (ab, "%sdialer-sequence", zprefix);
+	  uvwrite_string_array (e,
+				qport->uuconf_u.uuconf_stcp.uuconf_pzdialer,
+				ab);
+	}
       break;
     case UUCONF_PORTTYPE_TLI:
       {
@@ -1926,6 +1933,10 @@ ivwrite_hdb_port (qport, pinfo)
       else
 	fprintf (e, "%s", qport->uuconf_u.uuconf_stcp.uuconf_zport);
       fprintf (e, " - -");
+      pz = qport->uuconf_u.uuconf_stcp.uuconf_pzdialer;
+      if (pz != NULL)
+	for (; *pz != NULL; pz++)
+	  fprintf (e, " %s", *pz);
     }
   else if (qport->uuconf_ttype == UUCONF_PORTTYPE_TLI)
     {

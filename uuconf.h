@@ -409,6 +409,9 @@ struct uuconf_tcp_port
   /* The TCP port number to use.  May be a name or a number.  May be
      NULL, in which case "uucp" is looked up using getservbyname.  */
   char *uuconf_zport;
+  /* A NULL terminated sequence of dialer/token pairs (element 0 is a
+     dialer name, element 1 is a token, etc.)  May be NULL.  */
+  char **uuconf_pzdialer;
 };
 
 /* Additional information for a TLI port.  */

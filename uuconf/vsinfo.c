@@ -264,6 +264,7 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	  else
 	    qset->uuconf_qport->uuconf_u.uuconf_stcp.uuconf_zport
 	      = pzsplit[3];
+	  qset->uuconf_qport->uuconf_u.uuconf_stcp.uuconf_pzdialer = NULL;
 	}
 
       if (ctoks < 4)

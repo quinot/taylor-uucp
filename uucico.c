@@ -330,10 +330,8 @@ main (argc, argv)
 
 	case 'v':
 	  /* Print version and exit.  */
-	  fprintf
-	    (stderr,
-	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
-	     zProgram, VERSION);
+	  printf ("%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+		  zProgram, VERSION);
 	  exit (EXIT_SUCCESS);
 	  /*NOTREACHED*/
 
@@ -726,47 +724,28 @@ uusage ()
 static void
 uhelp ()
 {
-  fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+  printf ("Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
-  fprintf (stderr,
-	   "Usage: %s [options]\n", zProgram);
-  fprintf (stderr,
-	   " -s,-S,--system system: Call system (-S implies -f)\n");
-  fprintf (stderr,
-	   " -f,--force: Force call despite system status\n");
-  fprintf (stderr,
-	   " -r state: 1 for master, 0 for slave (default)\n");
-  fprintf (stderr,
-	   " --master: Act as master\n");
-  fprintf (stderr,
-	   " --slave: Act as slave (default)\n");
-  fprintf (stderr,
-	   " -p,--port port: Specify port (implies -e)\n");
-  fprintf (stderr,
-	   " -l,--prompt: prompt for login name and password\n");
-  fprintf (stderr,
-	   " -e,--loop: Endless loop of login prompts and daemon execution\n");
-  fprintf (stderr,
-	   " -w,--wait: After calling out, wait for incoming calls\n");
-  fprintf (stderr,
-	   " -q,--nouuxqt: Don't start uuxqt when done\n");
-  fprintf (stderr,
-	   " -c,--quiet: Don't log bad time or no work warnings\n");
-  fprintf (stderr,
-	   " -C,--ifwork: Only call named system if there is work\n");
-  fprintf (stderr,
-	   " -D,--nodetach: Don't detach from controlling terminal\n");
-  fprintf (stderr,
-	   " -x,-X,--debug debug: Set debugging level\n");
+  printf ("Usage: %s [options]\n", zProgram);
+  printf (" -s,-S,--system system: Call system (-S implies -f)\n");
+  printf (" -f,--force: Force call despite system status\n");
+  printf (" -r state: 1 for master, 0 for slave (default)\n");
+  printf (" --master: Act as master\n");
+  printf (" --slave: Act as slave (default)\n");
+  printf (" -p,--port port: Specify port (implies -e)\n");
+  printf (" -l,--prompt: prompt for login name and password\n");
+  printf (" -e,--loop: Endless loop of login prompts and daemon execution\n");
+  printf (" -w,--wait: After calling out, wait for incoming calls\n");
+  printf (" -q,--nouuxqt: Don't start uuxqt when done\n");
+  printf (" -c,--quiet: Don't log bad time or no work warnings\n");
+  printf (" -C,--ifwork: Only call named system if there is work\n");
+  printf (" -D,--nodetach: Don't detach from controlling terminal\n");
+  printf (" -x,-X,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
-  fprintf (stderr,
-	   " -I,--config file: Set configuration file to use\n");
+  printf (" -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  fprintf (stderr,
-	   " -v,--version: Print version and exit\n");
-  fprintf (stderr,
-	   " --help: Print help and exit\n");
+  printf (" -v,--version: Print version and exit\n");
+  printf (" --help: Print help and exit\n");
 }
 
 /* This function is called when a LOG_FATAL error occurs.  */
@@ -1062,6 +1041,7 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
       if (! fconn_dial (&sconn, puuconf, qsys, qsys->uuconf_zphone,
 			&sdialer, &tdialer))
 	{
+	  tdialer = DIALERFOUND_FALSE;
 	  terr = STATUS_DIAL_FAILED;
 	  fret = FALSE;
 	}

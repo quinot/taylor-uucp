@@ -148,6 +148,9 @@ static const struct cmdtab_offset asPtcp_cmds[] =
   { "service", UUCONF_CMDTABTYPE_STRING,
       offsetof (struct uuconf_port, uuconf_u.uuconf_stcp.uuconf_zport),
       NULL },
+  { "dialer-sequence", UUCONF_CMDTABTYPE_FULLSTRING,
+      offsetof (struct uuconf_port, uuconf_u.uuconf_stcp.uuconf_pzdialer),
+      NULL },
   { NULL, 0, 0, NULL }
 };
 
@@ -272,6 +275,7 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 	  break;
 	case UUCONF_PORTTYPE_TCP:
 	  qport->uuconf_u.uuconf_stcp.uuconf_zport = (char *) "uucp";
+	  qport->uuconf_u.uuconf_stcp.uuconf_pzdialer = NULL;
 	  qport->uuconf_ireliable = (UUCONF_RELIABLE_SPECIFIED
 				     | UUCONF_RELIABLE_ENDTOEND
 				     | UUCONF_RELIABLE_RELIABLE

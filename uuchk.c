@@ -646,6 +646,14 @@ ikshow_port (qport, pinfo)
       printf ("   Port type tcp\n");
       printf ("   TCP service %s\n",
 	      qport->uuconf_u.uuconf_stcp.uuconf_zport);
+      if (qtli->uuconf_pzdialer != NULL
+	  && qtli->uuconf_pzdialer[0] != NULL)
+	{
+	  printf ("   Dialer sequence");
+	  for (pz = qtli->uuconf_pzdialer; *pz != NULL; pz++)
+	    printf (" %s", *pz);
+	  printf ("\n");
+	}
       break;
     case UUCONF_PORTTYPE_TLI:
       qtli = &qport->uuconf_u.uuconf_stli;
