@@ -44,7 +44,8 @@ static void ucusage P((void));
 static void uchelp P((void));
 static void ucdirfile P((const char *zdir, const char *zfile,
 			 pointer pinfo));
-static void uccopy P((const char *zfile, const char *zdest));
+static void uccopy P((const char *zfile, const char *zdest,
+		      boolean fforcelocal));
 static void ucadd_cmd P((const struct uuconf_system *qsys,
 			 const struct scmd *qcmd, const char *zlog));
 static void ucspool_cmds P((boolean fjobid));
@@ -540,7 +541,7 @@ main (argc, argv)
 	}
 
       if (! flocal || ! fsysdep_directory (zfrom))
-	uccopy (zfrom, zdestfile);
+	uccopy (zfrom, zdestfile, FALSE);
       else
 	{
 	  char *zbase, *zindir;
@@ -675,7 +676,7 @@ ucdirfile (zfull, zrelative, pinfo)
   if (zto == NULL)
     ucabort ();
 
-  uccopy (zfull, zto);
+  uccopy (zfull, zto, TRUE);
 
   ubuffree (zto);
 }
@@ -686,9 +687,10 @@ ucdirfile (zfull, zrelative, pinfo)
    absolute path.  */
 
 static void
-uccopy (zfile, zdest)
+uccopy (zfile, zdest, fforcelocal)
      const char *zfile;
      const char *zdest;
+     boolean fforcelocal;
 {
   struct scmd s;
   char *zexclam;
@@ -696,7 +698,7 @@ uccopy (zfile, zdest)
 
   zexclam = strchr (zfile, '!');
 
-  if (zexclam == NULL)
+  if (zexclam == NULL || fforcelocal)
     {
       openfile_t efrom;
 
