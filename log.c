@@ -331,10 +331,13 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 
 	  if (eLlog == NULL)
 	    {
-	      /* We can't open the log file.  We don't even have a
-		 safe way to report this problem, since we may not be
-		 able to write to stderr (it may, for example, be
-		 attached to the incoming call).  */
+	      /* We can't open the log file.  We report the problem to
+		 stderr.  This is not ideal, since if this is uucico
+		 running on an inbound call stderr is actually
+		 connected to a remote system, but is better than
+		 doing nothing.  */
+	      fprintf (stderr, "%s: %s: can not open log file\n",
+		       zProgram, zLogfile);
 	      if (pfLfatal != NULL)
 		(*pfLfatal) ();
 	      usysdep_exit (FALSE);
