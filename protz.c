@@ -81,14 +81,14 @@
  *    'a', or maybe in time this will be *the* 'z' protocol.
  *
  * 8) Since we are writing a transport protocol, which isn't supposed to know
- *    anything about what is being transfered or where it is coming from, the
+ *    anything about what is being transferred or where it is coming from, the
  *    header data value has changed meaning. It no longer means "file position"
  *    but instead means "window position". It is a running counter of the bytes
- *    transfered. Each "message" begins on a 1k boundary so the count isn't a
+ *    transferred. Each "message" begins on a 1k boundary so the count isn't a
  *    precise byte count. The counter wraps every 4 gigabytes, although this
  *    wrapping isn't supported yet.
  *
- *    FIXME: At present the max data transfered per session is 4 gigabytes.
+ *    FIXME: At present the max data transferred per session is 4 gigabytes.
  *
  ****************************************************************************
  *
