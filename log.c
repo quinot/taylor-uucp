@@ -1,7 +1,7 @@
 /* log.c
    Routines to add entries to the log files.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -31,7 +31,7 @@ const char log_rcsid[] = "$Id$";
 
 #include <errno.h>
 
-#if ANSI_C
+#if HAVE_STDARG_H
 #include <stdarg.h>
 #endif
 
@@ -230,8 +230,9 @@ zstpcpy (zto, zfrom)
 /* Make a log entry.  We make a token concession to non ANSI_C systems,
    but it clearly won't always work.  */
 
-#if ! ANSI_C
+#if ! HAVE_PROTOTYPES || ! HAVE_STDARG_H
 #undef HAVE_VFPRINTF
+#define HAVE_VFPRINTF 0
 #endif
 
 /*VARARGS2*/
