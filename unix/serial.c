@@ -1816,9 +1816,9 @@ fsmodem_carrier (qconn, fcarrier)
 
 /* Tell the port to use hardware flow control.  There is no standard
    mechanism for controlling this.  This implementation supports
-   CRTSCTS on SunOS and RTS/CTSFLOW on 386(ish) unix.  If you know how
-   to do it on other systems, please implement it and send me the
-   patches.  */
+   CRTSCTS on SunOS, RTS/CTSFLOW on 386(ish) unix, CTSCD on the 3b1,
+   and TXADDCD/TXDELCD on AIX.  If you know how to do it on other
+   systems, please implement it and send me the patches.  */
 
 static boolean
 fsserial_hardflow (qconn, fhardflow)
@@ -1837,9 +1837,13 @@ fsserial_hardflow (qconn, fhardflow)
 #define HAVE_HARDFLOW 0
 #endif
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
+#ifndef TXADDCD
 #ifndef CRTSFL
 #ifndef CRTSCTS
+#ifndef CTSCD
 #define HAVE_HARDFLOW 0
+#endif
+#endif
 #endif
 #endif
 #endif
@@ -1851,6 +1855,11 @@ fsserial_hardflow (qconn, fhardflow)
 #if HAVE_HARDFLOW
   if (fhardflow)
     {
+#ifdef TXADDCD
+      /* The return value does not reliably indicate whether this
+	 actually succeeded.  */
+      (void) ioctl (q->o, TXADDCD, "rts");
+#else /* ! defined (TXADDCD) */
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
 #ifdef CRTSFL
       q->snew.c_cflag |= CRTSFL;
@@ -1859,6 +1868,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CRTSCTS
       q->snew.c_cflag |= CRTSCTS;
 #endif /* defined (CRTSCTS) */
+#ifdef CTSCD
+      q->snew.c_cflag |= CTSCD;
+#endif /* defined (CTSCD) */
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
 	{
@@ -1866,9 +1878,15 @@ fsserial_hardflow (qconn, fhardflow)
 		strerror (errno));
 	  return FALSE;
 	}
+#endif /* ! defined (TXADDCD) */
     }
   else
     {
+#ifdef TXDELCD
+      /* The return value does not reliably indicate whether this
+	 actually succeeded.  */
+      (void) ioctl (q->o, TXDELCD, "rts");
+#else /* ! defined (TXDELCD) */
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
 #ifdef CRTSFL
       q->snew.c_cflag &=~ CRTSFL;
@@ -1877,6 +1895,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CRTSCTS
       q->snew.c_cflag &=~ CRTSCTS;
 #endif /* defined (CRTSCTS) */
+#ifdef CTSCD
+      q->snew.c_cflag &=~ CTSCD;
+#endif /* defined (CTSCD) */
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
       if (! fsetterminfo (q->o, &q->snew))
 	{
@@ -1884,6 +1905,7 @@ fsserial_hardflow (qconn, fhardflow)
 		strerror (errno));
 	  return FALSE;
 	}
+#endif /* ! defined (TXDELCD) */
     }
 #endif /* HAVE_HARDFLOW */
 
