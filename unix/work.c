@@ -245,10 +245,17 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
   qdir = opendir ((char *) zdir);
   if (qdir == NULL)
     {
-      if (errno != ENOENT)
-	ulog (LOG_ERROR, "opendir (%s): %s", zdir, strerror (errno));
+      boolean fret;
+
+      if (errno == ENOENT)
+	fret = TRUE;
+      else
+	{
+	  ulog (LOG_ERROR, "opendir (%s): %s", zdir, strerror (errno));
+	  fret = FALSE;
+	}
       ubuffree (zdir);
-      return FALSE;
+      return fret;
     }
 
   ubuffree (zdir);
