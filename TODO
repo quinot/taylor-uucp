@@ -260,3 +260,13 @@ which matters when using the 'g' protocol.  Should ISTRIP default to
 off, and the characters be automatically stripped in the chat script?
 
 47.
+
+Terry Gardner: if a file transfer fails partway through, record the
+number of bytes transferred in the statistics file.
+
+48.
+
+Terry Gardner: record the length of time spent on a conversation when
+it is over.
+
+49.
