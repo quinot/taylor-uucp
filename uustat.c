@@ -1706,6 +1706,7 @@ fsquery_system (qsys, pq, inow)
 {
   int cwork;
   long ifirstwork;
+  const char *zid;
   boolean fret;
 
   if (! fsysdep_get_work_init (qsys, BGRADE_LOW, TRUE))
@@ -1713,17 +1714,25 @@ fsquery_system (qsys, pq, inow)
 
   cwork = 0;
   ifirstwork = 0L;
+  zid = NULL;
   while (TRUE)
     {
       struct scmd s;
       long itime;
+      const char *zthisid;
 
       if (! fsysdep_get_work (qsys, BGRADE_LOW, TRUE, &s))
 	return FALSE;
       if (s.bcmd == 'H')
 	break;
 
-      ++cwork;
+      zthisid = zsysdep_jobid (qsys, s.pseq);
+      if (zid == NULL || strcmp (zid, zthisid) != 0)
+	{
+	  ++cwork;
+	  xfree ((pointer) zid);
+	  zid = xstrdup (zthisid);
+	}
 
       itime = isysdep_work_time (qsys, s.pseq);
       if (ifirstwork == 0L || ifirstwork > itime)
@@ -1731,6 +1740,7 @@ fsquery_system (qsys, pq, inow)
     }
 
   usysdep_get_work_free (qsys);
+  xfree ((pointer) zid);
 
   /* Find the execution information, if any.  */
   while (*pq != NULL)
@@ -1773,13 +1783,14 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow)
 {
   boolean flocal;
   struct sstatus sstat;
+  boolean fnostatus;
   struct tm stime;
 
   flocal = strcmp (qsys->zname, zLocalname) == 0;
 
   if (! flocal)
     {
-      if (! fsysdep_get_status (qsys, &sstat))
+      if (! fsysdep_get_status (qsys, &sstat, &fnostatus))
 	return FALSE;
     }
 
@@ -1801,7 +1812,7 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow)
       printf (")");
     }
 
-  if (flocal)
+  if (flocal || fnostatus)
     {
       printf ("\n");
       return TRUE;

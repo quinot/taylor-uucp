@@ -620,7 +620,7 @@ static boolean fcall (qsys, qport, fforce, bgrade, fnodetach, ftimewarn)
   struct sstatus sstat;
 
   qorigsys = qsys;
-  if (! fsysdep_get_status (qorigsys, &sstat))
+  if (! fsysdep_get_status (qorigsys, &sstat, (boolean *) NULL))
     return FALSE;
 
   /* Make sure it's been long enough since the last failed call.  */
