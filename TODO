@@ -232,3 +232,8 @@ Yanek Martinson: allow each systems to independently choose whether to
 permit shell execution.
 
 75.
+
+Mike Park: we should accept and Shere=foo message with an alias of the
+system we are calling.
+
+76.
