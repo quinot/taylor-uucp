@@ -4440,6 +4440,7 @@ Brendan Kehoe @file{<brendan@@cs.widener.edu>}
 @file{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
 @file{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
 @file{clewis@@ferret.ocunix.on.ca} (Chris Lewis)
+@file{gdonl@@ssi1.com} (Don Lewis)
 @file{libove@@libove.det.dec.com} (Jay Vassos-Libove)
 @file{bruce%blilly@@Broadcast.Sony.COM} (Bruce Lilly)
 Ted Lindgreen @file{<tlindgreen@@encore.nl>}
