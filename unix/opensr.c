@@ -131,16 +131,18 @@ esysdep_open_send (qsys, zfile, fcheck, zuser)
 }
 
 /* Get a temporary file name to receive into.  We use the ztemp
-   argument to pick the file name, so that we relocate the file if the
+   argument to pick the file name, so that we restart the file if the
    transmission is aborted.  */
 
 char *
-zsysdep_receive_temp (qsys, zto, ztemp)
+zsysdep_receive_temp (qsys, zto, ztemp, frestart)
      const struct uuconf_system *qsys;
      const char *zto;
      const char *ztemp;
+     boolean frestart;
 {
-  if (ztemp != NULL
+  if (frestart
+      && ztemp != NULL
       && *ztemp == 'D'
       && strcmp (ztemp, "D.0") != 0)
     return zsappend3 (".Temp", qsys->uuconf_zname, ztemp);
@@ -168,8 +170,10 @@ esysdep_open_receive (qsys, zto, ztemp, zreceive, pcrestart)
      that case, we may have already received some portion of this
      file.  */
   o = -1;
-  *pcrestart = -1;
-  if (ztemp != NULL
+  if (pcrestart != NULL)
+    *pcrestart = -1;
+  if (pcrestart != NULL
+      && ztemp != NULL
       && *ztemp == 'D'
       && strcmp (ztemp, "D.0") != 0)
     {

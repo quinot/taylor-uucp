@@ -49,6 +49,8 @@ struct sprotocol
   int ireliable;
   /* The maximum number of channels this protocol can support.  */
   int cchans;
+  /* Whether files may be reliably restarted using this protocol.  */
+  boolean frestart;
   /* Protocol parameter commands.  */
   struct uuconf_cmdtab *qcmds;
   /* A routine to start the protocol.  If *pzlog is set to be

@@ -401,23 +401,27 @@ extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
 /* Return a temporary file name to receive into.  This file will be
    opened by esysdep_open_receive.  The qsys argument is the system
    the file is coming from, the zto argument is the name the file will
-   have after it has been fully received, and the ztemp argument, if
-   it is not NULL, is from the command sent by the remote system.  The
-   return value must be freed using ubuffree.  The function should
-   return NULL on error.  */
+   have after it has been fully received, the ztemp argument, if it is
+   not NULL, is from the command sent by the remote system, and the
+   frestart argument is TRUE if the protocol and remote system permit
+   file transfers to be restarted.  The return value must be freed
+   using ubuffree.  The function should return NULL on error.  */
 extern char *zsysdep_receive_temp P((const struct uuconf_system *qsys,
 				     const char *zfile,
-				     const char *ztemp));
+				     const char *ztemp,
+				     boolean frestart));
 
 /* Open a file to receive from another system.  The zreceive argument
    is the return value of zsysdep_receive_temp with the same qsys,
    zfile and ztemp arguments.  If the function can determine that this
    file has already been partially received, it should set *pcrestart
    to the number of bytes that have been received.  If the file has
-   not been partially received, *pcrestart should be set to -1.  The
-   function should return EFILECLOSED on error.  After the file is
-   written, fsysdep_move_file will be called to move the file to its
-   final destination, and to set the correct file mode.  */
+   not been partially received, *pcrestart should be set to -1.
+   pcrestart will be passed in as NULL if file restart is not
+   supported by the protocol or the remote system.  The function
+   should return EFILECLOSED on error.  After the file is written,
+   fsysdep_move_file will be called to move the file to its final
+   destination, and to set the correct file mode.  */
 extern openfile_t esysdep_open_receive P((const struct uuconf_system *qsys,
 					  const char *zto,
 					  const char *ztemp,

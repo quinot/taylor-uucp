@@ -308,7 +308,10 @@ flocal_rec_send_request (qtrans, qdaemon)
   boolean fret;
 
   qinfo->ztemp = zsysdep_receive_temp (qdaemon->qsys, qinfo->zfile,
-				       (const char *) NULL);
+				       (const char *) NULL,
+				       (qdaemon->qproto->frestart
+					&& (qdaemon->ifeatures
+					    & FEATURE_RESTART) != 0));
   if (qinfo->ztemp == NULL)
     {
       urrec_free (qtrans);
@@ -432,7 +435,11 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
      some way to do this, but I don't know what it is.  */
   qtrans->e = esysdep_open_receive (qdaemon->qsys, qinfo->zfile,
 				    (const char *) NULL, qinfo->ztemp,
-				    &crestart);
+				    ((qdaemon->qproto->frestart
+				      && (qdaemon->ifeatures
+					  & FEATURE_RESTART) != 0)
+				     ? &crestart
+				     : (long *) NULL));
   if (! ffileisopen (qtrans->e))
     return flocal_rec_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			    "cannot open file");
@@ -611,7 +618,10 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	}
     }
 
-  ztemp = zsysdep_receive_temp (qsys, zfile, qcmd->ztemp);
+  ztemp = zsysdep_receive_temp (qsys, zfile, qcmd->ztemp,
+				(qdaemon->qproto->frestart
+				 && (qdaemon->ifeatures
+				     & FEATURE_RESTART) != 0));
 
   /* Adjust the number of bytes we are prepared to receive according
      to the amount of free space we are supposed to leave available
@@ -654,7 +664,12 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   /* Open the file to receive into.  This may find an old copy of the
      file, which will be used for file restart if the other side
      supports it.  */
-  e = esysdep_open_receive (qsys, zfile, qcmd->ztemp, ztemp, &crestart);
+  e = esysdep_open_receive (qsys, zfile, qcmd->ztemp, ztemp,
+			    ((qdaemon->qproto->frestart
+			      && (qdaemon->ifeatures
+				  & FEATURE_RESTART) != 0)
+			     ? &crestart
+			     : (long *) NULL));
   if (! ffileisopen (e))
     {
       ubuffree (ztemp);
@@ -1048,7 +1063,10 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	 uuxqt might pick up the file before we have finished writing
 	 it.  */
       e = NULL;
-      ztemp = zsysdep_receive_temp (qdaemon->qsys, zxqtfile, "D.0");
+      ztemp = zsysdep_receive_temp (qdaemon->qsys, zxqtfile, "D.0",
+				    (qdaemon->qproto->frestart
+				     && (qdaemon->ifeatures
+					 & FEATURE_RESTART) != 0));
       if (ztemp != NULL)
 	e = esysdep_fopen (ztemp, FALSE, FALSE, TRUE);
 
