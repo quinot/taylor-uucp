@@ -277,7 +277,10 @@ main (argc, argv)
 	}
     }
 
-  if (! UUCONF_GRADE_LEGAL (bCgrade))
+  if (! UUCONF_GRADE_LEGAL (bCgrade)
+      || ((bCgrade < '0' || bCgrade > '9')
+	  && (bCgrade < 'a' || bCgrade > 'z')
+	  && (bCgrade < 'A' || bCgrade > 'Z')))
     {
       ulog (LOG_ERROR, "Ignoring illegal grade");
       bCgrade = BDEFAULT_UUCP_GRADE;

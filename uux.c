@@ -336,7 +336,10 @@ main (argc, argv)
 	}
     }
 
-  if (! UUCONF_GRADE_LEGAL (bXgrade))
+  if (! UUCONF_GRADE_LEGAL (bXgrade)
+      || ((bXgrade < '0' || bXgrade > '9')
+	  && (bXgrade < 'a' || bXgrade > 'z')
+	  && (bXgrade < 'A' || bXgrade > 'Z')))
     {
       ulog (LOG_ERROR, "Ignoring illegal grade");
       bXgrade = BDEFAULT_UUX_GRADE;
