@@ -1,7 +1,7 @@
 /* syssub.c
    System information subroutines.
 
-   Copyright (C) 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -80,6 +80,7 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
     { \
       OP (uuconf_qtimegrade); \
       OP (uuconf_qcalltimegrade); \
+      OP (uuconf_qcalledtimegrade); \
       OP (uuconf_qcall_local_size); \
       OP (uuconf_qcall_remote_size); \
       OP (uuconf_qcalled_local_size); \
