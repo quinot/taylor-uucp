@@ -241,16 +241,6 @@ Les Mikesell: add TLI and TLIS connection ability.
 Les Mikesell: allow a separate program to be specified to handle the
 communications with a particular system.
 
-99.
-
-Marty Shannon: some sort of Maxuuxqts?
-
-100.
-
-Franc,ois Pinard: if fork fails, retry or do something useful.
-Currently if it fails in fsysdep_execute, the work file will be thrown
-away, which is about as stupid as possible.
-
 105.
 
 T. William Wells: close and open the Debug file after each file
@@ -273,10 +263,7 @@ T. William Wells: new options for uustat:
 	-K interactively kill jobs
 Also, there should perhaps be a configuration option to request uustat
 to only display jobs submitted by the user running uustat, except for
-root and uucp (there's no point to doing this until there's some way
-to configure things so that the UUCP spool directory is not publically
-readable; right now anybody could just compile their own version of
-uustat and get all the information anyhow).
+root and uucp.
 
 117.
 
@@ -303,12 +290,6 @@ Include Michael Richardson's debugging information somewhere in the
 documentation.  Or implement a better debugging scheme which allows
 individual control over each type of debugging command.
 
-123.
-
-Change the new chat script debugging to have a maximum number of
-characters before starting a new line.  Applies to zget_uucp_cmd and
-zget_typed_line as well.
-
 124.
 
 Peter da Silva: perhaps there should be a ``chat-end-program'' command
@@ -317,3 +298,14 @@ and the protocol has been selected and turned on.  This would let
 people run stty to change their terminal parameters.
 
 128.
+
+Richard Stallman: have an interactive program to set up a chat script.
+It would let you type directly to the port, recording what you type as
+send strings and recording what comes back from the other side as
+expect strings.
+
+129.
+
+Use POSIX fcntl locks when possible instead of creating a lock file.
+
+130.
