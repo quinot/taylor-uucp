@@ -1,5 +1,8 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/serial.c (fsblock): Test for EINVAL when changing the write
+	descriptor as we do when changing the read descriptor.
+
 	* unix/seq.c (ixsysdep_get_sequence): If SPOOLDIR_HDB or
 	SPOOLDIR_SVR4, use .SQFILE for the name of the sequence directory,
 	to avoid colliding with the command sequence number file used by

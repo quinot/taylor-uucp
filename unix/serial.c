@@ -1335,12 +1335,22 @@ fsblock (qs, fblock)
       else
 	iwant = qs->iwr_flags | iSunblock;
 
-      if (fcntl (qs->owr, F_SETFL, iwant) < 0)
+      isys = fcntl (qs->owr, F_SETFL, iwant);
+      if (isys < 0)
 	{
-	  /* We don't bother to fix up iSunblock here, since we
-	     succeeded above.  */
-	  ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
-	  return FALSE;
+#if O_NONBLOCK != 0
+	  if (! fblock && iSunblock != O_NONBLOCK && errno == EINVAL)
+	    {
+	      iSunblock = O_NONBLOCK;
+	      iwant = qs->iwr_flags | O_NONBLOCK;
+	      isys = fcntl (qs->owr, F_SETFL, iwant);
+	    }
+#endif
+	  if (isys < 0)
+	    {
+	      ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
+	      return FALSE;
+	    }
 	}
 
       qs->iwr_flags = iwant;
