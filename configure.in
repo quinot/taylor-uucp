@@ -49,6 +49,17 @@ M_DEFINE([HAVE_SYS_TIME_AND_TIME_H],
    be included in a single source file.  */])
 rm -f conftest conftest.c
 dnl
+echo checking for termios.h and sys/ioctl.h being included together
+echo "#include <termios.h>
+#include <sys/ioctl.h>
+main () { exit (0); }" > conftest.c
+eval $compile
+M_DEFINE([HAVE_TERMIOS_AND_SYS_IOCTL_H],
+[`(if test -f $INCLUDEDIR/termios.h -a -f $INCLUDEDIR/sys/ioctl.h -a -s conftest && ./conftest 2>/dev/null; then echo 1; else echo 0; fi) 2>/dev/null`],
+[/* Set HAVE_TERMIOS_AND_SYS_IOCTL_H to 1 if <termios.h> and <sys/ioctl.h>
+   can both be included in a single source file.  */])
+rm -f conftest conftest.c
+dnl
 ILT_LIBTHING_CHECK([CBREAK], [#include <sgtty.h>], [int i = CBREAK;],
 [HAVE_CBREAK],
 [/* HAVE_CBREAK is just used if you don't set one of the terminal driver

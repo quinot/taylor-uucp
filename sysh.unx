@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.43  1992/03/09  22:07:36  ian
+   Wait for terminal output to drain at various points
+
    Revision 1.42  1992/03/03  21:01:20  ian
    Use strict timeout in fsserial_read, eliminate all race conditions
 
@@ -270,6 +273,15 @@ typedef struct termios sterminal;
 #define fgetterminfo(o, q) (tcgetattr ((o), (q)) == 0)
 #define fsetterminfo(o, q) (tcsetattr ((o), TCSANOW, (q)) == 0)
 #define fsetterminfodrain(o, q) (tcsetattr ((o), TCSADRAIN, (q)) == 0)
+
+/* On some systems it is not possible to include both <sys/ioctl.h>
+   and <termios.h> in the same source files; I don't really know why.
+   On such systems, we pretend that we don't have <sys/ioctl.h>.  */
+#if ! HAVE_TERMIOS_AND_SYS_IOCTL_H
+#undef HAVE_SYS_IOCTL_H
+#define HAVE_SYS_IOCTL_H 0
+#endif
+
 #endif /* HAVE_POSIX_TERMIOS */
 
 /* The root directory (this is needed by the system independent stuff).  */
