@@ -1,7 +1,7 @@
 /* uuconf.h
    Header file for UUCP configuration routines.
 
-   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -206,6 +206,12 @@ struct uuconf_system
      other system should transfer at that time.  May be NULL, in which
      case there are no grade restrictions.  */
   struct uuconf_timespan *uuconf_qcalltimegrade;
+  /* The times at which to allow a particular grade of work to be
+     transferred to the system, when it calls in.  The ival field of
+     each uuconf_timespan structure is the lowest grade which should
+     be transferred at that time.  May be NULL, in which case there
+     are no grade restrictions.  */
+  struct uuconf_timespan *uuconf_qcalledtimegrade;
   /* The maximum number of times to retry calling this system.  If
      this is 0, there is no limit.  */
   int uuconf_cmax_retries;
