@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/17  07:09:58  ian
+   Record statistics in fractions of a second
+
    Revision 1.5  1991/12/13  04:02:23  ian
    David Nugent: move ERROR: from start of line to after date and time
 
@@ -308,20 +311,14 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
     fprintf (edebug, "%s ", zLuser == NULL ? "uucp" : zLuser);
 #endif /* HAVE_BNU_LOGGING */
 
-  if (zLsystem != NULL)
-    {
-      fprintf (e, "%s ", zLsystem);
-      if (edebug != NULL)
-	fprintf (edebug, "%s ", zLsystem);
-    }
+  fprintf (e, "%s ", zLsystem == NULL ? "-" : zLsystem);
+  if (edebug != NULL)
+    fprintf (edebug, "%s ", zLsystem == NULL ? "-" : zLsystem);
 
 #if ! HAVE_BNU_LOGGING
-  if (zLuser != NULL)
-    {
-      fprintf (e, "%s ", zLuser);
-      if (edebug != NULL)
-	fprintf (edebug, "%s ", zLuser);
-    }
+  fprintf (e, "%s ", zLuser == NULL ? "-" : zLuser);
+  if (edebug != NULL)
+    fprintf (edebug, "%s ", zLuser == NULL ? "-" : zLuser);
 #endif /* ! HAVE_BNU_LOGGING */
 
   zstr = zldate_and_time ();
