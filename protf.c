@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/11/15  21:00:59  ian
+   Efficiency hacks for 'f' and 't' protocols
+
    Revision 1.1  1991/11/11  04:21:16  ian
    Initial revision
 
@@ -40,6 +43,7 @@ char protf_rcsid[] = "$Id$";
 
 #include "prot.h"
 #include "port.h"
+#include "system.h"
 
 /* This implementation is based on code by Piet Beertema, CWI,
    Amsterdam, Sep 1984.
@@ -105,7 +109,7 @@ ffstart (fmaster)
 
   /* We sleep to allow the other side to reset the terminal; this is
      what Mr. Beertema's code does.  */
-  sleep (2);
+  usysdep_sleep (2);
 
   return TRUE;
 }
@@ -411,28 +415,15 @@ ffwait ()
       if (fexit)
 	return TRUE;
 
-      /* If we are in file mode, we ask for a bunch of data with a one
-	 second timeout.  This avoids the problem of making a lot of
-	 system calls each of which returns a single character, at the
-	 cost of up to a second per file transfer.  I don't know if
-	 this is a good idea or not.  If we don't get anything back,
-	 or we're in command mode, we ask for a single character with
-	 a long timeout.  We don't have any way to jog the other side,
-	 so if the timeout fails we have to error out.  */
+      /* We only ask for one character at a time.  This could wind up
+	 being quite inefficient, since we might only get one
+	 character back from each read.  We really want to do
+	 something like get all available characters, then sleep for
+	 half a second and get all available characters again, and
+	 keep this up until we don't get anything after sleeping.  */
 
-      if (! fFfile)
-	crec = 0;
-      else
-	{
-	  if (! freceive_data (128, &crec, 1))
-	    return FALSE;
-	}
-
-      if (crec == 0)
-	{
-	  if (! freceive_data (1, &crec, cFtimeout))
-	    return FALSE;
-	}
+      if (! freceive_data (1, &crec, cFtimeout))
+	return FALSE;
 
       if (crec == 0)
 	{
