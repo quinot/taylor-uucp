@@ -41,7 +41,9 @@ uuconf_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
      pointer pinfo;
      struct uuconf_port *qport;
 {
+#if HAVE_V2_CONFIG || HAVE_HDB_CONFIG
   struct sglobal *qglobal = (struct sglobal *) pglobal;
+#endif
   int iret;
 
 #if HAVE_TAYLOR_CONFIG

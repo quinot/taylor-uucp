@@ -37,7 +37,9 @@ uuconf_dialer_info (pglobal, zdialer, qdialer)
      const char *zdialer;
      struct uuconf_dialer *qdialer;
 {
+#if HAVE_HDB_CONFIG
   struct sglobal *qglobal = (struct sglobal *) pglobal;
+#endif
   int iret;
 
 #if HAVE_TAYLOR_CONFIG
