@@ -52,9 +52,11 @@ uucp.info
 uucp.info-1
 uucp.info-2
 uucp.info-3
+uucp.info-4
 uudir.c
 uulog.c
 uuname.c
+uustat.1
 uustat.c
 uutime.h
 uux.1
