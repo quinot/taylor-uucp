@@ -182,70 +182,37 @@ iswork_cmp (pkey, pdatum)
   return strcmp (*pzkey, *pzdatum);
 }
 
-/* See whether there is any work to do for a particular system.  If
-   any work is found, *pbgrade is set to highest grade found.  */
+/* See whether there is any work to do for a particular system.  */
 
 boolean
-fsysdep_has_work (qsys, pbgrade)
+fsysdep_has_work (qsys)
      const struct uuconf_system *qsys;
-     char *pbgrade;
 {
-  boolean fret;
   char *zdir;
   DIR *qdir;
   struct dirent *qentry;
 
-  fret = FALSE;
-  *pbgrade = UUCONF_GRADE_LOW;
-
-  if (azSwork_files != NULL && iSwork_file < cSwork_files)
-    {
-      int i;
-
-      fret = TRUE;
-      for (i = iSwork_file; i < cSwork_files; i++)
-	{
-	  char bgrade;
-
-	  (void) fswork_file (qsys->uuconf_zname, azSwork_files[i],
-			      &bgrade);
-	  if (UUCONF_GRADE_CMP (bgrade, *pbgrade) < 0)
-	    *pbgrade = bgrade;
-	}
-    }
-
   zdir = zswork_directory (qsys->uuconf_zname);
   if (zdir == NULL)
     return FALSE;
-
   qdir = opendir ((char *) zdir);
   ubuffree (zdir);
-
   if (qdir == NULL)
     return FALSE;
 
   while ((qentry = readdir (qdir)) != NULL)
     {
       char bgrade;
-      char *zname;
 
-      /* If this is a work file and we haven't seen it before, return
-	 TRUE.  Also, determine the grade to return.  */
-      zname = qentry->d_name;
-      if (fswork_file (qsys->uuconf_zname, qentry->d_name, &bgrade)
-	  && (azSwork_files == NULL
-	      || bsearch ((pointer) &zname,
-			  (pointer) azSwork_files,
-			  cSwork_files, sizeof (char *),
-			  iswork_cmp) == NULL))
+      if (fswork_file (qsys->uuconf_zname, qentry->d_name, &bgrade))
 	{
-	  fret = TRUE;
-	  if (UUCONF_GRADE_CMP (bgrade, *pbgrade) < 0)
-	    *pbgrade = bgrade;
+	  closedir (qdir);
+	  return TRUE;
 	}
     }
+
   closedir (qdir);
-  return fret;
+  return FALSE;
 }
 
 /* Initialize the work scan.  We have to read all the files in the
@@ -303,7 +270,7 @@ fsysdep_get_work_init (qsys, bgrade, fcheck)
       char *zname;
 
       zname = qentry->d_name;
-      if (fswork_file (qsys->uuconf_zname, qentry->d_name, &bfilegrade)
+      if (fswork_file (qsys->uuconf_zname, zname, &bfilegrade)
 	  && (azSwork_files == NULL
 	      || bsearch ((pointer) &zname,
 			  (pointer) azSwork_files,
@@ -499,7 +466,6 @@ fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
 	  ++qSwork_file->cdid;
 
 	  /* Now parse the line into a command.  */
-
 	  if (! fparse_cmd (qSwork_file->aslines[iline].zline, qcmd))
 	    {
 	      ulog (LOG_ERROR, "Bad line in command file %s",
@@ -525,7 +491,7 @@ fsysdep_get_work (qsys, bgrade, fcheck, qcmd)
 	    }
 
 	  qSwork_file->aslines[iline].qfile = qSwork_file;
-	  qcmd->pseq = (pointer)(&qSwork_file->aslines[iline]);
+	  qcmd->pseq = (pointer) (&qSwork_file->aslines[iline]);
 
 	  ubuffree (zdir);
 	  return TRUE;
@@ -570,7 +536,7 @@ fsysdep_did_work (pseq)
       qline->ztemp = NULL;
     }
 
-  /* If not all the lines have been returned from bsysdep_get_work,
+  /* If not all the lines have been returned from fsysdep_get_work,
      we can't remove the file yet.  */
   if (qfile->cdid < qfile->clines)
     return TRUE;

@@ -32,9 +32,10 @@ const char protf_rcsid[] = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 
-#include "prot.h"
 #include "conn.h"
+#include "trans.h"
 #include "system.h"
+#include "prot.h"
 
 /* This implementation is based on code by Piet Beertema, CWI,
    Amsterdam, Sep 1984.
@@ -57,10 +58,33 @@ const char protf_rcsid[] = "$Id$";
    This causes all output bytes to be in the range 040 to 0176; these
    are the printable ASCII characters.  */
 
-/* Internal functions.  */
-static boolean ffprocess_data P((struct sconnection *qconn,
-				 boolean *pfexit, size_t *pcneed));
+/* This structure is used to hold information when dealing with the
+   end of file acknowledgement.  */
 
+struct sfinfo
+{
+  /* The functions from the generic code.  */
+  boolean (*psendfn) P((struct stransfer *qtrans, struct sdaemon *qdaemon));
+  boolean (*precfn) P((struct stransfer *qtrans, struct sdaemon *qdaemon,
+		       const char *zdata, size_t cdata));
+  /* The info pointer from the generic code.  */
+  pointer pinfo;
+  /* The character to send after receiving the checksum.  */
+  char bsend;
+};
+
+/* Internal functions.  */
+static boolean ffprocess_data P((struct sdaemon *qdaemon,
+				 boolean *pfexit, size_t *pcneed));
+static boolean ffawait_ack P((struct stransfer *qtrans,
+			      struct sdaemon *qdaemon,
+			      const char *zdata, size_t cdata));
+static boolean ffawait_cksum P((struct stransfer *qtrans,
+				struct sdaemon *qdaemon,
+				const char *zdata, size_t cdata));
+static boolean ffsend_ack P((struct stransfer *qtrans,
+			     struct sdaemon *qdaemon));
+
 /* The size of the buffer we allocate to store outgoing data in.  */
 #define CFBUFSIZE (256)
 
@@ -84,6 +108,9 @@ static char bFspecial;
 
 /* The number of times we have retried this file.  */
 static int cFretries;
+
+/* Whether this file has been acknowledged.  */
+static boolean fFacked;
 
 struct uuconf_cmdtab asFproto_params[] =
 {
@@ -116,8 +143,8 @@ static long cFrec_retries;
 
 /*ARGSUSED*/
 boolean
-ffstart (qconn, fmaster)
-     struct sconnection *qconn;
+ffstart (qdaemon, fmaster)
+     struct sdaemon *qdaemon;
      boolean fmaster;
 {
   cFsent_data = 0;
@@ -128,8 +155,8 @@ ffstart (qconn, fmaster)
   cFrec_retries = 0;
 
   /* Use XON/XOFF handshaking.  */
-  if (! fconn_set (qconn, PARITYSETTING_DEFAULT, STRIPSETTING_SEVENBITS,
-		   XONXOFF_ON))
+  if (! fconn_set (qdaemon->qconn, PARITYSETTING_DEFAULT,
+		   STRIPSETTING_SEVENBITS, XONXOFF_ON))
     return FALSE;
 
   /* We sleep to allow the other side to reset the terminal; this is
@@ -143,8 +170,8 @@ ffstart (qconn, fmaster)
 
 /*ARGSIGNORED*/
 boolean
-ffshutdown (qconn)
-     struct sconnection *qconn;
+ffshutdown (qdaemon)
+     struct sdaemon *qdaemon;
 {
   xfree ((pointer) zFbuf);
   zFbuf = NULL;
@@ -163,8 +190,8 @@ ffshutdown (qconn)
    return.  */
 
 boolean
-ffsendcmd (qconn, z)
-     struct sconnection *qconn;
+ffsendcmd (qdaemon, z)
+     struct sdaemon *qdaemon;
      const char *z;
 {
   size_t clen;
@@ -175,7 +202,7 @@ ffsendcmd (qconn, z)
   clen = strlen (z);
   zalc = (char *) alloca (clen + 2);
   sprintf (zalc, "%s\r", z);
-  return fsend_data (qconn, zalc, clen + 1, TRUE);
+  return fsend_data (qdaemon->qconn, zalc, clen + 1, TRUE);
 }
 
 /* Get space to be filled with data.  We allocate the space from the
@@ -183,8 +210,8 @@ ffsendcmd (qconn, z)
 
 /*ARGSIGNORED*/
 char *
-zfgetspace (qconn, pclen)
-     struct sconnection *qconn;
+zfgetspace (qdaemon, pclen)
+     struct sdaemon *qdaemon;
      size_t *pclen;
 {
   *pclen = CFBUFSIZE;
@@ -196,11 +223,13 @@ zfgetspace (qconn, pclen)
 /* Send out a data packet.  We have to encode the data into seven bits
    and accumulate a checksum.  */
 
+/*ARGSIGNORED*/
 boolean
-ffsenddata (qconn, zdata, cdata)
-     struct sconnection *qconn;
+ffsenddata (qdaemon, zdata, cdata, ipos)
+     struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     long ipos;
 {
   char ab[CFBUFSIZE * 2];
   char *ze;
@@ -269,27 +298,17 @@ ffsenddata (qconn, zdata, cdata)
 
   /* Passing FALSE tells fsend_data not to bother looking for incoming
      information, since we really don't expect any.  */
-  return fsend_data (qconn, ab, (size_t) (ze - ab), FALSE);
+  return fsend_data (qdaemon->qconn, ab, (size_t) (ze - ab), FALSE);
 }
 
-/* Process any data in the receive buffer.  */
-
-boolean
-ffprocess (qconn, pfexit)
-     struct sconnection *qconn;
-     boolean *pfexit;
-{
-  return ffprocess_data (qconn, pfexit, (size_t *) NULL);
-}
-
 /* Process data and return the amount of data we are looking for in
    *pcneed.  The 'f' protocol doesn't really reveal this, but when
    transferring file we know that we need at least seven characters
    for the checksum.  */
 
 static boolean
-ffprocess_data (qconn, pfexit, pcneed)
-     struct sconnection *qconn;
+ffprocess_data (qdaemon, pfexit, pcneed)
+     struct sdaemon *qdaemon;
      boolean *pfexit;
      size_t *pcneed;
 {
@@ -303,7 +322,6 @@ ffprocess_data (qconn, pfexit, pcneed)
     {
       /* A command continues until a '\r' character, which we turn
 	 into '\0' before calling fgot_data.  */
-
       while (iPrecstart != iPrecend)
 	{
 	  for (i = iPrecstart; i < CRECBUFLEN && i != iPrecend; i++)
@@ -312,17 +330,30 @@ ffprocess_data (qconn, pfexit, pcneed)
 		{
 		  int istart;
 
+		  DEBUG_MESSAGE1 (DEBUG_PROTO,
+				  "ffprocess_data: Got %d command bytes",
+				  i - iPrecstart + 1);
+
 		  abPrecbuf[i] = '\0';
 		  istart = iPrecstart;
 		  iPrecstart = (i + 1) % CRECBUFLEN;
-		  return fgot_data (abPrecbuf + istart,
+		  if (pcneed != NULL)
+		    *pcneed = 0;
+		  return fgot_data (qdaemon, abPrecbuf + istart,
 				    (size_t) (i - istart + 1),
-				    TRUE, FALSE, pfexit, qconn);
+				    (const char *) NULL, (size_t) 0,
+				    -1, -1, (long) -1, pfexit);
 		}
 	    }
 
-	  if (! fgot_data (abPrecbuf + iPrecstart, (size_t) (i - iPrecstart),
-			   TRUE, FALSE, pfexit, qconn))
+	  DEBUG_MESSAGE1 (DEBUG_PROTO,
+			  "ffprocess_data: Got %d command bytes",
+			  i - iPrecstart);
+
+	  if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
+			   (size_t) (i - iPrecstart),
+			   (const char *) NULL, (size_t) 0,
+			   -1, -1, (long) -1, pfexit))
 	    return FALSE;
 
 	  iPrecstart = i % CRECBUFLEN;
@@ -362,7 +393,6 @@ ffprocess_data (qconn, pfexit, pcneed)
 	     only legal pair of consecutive special characters
 	     are 0176 0176 which immediately precede the four
 	     digit checksum.  */
-
 	  if (b >= 0172)
 	    {
 	      if (bFspecial != 0)
@@ -381,8 +411,10 @@ ffprocess_data (qconn, pfexit, pcneed)
 		      /* Don't count the checksum in the received bytes.  */
 		      cFrec_bytes += zfrom - zstart - 2;
 		      cFrec_data += zto - zstart;
-		      if (! fgot_data (zstart, (size_t) (zto - zstart),
-				       FALSE, TRUE, pfexit, qconn))
+		      if (! fgot_data (qdaemon, zstart,
+				       (size_t) (zto - zstart),
+				       (const char *) NULL, (size_t) 0,
+				       1, -1, (long) -1, pfexit))
 			return FALSE;
 		    }
 
@@ -393,10 +425,16 @@ ffprocess_data (qconn, pfexit, pcneed)
 		  iFcheck = itmpchk;
 
 		  /* Tell fgot_data that we've read the entire file by
-		     passing 0 length data.  This will set *pfexit to
-		     TRUE and call fffile to verify the checksum.  */
-		  return fgot_data ((char *) NULL, (size_t) 0, FALSE, TRUE,
-				    pfexit, qconn);
+		     passing 0 length data.  This will wind up calling
+		     fffile to verify the checksum.  We set *pcneed to
+		     0 because we don't want to read any more data
+		     from the port, since we may have already read the
+		     checksum.  */
+		  if (pcneed != NULL)
+		    *pcneed = 0;
+		  return fgot_data (qdaemon, (const char *) NULL,
+				    (size_t) 0, (const char *) NULL,
+				    (size_t) 0, 1, -1, (long) -1, pfexit);
 		}
 
 	      /* Here we have encountered a special character that
@@ -449,12 +487,13 @@ ffprocess_data (qconn, pfexit, pcneed)
       if (zto != zstart)
 	{
 	  DEBUG_MESSAGE1 (DEBUG_PROTO,
-			  "ffprocess: Calling fgot_data with %d bytes",
+			  "ffprocess_data: Got %d bytes",
 			  zto - zstart);
 
 	  cFrec_data += zto - zstart;
-	  if (! fgot_data (zstart, (size_t) (zto - zstart), FALSE, TRUE,
-			   pfexit, qconn))
+	  if (! fgot_data (qdaemon, zstart, (size_t) (zto - zstart),
+			   (const char *) NULL, (size_t) 0,
+			   1, -1, (long) -1, pfexit))
 	    return FALSE;
 	}
 
@@ -486,30 +525,32 @@ ffprocess_data (qconn, pfexit, pcneed)
    command or a file.  */
 
 boolean
-ffwait (qconn)
-     struct sconnection *qconn;	
+ffwait (qdaemon)
+     struct sdaemon *qdaemon;
 {
   while (TRUE)
     {
       boolean fexit;
       size_t cneed, crec;
 
-      if (! ffprocess_data (qconn, &fexit, &cneed))
+      if (! ffprocess_data (qdaemon, &fexit, &cneed))
 	return FALSE;
       if (fexit)
 	return TRUE;
 
-      /* We really want to do something like get all available
-	 characters, then sleep for half a second and get all
-	 available characters again, and keep this up until we don't
-	 get anything after sleeping.  */
-      if (! freceive_data (qconn, cneed, &crec, cFtimeout, TRUE))
-	return FALSE;
-
-      if (crec == 0)
+      if (cneed > 0)
 	{
-	  ulog (LOG_ERROR, "Timed out waiting for data");
-	  return FALSE;
+	  /* We really want to do something like get all available
+	     characters, then sleep for half a second and get all
+	     available characters again, and keep this up until we
+	     don't get anything after sleeping.  */
+	  if (! freceive_data (qdaemon->qconn, cneed, &crec, cFtimeout, TRUE))
+	    return FALSE;
+	  if (crec == 0)
+	    {
+	      ulog (LOG_ERROR, "Timed out waiting for data");
+	      return FALSE;
+	    }
 	}
     }
 }
@@ -520,17 +561,25 @@ ffwait (qconn)
 
 /*ARGSUSED*/
 boolean
-fffile (qconn, fstart, fsend, pfredo, cbytes)
-     struct sconnection *qconn;
+fffile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
+     struct sdaemon *qdaemon;
+     struct stransfer *qtrans;
      boolean fstart;
      boolean fsend;
-     boolean *pfredo;
      long cbytes;
+     boolean *pfhandled;
 {
+  DEBUG_MESSAGE3 (DEBUG_PROTO, "fffile: fstart %s; fsend %s; fFacked %s",
+		  fstart ? "true" : "false", fsend ? "true" : "false",
+		  fFacked ? "true" : "false");
+
+  *pfhandled = FALSE;
+
   if (fstart)
     {
       iFcheck = 0xffff;
       cFretries = 0;
+      fFacked = FALSE;
       if (! fsend)
 	{
 	  bFspecial = 0;
@@ -540,99 +589,236 @@ fffile (qconn, fstart, fsend, pfredo, cbytes)
     }
   else
     {
-      const char *z;
+      struct sfinfo *qinfo;
 
-      *pfredo = FALSE;
+      /* We need to handle the checksum and the acknowledgement.  If
+	 we get a successful ACK, we set fFacked to TRUE and call the
+	 send or receive function by hand.  This will wind up calling
+	 here again, so if fFacked is TRUE we just return out and let
+	 the send or receive function do whatever it does.  This is a
+	 bit of a hack.  */
+      if (fFacked)
+	{
+	  fFacked = FALSE;
+	  return TRUE;
+	}
 
       if (fsend)
 	{
-	  char ab[8];
+	  char ab[sizeof "\176\176ABCD\r"];
 
 	  /* Send the final checksum.  */
-
 	  sprintf (ab, "\176\176%04x\r", iFcheck & 0xffff);
-	  if (! fsend_data (qconn, ab, (size_t) 7, TRUE))
+	  if (! fsend_data (qdaemon->qconn, ab, (size_t) 7, TRUE))
 	    return FALSE;
 
-	  /* Now look for the acknowledgement.  */
-	  z = zgetcmd (qconn);
-	  if (z == NULL)
-	    return FALSE;
+	  /* Now wait for the acknowledgement.  */
+	  fFfile = FALSE;
+	  qinfo = (struct sfinfo *) xmalloc (sizeof (struct sfinfo));
+	  qinfo->psendfn = qtrans->psendfn;
+	  qinfo->precfn = qtrans->precfn;
+	  qinfo->pinfo = qtrans->pinfo;
+	  qtrans->psendfn = NULL;
+	  qtrans->precfn = ffawait_ack;
+	  qtrans->pinfo = (pointer) qinfo;
+	  qtrans->fcmd = TRUE;
 
-	  /* An R means to retry sending the file.  */
-	  if (*z == 'R')
-	    {
-	      ++cFretries;
-	      if (cFretries > cFmaxretries)
-		{
-		  ulog (LOG_ERROR, "Too many retries");
-		  return FALSE;
-		}
-	      *pfredo = TRUE;
-	      iFcheck = 0xffff;
-	      ++cFsend_retries;
-	      return TRUE;
-	    }
+	  uqueue_receive (qtrans);
 
-	  if (*z == 'G')
-	    return TRUE;
-
-	  DEBUG_MESSAGE1 (DEBUG_PROTO, "fffile: Got \"%s\"", z);
-
-	  ulog (LOG_ERROR, "File send failed");
-	  return FALSE;
+	  *pfhandled = TRUE;
+	  return TRUE;
 	}
       else
 	{
-	  unsigned int icheck;
-
-	  /* We next expect to receive a command.  */
+	  /* Wait for the checksum.  */
 	  fFfile = FALSE;
+	  qinfo = (struct sfinfo *) xmalloc (sizeof (struct sfinfo));
+	  qinfo->psendfn = qtrans->psendfn;
+	  qinfo->precfn = qtrans->precfn;
+	  qinfo->pinfo = qtrans->pinfo;
+	  qtrans->psendfn = NULL;
+	  qtrans->precfn = ffawait_cksum;
+	  qtrans->pinfo = (pointer) qinfo;
+	  qtrans->fcmd = TRUE;
 
-	  /* Get the checksum.  */
-	  z = zgetcmd (qconn);
-	  if (z == NULL)
-	    return FALSE;
+	  uqueue_receive (qtrans);
 
-	  if (strlen (z) != 4
-	      || ! isxdigit (z[0])
-	      || ! isxdigit (z[1])
-	      || ! isxdigit (z[2])
-	      || ! isxdigit (z[3]))
-	    {
-	      ulog (LOG_ERROR, "Bad checksum format");
-	      return FALSE;
-	    }
-	  
-	  icheck = strtol (z, (char **) NULL, 16);
-
-	  if (icheck != (iFcheck & 0xffff))
-	    {
-	      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			      "Checksum failed; calculated 0x%x, got 0x%x",
-			      iFcheck & 0xffff, icheck);
-
-	      ++cFretries;
-	      if (cFretries > cFmaxretries)
-		{
-		  ulog (LOG_ERROR, "Too many retries");
-		  (void) ffsendcmd (qconn, "Q");
-		  return FALSE;
-		}
-
-	      *pfredo = TRUE;
-	      iFcheck = 0xffff;
-	      bFspecial = 0;
-	      fFfile = TRUE;
-	      ++cFrec_retries;
-
-	      /* Send an R to tell the other side to resend the file.  */
-	      return ffsendcmd (qconn, "R");
-	    }
-
-	  /* Send a G to tell the other side the file was received
-	     correctly.  */
-	  return ffsendcmd (qconn, "G");
+	  *pfhandled = TRUE;
+	  return TRUE;
 	}
     }
+}
+
+/* Wait for the ack after sending a file and the checksum.  */
+
+static boolean
+ffawait_ack (qtrans, qdaemon, zdata, cdata)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+     const char *zdata;
+     size_t cdata;
+{
+  struct sfinfo *qinfo = (struct sfinfo *) qtrans->pinfo;
+
+  qtrans->precfn = NULL;
+
+  /* An R means to retry sending the file.  */
+  if (*zdata == 'R')
+    {
+      ++cFretries;
+      if (cFretries > cFmaxretries)
+	{
+	  ulog (LOG_ERROR, "Too many retries");
+	  return FALSE;
+	}
+
+      ulog (LOG_NORMAL, "Resending file");
+      if (! ffilerewind (qtrans->e))
+	{
+	  ulog (LOG_ERROR, "rewind: %s", strerror (errno));
+	  return FALSE;
+	}
+      qtrans->ipos = (long) 0;
+
+      iFcheck = 0xffff;
+      ++cFsend_retries;
+
+      qtrans->psendfn = qinfo->psendfn;
+      qtrans->precfn = qinfo->precfn;
+      qtrans->pinfo = qinfo->pinfo;
+      xfree ((pointer) qinfo);
+      qtrans->fsendfile = TRUE;
+
+      uqueue_send (qtrans);
+
+      return TRUE;
+    }
+
+  if (*zdata != 'G')
+    {
+      DEBUG_MESSAGE1 (DEBUG_PROTO, "fffile: Got \"%s\"", zdata);
+      ulog (LOG_ERROR, "File send failed");
+      return FALSE;
+    }
+
+  qtrans->psendfn = qinfo->psendfn;
+  qtrans->precfn = qinfo->precfn;
+  qtrans->pinfo = qinfo->pinfo;
+  xfree ((pointer) qinfo);
+
+  /* Now call the send function by hand after setting fFacked to TRUE.
+     Since fFacked is true fffile will simply return out, and the send
+     function can do whatever it what was going to do.  */
+  fFacked = TRUE;
+  return (*qtrans->psendfn) (qtrans, qdaemon);
+}
+
+/* This function is called when the checksum arrives.  */
+
+/*ARGSUSED*/
+static boolean
+ffawait_cksum (qtrans, qdaemon, zdata, cdata)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+     const char *zdata;
+     size_t cdata;
+{
+  struct sfinfo *qinfo = (struct sfinfo *) qtrans->pinfo;
+  unsigned int icheck;
+
+  qtrans->precfn = NULL;
+
+  if (! isxdigit (zdata[0])
+      || ! isxdigit (zdata[1])
+      || ! isxdigit (zdata[2])
+      || ! isxdigit (zdata[3])
+      || zdata[4] != '\0')
+    {
+      ulog (LOG_ERROR, "Bad checksum format");
+      xfree (qtrans->pinfo);
+      return FALSE;
+    }
+	  
+  icheck = (unsigned int) strtol (zdata, (char **) NULL, 16);
+
+  if (icheck != (iFcheck & 0xffff))
+    {
+      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+		      "Checksum failed; calculated 0x%x, got 0x%x",
+		      iFcheck & 0xffff, icheck);
+
+      ++cFretries;
+      if (cFretries > cFmaxretries)
+	{
+	  ulog (LOG_ERROR, "Too many retries");
+	  qinfo->bsend = 'Q';
+	}
+      else
+	{
+	  ulog (LOG_NORMAL, "File being resent");
+
+	  /* This bit of code relies on the receive code setting
+	     qtrans->s.ztemp to the full name of the temporary file
+	     being used.  */
+	  qtrans->e = esysdep_truncate (qtrans->e, qtrans->s.ztemp);
+	  if (! ffileisopen (qtrans->e))
+	    return FALSE;
+	  qtrans->ipos = (long) 0;
+
+	  iFcheck = 0xffff;
+	  bFspecial = 0;
+	  fFfile = TRUE;
+	  ++cFrec_retries;
+
+	  /* Send an R to tell the other side to resend the file.  */
+	  qinfo->bsend = 'R';
+	}
+    }
+  else
+    {
+      /* Send a G to tell the other side the file was received
+	 correctly.  */
+      qinfo->bsend = 'G';
+    }
+
+  qtrans->psendfn = ffsend_ack;
+
+  uqueue_send (qtrans);
+
+  return TRUE;
+}
+
+/* Send the acknowledgement, and then possible wait for the resent
+   file.  */
+
+static boolean
+ffsend_ack (qtrans, qdaemon)
+     struct stransfer *qtrans;
+     struct sdaemon *qdaemon;
+{
+  struct sfinfo *qinfo = (struct sfinfo *) qtrans->pinfo;
+  char ab[2];
+
+  ab[0] = qinfo->bsend;
+  ab[1] = '\0';
+  if (! ffsendcmd (qdaemon, ab))
+    return FALSE;
+
+  qtrans->psendfn = qinfo->psendfn;
+  qtrans->precfn = qinfo->precfn;
+  qtrans->pinfo = qinfo->pinfo;
+  xfree ((pointer) qinfo);
+
+  if (ab[0] == 'Q')
+    return FALSE;
+  if (ab[0] == 'R')
+    {
+      qtrans->frecfile = TRUE;
+      uqueue_receive (qtrans);
+      return TRUE;
+    }
+
+  fFacked = TRUE;
+  return (*qtrans->precfn) (qtrans, qdaemon, (const char *) NULL,
+			    (size_t) 0);
 }

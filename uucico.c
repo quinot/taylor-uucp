@@ -35,33 +35,33 @@ const char uucico_rcsid[] = "$Id$";
 
 #include "conn.h"
 #include "prot.h"
+#include "trans.h"
 #include "system.h"
 
 /* The program name.  */
 char abProgram[] = "uucico";
 
-/* Define the known protocols.
-   bname, ffullduplex, qcmds, pfstart, pfshutdown, pfsendcmd, pzgetspace,
-   pfsenddata, pfprocess, pfwait, pffile  */
+/* Define the known protocols.  */
 
-static struct sprotocol asProtocols[] =
+#define TCP_PROTO \
+  (UUCONF_RELIABLE_ENDTOEND \
+   | UUCONF_RELIABLE_RELIABLE \
+   | UUCONF_RELIABLE_EIGHT)
+
+static const struct sprotocol asProtocols[] =
 {
-  { 't', FALSE,
-      (UUCONF_RELIABLE_ENDTOEND | UUCONF_RELIABLE_RELIABLE
-       | UUCONF_RELIABLE_EIGHT),
+  { 't', TCP_PROTO, 1,
       asTproto_params, ftstart, ftshutdown, ftsendcmd, ztgetspace,
-      ftsenddata, ftprocess, ftwait, ftfile },
-  { 'e', FALSE,
-      (UUCONF_RELIABLE_ENDTOEND | UUCONF_RELIABLE_RELIABLE
-       | UUCONF_RELIABLE_EIGHT),
+      ftsenddata, ftwait, ftfile },
+  { 'e', TCP_PROTO, 1,
       asEproto_params, festart, feshutdown, fesendcmd, zegetspace,
-      fesenddata, feprocess, fewait, fefile },
-  { 'g', FALSE, UUCONF_RELIABLE_EIGHT,
+      fesenddata, fewait, fefile },
+  { 'g', UUCONF_RELIABLE_EIGHT, 1,
       asGproto_params, fgstart, fgshutdown, fgsendcmd, zggetspace,
-      fgsenddata, fgprocess, fgwait, NULL },
-  { 'f', FALSE, UUCONF_RELIABLE_RELIABLE,
+      fgsenddata, fgwait, NULL },
+  { 'f', UUCONF_RELIABLE_RELIABLE, 1,
       asFproto_params, ffstart, ffshutdown, ffsendcmd, zfgetspace,
-      ffsenddata, ffprocess, ffwait, fffile },
+      ffsenddata, ffwait, fffile },
 };
 
 #define CPROTOCOLS (sizeof asProtocols / sizeof asProtocols[0])
@@ -71,11 +71,11 @@ static boolean fLocked_system;
 static struct uuconf_system sLocked_system;
 
 /* Open connection.  */
-struct sconnection *qConn;
+static struct sconnection *qConn;
 
 /* uuconf global pointer; need to close the connection after a fatal
    error.  */
-pointer pUuconf;
+static pointer pUuconf;
 
 /* This structure is passed to iuport_lock via uuconf_find_port.  */
 struct spass
@@ -91,17 +91,14 @@ static void uusage P((void));
 static void uabort P((void));
 static boolean fcall P((pointer puuconf,
 			const struct uuconf_system *qsys,
-			struct uuconf_port *qport,
-			boolean fforce, int bgrade,
-			boolean fnodetach, boolean ftimewarn));
-static boolean fconn_call P((pointer puuconf,
-			     const struct uuconf_system *qsys,
+			struct uuconf_port *qport, boolean fifwork,
+			boolean fforce, boolean fdetach,
+			boolean ftimewarn));
+static boolean fconn_call P((struct sdaemon *qdaemon,
 			     struct uuconf_port *qport,
 			     struct sstatus *qstat, int cretry,
 			     boolean *pfcalled));
-static boolean fdo_call P((pointer puuconf,
-			   const struct uuconf_system *qsys,
-			   struct sconnection *qconn,
+static boolean fdo_call P((struct sdaemon *qdaemon,
 			   struct sstatus *qstat,
 			   const struct uuconf_dialer *qdialer,
 			   boolean *pfcalled, enum tstatus_type *pterr));
@@ -111,23 +108,14 @@ static boolean flogin_prompt P((pointer puuconf,
 static boolean faccept_call P((pointer puuconf, const char *zlogin,
 			       struct sconnection *qconn,
 			       const char **pzsystem));
-static boolean fuucp P((pointer puuconf, boolean fmaster,
-			const struct uuconf_system *qsys,
-			struct sconnection *qconn,
-			const char *zlocalname, int bgrade, boolean fnew,
-			long cmax_receive));
-static boolean fdo_xcmd P((pointer puuconf,
-			   const struct uuconf_system *qsys,
-			   const char *zlocalname, boolean fcaller,
-			   const struct scmd *qcmd));
 static void uapply_proto_params P((pointer puuconf, int bproto,
 				   struct uuconf_cmdtab *qcmds,
 				   struct uuconf_proto_param *pas));
 static boolean fsend_uucp_cmd P((struct sconnection *qconn,
 				 const char *z));
-static const char *zget_uucp_cmd P((struct sconnection *qconn,
-				    boolean frequired));
-static const char *zget_typed_line P((struct sconnection *qconn));
+static char *zget_uucp_cmd P((struct sconnection *qconn,
+			      boolean frequired));
+static char *zget_typed_line P((struct sconnection *qconn));
 
 /* Long getopt options.  */
 
@@ -141,9 +129,9 @@ main (argc, argv)
   /* -c: Whether to warn if a call is attempted at a bad time.  */
   boolean ftimewarn = TRUE;
   /* -D: don't detach from controlling terminal.  */
-  boolean fnodetach = FALSE;
+  boolean fdetach = TRUE;
   /* -e: Whether to do an endless loop of accepting calls.  */
-  boolean floop = FALSE;
+  boolean fendless = FALSE;
   /* -f: Whether to force a call despite status of previous call.  */
   boolean fforce = FALSE;
   /* -I file: configuration file name.  */
@@ -185,12 +173,12 @@ main (argc, argv)
 
 	case 'D':
 	  /* Don't detach from controlling terminal.  */
-	  fnodetach = TRUE;
+	  fdetach = FALSE;
 	  break;
 
 	case 'e':
 	  /* Do an endless loop of accepting calls.  */
-	  floop = TRUE;
+	  fendless = TRUE;
 	  break;
 
 	case 'f':
@@ -351,7 +339,7 @@ main (argc, argv)
 	  /* Detach from the controlling terminal for the call.  This
 	     probably makes sense only on Unix.  We want the modem
 	     line to become the controlling terminal.  */
-	  if (! fnodetach &&
+	  if (fdetach &&
 	      (qport == NULL
 	       || qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN))
 	    usysdep_detach ();
@@ -372,8 +360,8 @@ main (argc, argv)
 	  else
 	    {
 	      fLocked_system = TRUE;
-	      fret = fcall (puuconf, &sLocked_system, qport, fforce,
-			    UUCONF_GRADE_HIGH, fnodetach, ftimewarn);
+	      fret = fcall (puuconf, &sLocked_system, qport, FALSE,
+			    fforce, fdetach, ftimewarn);
 	      if (fLocked_system)
 		{
 		  (void) fsysdep_unlock_system (&sLocked_system);
@@ -390,7 +378,6 @@ main (argc, argv)
 	{
 	  char **pznames, **pz;
 	  int c, i;
-	  char bgrade;
 	  boolean fdidone;
 
 	  /* Call all systems which have work to do.  */
@@ -429,14 +416,14 @@ main (argc, argv)
 		  continue;
 		}
 
-	      if (fsysdep_has_work (&sLocked_system, &bgrade))
+	      if (fsysdep_has_work (&sLocked_system))
 		{
 		  fdidone = TRUE;
 
 		  /* Detach from the controlling terminal.  On Unix
 		     this means that we will wind up forking a new
 		     process for each system we call.  */
-		  if (! fnodetach
+		  if (fdetach
 		      && (qport == NULL
 			  || qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN))
 		    usysdep_detach ();
@@ -457,8 +444,8 @@ main (argc, argv)
 		  else
 		    {
 		      fLocked_system = TRUE;
-		      if (! fcall (puuconf, &sLocked_system, qport, fforce,
-				   bgrade, fnodetach, ftimewarn))
+		      if (! fcall (puuconf, &sLocked_system, qport, TRUE,
+				   fforce, fdetach, ftimewarn))
 			fret = FALSE;
 
 		      /* Now ignore any SIGHUP that we got.  */
@@ -489,7 +476,7 @@ main (argc, argv)
       /* If requested, wait for calls after dialing out.  */
       if (fwait)
 	{
-	  floop = TRUE;
+	  fendless = TRUE;
 	  fmaster = FALSE;
 	}
     }
@@ -517,12 +504,12 @@ main (argc, argv)
 	  /* We are not using standard input.  Detach from the
 	     controlling terminal, so that the port we are about to
 	     use becomes our controlling terminal.  */
-	  if (! fnodetach
+	  if (fdetach
 	      && qport->uuconf_ttype != UUCONF_PORTTYPE_STDIN)
 	    usysdep_detach ();
 
 	  /* If a port was given, we loop forever.  */
-	  floop = TRUE;
+	  fendless = TRUE;
 	}
 
       if (fconn_lock (&sconn, TRUE))
@@ -544,7 +531,7 @@ main (argc, argv)
 
       if (fret)
 	{
-	  if (floop)
+	  if (fendless)
 	    {
 	      while (! FGOT_SIGNAL ()
 		     && flogin_prompt (puuconf, &sconn))
@@ -613,7 +600,7 @@ main (argc, argv)
     {
       /* Detach from the controlling terminal before starting up uuxqt,
 	 so that it runs as a true daemon.  */
-      if (! fnodetach)
+      if (fdetach)
 	usysdep_detach ();
       if (zsystem == NULL)
 	fret = fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
@@ -669,12 +656,8 @@ uusage ()
 static void
 uabort ()
 {
-  ustats_failed ();
-
-#if ! HAVE_HDB_LOGGING
-  /* When using HDB logging, it's a pain to have no system name.  */
-  ulog_system ((const char *) NULL);
-#endif
+  if (fLocked_system)
+    ustats_failed (&sLocked_system);
 
   ulog_user ((const char *) NULL);
 
@@ -692,6 +675,8 @@ uabort ()
       fLocked_system = FALSE;
     }
 
+  ulog_system ((const char *) NULL);
+
   ulog_close ();
   ustats_close ();
 
@@ -700,26 +685,27 @@ uabort ()
 
 /* Call another system, trying all the possible sets of calling
    instructions.  The qsys argument is the system to call.  The qport
-   argument is the port to use, and may be NULL.  If the fforce
-   argument is TRUE, a call is forced even if not enough time has
-   passed since the last failed call.  The bgrade argument is the
-   highest grade of work to be done for the system.  If the ftimewarn
-   argument is TRUE (the normal case), then a warning is given if
-   calls are not permitted at this time.  */
+   argument is the port to use, and may be NULL.  If the fifwork
+   argument is TRUE, the call is only placed if there is work to be
+   done.  If the fforce argument is TRUE, a call is forced even if not
+   enough time has passed since the last failed call.  If the
+   ftimewarn argument is TRUE (the normal case), then a warning is
+   given if calls are not permitted at this time.  */
 
 static boolean
-fcall (puuconf, qorigsys, qport, fforce, bgrade, fnodetach, ftimewarn)
+fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
      pointer puuconf;
      const struct uuconf_system *qorigsys;
      struct uuconf_port *qport;
+     boolean fifwork;
      boolean fforce;
-     int bgrade;
-     boolean fnodetach;
+     boolean fdetach;
      boolean ftimewarn;
 {
+  struct sstatus sstat;
+  struct sdaemon sdaem;
   boolean fbadtime, fnevertime;
   const struct uuconf_system *qsys;
-  struct sstatus sstat;
 
   if (! fsysdep_get_status (qorigsys, &sstat, (boolean *) NULL))
     return FALSE;
@@ -745,14 +731,29 @@ fcall (puuconf, qorigsys, qport, fforce, bgrade, fnodetach, ftimewarn)
 	}
     }
 
+  sdaem.puuconf = puuconf;
+  sdaem.qsys = NULL;
+  sdaem.zlocalname = NULL;
+  sdaem.qconn = NULL;
+  sdaem.qproto = NULL;
+  sdaem.clocal_size = -1;
+  sdaem.cremote_size = -1;
+  sdaem.cmax_ever = -2;
+  sdaem.cmax_receive = -1;
+  sdaem.fnew = FALSE;
+  sdaem.fhangup = FALSE;
+  sdaem.fmaster = TRUE;
+  sdaem.fcaller = TRUE;
+  sdaem.fhalfduplex = FALSE;
+  sdaem.bgrade = '\0';
+
   fbadtime = TRUE;
   fnevertime = TRUE;
 
   for (qsys = qorigsys; qsys != NULL; qsys = qsys->uuconf_qalternate)
     {
-      long ival;
       int cretry;
-      boolean fret, fcalled;
+      boolean fany, fret, fcalled;
 
       if (FGOT_SIGNAL ())
 	return FALSE;
@@ -762,18 +763,27 @@ fcall (puuconf, qorigsys, qport, fforce, bgrade, fnodetach, ftimewarn)
 
       fnevertime = FALSE;
 
-      /* The value returned in ival by ftimespan_match is the
-	 lowest grade which may be done at this time.  */
-      if (! ftimespan_match (qsys->uuconf_qtimegrade, &ival,
+      /* Make sure this is a legal time to call.  */
+      if (! ftimespan_match (qsys->uuconf_qtimegrade, (long *) NULL,
 			     &cretry))
 	continue;
-      if (UUCONF_GRADE_CMP (bgrade, (int) ival) > 0)
+
+      sdaem.qsys = qsys;
+
+      /* Queue up any work there is to do.  */
+      if (! fqueue (&sdaem, &fany))
+	return FALSE;
+
+      /* If we are only supposed to call if there is work, and there
+	 isn't any work, check the next alternates.  We can't give up
+	 at this point because there might be some other alternates
+	 with fewer restrictions on grade or file transfer size.  */
+      if (fifwork && ! fany)
 	continue;
 
       fbadtime = FALSE;
 
-      fret = fconn_call (puuconf, qsys, qport, &sstat, cretry,
-			 &fcalled);
+      fret = fconn_call (&sdaem, qport, &sstat, cretry, &fcalled);
       if (fret)
 	return TRUE;
       if (fcalled)
@@ -782,7 +792,7 @@ fcall (puuconf, qorigsys, qport, fforce, bgrade, fnodetach, ftimewarn)
       /* Now we have to dump that port so that we can aquire a new
 	 one.  On Unix this means that we will fork and get a new
 	 process ID, so we must unlock and relock the system.  */
-      if (! fnodetach)
+      if (fdetach)
 	{
 	  (void) fsysdep_unlock_system (&sLocked_system);
 	  fLocked_system = FALSE;
@@ -819,18 +829,22 @@ fcall (puuconf, qorigsys, qport, fforce, bgrade, fnodetach, ftimewarn)
    routine is responsible for opening and closing the connection.  */
 
 static boolean
-fconn_call (puuconf, qsys, qport, qstat, cretry, pfcalled)
-     pointer puuconf;
-     const struct uuconf_system *qsys;
+fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
+     struct sdaemon *qdaemon;
      struct uuconf_port *qport;
      struct sstatus *qstat;
      int cretry;
      boolean *pfcalled;
 {
+  pointer puuconf;
+  const struct uuconf_system *qsys;
   struct uuconf_port sport;
   struct sconnection sconn;
   enum tstatus_type terr;
   boolean fret;
+
+  puuconf = qdaemon->puuconf;
+  qsys = qdaemon->qsys;
 
   *pfcalled = FALSE;
 
@@ -916,12 +930,12 @@ fconn_call (puuconf, qsys, qport, qstat, cretry, pfcalled)
 	}
       else
 	{
+	  qdaemon->qconn = &sconn;
 	  if (tdialer == DIALERFOUND_FALSE)
 	    qdialer = NULL;
 	  else
 	    qdialer = &sdialer;
-	  fret = fdo_call (puuconf, qsys, &sconn, qstat, qdialer, pfcalled,
-			   &terr);
+	  fret = fdo_call (qdaemon, qstat, qdialer, pfcalled, &terr);
 	}
 
       (void) fconn_close (&sconn, puuconf, qdialer, fret);
@@ -962,21 +976,24 @@ fconn_call (puuconf, qsys, qport, qstat, cretry, pfcalled)
    error occurs *pterr is set to the status type to record.  */
 
 static boolean
-fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
-     pointer puuconf;
-     const struct uuconf_system *qsys;
-     struct sconnection *qconn;
+fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
+     struct sdaemon *qdaemon;
      struct sstatus *qstat;
      const struct uuconf_dialer *qdialer;
      boolean *pfcalled;
      enum tstatus_type *pterr;
 {
+  pointer puuconf;
+  const struct uuconf_system *qsys;
+  struct sconnection *qconn;
   const char *zport;
   int iuuconf;
-  const char *zstr;
-  boolean fnew;
+  char *zstr;
   long istart_time;
-  const char *zlocalname;
+
+  puuconf = qdaemon->puuconf;
+  qsys = qdaemon->qsys;
+  qconn = qdaemon->qconn;
 
   *pterr = STATUS_LOGIN_FAILED;
 
@@ -1013,6 +1030,7 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
   if (strncmp (zstr, "Shere", 5) != 0)
     {
       ulog (LOG_ERROR, "Bad initialization string");
+      ubuffree (zstr);
       return FALSE;
     }
 
@@ -1049,6 +1067,7 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 	  if (icmp != 0)
 	    {
 	      ulog (LOG_ERROR, "Called wrong system (%s)", zheresys);
+	      ubuffree (zstr);
 	      return FALSE;
 	    }
 	}
@@ -1058,6 +1077,8 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
     DEBUG_MESSAGE1 (DEBUG_HANDSHAKE,
 		    "fdo_call: Strange Shere: %s", zstr);
 #endif
+
+  ubuffree (zstr);
 
   /* We now send "S" name switches, where name is our UUCP name.  If
      we are using sequence numbers with this system, we send a -Q
@@ -1070,6 +1091,7 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
     long ival;
     char bgrade;
     char *zsend;
+    boolean fret;
 
     /* Determine the grade we should request of the other system.  A
        '\0' means that no restrictions have been made.  */
@@ -1081,14 +1103,14 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 
     /* Determine the name we will call ourselves.  */
     if (qsys->uuconf_zlocalname != NULL)
-      zlocalname = qsys->uuconf_zlocalname;
+      qdaemon->zlocalname = qsys->uuconf_zlocalname;
     else
       {
-	iuuconf = uuconf_localname (puuconf, &zlocalname);
+	iuuconf = uuconf_localname (puuconf, &qdaemon->zlocalname);
 	if (iuuconf == UUCONF_NOT_FOUND)
 	  {
-	    zlocalname = zsysdep_localname ();
-	    if (zlocalname == NULL)
+	    qdaemon->zlocalname = zsysdep_localname ();
+	    if (qdaemon->zlocalname == NULL)
 	      return FALSE;
 	  }
 	else if (iuuconf != UUCONF_SUCCESS)
@@ -1098,14 +1120,14 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 	  }
       }	    
 
-    zsend = (char *) alloca (strlen (zlocalname) + 70);
+    zsend = zbufalc (strlen (qdaemon->zlocalname) + 70);
     if (! qsys->uuconf_fsequence)
       {
 	if (bgrade == '\0')
-	  sprintf (zsend, "S%s -N", zlocalname);
+	  sprintf (zsend, "S%s -N", qdaemon->zlocalname);
 	else
-	  sprintf (zsend, "S%s -p%c -vgrade=%c -N", zlocalname, bgrade,
-		   bgrade);
+	  sprintf (zsend, "S%s -p%c -vgrade=%c -N", qdaemon->zlocalname,
+		   bgrade, bgrade);
       }
     else
       {
@@ -1115,14 +1137,16 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 	if (iseq < 0)
 	  return FALSE;
 	if (bgrade == '\0')
-	  sprintf (zsend, "S%s -Q%ld -N", zlocalname, iseq);
+	  sprintf (zsend, "S%s -Q%ld -N", qdaemon->zlocalname, iseq);
 	else
-	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -N", zlocalname, iseq,
-		   bgrade, bgrade);
+	  sprintf (zsend, "S%s -Q%ld -p%c -vgrade=%c -N",
+		   qdaemon->zlocalname, iseq, bgrade, bgrade);
       }
 
-    if (! fsend_uucp_cmd (qconn, zsend))
-      return FALSE;
+    fret = fsend_uucp_cmd (qconn, zsend);
+    ubuffree (zsend);
+    if (! fret)
+	return FALSE;
   }
 
   /* Now we should see ROK or Rreason where reason gives a cryptic
@@ -1136,29 +1160,33 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
     {
       ulog (LOG_ERROR, "Bad reponse to handshake string (%s)",
 	    zstr);
+      ubuffree (zstr);
       return FALSE;
     }
 
   if (strcmp (zstr + 1, "OKN") == 0)
-    fnew = TRUE;
+    qdaemon->fnew = TRUE;
   else if (strcmp (zstr + 1, "OK") == 0)
-    fnew = FALSE;
+    qdaemon->fnew = FALSE;
   else if (strcmp (zstr + 1, "CB") == 0)
     {
       ulog (LOG_NORMAL, "Remote system will call back");
       qstat->ttype = STATUS_COMPLETE;
       (void) fsysdep_set_status (qsys, qstat);
+      ubuffree (zstr);
       return TRUE;
     }
   else
     {
       ulog (LOG_ERROR, "Handshake failed (%s)", zstr + 1);
+      ubuffree (zstr);
       return FALSE;
     }
 
+  ubuffree (zstr);
+
   /* The slave should now send \020Pprotos\0 where protos is a list of
      supported protocols.  Each protocol is a single character.  */
-
   zstr = zget_uucp_cmd (qconn, TRUE);
   if (zstr == NULL)
     return FALSE;
@@ -1166,6 +1194,7 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
   if (zstr[0] != 'P')
     {
       ulog (LOG_ERROR, "Bad protocol handshake (%s)", zstr);
+      ubuffree (zstr);
       return FALSE;
     }
 
@@ -1237,6 +1266,8 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 	  }
       }
 
+    ubuffree (zstr);
+
     if (i >= CPROTOCOLS)
       {
 	(void) fsend_uucp_cmd (qconn, "UN");
@@ -1244,37 +1275,37 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 	return FALSE;
       }
 
-    qProto = &asProtocols[i];
+    qdaemon->qproto = &asProtocols[i];
 
-    sprintf (ab, "U%c", qProto->bname);
+    sprintf (ab, "U%c", qdaemon->qproto->bname);
     if (! fsend_uucp_cmd (qconn, ab))
       return FALSE;
   }
 
   /* Run any protocol parameter commands.  */
-
-  if (qProto->qcmds != NULL)
+  if (qdaemon->qproto->qcmds != NULL)
     {
       if (qsys->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, qProto->bname, qProto->qcmds,
+	uapply_proto_params (puuconf, qdaemon->qproto->bname,
+			     qdaemon->qproto->qcmds,
 			     qsys->uuconf_qproto_params);
       if (qconn->qport != NULL
 	  && qconn->qport->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, qProto->bname, qProto->qcmds,
+	uapply_proto_params (puuconf, qdaemon->qproto->bname,
+			     qdaemon->qproto->qcmds,
 			     qconn->qport->uuconf_qproto_params);
       if (qdialer != NULL
 	  && qdialer->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, qProto->bname, qProto->qcmds,
+	uapply_proto_params (puuconf, qdaemon->qproto->bname,
+			     qdaemon->qproto->qcmds,
 			     qdialer->uuconf_qproto_params);
     }
 
   /* Turn on the selected protocol.  */
-
-  if (! (*qProto->pfstart) (qconn, TRUE))
+  if (! (*qdaemon->qproto->pfstart) (qdaemon, TRUE))
     return FALSE;
 
   /* Now we have succesfully logged in as the master.  */
-
   ulog (LOG_NORMAL, "Handshake successful");
 
   *pterr = STATUS_FAILED;
@@ -1283,18 +1314,7 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
     boolean fret;
     long iend_time;
 
-    fret = fuucp (puuconf, TRUE, qsys, qconn, zlocalname, '\0', fnew,
-		  (long) -1);
-
-    ulog_user ((const char *) NULL);
-    usysdep_get_work_free (qsys);
-
-    /* If we jumped out due to an error, shutdown the protocol.  */
-    if (! fret)
-      {
-	(void) (*qProto->pfshutdown) (qconn);
-	ustats_failed ();
-      }
+    fret = floop (qdaemon);
 
     /* Now send the hangup message.  As the caller, we send six O's
        and expect to receive seven O's.  We send the six O's twice
@@ -1315,6 +1335,7 @@ fdo_call (puuconf, qsys, qconn, qstat, qdialer, pfcalled, pterr)
 		   only check for six.  */
 		if (strstr (zstr, "OOOOOO") == NULL)
 		  ulog (LOG_DEBUG, "No hangup from remote");
+		ubuffree (zstr);
 	      }
 	  }
 #endif
@@ -1371,62 +1392,70 @@ flogin_prompt (puuconf, qconn)
      pointer puuconf;
      struct sconnection *qconn;
 {
-  const char *zuser, *zpass;
+  char *zuser, *zpass;
+  boolean fret;
   int iuuconf;
 
   DEBUG_MESSAGE0 (DEBUG_HANDSHAKE, "flogin_prompt: Waiting for login");
 
+  zuser = NULL;
   do
     {
+      ubuffree (zuser);
       if (! fconn_write (qconn, "login: ", sizeof "login: " - 1))
 	return FALSE;
       zuser = zget_typed_line (qconn);
     }
   while (zuser != NULL && *zuser == '\0');
 
-  if (zuser != NULL)
+  if (zuser == NULL)
+    return TRUE;
+
+  if (! fconn_write (qconn, "Password:", sizeof "Password:" - 1))
     {
-      char *zhold;
-
-      zhold = (char *) alloca (strlen (zuser) + 1);
-      strcpy (zhold, zuser);
-
-      if (! fconn_write (qconn, "Password:", sizeof "Password:" - 1))
-	return FALSE;
-
-      zpass = zget_typed_line (qconn);
-      if (zpass != NULL)
-	{
-	  iuuconf = uuconf_callin (puuconf, zhold, zpass);
-	  if (iuuconf == UUCONF_NOT_FOUND)
-	    ulog (LOG_ERROR, "Bad login");
-	  else if (iuuconf != UUCONF_SUCCESS)
-	    {
-	      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
-	      return FALSE;
-	    }
-	  else
-	    {
-#if DEBUG > 1
-	      int iholddebug;
-#endif
-
-	      /* We ignore the return value of faccept_call because we
-		 really don't care whether the call succeeded or not.
-		 We are going to reset the port anyhow.  */
-#if DEBUG > 1
-	      iholddebug = iDebug;
-#endif
-	      (void) faccept_call (puuconf, zhold, qconn,
-				   (const char **) NULL);
-#if DEBUG > 1
-	      iDebug = iholddebug;
-#endif
-	    }
-	}
+      ubuffree (zuser);
+      return FALSE;
     }
 
-  return TRUE;
+  zpass = zget_typed_line (qconn);
+  if (zpass == NULL)
+    {
+      ubuffree (zuser);
+      return TRUE;
+    }
+
+  fret = TRUE;
+
+  iuuconf = uuconf_callin (puuconf, zuser, zpass);
+  ubuffree (zpass);
+  if (iuuconf == UUCONF_NOT_FOUND)
+    ulog (LOG_ERROR, "Bad login");
+  else if (iuuconf != UUCONF_SUCCESS)
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      fret = FALSE;
+    }
+  else
+    {
+#if DEBUG > 1
+      int iholddebug;
+#endif
+
+      /* We ignore the return value of faccept_call because we really
+	 don't care whether the call succeeded or not.  We are going
+	 to reset the port anyhow.  */
+#if DEBUG > 1
+      iholddebug = iDebug;
+#endif
+      (void) faccept_call (puuconf, zuser, qconn, (const char **) NULL);
+#if DEBUG > 1
+      iDebug = iholddebug;
+#endif
+    }
+
+  ubuffree (zuser);
+
+  return fret;
 }
 
 /* Accept a call from a remote system.  If pqsys is not NULL, *pqsys
@@ -1448,15 +1477,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   struct uuconf_dialer sdialer;
   boolean ftcp_port;
   char *zsend, *zspace;
-  const char *zstr;
+  boolean fret;
+  char *zstr;
   struct uuconf_system ssys;
   const struct uuconf_system *qsys;
   const struct uuconf_system *qany;
-  boolean fnew;
-  char bgrade;
-  const char *zlocalname;
+  struct sdaemon sdaem;
+  char *zloc;
   struct sstatus sstat;
-  long cmax_receive;
   boolean frestart;
 
   if (pzsystem != NULL)
@@ -1529,37 +1557,45 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	ftcp_port = TRUE;
     }
 
-  /* Get the local name to use.  */
-  {
-    char *zloc;
+  sdaem.puuconf = puuconf;
+  sdaem.qsys = NULL;
+  sdaem.zlocalname = NULL;
+  sdaem.qconn = qconn;
+  sdaem.qproto = NULL;
+  sdaem.clocal_size = -1;
+  sdaem.cremote_size = -1;
+  sdaem.cmax_ever = -2;
+  sdaem.cmax_receive = -1;
+  sdaem.fnew = FALSE;
+  sdaem.fhangup = FALSE;
+  sdaem.fmaster = FALSE;
+  sdaem.fcaller = FALSE;
+  sdaem.fhalfduplex = FALSE;
+  sdaem.bgrade = UUCONF_GRADE_LOW;
 
-    iuuconf = uuconf_login_localname (puuconf, zlogin, &zloc);
-    if (iuuconf == UUCONF_SUCCESS)
-      {
-	char *zcopy;
-
-	zcopy = (char *) alloca (strlen (zloc) + 1);
-	strcpy (zcopy, zloc);
-	free ((pointer) zloc);
-	zlocalname = zcopy;
-      }
-    else if (iuuconf == UUCONF_NOT_FOUND)
-      {
-	zlocalname = zsysdep_localname ();
-	if (zlocalname == NULL)
-	  return FALSE;
-      }
-    else
-      {
-	ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+  /* Get the local name to use.  If uuconf_login_localname returns a
+     value, it is not always freed up, although it should be.  */
+  iuuconf = uuconf_login_localname (puuconf, zlogin, &zloc);
+  if (iuuconf == UUCONF_SUCCESS)
+    sdaem.zlocalname = zloc;
+  else if (iuuconf == UUCONF_NOT_FOUND)
+    {
+      sdaem.zlocalname = zsysdep_localname ();
+      if (sdaem.zlocalname == NULL)
 	return FALSE;
-      }
-  }
+    }
+  else
+    {
+      ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      return FALSE;
+    }
 
   /* Tell the remote system who we are.   */
-  zsend = (char *) alloca (strlen (zlocalname) + 10);
-  sprintf (zsend, "Shere=%s", zlocalname);
-  if (! fsend_uucp_cmd (qconn, zsend))
+  zsend = zbufalc (strlen (sdaem.zlocalname) + sizeof "Shere=");
+  sprintf (zsend, "Shere=%s", sdaem.zlocalname);
+  fret = fsend_uucp_cmd (qconn, zsend);
+  ubuffree (zsend);
+  if (! fret)
     return FALSE;
 
   zstr = zget_uucp_cmd (qconn, TRUE);
@@ -1569,21 +1605,21 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   if (zstr[0] != 'S')
     {
       ulog (LOG_ERROR, "Bad introduction string");
+      ubuffree (zstr);
       return FALSE;
     }
-  ++zstr;
 
   zspace = strchr (zstr, ' ');
   if (zspace != NULL)
     *zspace = '\0';
 
-  iuuconf = uuconf_system_info (puuconf, zstr, &ssys);
+  iuuconf = uuconf_system_info (puuconf, zstr + 1, &ssys);
   if (iuuconf == UUCONF_NOT_FOUND)
     {
-      if (! funknown_system (puuconf, zstr, &ssys))
+      if (! funknown_system (puuconf, zstr + 1, &ssys))
 	{
 	  (void) fsend_uucp_cmd (qconn, "RYou are unknown to me");
-	  ulog (LOG_ERROR, "Call from unknown system %s", zstr);
+	  ulog (LOG_ERROR, "Call from unknown system %s", zstr + 1);
 	}
 
 #if ! HAVE_TAYLOR_CONFIG && HAVE_HDB_CONFIG
@@ -1593,6 +1629,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   else if (iuuconf != UUCONF_SUCCESS)
     {
       ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+      ubuffree (zstr);
       return FALSE;
     }
 
@@ -1620,6 +1657,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       else if (iuuconf != UUCONF_NOT_FOUND)
 	{
 	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
+	  ubuffree (zstr);
 	  return FALSE;
 	}
     }
@@ -1628,9 +1666,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     {
       (void) fsend_uucp_cmd (qconn, "RLOGIN");
       ulog (LOG_ERROR, "System %s used wrong login name %s",
-	    zstr, zlogin);
+	    zstr + 1, zlogin);
+      ubuffree (zstr);
       return FALSE;
     }
+
+  ubuffree (zstr);
+
+  sdaem.qsys = qsys;
 
   if (pzsystem != NULL)
     *pzsystem = zbufcpy (qsys->uuconf_zname);
@@ -1682,9 +1725,6 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
      -U switch specifies the ulimit of the remote system, which we
      treat as the maximum file size that may be sent.  The -R switch
      means that the remote system supports file restart; we don't.  */
-  fnew = FALSE;
-  bgrade = UUCONF_GRADE_LOW;
-  cmax_receive = (long) -1;
   frestart = FALSE;
 
   if (zspace == NULL)
@@ -1721,7 +1761,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		    int iwant;
 
 		    iwant = (int) strtol (zspace + 2, (char **) NULL, 10);
-		    if (! fnew)
+		    if (! sdaem.fnew)
 		      iwant = (1 << iwant) - 1;
 		    if (qsys->uuconf_zmax_remote_debug != NULL)
 		      iwant &= idebug_parse (qsys->uuconf_zmax_remote_debug);
@@ -1757,7 +1797,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		     grade, although we should.  */
 		  frecognized = TRUE;
 		  if (UUCONF_GRADE_LEGAL (zspace[2]))
-		    bgrade = zspace[2];
+		    sdaem.bgrade = zspace[2];
 		  break;
 		case 'v':
 		  if (strncmp (zspace + 1, "vgrade=",
@@ -1765,12 +1805,12 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		    {
 		      frecognized = TRUE;
 		      if (UUCONF_GRADE_LEGAL (zspace[sizeof "vgrade="]))
-			bgrade = zspace[sizeof "vgrade="];
+			sdaem.bgrade = zspace[sizeof "vgrade="];
 		    }
 		  break;
 		case 'N':
 		  frecognized = TRUE;
-		  fnew = TRUE;
+		  sdaem.fnew = TRUE;
 		  break;
 		case 'U':
 		  frecognized = TRUE;
@@ -1779,7 +1819,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
 		    c = strtol (zspace + 2, (char **) NULL, 0);
 		    if (c > 0)
-		      cmax_receive = c * (long) 512;
+		      sdaem.cmax_receive = c * (long) 512;
 		  }
 		  break;
 		case 'R':
@@ -1797,16 +1837,17 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
 	  if (! frecognized)
 	    {
-	      int clen;
+	      size_t clen;
 	      char *zcopy;
 
 	      /* We could just use %.*s for this, but it's probably
 		 not portable.  */
 	      clen = znext - zspace;
-	      zcopy = (char *) alloca (clen + 1);
-	      strncpy (zcopy, zspace, clen);
+	      zcopy = zbufalc (clen + 1);
+	      memcpy (zcopy, zspace, clen);
 	      zcopy[clen] = '\0';
 	      ulog (LOG_NORMAL, "Unrecognized argument %s", zcopy);
+	      ubuffree (zcopy);
 	    }
 
 	  zspace = znext;
@@ -1818,7 +1859,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   /* We recognized the system, and the sequence number (if any) was
      OK.  Send an ROK, and send a list of protocols.  If we got the -N
      switch, send ROKN to confirm it.  */
-  if (! fsend_uucp_cmd (qconn, fnew ? "ROKN" : "ROK"))
+  if (! fsend_uucp_cmd (qconn, sdaem.fnew ? "ROKN" : "ROK"))
     {
       sstat.ttype = STATUS_FAILED;
       (void) fsysdep_set_status (qsys, &sstat);
@@ -1837,7 +1878,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	  zprotos = qsys->uuconf_zprotocols;
 	else
 	  zprotos = qport->uuconf_zprotocols;
-	zsend = (char *) alloca (strlen (zprotos) + 2);
+	zsend = zbufalc (strlen (zprotos) + 2);
 	sprintf (zsend, "P%s", zprotos);
       }
     else
@@ -1845,7 +1886,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	char *zset;
 	int ir;
 
-	zsend = (char *) alloca (CPROTOCOLS + 2);
+	zsend = zbufalc (CPROTOCOLS + 2);
 	zset = zsend;
 	*zset++ = 'P';
 
@@ -1891,7 +1932,9 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	*zset = '\0';
       }
 
-    if (! fsend_uucp_cmd (qconn, zsend))
+    fret = fsend_uucp_cmd (qconn, zsend);
+    ubuffree (zsend);
+    if (! fret)
       {
 	sstat.ttype = STATUS_FAILED;
 	(void) fsysdep_set_status (qsys, &sstat);
@@ -1912,6 +1955,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	ulog (LOG_ERROR, "Bad protocol response string");
 	sstat.ttype = STATUS_FAILED;
 	(void) fsysdep_set_status (qsys, &sstat);
+	ubuffree (zstr);
 	return FALSE;
       }
 
@@ -1920,12 +1964,15 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	ulog (LOG_ERROR, "No supported protocol");
 	sstat.ttype = STATUS_FAILED;
 	(void) fsysdep_set_status (qsys, &sstat);
+	ubuffree (zstr);
 	return FALSE;
       }
 
     for (i = 0; i < CPROTOCOLS; i++)
       if (asProtocols[i].bname == zstr[1])
 	break;
+
+    ubuffree (zstr);
 
     if (i >= CPROTOCOLS)
       {
@@ -1935,7 +1982,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	return FALSE;
       }
 
-    qProto = &asProtocols[i];
+    sdaem.qproto = &asProtocols[i];
   }
 
   /* Run the chat script for when a call is received.  */
@@ -1951,18 +1998,21 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     }
 
   /* Run any protocol parameter commands.  */
-  if (qProto->qcmds != NULL)
+  if (sdaem.qproto->qcmds != NULL)
     {
       if (qsys->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, qProto->bname, qProto->qcmds,
+	uapply_proto_params (puuconf, sdaem.qproto->bname,
+			     sdaem.qproto->qcmds,
 			     qsys->uuconf_qproto_params);
       if (qport != NULL
 	  && qport->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, qProto->bname, qProto->qcmds,
+	uapply_proto_params (puuconf, sdaem.qproto->bname,
+			     sdaem.qproto->qcmds,
 			     qport->uuconf_qproto_params);
       if (qdialer != NULL
 	  && qdialer->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, qProto->bname, qProto->qcmds,
+	uapply_proto_params (puuconf, sdaem.qproto->bname,
+			     sdaem.qproto->qcmds,
 			     qdialer->uuconf_qproto_params);
     }
 
@@ -1972,7 +2022,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
   /* Turn on the selected protocol.  */
 
-  if (! (*qProto->pfstart)(qconn, FALSE))
+  if (! (*sdaem.qproto->pfstart) (&sdaem, FALSE))
     {
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = isysdep_time ((long *) NULL);
@@ -1985,7 +2035,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
      name at that point.  In that case, we repeat the port and login
      names.  */
 #if HAVE_HDB_LOGGING
-  if (bgrade == BGRADE_LOW)
+  if (sdaem.bgrade == BGRADE_LOW)
     ulog (LOG_NORMAL, "Handshake successful (login %s port %s)",
 	  zlogin,
 	  zLdevice == NULL ? "unknown" : zLdevice);
@@ -1993,29 +2043,18 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     ulog (LOG_NORMAL, "Handshake successful (login %s port %s grade %c)",
 	  zlogin,
 	  zLdevice == NULL ? "unknown" : zLdevice,
-	  bgrade);
+	  sdaem.bgrade);
 #else /* ! HAVE_HDB_LOGGING */
-  if (bgrade == UUCONF_GRADE_LOW)
+  if (sdaem.bgrade == UUCONF_GRADE_LOW)
     ulog (LOG_NORMAL, "Handshake successful");
   else
-    ulog (LOG_NORMAL, "Handshake successful (grade %c)", bgrade);
+    ulog (LOG_NORMAL, "Handshake successful (grade %c)", sdaem.bgrade);
 #endif /* ! HAVE_HDB_LOGGING */
 
   {
-    boolean fret;
     long iend_time;
 
-    fret = fuucp (puuconf, FALSE, qsys, qconn, zlocalname, bgrade, fnew,
-		  cmax_receive);
-    ulog_user ((const char *) NULL);
-    usysdep_get_work_free (qsys);
-
-    /* If we bombed out due to an error, shut down the protocol.  */
-    if (! fret)
-      {
-	(void) (*qProto->pfshutdown) (qconn);
-	ustats_failed ();
-      }
+    fret = floop (&sdaem);
 
     /* Hangup.  As the answerer, we send seven O's and expect to see
        six.  */
@@ -2032,6 +2071,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	      {
 		if (strstr (zstr, "OOOOOO") == NULL)
 		  ulog (LOG_DEBUG, "No hangup from remote");
+		ubuffree (zstr);
 	      }
 	  }
 #endif
@@ -2045,6 +2085,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     (void) uuconf_system_free (puuconf, &ssys);
     if (qport == &sport)
       (void) uuconf_port_free (puuconf, &sport);
+    xfree ((pointer) zloc);
 
     if (fret)
       sstat.ttype = STATUS_COMPLETE;
@@ -2055,1128 +2096,6 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
     return fret;
   }
-}
-
-/* This function runs the main UUCP protocol.  It is called when the
-   two systems have succesfully connected.  It transfers files back
-   and forth until neither system has any more work to do.  The
-   traditional UUCP protocol has a master which sends files to the
-   slave or requests files from the slave (a single file is requested
-   with the R command; a wildcarded file name is requested with the X
-   command).  The slave simply obeys the commands of the master.  When
-   the master has done all its work, it requests a hangup.  If the
-   slave has work to do it refuses the hangup and becomes the new
-   master.
-
-   This is essentially a half-duplex connection, in that files are
-   only transferred in one direction at a time.  This is not
-   unreasonable, since generally one site is receiving a lot of news
-   from the other site, and I believe that Telebit modems are
-   basically half-duplex in that it takes a comparatively long time to
-   turn the line around.  However, it is possible to design a
-   full-duplex protocol which would be useful in some situtations when
-   using V.32 (or a network) and this function attempts to support
-   this possibility.
-
-   Traditionally the work to be done is kept in a set of files whose
-   names begin with C.[system][grade][pid], where system is the remote
-   system name, grade is the grade of transfer, and pid makes the file
-   name unique.  Each line in these files is a command, and each line
-   can be treated independently.  We let the system dependent layer
-   handle all of this.
-
-   Here are the types of commands, along with the definitions of the
-   variables they use in the fuucp function.
-
-   'S' -- Send a file from master to slave.
-     zfrom -- master file name
-     zto -- slave file name
-     zuser -- user who requested the transfer
-     zoptions -- list of options
-     ztemp -- temporary file name on master (used unless option c)
-     imode -- mode to give file
-     znotify -- user to notify (if option n)
-
-     The options are:
-     C -- file copied to spool (use ztemp rather than zfrom)
-     c -- file not copied to spool (use zfrom rather than ztemp)
-     d -- create directories if necessary
-     f -- do not create directories
-     m -- notify originator (in zuser) when complete
-     n -- notify recipient (in znotify) when complete
-
-     I assume that the n option is implemented by the remote system.
-
-   'R' -- Retrieve a file from slave to master.
-     zfrom -- slave file name
-     zto -- master file name
-     zuser -- user who requested the transfer
-     zoptions -- list of options
-
-     The options are the same as in case 'S', except that option n is
-     not supported.  If zto is a directory, we must create a file in
-     that directory using the last component of zfrom.
-
-   'X' -- Execute wildcard transfer from slave to master.
-     zfrom -- wildcard file name
-     zto -- local file (hopefully a directory)
-     zuser -- user who requested the transfer
-     zoptions -- list of options
-
-     The options are presumably the same as in case 'R'.  It may be
-     permissible to have no zuser or zoptions.  The zto name will have
-     local! prepended to it already (where local is the local system
-     name).
-
-     This command is merely sent over to the remote system, where it
-     is executed.  When the remote system becomes the master, it sends
-     the files back.
-
-   'H' -- Hangup
-     This is used by the master to indicate a transfer of control.  If
-     slave has nothing to do, it responds with HY and the conversation
-     is finished.  Otherwise, the slave becomes the master, and
-     vice-versa.  */
-
-static boolean
-fuucp (puuconf, fmaster, qsys, qconn, zlocalname, bgrade, fnew, cmax_receive)
-     pointer puuconf;
-     boolean fmaster;
-     const struct uuconf_system *qsys;
-     struct sconnection *qconn;
-     const char *zlocalname;
-     int bgrade;
-     boolean fnew;
-     long cmax_receive;
-{
-  boolean fcaller, fmasterdone, fnowork;
-  struct uuconf_timespan *qlocal_size, *qremote_size;
-  long clocal_size, cremote_size, cmax_ever;
-
-  fcaller = fmaster;
-
-  fmasterdone = FALSE;
-  if (! qProto->ffullduplex && ! fmaster)
-    fmasterdone = TRUE;
-
-  /* If we are not the caller, the grade will be passed in as an
-     argument.  If we are the caller, we compute the grade in this
-     function so that we can recompute if time has passed.  */
-  if (fcaller)
-    {
-      long ival;
-
-      if (! ftimespan_match (qsys->uuconf_qtimegrade, &ival,
-			     (int *) NULL))
-	bgrade = '\0';
-      else
-	bgrade = (char) ival;
-    }
-
-  if (bgrade == '\0')
-    fnowork = TRUE;
-  else
-    {
-      if (! fsysdep_get_work_init (qsys, bgrade, FALSE))
-	return FALSE;
-      fnowork = FALSE;
-    }
-
-  /* Determine the maximum sizes we can send and receive.  */
-
-  if (fcaller)
-    {
-      qlocal_size = qsys->uuconf_qcall_local_size;
-      qremote_size = qsys->uuconf_qcall_remote_size;
-    }
-  else
-    {
-      qlocal_size = qsys->uuconf_qcalled_local_size;
-      qremote_size = qsys->uuconf_qcalled_remote_size;
-    }
-
-  if (! ftimespan_match (qlocal_size, &clocal_size, (int *) NULL))
-    clocal_size = (long) -1;
-  if (! ftimespan_match (qremote_size, &cremote_size, (int *) NULL))
-    cremote_size = (long) -1;
-  cmax_ever = (long) -2;
-
-  /* Loop while we have local commands to execute and while we receive
-     remote commands.  */
-
-  while (TRUE)
-    {
-#if ! HAVE_ALLOCA
-      /* This only works if we know that no caller of this function is
-	 holding an alloca'ed pointer.  */
-      (void) alloca (0);
-#endif
-
-#if DEBUG > 1
-      /* If we're doing any debugging, close the log and debugging
-	 files regularly.  This will let people copy them off and
-	 remove them while the conversation is in progresss.  */
-      if (iDebug != 0)
-	{
-	  ulog_close ();
-	  ustats_close ();
-	}
-#endif
-
-      /* We send a command to the remote system if
-	 we are the master or
-	 this is full duplex protocol which is ready for a command and
-	 we haven't finished executing commands.  */
-      if (fmaster ||
-	  (qProto->ffullduplex && ! fmasterdone))
-	{
-	  struct scmd s;
-	  char *zuse, *ztemp;
-	  const char *zmail;
-	  boolean fspool, fnever;
-	  openfile_t e = EFILECLOSED;
-	  boolean fgone;
-
-	  /* Get the next work line for this system.  All the arguments
-	     are left pointing into a static buffer, so they must be
-	     copied out before the next call.  */
-	  ulog_user ((const char *) NULL);
-	  if (fnowork)
-	    s.bcmd = 'H';
-	  else
-	    {
-	      s.zuser = NULL;
-	      if (! fsysdep_get_work (qsys, bgrade, FALSE, &s))
-		return FALSE;
-	      ulog_user (s.zuser);
-	    }
-
-	  switch (s.bcmd)
-	    {
-	    case 'S':
-	      /* Send a file.  s.zfrom should have been written out as
-		 an absolute path.  */
-
-	      /* Make sure we are permitted to transfer files.  */
-	      if (fcaller
-		  ? ! qsys->uuconf_fcall_transfer
-		  : ! qsys->uuconf_fcalled_transfer)
-		{
-		  if (! qsys->uuconf_fcall_transfer
-		      && ! qsys->uuconf_fcalled_transfer)
-		    {
-		      /* This case will have been checked by uucp or
-			 uux, but it could have changed.  */
-		      ulog (LOG_ERROR, "Not permitted to transfer files");
-		      (void) fmail_transfer (FALSE, s.zuser,
-					     (const char *) NULL,
-					     "not permitted to transfer files",
-					     s.zfrom, (const char *) NULL,
-					     s.zto, qsys->uuconf_zname,
-					     (const char *) NULL);
-		      (void) fsysdep_did_work (s.pseq);
-		    }
-		  break;
-		}
-
-	      /* The 'C' option means that the file has been copied to
-		 the spool directory.  */
-	      fspool = (strchr (s.zoptions, 'C') != NULL
-			|| fspool_file (s.zfrom));
-
-	      if (! fspool)
-		{
-		  if (! fin_directory_list (s.zfrom,
-					    qsys->uuconf_pzlocal_send,
-					    qsys->uuconf_zpubdir, TRUE,
-					    TRUE, s.zuser))
-		    {
-		      ulog (LOG_ERROR, "Not permitted to send %s",
-			    s.zfrom);
-		      (void) fmail_transfer (FALSE, s.zuser,
-					     (const char *) NULL,
-					     "not permitted to send",
-					     s.zfrom, (const char *) NULL,
-					     s.zto, qsys->uuconf_zname,
-					     (const char *) NULL);
-		      (void) fsysdep_did_work (s.pseq);
-		      break;
-		    }
-
-		  /* We're copying the real file, so use its mode
-		     directly rather than the mode copied into the
-		     command file.  */
-		  e = esysdep_open_send (qsys, s.zfrom, TRUE, s.zuser,
-					 &s.imode, &s.cbytes, &fgone);
-		}
-	      else
-		{
-		  unsigned int idummy;
-
-		  zuse = zsysdep_spool_file_name (qsys, s.ztemp);
-		  if (zuse == NULL)
-		    return FALSE;
-		  e = esysdep_open_send (qsys, zuse, FALSE,
-					 (const char *) NULL, &idummy,
-					 &s.cbytes, &fgone);
-		  ubuffree (zuse);
-		}
-
-	      if (! ffileisopen (e))
-		{
-		  /* If the file does not exist, fgone will be set to
-		     TRUE.  In this case we might have sent the file
-		     the last time we talked to the remote system,
-		     because we might have been interrupted in the
-		     middle of a command file.  To avoid confusion, we
-		     don't send a mail message.  */
-		  if (! fgone)
-		    (void) fmail_transfer (FALSE, s.zuser,
-					   (const char *) NULL,
-					   "cannot open file",
-					   s.zfrom, (const char *) NULL,
-					   s.zto, qsys->uuconf_zname,
-					   (const char *) NULL);
-		  (void) fsysdep_did_work (s.pseq);
-		  break;
-		}
-
-	      if (s.cbytes != -1)
-		{
-		  boolean fsmall;
-		  const char *zerr;
-
-		  fsmall = FALSE;
-		  fnever = FALSE;
-		  zerr = NULL;
-
-		  if (cmax_receive != -1 && cmax_receive < s.cbytes)
-		    {
-		      fsmall = TRUE;
-		      fnever = TRUE;
-		      zerr = "too large for receiver";
-		    }
-		  else if (clocal_size != -1 && clocal_size < s.cbytes)
-		    {
-		      fsmall = TRUE;
-
-		      if (cmax_ever == -2)
-			{
-			  long c1, c2;
-
-			  c1 = cmax_size_ever (qsys->uuconf_qcall_local_size);
-			  c2 = cmax_size_ever (qsys->uuconf_qcalled_local_size);
-			  if (c1 > c2)
-			    cmax_ever = c1;
-			  else
-			    cmax_ever = c2;
-			}
-		      
-		      if (cmax_ever == -1 || cmax_ever >= s.cbytes)
-			zerr = "too large to send now";
-		      else
-			{
-			  fnever = TRUE;
-			  zerr = "too large to send";
-			}
-		    }
-
-		  if (fsmall)
-		    {
-		      ulog (LOG_ERROR, "File %s is %s", s.zfrom, zerr);
-
-		      if (fnever)
-			{
-			  const char *zsaved;
-
-			  zsaved = zsysdep_save_temp_file (s.pseq);
-			  (void) fmail_transfer (FALSE, s.zuser,
-						 (const char *) NULL,
-						 zerr,
-						 s.zfrom, (const char *) NULL,
-						 s.zto, qsys->uuconf_zname,
-						 zsaved);
-			  (void) fsysdep_did_work (s.pseq);
-			}
-
-		      (void) ffileclose (e);
-		      break;
-		    }
-		}
-
-	      ulog (LOG_NORMAL, "Sending %s", s.zfrom);
-
-	      /* The send file function is responsible for notifying
-		 the user upon success (if option m) or failure, and
-		 for closing the file.  This allows it to not complete
-		 immediately.  */
-	      if (strchr (s.zoptions, 'm') == NULL)
-		zmail = NULL;
-	      else
-		zmail = s.zuser;
-				      
-	      if (! fsend_file (TRUE, e, &s, qconn, zmail,
-				qsys->uuconf_zname, fnew))
-		return FALSE;
-
-	      break;
-
-	    case 'R':
-	      /* Receive a file.  */
-
-	      /* Make sure we are permitted to transfer files.  */
-	      if (fcaller
-		  ? ! qsys->uuconf_fcall_transfer
-		  : ! qsys->uuconf_fcalled_transfer)
-		{
-		  if (! qsys->uuconf_fcall_transfer
-		      && ! qsys->uuconf_fcalled_transfer)
-		    {
-		      /* This case will have been checked by uucp or
-			 uux, but it could have changed.  */
-		      ulog (LOG_ERROR, "Not permitted to transfer files");
-		      (void) fmail_transfer (FALSE, s.zuser,
-					     (const char *) NULL,
-					     "not permitted to transfer files",
-					     s.zfrom, (const char *) NULL,
-					     s.zto, qsys->uuconf_zname,
-					     (const char *) NULL);
-		      (void) fsysdep_did_work (s.pseq);
-		    }
-		  break;
-		}
-
-	      if (fspool_file (s.zto))
-		{
-		  /* Normal users are not allowed to receive files in
-		     the spool directory, and to make it particularly
-		     difficult we require a special option '9'.  This
-		     is used only by uux when a file must be requested
-		     from one system and then sent to another.  */
-		  fspool = TRUE;
-		  if (s.zto[0] != 'D'
-		      || strchr (s.zoptions, '9') == NULL)
-		    {
-		      ulog (LOG_ERROR, "Not permitted to receive %s",
-			    s.zto);
-		      (void) fmail_transfer (FALSE, s.zuser,
-					     (const char *) NULL,
-					     "not permitted to receive",
-					     s.zfrom, qsys->uuconf_zname,
-					     s.zto, (const char *) NULL,
-					     (const char *) NULL);
-		      (void) fsysdep_did_work (s.pseq);
-		      break;
-		    }
-
-		  zuse = zsysdep_spool_file_name (qsys, s.zto);
-		  if (zuse == NULL)
-		    return FALSE;
-		}
-	      else
-		{
-		  fspool = FALSE;
-		  zuse = zsysdep_add_base (s.zto, s.zfrom);
-		  if (zuse == NULL)
-		    return FALSE;
-
-		  /* Check permissions.  */
-		  if (! fin_directory_list (zuse,
-					    qsys->uuconf_pzlocal_receive,
-					    qsys->uuconf_zpubdir, TRUE,
-					    FALSE, s.zuser))
-		    {
-		      ulog (LOG_ERROR, "Not permitted to receive %s",
-			    zuse);
-		      (void) fmail_transfer (FALSE, s.zuser,
-					     (const char *) NULL,
-					     "not permitted to receive",
-					     s.zfrom, qsys->uuconf_zname,
-					     zuse, (const char *) NULL,
-					     (const char *) NULL);
-		      ubuffree (zuse);
-		      (void) fsysdep_did_work (s.pseq);
-		      break;
-		    }
-
-		  /* The 'f' option means that directories should not
-		     be created if they do not already exist.  */
-		  if (strchr (s.zoptions, 'f') == NULL)
-		    {
-		      if (! fsysdep_make_dirs (zuse, TRUE))
-			{
-			  (void) fmail_transfer (FALSE, s.zuser,
-						 (const char *) NULL,
-						 "cannot create directories",
-						 s.zfrom, qsys->uuconf_zname,
-						 s.zto, (const char *) NULL,
-						 (const char *) NULL);
-			  ubuffree (zuse);
-			  (void) fsysdep_did_work (s.pseq);
-			  break;
-			}
-		    }
-		}
-
-	      e = esysdep_open_receive (qsys, zuse, &ztemp, &s.cbytes);
-	      if (! ffileisopen (e))
-		{
-		  (void) fmail_transfer (FALSE, s.zuser,
-					 (const char *) NULL,
-					 "cannot open file",
-					 s.zfrom, qsys->uuconf_zname,
-					 zuse, (const char *) NULL,
-					 (const char *) NULL);
-		  ubuffree (zuse);
-		  (void) fsysdep_did_work (s.pseq);
-		  break;
-		}
-
-	      s.ztemp = ztemp;
-
-	      /* Here s.cbytes represents the amount of free space we
-		 have.  We want to adjust it by the amount of free
-		 space permitted for this system.  If there is a
-		 maximum transfer size, we may want to use that as an
-		 amount of free space.  */
-	      if (s.cbytes != -1)
-		{
-		  s.cbytes -= qsys->uuconf_cfree_space;
-		  if (s.cbytes < 0)
-		    s.cbytes = 0;
-		}
-
-	      if (clocal_size != -1
-		  && (s.cbytes == -1 || clocal_size < s.cbytes))
-		s.cbytes = clocal_size;
-
-	      ulog (LOG_NORMAL, "Receiving %s", zuse);
-	      s.zto = zuse;
-
-	      /* As with the send routine, this function is
-		 responsible for mailing a message to the user on
-		 failure or on success if the m option is set, and is
-		 also responsible for closing the file.  */
-	      if (strchr (s.zoptions, 'm') == NULL)
-		zmail = NULL;
-	      else
-		zmail = s.zuser;
-
-	      /* The imode argument (passed as 0666) will be corrected
-		 with information from the remote system.  */
-	      s.imode = 0666;
-
-	      if (! freceive_file (TRUE, e, &s, qconn, zmail,
-				   qsys->uuconf_zname, fspool, fnew))
-		{
-		  ubuffree (ztemp);
-		  ubuffree (zuse);
-		  return FALSE;
-		}
-
-	      ubuffree (ztemp);
-	      ubuffree (zuse);
-	      break;
-
-	    case 'X':
-	      /* Request a file copy.  This is used to request a file
-		 to be sent to another machine, as well as to get a
-		 wildcarded filespec.  */
-	      ulog (LOG_NORMAL, "Requesting work: %s to %s", s.zfrom,
-		    s.zto);
-
-	      if (! fxcmd (&s, qconn, &fnever))
-		return FALSE;
-
-	      if (fnever)
-		(void) fmail_transfer (FALSE, s.zuser,
-				       (const char *) NULL,
-				       "wildcard request denied",
-				       s.zfrom, qsys->uuconf_zname,
-				       s.zto, (const char *) NULL,
-				       (const char *) NULL);
-	      (void) fsysdep_did_work (s.pseq);
-	      break;
-
-	    case 'H':
-	      /* There is nothing left to do; hang up.  If we are not the
-		 master, take no action (this allows for two-way
-		 protocols.  */
-	      fmasterdone = TRUE;
-	      if (fmaster)
-		{
-		  if (! fhangup_request (qconn))
-		    {
-		      ulog (LOG_ERROR, "Hangup failed");
-		      return FALSE;
-		    }
-
-		  fmaster = FALSE;
-
-		  /* Close the log file at every master/slave switch.
-		     This will cut down on the amount of time we have
-		     an old log file open.  */
-		  ulog_close ();
-		  ustats_close ();
-		}
-	      break;
-
-	    default:
-	      ulog (LOG_ERROR, "Unknown command '%c'", s.bcmd);
-	      break;
-	    }
-	}
-
-      /* We look for a command from the other system if we are the
-	 slave or this is a full-duplex protocol and the slave still
-	 has work to do.  */
-      if (! fmaster || qProto->ffullduplex)
-	{
-	  struct scmd s;
-	  boolean fspool;
-	  char *zuse, *ztemp;
-	  const char *zmail;
-	  openfile_t e;
-	  char bhave_grade;
-	  long cbytes;
-
-	  /* We are the slave.  Get the next command from the other
-	     system.  */
-	  ulog_user ((const char *) NULL);
-	  if (! fgetcmd (fmaster, &s, qconn))
-	    return FALSE;
-
-	  if (s.bcmd != 'H' && s.bcmd != 'Y')
-	    ulog_user (s.zuser);
-
-	  switch (s.bcmd)
-	    {
-	    case 'S':
-	      /* The master wants to send a file to us.  */
-
-	      if (! qsys->uuconf_fcall_request)
-		{
-		  ulog (LOG_ERROR,
-			"Remote system not permitted to send files");
-		  if (! ftransfer_fail ('S', FAILURE_PERM, qconn))
-		    return FALSE;
-		  break;
-		}
-		  
-	      if (fspool_file (s.zto))
-		{
-		  /* We don't accept remote command files.  */
-		  if (s.zto[0] == 'C')
-		    {
-		      if (! ftransfer_fail ('S', FAILURE_PERM, qconn))
-			return FALSE;
-		      break;
-		    }
-
-		  fspool = TRUE;
-		  zuse = zsysdep_spool_file_name (qsys, s.zto);
-		  if (zuse == NULL)
-		    return FALSE;
-		}
-	      else
-		{
-		  fspool = FALSE;
-		  zuse = zsysdep_local_file (s.zto, qsys->uuconf_zpubdir);
-		  if (zuse != NULL)
-		    {
-		      char *zadd;
-
-		      zadd = zsysdep_add_base (zuse, s.zfrom);
-		      ubuffree (zuse);
-		      zuse = zadd;
-		    }
-		  if (zuse == NULL)
-		    {
-		      if (! ftransfer_fail ('S', FAILURE_PERM, qconn))
-			return FALSE;
-		      break;
-		    }
-
-		  /* Check permissions.  */
-		  if (! fin_directory_list (zuse,
-					    qsys->uuconf_pzremote_receive,
-					    qsys->uuconf_zpubdir, TRUE,
-					    FALSE, (const char *) NULL))
-		    {
-		      ulog (LOG_ERROR, "Not permitted to receive %s", zuse);
-		      ubuffree (zuse);
-		      if (! ftransfer_fail ('S', FAILURE_PERM, qconn))
-			return FALSE;
-		      break;
-		    }
-
-		  if (strchr (s.zoptions, 'f') == NULL)
-		    {
-		      if (! fsysdep_make_dirs (zuse, TRUE))
-			{
-			  ubuffree (zuse);
-			  if (! ftransfer_fail ('S', FAILURE_PERM, qconn))
-			    return FALSE;
-			  break;
-			}
-		    }
-		}
-
-	      e = esysdep_open_receive (qsys, zuse, &ztemp, &cbytes);
-	      if (! ffileisopen (e))
-		{
-		  ubuffree (zuse);
-		  if (! ftransfer_fail ('S', FAILURE_OPEN, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      s.ztemp = ztemp;
-
-	      /* Adjust the number of bytes we are prepared to receive
-		 according to the amount of free space we are supposed
-		 to leave available and the maximum file size we are
-		 permitted to transfer.  */
-	      if (cbytes != -1)
-		{
-		  cbytes -= qsys->uuconf_cfree_space;
-		  if (cbytes < 0)
-		    cbytes = 0;
-		}
-	      
-	      if (cremote_size != -1
-		  && (cbytes == -1 || cremote_size < cbytes))
-		cbytes = cremote_size;
-
-	      /* If the number of bytes we are prepared to receive
-		 is less than the file size, we must fail.  */
-
-	      if (s.cbytes != -1
-		  && cbytes != -1
-		  && cbytes < s.cbytes)
-		{
-		  ulog (LOG_ERROR, "%s is too big to receive", zuse);
-		  ubuffree (zuse);
-		  (void) ffileclose (e);
-		  (void) remove (ztemp);
-		  ubuffree (ztemp);
-		  if (! ftransfer_fail ('S', FAILURE_SIZE, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      ulog (LOG_NORMAL, "Receiving %s", zuse);
-	      s.zto = zuse;
-
-	      if (strchr (s.zoptions, 'n') == NULL)
-		zmail = NULL;
-	      else
-		zmail = s.znotify;
-	      s.pseq = NULL;
-	      if (! freceive_file (FALSE, e, &s, qconn, zmail,
-				   qsys->uuconf_zname,  fspool, fnew))
-		{
-		  ubuffree (ztemp);
-		  ubuffree (zuse);
-		  return FALSE;
-		}
-
-	      ubuffree (ztemp);
-	      ubuffree (zuse);
-	      break;
-
-	    case 'R':
-	      /* The master wants to get a file from us.  */
-
-	      if (! qsys->uuconf_fcall_request)
-		{
-		  ulog (LOG_ERROR,
-			"Remote system not permitted to request files");
-		  if (! ftransfer_fail ('R', FAILURE_PERM, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      if (fspool_file (s.zfrom))
-		{
-		  ulog (LOG_ERROR, "Not permitted to send %s", s.zfrom);
-		  if (! ftransfer_fail ('R', FAILURE_PERM, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      zuse = zsysdep_local_file (s.zfrom,
-					 qsys->uuconf_zpubdir);
-	      if (zuse == NULL)
-		{
-		  if (! ftransfer_fail ('R', FAILURE_PERM, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      if (! fin_directory_list (zuse, qsys->uuconf_pzremote_send,
-					qsys->uuconf_zpubdir, TRUE, TRUE,
-					(const char *) NULL))
-		{
-		  ulog (LOG_ERROR, "No permission to send %s", zuse);
-		  ubuffree (zuse);
-		  if (! ftransfer_fail ('R', FAILURE_PERM, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      e = esysdep_open_send (qsys, zuse, TRUE, (const char *) NULL,
-				     &s.imode, &cbytes, (boolean *) NULL);
-	      if (! ffileisopen (e))
-		{
-		  ubuffree (zuse);
-		  if (! ftransfer_fail ('R', FAILURE_OPEN, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      /* If the file is larger than the amount of space
-		 the other side reported, we can't send it.  */
-	      if (cbytes != -1
-		  && ((s.cbytes != -1 && s.cbytes < cbytes)
-		      || (cremote_size != -1 && cremote_size < cbytes)
-		      || (cmax_receive != -1 && cmax_receive < cbytes)))
-		{
-		  ulog (LOG_ERROR, "%s is too large to send", zuse);
-		  ubuffree (zuse);
-		  if (! ftransfer_fail ('R', FAILURE_SIZE, qconn))
-		    return FALSE;
-		  (void) ffileclose (e);
-		  break;
-		}
-
-	      ulog (LOG_NORMAL, "Sending %s", zuse);
-
-	      /* Pass in the real size of the file.  */
-	      s.cbytes = cbytes;
-
-	      if (! fsend_file (FALSE, e, &s, qconn, (const char *) NULL,
-				qsys->uuconf_zname, fnew))
-		{
-		  ubuffree (zuse);
-		  return FALSE;
-		}
-
-	      ubuffree (zuse);
-	      break;
-
-	    case 'X':
-	      /* This is an execution request.  We are being asked to
-		 send one or more files to a destination on either the
-		 local or a remote system.  We do this by spooling up
-		 commands for the destination system.  */
-
-	      if (! qsys->uuconf_fcall_request)
-		{
-		  ulog (LOG_ERROR,
-			"Remote system not permitted to request files");
-		  if (! ftransfer_fail ('X', FAILURE_PERM, qconn))
-		    return FALSE;
-		  break;
-		}
-
-	      ulog (LOG_NORMAL, "Work requested: %s to %s", s.zfrom,
-		    s.zto);
-
-	      if (fdo_xcmd (puuconf, qsys, zlocalname, fcaller, &s))
-		{
-		  if (! fxcmd_confirm (qconn))
-		    return FALSE;
-		}
-	      else
-		{
-		  if (! ftransfer_fail ('X', FAILURE_PERM, qconn))
-		    return FALSE;
-		}
-
-	      break;
-
-	    case 'H':
-	      /* The master wants to hang up.  If we have something to
-		 do, become the master.  Otherwise, agree to hang up.
-		 We recheck the grades allowed at this time, since a
-		 lot of time may have passed.  */
-	      if (fcaller)
-		{
-		  long ival;
-
-		  if (! ftimespan_match (qsys->uuconf_qtimegrade, &ival,
-					 (int *) NULL))
-		    bgrade = '\0';
-		  else
-		    bgrade = (char) ival;
-		}
-	      if (bgrade != '\0'
-		  && fsysdep_has_work (qsys, &bhave_grade)
-		  && UUCONF_GRADE_CMP (bgrade, bhave_grade) >= 0)
-		{
-		  if (fmasterdone)
-		    {
-		      if (! fsysdep_get_work_init (qsys, bgrade, FALSE))
-			return FALSE;
-		      fnowork = FALSE;
-		    }
-
-		  fmasterdone = FALSE;
-		  
-		  if (! fhangup_reply (FALSE, qconn))
-		      return FALSE;
-		  fmaster = TRUE;
-
-		  /* Recalculate the maximum sizes we can send, since
-		     the time might have changed significantly.  */
-		  if (! ftimespan_match (qlocal_size, &clocal_size,
-					 (int *) NULL))
-		    clocal_size = (long) -1;
-		  if (! ftimespan_match (qremote_size, &cremote_size,
-					 (int *) NULL))
-		    cremote_size = (long) -1;
-
-		  /* Close the log file at every switch of master and
-		     slave.  */
-		  ulog_close ();
-		  ustats_close ();
-		}
-	      else
-		{
-		  /* The hangup_reply function will shut down the
-		     protocol.  */
-		  return fhangup_reply (TRUE, qconn);
-		}
-	      break;
-
-	    case 'Y':
-	      /* This is returned when a hangup has been confirmed and
-		 the protocol has been shut down.  */
-	      return TRUE;
-
-	    default:
-	      ulog (LOG_ERROR, "Unknown command %c", s.bcmd);
-	      break;
-	    }
-	}
-    }
-}
-
-/* Do an 'X' request for another system.  The other system has
-   basically requested us to execute a uucp command for them.  */
-
-static boolean
-fdo_xcmd (puuconf, qsys, zlocalname, fcaller, q)
-     pointer puuconf;
-     const struct uuconf_system *qsys;
-     const char *zlocalname;
-     boolean fcaller;
-     const struct scmd *q;
-{
-  const char *zexclam;
-  char *zdestfile;
-  char *zcopy;
-  struct uuconf_system sdestsys;
-  const struct uuconf_system *qdestsys;
-  int iuuconf;
-  char *zuser = NULL;
-  char aboptions[5];
-  char *zoptions = NULL;
-  boolean fmkdirs;
-  char *zfrom;
-  boolean fret;
-  char *zfile;
-
-  zexclam = strchr (q->zto, '!');
-  if (zexclam == NULL
-      || zexclam == q->zto
-      || strncmp (zlocalname, q->zto, zexclam - q->zto) == 0)
-    {
-      const char *zconst;
-
-      /* The files are supposed to be copied to the
-	 local system.  */
-      qdestsys = NULL;
-      if (zexclam == NULL)
-	zconst = q->zto;
-      else
-	zconst = zexclam + 1;
-
-      zdestfile = zsysdep_local_file (zconst, qsys->uuconf_zpubdir);
-      if (zdestfile == NULL)
-	return FALSE;
-
-      fmkdirs = strchr (q->zoptions, 'f') != NULL;
-    }
-  else
-    {
-      size_t clen;
-
-      clen = zexclam - q->zto;
-      zcopy = (char *) alloca (clen + 1);
-      memcpy (zcopy, q->zto, clen);
-      zcopy[clen] = '\0';
-
-      iuuconf = uuconf_system_info (puuconf, zcopy, &sdestsys);
-      if (iuuconf == UUCONF_NOT_FOUND)
-	{
-	  if (! funknown_system (puuconf, zcopy, &sdestsys))
-	    {
-	      ulog (LOG_ERROR, "Destination system %s unknown",
-		    zcopy);
-	      return FALSE;
-	    }
-	}
-      else if (iuuconf != UUCONF_SUCCESS)
-	{
-	  ulog_uuconf (LOG_ERROR, puuconf, iuuconf);
-	  return FALSE;
-	}
-
-      qdestsys = &sdestsys;
-      zdestfile = zbufcpy (zexclam + 1);
-
-      zuser = (char *) alloca (strlen (qdestsys->uuconf_zname)
-			       + strlen (q->zuser) + sizeof "!");
-      sprintf (zuser, "%s!%s", qdestsys->uuconf_zname, q->zuser);
-      zoptions = aboptions;
-      *zoptions++ = 'C';
-      if (strchr (q->zoptions, 'd') != NULL)
-	*zoptions++ = 'd';
-      if (strchr (q->zoptions, 'm') != NULL)
-	*zoptions++ = 'm';
-      *zoptions = '\0';
-      fmkdirs = TRUE;
-    }
-
-  /* Now we have to process each source file.  The
-     source specification may or may use wildcards.  */
-  zfrom = zsysdep_local_file (q->zfrom, qsys->uuconf_zpubdir);
-  if (zfrom == NULL)
-    {
-      ubuffree (zdestfile);
-      return FALSE;
-    }
-
-  if (! fsysdep_wildcard_start (zfrom))
-    {
-      ubuffree (zdestfile);
-      ubuffree (zfrom);
-      return FALSE;
-    }
-
-  fret = TRUE;
-
-  while ((zfile = zsysdep_wildcard (zfrom)) != NULL)
-    {
-      char *zto;
-      char abtname[CFILE_NAME_LEN];
-
-      /* Make sure the remote system is permitted to read the
-	 specified file.  */
-      if (! fin_directory_list (zfile, qsys->uuconf_pzremote_send,
-				qsys->uuconf_zpubdir, TRUE, TRUE,
-				(const char *) NULL))
-	{
-	  ulog (LOG_ERROR, "Not permitted to send %s", zfile);
-	  fret = FALSE;
-	  break;
-	}
-
-      if (qdestsys != NULL)
-	{
-	  /* We really should get the original grade here.  */
-	  zto = zsysdep_data_file_name (qdestsys, zlocalname,
-					BDEFAULT_UUCP_GRADE,
-					abtname, (char *) NULL,
-					(char *) NULL);
-	  if (zto == NULL)
-	    {
-	      fret = FALSE;
-	      break;
-	    }
-	}
-      else
-	{
-	  zto = zsysdep_add_base (zdestfile, zfile);
-	  if (zto == NULL)
-	    {
-	      fret = FALSE;
-	      break;
-	    }
-	  /* We only accept a local destination if the remote system
-	     has the right to create files there.  */
-	  if (! fin_directory_list (zto, qsys->uuconf_pzremote_receive,
-				    qsys->uuconf_zpubdir, TRUE, FALSE,
-				    (const char *) NULL))
-	    {
-	      ulog (LOG_ERROR, "Not permitted to receive %s", zto);
-	      ubuffree (zto);
-	      fret = FALSE;
-	      break;
-	    }
-	}
-
-      /* Copy the file either to the final destination or to the
-	 spool directory.  */
-      if (! fcopy_file (zfile, zto, qdestsys == NULL, fmkdirs))
-	{
-	  ubuffree (zto);
-	  fret = FALSE;
-	  break;
-	}
-
-      ubuffree (zto);
-
-      /* If there is a destination system, queue it up.  */
-      if (qdestsys != NULL)
-	{
-	  struct scmd ssend;
-	  char *zjobid;
-
-	  ssend.bcmd = 'S';
-	  ssend.pseq = NULL;
-	  ssend.zfrom = zfile;
-	  ssend.zto = zdestfile;
-	  ssend.zuser = zuser;
-	  ssend.zoptions = aboptions;
-	  ssend.ztemp = abtname;
-	  ssend.imode = isysdep_file_mode (zfile);
-	  if (ssend.imode == 0)
-	    {
-	      fret = FALSE;
-	      break;
-	    }
-	  ssend.znotify = "";
-	  ssend.cbytes = -1;
-
-	  zjobid = zsysdep_spool_commands (qdestsys, BDEFAULT_UUCP_GRADE,
-					   1, &ssend);
-	  if (zjobid == NULL)
-	    {
-	      fret = FALSE;
-	      break;
-	    }
-	  ubuffree (zjobid);
-	}
-
-      ubuffree (zfile);
-    }
-
-  if (zfile != NULL)
-    ubuffree (zfile);
-
-  if (! fsysdep_wildcard_end ())
-    fret = FALSE;
-
-  ubuffree (zdestfile);
-  if (qdestsys != NULL)
-    (void) uuconf_system_free (puuconf, &sdestsys);
-
-  ubuffree (zfrom);
-
-  return fret;
 }
 
 /* Apply protocol parameters, once we know the protocol.  */
@@ -3227,15 +2146,19 @@ fsend_uucp_cmd (qconn, z)
      struct sconnection *qconn;
      const char *z;
 {
-  char *zalc;
   size_t cwrite;
+  char *zalc;
+  boolean fret;
 
   cwrite = strlen (z) + 2;
 
-  zalc = (char *) alloca (cwrite);
-  sprintf (zalc, "\020%s", z);
+  zalc = zbufalc (cwrite);
+  zalc[0] = '\020';
+  memcpy (zalc + 1, z, cwrite - 1);
 
-  return fconn_write (qconn, zalc, cwrite);
+  fret = fconn_write (qconn, zalc, cwrite);
+  ubuffree (zalc);
+  return fret;
 }
 
 /* Get a UUCP command beginning with a DLE character and ending with a
@@ -3247,16 +2170,16 @@ fsend_uucp_cmd (qconn, z)
 
 #define CTIMEOUT (120)
 #define CSHORTTIMEOUT (10)
-#define CINCREMENT (10)
+#define CINCREMENT (100)
 
-static const char *
+static char *
 zget_uucp_cmd (qconn, frequired)
      struct sconnection *qconn;
      boolean frequired;
 {
-  static char *zalc;
-  static int calc;
-  int cgot;
+  char *zalc;
+  size_t calc;
+  size_t cgot;
   long iendtime;
   int ctimeout;
 #if DEBUG > 1
@@ -3280,6 +2203,8 @@ zget_uucp_cmd (qconn, frequired)
     }
 #endif
 
+  zalc = NULL;
+  calc = 0;
   cgot = -1;
   while ((ctimeout = (int) (iendtime - isysdep_time ((long *) NULL))) > 0)
     {
@@ -3299,6 +2224,7 @@ zget_uucp_cmd (qconn, frequired)
 #endif
 	  if (b == -1 && frequired)
 	    ulog (LOG_ERROR, "Timeout");
+	  ubuffree (zalc);
 	  return NULL;
 	}
 
@@ -3350,8 +2276,13 @@ zget_uucp_cmd (qconn, frequired)
 
       if (cgot >= calc)
 	{
+	  char *znew;
+
 	  calc += CINCREMENT;
-	  zalc = (char *) xrealloc ((pointer) zalc, calc);
+	  znew = zbufalc (calc);
+	  memcpy (znew, zalc, cgot);
+	  ubuffree (zalc);
+	  zalc = znew;
 	}
 
       zalc[cgot] = (char) b;
@@ -3378,6 +2309,8 @@ zget_uucp_cmd (qconn, frequired)
     }
 #endif
 
+  ubuffree (zalc);
+
   if (frequired)
     ulog (LOG_ERROR, "Timeout");
   return NULL;
@@ -3386,13 +2319,13 @@ zget_uucp_cmd (qconn, frequired)
 /* Read a sequence of characters up to a newline or carriage return, and
    return the line without the line terminating character.  */
 
-static const char *
+static char *
 zget_typed_line (qconn)
      struct sconnection *qconn;
 {
-  static char *zalc;
-  static int calc;
-  int cgot;
+  char *zalc;
+  size_t calc;
+  size_t cgot;
 
 #if DEBUG > 1
   int cchars;
@@ -3407,6 +2340,8 @@ zget_typed_line (qconn)
     }
 #endif
 
+  zalc = NULL;
+  calc = 0;
   cgot = 0;
   while (TRUE)
     {
@@ -3425,6 +2360,7 @@ zget_typed_line (qconn)
 	      iDebug = iolddebug;
 	    }
 #endif
+	  ubuffree (zalc);
 	  return NULL;
 	}
 
@@ -3450,8 +2386,13 @@ zget_typed_line (qconn)
 
       if (cgot >= calc)
 	{
+	  char *znew;
+
 	  calc += CINCREMENT;
-	  zalc = (char *) xrealloc ((pointer) zalc, calc);
+	  znew = zbufalc (calc);
+	  memcpy (znew, zalc, cgot);
+	  ubuffree (zalc);
+	  zalc = znew;
 	}
 
       if (b == '\r' || b == '\n')

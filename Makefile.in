@@ -93,8 +93,9 @@ MDEFINES = CC='$(CC)' CFLAGS='$(CFLAGS)' RANLIB='$(RANLIB)' LN_S='$(LN_S)' newco
 PROGRAMS = uucico uuxqt uux uucp uuchk uuconv uustat uuname uulog uuto \
 	uupick cu
 
-UUOBJS = uucico.o prot.o protg.o protf.o prott.o prote.o file.o \
-	time.o log.o chat.o conn.o tcp.o util.o parse.o copy.o
+UUOBJS = uucico.o trans.o send.o rec.o xcmd.o prot.o protg.o protf.o \
+	prott.o prote.o time.o log.o chat.o conn.o tcp.o util.o \
+	parse.o copy.o
 XQTOBJS = uuxqt.o util.o log.o copy.o
 UUXOBJS = uux.o util.o log.o copy.o
 UUCPOBJS = uucp.o util.o log.o copy.o
@@ -102,22 +103,22 @@ UUSTATOBJS = uustat.o util.o log.o parse.o copy.o
 UUNAMEOBJS = uuname.o log.o
 UULOGOBJS = uulog.o log.o
 UUPICKOBJS = uupick.o log.o copy.o
-CUOBJS = cu.o prot.o file.o log.o chat.o conn.o tcp.o parse.o copy.o
+CUOBJS = cu.o prot.o log.o chat.o conn.o tcp.o parse.o copy.o
 UUCHKOBJS = uuchk.o
 UUCONVOBJS = uuconv.o
 TSTOBJS = tstuu.o
 
 ALLOBJS = uucico.o uuxqt.o uux.o uucp.o uuchk.o uuconv.o uustat.o \
-	uuname.o uulog.o uupick.o cu.o uudir.o tstuu.o prot.o protg.o \
-	protf.o prott.o prote.o file.o util.o time.o log.o chat.o \
-	conn.o tcp.o parse.o copy.o
+	uuname.o uulog.o uupick.o cu.o uudir.o tstuu.o trans.o send.o \
+	rec.o xcmd.o prot.o protg.o protf.o prott.o prote.o util.o \
+	time.o log.o chat.o conn.o tcp.o parse.o copy.o
 
 UULIBS = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 
 all: $(PROGRAMS) $(TSTUU) $(UUDIR)
 
 install: $(PROGRAMS) uucp.info $(UUDIR)
-	-mkdir $(sbindir) $(bindir)
+	-mkdir $(sbindir) $(bindir) $(infodir)
 	-ln $(sbindir)/uucico $(sbindir)/uucico.old
 	-ln $(sbindir)/uuxqt $(sbindir)/uuxqt.old
 	rm -f $(sbindir)/uucico $(sbindir)/uuxqt
@@ -156,7 +157,7 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	$(INSTALL_DATA) $(srcdir)/uuxqt.8 $(man8dir)/uuxqt$(man8ext)
 	$(INSTALL_DATA) $(srcdir)/uux.1 $(man1dir)/uux$(man1ext)
 	$(INSTALL_DATA) $(srcdir)/uucp.1 $(man1dir)/uucp$(man1ext)
-	$(INSTALL_DATA) $(srcdir)/uustat.1 $(man1dir)/uucp$(man1ext)
+	$(INSTALL_DATA) $(srcdir)/uustat.1 $(man1dir)/uustat$(man1ext)
 	-$(INSTALL_DATA) $(srcdir)/uucp.info $(infodir)/uucp.info
 	-$(INSTALL_DATA) $(srcdir)/uucp.info-1 $(infodir)/uucp.info-1
 	-$(INSTALL_DATA) $(srcdir)/uucp.info-2 $(infodir)/uucp.info-2
@@ -302,7 +303,7 @@ TAGS:
 
 $(ALLOBJS): uucp.h conf.h policy.h uuconf.h
 
-uucico.o: system.h prot.h conn.h getopt.h
+uucico.o: system.h prot.h conn.h trans.h getopt.h
 uuxqt.o: system.h getopt.h
 uux.o: system.h getopt.h sysdep.h
 uucp.o: system.h getopt.h
@@ -315,12 +316,15 @@ uuchk.o: getopt.h
 uuconv.o: getopt.h
 uudir.o: sysdep.h
 tstuu.o: sysdep.h getopt.h
+trans.o: system.h prot.h trans.h
+send.o: system.h prot.h trans.h
+rec.o: system.h prot.h trans.h
+xcmd.o: system.h prot.h trans.h
 prot.o: system.h prot.h conn.h
-protg.o: system.h prot.h conn.h
-protf.o: prot.h conn.h system.h
-prott.o: prot.h conn.h system.h
-prote.o: prot.h conn.h system.h
-file.o: system.h
+protg.o: system.h prot.h conn.h trans.h
+protf.o: prot.h conn.h system.h trans.h
+prott.o: prot.h conn.h system.h trans.h
+prote.o: prot.h conn.h system.h trans.h
 log.o: system.h
 chat.o: system.h conn.h
 conn.o: conn.h

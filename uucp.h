@@ -245,9 +245,11 @@ typedef FILE *openfile_t;
 #define ffilereaderror(e, c) ferror (e)
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
 #ifdef SEEK_SET
-#define ffilerewind(e) (fseek (e, (long) 0, SEEK_SET) == 0)
+#define ffileseek(e, i) (fseek ((e), (long) (i), SEEK_SET) == 0)
+#define ffilerewind(e) (fseek ((e), (long) 0, SEEK_SET) == 0)
 #else
-#define ffilerewind(e) (fseek (e, (long) 0, 0) == 0)
+#define ffileseek(e, i) (fseek ((e), (long) (i), 0) == 0)
+#define ffilerewind(e) (fseek ((e), (long) 0, 0) == 0)
 #endif
 #define ffileclose(e) (fclose (e) == 0)
 
@@ -265,9 +267,11 @@ typedef int openfile_t;
 #define ffilereaderror(e, c) ((c) < 0)
 #define cfilewrite(e, z, c) write ((e), (z), (c))
 #ifdef SEEK_SET
-#define ffilerewind(e) (lseek (e, (long) 0, SEEK_SET) >= 0)
+#define ffileseek(e) (lseek ((e), (long) 0, SEEK_SET) >= 0)
+#define ffilerewind(e) (lseek ((e), (long) 0, SEEK_SET) >= 0)
 #else
-#define ffilerewind(e) (lseek (e, (long) 0, 0) >= 0)
+#define ffileseek(e) (lseek ((e), (long) 0, 0) >= 0)
+#define ffilerewind(e) (lseek ((e), (long) 0, 0) >= 0)
 #endif
 #define ffileclose(e) (close (e) >= 0)
 
@@ -626,7 +630,7 @@ extern void ustats P((boolean fsucceeded, const char *zuser,
 
 /* We have lost the connection; record any in progress file transfers
    in the statistics file.  */
-extern void ustats_failed P((void));
+extern void ustats_failed P((const struct uuconf_system *qsys));
 
 /* Close the statistics file.  */
 extern void ustats_close P((void));

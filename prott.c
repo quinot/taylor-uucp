@@ -29,9 +29,10 @@
 const char prott_rcsid[] = "$Id$";
 #endif
 
-#include "prot.h"
 #include "conn.h"
+#include "trans.h"
 #include "system.h"
+#include "prot.h"
 
 /* This implementation is based on code written by Rick Adams.
 
@@ -67,19 +68,19 @@ struct uuconf_cmdtab asTproto_params[] =
 
 /* Local function.  */
 
-static boolean ftprocess_data P((struct sconnection *qconn, boolean *pfexit,
+static boolean ftprocess_data P((struct sdaemon *qdaemon, boolean *pfexit,
 				 size_t *pcneed));
 
 /* Start the protocol.  */
 
 /*ARGSUSED*/
 boolean
-ftstart (qconn, fmaster)
-     struct sconnection *qconn;
+ftstart (qdaemon, fmaster)
+     struct sdaemon *qdaemon;
      boolean fmaster;
 {
-  if (! fconn_set (qconn, PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
-		   XONXOFF_OFF))
+  if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
+		   STRIPSETTING_EIGHTBITS, XONXOFF_OFF))
     return FALSE;
   zTbuf = (char *) xmalloc (CTBUFSIZE + CTFRAMELEN);
   /* The first two bytes of the buffer are always zero.  */
@@ -94,8 +95,8 @@ ftstart (qconn, fmaster)
 
 /*ARGSUSED*/
 boolean 
-ftshutdown (qconn)
-     struct sconnection *qconn;
+ftshutdown (qdaemon)
+     struct sdaemon *qdaemon;
 {
   xfree ((pointer) zTbuf);
   zTbuf = NULL;
@@ -108,8 +109,8 @@ ftshutdown (qconn)
    TPACKSIZE.  */
 
 boolean
-ftsendcmd (qconn, z)
-     struct sconnection *qconn;
+ftsendcmd (qdaemon, z)
+     struct sdaemon *qdaemon;
      const char *z;
 {
   size_t clen, csend;
@@ -128,7 +129,7 @@ ftsendcmd (qconn, z)
   memcpy (zalc, z, clen);
   bzero (zalc + clen, csend - clen);
 
-  return fsend_data (qconn, zalc, clen, TRUE);
+  return fsend_data (qdaemon->qconn, zalc, csend, TRUE);
 }
 
 /* Get space to be filled with data.  We provide a buffer which has
@@ -136,8 +137,8 @@ ftsendcmd (qconn, z)
 
 /*ARGSIGNORED*/
 char *
-ztgetspace (qconn, pclen)
-     struct sconnection *qconn;
+ztgetspace (qdaemon, pclen)
+     struct sdaemon *qdaemon;
      size_t *pclen;
 {
   *pclen = CTBUFSIZE;
@@ -148,11 +149,13 @@ ztgetspace (qconn, pclen)
    preceding the buffer.  This allows us to send the entire block with
    header bytes in a single call.  */
 
+/*ARGSIGNORED*/
 boolean
-ftsenddata (qconn, zdata, cdata)
-     struct sconnection *qconn;
+ftsenddata (qdaemon, zdata, cdata, ipos)
+     struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     long ipos;
 {
   /* Here we do htonl by hand, since it doesn't exist everywhere.  We
      know that the amount of data cannot be greater than CTBUFSIZE, so
@@ -165,24 +168,15 @@ ftsenddata (qconn, zdata, cdata)
 
   /* We pass FALSE to fsend_data since we don't expect the other side
      to be sending us anything just now.  */
-  return fsend_data (qconn, zdata - CTFRAMELEN, cdata + CTFRAMELEN, FALSE);
+  return fsend_data (qdaemon->qconn, zdata - CTFRAMELEN, cdata + CTFRAMELEN,
+		     FALSE);
 }
 
-/* Process any data in the receive buffer.  */
-
-boolean
-ftprocess (qconn, pfexit)
-     struct sconnection *qconn;
-     boolean *pfexit;
-{
-  return ftprocess_data (qconn, pfexit, (size_t *) NULL);
-}
-
 /* Process data and return the amount we need in *pfneed.  */
 
 static boolean
-ftprocess_data (qconn, pfexit, pcneed)
-     struct sconnection *qconn;
+ftprocess_data (qdaemon, pfexit, pcneed)
+     struct sdaemon *qdaemon;
      boolean *pfexit;
      size_t *pcneed;
 {
@@ -208,15 +202,11 @@ ftprocess_data (qconn, pfexit, pcneed)
 			  "ftprocess_data: Got %d command bytes",
 			  cfirst);
 
-	  if (! fgot_data (abPrecbuf + iPrecstart, (size_t) cfirst, TRUE,
-			   FALSE, pfexit, qconn))
+	  if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
+			   (size_t) cfirst, abPrecbuf,
+			   (size_t) CTPACKSIZE - cfirst,
+			   -1, -1, (long) -1, pfexit))
 	    return FALSE;
-	  if (cfirst < CTPACKSIZE && ! *pfexit)
-	    {
-	      if (! fgot_data (abPrecbuf, (size_t) CTPACKSIZE - cfirst,
-			       TRUE, FALSE, pfexit, qconn))
-		return FALSE;
-	    }
 
 	  iPrecstart = (iPrecstart + CTPACKSIZE) % CRECBUFLEN;
 
@@ -260,17 +250,12 @@ ftprocess_data (qconn, pfexit, pcneed)
 
       DEBUG_MESSAGE1 (DEBUG_PROTO,
 		      "ftprocess_data: Got %d data bytes",
-		      cfirst);
+		      clen);
 
-      if (! fgot_data (abPrecbuf + iPrecstart, (size_t) cfirst, FALSE, TRUE,
-		       pfexit, qconn))
+      if (! fgot_data (qdaemon, abPrecbuf + iPrecstart,
+		       (size_t) cfirst, abPrecbuf, (size_t) (clen - cfirst),
+		       1, -1, (long) -1, pfexit))
 	return FALSE;
-      if (cfirst < clen)
-	{
-	  if (! fgot_data (abPrecbuf, (size_t) (clen - cfirst), FALSE, TRUE,
-			   pfexit, qconn))
-	    return FALSE;
-	}
 
       iPrecstart = (iPrecstart + clen) % CRECBUFLEN;
 			   
@@ -290,20 +275,20 @@ ftprocess_data (qconn, pfexit, pcneed)
    of a command or a file.  */
 
 boolean
-ftwait (qconn)
-     struct sconnection *qconn;
+ftwait (qdaemon)
+     struct sdaemon *qdaemon;
 {
   while (TRUE)
     {
       boolean fexit;
       size_t cneed, crec;
 
-      if (! ftprocess_data (qconn, &fexit, &cneed))
+      if (! ftprocess_data (qdaemon, &fexit, &cneed))
 	return FALSE;
       if (fexit)
 	return TRUE;
 
-      if (! freceive_data (qconn, cneed, &crec, cTtimeout, TRUE))
+      if (! freceive_data (qdaemon->qconn, cneed, &crec, cTtimeout, TRUE))
 	return FALSE;
 
       if (crec == 0)
@@ -318,15 +303,15 @@ ftwait (qconn)
 
 /*ARGSUSED*/
 boolean
-ftfile (qconn, fstart, fsend, pfredo, cbytes)
-     struct sconnection *qconn;
+ftfile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
+     struct sdaemon *qdaemon;
+     struct stransfer *qtrans;
      boolean fstart;
      boolean fsend;
-     boolean *pfredo;
      long cbytes;
+     boolean *pfhandled;
 {
-  if (pfredo != NULL)
-    *pfredo = FALSE;
+  *pfhandled = FALSE;
 
   if (! fsend)
     fTfile = fstart;

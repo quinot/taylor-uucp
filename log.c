@@ -552,6 +552,19 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros)
 {
   long cbps;
 
+  /* The seconds and microseconds are now counted independently, so
+     they may be out of synch.  */
+  if (cmicros < 0)
+    {
+      csecs -= ((- cmicros) / 1000000L) + 1;
+      cmicros = 1000000L - ((- cmicros) % 1000000L);
+    }
+  if (cmicros >= 1000000L)
+    {
+      csecs += cmicros / 10000000L;
+      cmicros = cmicros % 1000000L;
+    }      
+
   /* On a system which can determine microseconds we might very well
      have both csecs == 0 and cmicros == 0.  */
   if (csecs == 0 && cmicros == 0)

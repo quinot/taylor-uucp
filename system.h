@@ -261,12 +261,10 @@ extern boolean fsysdep_get_status P((const struct uuconf_system *qsys,
 extern boolean fsysdep_set_status P((const struct uuconf_system *qsys,
 				     const struct sstatus *qset));
 
-/* Check whether there is work for a remote system.  This should set
-   *pbgrade to the highest grade of work waiting to execute.  It
-   should return TRUE if there is work, FALSE otherwise; there is no
-   way to indicate an error.  */
-extern boolean fsysdep_has_work P((const struct uuconf_system *qsys,
-				   char *pbgrade));
+/* Check whether there is work for a remote system.  It should return
+   TRUE if there is work, FALSE otherwise; there is no way to indicate
+   an error.  */
+extern boolean fsysdep_has_work P((const struct uuconf_system *qsys));
 
 /* Initialize the work scan.  This will be called before
    fsysdep_get_work.  The bgrade argument is the minimum grade of
@@ -353,42 +351,40 @@ extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
    system the file is being sent to.  If fcheck is TRUE, it should
    make sure that the file is readable by zuser (if zuser is NULL the
    file must be readable by anybody).  This is to eliminate a window
-   between fsysdep_in_directory and esysdep_open_send.  The function
-   should set *pimode to the mode that should be sent over (this
-   should be a UNIX style file mode number).  It should set *pcbytes
-   to the number of bytes contained in the file.  If an error occurs,
-   it should return EFILECLOSED and, if pfgone is not NULL, it should
-   *pfgone to TRUE if the file no longer exists or FALSE if there was
-   some other error.  */
+   between fsysdep_in_directory and esysdep_open_send.  If an error
+   occurs, it should return EFILECLOSED and, if pfgone is not NULL, it
+   should *pfgone to TRUE if the file no longer exists or FALSE if
+   there was some other error.  */
 extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
 				       const char *zname,
 				       boolean fcheck,
 				       const char *zuser,
-				       unsigned int *pimode,
-				       long *pcbytes,
 				       boolean *pfgone));
 
-/* Open a file to receive from another system.  Receiving a file is
-   done in two steps.  First esysdep_open_receive is called.  This
-   should open a temporary file and return the file name in *pztemp.
-   It may ignore qsys (the system the file is coming from) and zto
-   (the file to be created) although they are passed in case they are
-   useful.  The file mode is not available at this point.  The *pztemp
-   return value must be freed using ubuffree.  The amount of free
-   space should be returned in *pcbytes; ideally it should be the
-   lesser of the amount of free space on the file system of the
-   temporary file and the amount of free space on the file system of
-   the final destination.  If the amount of free space is not
-   available, *pcbytes should be set to -1.  The function should
-   return EFILECLOSED on error.
+/* Return a temporary file name to receive into.  This file will be
+   opened by esysdep_open_receive.  It may ignore qsys (the system the
+   file is coming from) and zto (the file to be created) although they
+   are passed in case they are useful.  The file mode is not available
+   at this point.  The *pztemp return value must be freed using
+   ubuffree.  The amount of free space should be returned in *pcbytes;
+   ideally it should be the lesser of the amount of free space on the
+   file system of the temporary file and the amount of free space on
+   the file system of the final destination.  If the amount of free
+   space is not available, *pcbytes should be set to -1.  The function
+   should return NULL on error.  */
+extern char *zsysdep_receive_temp P((const struct uuconf_system *qsys,
+				     const char *zfile,
+				     long *pcbytes));
 
+/* Open a file to receive from another system.  The ztemp argument is
+   the return value of zsysdep_receive_temp with the same qsys and
+   zfile arguments.  The function should return EFILECLOSED on error.
    After the file is written, fsysdep_move_file will be called to move
    the file to its final destination, and to set the correct file
    mode.  */
 extern openfile_t esysdep_open_receive P((const struct uuconf_system *qsys,
 					  const char *zto,
-					  char **pztemp,
-					  long *pcbytes));
+					  const char *ztemp));
 
 /* Move a file.  This is used to move a received file to its final
    location.  The zto argument is the file to create.  The zorig

@@ -33,8 +33,9 @@ const char protg_rcsid[] = "$Id$";
 #include <errno.h>
 
 #include "conn.h"
-#include "prot.h"
+#include "trans.h"
 #include "system.h"
+#include "prot.h"
 
 /* Each 'g' protocol packet begins with six bytes.  They are:
 
@@ -341,18 +342,18 @@ static const char * const azGcontrol[] =
 
 /* Local functions.  */
 
-static boolean fgexchange_init P((struct sconnection *qconn,
+static boolean fgexchange_init P((struct sdaemon *qdaemon,
 				  boolean fmaster, int ictl, int ival,
 				 int *piset));
-static boolean fgsend_control P((struct sconnection *qconn, int ictl,
+static boolean fgsend_control P((struct sdaemon *qdaemon, int ictl,
 				 int ival));
 static void ugadjust_ack P((int iseq));
-static boolean fgwait_for_packet P((struct sconnection *qconn,
+static boolean fgwait_for_packet P((struct sdaemon *qdaemon,
 				    boolean freturncontrol, int ctimeout,
 				    int cretries));
-static boolean fgsend_acks P((struct sconnection *qconn));
-static boolean fggot_ack P((struct sconnection *qconn, int iack));
-static boolean fgprocess_data P((struct sconnection *qconn, boolean fdoacks,
+static boolean fgsend_acks P((struct sdaemon *qdaemon));
+static boolean fggot_ack P((struct sdaemon *qdaemon, int iack));
+static boolean fgprocess_data P((struct sdaemon *qdaemon, boolean fdoacks,
 				 boolean freturncontrol,
 				 boolean *pfexit, size_t *pcneed,
 				 boolean *pffound));
@@ -368,8 +369,8 @@ static int igchecksum2 P((const char *zfirst, size_t cfirst,
    INITB packet contains the packet size.  */
 
 boolean
-fgstart (qconn, fmaster)
-     struct sconnection *qconn;
+fgstart (qdaemon, fmaster)
+     struct sdaemon *qdaemon;
      boolean fmaster;
 {
   int iseg;
@@ -377,8 +378,8 @@ fgstart (qconn, fmaster)
   boolean fgota, fgotb;
 
   /* The 'g' protocol requires a full eight bit interface.  */
-  if (! fconn_set (qconn, PARITYSETTING_NONE, STRIPSETTING_EIGHTBITS,
-		   XONXOFF_OFF))
+  if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
+		   STRIPSETTING_EIGHTBITS, XONXOFF_OFF))
     return FALSE;
 
   iGsendseq = 1;
@@ -420,32 +421,32 @@ fgstart (qconn, fmaster)
     {
       if (fgota)
 	{
-	  if (! fgsend_control (qconn, INITA, iGrequest_winsize))
+	  if (! fgsend_control (qdaemon, INITA, iGrequest_winsize))
 	    return FALSE;
 	}
       else
 	{
-	  if (! fgexchange_init (qconn, fmaster, INITA, iGrequest_winsize,
-				 &iGremote_winsize))
+	  if (! fgexchange_init (qdaemon, fmaster, INITA,
+				 iGrequest_winsize, &iGremote_winsize))
 	    continue;
 	}
       fgota = TRUE;
 
       if (fgotb)
 	{
-	  if (! fgsend_control (qconn, INITB, iseg))
+	  if (! fgsend_control (qdaemon, INITB, iseg))
 	    return FALSE;
 	}
       else
 	{
-	  if (! fgexchange_init (qconn, fmaster, INITB, iseg,
+	  if (! fgexchange_init (qdaemon, fmaster, INITB, iseg,
 				 &iGremote_segsize))
 	    continue;
 	}
       fgotb = TRUE;
 
-      if (! fgexchange_init (qconn, fmaster, INITC, iGrequest_winsize,
-			     &iGremote_winsize))
+      if (! fgexchange_init (qdaemon, fmaster, INITC,
+			     iGrequest_winsize, &iGremote_winsize))
 	continue;
 
       /* We have succesfully connected.  Determine the remote packet
@@ -521,8 +522,8 @@ fgstart (qconn, fmaster)
    time out and resend INITA.  */
 
 static boolean
-fgexchange_init (qconn, fmaster, ictl, ival, piset)
-     struct sconnection *qconn;
+fgexchange_init (qdaemon, fmaster, ictl, ival, piset)
+     struct sdaemon *qdaemon;
      boolean fmaster;
      int ictl;
      int ival;
@@ -548,7 +549,7 @@ fgexchange_init (qconn, fmaster, ictl, ival, piset)
 
       if (fmaster || i > 0)
 	{
-	  if (! fgsend_control (qconn, ictl, ival))
+	  if (! fgsend_control (qdaemon, ictl, ival))
 	    return FALSE;
 	}
 
@@ -562,8 +563,7 @@ fgexchange_init (qconn, fmaster, ictl, ival, piset)
 	  /* We pass 0 as the retry count to fgwait_for_packet because
 	     we want to handle retries here and because if it retried
 	     it would send a packet, which would be bad.  */
-
-	  if (! fgwait_for_packet (qconn, TRUE, ctimeout, 0))
+	  if (! fgwait_for_packet (qdaemon, TRUE, ctimeout, 0))
 	    break;
 
 	  if (CONTROL_TT (iGpacket_control) == CONTROL)
@@ -576,7 +576,7 @@ fgexchange_init (qconn, fmaster, ictl, ival, piset)
 		     packet, send it now.  */
 		  if (! fmaster && i == 0)
 		    {
-		      if (! fgsend_control (qconn, ictl, ival))
+		      if (! fgsend_control (qdaemon, ictl, ival))
 			return FALSE;
 		    }
 
@@ -619,11 +619,11 @@ fgexchange_init (qconn, fmaster, ictl, ival, piset)
 /* Shut down the protocol.  */
 
 boolean
-fgshutdown (qconn)
-     struct sconnection *qconn;
+fgshutdown (qdaemon)
+     struct sdaemon *qdaemon;
 {
-  (void) fgsend_control (qconn, CLOSE, 0);
-  (void) fgsend_control (qconn, CLOSE, 0);
+  (void) fgsend_control (qdaemon, CLOSE, 0);
+  (void) fgsend_control (qdaemon, CLOSE, 0);
   (void) fginit_sendbuffers (FALSE);
 
   /* The count of sent packets may not be accurate, because some of
@@ -664,8 +664,8 @@ fgshutdown (qconn)
    the entire string has been sent.  Each packet is full.  */
 
 boolean
-fgsendcmd (qconn, z)
-     struct sconnection *qconn;
+fgsendcmd (qdaemon, z)
+     struct sdaemon *qdaemon;
      const char *z;
 {
   size_t clen;
@@ -680,7 +680,7 @@ fgsendcmd (qconn, z)
       char *zpacket;
       size_t cdummy;
 
-      zpacket = zggetspace (qconn, &cdummy);
+      zpacket = zggetspace (qdaemon, &cdummy);
 
       if (clen < iGremote_packsize)
 	{
@@ -703,7 +703,7 @@ fgsendcmd (qconn, z)
 	  bzero (zpacket + clen, csize - clen);
 	  fagain = FALSE;
 
-	  if (! fgsenddata (qconn, zpacket, csize))
+	  if (! fgsenddata (qdaemon, zpacket, csize, (long) 0))
 	    return FALSE;
 	}
       else
@@ -713,7 +713,8 @@ fgsendcmd (qconn, z)
 	  clen -= iGremote_packsize;
 	  fagain = TRUE;
 
-	  if (! fgsenddata (qconn, zpacket, (size_t) iGremote_packsize))
+	  if (! fgsenddata (qdaemon, zpacket, (size_t) iGremote_packsize,
+			    (long) 0))
 	    return FALSE;
 	}
     }
@@ -765,8 +766,8 @@ fginit_sendbuffers (fallocate)
 
 /*ARGSUSED*/
 char *
-zggetspace (qconn, pclen)
-     struct sconnection *qconn;
+zggetspace (qdaemon, pclen)
+     struct sdaemon *qdaemon;
      size_t *pclen;
 {
   *pclen = iGremote_packsize;
@@ -774,14 +775,16 @@ zggetspace (qconn, pclen)
 }
 
 /* Send out a data packet.  This computes the checksum, sets up the
-   header, and sends the packet out.  The argument should point to the
-   return value of zggetspace.  */
+   header, and sends the packet out.  The argument zdata should point
+   to the return value of zggetspace.  */
 
+/*ARGSIGNORED*/
 boolean
-fgsenddata (qconn, zdata, cdata)
-     struct sconnection *qconn;
+fgsenddata (qdaemon, zdata, cdata, ipos)
+     struct sdaemon *qdaemon;
      char *zdata;
      size_t cdata;
+     long ipos;
 {
   char *z;
   int itt, iseg;
@@ -862,7 +865,7 @@ fgsenddata (qconn, zdata, cdata)
   while (iGsendseq == iGremote_ack
 	 || CSEQDIFF (iGsendseq, iGremote_ack) > iGremote_winsize)
     {
-      if (! fgwait_for_packet (qconn, TRUE, cGtimeout, cGretries))
+      if (! fgwait_for_packet (qdaemon, TRUE, cGtimeout, cGretries))
 	return FALSE;
     }
 
@@ -871,7 +874,7 @@ fgsenddata (qconn, zdata, cdata)
   while (CSEQDIFF (iGrecseq, iGlocal_ack) > 1)
     {
       iGlocal_ack = INEXTSEQ (iGlocal_ack);
-      if (! fgsend_control (qconn, RR, iGlocal_ack))
+      if (! fgsend_control (qdaemon, RR, iGlocal_ack))
 	return FALSE;
     }
   iGlocal_ack = iGrecseq;
@@ -904,7 +907,7 @@ fgsenddata (qconn, zdata, cdata)
 		  "fgsenddata: Sending packet %d (%d bytes)",
 		  CONTROL_XXX (z[IFRAME_CONTROL]), cdata);
 
-  return fsend_data (qconn, z, CFRAMELEN + csize, TRUE);
+  return fsend_data (qdaemon->qconn, z, CFRAMELEN + csize, TRUE);
 }
 
 /* Recompute the control byte and checksum of a packet so that it
@@ -953,8 +956,8 @@ ugadjust_ack (iseq)
    message.  If I'm wrong, it can be changed easily enough.  */
 
 static boolean
-fgsend_control (qconn, ixxx, iyyy)
-     struct sconnection *qconn;
+fgsend_control (qdaemon, ixxx, iyyy)
+     struct sdaemon *qdaemon;
      int ixxx;
      int iyyy;
 {
@@ -979,34 +982,17 @@ fgsend_control (qconn, ixxx, iyyy)
   ab[IFRAME_XOR] = (char) (ab[IFRAME_K] ^ ab[IFRAME_CHECKLOW]
 			   ^ ab[IFRAME_CHECKHIGH] ^ ab[IFRAME_CONTROL]);
 
-  return fsend_data (qconn, ab, (size_t) CFRAMELEN, TRUE);
-}
-
-/* Process existing data.  Set *pfexit to TRUE if a file or a command
-   has been completely received.  Return FALSE on error.  */
-
-boolean
-fgprocess (qconn, pfexit)
-     struct sconnection *qconn;
-     boolean *pfexit;
-{
-  /* Don't ack incoming data (since this is called when a file is
-     being sent and the acks can be merged onto the outgoing data),
-     don't return after receiving a control packet, and don't bother
-     to report how much more data is needed or whether any packets
-     were found.  */
-  return fgprocess_data (qconn, FALSE, FALSE, pfexit, (size_t *) NULL,
-			 (boolean *) NULL);
+  return fsend_data (qdaemon->qconn, ab, (size_t) CFRAMELEN, TRUE);
 }
 
 /* Wait for data to come in.  This continues processing until a
    complete file or command has been received.  */
 
 boolean
-fgwait (qconn)
-     struct sconnection *qconn;
+fgwait (qdaemon)
+     struct sdaemon *qdaemon;
 {
-  return fgwait_for_packet (qconn, FALSE, cGtimeout, cGretries);
+  return fgwait_for_packet (qdaemon, FALSE, cGtimeout, cGretries);
 }
 
 /* Get a packet.  This is called when we have nothing to send, but
@@ -1019,8 +1005,8 @@ fgwait (qconn)
    exceeded.  */
 
 static boolean
-fgwait_for_packet (qconn, freturncontrol, ctimeout, cretries)
-     struct sconnection *qconn;
+fgwait_for_packet (qdaemon, freturncontrol, ctimeout, cretries)
+     struct sdaemon *qdaemon;
      boolean freturncontrol;
      int ctimeout;
      int cretries;
@@ -1040,8 +1026,8 @@ fgwait_for_packet (qconn, freturncontrol, ctimeout, cretries)
       boolean ffound;
       size_t crec;
   
-      if (! fgprocess_data (qconn, TRUE, freturncontrol, &fexit, &cneed,
-			    &ffound))
+      if (! fgprocess_data (qdaemon, TRUE, freturncontrol, &fexit,
+			    &cneed, &ffound))
 	return FALSE;
 
       if (fexit)
@@ -1065,7 +1051,7 @@ fgwait_for_packet (qconn, freturncontrol, ctimeout, cretries)
 	    }
 	}
 
-      if (! freceive_data (qconn, cneed, &crec, ctimeout, TRUE))
+      if (! freceive_data (qdaemon->qconn, cneed, &crec, ctimeout, TRUE))
 	return FALSE;
 
       cgarbage += crec;
@@ -1115,7 +1101,7 @@ fgwait_for_packet (qconn, freturncontrol, ctimeout, cretries)
 
 	      ugadjust_ack (inext);
 	      ++cGresent_packets;
-	      if (! fsend_data (qconn, azGsendbuffers[inext],
+	      if (! fsend_data (qdaemon->qconn, azGsendbuffers[inext],
 				CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
 				TRUE))
 		return FALSE;
@@ -1127,10 +1113,10 @@ fgwait_for_packet (qconn, freturncontrol, ctimeout, cretries)
 		 the other side.  */
 	      if (iGlocal_ack != iGrecseq)
 		{
-		  if (! fgsend_acks (qconn))
+		  if (! fgsend_acks (qdaemon))
 		    return FALSE;
 		}
-	      if (! fgsend_control (qconn, RJ, iGrecseq))
+	      if (! fgsend_control (qdaemon, RJ, iGrecseq))
 		return FALSE;
 	    }
 	}
@@ -1140,13 +1126,13 @@ fgwait_for_packet (qconn, freturncontrol, ctimeout, cretries)
 /* Send acks for all packets we haven't acked yet.  */
 
 static boolean
-fgsend_acks (qconn)
-     struct sconnection *qconn;
+fgsend_acks (qdaemon)
+     struct sdaemon *qdaemon;
 {
   while (iGlocal_ack != iGrecseq)
     {
       iGlocal_ack = INEXTSEQ (iGlocal_ack);
-      if (! fgsend_control (qconn, RR, iGlocal_ack))
+      if (! fgsend_control (qdaemon, RR, iGlocal_ack))
 	return FALSE;
     }
   return TRUE;
@@ -1160,8 +1146,8 @@ fgsend_acks (qconn)
    retransmission.  */
 
 static boolean
-fggot_ack (qconn, iack)
-     struct sconnection *qconn;
+fggot_ack (qdaemon, iack)
+     struct sdaemon *qdaemon;
      int iack;
 {
   int inext;
@@ -1181,7 +1167,7 @@ fggot_ack (qconn, iack)
 
       ugadjust_ack (inext);
       ++cGresent_packets;
-      if (! fsend_data (qconn, azGsendbuffers[inext],
+      if (! fsend_data (qdaemon->qconn, azGsendbuffers[inext],
 			CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
 			TRUE))
 	return FALSE;
@@ -1195,7 +1181,7 @@ fggot_ack (qconn, iack)
 
 	  ugadjust_ack (inext);
 	  ++cGresent_packets;
-	  if (! fsend_data (qconn, azGsendbuffers[inext],
+	  if (! fsend_data (qdaemon->qconn, azGsendbuffers[inext],
 			    CFRAMELEN + CPACKLEN (azGsendbuffers[inext]),
 			    TRUE))
 	    return FALSE;
@@ -1252,8 +1238,8 @@ fgcheck_errors ()
    otherwise they must be acknowledged later.  */
 
 static boolean
-fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
-     struct sconnection *qconn;
+fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
+     struct sdaemon *qdaemon;
      boolean fdoacks;
      boolean freturncontrol;
      boolean *pfexit;
@@ -1316,7 +1302,6 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	 code should have ensured that it will never fail.  If this is
 	 not the start of a packet, bump iPrecstart and loop around to
 	 look for another DLE.  */
-
       if (ab[IFRAME_DLE] != DLE
 	  || ab[IFRAME_K] < 1
 	  || ab[IFRAME_K] > 9
@@ -1410,7 +1395,6 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    }
 	  
 	  /* Set up the data pointers and compute the checksum.  */
-
 	  if (iPrecend >= iPrecstart)
 	    cfirst = cwant;
 	  else
@@ -1467,13 +1451,12 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	     basically what this code does).  If we totally missed the
 	     packet we will time out and send an RJ in the function
 	     fgwait_for_packet above.  */
-
 	  if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL)
 	    {
 	      /* Make sure we've acked everything up to this point.  */
 	      if (iGrecseq != iGlocal_ack)
 		{
-		  if (! fgsend_acks (qconn))
+		  if (! fgsend_acks (qdaemon))
 		    return FALSE;
 		}
 
@@ -1481,7 +1464,7 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 		 it failed.  */
 	      if (CONTROL_XXX (ab[IFRAME_CONTROL]) == INEXTSEQ (iGrecseq))
 		{
-		  if (! fgsend_control (qconn, RJ, iGrecseq))
+		  if (! fgsend_control (qdaemon, RJ, iGrecseq))
 		    return FALSE;
 		}
 	    }
@@ -1508,7 +1491,7 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       if (CONTROL_TT (ab[IFRAME_CONTROL]) != CONTROL
 	  || CONTROL_XXX (ab[IFRAME_CONTROL]) == RR)
 	{
-	  if (! fggot_ack (qconn, CONTROL_YYY (ab[IFRAME_CONTROL])))
+	  if (! fggot_ack (qdaemon, CONTROL_YYY (ab[IFRAME_CONTROL])))
 	    return FALSE;
 	}
 
@@ -1557,7 +1540,7 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	  if (fdoacks)
 	    {
-	      if (! fgsend_acks (qconn))
+	      if (! fgsend_acks (qdaemon))
 		return FALSE;
 	    }
 
@@ -1626,15 +1609,10 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	     accumulating a command and encountered a null byte, so we
 	     can ignore the second batch of data.  */
 
-	  if (! fgot_data (zfirst, (size_t) cfirst, FALSE, FALSE,
-			   pfexit, qconn))
+	  if (! fgot_data (qdaemon, zfirst, (size_t) cfirst,
+			   zsecond, (size_t) csecond,
+			   -1, -1, (long) -1, pfexit))
 	    return FALSE;
-	  if (csecond > 0 && ! *pfexit)
-	    {
-	      if (! fgot_data (zsecond, (size_t) csecond, FALSE, FALSE,
-			       pfexit, qconn))
-		return FALSE;
-	    }
 
 	  /* If fgot_data told us that we were finished, get out.  */
 	  if (*pfexit)
@@ -1666,12 +1644,10 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	{
 	case CLOSE:
 	  /* The other side has closed the connection.  */
-	  if (fPerror_ok)
-	    (void) fgshutdown (qconn);
-	  else
+	  if (fLog_sighup)
 	    {
 	      ulog (LOG_ERROR, "Received unexpected CLOSE packet");
-	      (void) fgsend_control (qconn, CLOSE, 0);
+	      (void) fgsend_control (qdaemon, CLOSE, 0);
 	    }
 	  return FALSE;
 	case RJ:
@@ -1699,7 +1675,8 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      if (! fgcheck_errors ())
 		return FALSE;
 	      zpack = azGsendbuffers[iGretransmit_seq];
-	      if (! fsend_data (qconn, zpack, CFRAMELEN + CPACKLEN (zpack),
+	      if (! fsend_data (qdaemon->qconn, zpack,
+				CFRAMELEN + CPACKLEN (zpack),
 				TRUE))
 		return FALSE;
 	    }
@@ -1717,7 +1694,8 @@ fgprocess_data (qconn, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	    ++cGresent_packets;
 	    ++cGremote_rejects;
 	    zpack = azGsendbuffers[CONTROL_YYY (ab[IFRAME_CONTROL])];
-	    if (! fsend_data (qconn, zpack, CFRAMELEN + CPACKLEN (zpack),
+	    if (! fsend_data (qdaemon->qconn, zpack,
+			      CFRAMELEN + CPACKLEN (zpack),
 			      TRUE))
 	      return FALSE;
 	  }

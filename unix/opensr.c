@@ -83,13 +83,11 @@
    the size.  */
 
 openfile_t
-esysdep_open_send (qsys, zfile, fcheck, zuser, pimode, pcbytes, pfgone)
+esysdep_open_send (qsys, zfile, fcheck, zuser, pfgone)
      const struct uuconf_system *qsys;
      const char *zfile;
      boolean fcheck;
      const char *zuser;
-     unsigned int *pimode;
-     long *pcbytes;
      boolean *pfgone;
 {
   struct stat s;
@@ -154,76 +152,23 @@ esysdep_open_send (qsys, zfile, fcheck, zuser, pimode, pcbytes, pfgone)
 	}
     }
 
-  *pimode = s.st_mode & 0777;
-  *pcbytes = s.st_size;
   return e;
 }
 
-/* Open a temporary file to receive into.  This should, perhaps, check
-   that we have write permission on the receiving directory, but it
-   doesn't.  It is supposed to set *pcbytes to the size of the largest
-   file that can be accepted.  */
+/* Get a temporary file name to receive into.  This is supposed to set
+   *pcbytes to the size of the largest file that can be accepted.  */
 
-openfile_t
-esysdep_open_receive (qsys, zto, pztemp, pcbytes)
+char *
+zsysdep_receive_temp (qsys, zto, pcbytes)
      const struct uuconf_system *qsys;
      const char *zto;
-     char **pztemp;
      long *pcbytes;
 {
-  char *z;
-  int o;
-  openfile_t e;
+  char *zret;
   long c1, c2;
-  char *zcopy, *zslash;
+  char *z1, *z2, *zslash;
 
-  z = zstemp_file (qsys);
-
-  o = creat (z, IPRIVATE_FILE_MODE);
-
-  if (o < 0)
-    {
-      if (errno == ENOENT)
-	{
-	  if (! fsysdep_make_dirs (z, FALSE))
-	    {
-	      ubuffree (z);
-	      return EFILECLOSED;
-	    }
-	  o = creat (z, IPRIVATE_FILE_MODE);
-	}
-      if (o < 0)
-	{
-	  ulog (LOG_ERROR, "creat (%s): %s", z, strerror (errno));
-	  ubuffree (z);
-	  return EFILECLOSED;
-	}
-    }
-
-  if (fcntl (o, F_SETFD, fcntl (o, F_GETFD, 0) | FD_CLOEXEC) < 0)
-    {
-      ulog (LOG_ERROR, "fcntl (FD_CLOEXEC): %s", strerror (errno));
-      (void) close (o);
-      ubuffree (z);
-      return EFILECLOSED;
-    }
-
-#if USE_STDIO
-  e = fdopen (o, (char *) BINWRITE);
-
-  if (e == NULL)
-    {
-      ulog (LOG_ERROR, "fdopen (%s): %s", z, strerror (errno));
-      (void) close (o);
-      (void) remove (z);
-      ubuffree (z);
-      return NULL;
-    }
-#else
-  e = o;
-#endif
-
-  *pztemp = z;
+  zret = zstemp_file (qsys);
 
   /* Try to determine the amount of free space available for the
      temporary file and for the final destination.  This code is
@@ -231,24 +176,33 @@ esysdep_open_receive (qsys, zto, pztemp, pcbytes)
   c1 = (long) -1;
   c2 = (long) -1;
 
-  zcopy = (char *) alloca (strlen (zto) + 1);
-  strcpy (zcopy, zto);
-  zslash = strrchr (zcopy, '/');
+  z1 = zbufcpy (zret);
+  zslash = strrchr (z1, '/');
   if (zslash != NULL)
     *zslash = '\0';
   else
     {
-      zcopy[0] = '.';
-      zcopy[1] = '\0';
+      z1[0] = '.';
+      z1[1] = '\0';
+    }
+
+  z2 = zbufcpy (zto);
+  zslash = strrchr (z2, '/');
+  if (zslash != NULL)
+    *zslash = '\0';
+  else
+    {
+      z2[0] = '.';
+      z2[1] = '\0';
     }
 
   {
 #if FS_STATVFS
     struct statvfs s;
 
-    if (statvfs (z, &s) >= 0)
+    if (statvfs (z1, &s) >= 0)
       c1 = (long) s.f_bavail * (long) s.f_frsize;
-    if (statvfs (zcopy, &s) >= 0)
+    if (statvfs (z2, &s) >= 0)
       c2 = (long) s.f_bavail * (long) s.f_frsize;
 #endif
 #if FS_USG_STATFS
@@ -259,47 +213,50 @@ esysdep_open_receive (qsys, zto, pztemp, pcbytes)
        f_bfree is measured in f_bsize byte blocks.  Rather than
        overestimate the amount of free space, this code assumes that
        f_bfree is measuring 512 byte blocks.  */
-    if (statfs (z, &s, sizeof s, 0) >= 0)
+    if (statfs (z1, &s, sizeof s, 0) >= 0)
       c1 = (long) s.f_bfree * (long) 512;
-    if (statfs (zcopy, &s, sizeof s, 0) >= 0)
+    if (statfs (z2, &s, sizeof s, 0) >= 0)
       c2 = (long) s.f_bfree * (long) 512;
 #endif
 #if FS_MNTENT
     struct statfs s;
 
-    if (statfs (z, &s) == 0)
+    if (statfs (z1, &s) == 0)
       c1 = (long) s.f_bavail * (long) s.f_bsize;
-    if (statfs (zcopy, &s) == 0)
+    if (statfs (z2, &s) == 0)
       c2 = (long) s.f_bavail * (long) s.f_bsize;
 #endif
 #if FS_GETMNT
     struct fs_data s;
 
-    if (statfs (z, &s) == 1)
+    if (statfs (z1, &s) == 1)
       c1 = (long) s.fd_req.bfreen * (long) 1024;
-    if (statfs (zcopy, &s) == 1)
+    if (statfs (z2, &s) == 1)
       c2 = (long) s.fd_req.bfreen * (long) 1024;
 #endif
 #if FS_STATFS
     struct statfs s;
 
-    if (statfs (z, &s) >= 0)
+    if (statfs (z1, &s) >= 0)
       c1 = (long) s.f_bavail * (long) s.f_fsize;
-    if (statfs (zcopy, &s) >= 0)
+    if (statfs (z2, &s) >= 0)
       c2 = (long) s.f_bavail * (long) s.f_fsize;
 #endif
 #if FS_USTAT
     struct stat sstat;
     struct ustat s;
 
-    if (fstat (o, &sstat) == 0
+    if (stat (z1, &sstat) == 0
 	&& ustat (sstat.st_dev, &s) == 0)
       c1 = (long) s.f_tfree * (long) 512;
-    if (stat (zcopy, &sstat) == 0
+    if (stat (z2, &sstat) == 0
 	&& ustat (sstat.st_dev, &s) == 0)
       c2 = (long) s.f_tfree * (long) 512;
 #endif
   }
+
+  ubuffree (z1);
+  ubuffree (z2);
 
   if (c1 == (long) -1)
     *pcbytes = c2;
@@ -309,6 +266,61 @@ esysdep_open_receive (qsys, zto, pztemp, pcbytes)
     *pcbytes = c1;
   else
     *pcbytes = c2;
+
+  return zret;
+}  
+
+/* Open a temporary file to receive into.  This should, perhaps, check
+   that we have write permission on the receiving directory, but it
+   doesn't.  */
+
+openfile_t
+esysdep_open_receive (qsys, zto, ztemp)
+     const struct uuconf_system *qsys;
+     const char *zto;
+     const char *ztemp;
+{
+  int o;
+  openfile_t e;
+
+  o = creat ((char *) ztemp, IPRIVATE_FILE_MODE);
+
+  if (o < 0)
+    {
+      if (errno == ENOENT)
+	{
+	  if (! fsysdep_make_dirs (ztemp, FALSE))
+	    return EFILECLOSED;
+	  o = creat ((char *) ztemp, IPRIVATE_FILE_MODE);
+	}
+      if (o < 0)
+	{
+	  ulog (LOG_ERROR, "creat (%s): %s", ztemp, strerror (errno));
+	  return EFILECLOSED;
+	}
+    }
+
+  if (fcntl (o, F_SETFD, fcntl (o, F_GETFD, 0) | FD_CLOEXEC) < 0)
+    {
+      ulog (LOG_ERROR, "fcntl (FD_CLOEXEC): %s", strerror (errno));
+      (void) close (o);
+      (void) remove (ztemp);
+      return EFILECLOSED;
+    }
+
+#if USE_STDIO
+  e = fdopen (o, (char *) BINWRITE);
+
+  if (e == NULL)
+    {
+      ulog (LOG_ERROR, "fdopen (%s): %s", ztemp, strerror (errno));
+      (void) close (o);
+      (void) remove (ztemp);
+      return EFILECLOSED;
+    }
+#else
+  e = o;
+#endif
 
   return e;
 }
