@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.9  1991/12/01  02:12:02  ian
+   David Nugent: some systems don't define O_NDELAY
+
    Revision 1.8  1991/11/26  02:13:48  ian
    Bob Denny: Add definitions for FD_SET, FD_ZERO and FD_ISSET
 
@@ -61,7 +64,6 @@ char tstuu_rcsid[] = "$Id$";
 #include <string.h>
 #include <errno.h>
 #include <time.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>

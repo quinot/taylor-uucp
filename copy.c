@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/19  03:23:34  ian
+   Chip Salzenberg: append to private debugging file, don't overwrite it
+
    Revision 1.1  1991/09/10  19:39:38  ian
    Initial revision
 
@@ -93,9 +96,8 @@ fcopy_file (zfrom, zto, fpublic)
   return TRUE;
 }
 
-#else /* USE_STDIO */
+#else /* ! USE_STDIO */
 
-#include <unistd.h>
 #include <fcntl.h>
 
 boolean
