@@ -1088,7 +1088,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  else
 	    {
 	      cfirst = CRECBUFLEN - (iPrecstart + CHDRLEN);
-	      if (cfirst < 0)
+	      if (cfirst <= 0)
 		{
 		  /* Here cfirst is non-positive, so subtracting from
 		     abPrecbuf will actually skip the appropriate number
