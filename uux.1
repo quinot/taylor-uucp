@@ -1,5 +1,8 @@
 ''' $Id$
 ''' $Log$
+''' Revision 1.1  1991/12/14  19:05:30  ian
+''' Initial revision
+'''
 '''
 .TH uux 1 "Taylor UUCP 1.01"
 .SH NAME
@@ -84,6 +87,22 @@ world.
 .TP5
 .B \-C
 Copy local files to the spool directory.
+.TP5
+.B \-l
+Link local files into the spool directory.  If a file can not be
+linked because it is on a different device, it will be copied unless
+the
+.B \-c
+option also appears (in other words, use of
+.B \-l
+switches the default from
+.B \-c
+to
+.B \-C).
+If the files are changed before being processed by the
+.I uucico
+(8) daemon, the changed versions will be used.  The files must be
+readable by the world.
 .TP5
 .B \-g grade
 Set the grade of the file transfer command.  Jobs of a higher grade
