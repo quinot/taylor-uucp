@@ -1,7 +1,7 @@
 /* uuconv.c
    Convert one type of UUCP configuration file to another.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -479,7 +479,7 @@ static void
 uvusage ()
 {
   fprintf (stderr,
-	   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
 	   "Usage: uuconv -i input -o output [-p program] [-I file]\n");

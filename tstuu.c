@@ -1,7 +1,7 @@
 /* tstuu.c
    Test the uucp package on a UNIX system.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -264,7 +264,7 @@ main (argc, argv)
 	  break;
 	default:
 	  fprintf (stderr,
-		   "Taylor UUCP version %s, copyright (C) 1991, 1992 Ian Lance Taylor\n",
+		   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 		   VERSION);
 	  fprintf (stderr,
 		   "Usage: tstuu [-xn] [-t #] [-u] [-1 cmd] [-2 cmd]\n");

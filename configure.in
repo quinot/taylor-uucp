@@ -1,6 +1,6 @@
 dnl Taylor UUCP configuration file
 dnl This should be processed with autoconf to produce a configure script.
-dnl Copyright (c) 1992 Ian Lance Taylor
+dnl Copyright (c) 1992, 1993 Ian Lance Taylor
 dnl
 AC_INIT(policy.h)
 AC_CONFIG_HEADER(conf.h)
