@@ -1,5 +1,8 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* Michael Ju. Tokarev: unix/serial.c (fsserial_hardflow): Add
+	support for CRTSXOFF used on Solaris.
+
 	* unix/serial.c (fsserial_lockfile): In HAVE_SCO_LOCKFILES case,
 	only lower case the last letter in the lock file name.
 	* uucp.texi (UUCP Lock Files): Document this change.

@@ -1837,10 +1837,11 @@ fsmodem_carrier (qconn, fcarrier)
 
 /* Tell the port to use hardware flow control.  There is no standard
    mechanism for controlling this.  This implementation supports
-   CRTSCTS on SunOS, RTS/CTSFLOW on 386(ish) unix, CTSCD on the 3b1,
-   CCTS_OFLOW/CRTS_IFLOW on BSDI, TXADDCD/TXDELCD on AIX, IRTS on NCR
-   Tower, and TCGETX/TCSETX on HP/UX.  If you know how to do it on
-   other systems, please implement it and send me the patches.  */
+   CRTSCTS and CRTSXOFF on SunOS/Solaris, RTS/CTSFLOW on 386(ish)
+   unix, CTSCD on the 3b1, CCTS_OFLOW/CRTS_IFLOW on BSDI,
+   TXADDCD/TXDELCD on AIX, IRTS on NCR Tower, and TCGETX/TCSETX on
+   HP/UX.  If you know how to do it on other systems, please implement
+   it and send me the patches.  */
 
 static boolean
 fsserial_hardflow (qconn, fhardflow)
@@ -1894,6 +1895,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CRTSCTS
       q->snew.c_cflag |= CRTSCTS;
 #endif /* defined (CRTSCTS) */
+#ifdef CRTSXOFF
+      q->snew.c_cflag |= CRTSXOFF;
+#endif /* defined (CRTSXOFF) */
 #ifdef CTSCD
       q->snew.c_cflag |= CTSCD;
 #endif /* defined (CTSCD) */
@@ -1950,6 +1954,9 @@ fsserial_hardflow (qconn, fhardflow)
 #ifdef CRTSCTS
       q->snew.c_cflag &=~ CRTSCTS;
 #endif /* defined (CRTSCTS) */
+#ifdef CRTSXOFF
+      q->snew.c_cflag &=~ CRTSXOFF;
+#endif /* defined (CRTSXOFF) */
 #ifdef CTSCD
       q->snew.c_cflag &=~ CTSCD;
 #endif /* defined (CTSCD) */
