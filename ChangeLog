@@ -1,5 +1,9 @@
 2002-02-16  Ian Lance Taylor  <ian@airs.com>
 
+	* configure.in: When checking for <sys/select.h>, only include
+	<sys/time.h> if it exists.
+	* configure: Rebuild.
+
 	Raymond Nijssen: Support for hardware flow control on HP/UX.
 	* unix/serial.c: Include <sys/termiox.h> if the system has it.
 	(fsserial_hardflow): If HAVE_SYS_TERMIOX_H, use TCGETX/TCSETX to
