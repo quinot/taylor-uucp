@@ -8095,6 +8095,7 @@ System III.
 In alphabetical order:
 
 @example
+Meno Abels @code{<Meno.Abels@@Technical.Adviser.com>}
 "Earle F. Ake - SAIC" @code{<ake@@Dayton.SAIC.COM>}
 @code{mra@@searchtech.com} (Michael Almond)
 @code{cambler@@zeus.calpoly.edu} (Christopher J. Ambler)
