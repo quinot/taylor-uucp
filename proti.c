@@ -206,6 +206,9 @@ static int iIrequest_winsize = IREQUEST_WINSIZE;
    iIforced_remote_packsize).  */
 static int iIremote_packsize;
 
+/* Size which buffers were allocated for.  */
+static int iIalc_packsize;
+
 /* Forced remote packet size, used if non-zero (protocol parameter
    ``remote-packet-size'').  */
 static int iIforced_remote_packsize = 0;
@@ -324,10 +327,11 @@ struct uuconf_cmdtab asIproto_params[] =
 /* Local functions.  */
 
 static boolean finak P((struct sdaemon *qdaemon, int iseq));
+static boolean firesend P((struct sdaemon *qdaemon));
 static boolean fiwait_for_packet P((struct sdaemon *qdaemon,
 				    int ctimeout, int cretries,
 				    boolean fone, boolean *ftimedout));
-static boolean ficheck_errors P((void));
+static boolean ficheck_errors P((struct sdaemon *qdaemon));
 static boolean fiprocess_data P((struct sdaemon *qdaemon,
 				 boolean *pfexit, boolean *pffound,
 				 size_t *pcneed));
@@ -361,6 +365,7 @@ fistart (qdaemon, pzlog)
     iIforced_remote_packsize = 0;
   else
     iIremote_packsize = iIforced_remote_packsize;
+  iIalc_packsize = 0;
   if (iIforced_remote_winsize <= 0 || iIforced_remote_winsize >= IMAXSEQ)
     iIforced_remote_winsize = 0;
   else
@@ -458,6 +463,7 @@ fistart (qdaemon, pzlog)
 			    + 50);
 	  sprintf (*pzlog, "protocol 'i' packet size %d window %d",
 		   (int) iIremote_packsize, (int) iIremote_winsize);
+	  iIalc_packsize = iIremote_packsize;
 
 	  return TRUE;
 	}
@@ -566,6 +572,72 @@ fisendcmd (qdaemon, z, ilocal, iremote)
   /*NOTREACHED*/
 }
 
+/* Send a NAK.  */
+
+static boolean
+finak (qdaemon, iseq)
+     struct sdaemon *qdaemon;
+     int iseq;
+{
+  char abnak[CHDRLEN];
+
+  abnak[IHDR_INTRO] = IINTRO;
+  abnak[IHDR_LOCAL] = IHDRWIN_SET (iseq, 0);
+  abnak[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
+  iIlocal_ack = iIrecseq;
+  abnak[IHDR_CONTENTS1] = IHDRCON_SET1 (NAK, qdaemon->fcaller, 0);
+  abnak[IHDR_CONTENTS2] = IHDRCON_SET2 (NAK, qdaemon->fcaller, 0);
+  abnak[IHDR_CHECK] = IHDRCHECK_VAL (abnak);
+
+  afInaked[iseq] = TRUE;
+
+  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
+		  "finak: Sending NAK %d", iseq);
+
+  return fsend_data (qdaemon->qconn, abnak, CHDRLEN, TRUE);
+}
+
+/* Resend the latest packet the remote has not acknowledged.  */
+
+static boolean
+firesend (qdaemon)
+     struct sdaemon *qdaemon;
+{
+  int iseq;
+  char *zhdr;
+  size_t clen;
+
+  iseq = INEXTSEQ (iIremote_ack);
+#if DEBUG > 0
+  if (iseq == iIsendseq)
+    ulog (LOG_FATAL, "firesend: Can't happen");
+#endif
+
+  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
+		  "firesend: Resending packet %d", iseq);
+
+  /* Update the received sequence number.  */
+  zhdr = azIsendbuffers[iseq] + CHDROFFSET;
+  if (IHDRWIN_GETSEQ (zhdr[IHDR_REMOTE]) != iIrecseq)
+    {
+      int iremote;
+
+      iremote = IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]);
+      zhdr[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
+      zhdr[IHDR_CHECK] = IHDRCHECK_VAL (zhdr);
+      iIlocal_ack = iIrecseq;
+    }
+
+  ++cIresent_packets;
+
+  clen = CHDRCON_GETBYTES (zhdr[IHDR_CONTENTS1],
+			   zhdr[IHDR_CONTENTS2]);
+
+  return fsend_data (qdaemon->qconn, zhdr,
+		     CHDRLEN + clen + (clen > 0 ? CCKSUMLEN : 0),
+		     TRUE);
+}
+
 /* Get buffer space to use for packet data.  We return a pointer to
    the space to be used for the actual data, leaving room for the
    header.  */
@@ -662,12 +734,32 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      enough to avoid a wait).  */
   if (iIremote_winsize > 0)
     {
+      int cwaits;
+
+      cwaits = 0;
       while (CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
 	{
 	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fisenddata: Waiting for ACK");
 	  if (! fiwait_for_packet (qdaemon, cItimeout, cIretries,
 				   TRUE, (boolean *) NULL))
 	    return FALSE;
+
+	  /* If a NAK is lost, it is possible for the other side to be
+	     sending a stream of packets while we are waiting for an
+	     ACK.  Since we don't have an independent timeout on the
+	     receive end, this means that we will wait until the other
+	     side has finished sending packets and one of us times
+	     out.  To avoid locking ourselves up, if we get 10 packets
+	     in a row without getting the ack we need, we resend the
+	     packet the other side is looking for.  Hopefully that
+	     will trigger an ACK or NAK and get us going again.  */
+	  ++cwaits;
+	  if (cwaits > 10)
+	    {
+	      cwaits = 0;
+	      if (! firesend (qdaemon))
+		return FALSE;
+	    }
 	}
     }
 
@@ -708,30 +800,6 @@ fiwait (qdaemon)
 {
   return fiwait_for_packet (qdaemon, cItimeout, cIretries,
 			    FALSE, (boolean *) NULL);
-}
-
-/* Send a NAK.  */
-
-static boolean
-finak (qdaemon, iseq)
-     struct sdaemon *qdaemon;
-     int iseq;
-{
-  char abnak[CHDRLEN];
-
-  abnak[IHDR_INTRO] = IINTRO;
-  abnak[IHDR_LOCAL] = IHDRWIN_SET (iseq, 0);
-  abnak[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
-  iIlocal_ack = iIrecseq;
-  abnak[IHDR_CONTENTS1] = IHDRCON_SET1 (NAK, qdaemon->fcaller, 0);
-  abnak[IHDR_CONTENTS2] = IHDRCON_SET2 (NAK, qdaemon->fcaller, 0);
-  abnak[IHDR_CHECK] = IHDRCHECK_VAL (abnak);
-
-  afInaked[iseq] = TRUE;
-
-  DEBUG_MESSAGE1 (DEBUG_PROTO, "finak: Sending NAK %d", iseq);
-
-  return fsend_data (qdaemon->qconn, abnak, CHDRLEN, TRUE);
 }
 
 /* Wait for a packet.  Either there is no data to send, or the remote
@@ -811,36 +879,7 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
 
 	  if (INEXTSEQ (iIremote_ack) != iIsendseq)
 	    {
-	      int inext;
-	      char *zhdr;
-	      size_t clen;
-
-	      inext = INEXTSEQ (iIremote_ack);
-
-	      DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			      "fgwait_for_packet: Resending packet %d",
-			      inext);
-
-	      /* Update the received sequence number.  */
-	      zhdr = azIsendbuffers[inext] + CHDROFFSET;
-	      if (IHDRWIN_GETSEQ (zhdr[IHDR_REMOTE]) != iIrecseq)
-		{
-		  int iremote;
-
-		  iremote = IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]);
-		  zhdr[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
-		  zhdr[IHDR_CHECK] = IHDRCHECK_VAL (zhdr);
-		  iIlocal_ack = iIrecseq;
-		}
-	      
-	      ++cIresent_packets;
-
-	      clen = CHDRCON_GETBYTES (zhdr[IHDR_CONTENTS1],
-				       zhdr[IHDR_CONTENTS2]);
-
-	      if (! fsend_data (qdaemon->qconn, zhdr,
-				CHDRLEN + clen + (clen > 0 ? CCKSUMLEN : 0),
-				TRUE))
+	      if (! firesend (qdaemon))
 		return FALSE;
 	    }
 	  else
@@ -856,7 +895,8 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
 /* Make sure we haven't overflowed the permissible error level.  */
 
 static boolean
-ficheck_errors ()
+ficheck_errors (qdaemon)
+     struct sdaemon *qdaemon;
 {
   if (cIerrors < 0)
     return TRUE;
@@ -865,6 +905,36 @@ ficheck_errors ()
        - (cIreceived_packets / cIerror_decay))
       > cIerrors)
     {
+      /* Try shrinking the packet size.  */
+      if (iIrequest_packsize > 400)
+	{
+	  char absync[CHDRLEN + 3 + CCKSUMLEN];
+	  unsigned long icksum;
+
+	  iIrequest_packsize /= 2;
+	  absync[IHDR_INTRO] = IINTRO;
+	  absync[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
+	  absync[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
+	  iIlocal_ack = iIrecseq;
+	  absync[IHDR_CONTENTS1] = IHDRCON_SET1 (SYNC, qdaemon->fcaller, 3);
+	  absync[IHDR_CONTENTS2] = IHDRCON_SET2 (SYNC, qdaemon->fcaller, 3);
+	  absync[IHDR_CHECK] = IHDRCHECK_VAL (absync);
+	  absync[CHDRLEN + 0] = (iIrequest_packsize >> 8) & 0xff;
+	  absync[CHDRLEN + 1] = iIrequest_packsize & 0xff;
+	  absync[CHDRLEN + 2] = iIrequest_winsize;
+	  icksum = icrc (absync + CHDRLEN, 3, ICRCINIT);
+	  UCKSUM_SET (absync + CHDRLEN + 3, icksum);
+
+	  cIerrors *= 2;
+
+	  DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			  "ficheck_errors: Sending SYNC packsize %d winsize %d",
+			  iIrequest_packsize, iIrequest_winsize);
+
+	  return fsend_data (qdaemon->qconn, absync,
+			     CHDRLEN + 3 + CCKSUMLEN, TRUE);
+	}
+
       ulog (LOG_ERROR, "Too many 'i' protocol errors");
       return FALSE;
     }
@@ -882,10 +952,14 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
      boolean *pffound;
      size_t *pcneed;
 {
+  boolean fbadhdr;
+
   if (pfexit != NULL)
     *pfexit = FALSE;
   if (pffound != NULL)
     *pffound = FALSE;
+
+  fbadhdr = FALSE;
 
   while (iPrecstart != iPrecend)
     {
@@ -939,11 +1013,20 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  || (FHDRCON_GETCALLER (ab[IHDR_CONTENTS1], ab[IHDR_CONTENTS2])
 	      ? qdaemon->fcaller : ! qdaemon->fcaller))
 	{
-	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fiprocess_data: Bad header");
+	  /* We only report a single bad header message per call, to
+	     avoid generating many errors if we get many INTRO bytes
+	     in a row.  */
+	  if (! fbadhdr)
+	    {
+	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
+			      "fiprocess_data: Bad header");
 
-	  ++cIbad_hdr;
-	  if (! ficheck_errors ())
-	    return FALSE;
+	      ++cIbad_hdr;
+	      if (! ficheck_errors (qdaemon))
+		return FALSE;
+
+	      fbadhdr = TRUE;
+	    }
 
 	  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
 	  continue;
@@ -965,14 +1048,14 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	     packet we have received is iIrecseq.  The last packet we
 	     have acked is iIlocal_ack.  */
 	  if (iIrequest_winsize > 0
-	      && CSEQDIFF (iseq, iIlocal_ack) >= iIrequest_winsize)
+	      && CSEQDIFF (iseq, iIlocal_ack) > iIrequest_winsize)
 	    {
-	      DEBUG_MESSAGE1 (DEBUG_PROTO,
+	      DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fiprocess_data: Out of order packet %d",
 			      iseq);
 
 	      ++cIbad_order;
-	      if (! ficheck_errors ())
+	      if (! ficheck_errors (qdaemon))
 		return FALSE;
 
 	      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
@@ -1038,15 +1121,20 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 
 	  if (ICKSUM_GET (abcksum) != ickdata)
 	    {
-	      DEBUG_MESSAGE2 (DEBUG_PROTO,
+	      DEBUG_MESSAGE2 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fiprocess_data: Bad checksum; data %lu, frame %lu",
 			      ickdata, ICKSUM_GET (abcksum));
 
 	      ++cIbad_cksum;
-	      if (! ficheck_errors ())
+	      if (! ficheck_errors (qdaemon))
 		return FALSE;
 
-	      if (iseq != -1)
+	      /* If this sequence number is in our receive window,
+		 send a NAK.  */
+	      if (iseq != -1
+		  && (iIrequest_winsize <= 0
+		      || CSEQDIFF (iseq, iIrecseq) <= iIrequest_winsize)
+		  && azIrecbuffers[iseq] == NULL)
 		{
 		  if (! finak (qdaemon, iseq))
 		    return FALSE;
@@ -1087,13 +1175,13 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 		   && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize)
 		  || azIrecbuffers[iseq] != NULL)
 		{
-		  DEBUG_MESSAGE1 (DEBUG_PROTO,
+		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 				  "fiprocess_data: Ignoring duplicate packet %d",
 				  iseq);
 		  continue;
 		}
 
-	      DEBUG_MESSAGE1 (DEBUG_PROTO,
+	      DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fiprocess_data: Saving unexpected packet %d",
 			      iseq);
 
@@ -1110,12 +1198,14 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 
 	      /* Send NAK's for each packet between the last one we
 		 received and this one, avoiding any packets for which
-		 we've already sent NAK's.  */
+		 we've already sent NAK's or which we've already
+		 received.  */
 	      for (i = INEXTSEQ (iIrecseq);
 		   i != iseq;
 		   i = INEXTSEQ (i))
 		{
-		  if (! afInaked[i])
+		  if (! afInaked[i]
+		      && azIrecbuffers[i] == NULL)
 		    {
 		      if (! finak (qdaemon, i))
 			return FALSE;
@@ -1170,9 +1260,6 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	{
 	  char aback[CHDRLEN];
 
-	  for (i = iIlocal_ack; i <= iIrecseq; i++)
-	    afInaked[i] = FALSE;
-
 	  aback[IHDR_INTRO] = IINTRO;
 	  aback[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
 	  aback[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
@@ -1214,12 +1301,14 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
     {
     case DATA:
       {
+	int iseq;
 	boolean fret;
 
+	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
 	DEBUG_MESSAGE2 (DEBUG_PROTO,
 			"fiprocess_packet: Got DATA packet %d size %d",
-			IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]),
-			cfirst + csecond);
+			iseq, cfirst + csecond);
+	afInaked[iseq] = FALSE;
 	fret = fgot_data (qdaemon, zfirst, (size_t) cfirst,
 			  zsecond, (size_t) csecond,
 			  IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]),
@@ -1234,8 +1323,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	int ipack, iwin;
 
 	/* We accept a SYNC packet to adjust the packet and window
-	   sizes at any time, although we don't currently generate
-	   SYNC packets except when initializating the connection.  */
+	   sizes at any time.  */
 	if (cfirst + csecond < 3)
 	  {
 	    ulog (LOG_ERROR, "Bad SYNC packet");
@@ -1255,7 +1343,9 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 			"fiprocess_packet: Got SYNC packsize %d winsize %d",
 			ipack, iwin);
 
-	if (iIforced_remote_packsize == 0)
+	if (iIforced_remote_packsize == 0
+	    && (iIalc_packsize == 0
+		|| ipack <= iIalc_packsize))
 	  iIremote_packsize = ipack;
 	if (iIforced_remote_winsize == 0)
 	  iIremote_winsize = iwin;
@@ -1285,7 +1375,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	size_t clen;
 
 	++cIremote_rejects;
-	if (! ficheck_errors ())
+	if (! ficheck_errors (qdaemon))
 	  return FALSE;
 
 	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
@@ -1295,13 +1385,13 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 		|| CSEQDIFF (iseq, iIremote_ack) > iIrequest_winsize
 		|| CSEQDIFF (iIsendseq, iseq) > iIrequest_winsize))
 	  {
-	    DEBUG_MESSAGE1 (DEBUG_PROTO,
+	    DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			    "fiprocess_packet: Ignoring out of order NAK %d",
 			    iseq);
 	    return TRUE;
 	  }
 
-	DEBUG_MESSAGE1 (DEBUG_PROTO,
+	DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			"fiprocess_packet: Got NAK %d; resending packet",
 			iseq);
 
