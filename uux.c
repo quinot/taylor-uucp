@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1991/12/18  03:54:14  ian
+   Made error messages to terminal appear more normal
+
    Revision 1.12  1991/12/14  16:09:07  ian
    Added -l option to uux to link files into the spool directory
 
@@ -88,11 +91,11 @@ char uux_rcsid[] = "$Id$";
 
 /* This is the list of word separators.  We break filename arguments
    at these characters.  */
-#define ZSHELLSEPS ";&*()|<>"
+#define ZSHELLSEPS ";&*()|<> \t"
 
 /* This is the list of word separators without the redirection
    operators.  */
-#define ZSHELLNONREDIRSEPS ";&*()|"
+#define ZSHELLNONREDIRSEPS ";&*()| \t"
 
 /* The program name.  */
 const char abProgram[] = "uux";
