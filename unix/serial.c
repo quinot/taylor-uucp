@@ -29,6 +29,8 @@
 const char serial_rcsid[] = "$Id$";
 #endif
 
+#include "sysdep.h"
+
 #include <errno.h>
 #include <ctype.h>
 
@@ -89,7 +91,7 @@ const char serial_rcsid[] = "$Id$";
 #endif
 #endif
 
-#if HAVE_STRIP_BUG
+#if HAVE_STRIP_BUG && HAVE_BSD_TTY
 #include <termio.h>
 #endif
 
@@ -165,7 +167,6 @@ const char serial_rcsid[] = "$Id$";
 #include "uudefs.h"
 #include "uuconf.h"
 #include "system.h"
-#include "sysdep.h"
 #include "conn.h"
 
 #if HAVE_TLI
@@ -1308,6 +1309,7 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
       && qdialer == &sdialer)
     (void) uuconf_dialer_free (puuconf, &sdialer);
 
+#if ! HAVE_RESET_BUG
   /* Reset the terminal to make sure we drop DTR.  It should be
      dropped when we close the descriptor, but that doesn't seem to
      happen on some systems.  Use a 30 second timeout to avoid hanging
@@ -1343,6 +1345,7 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
       /* Let the port settle.  */
       sleep (2);
     }
+#endif /* ! HAVE_RESET_BUG */
 
   if (! fsserial_close (qsysdep))
     fret = FALSE;

@@ -113,7 +113,6 @@
    SINGLE_WRITE is too small, file transfer will use more CPU time
    than necessary.  If you have no idea, 64 should work on most modern
    systems.  */
-
 #define SINGLE_WRITE 64
 
 /* Some tty drivers, such as those from SCO and AT&T's Unix PC, have a
@@ -128,14 +127,24 @@
    scripts.  */
 #define	HAVE_CLOCAL_BUG	0
 
+/* On some systems, such as SCO Xenix, resetting DTR on a port
+   apparently prevents getty from working on the port, and thus
+   prevents anybody from dialing in.  If HAVE_RESET_BUG is set to 1,
+   DTR will not be reset when a serial port is closed.  */
+#define HAVE_RESET_BUG 0
+
 /* On Ultrix 4.0, at least, setting CBREAK causes input characters to
    be stripped, regardless of the setting of LPASS8 and LLITOUT.  This
    can be worked around by using the termio call to reset ISTRIP.
-   This probably does not apply to any other operating system.  */
-#ifdef ultrix
-#define HAVE_STRIP_BUG 1
-#else
+   This probably does not apply to any other operating system.
+   Setting HAVE_STRIP_BUG to 1 will use this workaround.  */
 #define HAVE_STRIP_BUG 0
+
+#if HAVE_BSD_TTY
+#ifdef ultrix
+#undef HAVE_STRIP_BUG
+#define HAVE_STRIP_BUG 1
+#endif
 #endif
 
 /* Set TIMES_TICK to the fraction of a second which times(2) returns
