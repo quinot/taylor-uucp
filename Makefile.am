@@ -23,7 +23,7 @@ uudirdir = $(sbindir)/util
 uudir_PROGRAMS = uudir
 endif
 
-AM_CFLAGS = $(UUDIRFLAGS)
+AM_CFLAGS = $(WARN_CFLAGS) $(UUDIRFLAGS)
 
 LDADD = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 

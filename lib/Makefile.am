@@ -6,4 +6,4 @@ libuucp_a_SOURCES = buffer.c crc.c debug.c escape.c getopt.c getop1.c \
 	parse.c spool.c status.c xfree.c xmall.c xreall.c
 libuucp_a_LIBADD = $(LIBOBJS)
 
-AM_CFLAGS = -I.. -I$(srcdir)/..
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS)

@@ -74,6 +74,7 @@ POUNDBANG = @POUNDBANG@
 RANLIB = @RANLIB@
 UNIXOBJS = @UNIXOBJS@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -85,7 +86,7 @@ libuucp_a_SOURCES = buffer.c crc.c debug.c escape.c getopt.c getop1.c \
 
 libuucp_a_LIBADD = $(LIBOBJS)
 
-AM_CFLAGS = -I.. -I$(srcdir)/..
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS)
 subdir = lib
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h

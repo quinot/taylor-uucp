@@ -16,4 +16,4 @@ libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
 	tval.c ugtlin.c unk.c val.c vinit.c vport.c vsinfo.c vsnams.c \
 	vsys.c
 
-AM_CFLAGS = -I.. -I$(srcdir)/..
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS)

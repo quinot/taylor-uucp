@@ -74,6 +74,7 @@ POUNDBANG = @POUNDBANG@
 RANLIB = @RANLIB@
 UNIXOBJS = @UNIXOBJS@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -95,7 +96,7 @@ libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
 	vsys.c
 
 
-AM_CFLAGS = -I.. -I$(srcdir)/..
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS)
 subdir = uuconf
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h

@@ -22,4 +22,4 @@ else
 UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(sbindir)/util/uudir\"
 endif
 
-AM_CFLAGS = -I.. -I$(srcdir)/.. $(UUDIRFLAGS)
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS) $(UUDIRFLAGS)

@@ -75,6 +75,7 @@ POUNDBANG = @POUNDBANG@
 RANLIB = @RANLIB@
 UNIXOBJS = @UNIXOBJS@
 VERSION = @VERSION@
+WARN_CFLAGS = @WARN_CFLAGS@
 am__include = @am__include@
 am__quote = @am__quote@
 install_sh = @install_sh@
@@ -98,7 +99,7 @@ man_MANS = uux.1 uucp.1 uustat.1 cu.1 uucico.8 uuxqt.8
 @HAVE_MKDIR_TRUE@uudir_PROGRAMS = 
 @HAVE_MKDIR_FALSE@uudir_PROGRAMS = uudir
 
-AM_CFLAGS = $(UUDIRFLAGS)
+AM_CFLAGS = $(WARN_CFLAGS) $(UUDIRFLAGS)
 
 LDADD = unix/libunix.a uuconf/libuuconf.a lib/libuucp.a
 
