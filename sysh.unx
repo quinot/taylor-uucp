@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.32  1992/02/08  23:34:41  ian
+   If we have neither getcwd nor getwd, fork /bin/pwd to get the cwd
+
    Revision 1.31  1992/02/08  20:02:36  ian
    Added HAVE_SETRET configuration option for systems without setjmp
 
@@ -348,6 +351,9 @@
    HAVE_BSD_DIRECT -- Use BSD direct structure  */
 #define HAVE_POSIX_DIRENT 1
 #define HAVE_BSD_DIRECT 0
+
+/* If you have the dup2 call, set HAVE_DUP2 to 1.  */
+#define HAVE_DUP2 0
 
 /* If the system supports file names longer than 14 characters,
    set HAVE_LONG_NAMES to 1.  */
