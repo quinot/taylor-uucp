@@ -1030,13 +1030,6 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	       iconn_baud (qconn)))
     return FALSE;
 
-  qstat->ttype = STATUS_TALKING;
-  qstat->ilast = isysdep_time ((long *) NULL);
-  qstat->cretries = 0;
-  qstat->cwait = 0;
-  if (! fsysdep_set_status (qsys, qstat))
-    return FALSE;
-
   *pfcalled = TRUE;
   istart_time = isysdep_time ((long *) NULL);
 
@@ -1056,6 +1049,13 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
     }
 
   ulog (LOG_NORMAL, "Login successful");
+
+  qstat->ttype = STATUS_TALKING;
+  qstat->ilast = isysdep_time ((long *) NULL);
+  qstat->cretries = 0;
+  qstat->cwait = 0;
+  if (! fsysdep_set_status (qsys, qstat))
+    return FALSE;
 
   if (zstr[5] == '=')
     {
@@ -2149,10 +2149,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   else
     sprintf (zgrade, "grade %c ", sdaem.bgrade);
 
-  /* If we using HAVE_HDB_LOGGING, then the previous ``incoming call''
-     message went to the general log, since we didn't know the system
-     name at that point.  In that case, we repeat the port and login
-     names.  */
+  /* If we are using HAVE_HDB_LOGGING, then the previous ``incoming
+     call'' message went to the general log, since we didn't know the
+     system name at that point.  In that case, we repeat the port and
+     login names.  */
 #if HAVE_HDB_LOGGING
   ulog (LOG_NORMAL, "Handshake successful (login %s port %s %s%s)",
 	zlogin,
