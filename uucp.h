@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.2  1991/09/19  02:22:44  ian
+   Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
+
    Revision 1.1  1991/09/10  19:47:55  ian
    Initial revision
 
@@ -106,6 +109,9 @@ extern char *getenv ();
 /* The boolean type holds boolean values.  */
 
 typedef int boolean;
+
+#undef TRUE
+#undef FALSE
 #define TRUE (1)
 #define FALSE (0)
 
