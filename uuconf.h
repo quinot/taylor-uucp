@@ -746,6 +746,21 @@ extern int uuconf_localname (void *uuconf_pglobal,
 			     const char *uuconf_zlogin,
 			     char **pzname);
 
+/* Get the name of the UUCP log file.  This will set *pzlog to a
+   constant string, which should not be freed.  */
+extern int uuconf_logfile (void *uuconf_pglobal,
+			   const char **uuconf_pzlog);
+
+/* Get the name of the UUCP statistics file.  This will set *pzstats
+   to a constant string, which should not be freed.  */
+extern int uuconf_statsfile (void *uuconf_pglobal,
+			     const char **uuconf_pzstats);
+
+/* Get the name of the UUCP debugging file.  This will set *pzdebug to
+   a constant string, which should not be freed.  */
+extern int uuconf_debugfile (void *uuconf_pglobal,
+			     const char **uuconf_pzdebug);
+
 /* Check a login name and password.  This checks the Taylor UUCP
    password file (not /etc/passwd).  It will work even if
    uuconf_taylor_init was not called.  If the login name exists and
@@ -794,6 +809,9 @@ extern int uuconf_dialer_names ();
 extern int uuconf_dialer_info ();
 extern int uuconf_dialer_free ();
 extern int uuconf_localname ();
+extern int uuconf_logfile ();
+extern int uuconf_statsfile ();
+extern int uuconf_debugfile ();
 extern int uuconf_callin ();
 extern int uuconf_callout ();
 extern int uuconf_validate ();

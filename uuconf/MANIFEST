@@ -23,6 +23,7 @@ chatc.c
 cmdarg.c
 cmdfil.c
 cmdlin.c
+debfil.c
 dial.c
 diasub.c
 dnams.c
@@ -51,6 +52,7 @@ init.c
 int.c
 lineno.c
 locnm.c
+logfil.c
 memcpy.c
 mrgblk.c
 paramc.c
@@ -62,6 +64,7 @@ reliab.c
 sinfo.c
 snams.c
 split.c
+stafil.c
 strcas.c
 strdup.c
 strerr.c
