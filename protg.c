@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/01/04  22:15:41  ian
+   Mark Mallett: wait for INITx from master before sending our INITx
+
    Revision 1.14  1992/01/02  05:01:28  ian
    Count rejections separately from resent packets
 
@@ -1066,12 +1069,25 @@ fggot_ack (iack)
   return TRUE;
 }
 
-/* See if we've overflowed the permitted number of errors.  */
+/* See if we've received more than the permitted number of errors.  If
+   we receive a bad packet, we can expect a window full (less one) of
+   out of order packets to follow, so we discount cGbad_order
+   accordingly.  */
 
 static boolean
 fgcheck_errors ()
 {
-  if ((cGbad_hdr + cGbad_checksum + cGbad_order + cGremote_rejects)
+  int corder;
+
+  if (cGmax_errors < 0)
+    return TRUE;
+
+  corder = (cGbad_order
+	    - ((cGbad_hdr + cGbad_checksum) * (iGremote_winsize - 1)));
+  if (corder < 0)
+    corder = 0;
+
+  if ((cGbad_hdr + cGbad_checksum + corder + cGremote_rejects)
       > cGmax_errors)
     {
       ulog (LOG_ERROR, "Too many 'g' protocol errors");
