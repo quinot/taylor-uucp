@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/12/29  04:04:18  ian
+   Added a bunch of extern definitions
+
    Revision 1.5  1991/12/22  20:57:57  ian
    Added externs for strcasecmp or strncasecmp
 
@@ -354,7 +357,7 @@ ftime_now (ztime)
       time_t itime;
 
       (void) time (&itime);
-      s = *localtime (&itime);
+      memcpy (&s, localtime (&itime), sizeof (struct tm));
       fhave = TRUE;
     }
 
