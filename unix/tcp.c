@@ -180,6 +180,7 @@ ftcp_open (qconn, ibaud, fwait)
   struct ssysdep_conn *qsysdep;
   const char *zport;
   uid_t ieuid;
+  gid_t iegid;
   boolean fswap;
 #if HAVE_GETADDRINFO
   struct addrinfo shints;
@@ -261,7 +262,7 @@ ftcp_open (qconn, ibaud, fwait)
   fswap = geteuid () != 0;
   if (fswap)
     {
-      if (! fsuser_perms (&ieuid))
+      if (! fsuser_perms (&ieuid, &iegid))
 	{
 	  (void) close (qsysdep->o);
 	  qsysdep->o = -1;
@@ -275,7 +276,7 @@ ftcp_open (qconn, ibaud, fwait)
       if (bind (qsysdep->o, quse->ai_addr, quse->ai_addrlen) < 0)
 	{
 	  if (fswap)
-	    (void) fsuucp_perms ((long) ieuid);
+	    (void) fsuucp_perms ((long) ieuid, (long) iegid);
 	  ulog (LOG_FATAL, "bind: %s", strerror (errno));
 	}
     }
@@ -292,7 +293,7 @@ ftcp_open (qconn, ibaud, fwait)
       if (bind (qsysdep->o, (struct sockaddr *) &sin, sizeof sin) < 0)
 	{
 	  if (fswap)
-	    (void) fsuucp_perms ((long) ieuid);
+	    (void) fsuucp_perms ((long) ieuid, (long) iegid);
 	  ulog (LOG_FATAL, "bind: %s", strerror (errno));
 	}
     }
@@ -305,7 +306,7 @@ ftcp_open (qconn, ibaud, fwait)
   /* Now swap back to the uucp user ID.  */
   if (fswap)
     {
-      if (! fsuucp_perms ((long) ieuid))
+      if (! fsuucp_perms ((long) ieuid, (long) iegid))
 	ulog (LOG_FATAL, "Could not swap back to UUCP user permissions");
     }
 

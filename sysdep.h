@@ -475,12 +475,12 @@ extern boolean fsuser_access P((const struct stat *, int imode,
 				const char *zuser));
 
 /* Switch to the permissions of the invoking user.  This sets the
-   argument to a value to pass to fsuucp_perms.  */
-extern boolean fsuser_perms P((uid_t *));
+   arguments to values to pass to fsuucp_perms.  */
+extern boolean fsuser_perms P((uid_t *, gid_t *));
 
 /* Switch back to the permissions of the UUCP user ID.  This should be
-   passed the value returned by fsuser_perms in its argument.  */
-extern boolean fsuucp_perms P((long));
+   passed the values returned by fsuser_perms in its arguments.  */
+extern boolean fsuucp_perms P((long, long));
 
 /* Stick two directories and a file name together.  */
 extern char *zsappend3 P((const char *zdir1, const char *zdir2,

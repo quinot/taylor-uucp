@@ -14,15 +14,16 @@ ixsysdep_user_file_mode (zfile)
      const char *zfile;
 {
   uid_t ieuid;
+  gid_t iegid;
   int iret;
   struct stat s;
 
-  if (! fsuser_perms (&ieuid))
+  if (! fsuser_perms (&ieuid, &iegid))
     return 0;
 
   iret = stat ((char *) zfile, &s);
 
-  if (! fsuucp_perms ((long) ieuid))
+  if (! fsuucp_perms ((long) ieuid, (long) iegid))
     return 0;
 
   if (iret != 0)

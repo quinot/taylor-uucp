@@ -1,5 +1,10 @@
 2002-02-14  Ian Lance Taylor  <ian@airs.com>
 
+	* unix/uid.c (fsuser_perms): Add piegid parameter.  Change all
+	callers.
+	(fsuucp_perms): Add iegid parameter.  Change all callers.
+	* sysdep.h (fsuser_perms, fsuucp_perms): Update declarations.
+
 	* John Hughes: uuconf.h (struct uuconf_system): Add
 	uuconf_cmax_file_time field.
 	* uuconf/syssub.c (SYSTEM_INTEGERS): Add cmax_file_time.

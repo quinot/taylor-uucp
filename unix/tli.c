@@ -250,6 +250,7 @@ ftli_open (qconn, ibaud, fwait)
   const char *zservaddr;
   char *zfreeaddr;
   uid_t ieuid;
+  gid_t iegid;
   boolean fswap;
   struct t_bind *qtbind;
   struct t_call *qtcall;
@@ -280,7 +281,7 @@ ftli_open (qconn, ibaud, fwait)
   fswap = fwait && geteuid () != 0;
   if (fswap)
     {
-      if (! fsuser_perms (&ieuid))
+      if (! fsuser_perms (&ieuid, &iegid))
 	{
 	  ubuffree (zfreedev);
 	  return FALSE;
@@ -291,7 +292,7 @@ ftli_open (qconn, ibaud, fwait)
   if (qsysdep->o < 0)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_ERROR, "t_open (%s): %s", zdevice, ztlierror ());
       ubuffree (zfreedev);
       return FALSE;
@@ -301,7 +302,7 @@ ftli_open (qconn, ibaud, fwait)
 	     fcntl (qsysdep->o, F_GETFD, 0) | FD_CLOEXEC) < 0)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_ERROR, "fcntl (FD_CLOEXEC): %s", strerror (errno));
       ubuffree (zfreedev);
       (void) t_close (qsysdep->o);
@@ -313,7 +314,7 @@ ftli_open (qconn, ibaud, fwait)
   if (qsysdep->iflags < 0)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_ERROR, "fcntl: %s", strerror (errno));
       ubuffree (zfreedev);
       (void) t_close (qsysdep->o);
@@ -351,7 +352,7 @@ ftli_open (qconn, ibaud, fwait)
   if (qtbind == NULL)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_FATAL, "t_alloc (T_BIND): %s", ztlierror ());
     }
 
@@ -359,7 +360,7 @@ ftli_open (qconn, ibaud, fwait)
   if (zservaddr == NULL)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_FATAL, "Can't run as TLI server; no server address");
     }
 
@@ -368,7 +369,7 @@ ftli_open (qconn, ibaud, fwait)
   if (qtbind->addr.len > qtbind->addr.maxlen)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_FATAL, "%s: TLI server address too long (max %d)",
 	    zservaddr, qtbind->addr.maxlen);
     }
@@ -380,13 +381,13 @@ ftli_open (qconn, ibaud, fwait)
   if (t_bind (qsysdep->o, qtbind, (struct t_bind *) NULL) < 0)
     {
       if (fswap)
-	(void) fsuucp_perms ((long) ieuid);
+	(void) fsuucp_perms ((long) ieuid, (long) iegid);
       ulog (LOG_FATAL, "t_bind (%s): %s", zservaddr, ztlierror ());
     }
 
   if (fswap)
     {
-      if (! fsuucp_perms ((long) ieuid))
+      if (! fsuucp_perms ((long) ieuid, (long) iegid))
 	ulog (LOG_FATAL, "Could not swap back to UUCP user permissions");
     }
 

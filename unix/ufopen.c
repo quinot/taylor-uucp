@@ -65,11 +65,12 @@ esysdep_user_fopen (zfile, frd, fbinary)
      boolean fbinary ATTRIBUTE_UNUSED;
 {
   uid_t ieuid;
+  gid_t iegid;
   openfile_t e;
   const char *zerr;
   int o = 0;
 
-  if (! fsuser_perms (&ieuid))
+  if (! fsuser_perms (&ieuid, &iegid))
     return EFILECLOSED;
 
   zerr = NULL;
@@ -98,7 +99,7 @@ esysdep_user_fopen (zfile, frd, fbinary)
     }
 #endif
 
-  if (! fsuucp_perms ((long) ieuid))
+  if (! fsuucp_perms ((long) ieuid, (long) iegid))
     {
       if (ffileisopen (e))
 	(void) ffileclose (e);

@@ -40,20 +40,33 @@
 /* Switch to permissions of the invoking user.  */
 
 boolean
-fsuser_perms (pieuid)
+fsuser_perms (pieuid, piegid)
      uid_t *pieuid;
+     gid_t *piegid;
 {
   uid_t ieuid, iuid;
+  gid_t iegid, igid;
 
   ieuid = geteuid ();
   iuid = getuid ();
   if (pieuid != NULL)
     *pieuid = ieuid;
 
+  iegid = getegid ();
+  igid = getgid ();
+  if (piegid != NULL)
+    *piegid = iegid;
+
 #if HAVE_SETREUID
   /* Swap the effective user id and the real user id.  We can then
      swap them back again when we want to return to the uucp user's
      permissions.  */
+  if (setregid (iegid, igid) < 0)
+    {
+      ulog (LOG_ERROR, "setregid (%ld, %ld): %s",
+	    (long) iegid, (long) igid, strerror (errno));
+      return FALSE;
+    }
   if (setreuid (ieuid, iuid) < 0)
     {
       ulog (LOG_ERROR, "setreuid (%ld, %ld): %s",
@@ -68,6 +81,11 @@ fsuser_perms (pieuid)
      be able to switch back and forth, so don't even try.  */
   if (iuid != 0)
     {
+      if (setgid (igid) < 0)
+	{
+	  ulog (LOG_ERROR, "setgid (%ld): %s", (long) igid, strerror (errno));
+	  return FALSE;
+	}
       if (setuid (iuid) < 0)
 	{
 	  ulog (LOG_ERROR, "setuid (%ld): %s", (long) iuid, strerror (errno));
@@ -88,16 +106,26 @@ fsuser_perms (pieuid)
 
 /*ARGSUSED*/
 boolean
-fsuucp_perms (ieuid)
+fsuucp_perms (ieuid, iegid)
      long ieuid ATTRIBUTE_UNUSED;
+     long iegid ATTRIBUTE_UNUSED;
 {
 #if HAVE_SETREUID
   /* Swap effective and real user id's back to what they were.  */
-  if (! fsuser_perms ((uid_t *) NULL))
+  if (! fsuser_perms ((uid_t *) NULL, (gid_t *) NULL))
     return FALSE;
 #else /* ! HAVE_SETREUID */
 #if HAVE_SAVED_SETUID
   /* Set ourselves back to our original effective user id.  */
+  if (setgid ((gid_t) iegid) < 0)
+    {
+      ulog (LOG_ERROR, "setgid (%ld): %s", (long) iegid, strerror (errno));
+      /* Is this error message helpful or confusing?  */
+      if (errno == EPERM)
+	ulog (LOG_ERROR,
+	      "Probably HAVE_SAVED_SETUID in policy.h should be set to 0");
+      return FALSE;
+    }
   if (setuid ((uid_t) ieuid) < 0)
     {
       ulog (LOG_ERROR, "setuid (%ld): %s", (long) ieuid, strerror (errno));
