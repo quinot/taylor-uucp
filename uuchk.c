@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/01/05  03:09:17  ian
+   Changed abProgram and abVersion to non const to avoid compiler bug
+
    Revision 1.14  1991/12/23  05:15:54  ian
    David Nugent: set debugging level for a specific system
 
@@ -83,7 +86,7 @@ char uuchk_rcsid[] = "$Id$";
 #include "sysdep.h"
 
 /* External functions.  */
-extern int strcmp (), strcasecmp ();
+extern int strcasecmp ();
 
 /* Program name.  */
 char abProgram[] = "uuchk";
