@@ -100,6 +100,14 @@ enum _argtype
   optional_argument
 };
 
+#ifndef P
+/* On some systems, <stdio.h> includes getopt.h before P is defined by
+   uucp.h, and the -I arguments cause this version of getopt.h to be
+   included.  Work around that here.  */
+#define P(x) ()
+#define UNDEFINE_P
+#endif
+
 extern int getopt P((int argc, char *const *argv, const char *shortopts));
 extern int getopt_long P((int argc, char *const *argv, const char *shortopts,
 			  const struct option *longopts, int *longind));
@@ -112,6 +120,11 @@ extern int _getopt_internal P((int argc, char *const *argv,
 			       const char *shortopts,
 			       const struct option *longopts, int *longind,
 			       int long_only));
+
+#ifdef UNDEFINE_P
+#undef P
+#undef UNDEFINE_P
+#endif
 
 #ifdef	__cplusplus
 }
