@@ -41,6 +41,7 @@ const char uucp_rcsid[] = "$Id$";
 /* Local functions.  */
 
 static void ucusage P((void));
+static void uchelp P((void));
 static void ucdirfile P((const char *zdir, const char *zfile,
 			 pointer pinfo));
 static void uccopy P((const char *zfile, const char *zdest));
@@ -51,11 +52,29 @@ static const char *zcone_system P((boolean *pfany));
 static void ucrecord_file P((const char *zfile));
 static void ucabort P((void));
 
-/* The program name.  */
-char abProgram[] = "uucp";
-
 /* Long getopt options.  */
-static const struct option asClongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asClongopts[] =
+{
+  { "copy", no_argument, NULL, 'C' },
+  { "nocopy", no_argument, NULL, 'c' },
+  { "directories", no_argument, NULL, 'd' },
+  { "nodirectories", no_argument, NULL, 'f' },
+  { "grade", required_argument, NULL, 'g' },
+  { "jobid", no_argument, NULL, 'j' },
+  { "mail", no_argument, NULL, 'm' },
+  { "notify", required_argument, NULL, 'n' },
+  { "nouucico", no_argument, NULL, 'r' },
+  { "recursive", no_argument, NULL, 'R' },
+  { "status", required_argument, NULL, 's' },
+  { "uuto", no_argument, NULL, 't' },
+  { "user", required_argument, NULL, 'u' },
+  { "noexpand", no_argument, NULL, 'w' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 /* Local variables.  There are a bunch of these, mostly set by the
    options and the last (the destination) argument.  These have file
@@ -142,6 +161,8 @@ main (argc, argv)
   const char *zdestsys;
   char *zoptions;
   boolean fexit;
+
+  zProgram = argv[0];
 
   while ((iopt = getopt_long (argc, argv, "cCdfg:I:jmn:prRs:tu:Wx:",
 			      asClongopts, (int *) NULL)) != EOF)
@@ -232,13 +253,28 @@ main (argc, argv)
 #endif
 	  break;
 
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 1:
+	  /* --help.  */
+	  uchelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
 	case 0:
 	  /* Long option found and flag set.  */
 	  break;
 
 	default:
 	  ucusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -540,6 +576,8 @@ main (argc, argv)
   return 0;
 }
 
+/* Print usage message and die.  */
+
 static void
 ucusage ()
 {
@@ -547,42 +585,59 @@ ucusage ()
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uucp [options] file1 [file2 ...] dest\n");
+	   "Usage: %s [options] file1 [file2 ...] dest\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
+  exit (EXIT_FAILURE);
+}
+
+/* Print help message.  */
+
+static void
+uchelp ()
+{
   fprintf (stderr,
-	   " -c: Do not copy local files to spool directory\n");
+	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	   VERSION);
   fprintf (stderr,
-	   " -C, -p: Copy local files to spool directory (default)\n");
+	   "Usage: %s [options] file1 [file2 ...] dest\n", zProgram);
   fprintf (stderr,
-	   " -d: Create necessary directories (default)\n");
+	   " -c,--nocopy: Do not copy local files to spool directory\n");
   fprintf (stderr,
-	   " -f: Do not create directories (fail if they do not exist)\n");
+	   " -C,-p,--copy: Copy local files to spool directory (default)\n");
   fprintf (stderr,
-	   " -g grade: Set job grade (must be alphabetic)\n");
+	   " -d,--directories: Create necessary directories (default)\n");
   fprintf (stderr,
-	   " -m: Report status of copy by mail\n");
+	   " -f,--nodirectories: Do not create directories (fail if they do not exist)\n");
   fprintf (stderr,
-	   " -n user: Report status of copy by mail to remote user\n");
+	   " -g,--grade grade: Set job grade (must be alphabetic)\n");
   fprintf (stderr,
-	   " -R: Copy directories recursively\n");
+	   " -m,--mail: Report status of copy by mail\n");
   fprintf (stderr,
-	   " -r: Do not start uucico daemon\n");
+	   " -n,--notify user: Report status of copy by mail to remote user\n");
   fprintf (stderr,
-	   " -s file: Report completion status to file\n");
+	   " -R,--recursive: Copy directories recursively\n");
   fprintf (stderr,
-	   " -j: Report job id\n");
+	   " -r,--nouucico: Do not start uucico daemon\n");
   fprintf (stderr,
-	   " -W: Do not add current directory to remote filenames\n");
+	   " -s,--status file: Report completion status to file\n");
   fprintf (stderr,
-	   " -t: Emulate uuto\n");
+	   " -j,--jobid: Report job id\n");
   fprintf (stderr,
-	   " -u name: Set user name\n");
+	   " -W,--noexpand: Do not add current directory to remote filenames\n");
   fprintf (stderr,
-	   " -x debug: Set debugging level\n");
+	   " -t,--uuto: Emulate uuto\n");
+  fprintf (stderr,
+	   " -u,--usage name: Set user name\n");
+  fprintf (stderr,
+	   " -x,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
+	   " -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-  exit (EXIT_FAILURE);
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help and exit\n");
 }
 
 /* This is called for each file in a directory heirarchy.  */
