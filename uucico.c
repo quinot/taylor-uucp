@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.70  1992/03/09  05:08:16  ian
+   Added status for wrong time to call, not used if system can't be called
+
    Revision 1.69  1992/03/08  17:45:41  ian
    Ted Lindgreen: start uuxqt for only one system if appropriate
 
@@ -1932,14 +1935,22 @@ faccept_call (zlogin, qport, pqsys)
      message went to the general log, since we didn't know the system
      name at that point.  In that case, we repeat the port and login
      names.  */
-
 #if HAVE_BNU_LOGGING
-  ulog (LOG_NORMAL, "Handshake successful (login %s port %s)",
-	zlogin == NULL ? "unknown" : zlogin,
-	zLdevice == NULL ? "unknown" : zLdevice);
-#else
-  ulog (LOG_NORMAL, "Handshake successful");
-#endif
+  if (bgrade == BGRADE_LOW)
+    ulog (LOG_NORMAL, "Handshake successful (login %s port %s)",
+	  zlogin == NULL ? "unknown" : zlogin,
+	  zLdevice == NULL ? "unknown" : zLdevice);
+  else
+    ulog (LOG_NORMAL, "Handshake successful (login %s port %s grade %c)",
+	  zlogin == NULL ? "unknown" : zlogin,
+	  zLdevice == NULL ? "unknown" : zLdevice,
+	  bgrade);
+#else /* ! HAVE_BNU_LOGGING */
+  if (bgrade == BGRADE_LOW)
+    ulog (LOG_NORMAL, "Handshake successful");
+  else
+    ulog (LOG_NORMAL, "Handshake successful (grade %c)", bgrade);
+#endif /* ! HAVE_BNU_LOGGING */
 
   {
     boolean fret;
