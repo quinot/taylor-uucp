@@ -951,6 +951,20 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 
       if (qtrans->s.pseq != NULL)
 	(void) fsysdep_did_work (qtrans->s.pseq);
+
+      if (! qinfo->flocal)
+	{
+	  /* Remember that we have received this file, so that if the
+	     connection drops at this point we won't receive it again.
+	     We could check the return value here, but if we return
+	     FALSE we couldn't do anything but drop the connection,
+	     which would hardly be reasonable.  Instead we trust that
+	     the administrator will notice and handle any error
+	     messages, which are very unlikely to occur if everything
+	     is set up correctly.  */
+	  (void) fsysdep_remember_reception (qdaemon->qsys, qtrans->s.zto,
+					     qtrans->s.ztemp);
+	}
     }
   else
     {
@@ -971,10 +985,10 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
      file itself.  */
   if (qtrans->s.bcmd == 'E' && zerr == NULL)
     {
-      char *zxqt, *zxqtfile;
+      char *zxqt, *zxqtfile, *ztemp;
+      long cdummy;
       FILE *e;
-
-      e = NULL;
+      boolean fbad;
 
       /* We get an execution file name by simply replacing the leading
 	 D in the received file name with an X.  This pretty much
@@ -987,14 +1001,25 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 					  (pointer) NULL);
       ubuffree (zxqt);
 
-      if (zxqtfile != NULL)
+      if (zxqtfile == NULL)
 	{
-	  e = esysdep_fopen (zxqtfile, FALSE, FALSE, TRUE);
-	  ubuffree (zxqtfile);
+	  urrec_free (qtrans);
+	  return FALSE;
 	}
+
+      /* We have to write via a temporary file, because otherwise
+	 uuxqt might pick up the file before we have finished writing
+	 it.  */
+      e = NULL;
+      ztemp = zsysdep_receive_temp (qdaemon->qsys, zxqtfile, "D.0",
+				    &cdummy);
+      if (ztemp != NULL)
+	e = esysdep_fopen (ztemp, FALSE, FALSE, TRUE);
 
       if (e == NULL)
 	{
+	  ubuffree (zxqtfile);
+	  ubuffree (ztemp);
 	  urrec_free (qtrans);
 	  return FALSE;
 	}
@@ -1012,13 +1037,29 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
       if (strchr (qtrans->s.zoptions, 'e') != NULL)
 	fprintf (e, "e\n");
 
+      fbad = FALSE;
       if (fclose (e) == EOF)
 	{
 	  ulog (LOG_ERROR, "fclose: %s", strerror (errno));
+	  fbad = TRUE;
+	}
+
+      if (! fbad)
+	{
+	  if (! fsysdep_move_file (ztemp, zxqtfile, TRUE, FALSE, FALSE,
+				   (const char *) NULL))
+	    fbad = TRUE;
+	}
+
+      ubuffree (zxqtfile);
+      ubuffree (ztemp);
+
+      if (fbad)
+	{
 	  urrec_free (qtrans);
 	  return FALSE;
 	}
-    }      
+    }
 
   /* Prepare to send the completion string to the remote system.  If
      we have not yet replied to the remote send request, we leave the
@@ -1061,8 +1102,9 @@ frec_file_send_confirm (qtrans, qdaemon)
   fret = (*qdaemon->qproto->pfsendcmd) (qdaemon, zsend,
 					qtrans->ilocal, qtrans->iremote);
 
-  /* Now, if that was a remote command, remember that we received that
-     file, at least until the receive message is acked.  */
+  /* Now, if that was a remote command, then when the confirmation
+     message is acked we no longer have to remember that we received
+     that file.  */
   if (! qinfo->flocal && qinfo->fmoved)
     usent_receive_ack (qdaemon, qtrans);
 

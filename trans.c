@@ -1263,14 +1263,6 @@ usent_receive_ack (qdaemon, qtrans)
 {
   struct sreceive_ack *q;
 
-  /* We could check the return value here, but if we return FALSE we
-     couldn't do anything but drop the connection, which would hardly
-     be reasonable.  Instead we trust that the administrator will
-     notice and handle any error messages, which are very unlikely to
-     occur if everything is set up correctly.  */
-  (void) fsysdep_remember_reception (qdaemon->qsys, qtrans->s.zto,
-				     qtrans->s.ztemp);
-
   if (qTfree_receive_ack == NULL)
     q = (struct sreceive_ack *) xmalloc (sizeof (struct sreceive_ack));
   else
