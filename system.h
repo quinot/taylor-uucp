@@ -80,10 +80,9 @@ extern boolean fsysdep_other_config P((const char *));
 extern void usysdep_detach P((void));
 
 /* Get the local node name if it is not specified in the configuration
-   file.  This is called before the usysdep_initialize function is
-   called.  It should return NULL on error.  The return value should
-   point to a static buffer.  */
-extern const char *zsysdep_local_name P((void));
+   files.  This should return an malloced buffer.  It may not return
+   NULL.  */
+extern char *zsysdep_localname P((void));
 
 /* Get the login name.  This is used when uucico is started up with no
    arguments in slave mode, which causes it to assume that somebody
@@ -145,7 +144,7 @@ extern const char *zsysdep_port_name P((boolean *pftcp_port));
 
 /* Make a spool directory for a system.  This will be called each time
    the system might be accessed.  It should return FALSE on error.  */
-extern boolean fsysdep_make_spool_dir P((const struct ssysteminfo *qsys));
+extern boolean fsysdep_make_spool_dir P((const struct uuconf_system *qsys));
 
 /* Return whether a file name is in a directory, and check for read or
    write access.  This should check whether zfile is within zdir (or
@@ -163,7 +162,7 @@ extern boolean fsysdep_make_spool_dir P((const struct ssysteminfo *qsys));
    which case the check should be made for any user, not just zuser.
    There is no way for this function to return error.  The qsys
    argument should be used to expand ~ into the public directory.  */
-extern boolean fsysdep_in_directory P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_in_directory P((const struct uuconf_system *qsys,
 				       const char *zfile,
 				       const char *zdir,
 				       boolean fcheck,
@@ -228,35 +227,35 @@ extern void usysdep_pause P((void));
 
 /* Lock a remote system.  This should return FALSE if the system is
    already locked (no error should be reported).  */
-extern boolean fsysdep_lock_system P((const struct ssysteminfo *qsys));
+extern boolean fsysdep_lock_system P((const struct uuconf_system *qsys));
 
 /* Unlock a remote system.  This should return FALSE on error
    (although the return value is generally ignored).  */
-extern boolean fsysdep_unlock_system P((const struct ssysteminfo *qsys));
+extern boolean fsysdep_unlock_system P((const struct uuconf_system *qsys));
 
 /* Get the conversation sequence number for a remote system, and
    increment it for next time.  This should return -1 on error.  */
-extern long isysdep_get_sequence P((const struct ssysteminfo *qsys));
+extern long isysdep_get_sequence P((const struct uuconf_system *qsys));
 
 /* Get the status of a remote system.  This should return FALSE on
    error.  Otherwise it should set *qret to the status.  If no status
    information is available, this should set *qret to sensible values
    and return TRUE.  If pfnone is not NULL, then it should be set to
    TRUE if no status information was available or FALSE otherwise.  */
-extern boolean fsysdep_get_status P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_get_status P((const struct uuconf_system *qsys,
 				     struct sstatus *qret,
 				     boolean *pfnone));
 
 /* Set the status of a remote system.  This should return FALSE on
    error.  The system will be locked before this call is made.  */
-extern boolean fsysdep_set_status P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_set_status P((const struct uuconf_system *qsys,
 				     const struct sstatus *qset));
 
 /* Check whether there is work for a remote system.  This should set
    *pbgrade to the highest grade of work waiting to execute.  It
    should return TRUE if there is work, FALSE otherwise; there is no
    way to indicate an error.  */
-extern boolean fsysdep_has_work P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_has_work P((const struct uuconf_system *qsys,
 				   char *pbgrade));
 
 /* Initialize the work scan.  This will be called before
@@ -266,7 +265,7 @@ extern boolean fsysdep_has_work P((const struct ssysteminfo *qsys,
    argument is TRUE if the work will not actually be done (i.e. this
    is being called by uustat).  This function should return FALSE on
    error.  */
-extern boolean fsysdep_get_work_init P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_get_work_init P((const struct uuconf_system *qsys,
 					int bgrade, boolean fcheck));
 
 /* Get the next command to be executed for a remote system.  The
@@ -280,7 +279,7 @@ extern boolean fsysdep_get_work_init P((const struct ssysteminfo *qsys,
    should set qcmd->pseq to something which can be passed to
    fsysdep_did_work to remove the job from the queue when it has been
    completed.  */
-extern boolean fsysdep_get_work P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_get_work P((const struct uuconf_system *qsys,
 				   int bgrade, boolean fcheck,
 				   struct scmd *qcmd));
 
@@ -303,7 +302,7 @@ extern const char *zsysdep_save_temp_file P((pointer pseq));
 /* Cleanup anything left over by fsysdep_get_work_init and
    fsysdep_get_work.  This may be called even though
    fsysdep_get_work_init has not been.  */
-extern void usysdep_get_work_free P((const struct ssysteminfo *qsys));
+extern void usysdep_get_work_free P((const struct uuconf_system *qsys));
 
 /* Get the real file name for a file.  The file may or may not exist
    on the system.  If the zname argument is not NULL, then the zfile
@@ -316,14 +315,14 @@ extern void usysdep_get_work_free P((const struct ssysteminfo *qsys));
    have its own public directory); similar conventions may be
    desirable on other systems.  The return value may point to a common
    static buffer.  This should return NULL on error.  */
-extern const char *zsysdep_real_file_name P((const struct ssysteminfo *,
+extern const char *zsysdep_real_file_name P((const struct uuconf_system *,
 					     const char *zfile,
 					     const char *zname));
 
 /* Get a file name from the spool directory.  This should return
    NULL on error.  The return value may point to a common static
    buffer.  */
-extern const char *zsysdep_spool_file_name P((const struct ssysteminfo *,
+extern const char *zsysdep_spool_file_name P((const struct uuconf_system *,
 					      const char *zfile));
 
 /* Make necessary directories.  This should create all non-existent
@@ -360,7 +359,7 @@ extern FILE *esysdep_fopen P((const char *zfile, boolean fpublic,
    it should return EFILECLOSED and, if pfgone is not NULL, it should
    *pfgone to TRUE if the file no longer exists or FALSE if there was
    some other error.  */
-extern openfile_t esysdep_open_send P((const struct ssysteminfo *qsys,
+extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
 				       const char *zname,
 				       boolean fcheck,
 				       const char *zuser,
@@ -385,7 +384,7 @@ extern openfile_t esysdep_open_send P((const struct ssysteminfo *qsys,
    After the file is written, fsysdep_move_file will be called to move
    the file to its final destination, and to set the correct file
    mode.  */
-extern openfile_t esysdep_open_receive P((const struct ssysteminfo *qsys,
+extern openfile_t esysdep_open_receive P((const struct uuconf_system *qsys,
 					  const char *zto,
 					  const char **pztemp,
 					  long *pcbytes));
@@ -419,14 +418,14 @@ extern openfile_t esysdep_truncate P((openfile_t e, const char *zname));
 /* Start expanding a wildcarded file name.  This should return FALSE
    on error; otherwise subsequent calls to zsysdep_wildcard should
    return file names.  The argument may have leading ~ characters.  */
-extern boolean fsysdep_wildcard_start P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_wildcard_start P((const struct uuconf_system *qsys,
 					 const char *zfile));
 
 /* Get the next wildcard name.  This should return NULL when there are
    no more names to return.  The return value may point to a common
    static buffer.  The argument should be the same as that to
    fsysdep_wildcard_start.  There is no way to return error.  */
-extern const char *zsysdep_wildcard P((const struct ssysteminfo *qsys,
+extern const char *zsysdep_wildcard P((const struct uuconf_system *qsys,
 				       const char *zfile));
 
 /* Finish getting wildcard names.  This may be called before or after
@@ -442,7 +441,7 @@ extern boolean fsysdep_wildcard_end P((void));
    return NULL on error, or the jobid on success.  The jobid is a
    string that may be printed or passed to fsysdep_kill_job and
    related functions, but is otherwise uninterpreted.  */
- extern const char *zsysdep_spool_commands P((const struct ssysteminfo *qsys,
+ extern const char *zsysdep_spool_commands P((const struct uuconf_system *qsys,
 					      int bgrade, int ccmds,
 					      const struct scmd *pascmds));
 
@@ -465,7 +464,7 @@ extern boolean fsysdep_wildcard_end P((void));
 
 #define CFILE_NAME_LEN (15)
 
-extern const char *zsysdep_data_file_name P((const struct ssysteminfo *qsys,
+extern const char *zsysdep_data_file_name P((const struct uuconf_system *qsys,
 					     int bgrade, char *ztname,
 					     char *zdname, char *zxname));
 
@@ -510,7 +509,7 @@ extern const char *zsysdep_find_command P((const char *zcmd,
    on the file with both qsys->zremote_receive and qsys->zremote_send.
    If the file is rejected, it should log an error and return FALSE.
    Otherwise it should return TRUE.  */
-extern boolean fsysdep_xqt_check_file P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_xqt_check_file P((const struct uuconf_system *qsys,
 					 const char *zfile));
 #endif /* ! ALLOW_FILENAME_ARGUMENTS */
 
@@ -530,7 +529,7 @@ extern boolean fsysdep_xqt_check_file P((const struct ssysteminfo *qsys,
    (obviously, this can only really be done on Unix systems).  If an
    error occurs this should return FALSE and set *pftemp
    appropriately.  */
-extern boolean fsysdep_execute P((const struct ssysteminfo *qsys,
+extern boolean fsysdep_execute P((const struct uuconf_system *qsys,
 				  const char *zuser,
 				  const char **pazargs,
 				  const char *zfullcmd,
@@ -653,7 +652,7 @@ extern boolean usysdep_walk_tree P((const char *zdir,
    string which may be printed out and read in and passed to
    fsysdep_kill_job, etc., but is not otherwise interpreted.  The
    return value may point to a common statis buffer.  */
-extern const char *zsysdep_jobid P((const struct ssysteminfo *qsys,
+extern const char *zsysdep_jobid P((const struct uuconf_system *qsys,
 				    pointer pseq));
 
 /* See whether the current user is permitted to kill jobs submitted by
@@ -676,7 +675,7 @@ extern boolean fsysdep_rejuvenate_job P((const char *zjobid));
 /* Get the time a job was queued, given the sequence number.  There is
    no way to indicate error.  The return value must use the same epoch
    as isysdep_time.  */
-extern long isysdep_work_time P((const struct ssysteminfo *qsys,
+extern long isysdep_work_time P((const struct uuconf_system *qsys,
 				 pointer pseq));
 
 /* Get the time a file was created.  This is called by uustat on
@@ -716,12 +715,12 @@ extern boolean fsysdep_lock_status P((void));
    used by cu to control whether the user can open a port directly,
    rather than merely being able to dial out on it.  Opening a port
    directly allows the modem to be reprogrammed.  */
-extern boolean fsysdep_port_access P((struct sport *));
+extern boolean fsysdep_port_access P((struct uuconf_port *));
 
 /* Return whether the given port could be named by the given line.  On
    Unix, the line argument would be something like "ttyd0", and this
    function should return TRUE if the named port is "/dev/ttyd0".  */
-extern boolean fsysdep_port_is_line P((struct sport *qport,
+extern boolean fsysdep_port_is_line P((struct uuconf_port *qport,
 				       const char *zline));
 
 /* Set the terminal into raw mode.  In this mode no input characters
