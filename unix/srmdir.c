@@ -35,7 +35,7 @@
 #include <ftw.h>
 #endif
 
-static int isremove_dir P((const char *, struct stat *, int));
+static int isremove_dir P((const char *, const struct stat *, int));
 
 /* Keep a list of directories to be removed.  */
 
@@ -86,10 +86,11 @@ fsysdep_rmdir (zdir)
 
 /* Remove a file in a directory.  */
 
+/*ARGSUSED*/
 static int
 isremove_dir (zfile, qstat, iflag)
      const char *zfile;
-     struct stat *qstat;
+     const struct stat *qstat;
      int iflag;
 {
   if (iflag == FTW_D || iflag == FTW_DNR)

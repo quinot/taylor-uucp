@@ -489,7 +489,7 @@ extern int dup2 P((int oold, int onew));
 #if ! HAVE_FTW
 extern int ftw P((const char *zdir,
 		  int (*pfn) P((const char *zfile,
-				struct stat *qstat,
+				const struct stat *qstat,
 				int iflag)),
 		  int cdescriptors));
 #endif
