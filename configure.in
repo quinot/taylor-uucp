@@ -139,8 +139,8 @@ ILT_FUNC_CHECK(vprintf raise remove strdup strstr strcasecmp stricmp strerror)
 ILT_FUNC_CHECK(memset memcmp memchr memcpy memmove bcopy bcmp bzero)
 undefine([index])
 ILT_FUNC_CHECK(strchr strrchr index rindex strtol bsearch)
-ILT_FUNC_CHECK(gethostname uname setitimer napms nap usleep sigsetjmp setret)
-ILT_FUNC_CHECK(getcwd getwd waitpid wait4 socket)
+ILT_FUNC_CHECK(gethostname uname setitimer napms nap usleep poll select)
+ILT_FUNC_CHECK(sigsetjmp setret getcwd getwd waitpid wait4 socket)
 ILT_FUNC_CHECK(ftruncate ltrunc rename opendir dup2 gettimeofday ftime times)
 echo checking whether times can be declared as returning long
 echo "#include <sys/times.h>
