@@ -162,3 +162,12 @@ The compilation instructions are in uucp.texi.  Here is a summary.
     programs are compiled with debugging information, and they are not
     stripped when they are installed.  Read the man page for strip for
     more information.
+
+    On older System V based systems which do not have the setreuid
+    system call, problems may arise if ordinary users can start an
+    execution of uuxqt, perhaps indirectly via uucp or uux.  UUCP jobs
+    may wind up executing with a real user ID of the user who invoked
+    uuxqt, which can cause problems if the UUCP job checks the real
+    user ID for security purposes.  On such systems, it is safest to
+    put ``run-uuxqt never'' in the `config' file, so that uucico never
+    starts uuxqt, and invoke uuxqt directly from cron.
