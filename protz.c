@@ -1311,7 +1311,7 @@ static unsigned short crctab[256] = {
 /*     hardware you could probably optimize the shift in assembler by  */
 /*     using byte-swap instructions.                                   */
 
-static long crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
+static unsigned long crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
 0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L, 0x706af48fL, 0xe963a535L, 0x9e6495a3L,
 0x0edb8832L, 0x79dcb8a4L, 0xe0d5e91eL, 0x97d2d988L, 0x09b64c2bL, 0x7eb17cbdL, 0xe7b82d07L, 0x90bf1d91L,
 0x1db71064L, 0x6ab020f2L, 0xf3b97148L, 0x84be41deL, 0x1adad47dL, 0x6ddde4ebL, 0xf4d4b551L, 0x83d385c7L,
@@ -1359,7 +1359,9 @@ static long crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
  */
 
 #define updcrc(cp, crc) (crctab[((crc >> 8) & 255)] ^ (crc << 8) ^ cp)
-#define UPDC32(b, crc) (crc_32_tab[((int) (crc) ^ (b)) & 0xff] ^ (((crc) >> 8) & 0x00ffffffL))
+#define UPDC32(b, crc) \
+  (crc_32_tab[((unsigned)(crc) ^ (unsigned)(b)) & 0xff] \
+   ^ (((crc) >> 8) & 0x00ffffffL))
 
 /****************************************************************************/
 
@@ -1822,7 +1824,7 @@ hdrval_t hdrval;
 {
 	char *p;
 	int i;
-	long crc;
+	unsigned long crc;
 	achdrval_t achdrval;
 
 	p = zresult;
@@ -1893,7 +1895,7 @@ size_t cdata;
 int frameend;
 {
 	char *p;
-	long crc;
+	unsigned long crc;
 
 	p = zresult;
 
@@ -2113,7 +2115,7 @@ int length;
 int *iprxcount;
 {
 	int c,d;
-	long crc;
+	unsigned long crc;
 	char *end;
 
 	crc = ICRCINIT;
