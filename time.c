@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.10  1992/03/08  01:52:34  ian
+   Removed extraneous semicolons
+
    Revision 1.9  1992/03/07  02:56:30  ian
    Rewrote time routines
 
@@ -76,6 +79,19 @@ char time_rcsid[] = "$Id$";
 extern int strncasecmp ();
 extern time_t time ();
 extern struct tm *localtime ();
+
+/* Local functions.  */
+
+static struct sspan *qtnew P((struct sspan *qnext, long ival,
+			      int istart, int iend, int cretry));
+static struct sspan *qtadd_span P((struct sspan *qlist, long ival,
+				   int istart, int iend,
+				   boolean (*picmp) P((long, long)),
+				   int cretry));
+static struct sspan *qttime_parse P((const char *ztime,
+				     struct sspan *qlist, long ival,
+				     boolean (*picmp) P((long, long)),
+				     int cretry));
 
 /* A helper function to create a new time span with the specified
    arguments.  */
@@ -412,20 +428,24 @@ qttime_parse (ztime, qlist, ival, picmp, cretry)
   return qlist;
 }
 
-/* See if a given broken down time matches a time span.  If it does,
-   return TRUE, set *pival to the value for the matching span, and set
+/* See if the current time matches a time span.  If it does, return
+   TRUE, set *pival to the value for the matching span, and set
    *pcretry to the retry for the matching span.  Otherwise return
    FALSE.  */
 
-static boolean
-ftmatch_span (qspan, qtm, pival, pcretry)
-     struct sspan *qspan;
-     struct tm *qtm;
+boolean
+ftimespan_match (qspan, pival, pcretry)
+     const struct sspan *qspan;
      long *pival;
      int *pcretry;
 {
+  time_t inow;
+  struct tm *qtm;
   int itm;
-  struct sspan *q;
+  const struct sspan *q;
+
+  time (&inow);
+  qtm = localtime (&inow);
 
   /* Get the number of minutes since Sunday for the time.  */
   itm = qtm->tm_wday * 24 * 60 + qtm->tm_hour * 60 + qtm->tm_min;
@@ -434,8 +454,10 @@ ftmatch_span (qspan, qtm, pival, pcretry)
     {
       if (q->istart <= itm && itm <= q->iend)
 	{
-	  *pival = q->ival;
-	  *pcretry = q->cretry;
+	  if (pival != NULL)
+	    *pival = q->ival;
+	  if (pcretry != NULL)
+	    *pcretry = q->cretry;
 	  return TRUE;
 	}
     }
@@ -444,6 +466,8 @@ ftmatch_span (qspan, qtm, pival, pcretry)
 }
 
 /* Compare two work grades.  */
+
+static int itgradecmp P((long, long));
 
 static int
 itgradecmp (i1, i2)
@@ -500,6 +524,8 @@ qtimegrade_parse (ztimegrade)
 }
 
 /* Compare sizes when putting them into a timestring.  */
+
+static int itsizecmp P((long, long));
 
 static int
 itsizecmp (i1, i2)
@@ -562,37 +588,26 @@ qtimesize_parse (ztimesize)
 
 /* Determine the grade of work we are permitted to do at the current
    time, given a time/grade string.  Return a null byte if no grades
-   are legal.  If pcretry is not NULL, it will be set to associated
-   retry time.  */
+   are legal.  */
 
 char
-btimegrade (ztimegrade, pcretry)
+btimegrade (ztimegrade)
      const char *ztimegrade;
-     int *pcretry;
 {
   struct sspan *qspan;
-  time_t itime;
-  struct tm *qtime;
   boolean fmatch;
   long ival;
-  int cretry;
 
   qspan = qtimegrade_parse (ztimegrade);
   if (qspan == NULL)
     return '\0';
 
-  time (&itime);
-  qtime = localtime (&itime);
-
-  fmatch = ftmatch_span (qspan, qtime, &ival, &cretry);
+  fmatch = ftimespan_match (qspan, &ival, (int *) NULL);
 
   utimespan_free (qspan);
 
   if (! fmatch)
     return '\0';
-
-  if (pcretry != NULL)
-    *pcretry = cretry;
 
   return (int) ival;
 }
@@ -606,20 +621,14 @@ cmax_size_now (ztimesize)
      const char *ztimesize;
 {
   struct sspan *qspan;
-  time_t itime;
-  struct tm *qtime;
   boolean fmatch;
   long ival;
-  int cretry;
 
   qspan = qtimesize_parse (ztimesize);
   if (qspan == NULL)
     return -1;
 
-  time (&itime);
-  qtime = localtime (&itime);
-
-  fmatch = ftmatch_span (qspan, qtime, &ival, &cretry);
+  fmatch = ftimespan_match (qspan, &ival, (int *) NULL);
 
   utimespan_free (qspan);
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.49  1992/03/08  16:42:41  ian
+   Ted Lindgreen: report port and login name in log file
+
    Revision 1.48  1992/03/07  04:58:09  ian
    Eric Ziegast: some systems don't define EXIT_SUCCESS or FAILURE
 
@@ -645,6 +648,8 @@ enum tstatus
   STATUS_FAILED,
   /* Talking to remote system.  */
   STATUS_TALKING,
+  /* Wrong time to call.  */
+  STATUS_WRONG_TIME,
   /* Number of status values.  */
   STATUS_VALUES
 };

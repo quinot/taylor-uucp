@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.69  1992/03/08  17:45:41  ian
+   Ted Lindgreen: start uuxqt for only one system if appropriate
+
    Revision 1.68  1992/03/08  17:08:20  ian
    Ted Lindgreen: ignore -u option
 
@@ -793,7 +796,7 @@ static boolean fcall (qsys, qport, fforce, bgrade)
      boolean fforce;
      int bgrade;
 {
-  boolean fbadtime;
+  boolean fbadtime, fnevertime;
   const struct ssysteminfo *qorigsys;
   struct sstatus sstat;
 
@@ -823,29 +826,41 @@ static boolean fcall (qsys, qport, fforce, bgrade)
     }
 
   fbadtime = TRUE;
+  fnevertime = TRUE;
 
   do
     {
-      int blowgrade;
-      int cretry;
+      struct sspan *qtime;
       const struct ssysteminfo *qnext;
 
-      blowgrade = btimegrade (qsys->ztime, &cretry);
-      if (blowgrade != '\0'
-	  && igradecmp (bgrade, blowgrade) <= 0)
+      qtime = qtimegrade_parse (qsys->ztime);
+      if (qtime != NULL)
 	{
-	  boolean fret, fcalled;
-	  struct sport sportinfo;
-	  
-	  fbadtime = FALSE;
+	  long ival;
+	  int cretry;
 
-	  fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled,
-			   &sportinfo);
-	  (void) fport_close (fret);
-	  if (fret)
-	    return TRUE;
-	  if (fcalled)
-	    return FALSE;
+	  fnevertime = FALSE;
+
+	  /* The value returned in ival by fspan_match is the lowest
+	     grade which may be done at this time.  */
+	  if (ftimespan_match (qtime, &ival, &cretry)
+	      && igradecmp (bgrade, (int) ival) <= 0)
+	    {
+	      boolean fret, fcalled;
+	      struct sport sportinfo;
+	  
+	      fbadtime = FALSE;
+
+	      fret = fdo_call (qsys, qport, &sstat, cretry, &fcalled,
+			       &sportinfo);
+	      (void) fport_close (fret);
+	      if (fret)
+		return TRUE;
+	      if (fcalled)
+		return FALSE;
+	    }
+
+	  utimespan_free (qtime);
 	}
 
       /* Look for the next alternate with different calling
@@ -872,10 +887,18 @@ static boolean fcall (qsys, qport, fforce, bgrade)
     {
       ulog (LOG_ERROR, "Wrong time to call");
 
-      /* We should probably indicate that it was the wrong time to
-	 call in the status file.  */
-      sstat.ilast = isysdep_time ((long *) NULL);
-      (void) fsysdep_set_status (qorigsys, &sstat);
+      /* Update the status, unless the system can never be called.  If
+	 the system can never be called, there is little point to
+	 putting in a ``wrong time to call'' message.  We don't change
+	 the number of retries, although we do set the wait until the
+	 next retry to 0.  */
+      if (! fnevertime)
+	{
+	  sstat.ttype = STATUS_WRONG_TIME;
+	  sstat.ilast = isysdep_time ((long *) NULL);
+	  sstat.cwait = 0;
+	  (void) fsysdep_set_status (qorigsys, &sstat);
+	}
     }
 
   return FALSE;
@@ -1033,7 +1056,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       bgrade = '\0';
     else
       {
-	bgrade = btimegrade (qsys->zcalltimegrade, (int *) NULL);
+	bgrade = btimegrade (qsys->zcalltimegrade);
 	/* A \0 in this case means that no restrictions have been
 	   made.  */
       }
@@ -2072,7 +2095,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
      function so that we can recompute if time has passed.  */
 
   if (fcaller)
-    bgrade = btimegrade (qsys->ztime, (int *) NULL);
+    bgrade = btimegrade (qsys->ztime);
 
   if (bgrade == '\0')
     fnowork = TRUE;
@@ -2645,7 +2668,7 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		 We recheck the grades allowed at this time, since a
 		 lot of time may have passed.  */
 	      if (fcaller)
-		bgrade = btimegrade (qsys->ztime, (int *) NULL);
+		bgrade = btimegrade (qsys->ztime);
 	      if (bgrade != '\0'
 		  && fsysdep_has_work (qsys, &bhave_grade)
 		  && igradecmp (bgrade, bhave_grade) >= 0)
