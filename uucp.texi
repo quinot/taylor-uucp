@@ -2053,7 +2053,7 @@ bring in the wrong versions of certain routines; if you want to use
 You can also pass other arguments to @code{configure} on the command
 line.  Use @samp{configure --help} for a complete list.  Of particular
 interest:
-@table @samp
+@table @option
 @item --prefix=@var{dirname}
 The directory under which all files are installed.  Default
 @file{/usr/local}.
@@ -2839,8 +2839,8 @@ UUCP package if compiled with @code{HAVE_TAYLOR_CONFIG} set to 1 in
 @file{policy.h}.
 
 The configuration files are normally found in the directory
-@var{newconfigdir}, which is defined by the @file{Makefile} variable
-@file{newconfigdir}; by default @var{newconfigdir} is
+@var{newconfigdir}, which is defined by the @code{configure} option
+@option{--with-newconfigdir}; by default @var{newconfigdir} is
 @file{/usr/local/conf/uucp}.  However, the main configuration file,
 @file{config}, is the only one which must be in that directory, since it
 may specify a different location for any or all of the other files.  You

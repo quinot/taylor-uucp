@@ -1,5 +1,10 @@
 2002-03-06  Ian Lance Taylor  <ian@airs.com>
 
+	* uucp.texi (Compilation): Use @option in table of configure
+	options.
+	(Configuration Files): The newconfigdir variable is now set using
+	a configure option.
+
 	* configure.in: Don't assume that ac_cv_func_getline will be
 	defined, since we no longer always test for the presence of
 	getline.
