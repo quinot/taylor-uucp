@@ -266,9 +266,9 @@ zsfile_name (btype, zsystem, zlocalname, bgrade, fxqt, ztname, zdname, zxname)
 	     our system name so that remote UUCP's running SPOOLDIR_V2
 	     and the like can distinguish while files come from which
 	     systems.  */
-#if SPOOLDIR_HDB || SPOOLDIR_SVR4
+#if SPOOLDIR_SVR4
 	  sprintf (absimple, "D.%.7s%c%s", zsystem, bgrade, abseq);
-#else /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 */
+#else /* ! SPOOLDIR_SVR4 */
 #if ! SPOOLDIR_TAYLOR
 	  sprintf (absimple, "D.%.7s%c%s", zlocalname, bgrade, abseq);
 #else /* SPOOLDIR_TAYLOR */
