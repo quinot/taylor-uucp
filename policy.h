@@ -95,7 +95,7 @@
    you should set HAVE_UNBLOCKED_WRITES to 0; otherwise you should set
    it to 1.  In general on System V releases without STREAMS-based
    ttys (e.g., before SVR4) HAVE_UNBLOCKED_WRITES should be 0 and on
-   BSD or SVR4 it should be 1.
+   modern systems it should be 1.
 
    If HAVE_UNBLOCKED_WRITES is set to 1 when it should be 0 you may
    see an unexpectedly large number of transmission errors, or, if you
@@ -104,7 +104,7 @@
    set to 0 when it should be 1, file transfer will use more CPU time
    than necessary.  If you are unsure, setting HAVE_UNBLOCKED_WRITES
    to 0 should always be safe.  */
-#define HAVE_UNBLOCKED_WRITES 0
+#define HAVE_UNBLOCKED_WRITES 1
 
 /* When the code does do a blocking write, it wants to write the
    largest amount of data which the kernel will accept as a single
@@ -241,6 +241,7 @@
    choices as appropriate.  */
 #if 1
 #define MAIL_PROGRAM "/usr/lib/sendmail -t"
+/* #define MAIL_PROGRAM "/usr/sbin/sendmail -t" */
 #define MAIL_PROGRAM_TO_BODY 1
 #define MAIL_PROGRAM_SUBJECT_BODY 1
 #endif
@@ -301,6 +302,7 @@
 /* #define LOCKDIR "/usr/spool/locks" */
 /* #define LOCKDIR "/usr/spool/uucp/LCK" */
 /* #define LOCKDIR "/var/spool/lock" */
+/* #define LOCKDIR "/var/lock" */
 
 /* You must also specify the format of the lock files by setting
    exactly one of the following macros to 1.  Check an existing lock
@@ -644,18 +646,21 @@
    command in the configuration file.  */
 #define LOGFILE "/usr/spool/uucp/Log"
 /* #define LOGFILE "/var/spool/uucp/Log" */
+/* #define LOGFILE "/var/log/uucp/Log" */
 
 /* The default statistics file when using HAVE_TAYLOR_LOGGING.  When
    using HAVE_TAYLOR_CONFIG, this may be overridden by the
    ``statfile'' command in the configuration file.  */
 #define STATFILE "/usr/spool/uucp/Stats"
 /* #define STATFILE "/var/spool/uucp/Stats" */
+/* #define STATFILE "/var/log/uucp/Stats" */
 
 /* The default debugging file when using HAVE_TAYLOR_LOGGING.  When
    using HAVE_TAYLOR_CONFIG, this may be overridden by the
    ``debugfile'' command in the configuration file.  */
 #define DEBUGFILE "/usr/spool/uucp/Debug"
 /* #define DEBUGFILE "/var/spool/uucp/Debug" */
+/* #define DEBUGFILE "/var/log/uucp/Debug" */
 
 #endif /* HAVE_TAYLOR_LOGGING */
 

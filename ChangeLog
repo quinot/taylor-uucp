@@ -1,3 +1,8 @@
+2002-03-05  Ian Lance Taylor  <ian@zembu.com>
+
+	* policy.h: Add some comments for modern systems.
+	(HAVE_UNBLOCKED_WRITES): Default to 1.
+
 2002-03-02  Ian Lance Taylor  <ian@airs.com>
 
 	* trans.h (FEATURE_QUOTES): Define.
