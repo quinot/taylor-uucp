@@ -804,9 +804,10 @@ fsysdep_terminal_raw (flocalecho)
   bSeof = sSterm_new.c_cc[VEOF];
   bStstp = sSterm_new.c_cc[VSUSP];
   if (! flocalecho)
-    sSterm_new.c_lflag &=~ (ICANON | ISIG | ECHO | ECHOE | ECHOK | ECHONL);
+    sSterm_new.c_lflag &=~
+      (ICANON | IEXTEN | ISIG | ECHO | ECHOE | ECHOK | ECHONL);
   else
-    sSterm_new.c_lflag &=~ (ICANON | ISIG);
+    sSterm_new.c_lflag &=~ (ICANON | IEXTEN | ISIG);
   sSterm_new.c_iflag &=~ (INLCR | IGNCR | ICRNL);
   sSterm_new.c_oflag &=~ (OPOST);
   sSterm_new.c_cc[VMIN] = 1;
