@@ -94,14 +94,15 @@ fsysdep_wildcard_start (zfile)
   zfrom = zfile;
   while (*zfrom != '\0')
     {
-      /* Quote unusual characters to avoid shell trickery.  */
+      /* To avoid shell trickery, we quote all characters except
+	 letters, digits, and wildcard specifiers.  We don't quote '/'
+	 to avoid an Ultrix sh bug.  */
       if (! isalnum (*zfrom)
 	  && *zfrom != '*'
 	  && *zfrom != '?'
 	  && *zfrom != '['
 	  && *zfrom != ']'
-	  && *zfrom != '/'
-	  && *zfrom != '~')
+	  && *zfrom != '/')
 	*zto++ = '\\';
       *zto++ = *zfrom++;
     }
