@@ -737,6 +737,9 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
       int cwaits;
 
       cwaits = 0;
+      /* iIsendseq is the sequence number we are sending, and
+	 iIremote_ack is the last sequence number acknowledged by the
+	 remote system.  */
       while (CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
 	{
 	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fisenddata: Waiting for ACK");
@@ -1045,8 +1048,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
       if (iseq != -1)
 	{
 	  /* Make sure this packet is in our receive window.  The last
-	     packet we have received is iIrecseq.  The last packet we
-	     have acked is iIlocal_ack.  */
+	     packet we have acked is iIlocal_ack.  */
 	  if (iIrequest_winsize > 0
 	      && CSEQDIFF (iseq, iIlocal_ack) > iIrequest_winsize)
 	    {
@@ -1130,8 +1132,10 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 		return FALSE;
 
 	      /* If this sequence number is in our receive window,
-		 send a NAK.  */
+		 send a NAK.  iIrecseq is the last sequence number we
+		 have succesfully received.  */
 	      if (iseq != -1
+		  && iseq != iIrecseq
 		  && (iIrequest_winsize <= 0
 		      || CSEQDIFF (iseq, iIrecseq) <= iIrequest_winsize)
 		  && azIrecbuffers[iseq] == NULL)
@@ -1156,7 +1160,10 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  ++cIreceived_packets;
 	}
 
-      /* Get the ack from the packet, if appropriate.  */
+      /* Get the ack from the packet, if appropriate.  iIsendseq is
+	 the next sequence number we are going to send, and
+	 iIremote_ack is the last sequence number acknowledged by the
+	 remote system.  */
       iack = IHDRWIN_GETSEQ (ab[IHDR_REMOTE]);
       if (iIrequest_winsize > 0
 	  && iack != iIsendseq
@@ -1176,8 +1183,9 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  if (iseq != INEXTSEQ (iIrecseq))
 	    {
 	      /* If this is a duplicate packet, just ignore it.  */
-	      if ((iIrequest_winsize > 0
-		   && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize)
+	      if (iseq == iIrecseq
+		  || (iIrequest_winsize > 0
+		      && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize)
 		  || azIrecbuffers[iseq] != NULL)
 		{
 		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
