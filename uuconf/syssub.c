@@ -123,13 +123,6 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
 /* There is no macro for uuconf_qalternate, uuconf_zport,
    uuconf_qport, uuconf_qproto_params, or uuconf_palloc.  */
 
-/* We need to be able to distinguish between a value that is not set
-   and a value that has been set to NULL.  We do this by initializing
-   the value to point to _uuconf_unset, and then correcting it in
-   _uuconf_isystem_basic_default.  */
-
-char _uuconf_unset;
-
 /* Clear the contents of a struct uuconf_system.  */
 
 void
