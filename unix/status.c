@@ -32,10 +32,10 @@
 
 #include <errno.h>
 
-#if SPOOLDIR_HDB
+#if SPOOLDIR_HDB || SPOOLDIR_SVR4
 
 /* If we are using HDB spool layout, store status using HDB status
-   values (should we do this for SPOOLDIR_SVR4 as well?).  */
+   values.  SVR4 is a variant of HDB.  */
 
 #define MAP_STATUS 1
 
@@ -45,11 +45,11 @@ static const int aiMapstatus[] =
 };
 #define CMAPENTRIES (sizeof (aiMapstatus) / sizeof (aiMapstatus[0]))
 
-#else /* ! SPOOLDIR_HDB */
+#else /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 */
 
 #define MAP_STATUS 0
 
-#endif /* ! SPOOLDIR_HDB */
+#endif /* ! SPOOLDIR_HDB && ! SPOOLDIR_SVR4 */
 
 /* Get the status of a system.  This assumes that we are in the spool
    directory.  */
