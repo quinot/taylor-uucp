@@ -933,7 +933,7 @@ fsworkfiles_system (puuconf, icmd, qsys, cusers, pazusers, fnotusers, iold,
 {
   boolean fret;
 
-  if (! fsysdep_get_work_init (qsys, UUCONF_GRADE_LOW))
+  if (! fsysdep_get_work_init (qsys, UUCONF_GRADE_LOW, 0))
     return FALSE;
 
   while (TRUE)
@@ -941,7 +941,7 @@ fsworkfiles_system (puuconf, icmd, qsys, cusers, pazusers, fnotusers, iold,
       struct scmd s;
       long itime;
 
-      if (! fsysdep_get_work (qsys, UUCONF_GRADE_LOW, &s))
+      if (! fsysdep_get_work (qsys, UUCONF_GRADE_LOW, 0, &s))
 	{
 	  usysdep_get_work_free (qsys);
 	  return FALSE;
@@ -2166,7 +2166,7 @@ fsquery_system (qsys, pq, inow, zlocalname, csystems, pazsystems,
   char *zid;
   boolean fret;
 
-  if (! fsysdep_get_work_init (qsys, UUCONF_GRADE_LOW))
+  if (! fsysdep_get_work_init (qsys, UUCONF_GRADE_LOW, 0))
     return FALSE;
 
   cwork = 0;
@@ -2178,7 +2178,7 @@ fsquery_system (qsys, pq, inow, zlocalname, csystems, pazsystems,
       long itime;
       char *zthisid;
 
-      if (! fsysdep_get_work (qsys, UUCONF_GRADE_LOW, &s))
+      if (! fsysdep_get_work (qsys, UUCONF_GRADE_LOW, 0, &s))
 	return FALSE;
       if (s.bcmd == 'H')
 	break;

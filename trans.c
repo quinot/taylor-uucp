@@ -36,6 +36,11 @@ const char trans_rcsid[] = "$Id$";
 #include "prot.h"
 #include "system.h"
 #include "trans.h"
+
+/* To avoid wasting a lot of time scanning the spool directory, which
+   might cause the remote system to time out, we limit each scan to
+   pick up at most a certain number of files.  */
+#define COMMANDS_PER_SCAN (200)
 
 /* Local functions.  */
 
@@ -511,14 +516,14 @@ fqueue (qdaemon, pfany)
   if (bgrade == '\0')
     return TRUE;
 
-  if (! fsysdep_get_work_init (qsys, bgrade))
+  if (! fsysdep_get_work_init (qsys, bgrade, COMMANDS_PER_SCAN))
     return FALSE;
 
   while (TRUE)
     {
       struct scmd s;
 
-      if (! fsysdep_get_work (qsys, bgrade, &s))
+      if (! fsysdep_get_work (qsys, bgrade, COMMANDS_PER_SCAN, &s))
 	return FALSE;
 
       if (s.bcmd == 'H')

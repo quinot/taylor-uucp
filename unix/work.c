@@ -57,11 +57,6 @@ static int iswork_cmp P((constpointer pkey, constpointer pdatum));
    This allows the UUCP package to send and receive multiple files at
    the same time.  */
 
-/* To avoid wasting a lot of time scanning the spool directory, which
-   might cause the remote system to time out, we limit each scan to
-   pick up at most a certain number of files.  */
-#define COMMANDS_PER_SCAN (200)
-
 /* The ssfilename structure holds the name of a work file, as well as
    its grade.  */
 
@@ -282,9 +277,10 @@ fsysdep_has_work (qsys)
 #define CWORKFILES (10)
 
 boolean
-fsysdep_get_work_init (qsys, bgrade)
+fsysdep_get_work_init (qsys, bgrade, cmax)
      const struct uuconf_system *qsys;
      int bgrade;
+     unsigned int cmax;
 {
   char *zdir;
   DIR *qdir;
@@ -398,14 +394,14 @@ fsysdep_get_work_init (qsys, bgrade)
 	      asSwork_files[cSwork_files].zfile = zname;
 	      asSwork_files[cSwork_files].bgrade = bfilegrade;
 	      ++cSwork_files;
-	      if (cSwork_files - chad > COMMANDS_PER_SCAN)
+	      if (cmax != 0 && cSwork_files - chad > cmax)
 		break;
 	    }
 	}
 
 #if SPOOLDIR_SVR4
       closedir (qdir);
-      if (cSwork_files - chad > COMMANDS_PER_SCAN)
+      if (cmax != 0 && cSwork_files - chad > cmax)
 	break;
     }
   qdir = qgdir;
@@ -433,9 +429,10 @@ fsysdep_get_work_init (qsys, bgrade)
 
 /*ARGSUSED*/
 boolean
-fsysdep_get_work (qsys, bgrade, qcmd)
+fsysdep_get_work (qsys, bgrade, cmax, qcmd)
      const struct uuconf_system *qsys;
      int bgrade ATTRIBUTE_UNUSED;
+     unsigned int cmax ATTRIBUTE_UNUSED;
      struct scmd *qcmd;
 {
   char *zdir;
