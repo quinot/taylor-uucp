@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/10  19:24:22  ian
+   Added pffile protocol entry point for file level control
+
    Revision 1.5  1991/11/07  20:52:33  ian
    Chip Salzenberg: pass command as single argument to /bin/sh
 
@@ -85,6 +88,14 @@ extern const char *zsysdep_local_name P((void));
    name.  It should return NULL on error.  The return value should
    point to a static buffer.  */
 extern const char *zsysdep_login_name P((void));
+
+/* Get the port name.  This is used when uucico is started up in slave
+   mode to figure out which port was used to call in so that it can
+   determine any appropriate protocol parameters.  This may return
+   NULL if the port cannot be determined, which will just mean that no
+   protocol parameters are applied.  The name returned should be the
+   sort of name that would appear in the port file.  */
+extern const char *zsysdep_port_name P((void));
 
 /* Make a spool directory for a system.  This will be called each time
    the system might be accessed.  It should return FALSE on error.  */

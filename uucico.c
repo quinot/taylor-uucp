@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.11  1991/11/11  16:59:05  ian
+   Eliminate fread_port_info, allow NULL pflock arg to ffind_port
+
    Revision 1.10  1991/11/11  04:21:16  ian
    Added 'f' protocol
 
@@ -105,7 +108,7 @@ static boolean fcall_failed P((const struct ssysteminfo *qsys,
 			       enum tstatus twhy, struct sstatus *qstat,
 			       int cretry));
 static boolean fwait_for_calls P((struct sport *qport));
-static boolean faccept_call P((const char *zlogin));
+static boolean faccept_call P((const char *zlogin, struct sport *qport));
 static boolean fuucp P((boolean fmaster, const struct ssysteminfo *qsys,
 			int bgrade, boolean fnew));
 static boolean fdo_xcmd P((const struct ssysteminfo *qsys,
@@ -402,7 +405,7 @@ main (argc, argv)
 	      zlogin = zsysdep_login_name ();
 	      if (zlogin == NULL)
 		ulog (LOG_FATAL, "Can't get login name");
-	      fret = faccept_call (zlogin);
+	      fret = faccept_call (zlogin, (struct sport *) NULL);
 	      (void) fport_close (fret);
 	      if (fLocked_system)
 		{
@@ -1023,7 +1026,7 @@ static boolean fwait_for_calls (qport)
 	    {
 	      if (fcheck_login (zhold, zpass))
 		{
-		  (void) faccept_call (zhold);
+		  (void) faccept_call (zhold, qport);
 		  if (fLocked_system)
 		    {
 		      (void) fsysdep_unlock_system (&sLocked_system);
@@ -1041,9 +1044,13 @@ static boolean fwait_for_calls (qport)
 
 /* Accept a call from a remote system.  */
 
-static boolean faccept_call (zlogin)
+static boolean faccept_call (zlogin, qport)
      const char *zlogin;
+     struct sport *qport;
 {
+  int cport_proto_params, cdial_proto_params;
+  struct sproto_param *qport_proto_params, *qdial_proto_params;
+  struct sport sportinfo;
   char *zsend, *zspace;
   const char *zstr;
   struct ssysteminfo ssys;
@@ -1053,6 +1060,71 @@ static boolean faccept_call (zlogin)
   const char *zuse_local;
 
   ulog (LOG_NORMAL, "Incoming call");
+
+  /* Figure out protocol parameters determined by the port.  If no
+     port was specified we're reading standard input, so try to get
+     the port name and read information from the port file.  We only
+     use the port information to get protocol parameters; we don't
+     want to start treating the port as though it were a modem, for
+     example.  */
+
+  if (qport != NULL)
+    {
+      cport_proto_params = qport->cproto_params;
+      qport_proto_params = qport->qproto_params;
+    }
+  else
+    {
+      const char *zport;
+
+      zport = zsysdep_port_name ();
+      if (zport == NULL
+	  || ! ffind_port (zport, (long) 0, (long) 0, &sportinfo,
+			   (boolean (*) P((struct sport *, boolean))) NULL,
+			   FALSE))
+	{
+	  cport_proto_params = 0;
+	  qport_proto_params = NULL;
+	}
+      else
+	{
+	  cport_proto_params = sportinfo.cproto_params;
+	  qport_proto_params = sportinfo.qproto_params;
+	  qport = &sportinfo;
+	}
+    }
+
+  /* If we've managed to figure out that this is a modem port, now try
+     to get protocol parameters from the dialer.  */
+
+  cdial_proto_params = 0;
+  qdial_proto_params = NULL;
+  if (qport != NULL
+      && qport->ttype == PORTTYPE_MODEM)
+    {
+      if (qport->u.smodem.zdialer != NULL)
+	{
+	  char *zcopy;
+	  char *zdial;
+	  struct sdialer sdialerinfo;
+
+	  /* We use the first dialer in the sequence.  */
+	  zcopy = (char *) alloca (strlen (qport->u.smodem.zdialer) + 1);
+	  strcpy (zcopy, qport->u.smodem.zdialer);
+
+	  zdial = strtok (zcopy, " \t");
+	  if (fread_dialer_info (zdial, &sdialerinfo))
+	    {
+	      cdial_proto_params = sdialerinfo.cproto_params;
+	      qdial_proto_params = sdialerinfo.qproto_params;
+	    }
+	}
+      else if (qport->u.smodem.qdialer != NULL)
+	{
+	  cdial_proto_params = qport->u.smodem.qdialer->cproto_params;
+	  qdial_proto_params = qport->u.smodem.qdialer->qproto_params;
+	}
+    }	  
 
   /* We have to check to see whether some system uses this login name
      to indicate a different local name.  Obviously, this means that
@@ -1380,9 +1452,12 @@ static boolean faccept_call (zlogin)
       if (qsys->cproto_params != 0)
 	uapply_proto_params (qProto->bname, qProto->qcmds,
 			     qsys->cproto_params, qsys->qproto_params);
-      if (qPort->cproto_params != 0)
+      if (cport_proto_params != 0)
 	uapply_proto_params (qProto->bname, qProto->qcmds,
-			     qPort->cproto_params, qPort->qproto_params);
+			     cport_proto_params, qport_proto_params);
+      if (cdial_proto_params != 0)
+	uapply_proto_params (qProto->bname, qProto->qcmds,
+			     cdial_proto_params, qdial_proto_params);
     }
 
   /* Turn on the selected protocol.  */
