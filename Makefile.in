@@ -225,18 +225,18 @@ uulog: $(UULOGOBJS) $(UULIBS)
 uusched: uusched.in Makefile
 	-rm -f uusched
 	if [ "x$(POUNDBANG)" = "xno" ]; then \
-	  sed -e 's,#!/bin/sh,:' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched \
+	  sed -e 's,#!/bin/sh,:' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched; \
 	else \
-	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched \
+	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uusched.in > uusched; \
 	fi
 	chmod 0555 uusched
 
 uuto: uuto.in Makefile
 	-rm -f uuto
 	if [ "x$(POUNDBANG)" = "xno" ]; then \
-	  sed -e 's,#!/bin/sh,:' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto \
+	  sed -e 's,#!/bin/sh,:' -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto; \
 	else \
-	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto \
+	  sed -e 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto; \
 	fi
 	chmod 0555 uuto
 
