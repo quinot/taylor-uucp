@@ -236,3 +236,7 @@ Lele Gaifax: put the complete year in the log file.
 John Theus: use getwd as an option for getcwd.
 
 60.
+
+Chip Salzenberg: change protocol ordering to 't', 'g', 'f'.
+
+61.
