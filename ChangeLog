@@ -1,3 +1,10 @@
+2002-03-06  Ian Lance Taylor  <ian@airs.com>
+
+	* configure.in: Don't assume that ac_cv_func_getline will be
+	defined, since we no longer always test for the presence of
+	getline.
+	* configure, config.h.in: Rebuild.
+
 2002-03-05  Ian Lance Taylor  <ian@airs.com>
 
 	* configure.in: Don't define SBINDIR.

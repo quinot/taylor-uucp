@@ -361,7 +361,9 @@ dnl functions found on ISC and HP/UX by also checking for getdelim;
 dnl the version of getline we want is normally implemented by calling
 dnl getdelim.
 AC_CHECK_FUNC(getdelim,
-[AC_CHECK_FUNCS(getline)])
+[AC_CHECK_FUNC(getline,
+[AC_DEFINE(HAVE_GETLINE, 1, [Define if you have the getline function.])],
+[LIBOBJS="$LIBOBJS getlin.o"])])
 dnl
 dnl Check for the SCO buggy ftime; the code can cope with the bug,
 dnl though it would prefer not to, so if we're cross-configuring we
@@ -469,9 +471,6 @@ fi
 if test $ac_cv_func_bzero != yes \
    && test $ac_cv_func_memset != yes; then
   LIBOBJS="$LIBOBJS bzero.o"
-fi
-if test $ac_cv_func_getline != yes; then
-  LIBOBJS="$LIBOBJS getlin.o"
 fi
 if test $ac_cv_func_memchr != yes; then
   LIBOBJS="$LIBOBJS memchr.o"
