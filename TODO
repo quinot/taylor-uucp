@@ -394,3 +394,12 @@ Michael Nolan: check permissions for transfer in uucp and uux rather
 than waiting for uucico to check them.
 
 115.
+
+T. William Wells: new options for uustat:
+	-i display job ids only
+	-K interactively kill jobs
+Also, there should perhaps be a configuration option to request uustat
+to only display jobs submitted by the user running uustat, except for
+root and uucp.
+
+116.
