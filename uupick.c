@@ -1,7 +1,7 @@
 /* uupick.c
    Get files stored in the public directory by uucp -t.
 
-   Copyright (C) 1992, 1993, 1994 Ian Lance Taylor
+   Copyright (C) 1992, 1993, 1994, 1995 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
