@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.67  1992/03/08  16:42:41  ian
+   Ted Lindgreen: report port and login name in log file
+
    Revision 1.66  1992/03/07  02:56:30  ian
    Rewrote time routines
 
@@ -350,7 +353,7 @@ main (argc, argv)
   int iholddebug;
 
   while ((iopt = getopt (argc, argv,
-			 "DefI:lp:qr:s:S:x:X:w")) != EOF)
+			 "DefI:lp:qr:s:S:u:x:X:w")) != EOF)
     {
       switch (iopt)
 	{
@@ -411,6 +414,13 @@ main (argc, argv)
 	  zsystem = optarg;
 	  fforce = TRUE;
 	  fmaster = TRUE;
+	  break;
+
+	case 'u':
+	  /* Some versions of uucpd invoke uucico with a -u argument
+	     specifying the login name.  I'm told it is safe to ignore
+	     this value, although perhaps we should use it rather than
+	     zsysdep_login_name ().  */
 	  break;
 
 	case 'x':
