@@ -224,11 +224,6 @@ David Nugent: add an option to uuxqt to allow a nice value to be
 specified.  It's hard to do from a shell script because some systems
 don't permit shell scripts to be executed via execl.
 
-38.
-
-Franc,ois Pinard: don't bother to warn if the other side doesn't send
-the useless final "HY".
-
 39.
 
 Franc,ois Pinard: Have the install target in the Makefile save the

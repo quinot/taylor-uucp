@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/15  21:00:59  ian
+   Efficiency hacks for 'f' and 't' protocols
+
    Revision 1.4  1991/11/11  19:32:03  ian
    Added breceive_char to read characters through protocol buffering
 
@@ -587,9 +590,11 @@ fgetcmd (fmaster, qcmd)
 	  fPerror_ok = FALSE;
 	  if (zcmd == NULL)
 	    return TRUE;
+#if DEBUG > 0
 	  if (strcmp (zcmd, "HY") != 0)
-	    ulog (LOG_ERROR, "Got \"%s\" when expecting \"HY\"",
+	    ulog (LOG_DEBUG, "fgetcmd: Got \"%s\" when expecting \"HY\"",
 		  zcmd);
+#endif
 	  (void) (qProto->pfshutdown) ();
 	  return TRUE;
 	}
