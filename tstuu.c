@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.18  1991/12/18  05:12:00  ian
+   Added -l option to uucico to prompt for login name once and then exit
+
    Revision 1.17  1991/12/17  22:21:19  ian
    Sleep before printing login to wait until input has been flushed
 
@@ -503,6 +506,9 @@ uchild (isig)
   struct tms sbase, s1, s2;
 
   signal (SIGCHLD, SIG_DFL);
+
+  /* Give the processes a chance to die on their own.  */
+  sleep (1);
 
   (void) kill (iPid1, SIGTERM);
   (void) kill (iPid2, SIGTERM);
