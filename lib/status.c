@@ -7,7 +7,7 @@
 
 /* Status strings.  These must match enum tstatus_type.  */
 
-#if SPOOLDIR_HDB || SPOOLDIR_SVR4
+#if USE_TRADITIONAL_STATUS
 
 const char *azStatus[] =
 {
