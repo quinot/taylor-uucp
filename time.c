@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/09/19  02:22:44  ian
+   Chip Salzenberg's patch to allow ";retrytime" at the end of a time string
+
    Revision 1.3  1991/09/12  05:04:44  ian
    Wrong sense of comparison in btime_low_grade
 
@@ -52,6 +55,10 @@ char time_rcsid[] = "$Id$";
 #include <sys/types.h>
 #endif /* HAVE_SYS_TIME_T */
 #endif /* ! HAVE_TIME_T */
+
+/* Externs.  These may be in <string.h>, but putting them here won't
+   hurt.  */
+extern int strncasecmp ();
 
 /* Timetables are kept in a array of pairs of strings.  */
 
