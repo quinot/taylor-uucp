@@ -363,8 +363,10 @@ if test -z "$space"; then
     fi
     if test -z "$space"; then
       # 4.4BSD
-      AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h,
-	AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
+      AC_PROGRAM_EGREP(found_mount_ufs, [#include <sys/mount.h>
+#ifdef MOUNT_UFS
+found_mount_ufs
+#endif],AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
     fi
     if test -z "$space"; then
       # Ultrix
