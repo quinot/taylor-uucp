@@ -354,15 +354,25 @@ flocal_send_request (qtrans, qdaemon)
     return flocal_send_fail (qtrans, &qtrans->s, qdaemon->qsys,
 			     "too large for receiver");
 
-  /* Construct the notify string to send.  */
+  /* Construct the notify string to send.  If we are going to send a
+     size or an execution command, it must be non-empty.  */
   znotify = qtrans->s.znotify;
   if (znotify == NULL)
     znotify = "";
-  if (*znotify == '\0'
-      && ((qdaemon->ifeatures & FEATURE_SIZES) != 0
-	  || (qtrans->s.bcmd == 'E'
-	      && (qdaemon->ifeatures & FEATURE_EXEC) != 0)))
-    znotify = "\"\"";
+  if ((qdaemon->ifeatures & FEATURE_SIZES) != 0
+      || (qtrans->s.bcmd == 'E'
+	  && (qdaemon->ifeatures & FEATURE_EXEC) != 0))
+    {
+      if (*znotify == '\0')
+	znotify = "\"\"";
+    }
+  else
+    {
+      /* We don't need a notify string.  Some crufty UUCP code can't
+	 handle a pair of double quotes.  */
+      if (strcmp (znotify, "\"\"") == 0)
+	znotify = "";
+    }
 
   /* Construct the size string to send.  */
   if ((qdaemon->ifeatures & FEATURE_SIZES) == 0
@@ -400,7 +410,7 @@ flocal_send_request (qtrans, qdaemon)
     }
   else
     {
-      const char *zoptions;
+      const char *zoptions, *zdummy;
 
       /* Send the string
 	 S zfrom zto zuser zoptions ztemp imode znotify
@@ -410,7 +420,8 @@ flocal_send_request (qtrans, qdaemon)
 	 if znotify is empty we must send it as "".  If this is really
 	 an execution request, we have to simplify the options string
 	 to remove the various execution options which may confuse the
-	 remote system.  */
+	 remote system.  SVR4 expects a string "dummy" between the
+	 notify string and the size; I don't know why.  */
       if (qtrans->s.bcmd != 'E')
 	zoptions = qtrans->s.zoptions;
       else if (strchr (qtrans->s.zoptions, 'C') != NULL)
@@ -418,9 +429,14 @@ flocal_send_request (qtrans, qdaemon)
       else
 	zoptions = "c";
 
-      sprintf (zsend, "S %s %s %s -%s %s 0%o %s %s", qtrans->s.zfrom,
+      if ((qdaemon->ifeatures & FEATURE_SVR4) != 0)
+	zdummy = " dummy ";
+      else
+	zdummy = " ";
+
+      sprintf (zsend, "S %s %s %s -%s %s 0%o %s%s%s", qtrans->s.zfrom,
 	       qtrans->s.zto, qtrans->s.zuser, zoptions,
-	       qtrans->s.ztemp, qtrans->s.imode, znotify,
+	       qtrans->s.ztemp, qtrans->s.imode, znotify, zdummy,
 	       absize);
     }
 

@@ -1234,7 +1234,9 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
 	      switch (*zopt)
 		{
 		case 'R':
-		  qdaemon->ifeatures |= FEATURE_RESTART;
+		  qdaemon->ifeatures |= (FEATURE_RESTART
+					 | FEATURE_SVR4
+					 | FEATURE_SIZES);
 		  break;
 		case 'U':
 		  c = strtol (zopt, &zend, 0);
@@ -1975,12 +1977,16 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
     if (! fgotn)
       {
-	/* SVR4 UUCP expects ROK -R to signal support for file
-	   restart.  */
-	if ((sdaem.ifeatures & FEATURE_RESTART) != 0)
-	  zreply = "ROK -R";
-	else
+	if ((sdaem.ifeatures & FEATURE_RESTART) == 0)
 	  zreply = "ROK";
+	else
+	  {
+	    /* We got -R without -N, so assume that this is SVR4 UUCP.
+	       SVR4 UUCP expects ROK -R to signal support for file
+	       restart.  */
+	    sdaem.ifeatures |= FEATURE_SVR4 | FEATURE_SIZES;
+	    zreply = "ROK -R";
+	  }
       }
     else if ((sdaem.ifeatures & FEATURE_V103) != 0)
       zreply = "ROKN";

@@ -43,6 +43,12 @@
    to say, this should not be used by any new programs.  */
 #define FEATURE_V103 (010)
 
+/* SVR4 UUCP: expects dummy string between notify field and size field
+   in send command.  There is probably some meaning to this string,
+   but I don't know what it is.  If I ever find out, this flag will
+   still be used to indicate it.  */
+#define FEATURE_SVR4 (020)
+
 /* This structure is used to hold information concerning the
    communication link established with the remote system.  */
 
