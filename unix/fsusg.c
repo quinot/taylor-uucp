@@ -25,35 +25,35 @@
 
 int statfs ();
 
-#ifdef HAVE_SYS_PARAM_H
+#if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
 
-#ifdef HAVE_SYS_MOUNT_H
+#if HAVE_SYS_MOUNT_H
 #include <sys/mount.h>
 #endif
 
-#ifdef HAVE_SYS_VFS_H
+#if HAVE_SYS_VFS_H
 #include <sys/vfs.h>
 #endif
 
-#ifdef HAVE_SYS_FILSYS_H
+#if HAVE_SYS_FILSYS_H
 #include <sys/filsys.h>		/* SVR2.  */
 #endif
 
-#ifdef HAVE_FCNTL_H
+#if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 
-#ifdef HAVE_SYS_STATFS_H
+#if HAVE_SYS_STATFS_H
 #include <sys/statfs.h>
 #endif
 
-#ifdef HAVE_SYS_DUSTAT_H	/* AIX PS/2.  */
+#if HAVE_SYS_DUSTAT_H		/* AIX PS/2.  */
 #include <sys/dustat.h>
 #endif
 
-#ifdef HAVE_SYS_STATVFS_H	/* SVR4.  */
+#if HAVE_SYS_STATVFS_H		/* SVR4.  */
 #include <sys/statvfs.h>
 int statvfs ();
 #endif
@@ -144,7 +144,7 @@ get_fs_usage (path, disk, fsp)
 
   if (statfs (path, &fsd) != 1)
     return -1;
-#define CONVERT_BLOCKS(b) adjust_blocks ((b), 1024, 512)
+#define CONVERT_BLOCKS(b) adjust_blocks ((long) (b), 1024, 512)
   fsp->fsu_blocks = CONVERT_BLOCKS (fsd.fd_req.btot);
   fsp->fsu_bfree = CONVERT_BLOCKS (fsd.fd_req.bfree);
   fsp->fsu_bavail = CONVERT_BLOCKS (fsd.fd_req.bfreen);
