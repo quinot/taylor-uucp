@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1991/12/21  22:07:47  ian
+   John Theus: don't warn if port file does not exist
+
    Revision 1.20  1991/12/19  04:25:57  ian
    Terry Gardner: configuration parameter to not use both NONBLOCK and NDELAY
 
@@ -97,14 +100,18 @@ char tstuu_rcsid[] = "$Id$";
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+
+#if USE_STDIO && HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#include "sysdep.h"
+
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/times.h>
-
-#include "sysdep.h"
 
 #if HAVE_SYSWAIT_H
 #include <sys/wait.h>
@@ -163,9 +170,11 @@ char tstuu_rcsid[] = "$Id$";
 
 /* External functions.  */
 
-extern int select ();
+extern int select (), ioctl (), close (), dup2 (), execl (), access ();
+extern int read (), write ();
+extern unsigned int sleep ();
+extern pid_t fork ();
 extern clock_t times ();
-extern int ioctl ();
 
 #if ! HAVE_REMOVE
 #define remove unlink
@@ -189,7 +198,7 @@ static int cDebug;
 static int iTest;
 static boolean fCall_uucico;
 static int iPercent;
-static int iPid1, iPid2;
+static pid_t iPid1, iPid2;
 static int cFrom1, cFrom2;
 static int cSleep1, cSleep2;
 static char abLogout1[sizeof "tstout /dev/ptyp0"];

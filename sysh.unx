@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.16  1991/12/19  04:25:57  ian
+   Terry Gardner: configuration parameter to not use both NONBLOCK and NDELAY
+
    Revision 1.15  1991/12/17  07:09:58  ian
    Record statistics in fractions of a second
 
@@ -218,6 +221,24 @@
    to avoid trying to include it.  */
 #define HAVE_SYSWAIT_H 1
 
+/* The type pid_t is the type of a process identifier.  It is normally
+   defined in <sys/types.h>; if it is not defined there, uncomment the
+   following line and set it to the correct type.  This is the type
+   returned by the fork(2) function and the getpid(2) function.  */
+/* #define PID_T int */
+
+/* The type uid_t is the type of a user identifier.  It is normally
+   defined in <sys/types.h>; if it is not defined there, uncomment the
+   following line and set it to the correct type.  This is the type
+   returned by the getuid(2) function; on System V it is often
+   unsigned short.  */
+/* #define UID_T short */
+
+/* The type off_t is the return value of lseek(2).  It is sometimes
+   defined in <sys/types.h>; if it is not define there, uncomment the
+   following line and set it to the correct type.  */
+/* #define OFF_T long */
+
 /* If you want to be able to use a default for the system name without
    specifying it with the ``nodename'' command in the configuration
    file, one of the following macros must be set to 1.  Set
@@ -268,7 +289,8 @@
 
 /* Set HAVE_EUID to 1 if it makes sense to call setuid (geteuid ()).
    This is mainly done to avoid running with root permissions, which
-   make locking complex.  */
+   make locking complex.  Setting it to 1 will actually do no harm
+   even if the call fails.  */
 #define HAVE_EUID 1
 
 /* Set HAVE_FTRUNCATE to 1 if you have the ftruncate call which
@@ -387,6 +409,18 @@
 
 #if HAVE_ULTRIX_STATFS + HAVE_SCO_STATFS + HAVE_USTAT > 1
  #error Multiple disk space definitions
+#endif
+
+#ifdef PID_T
+typedef PID_T pid_t;
+#endif
+
+#ifdef UID_T
+typedef UID_T uid_t;
+#endif
+
+#ifdef OFF_T
+typedef OFF_T off_t;
 #endif
 
 #if HAVE_BSD_TTY

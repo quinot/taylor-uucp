@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.22  1991/12/22  20:38:50  ian
+   Monty Solomon: don't define strcasecmp and strncasecmp
+
    Revision 1.21  1991/12/21  23:10:43  ian
    Terry Gardner: record failed file transfers in statistics file
 
@@ -96,10 +99,9 @@
  #pragma once
 #endif
 
-#include <stdio.h>
-#include <unistd.h>
-
 #include "conf.h"
+
+#include <stdio.h>
 
 /* Get a definition for ANSI_C if we weren't given one.  */
 
@@ -186,6 +188,7 @@ typedef int boolean;
    are using stdio or not.  */
 
 #if USE_STDIO
+
 typedef FILE *openfile_t;
 #define EFILECLOSED ((FILE *) NULL)
 #define ffileisopen(e) ((e) != NULL)
@@ -194,7 +197,17 @@ typedef FILE *openfile_t;
 #define cfilewrite(e, z, c) fwrite ((z), 1, (c), (e))
 #define ffilerewind(e) (fseek (e, (long) 0, SEEK_SET) == 0)
 #define ffileclose(e) (fclose (e) == 0)
-#else
+
+#else /* ! USE_STDIO */
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+/* It would be nice to provide prototypes for read, write and lseek, but
+   we can't because they might not return int.  */
+extern int close ();
+
 typedef int openfile_t;
 #define EFILECLOSED (-1)
 #define ffileisopen(e) ((e) >= 0)
@@ -203,7 +216,8 @@ typedef int openfile_t;
 #define cfilewrite(e, z, c) write ((e), (z), (c))
 #define ffilerewind(e) (lseek (e, (long) 0, SEEK_SET) >= 0)
 #define ffileclose(e) (close (e) >= 0)
-#endif
+
+#endif /* ! USE_STDIO */
 
 /* The sigret_t type holds the return type of a signal function.  We
    use #define rather than typedef because at least one compiler
