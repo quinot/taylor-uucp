@@ -144,19 +144,23 @@ install: $(PROGRAMS) uucp.info $(UUDIR)
 	chown $(owner) $(bindir)/uuname
 	chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
 	chmod 4555 $(bindir)/uuname
-	cd $(srcdir); $(INSTALL_DATA) uucico.8 $(man8dir)/uucico$(man8ext)
-	cd $(srcdir); $(INSTALL_DATA) uuxqt.8 $(man8dir)/uuxqt$(man8ext)
-	cd $(srcdir); $(INSTALL_DATA) uux.1 $(man1dir)/uux$(man1ext)
-	cd $(srcdir); $(INSTALL_DATA) uucp.1 $(man1dir)/uucp$(man1ext)
-	-cd $(srcdir); $(INSTALL_DATA) uucp.info $(infodir)/uucp.info
-	-cd $(srcdir); $(INSTALL_DATA) uucp.info-1 $(infodir)/uucp.info-1
-	-cd $(srcdir); $(INSTALL_DATA) uucp.info-2 $(infodir)/uucp.info-2
-	-cd $(srcdir); $(INSTALL_DATA) uucp.info-3 $(infodir)/uucp.info-3
+	$(INSTALL_DATA) $(srcdir)/uucico.8 $(man8dir)/uucico$(man8ext)
+	$(INSTALL_DATA) $(srcdir)/uuxqt.8 $(man8dir)/uuxqt$(man8ext)
+	$(INSTALL_DATA) $(srcdir)/uux.1 $(man1dir)/uux$(man1ext)
+	$(INSTALL_DATA) $(srcdir)/uucp.1 $(man1dir)/uucp$(man1ext)
+	$(INSTALL_DATA) $(srcdir)/uustat.1 $(man1dir)/uucp$(man1ext)
+	-$(INSTALL_DATA) $(srcdir)/uucp.info $(infodir)/uucp.info
+	-$(INSTALL_DATA) $(srcdir)/uucp.info-1 $(infodir)/uucp.info-1
+	-$(INSTALL_DATA) $(srcdir)/uucp.info-2 $(infodir)/uucp.info-2
+	-$(INSTALL_DATA) $(srcdir)/uucp.info-3 $(infodir)/uucp.info-3
+	-$(INSTALL_DATA) $(srcdir)/uucp.info-4 $(infodir)/uucp.info-4
 
 uninstall:
 	rm -f $(libdir)/uucico $(libdir)/uuxqt
 	-cp $(libdir)/uucico.old $(libdir)/uucico
 	-cp $(libdir)/uuxqt.old $(libdir)/uuxqt
+	-chown $(owner) $(libdir)/uucico $(libdir)/uuxqt $(libdir)/uuchk
+	-chmod 4555 $(libdir)/uucico $(libdir)/uuxqt
 	rm -f $(bindir)/uux $(bindir)/uucp $(bindir)/uustat
 	rm -f $(bindir)/uuname $(bindir)/uulog
 	-cp $(bindir)/uux.old $(bindir)/uux
@@ -164,6 +168,10 @@ uninstall:
 	-cp $(bindir)/uustat.old $(bindir)/uustat
 	-cp $(bindir)/uuname.old $(bindir)/uuname
 	-cp $(bindir)/uulog.old $(bindir)/uulog
+	-chown $(owner) $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
+	-chown $(owner) $(bindir)/uuname
+	-chmod 4555 $(bindir)/uux $(bindir)/uucp $(bindir)/uustat 
+	-chmod 4555 $(bindir)/uuname
 
 uucico: $(UUOBJS)
 	$(CC) $(LDFLAGS) -o uucico $(UUOBJS) $(LIBS)
