@@ -90,8 +90,9 @@ les@chinet.chi.il.us (Leslie Mikesell) writes:
 
 14.
 
-There should be some way for chat scripts to specify the parity to
-expect and to generate.
+Should there be a way for chat scripts to specify the parity to
+generate?  I don't think there's much point to specifying what parity
+to accept.
 
 15.
 
@@ -164,13 +165,6 @@ port, and invoke uucico.  That may be the required solution.
 Michael Haberler:  there should be an option to invoke uucico which
 outputs a single login: and Password: prompt, handles the call, and
 then exits.  This would be useful when invoked by inetd.
-
-28.
-
-Christof Junge: there should be a -L option on uux to try to link the
-files into the spool directory.  This allows a single news batch to be
-sent to several systems without copying it several times or leaving it
-around whereever news batches are created.
 
 31.
 
@@ -252,12 +246,6 @@ in the modem's input buffer from the previous call, which clobbers the
 start of the next call.  We should flush the input buffer after
 opening it.  This can be done with TIOCFLUSH under BSD, TCFLSH under
 SYSV, or tcflush under POSIX.
-
-46.
-
-With some systems the ISTRIP affects the first packet from the remote,
-which matters when using the 'g' protocol.  Should ISTRIP default to
-off, and the characters be automatically stripped in the chat script?
 
 47.
 
