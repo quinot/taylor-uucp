@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.5  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.4  1991/11/07  20:52:33  ian
    Chip Salzenberg: pass command as single argument to /bin/sh
 
@@ -294,11 +297,11 @@ uqcatch (isig)
 }
 
 /* An execute file is a series of lines.  The first character of each
-   line is a command.  The following commands are supported:
+   line is a command.  The following commands are defined:
 
    C command-line
    I standard-input
-   O standard-output
+   O standard-output [ system ]
    F required-file filename-to-use
    R requestor-address
    U user system
@@ -311,7 +314,9 @@ uqcatch (isig)
    M status-file
    # comment
 
-   Unrecognized commands are ignored.  */
+   Unrecognized commands are ignored.
+
+   This code does not currently support the B or M commands.  */
 
 /* Command arguments.  */
 static const char **azQargs;
