@@ -1,5 +1,10 @@
 /* Configuration header file for Taylor UUCP.  -*- C -*-  */
 
+/* If your compiler does not use const correctly, then undefine it
+   here.  This #undef is commented out by the configure script if it
+   determines that const is supported.  */
+#undef const
+
 /* Set ECHO_PROGRAM to a program which echoes its arguments; if echo
    is a shell builtin you can just use "echo".  */
 #define ECHO_PROGRAM undefined

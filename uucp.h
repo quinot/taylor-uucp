@@ -1,7 +1,7 @@
 /* uucp.h
    Header file for the UUCP package.
 
-   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993, 1994 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -111,8 +111,7 @@ typedef void *pointer;
 typedef const void *constpointer;
 #define BUCHAR(b) ((unsigned char) (b))
 #else /* ! ANSI_C */
-/* Handle uses of const, volatile and void in Classic C.  */
-#define const
+/* Handle uses of volatile and void in Classic C.  */
 #define volatile
 #if ! HAVE_VOID
 #define void int
