@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.52  1992/03/11  00:18:50  ian
+   Save temporary file if file send fails
+
    Revision 1.51  1992/03/09  20:14:37  ian
    Ted Lindgreen: added max-remote-debug command
 
@@ -811,8 +814,9 @@ extern boolean fstore_sendfile P((openfile_t e, pointer pseq,
 extern boolean fsent_file P((boolean freceived, long cbytes,
 			     const char *zwhy, boolean fnever));
 
-/* Note an error sending a file.  Do not call fsent_file after this.  */
-extern void usendfile_error P((const char *zwhy, boolean fnever));
+/* Note an error sending a file.  The function fsent_file must still
+   be called after this is called.  */
+extern void usendfile_error P((void));
 
 /* Store information about a file being received.  */
 extern boolean fstore_recfile P((openfile_t e, pointer pseq,
@@ -828,7 +832,7 @@ extern boolean freceived_file P((boolean fsent, long cbytes,
 
 /* Note an error receiving a file.  The function freceived_file must
    still be called after this is called.  */
-extern void urecfile_error P((const char *zwhy, boolean fnever));
+extern void urecfile_error P((void));
 
 /* Prepare to receive a file again by discarding the previous
    contents.  */

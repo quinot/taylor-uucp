@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.15  1992/03/11  00:18:50  ian
+   Save temporary file if file send fails
+
    Revision 1.14  1992/02/09  05:21:55  ian
    Bob Denny: call fmail_transfer before fsysdep_did_work
 
@@ -118,9 +121,6 @@ static long cPsent_bytes = -1;
 /* Amount of data received for current receive file; -1 means there is
    no current receive file.  */
 static long cPreceived_bytes = -1;
-
-/* Whether an error has been reported for current file being received.  */
-static boolean fPreceived_error;
 
 /* Send a file.  If we are the master, we must send a command to
    transfer the file and wait for a confirmation that we can begin
@@ -455,7 +455,6 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
     return FALSE;
 
   cPreceived_bytes = 0;
-  fPreceived_error = FALSE;
 
   /* Tell the protocol that we are starting to receive a file.  */
   if (qProto->pffile != NULL)
@@ -770,14 +769,11 @@ fploop ()
 		  cdata = cfileread (eSendfile, zdata, cdata);
 		  if (ffilereaderror (eSendfile, cdata))
 		    {
-		      const char *zerr;
-
 		      /* The protocol gives us no way to report a file
 			 sending error, so we just drop the connection.
 			 What else can we do?  */
-		      zerr = strerror (errno);
-		      ulog (LOG_ERROR, "read: %s", zerr);
-		      usendfile_error (zerr, TRUE);
+		      ulog (LOG_ERROR, "read: %s", strerror (errno));
+		      usendfile_error ();
 		      return FALSE;
 		    }
 		}
@@ -814,11 +810,9 @@ fploop ()
 			  ulog (LOG_NORMAL, "Resending file");
 			  if (! ffilerewind (eSendfile))
 			    {
-			      const char *zerr;
-
-			      zerr = strerror (errno);
-			      ulog (LOG_ERROR, "rewind: %s", zerr);
-			      usendfile_error (zerr, FALSE);
+			      ulog (LOG_ERROR, "rewind: %s",
+				    strerror (errno));
+			      usendfile_error ();
 			      return FALSE;
 			    }
 			  continue;
@@ -907,7 +901,6 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 		  ulog (LOG_NORMAL, "File being resent");
 		  if (! frecfile_rewind ())
 		    return FALSE;
-		  fPreceived_error = FALSE;
 		  return TRUE;
 		}
 	    }
@@ -924,7 +917,7 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	  /* Cast zdata to avoid warnings because of erroneous
 	     prototypes on Ultrix.  */
 	  cwrote = cfilewrite (eRecfile, (char *) zdata, cdata);
-	  if (cwrote != cdata && ! fPreceived_error)
+	  if (cwrote != cdata)
 	    {
 	      const char *zerr;
 
@@ -933,8 +926,17 @@ fgot_data (zdata, cdata, fcmd, ffile, pfexit)
 	      else
 		zerr = "could not write all data";
 	      ulog (LOG_ERROR, "write: %s", zerr);
-	      urecfile_error (zerr, TRUE);
-	      fPreceived_error = TRUE;
+	      urecfile_error ();
+
+	      /* Any write error is almost certainly a temporary
+		 condition, or else UUCP would not be functioning at
+		 all.  If we continue to accept the file, we will wind
+		 up rejecting it at the end (what else could we do?)
+		 and the remote system will throw away the request.
+		 We're better off just dropping the connection, which
+		 is what happens when we return FALSE, and trying
+		 again later.  */
+	      return FALSE;
 	    }
 
 	  cPreceived_bytes += cdata;
