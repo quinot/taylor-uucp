@@ -106,8 +106,8 @@ struct scmd
      simple execution, 'H' for hangup, 'Y' for hangup confirm, 'N' for
      hangup deny).  */
   char bcmd;
-  /* At least one compiler needs an explicit padding byte here.  */
-  char bdummy;
+  /* Grade of the command ('\0' if from remote system).  */
+  char bgrade;
   /* Sequence handle for fsysdep_did_work.  */
   pointer pseq;
   /* File name to transfer from.  */

@@ -233,7 +233,39 @@ fqueue_send (qdaemon, qtrans)
     ulog (LOG_FATAL, "fqueue_send: Bad call");
 #endif
   utdequeue (qtrans);
-  utqueue (&qTsend, qtrans, FALSE);
+
+  /* Sort the send queue to always send commands before files, and to
+     sort jobs by grade.  */
+  if (qTsend == NULL)
+    utqueue (&qTsend, qtrans, FALSE);
+  else
+    {
+      register struct stransfer *q;
+      boolean ffirst;
+
+      ffirst = TRUE;
+      q = qTsend;
+      do
+	{
+	  if (! qtrans->fsendfile && q->fsendfile)
+	    break;
+	  if ((! qtrans->fsendfile || q->fsendfile)
+	      && UUCONF_GRADE_CMP (qtrans->s.bgrade, q->s.bgrade) < 0)
+	    break;
+
+	  ffirst = FALSE;
+	  q = q->qnext;
+	}
+      while (q != qTsend);
+
+      qtrans->qnext = q;
+      qtrans->qprev = q->qprev;
+      q->qprev = qtrans;
+      qtrans->qprev->qnext = qtrans;
+      if (ffirst)
+	qTsend = qtrans;
+      qtrans->pqqueue = &qTsend;
+    }
 
   /* Since we're now going to wait to send data, don't charge this
      transfer for receive time.  */
@@ -978,7 +1010,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
   else
     {
       /* Get the transfer structure this data is intended for.  */
-
       q = qtchan (ilocal);
     }
 

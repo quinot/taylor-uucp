@@ -920,6 +920,7 @@ main (argc, argv)
 		 spool directory; normally such requests are rejected.
 		 This privilege is easy to abuse.  */
 	      s.bcmd = 'R';
+	      s.bgrade = bgrade;
 	      s.pseq = NULL;
 	      s.zfrom = zfile;
 	      s.zto = zbufcpy (abtname);
@@ -1119,6 +1120,7 @@ main (argc, argv)
 
       /* Set up an E command.  */
       s.bcmd = 'E';
+      s.bgrade = bgrade;
       s.pseq = NULL;
       s.zuser = zuser;
       s.zfrom = zinput_from;
@@ -1367,6 +1369,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
 
       /* Send the execution file.  */
       s.bcmd = 'S';
+      s.bgrade = bgrade;
       s.pseq = NULL;
       s.zfrom = zbufcpy (abtname);
       s.zto = zbufcpy (abxname);
@@ -1390,6 +1393,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward, qxqtsys, zxqtloc,
     }
 
   s.bcmd = 'S';
+  s.bgrade = bgrade;
   s.pseq = NULL;
   s.zfrom = zbufcpy (zfrom);
   s.zto = zbufcpy (zto);

@@ -343,6 +343,7 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 	  char *zjobid;
 
 	  ssend.bcmd = 'S';
+	  ssend.bgrade = BDEFAULT_UUCP_GRADE;
 	  ssend.pseq = NULL;
 	  ssend.zfrom = zfile;
 	  ssend.zto = zdestfile;

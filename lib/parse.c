@@ -1,7 +1,7 @@
 /* parse.c
    Parse a UUCP command string.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -59,6 +59,7 @@ fparse_cmd (zcmd, qcmd)
       && qcmd->bcmd != 'P')
     return FALSE;
 
+  qcmd->bgrade = '\0';
   qcmd->pseq = NULL;
   qcmd->zfrom = NULL;
   qcmd->zto = NULL;

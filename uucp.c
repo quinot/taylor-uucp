@@ -732,6 +732,7 @@ uccopy (zfile, zdest)
 	    {
 	      /* We're not forwarding.  Just send the file.  */
 	      s.bcmd = 'S';
+	      s.bgrade = bCgrade;
 	      s.pseq = NULL;
 	      s.zfrom = zbufcpy (zfile);
 	      s.zto = zbufcpy (zdest);
@@ -796,6 +797,7 @@ uccopy (zfile, zdest)
 
 	      /* Send the execution file.  */
 	      s.bcmd = 'S';
+	      s.bgrade = bCgrade;
 	      s.pseq = NULL;
 	      s.zfrom = zbufcpy (abxtname);
 	      s.zto = zbufcpy (abxname);
@@ -817,6 +819,7 @@ uccopy (zfile, zdest)
 
 	      /* Send the data file.  */
 	      s.bcmd = 'S';
+	      s.bgrade = bCgrade;
 	      s.pseq = NULL;
 	      s.zfrom = zbufcpy (zfile);
 	      s.zto = zbufcpy (abdname);
@@ -927,6 +930,7 @@ uccopy (zfile, zdest)
 	      zto = zbufcpy (zdest);
 	    }
 
+	  s.bgrade = bCgrade;
 	  s.pseq = NULL;
 	  s.zfrom = zfrom;
 	  s.zto = zto;
@@ -1001,6 +1005,7 @@ uccopy (zfile, zdest)
 
 	  /* Send the execution file.  */
 	  s.bcmd = 'S';
+	  s.bgrade = bCgrade;
 	  s.pseq = NULL;
 	  s.zfrom = zbufcpy (abtname);
 	  s.zto = zbufcpy (abxname);

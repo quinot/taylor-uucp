@@ -1385,6 +1385,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
 	  /* Fill in the command structure.  */
 
 	  s.bcmd = 'S';
+	  s.bgrade = BDEFAULT_UUX_GRADE;
 	  s.pseq = NULL;
 	  s.zfrom = abtemp;
 	  s.zto = zQoutfile;
