@@ -1,4 +1,4 @@
-This is the README file for release 1.0 of the Taylor UUCP package.
+This is the README file for release 1.01 of the Taylor UUCP package.
 
 It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
 or, equivalently, uunet!airs!ian, or c/o AIRS P.O. Box 520, Waltham
@@ -261,3 +261,6 @@ command succeeds.  If this is true, there should probably be a compile
 time switch to select which behaviour to follow.
 
 The -b and -s options to uux are not implemented by uuxqt.  
+
+The log and statistics files are not in the same format as any
+existing package.
