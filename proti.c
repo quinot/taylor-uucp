@@ -663,10 +663,11 @@ firesend (qdaemon)
   size_t clen;
 
   iseq = INEXTSEQ (iIremote_ack);
-#if DEBUG > 0
   if (iseq == iIsendseq)
-    ulog (LOG_FATAL, "firesend: Can't happen");
-#endif
+    {
+      /* Everything has been ACKed and there is nothing to resend.  */
+      return TRUE;
+    }
 
   DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 		  "firesend: Resending packet %d", iseq);
@@ -700,31 +701,16 @@ static boolean
 fiwindow_wait (qdaemon)
      struct sdaemon *qdaemon;
 {
-  int cwaits;
-
-  cwaits = 0;
-
   /* iIsendseq is the sequence number we are sending, and iIremote_ack
      is the last sequence number acknowledged by the remote. */
   while (CSEQDIFF (iIsendseq, iIremote_ack) > iIremote_winsize)
     {
       /* If a NAK is lost, it is possible for the other side to be
 	 sending a stream of packets while we are waiting for an ACK.
-	 Since we don't have an independent timeout on the receive
-	 end, this means that we will wait until the other side has
-	 finished sending packets and one of us times out.  To avoid
-	 locking ourselves up, if we get 10 packets in a row without
-	 getting the ack we need, we resend the packet the other side
-	 is looking for.  Hopefully that will trigger an ACK or NAK
-	 and get us going again.  */
-      ++cwaits;
-      if (cwaits > 10)
-	{
-	  cwaits = 0;
-	  if (! firesend (qdaemon))
-	    return FALSE;
-	}
-
+	 This should be caught in fiprocess_data; if it is about to
+	 send an ACK, but it has an unacknowledged packet to send, it
+	 sends the entire packet.  Hopefully that will trigger an ACK
+	 or a NAK and get us going again.  */
       DEBUG_MESSAGE0 (DEBUG_PROTO, "fiwindow_wait: Waiting for ACK");
       if (! fiwait_for_packet (qdaemon, cItimeout, cIretries,
 			       TRUE, (boolean *) NULL))
@@ -944,9 +930,9 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
 	}
       else
 	{
-	  /* We timed out on the read.  If we have an unacknowledged
-	     packet, resend it; otherwise, send a NAK for the packet
-	     we want to see.  */
+	  int i;
+
+	  /* We timed out on the read.  */
 	  ++ctimeouts;
 	  if (ctimeouts > cretries)
 	    {
@@ -957,16 +943,16 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
 	      return FALSE;
 	    }
 
-	  if (INEXTSEQ (iIremote_ack) != iIsendseq)
-	    {
-	      if (! firesend (qdaemon))
-		return FALSE;
-	    }
-	  else
-	    {
-	      if (! finak (qdaemon, INEXTSEQ (iIrecseq)))
-		return FALSE;
-	    }
+	  /* Clear out the list of packets we have sent NAKs for.  We
+	     should have seen some sort of response by now.  */
+	  for (i = 0; i < IMAXSEQ; i++)
+	    afInaked[i] = FALSE;
+
+	  /* Send a NAK for the packet we want, and, if we have an
+	     unacknowledged packet, send it again.  */
+	  if (! finak (qdaemon, INEXTSEQ (iIrecseq))
+	      || ! firesend (qdaemon))
+	    return FALSE;
 	}
     }
   /*NOTREACHED*/
@@ -1254,13 +1240,14 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  iIremote_ack = iack;
 	}
 
-      /* If we haven't handled all previous packets, we must save off this
-	 packet and deal with it later.  */
       if (iseq != -1)
 	{
+	  afInaked[iseq] = FALSE;
+
+	  /* If we haven't handled all previous packets, we must save
+	     off this packet and deal with it later.  */
 	  if (iseq != INEXTSEQ (iIrecseq))
 	    {
-	      /* If this is a duplicate packet, just ignore it.  */
 	      if (iseq == iIrecseq
 		  || (iIrequest_winsize > 0
 		      && CSEQDIFF (iseq, iIrecseq) > iIrequest_winsize)
@@ -1269,22 +1256,23 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 				  "fiprocess_data: Ignoring duplicate packet %d",
 				  iseq);
-		  continue;
 		}
-
-	      DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
-			      "fiprocess_data: Saving unexpected packet %d",
-			      iseq);
-
-	      azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN + csize));
-	      memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
-	      if (csize > 0)
+	      else
 		{
-		  memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
-			  (size_t) cfirst);
-		  if (csecond > 0)
-		    memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
-			    zsecond, (size_t) csecond);
+		  DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
+				  "fiprocess_data: Saving unexpected packet %d",
+				  iseq);
+
+		  azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN + csize));
+		  memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
+		  if (csize > 0)
+		    {
+		      memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
+			      (size_t) cfirst);
+		      if (csecond > 0)
+			memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
+				zsecond, (size_t) csecond);
+		    }
 		}
 
 	      /* Send NAK's for each packet between the last one we
@@ -1341,29 +1329,40 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	}
 
       /* If we have received half of our window size or more since the
-	 last ACK, send one now.  Note that this is unlikely if we are
-	 currently sending data, since each packet sent will ACK the
-	 most recently received packet.  Sending an ACK for half the
-	 window at a time should significantly cut the acknowledgement
-	 traffic when only one side is sending.  */
+	 last ACK, send one now.  Sending an ACK for half the window
+	 at a time should significantly cut the acknowledgement
+	 traffic when only one side is sending.  We should normally
+	 not have to send an ACK if we have data to send, since each
+	 packet sent will ACK the most recently received packet.  So
+	 if we have an unacknowledged packet, assume that something
+	 went wrong and resend the whole packet rather than just an
+	 ACK.  */
       if (iIrequest_winsize > 0
 	  && CSEQDIFF (iIrecseq, iIlocal_ack) >= iIrequest_winsize / 2)
 	{
-	  char aback[CHDRLEN];
+	  if (INEXTSEQ (iIremote_ack) != iIsendseq)
+	    {
+	      if (! firesend (qdaemon))
+		return FALSE;
+	    }
+	  else
+	    {
+	      char aback[CHDRLEN];
 
-	  aback[IHDR_INTRO] = IINTRO;
-	  aback[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
-	  aback[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
-	  iIlocal_ack = iIrecseq;
-	  aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
-	  aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
-	  aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
+	      aback[IHDR_INTRO] = IINTRO;
+	      aback[IHDR_LOCAL] = IHDRWIN_SET (0, 0);
+	      aback[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
+	      iIlocal_ack = iIrecseq;
+	      aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
+	      aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
+	      aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
 
-	  DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_data: Sending ACK %d",
-			  iIrecseq);
+	      DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_data: Sending ACK %d",
+			      iIrecseq);
 
-	  if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
-	    return FALSE;
+	      if (! (*pfIsend) (qdaemon->qconn, aback, CHDRLEN, TRUE))
+		return FALSE;
+	    }
 	}
     }
 
@@ -1399,7 +1398,6 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	DEBUG_MESSAGE2 (DEBUG_PROTO,
 			"fiprocess_packet: Got DATA packet %d size %d",
 			iseq, cfirst + csecond);
-	afInaked[iseq] = FALSE;
 	fret = fgot_data (qdaemon, zfirst, (size_t) cfirst,
 			  zsecond, (size_t) csecond,
 			  IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]),
@@ -1473,10 +1471,13 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 
 	iseq = IHDRWIN_GETSEQ (zhdr[IHDR_LOCAL]);
 
-	if (iIremote_winsize > 0
-	    && (iseq == iIsendseq
-		|| CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
-		|| CSEQDIFF (iIsendseq, iseq) > iIremote_winsize))
+	/* The timeout code will send a NAK for the packet the remote
+	   side wants.  So we may see a NAK here for the packet we are
+	   about to send.  */
+	if (iseq == iIsendseq
+	    || (iIremote_winsize > 0
+		&& (CSEQDIFF (iseq, iIremote_ack) > iIremote_winsize
+		    || CSEQDIFF (iIsendseq, iseq) > iIremote_winsize)))
 	  {
 	    DEBUG_MESSAGE1 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			    "fiprocess_packet: Ignoring out of order NAK %d",
