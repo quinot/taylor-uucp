@@ -32,6 +32,25 @@
 
 #include <errno.h>
 
+#if SPOOLDIR_HDB
+
+/* If we are using HDB spool layout, store status using HDB status
+   values (should we do this for SPOOLDIR_SVR4 as well?).  */
+
+#define MAP_STATUS 1
+
+static const int aiMapstatus[] =
+{
+  0, 13, 7, 6, 4, 20, 3, 2
+};
+#define CMAPENTRIES (sizeof (aiMapstatus) / sizeof (aiMapstatus[0]))
+
+#else /* ! SPOOLDIR_HDB */
+
+#define MAP_STATUS 0
+
+#endif /* ! SPOOLDIR_HDB */
+
 /* Get the status of a system.  This assumes that we are in the spool
    directory.  */
 
@@ -105,8 +124,23 @@ fsysdep_get_status (qsys, qret, pfnone)
   if (zend == zline)
     fbad = TRUE;
 
+#if MAP_STATUS
   /* On some systems it may be appropriate to map system dependent status
-     values on to our status values.  Perhaps someday.  */
+     values on to our status values.  */
+  {
+    int i;
+
+    for (i = 0; i < CMAPENTRIES; ++i)
+      {
+	if (aiMapstatus[i] == istat)
+	  {
+	    istat = i;
+	    break;
+	  }
+      }
+  }
+#endif /* MAP_STATUS */
+
   if (istat < 0 || istat >= (int) STATUS_VALUES)
     istat = (int) STATUS_COMPLETE;
   qret->ttype = (enum tstatus_type) istat;
@@ -158,8 +192,13 @@ fsysdep_set_status (qsys, qset)
     return FALSE;
   istat = (int) qset->ttype;
 
+#if MAP_STATUS
   /* On some systems it may be appropriate to map istat onto a system
-     dependent number.  Perhaps someday.  */
+     dependent number.  */
+  if (istat >= 0 && istat < CMAPENTRIES)
+    istat = aiMapstatus[istat];
+#endif /* MAP_STATUS */
+
   fprintf (e, "%d %d %ld %d %s %s\n", istat, qset->cretries,
 	   qset->ilast, qset->cwait, azStatus[(int) qset->ttype],
 	   qsys->uuconf_zname);
