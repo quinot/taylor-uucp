@@ -1143,13 +1143,26 @@ fsmodem_open (qconn, ibaud, fwait)
      long ibaud;
      boolean fwait;
 {
+  struct uuconf_modem_port *qm;
+
+  qm = &qconn->qport->uuconf_u.uuconf_smodem.
   if (ibaud == (long) 0)
-    ibaud = qconn->qport->uuconf_u.uuconf_smodem.uuconf_ibaud;
+    ibaud = qm->uuconf_ibaud;
+
   if (! fsserial_open (qconn, ibaud, fwait,
 		       fwait ? CLEAR_CLOCAL : SET_CLOCAL))
     return FALSE;
-  return fsserial_hardflow
-    (qconn, qconn->qport->uuconf_u.uuconf_smodem.uuconf_fhardflow);
+
+  /* If we are waiting for carrier, then turn on hardware flow
+     control.  We don't turn on hardware flow control when dialing
+     out, because some modems don't assert the necessary signals until
+     they see carrier.  Instead, we turn on hardware flow control in
+     fsmodem_carrier.  */
+  if (fwait
+      && ! fsserial_hardflow (qconn, qm->uuconf_fhardflow))
+    return FALSE;
+
+  return TRUE;
 }
 
 /* Open a direct port.  */
@@ -1160,15 +1173,18 @@ fsdirect_open (qconn, ibaud, fwait)
      long ibaud;
      boolean fwait;
 {
+  struct uuconf_direct_port *qd;
+
+  qd = &qconn->qport->uuconf_u.uuconf_sdirect;
   if (ibaud == (long) 0)
-    ibaud = qconn->qport->uuconf_u.uuconf_sdirect.uuconf_ibaud;
+    ibaud = qd->uuconf_ibaud;
   if (! fsserial_open (qconn, ibaud, fwait,
-		       (qconn->qport->uuconf_u.uuconf_sdirect.uuconf_fcarrier
-			? CLEAR_CLOCAL
-			: SET_CLOCAL)))
+		       qd->uuconf_fcarrier ? CLEAR_CLOCAL : SET_CLOCAL))
     return FALSE;
-  return fsserial_hardflow
-    (qconn, qconn->qport->uuconf_u.uuconf_sdirect.uuconf_fhardflow);
+
+  /* Always turn on hardware flow control for a direct port when it is
+     opened.  There is no other sensible time to turn it on.  */
+  return fsserial_hardflow (qconn, qd->uuconf_fhardflow);
 }
 
 /* Change the blocking status of the port.  We keep track of the
@@ -1621,15 +1637,17 @@ fsmodem_carrier (qconn, fcarrier)
      boolean fcarrier;
 {
   register struct ssysdep_conn *q;
+  struct uuconf_modem_port *qm;
 
   q = (struct ssysdep_conn *) qconn->psysdep;
 
   if (! q->fterminal)
     return TRUE;
 
+  qm = &qconn->qport->uuconf_u.uuconf_smodem;
   if (fcarrier)
     {
-      if (qconn->qport->uuconf_u.uuconf_smodem.uuconf_fcarrier)
+      if (qm->uuconf_fcarrier)
 	{
 #ifdef TIOCCAR
 	  /* Tell the modem to pay attention to carrier.  */
@@ -1642,18 +1660,18 @@ fsmodem_carrier (qconn, fcarrier)
 
 #if HAVE_BSD_TTY
 #ifdef LNOMDM
-      /* IS68K Unix uses a local LNOMDM bit.  */
-      {
-	int iparam;
-
-	iparam = LNOMDM;
-	if (ioctl (q->o, TIOCLBIC, &iparam) < 0)
+	  /* IS68K Unix uses a local LNOMDM bit.  */
 	  {
-	    ulog (LOG_ERROR, "ioctl (TIOCLBIC, LNOMDM): %s",
-		  strerror (errno));
-	    return FALSE;
+	    int iparam;
+
+	    iparam = LNOMDM;
+	    if (ioctl (q->o, TIOCLBIC, &iparam) < 0)
+	      {
+		ulog (LOG_ERROR, "ioctl (TIOCLBIC, LNOMDM): %s",
+		      strerror (errno));
+		return FALSE;
+	      }
 	  }
-      }
 #endif /* LNOMDM */
 #endif /* HAVE_BSD_TTY */
 
@@ -1667,9 +1685,20 @@ fsmodem_carrier (qconn, fcarrier)
 	    }
 #endif /* HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS */
 	}
+
+      /* Turn on hardware flow control after turning on carrier.  We
+	 don't do it until now because some modems don't assert the
+	 right signals until they see carrier.  */
+      if (! fsserial_hardflow (qconn, qm->uuconf_fhardflow))
+	return FALSE;
     }
   else
     {
+      /* Turn off any hardware flow control before turning off
+	 carrier.  */
+      if (! fsserial_hardflow (qconn, FALSE))
+	return FALSE;
+
 #ifdef TIOCNCAR
       /* Tell the modem to ignore carrier.  */ 
       if (ioctl (q->o, TIOCNCAR, 0) < 0)
