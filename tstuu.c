@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.54  1992/04/25  00:33:47  ian
+   Make include of <sys/times.h> optional
+
    Revision 1.53  1992/04/14  17:34:03  ian
    Zacharias Beckman: minor touchups for NeXT
 
@@ -353,7 +356,7 @@ static void ucheck_file P((const char *zfile, const char *zerr,
 			   int cextra));
 static void ucheck_test P((int itest, boolean fcall_uucico));
 static void utransfer P((int ofrom, int oto, int otoslave, int *pc));
-static SIGtype uchild P((int isig));
+static RETSIGTYPE uchild P((int isig));
 static int cpshow P((char *z, int bchar));
 static void uchoose P((int *po1, int *po2));
 static boolean fwritable P((int o));
@@ -649,7 +652,7 @@ main (argc, argv)
 
 /* When a child dies, kill them both.  */
 
-static SIGtype
+static RETSIGTYPE
 uchild (isig)
      int isig;
 {
