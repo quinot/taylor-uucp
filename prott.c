@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1991/11/16  00:31:01  ian
+   Increased default 't' and 'f' protocol timeouts
+
    Revision 1.5  1991/11/15  23:27:21  ian
    Include system.h in prott.c and protf.c
 
@@ -131,9 +134,8 @@ ftsendcmd (z)
   clen = ((clen / CTPACKSIZE) + 1) * CTPACKSIZE;
 
   zalc = (char *) alloca (clen);
+  memset (zalc, 0, clen);
   strcpy (zalc, z);
-
-  zalc[clen - 1] = '\0';
 
   return fsend_data (zalc, clen, TRUE);
 }

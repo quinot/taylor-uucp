@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/12/11  15:02:45  ian
+   Tweaked initialization sequence slightly for better packet loss response
+
    Revision 1.6  1991/11/15  21:33:36  ian
    Remove unreached line
 
@@ -534,6 +537,7 @@ fginit_sendbuffers (fallocate)
 	  azGsendbuffers[i] = (char *) malloc (CFRAMELEN + iGremote_packsize);
 	  if (azGsendbuffers[i] == NULL)
 	    return FALSE;
+	  memset (azGsendbuffers[i], 0, CFRAMELEN + iGremote_packsize);
 	}
       else
 	azGsendbuffers[i] = NULL;
