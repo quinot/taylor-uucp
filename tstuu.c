@@ -972,7 +972,7 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
       e = xfopen ("/usr/tmp/tstuu/Call1", "w");
 
       fprintf (e, "Call out password file\n");
-      fprintf (e, "%s test1 pass1\n", zsys);
+      fprintf (e, "%s test1 pass\\s1\n", zsys);
 
       xfclose (e);
 
@@ -1041,7 +1041,7 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
 	  e = xfopen ("/usr/tmp/tstuu/Pass2", "w");
 
 	  fprintf (e, "# Call in password file\n");
-	  fprintf (e, "test1 pass1\n");
+	  fprintf (e, "test1 pass\\s1\n");
 
 	  xfclose (e);
 	}

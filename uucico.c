@@ -1606,7 +1606,7 @@ flogin_prompt (puuconf, qconn)
 
   fret = TRUE;
 
-  iuuconf = uuconf_callin (puuconf, zuser, zpass);
+  iuuconf = uuconf_callin (puuconf, zuser, zpass, cescape);
   ubuffree (zpass);
   if (iuuconf == UUCONF_NOT_FOUND)
     ulog (LOG_ERROR, "Bad login");

@@ -1,7 +1,7 @@
 /* callin.c
    Check a login name and password against the UUCP password file.
 
-   Copyright (C) 1992 Ian Lance Taylor
+   Copyright (C) 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP uuconf library.
 
@@ -31,24 +31,32 @@ const char _uuconf_callin_rcsid[] = "$Id$";
 
 #include <errno.h>
 
-static int iplogin P((pointer pglobal, int argc, char **argv,
+static int ipcheck P((pointer pglobal, int argc, char **argv,
 		      pointer pvar, pointer pinfo));
+
+struct sinfo
+{
+  size_t (*pfn) P((char *));
+  const char *zlogin;
+  char *zfilepass;
+};
 
 /* Check a login name and password against the UUCP password file.
    This looks at the Taylor UUCP password file, but will work even if
    uuconf_taylor_init was not called.  */
 
 int
-uuconf_callin (pglobal, zlogin, zpassword)
+uuconf_callin (pglobal, zlogin, zpassword, pfn)
      pointer pglobal;
      const char *zlogin;
      const char *zpassword;
+     size_t (*pfn) P((char *));
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;
   char **pz;
-  struct uuconf_cmdtab as[2];
-  char *zfilepass;
+  struct uuconf_cmdtab as[1];
+  struct sinfo s;
 
   /* If we have no password file names, fill in the default name.  */
   if (qglobal->qprocess->pzpwdfiles == NULL)
@@ -66,14 +74,11 @@ uuconf_callin (pglobal, zlogin, zpassword)
 	return iret;
     }
 
-  as[0].uuconf_zcmd = zlogin;
-  as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 2;
-  as[0].uuconf_pvar = (pointer) &zfilepass;
-  as[0].uuconf_pifn = iplogin;
+  as[0].uuconf_zcmd = NULL;
 
-  as[1].uuconf_zcmd = NULL;
-
-  zfilepass = NULL;
+  s.pfn = pfn;
+  s.zlogin = zlogin;
+  s.zfilepass = NULL;
 
   iret = UUCONF_SUCCESS;
 
@@ -91,12 +96,11 @@ uuconf_callin (pglobal, zlogin, zpassword)
 	  break;
 	}
 
-      iret = uuconf_cmd_file (pglobal, e, as, (pointer) NULL,
-			      (uuconf_cmdtabfn) NULL,
-			      UUCONF_CMDTABFLAG_CASE, (pointer) NULL);
+      iret = uuconf_cmd_file (pglobal, e, as, (pointer) &s,
+			      ipcheck, 0, (pointer) NULL);
       (void) fclose (e);
 
-      if (iret != UUCONF_SUCCESS || zfilepass != NULL)
+      if (iret != UUCONF_SUCCESS || s.zfilepass != NULL)
 	break;
     }
 
@@ -105,21 +109,33 @@ uuconf_callin (pglobal, zlogin, zpassword)
       qglobal->zfilename = *pz;
       iret |= UUCONF_ERROR_FILENAME;
     }
-  else if (zfilepass == NULL
-	   || strcmp (zfilepass, zpassword) != 0)
+  else if (s.zfilepass == NULL)
     iret = UUCONF_NOT_FOUND;
+  else
+    {
+      size_t clen;
 
-  if (zfilepass != NULL)
-    free ((pointer) zfilepass);
+      if (pfn == NULL)
+	clen = strlen (s.zfilepass);
+      else
+	clen = (*pfn) (s.zfilepass);
+      if (strncmp (s.zfilepass, zpassword, clen) != 0
+	  || zpassword[clen] != '\0')
+	iret = UUCONF_NOT_FOUND;
+    }
+
+  if (s.zfilepass != NULL)
+    free ((pointer) s.zfilepass);
 
   return iret;
 }
 
-/* This is called if it is the name we are looking for.  The pvar
-   argument points to zfilepass, and we set it to the password.  */
+/* This is called on each line of the file.  It transforms the login
+   name from the file to see if it is the one we are looking for.  If
+   it is, it sets pinfo->zfilepass to the password.  */
 
 static int
-iplogin (pglobal, argc, argv, pvar, pinfo)
+ipcheck (pglobal, argc, argv, pvar, pinfo)
      pointer pglobal;
      int argc;
      char **argv;
@@ -127,16 +143,41 @@ iplogin (pglobal, argc, argv, pvar, pinfo)
      pointer pinfo;
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
-  char **pzpass = (char **) pvar;
+  struct sinfo *q = (struct sinfo *) pinfo;
+  char *z;
+  size_t clen;
 
-  *pzpass = strdup (argv[1]);
-  if (*pzpass == NULL)
+  if (argc != 2)
+    return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
+
+  z = strdup (argv[0]);
+  if (z == NULL)
     {
       qglobal->ierrno = errno;
       return (UUCONF_MALLOC_FAILED
 	      | UUCONF_ERROR_ERRNO
 	      | UUCONF_CMDTABRET_EXIT);
     }
+  if (q->pfn == NULL)
+    clen = strlen (z);
+  else
+    clen = (*q->pfn) (z);
+  if (strncmp (z, q->zlogin, clen) == 0
+      && q->zlogin[clen] == '\0')
+    {
+      free ((pointer) z);
+      q->zfilepass = strdup (argv[1]);
+      if (q->zfilepass == NULL)
+	{
+	  qglobal->ierrno = errno;
+	  return (UUCONF_MALLOC_FAILED
+		  | UUCONF_ERROR_ERRNO
+		  | UUCONF_CMDTABRET_EXIT);
+	}
+      return UUCONF_CMDTABRET_EXIT;
+    }
 
-  return UUCONF_CMDTABRET_EXIT;
+  free ((pointer) z);
+
+  return UUCONF_CMDTABRET_CONTINUE;
 }

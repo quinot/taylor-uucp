@@ -1,7 +1,7 @@
 /* chat.c
    Chat routine for the UUCP package.
 
-   Copyright (C) 1991, 1992 Ian Lance Taylor
+   Copyright (C) 1991, 1992, 1993 Ian Lance Taylor
 
    This file is part of the Taylor UUCP package.
 
@@ -717,6 +717,8 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 	    case 'L':
 	      {
 		const char *zlog;
+		char *zcopy;
+		size_t clen;
 
 		if (qsys == NULL)
 		  {
@@ -756,18 +758,24 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 		      }
 		    zlog = zcallout_login;
 		  }
+		zcopy = zbufcpy (zlog);
+		clen = cescape (zcopy);
 		fquote = fcsend_debug (fquote, (size_t) 0, "login");
-		fquote = fcsend_debug (fquote, strlen (zlog), zlog);
-		if (! (*pfwrite) (qconn, zlog, strlen (zlog)))
+		fquote = fcsend_debug (fquote, clen, zcopy);
+		if (! (*pfwrite) (qconn, zcopy, clen))
 		  {
+		    ubuffree (zcopy);
 		    ucsend_debug_end (fquote, TRUE);
 		    return FALSE;
 		  }
+		ubuffree (zcopy);
 	      }
 	      break;
 	    case 'P':
 	      {
 		const char *zpass;
+		char *zcopy;
+		size_t clen;
 
 		if (qsys == NULL)
 		  {
@@ -807,13 +815,17 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
 		      }
 		    zpass = zcallout_pass;
 		  }
+		zcopy = zbufcpy (zpass);
+		clen = cescape (zcopy);
 		fquote = fcsend_debug (fquote, (size_t) 0, "password");
-		fquote = fcsend_debug (fquote, strlen (zpass), zpass);
-		if (! (*pfwrite) (qconn, zpass, strlen (zpass)))
+		fquote = fcsend_debug (fquote, clen, zcopy);
+		if (! (*pfwrite) (qconn, zcopy, clen))
 		  {
+		    ubuffree (zcopy);
 		    ucsend_debug_end (fquote, TRUE);
 		    return FALSE;
 		  }
+		ubuffree (zcopy);
 	      }
 	      break;
 	    case 'D':
@@ -1168,6 +1180,7 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
       for (zfrom = *pz; *zfrom != '\0'; zfrom++)
 	{
 	  const char *zadd = NULL;
+	  char *zfree = NULL;
 	  size_t cadd;
 	  char abadd[15];
 
@@ -1241,7 +1254,9 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		      }
 		    zlog = zcallout_login;
 		  }
-		zadd = zlog;
+		zfree = zbufcpy (zlog);
+		(void) cescape (zfree);
+		zadd = zfree;
 	      }
 	      break;
 	    case 'P':
@@ -1287,7 +1302,9 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 		      }
 		    zpass = zcallout_pass;
 		  }
-		zadd = zpass;
+		zfree = zbufcpy (zpass);
+		(void) cescape (zfree);
+		zadd = zfree;
 	      }
 	      break;
 	    case 'D':
@@ -1405,6 +1422,7 @@ fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
 	  memcpy (zto, zadd, cadd + 1);
 	  zto += cadd;
 	  clen += cadd;
+	  ubuffree (zfree);
 	}
 
       if (! fret)
