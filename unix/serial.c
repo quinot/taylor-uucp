@@ -1929,7 +1929,49 @@ fsysdep_modem_end_dial (qconn, qdial)
 	  return FALSE;
 	}
 
-#endif /* TIOCWONLINE */
+#else /* ! defined (TIOCWONLINE) */
+
+      /* Try to open the port again without using O_NDELAY.  In
+	 principle, the open should delay until carrier is available.
+	 This may not work on some systems, so we just ignore any
+	 errors.  */
+      {
+	int onew;
+ 
+	onew = open (q->zdevice, O_RDWR);
+	if (onew >= 0)
+	  {
+	    boolean fbad;
+	    int iflags;
+
+	    fbad = FALSE;
+
+	    if (fcntl (onew, F_SETFD,
+		       fcntl (onew, F_GETFD, 0) | FD_CLOEXEC) < 0)
+	      fbad = TRUE;
+
+	    if (! fbad)
+	      {
+		iflags = fcntl (onew, F_GETFL, 0);
+		if (iflags < 0)
+		  fbad = TRUE;
+	      }
+
+	    if (fbad)
+	      (void) close (onew);
+	    else
+	      {
+		(void) close (q->o);
+		q->o = onew;
+		q->iflags = iflags;
+#if HAVE_TIOCSINUSE
+		(void) ioctl (onew, TIOCSINUSE, 0);
+#endif
+	      }
+	  }
+      }
+
+#endif /* ! defined (TIOCWONLINE) */
     }
 
   return TRUE; 
