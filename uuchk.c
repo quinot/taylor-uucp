@@ -453,6 +453,50 @@ ukshow (qsys, puuconf)
 	    }
 	}
 
+      if (fcalled)
+	{
+	  if (qsys->uuconf_qcalledtimegrade != NULL)
+	    {
+	      boolean fprint, fother;
+
+	      qtime = qcompress_span (qsys->uuconf_qcalledtimegrade);
+	      fprint = FALSE;
+	      fother = FALSE;
+	      if (qtime->uuconf_istart != 0)
+		fother = TRUE;
+	      for (qspan = qtime; qspan != NULL; qspan = qspan->uuconf_qnext)
+		{
+		  if ((char) qspan->uuconf_ival == UUCONF_GRADE_LOW)
+		    {
+		      fother = TRUE;
+		      continue;
+		    }
+		  fprint = TRUE;
+		  printf (" ");
+		  ukshow_time (qspan);
+		  printf (" will send work grade %c or higher\n",
+			  (char) qspan->uuconf_ival);
+		  if (qspan->uuconf_qnext == NULL)
+		    {
+		      if (qspan->uuconf_iend != 7 * 24 * 60)
+			fother = TRUE;
+		    }
+		  else
+		    {
+		      if (qspan->uuconf_iend
+			  != qspan->uuconf_qnext->uuconf_istart)
+			fother = TRUE;
+		    }
+		}
+	      if (fprint && fother)
+		printf (" (At other times will send any work)\n");
+	    }
+	}
+
+      if (fcall && qsys->uuconf_csuccess_wait != 0)
+	printf (" Will wait %d seconds after a successful call\n",
+		qsys->uuconf_csuccess_wait);
+
       if (qsys->uuconf_fsequence)
 	printf (" Sequence numbers are used\n");
 
