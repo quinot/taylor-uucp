@@ -899,8 +899,6 @@ fsworkfiles_system (puuconf, icmd, qsys, cusers, pazusers, fnotusers, iold,
 	}
       if (s.bcmd == 'H')
 	break;
-      if (s.bcmd == 'P')
-	continue;
 
       if (cusers > 0)
 	{
@@ -910,7 +908,8 @@ fsworkfiles_system (puuconf, icmd, qsys, cusers, pazusers, fnotusers, iold,
 	  fmatch = fnotusers;
 	  for (i = 0; i < cusers; i++)
 	    {
-	      if (strcmp (pazusers[i], s.zuser) == 0)
+	      if (s.zuser != NULL
+		  && strcmp (pazusers[i], s.zuser) == 0)
 		{
 		  fmatch = ! fmatch;
 		  break;
@@ -1064,6 +1063,9 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 			  printf ("Requesting %s to %s", qshow->s.zfrom,
 				  qshow->s.zto);
 			  break;
+			case 'P':
+			  printf ("(poll file)");
+			  break;
 #if DEBUG > 0
 			default:
 			  printf ("Bad line %d", qshow->s.bcmd);
@@ -1211,7 +1213,8 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 	    fkill = TRUE;
 	      
 	  if (fkill
-	      && strcmp (zsysdep_login_name (), qlist->s.zuser) != 0
+	      && (qlist->s.zuser == NULL
+		  || strcmp (zsysdep_login_name (), qlist->s.zuser) != 0)
 	      && ! fsysdep_privileged ())
 	    ulog (LOG_ERROR, "%s: Not submitted by you", zlistid);
 	  else
@@ -1258,7 +1261,6 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
     }
 
   /* Start a new list with the entry we just got.  */
-
   if (qcmd != NULL)
     {
       qlist = (struct scmdlist *) xmalloc (sizeof (struct scmdlist));
@@ -1289,7 +1291,8 @@ usworkfile_header (qsys, qcmd, zjobid, itime, ffirst)
   else
     zshowid = "-";
 
-  printf ("%s %s %s ", zshowid, qsys->uuconf_zname, qcmd->zuser);
+  printf ("%s %s %s ", zshowid, qsys->uuconf_zname,
+	  qcmd->zuser != NULL ? qcmd->zuser : OWNER);
 
   usysdep_localtime (itime, &stime);
   printf ("%04d-%02d-%02d %02d:%02d:%02d ",
@@ -1585,7 +1588,7 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
       pz[i++] = "\n";
     }
   pz[i++] = "requested by\n\t";
-  pz[i++] = zuser;
+  pz[i++] = zuser != NULL ? zuser : OWNER;
   pz[i++] = "\non system\n\t";
   pz[i++] = qsys->uuconf_zname;
   pz[i++] = "\n";
@@ -1633,15 +1636,20 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 	    case 'X':
 	      pz[i++] = "\trequest ";
 	      break;
+	    case 'P':
+	      pz[i++] = "\tpoll ";
 #if DEBUG > 0
 	    case 'E':
 	      ulog (LOG_FATAL, "fsnotify: Can't happen");
 	      break;
 #endif
 	    }
-	  pz[i++] = qshow->s.zfrom;
-	  pz[i++] = " to ";
-	  pz[i++] = qshow->s.zto;
+	  if (qshow->s.zfrom != NULL && qshow->s.zto != NULL)
+	    {
+	      pz[i++] = qshow->s.zfrom;
+	      pz[i++] = " to ";
+	      pz[i++] = qshow->s.zto;
+	    }
 	}
     }
 
@@ -1713,7 +1721,8 @@ fsnotify (puuconf, icmd, zcomment, cstdin, fkilled, zcmd, qcmd, zid, zuser,
 	fret = FALSE;
     }
 
-  if ((icmd & JOB_NOTIFY) != 0)
+  if ((icmd & JOB_NOTIFY) != 0
+      && (zrequestor != NULL || zuser != NULL))
     {
       const char *zmail;
       int iuuconf;
@@ -1992,8 +2001,6 @@ fsquery_system (qsys, pq, inow, zlocalname)
 	return FALSE;
       if (s.bcmd == 'H')
 	break;
-      if (s.bcmd == 'P')
-	continue;
 
       zthisid = zsysdep_jobid (qsys, s.pseq);
       if (zid != NULL && strcmp (zid, zthisid) == 0)
