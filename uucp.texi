@@ -6137,7 +6137,7 @@ following @file{X.}  file:
 @example
 U ian test1
 F D.test1N003r qux
-O /usr/spool/uucppublic test1
+O /usr/spool/uucppublic/gorp test1
 F D.test1N003s
 I D.test1N003s
 C cat - ~ian/bar qux
@@ -6149,7 +6149,7 @@ the command is executed, the latter file will be copied to the execution
 directory under the name @samp{qux}.  Note that since the file
 @file{~ian/bar} is already on the execution system, no action need be
 taken for it.  The standard output will be collected in a file, then
-copied to the directory @file{/usr/spool/uucppublic} on the system
+copied to the file @file{/usr/spool/uucppublic/gorp} on the system
 @samp{test1}.
 
 @ifset faq
@@ -8291,6 +8291,7 @@ Aleksey P. Rudnev @code{<alex@@kiae.su>}
 Curt Sampson @code{<curt@@portal.ca>}
 @code{sojurn!mike@@hobbes.cert.sei.cmu.edu} (Mike Sangrey)
 Nickolay Saukh @code{<nms@@ussr.EU.net>}
+Ignatios Souvatzis @code{<is@@jocelyn.rhein.de>}
 @code{heiko@@lotte.sax.de} (Heiko Schlittermann)
 Eric Schnoebelen @code{<eric@@cirr.com>}
 @code{russell@@alpha3.ersys.edmonton.ab.ca} (Russell Schulz)

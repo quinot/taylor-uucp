@@ -1,5 +1,8 @@
 2002-02-07  Ian Lance Taylor  <ian@airs.com>
 
+	* Ignatios Souvatzis: uucp.texi (Execution File Format): Correct
+	example of X. file.
+
 	* uucp.c (uccopy): Add fforcelocal option.  Change all callers.
 
 	* protz.c (fzwait): Remove unreachable return statement.
