@@ -26,120 +26,11 @@
 /* This is the internal header file for the uuconf package.  It should
    not be included by anything other than the uuconf code itself.  */
 
-/* We need the public header file.  */
-#include "uuconf.h"
-
-/* We need the system configuration header file.  */
-#include "conf.h"
-
-/* We need the system policy header file.  */
-#include "policy.h"
+/* Get all the general definitions, including uuconf.h.   */
+#include "uucp.h"
 
 /* We need the system dependent header file.  */
 #include "syshdr.h"
-
-/* Get <sys/types.h>.  */
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-/* We need definitions for various ANSI C features.  If UUCONF_ANSI_C
-   is 1, then uuconf.h already included <stddef.h>.  */
-#if ! UUCONF_ANSI_C
-
-/* Define size_t.  */
-#ifdef SIZE_T
-typedef SIZE_T size_t;
-#endif
-
-/* This definition of offsetof should work on most systems; if it
-   fails, it will have to be patched in some difficult to foresee
-   manner.  */
-#define offsetof(type, field) ((size_t) (char *) &(((type *) 0)->field))
-
-/* A generic pointer type.  */
-typedef char *pointer;
-
-/* A generic pointer to const.  */
-typedef char *constpointer;
-
-/* We just ignore const.  */
-#define const
-
-/* We only use void as a function return value.  */
-#define void int
-
-/* Used for function prototypes.  */
-#define P(x) ()
-
-/* Used for arguments to the ctype functions.  */
-#define BUCHAR(b) ((b) & 0xff)
-
-#else /* UUCONF_ANSI_C */
-
-/* A generic pointer type.  */
-typedef void *pointer;
-
-/* A generic pointer to const.  */
-typedef const void *constpointer;
-
-/* Used for function prototypes.  */
-#define P(x) x
-
-/* Used for arguments to the ctype functions.  */
-#define BUCHAR(b) ((unsigned char) (b))
-
-#endif /* UUCONF_ANSI_C */
-
-/* Get the string functions, which are used throughout the code.  */
-
-#if HAVE_MEMORY_H
-#include <memory.h>
-#endif
-
-#if HAVE_STRING_H
-#include <string.h>
-#else /* ! HAVE_STRING_H */
-#if HAVE_STRINGS_H
-#include <strings.h>
-#else /* ! HAVE_STRINGS_H */
-extern int strcmp (), strncmp ();
-extern char *strchr (), *strerror ();
-extern size_t strlen (), strspn (), strcspn ();
-#if ! HAVE_MEMORY_H
-extern pointer memcpy ();
-#endif /* ! HAVE_MEMORY_H */
-#endif /* ! HAVE_STRINGS_H */
-#endif /* ! HAVE_STRING_H */
-
-/* Get what we need from <stdlib.h>.  */
-
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#else /* ! HAVE_STDLIB_H */
-extern pointer malloc (), realloc ();
-extern void free ();
-extern long strtol ();
-#endif /* ! HAVE_STDLIB_H */
-
-/* NeXT uses <libc.h> to declare a bunch of functions.  */
-#if HAVE_LIBC_H
-#include <libc.h>
-#endif
-
-/* We need boolean, TRUE and FALSE.  */
-typedef int boolean;
-#undef TRUE
-#define TRUE (1)
-#undef FALSE
-#define FALSE (0)
-
-/* If we need to declare errno, do so.  I don't want to always do
-   this, because some system might theoretically have a different
-   declaration for errno.  On a POSIX system this is sure to work.  */
-#if ! HAVE_ERRNO_DECLARATION
-extern int errno;
-#endif
 
 /* This is the generic information structure.  This holds all the
    per-thread global information needed by the uuconf code.  The
@@ -468,51 +359,3 @@ extern int _uuconf_getline P((struct sglobal *qglobal,
 /* Split a string into tokens.  */
 extern int _uuconf_istrsplit P((char *zline, int bsep,
 				char ***ppzsplit, size_t *csplit));
-
-/* Library replacement functions.  */
-
-/* Copy one block of memory to another.  */
-#if ! HAVE_MEMCPY
-#if HAVE_BCOPY
-#define memcpy(pto, pfrom, c) bcopy ((pfrom), (pto), (c))
-#else /* ! HAVE_BCOPY */
-#define memcpy _uuconf_replace_memcpy
-extern pointer memcpy P((pointer pto, constpointer pfrom, size_t c));
-#endif /* ! HAVE_BCOPY */
-#endif /* ! HAVE_MEMCPY */
-
-/* Read a line from a file.  */
-#if ! HAVE_GETLINE
-#define getline _uuconf_replace_getline
-extern int getline P((char **, size_t *, FILE *));
-#endif
-
-/* Compare strings case insensitively.  */
-#if ! HAVE_STRCASECMP
-#define strcasecmp _uuconf_replace_strcasecmp
-extern int strcasecmp P((const char *, const char *));
-#endif
-
-/* Duplicate a string into the heap.  */
-#if ! HAVE_STRDUP
-#define strdup _uuconf_replace_strdup
-extern char *strdup P((const char *));
-#endif
-
-/* Compare strings case insensitively up to a point.  */
-#if ! HAVE_STRNCASECMP
-#define strncasecmp _uuconf_replace_strncasecmp
-extern int strncasecmp P((const char *, const char *, size_t));
-#endif
-
-/* Return a string for an errno value.  */
-#if ! HAVE_STRERROR
-#define strerror _uuconf_replace_strerror
-extern char *strerror P((int ierr));
-#endif
-
-/* Get an integer from a string.  */
-#if ! HAVE_STRTOL
-#define strtol _uuconf_replace_strtol
-extern long strtol P((const char *z, char **pzend, int ibase));
-#endif

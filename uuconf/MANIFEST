@@ -1,14 +1,8 @@
 README
 COPYING.LIB
-INSTALL
 MANIFEST
-configure
-configure.in
 Makefile.in
-conf.h.in
 alloc.h
-getopt.h
-policy.h
 syshdr.unx
 uucnfi.h
 addblk.c
@@ -37,8 +31,6 @@ fredia.c
 free.c
 freprt.c
 fresys.c
-getlin.c
-getopt.c
 grdcmp.c
 hdial.c
 hdnams.c
@@ -56,7 +48,6 @@ lineno.c
 locnm.c
 logfil.c
 maxuxq.c
-memcpy.c
 mrgblk.c
 paramc.c
 port.c
@@ -70,11 +61,6 @@ snams.c
 split.c
 spool.c
 stafil.c
-strcas.c
-strdup.c
-strerr.c
-strncs.c
-strtol.c
 syssub.c
 tcalou.c
 tdial.c
@@ -93,7 +79,6 @@ tsys.c
 tval.c
 ugtlin.c
 unk.c
-uuchk.c
 uuconv.c
 val.c
 vinit.c
