@@ -31,15 +31,13 @@
 
 #include <errno.h>
 
-/* Start up a new program and end the current one.  We always go
-   through ixsspawn, and never exec directly.  We don't have to worry
-   about SIGHUP because the current process is either not a process
-   group leader (uucp, uux) or it does not have a controlling terminal
-   (uucico).  */
+/* Start up a new program and end the current one.  We don't have to
+   worry about SIGHUP because the current process is either not a
+   process group leader (uucp, uux) or it does not have a controlling
+   terminal (uucico).  */
 
 boolean
-fsysdep_run (ffork, zprogram, zarg1, zarg2)
-     boolean ffork;
+fsysdep_run (zprogram, zarg1, zarg2)
      const char *zprogram;
      const char *zarg1;
      const char *zarg2;
@@ -72,9 +70,6 @@ fsysdep_run (ffork, zprogram, zarg1, zarg2)
       ulog (LOG_ERROR, "ixsspawn: %s", strerror (errno));
       return FALSE;
     }
-
-  if (ffork)
-    return TRUE;
 
   exit (EXIT_SUCCESS);
 }

@@ -628,13 +628,13 @@ main (argc, argv)
 	usysdep_detach ();
       if (zsystem == NULL)
 	{
-	  if (! fsysdep_run (FALSE, "uuxqt", (const char *) NULL,
+	  if (! fsysdep_run ("uuxqt", (const char *) NULL,
 			     (const char *) NULL))
 	    fret = FALSE;
 	}
       else
 	{
-	  if (! fsysdep_run (FALSE, "uuxqt", "-s", zsystem))
+	  if (! fsysdep_run ("uuxqt", "-s", zsystem))
 	    fret = FALSE;
 	}
     }

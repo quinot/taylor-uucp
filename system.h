@@ -205,18 +205,17 @@ extern boolean fsysdep_in_directory P((const char *zfile,
    return error.  */
 extern boolean fsysdep_file_exists P((const char *zfile));
 
-/* Exit the current program and start a new one.  If the ffork
-   argument is TRUE, the new program should be started up and the
-   current program should continue (but in all current cases, it will
-   immediately exit anyhow); if the ffork argument is FALSE, the new
-   program should replace the current program.  The three string
-   arguments may be catenated together to form the program to execute;
-   I did it this way to make it easy to call execl(2), and because I
-   never needed more than two arguments.  The program will always be
-   "uucico" or "uuxqt".  The return value will be passed directly to
-   usysdep_exit, and should be TRUE on success, FALSE on error.  */
-extern boolean fsysdep_run P((boolean ffork, const char *zprogram,
-			      const char *zarg1, const char *zarg2));
+/* Start up a program.  The code expects fsysdep_run to return after
+   doing a fork, but at least for now everything will work fine if it
+   does not (on a system which does not support forking).  The three
+   string arguments may be catenated together to form the program to
+   execute; I did it this way to make it easy to call execl(2), and
+   because I never needed more than two arguments.  The program will
+   always be "uucico" or "uuxqt".  The return value will be passed
+   directly to usysdep_exit, and should be TRUE on success, FALSE on
+   error.  */
+extern boolean fsysdep_run P((const char *zprogram, const char *zarg1,
+			      const char *zarg2));
 
 /* Send a mail message.  This function will be passed an array of
    strings.  All necessary newlines are already included; the strings

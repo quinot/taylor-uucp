@@ -1234,9 +1234,9 @@ main (argc, argv)
   else
     {
       if (zcall_system != NULL)
-	fexit = fsysdep_run (TRUE, "uucico", "-s", zcall_system);
+	fexit = fsysdep_run ("uucico", "-s", zcall_system);
       else if (fcall_any)
-	fexit = fsysdep_run (TRUE, "uucico", "-r1", (const char *) NULL);
+	fexit = fsysdep_run ("uucico", "-r1", (const char *) NULL);
       else
 	fexit = TRUE;
     }
