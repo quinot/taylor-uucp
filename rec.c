@@ -1053,7 +1053,6 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	}
 
       fprintf (e, "U %s %s\n", qtrans->s.zuser, qdaemon->qsys->uuconf_zname);
-      fprintf (e, "C %s\n", qtrans->s.zcmd);
       fprintf (e, "F %s\n", qtrans->s.zto);
       fprintf (e, "I %s\n", qtrans->s.zto);
       if (strchr (qtrans->s.zoptions, 'N') != NULL)
@@ -1064,6 +1063,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	fprintf (e, "R %s\n", qtrans->s.znotify);
       if (strchr (qtrans->s.zoptions, 'e') != NULL)
 	fprintf (e, "e\n");
+      fprintf (e, "C %s\n", qtrans->s.zcmd);
 
       fbad = FALSE;
       if (fclose (e) == EOF)

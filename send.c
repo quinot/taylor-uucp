@@ -1118,7 +1118,6 @@ fsend_exec_file_init (qtrans, qdaemon)
 
   usadd_exec_line (&z, &calc, &clen, 'U', qtrans->s.zuser,
 		   qdaemon->zlocalname);
-  usadd_exec_line (&z, &calc, &clen, 'C', qtrans->s.zcmd, "");
   usadd_exec_line (&z, &calc, &clen, 'F', qtrans->s.zto, "");
   usadd_exec_line (&z, &calc, &clen, 'I', qtrans->s.zto, "");
   if (strchr (qtrans->s.zoptions, 'N') != NULL)
@@ -1129,6 +1128,7 @@ fsend_exec_file_init (qtrans, qdaemon)
     usadd_exec_line (&z, &calc, &clen, 'R', qtrans->s.znotify, "");
   if (strchr (qtrans->s.zoptions, 'e') != NULL)
     usadd_exec_line (&z, &calc, &clen, 'e', "", "");
+  usadd_exec_line (&z, &calc, &clen, 'C', qtrans->s.zcmd, "");
 
   qinfo->zexec = z;
   qinfo->cbytes = clen;

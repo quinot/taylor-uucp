@@ -1152,7 +1152,6 @@ main (argc, argv)
     {
       /* Finish up the execute file.  */
       uxadd_xqt_line ('U', zuser, zxqtloc);
-      uxadd_xqt_line ('C', zfullcmd, (const char *) NULL);
       if (zinput_from != NULL)
 	{
 	  uxadd_xqt_line ('F', zinput_to, (char *) NULL);
@@ -1170,6 +1169,7 @@ main (argc, argv)
 	uxadd_xqt_line ('R', zrequestor, (const char *) NULL);
       if (fneedshell)
 	uxadd_xqt_line ('e', (const char *) NULL, (const char *) NULL);
+      uxadd_xqt_line ('C', zfullcmd, (const char *) NULL);
       if (fclose (eXxqt_file) != 0)
 	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
       eXxqt_file = NULL;
