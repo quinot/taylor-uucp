@@ -215,7 +215,6 @@
 #define HAVE_GETLINE 0 /* getlin.o */
 #define HAVE_MEMCHR 0 /* memchr.o */
 #define HAVE_STRDUP 0 /* strdup.o */
-#define HAVE_STRLWR 0 /* strlwr.o */
 #define HAVE_STRSTR 0 /* strstr.o */
 #define HAVE_STRTOL 0 /* strtol.o */
 

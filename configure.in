@@ -139,7 +139,7 @@ dnl
 undefine([index])
 AC_HAVE_FUNCS(memset memcmp memchr memcpy bcopy bcmp bzero)
 AC_HAVE_FUNCS(strchr strrchr index rindex strerror strtol strstr)
-AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp strlwr)
+AC_HAVE_FUNCS(strdup strcasecmp strncasecmp stricmp strnicmp)
 AC_HAVE_FUNCS(bsearch vfprintf)
 AC_HAVE_FUNCS(remove ftruncate ltrunc rename opendir dup2 waitpid wait4)
 AC_HAVE_FUNCS(sigsetjmp setret)

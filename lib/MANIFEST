@@ -18,7 +18,6 @@ status.c
 strcas.c
 strchr.c
 strdup.c
-strlwr.c
 strncs.c
 strrch.c
 strstr.c

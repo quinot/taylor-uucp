@@ -30,6 +30,7 @@ const char serial_rcsid[] = "$Id$";
 #endif
 
 #include <errno.h>
+#include <ctype.h>
 
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -560,12 +561,21 @@ fsserial_lockfile (flok, qconn)
 #if ! HAVE_SVR4_LOCKFILES
       {
 	const char *zbase;
+	size_t clen;
 
 	zbase = strrchr (qsysdep->zdevice, '/') + 1;
-	zalc = zbufalc (strlen (zbase) + sizeof "LCK..");
-	sprintf (zalc, "LCK..%s", zbase);
+	clen = strlen (zbase);
+	zalc = zbufalc (sizeof "LCK.." + clen);
+	memcpy (zalc, "LCK..", sizeof "LCK.." - 1);
+	memcpy (zalc + sizeof "LCK.." - 1, zbase, clen + 1);
 #if HAVE_SCO_LOCKFILES
-	strlwr (zalc + sizeof "LCK.." - 1);
+	{
+	  char *zl;
+
+	  for (zl = zalc + sizeof "LCK.." - 1; *zl != '\0'; zl++)
+	    if (isupper (*zl))
+	      *zl = tolower (*zl);
+	}
 #endif
       }
 #else /* HAVE_SVR4_LOCKFILES */

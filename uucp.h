@@ -360,8 +360,3 @@ extern pointer bsearch P((constpointer pkey, constpointer parray,
 			  size_t celes, size_t cbytes,
 			  int (*pficmp) P((constpointer, constpointer))));
 #endif
-
-/* Convert a string to lower case.  */
-#if ! HAVE_STRLWR
-extern char *strlwr P((char *));
-#endif
