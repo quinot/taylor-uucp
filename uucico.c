@@ -54,9 +54,6 @@ const char uucico_rcsid[] = "$Id$";
 #define COHERENT_C_OPTION 0
 #endif
 
-/* The program name.  */
-char abProgram[] = "uucico";
-
 /* Define the known protocols.  */
 
 #define TCP_PROTO \
@@ -120,12 +117,13 @@ struct spass
 /* Local functions.  */
 
 static void uusage P((void));
+static void uhelp P((void));
 static void uabort P((void));
 static boolean fcall P((pointer puuconf,
 			const struct uuconf_system *qsys,
 			struct uuconf_port *qport, boolean fifwork,
 			boolean fforce, boolean fdetach,
-			boolean ftimewarn));
+			boolean fquiet));
 static boolean fconn_call P((struct sdaemon *qdaemon,
 			     struct uuconf_port *qport,
 			     struct sstatus *qstat, int cretry,
@@ -155,15 +153,34 @@ static char *zget_uucp_cmd P((struct sconnection *qconn,
 static char *zget_typed_line P((struct sconnection *qconn));
 
 /* Long getopt options.  */
-static const struct option asLongopts[] = { { NULL, 0, NULL, 0 } };
+static const struct option asLongopts[] =
+{
+  { "quiet", no_argument, NULL, 2 },
+  { "ifwork", no_argument, NULL, 'C' },
+  { "nodetach", no_argument, NULL, 'D' },
+  { "loop", no_argument, NULL, 'e' },
+  { "force", no_argument, NULL, 'f'},
+  { "prompt", no_argument, NULL, 'l' },
+  { "port", required_argument, NULL, 'p' },
+  { "nouuxqt", no_argument, NULL, 'q' },
+  { "master", no_argument, NULL, 3 },
+  { "slave", no_argument, NULL, 4 },
+  { "system", required_argument, NULL, 's' },
+  { "wait", no_argument, NULL, 'w' },
+  { "config", required_argument, NULL, 'I' },
+  { "debug", required_argument, NULL, 'x' },
+  { "version", no_argument, NULL, 'v' },
+  { "help", no_argument, NULL, 1 },
+  { NULL, 0, NULL, 0 }
+};
 
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
-  /* -c: Whether to warn if a call is attempted at a bad time.  */
-  boolean ftimewarn = TRUE;
+  /* -c: Whether to be quiet.  */
+  boolean fquiet = FALSE;
   /* -C: Only call the system if there is work.  */
   boolean fifwork = FALSE;
   /* -D: don't detach from controlling terminal.  */
@@ -200,10 +217,12 @@ main (argc, argv)
   int iholddebug;
 #endif
 
+  zProgram = argv[0];
+
 #if COHERENT_C_OPTION
-  zopts = "c:CDefI:lp:qr:s:S:u:x:X:w";
+  zopts = "c:CDefI:lp:qr:s:S:u:x:X:vw";
 #else
-  zopts = "cCDefI:lp:qr:s:S:u:x:X:w";
+  zopts = "cCDefI:lp:qr:s:S:u:x:X:vw";
 #endif
 
   while ((iopt = getopt_long (argc, argv, zopts,
@@ -218,9 +237,11 @@ main (argc, argv)
 #endif
       switch (iopt)
 	{
+	case 2:
 	case 'c':
-	  /* Don't warn if a call is attempted at a bad time.  */
-	  ftimewarn = FALSE;
+	  /* Don't warn if a call is attempted at a bad time, and
+	     don't print the "No work" message.  */
+	  fquiet = TRUE;
 	  break;
 
 	case 'C':
@@ -241,12 +262,6 @@ main (argc, argv)
 	  /* Force a call even if it hasn't been long enough since the last
 	     failed call.  */
 	  fforce = TRUE;
-	  break;
-
-	case 'I':
-	  /* Set configuration file name (default is in sysdep.h).  */
-	  if (fsysdep_other_config (optarg))
-	    zconfig = optarg;
 	  break;
 
 	case 'l':
@@ -294,18 +309,49 @@ main (argc, argv)
 	     zsysdep_login_name ().  */
 	  break;
 
-	case 'x':
-	case 'X':
-#if DEBUG > 1
-	  /* Set debugging level  */
-	  iDebug |= idebug_parse (optarg);
-#endif
-	  break;
-
 	case 'w':
 	  /* Call out and then wait for a call in  */
 	  fwait = TRUE;
 	  break;
+
+	case 'I':
+	  /* Set configuration file name (default is in sysdep.h).  */
+	  if (fsysdep_other_config (optarg))
+	    zconfig = optarg;
+	  break;
+
+	case 'x':
+	case 'X':
+#if DEBUG > 1
+	  /* Set debugging level.  */
+	  iDebug |= idebug_parse (optarg);
+#endif
+	  break;
+
+	case 'v':
+	  /* Print version and exit.  */
+	  fprintf
+	    (stderr,
+	     "%s: Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
+	     zProgram, VERSION);
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
+
+	case 4:
+	  /* --slave.  */
+	  fmaster = FALSE;
+	  break;
+
+	case 3:
+	  /* --master.  */
+	  fmaster = TRUE;
+	  break;
+
+	case 1:
+	  /* --help.  */
+	  uhelp ();
+	  exit (EXIT_SUCCESS);
+	  /*NOTREACHED*/
 
 	case 0:
 	  /* Long option found, and flag value set.  */
@@ -313,7 +359,7 @@ main (argc, argv)
 
 	default:
 	  uusage ();
-	  break;
+	  /*NOTREACHED*/
 	}
     }
 
@@ -322,7 +368,7 @@ main (argc, argv)
 
   if (fwait && zport == NULL)
     {
-      ulog (LOG_ERROR, "-w requires -e");
+      fprintf (stderr, "%s: -w requires -e", zProgram);
       uusage ();
     }
 
@@ -353,7 +399,7 @@ main (argc, argv)
 					      pointer))) NULL,
 				  (pointer) NULL, &sport);
       if (iuuconf == UUCONF_NOT_FOUND)
-	ulog (LOG_FATAL, "%s: Port not found", zport);
+	ulog (LOG_FATAL, "%s: port not found", zport);
       else if (iuuconf != UUCONF_SUCCESS)
 	ulog_uuconf (LOG_FATAL, puuconf, iuuconf);
       qport = &sport;
@@ -417,7 +463,7 @@ main (argc, argv)
 	    {
 	      fLocked_system = TRUE;
 	      fret = fcall (puuconf, &sLocked_system, qport, fifwork,
-			    fforce, fdetach, ftimewarn);
+			    fforce, fdetach, fquiet);
 	      if (fLocked_system)
 		{
 		  (void) fsysdep_unlock_system (&sLocked_system);
@@ -501,7 +547,7 @@ main (argc, argv)
 		    {
 		      fLocked_system = TRUE;
 		      if (! fcall (puuconf, &sLocked_system, qport, TRUE,
-				   fforce, fdetach, ftimewarn))
+				   fforce, fdetach, fquiet))
 			fret = FALSE;
 
 		      /* Now ignore any SIGHUP that we got.  */
@@ -525,7 +571,7 @@ main (argc, argv)
 
 	  xfree ((pointer) pznames);
 
-	  if (! fdidone)
+	  if (! fdidone && ! fquiet)
 	    ulog (LOG_NORMAL, "No work");
 	}
 
@@ -665,46 +711,62 @@ main (argc, argv)
   return 0;
 }
 
-/* Print out a usage message.  */
+/* Print out a usage message and die.  */
 
 static void
 uusage ()
+{
+  fprintf (stderr, "Usage: %s [options]\n", zProgram);
+  fprintf (stderr, "Use %s --help for help\n", zProgram);
+  exit (EXIT_FAILURE);
+}
+
+/* Print a help message.  */
+
+static void
+uhelp ()
 {
   fprintf (stderr,
 	   "Taylor UUCP version %s, copyright (C) 1991, 1992, 1993 Ian Lance Taylor\n",
 	   VERSION);
   fprintf (stderr,
-	   "Usage: uucico [options]\n");
+	   "Usage: %s [options]\n", zProgram);
   fprintf (stderr,
-	   " -s,-S system: Call system (-S implies -f)\n");
+	   " -s,-S,--system system: Call system (-S implies -f)\n");
   fprintf (stderr,
-	   " -f: Force call despite system status\n");
+	   " -f,--force: Force call despite system status\n");
   fprintf (stderr,
 	   " -r state: 1 for master, 0 for slave (default)\n");
   fprintf (stderr,
-	   " -p port: Specify port (implies -e)\n");
+	   " --master: Act as master\n");
   fprintf (stderr,
-	   " -l: prompt for login name and password\n");
+	   " --slave: Act as slave (default)\n");
   fprintf (stderr,
-	   " -e: Endless loop of login prompts and daemon execution\n");
+	   " -p,--port port: Specify port (implies -e)\n");
   fprintf (stderr,
-	   " -w: After calling out, wait for incoming calls\n");
+	   " -l,--prompt: prompt for login name and password\n");
   fprintf (stderr,
-	   " -q: Don't start uuxqt when done\n");
+	   " -e,--loop: Endless loop of login prompts and daemon execution\n");
   fprintf (stderr,
-	   " -c: Don't warn if call is attempted at a bad time\n");
+	   " -w,--wait: After calling out, wait for incoming calls\n");
   fprintf (stderr,
-	   " -C: Only call named system if there is work\n");
+	   " -q,--nouuxqt: Don't start uuxqt when done\n");
   fprintf (stderr,
-	   " -D: Don't detach from controlling terminal\n");
+	   " -c,--quiet: Don't log bad time or no work warnings\n");
   fprintf (stderr,
-	   " -x,-X debug: Set debugging level\n");
+	   " -C,--ifwork: Only call named system if there is work\n");
+  fprintf (stderr,
+	   " -D,--nodetach: Don't detach from controlling terminal\n");
+  fprintf (stderr,
+	   " -x,-X,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   fprintf (stderr,
-	   " -I file: Set configuration file to use\n");
+	   " -I,--config file: Set configuration file to use\n");
 #endif /* HAVE_TAYLOR_CONFIG */
-
-  exit (EXIT_FAILURE);
+  fprintf (stderr,
+	   " -v,--version: Print version and exit\n");
+  fprintf (stderr,
+	   " --help: Print help and exit\n");
 }
 
 /* This function is called when a LOG_FATAL error occurs.  */
@@ -744,19 +806,19 @@ uabort ()
    argument is the port to use, and may be NULL.  If the fifwork
    argument is TRUE, the call is only placed if there is work to be
    done.  If the fforce argument is TRUE, a call is forced even if not
-   enough time has passed since the last failed call.  If the
-   ftimewarn argument is TRUE (the normal case), then a warning is
-   given if calls are not permitted at this time.  */
+   enough time has passed since the last failed call.  If the fquiet
+   argument is FALSE (the normal case), then a warning is given if
+   calls are not permitted at this time.  */
 
 static boolean
-fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
+fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, fquiet)
      pointer puuconf;
      const struct uuconf_system *qorigsys;
      struct uuconf_port *qport;
      boolean fifwork;
      boolean fforce;
      boolean fdetach;
-     boolean ftimewarn;
+     boolean fquiet;
 {
   struct sstatus sstat;
   long inow;
@@ -873,7 +935,7 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 	}
     }
 
-  if (fbadtime && ftimewarn)
+  if (fbadtime && ! fquiet)
     {
       ulog (LOG_NORMAL, "Wrong time to call");
 
