@@ -141,7 +141,9 @@ static boolean fsnotify P((pointer puuconf, int icmd, const char *zcomment,
 			   const struct uuconf_system *qsys,
 			   const char *zstdin, pointer pstdinseq,
 			   const char *zrequestor));
-static boolean fsquery P((pointer puuconf));
+static boolean fsquery P((pointer puuconf, int csystems,
+			  char **pazsystems, boolean fnotsystems,
+			  long iold, long iyoung));
 static int csunits_show P((long idiff));
 static boolean fsmachines P((void));
 
@@ -413,10 +415,10 @@ main (argc, argv)
     ++ccmds;
   if (fps)
     ++ccmds;
-  if (fquery)
-    ++ccmds;
-  if (fexecute || csystems > 0 || cusers > 0 || ioldhours != -1
+  if (fexecute || fquery || csystems > 0 || cusers > 0 || ioldhours != -1
       || iyounghours != -1 || ccommands > 0)
+    ++ccmds;
+  if (fexecute && fquery)
     ++ccmds;
 
   if (ccmds > 1)
@@ -495,6 +497,7 @@ main (argc, argv)
     }
 
   if (! fexecute
+      && ! fquery
       && (fall
 	  || csystems > 0
 	  || cusers > 0
@@ -518,7 +521,17 @@ main (argc, argv)
       fret = FALSE;
     }
   else if (fquery)
-    fret = fsquery (puuconf);
+    {
+      if (cusers > 0 || ccommands > 0)
+	{
+	  ulog (LOG_ERROR, "-u, -c not supported with -q");
+	  ususage ();
+	  fret = FALSE;
+	}
+      else
+	fret = fsquery (puuconf, csystems, pazsystems, fnotsystems,
+			iold, iyoung);
+    }
   else if (fmachine)
     fret = fsmachines ();
   else if (ckills > 0 || crejuvs > 0)
@@ -1852,15 +1865,23 @@ struct sxqtlist
 
 static boolean fsquery_system P((const struct uuconf_system *qsys,
 				 struct sxqtlist **pq,
-				 long inow, const char *zlocalname));
+				 long inow, const char *zlocalname,
+				 int csystems, char **pazsystems,
+				 boolean fnotsystems, long iold, long iyoung));
 static boolean fsquery_show P((const struct uuconf_system *qsys, int cwork,
-			       long ifirstwork,
-			       struct sxqtlist *qxqt,
-			       long inow, const char *zlocalname));
+			       long ifirstwork, struct sxqtlist *qxqt,
+			       long inow, const char *zlocalname,
+			       int csystems, char **pazsystems,
+			       boolean fnotsystems, long iold, long iyoung));
 
 static boolean
-fsquery (puuconf)
+fsquery (puuconf, csystems, pazsystems, fnotsystems, iold, iyoung)
      pointer puuconf;
+     int csystems;
+     char **pazsystems;
+     boolean fnotsystems;
+     long iold;
+     long iyoung;
 {
   int iuuconf;
   const char *zlocalname;
@@ -1951,7 +1972,8 @@ fsquery (puuconf)
 	  continue;
 	}
 
-      if (! fsquery_system (&ssys, &qlist, inow, zlocalname))
+      if (! fsquery_system (&ssys, &qlist, inow, zlocalname, csystems,
+			    pazsystems, fnotsystems, iold, iyoung))
 	fret = FALSE;
 
       (void) uuconf_system_free (puuconf, &ssys);
@@ -1990,7 +2012,9 @@ fsquery (puuconf)
 		  ssys.uuconf_zname = (char *) zlocalname;
 		}
 
-	      if (! fsquery_show (&ssys, 0, 0L, *pq, inow, zlocalname))
+	      if (! fsquery_show (&ssys, 0, 0L, *pq, inow, zlocalname,
+				  csystems, pazsystems, fnotsystems,
+				  iold, iyoung))
 		fret = FALSE;
 	      (void) uuconf_system_free (puuconf, &ssys);
 	      qfree = *pq;
@@ -2016,7 +2040,8 @@ fsquery (puuconf)
 	  break;
 	}
 
-      if (! fsquery_show (&ssys, 0, 0L, qlist, inow, zlocalname))
+      if (! fsquery_show (&ssys, 0, 0L, qlist, inow, zlocalname,
+			  csystems, pazsystems, fnotsystems, iold, iyoung))
 	fret = FALSE;
       (void) uuconf_system_free (puuconf, &ssys);
       qnext = qlist->qnext;
@@ -2031,11 +2056,17 @@ fsquery (puuconf)
 /* Query a single known system.  */
 
 static boolean
-fsquery_system (qsys, pq, inow, zlocalname)
+fsquery_system (qsys, pq, inow, zlocalname, csystems, pazsystems,
+		fnotsystems, iold, iyoung)
      const struct uuconf_system *qsys;
      struct sxqtlist **pq;
      long inow;
      const char *zlocalname;
+     int csystems;
+     char **pazsystems;
+     boolean fnotsystems;
+     long iold;
+     long iyoung;
 {
   int cwork;
   long ifirstwork;
@@ -2090,7 +2121,9 @@ fsquery_system (qsys, pq, inow, zlocalname)
   if (cwork == 0 && *pq == NULL)
     return TRUE;
 
-  fret = fsquery_show (qsys, cwork, ifirstwork, *pq, inow, zlocalname);
+  fret = fsquery_show (qsys, cwork, ifirstwork, *pq, inow,
+		       zlocalname, csystems, pazsystems, fnotsystems,
+		       iold, iyoung);
 
   if (*pq != NULL)
     {
@@ -2109,19 +2142,53 @@ fsquery_system (qsys, pq, inow, zlocalname)
    local system specially.  */
 
 static boolean
-fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname)
+fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname,
+	      csystems, pazsystems, fnotsystems, iold, iyoung)
      const struct uuconf_system *qsys;
      int cwork;
      long ifirstwork;
      struct sxqtlist *qxqt;
      long inow;
      const char *zlocalname;
+     int csystems;
+     char **pazsystems;
+     boolean fnotsystems;
+     long iold;
+     long iyoung;
 {
   boolean flocal;
   struct sstatus sstat;
   boolean fnostatus;
   struct tm stime;
   int cpad;
+
+  /* Make sure this is one of the systems we are printing.  */
+  if (csystems > 0)
+    {
+      boolean fmatch;
+      int i;
+
+      fmatch = fnotsystems;
+      for (i = 0; i < csystems; i++)
+	{
+	  if (strcmp (pazsystems[i], qsys->uuconf_zname) == 0)
+	    {
+	      fmatch = ! fmatch;
+	      break;
+	    }
+	}
+      if (! fmatch)
+	return TRUE;
+    }
+
+  /* Make sure the commands are within the time bounds.  */
+  if ((iold != (long) -1
+       && (cwork == 0 || ifirstwork > iold)
+       && (qxqt == NULL || qxqt->ifirst > iold))
+      || (iyoung != (long) -1
+	  && (cwork == 0 || ifirstwork < iyoung)
+	  && (qxqt == NULL || qxqt->ifirst < iyoung)))
+    return TRUE;
 
   flocal = strcmp (qsys->uuconf_zname, zlocalname) == 0;
 

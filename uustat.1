@@ -60,9 +60,33 @@ jobid ] [
 .B \-\-rejuvenate
 jobid ]
 .PP
-.B uustat \-q
+.B uustat \-q [
+.B \-sS
+system ] [
+.B \-oy
+hours ] [
+.B \-\-system
+system ] [
+.B \-\-not-system
+system ] [
+.B \-\-older-than
+hours ] [
+.B \-\-younger-than
+hours ]
 .PP
-.B uustat \-\-list
+.B uustat \-\-list [
+.B \-sS
+system ] [
+.B \-oy
+hours ] [
+.B \-\-system
+system ] [
+.B \-\-not-system
+system ] [
+.B \-\-older-than
+hours ] [
+.B \-\-younger-than
+hours ]
 .PP
 .B uustat \-m
 .PP
@@ -139,12 +163,16 @@ of
 .B \-s system, \-\-system system
 List all jobs queued up for the named system.  These options may be
 specified multiple times, in which case all jobs for all the systems
-will be listed.
+will be listed.  If used with
+.B \-\-list
+only the systems named will be listed.
 .TP 5
 .B \-S system, \-\-not-system system
 List all jobs queued for systems other than the one named.  These
 options may be specified multiple times, in which case no jobs from
-any of the specified systems will be listed.  These options may not be
+any of the specified systems will be listed.  If used with
+.B \-\-list
+only the systems not named will be listed.  These options may not be
 used with
 .B \-s
 or
@@ -189,10 +217,18 @@ or
 .B \-\-command.
 .TP 5
 .B \-o hours, \-\-older-than hours
-List all queued jobs older than the given number of hours.
+List all queued jobs older than the given number of hours.  If used
+with
+.B \-\-list
+only systems whose oldest job is older than the given number of hours
+will be listed.
 .TP 5
 .B \-y hours, \-\-younger-than hours
-List all queued jobs younger than the given number of hours.
+List all queued jobs younger than the given number of hours.  If used
+with
+.B \-\-list
+only systems whose oldest job is younger than the given number of
+hours will be listed.
 .TP 5
 .B \-k jobid, \-\-kill jobid
 Kill the named job.  The job id is shown by the default output format,
@@ -239,7 +275,18 @@ several jobs.
 .TP 5
 .B \-q, \-\-list
 Display the status of commands, executions and conversations for all
-remote systems for which commands or executions are queued.
+remote systems for which commands or executions are queued.  The
+.B \-s,
+.B \-\-system,
+.B \-S,
+.B \-\-not-system,
+.B \-o,
+.B \-\-older-than,
+.B \-y,
+and
+.B \-\-younger-than
+options may be used to restrict the systems which are listed.  Systems
+for which no commands or executions are queued will never be listed.
 .TP 5
 .B \-m, \-\-status
 Display the status of conversations for all remote systems.
