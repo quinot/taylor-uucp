@@ -34,12 +34,10 @@
 
 /* Get the current conversation sequence number for a remote system,
    and increment it for next time.  The conversation sequence number
-   is kept in a file named .SQ in the spool directory for that system.
-   This is not compatible with other versions of UUCP, but it makes
-   more sense to me.  The sequence file is only used if specified in
-   the information for that system.  In V2, the file
-   /usr/lib/uucp/SQFILE is searched for each system to get a
-   conversation sequence number.  */
+   is kept in a file named for the system in the directory .Sequence
+   in the spool directory.  This is not compatible with other versions
+   of UUCP, but it makes more sense to me.  The sequence file is only
+   used if specified in the information for that system.  */
 
 long
 ixsysdep_get_sequence (qsys)
