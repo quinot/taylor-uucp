@@ -11,8 +11,8 @@
 	* log.c (ulog): Add code to HDB_LOGGING case to protect the
 	administrator against foolishness.
 
-	* Tom Ivar Helbekkmo: uux.c (main): Correct off-by-one error in
-	memory allocation.
+	* Meno Abels: uux.c (main): Correct off-by-one error in memory
+	allocation.
 
 	* Vadim Radionov: copy.c (fcopy_open_file): Check for read
 	errors.
