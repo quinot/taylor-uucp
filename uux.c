@@ -853,8 +853,8 @@ main (argc, argv)
 	    {
 	      char *zdata;
 
-	      if (! sfromsys.fcall_transfer
-		  && ! sfromsys.fcalled_transfer)
+	      if (! sfromsys.uuconf_fcall_transfer
+		  && ! sfromsys.uuconf_fcalled_transfer)
 		ulog (LOG_FATAL,
 		      "Not permitted to transfer files to or from %s",
 		      sfromsys.uuconf_zname);
@@ -1172,8 +1172,8 @@ main (argc, argv)
     {
       char *zjobid;
 
-      if (! sxqtsys.fcall_transfer
-	  && ! sxqtsys.fcalled_transfer)
+      if (! sxqtsys.uuconf_fcall_transfer
+	  && ! sxqtsys.uuconf_fcalled_transfer)
 	ulog (LOG_FATAL, "Not permitted to transfer files to or from %s",
 	      sxqtsys.uuconf_zname);
 
