@@ -227,8 +227,6 @@ _uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
       return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO;
     }
 
-  qglobal->ilineno = 0;
-
   iret = uuconf_cmd_file ((pointer) qglobal, qloc->e, as, (pointer) &si,
 			  iiunknown, UUCONF_CMDTABFLAG_BACKSLASH,
 			  qsys->uuconf_palloc);
@@ -269,10 +267,9 @@ _uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
 
   si.falternates = FALSE;
 
-  qglobal->ilineno = qloc->ilineno;
-
   iret = uuconf_cmd_file (qglobal, qloc->e, as, (pointer) &si, iiunknown,
 			  UUCONF_CMDTABFLAG_BACKSLASH, qsys->uuconf_palloc);
+  qglobal->ilineno += qloc->ilineno;
 
   if (iret == UUCONF_SUCCESS)
     {
