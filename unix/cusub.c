@@ -770,6 +770,8 @@ fsysdep_terminal_raw (flocalecho)
     sSterm_new.c_lflag &=~ (ICANON | ISIG | ECHO | ECHOE | ECHOK | ECHONL);
   else
     sSterm_new.c_lflag &=~ (ICANON | ISIG);
+  sSterm_new.c_iflag &=~ (INLCR | IGNCR | ICRNL);
+  sSterm_new.c_oflag &=~ (OPOST);
   sSterm_new.c_cc[VMIN] = 1;
   sSterm_new.c_cc[VTIME] = 0;
 
@@ -783,6 +785,8 @@ fsysdep_terminal_raw (flocalecho)
     sSterm_new.c_lflag &=~ (ICANON | ISIG | ECHO | ECHOE | ECHOK | ECHONL);
   else
     sSterm_new.c_lflag &=~ (ICANON | ISIG);
+  sSterm_new.c_iflag &=~ (INLCR | IGNCR | ICRNL);
+  sSterm_new.c_oflag &=~ (OPOST);
   sSterm_new.c_cc[VMIN] = 1;
   sSterm_new.c_cc[VTIME] = 0;
 
