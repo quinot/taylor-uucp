@@ -42,9 +42,9 @@ uuconf_strip (pglobal, pistrip)
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 
   *pistrip = 0;
-  if (qglobal->fstrip_login)
+  if (qglobal->qprocess->fstrip_login)
     *pistrip |= UUCONF_STRIP_LOGIN;
-  if (qglobal->fstrip_proto)
+  if (qglobal->qprocess->fstrip_proto)
     *pistrip |= UUCONF_STRIP_PROTO;
   return UUCONF_SUCCESS;
 }
