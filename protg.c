@@ -283,6 +283,10 @@ static int cGgarbage_data = CGARBAGE;
    Protocol parameter ``errors''.  */
 static int cGmax_errors = CERRORS;
 
+/* Whether to use shorter packets when possible.  Protocol parameter
+   ``short-packets''.  */
+static boolean fGshort_packets = TRUE;
+
 /* Protocol parameter commands.  */
 
 struct uuconf_cmdtab asGproto_params[] =
@@ -304,6 +308,8 @@ struct uuconf_cmdtab asGproto_params[] =
       (pointer) &iGforced_remote_winsize, NULL },
   { "remote-packet-size", UUCONF_CMDTABTYPE_INT,
       (pointer) &iGforced_remote_packsize, NULL },
+  { "short-packets", UUCONF_CMDTABTYPE_BOOLEAN, (pointer) &fGshort_packets,
+      NULL },
   { NULL, 0, NULL, NULL }
 };
 
@@ -359,7 +365,7 @@ static boolean fgprocess_data P((struct sdaemon *qdaemon, boolean fdoacks,
 				 boolean *pfexit, size_t *pcneed,
 				 boolean *pffound));
 static boolean fginit_sendbuffers P((boolean fallocate));
-static boolean fgcheck_errors P((void));
+static boolean fgcheck_errors P((struct sdaemon *qdaemon));
 static int igchecksum P((const char *zdata, size_t clen));
 static int igchecksum2 P((const char *zfirst, size_t cfirst,
 			  const char *zsecond, size_t csecond));
@@ -410,8 +416,8 @@ fgstart (qdaemon)
   iseg -= 5;
   if (iseg < 0 || iseg > 7)
     {
-      ulog (LOG_ERROR, "Illegal packet size %d for 'g' protocol",
-	    iGrequest_packsize);
+      ulog (LOG_ERROR, "Illegal packet size %d for '%c' protocol",
+	    iGrequest_packsize, qdaemon->qproto->bname);
       iseg = 1;
     }
   
@@ -491,7 +497,18 @@ fgstart (qdaemon)
 
   return FALSE;
 }
+
+/* The 'G' protocol is identical to the 'g' protocol, except that
+   short packets are never supported.  */
 
+boolean
+fbiggstart (qdaemon)
+     struct sdaemon *qdaemon;
+{
+  fGshort_packets = FALSE;
+  return fgstart (qdaemon);
+}
+
 /* Exchange initialization messages with the other system.
 
    A problem:
@@ -628,9 +645,9 @@ fgshutdown (qdaemon)
      middle (the ones that counted for cGdelayed_packets).  I don't
      think it's worth being precise.  */
   ulog (LOG_NORMAL,
-	"Protocol 'g' packets: sent %ld, resent %ld, received %ld",
-	cGsent_packets, cGresent_packets - cGdelayed_packets,
-	cGrec_packets);
+	"Protocol '%c' packets: sent %ld, resent %ld, received %ld",
+	qdaemon->qproto->bname, cGsent_packets,
+	cGresent_packets - cGdelayed_packets, cGrec_packets);
   if (cGbad_hdr != 0
       || cGbad_checksum != 0
       || cGbad_order != 0
@@ -653,6 +670,7 @@ fgshutdown (qdaemon)
   cGmax_errors = CERRORS;
   iGforced_remote_winsize = IREMOTE_WINDOW;
   iGforced_remote_packsize = IREMOTE_PACKSIZE;
+  fGshort_packets = TRUE;
 
   return TRUE;
 }
@@ -690,7 +708,7 @@ fgsendcmd (qdaemon, z, ilocal, iremote)
 	     which may indicate an older UUCP package), try to fit
 	     this command into a smaller packet.  We still always send
 	     a complete packet, though.  */
-	  if (iGremote_packsize <= 64)
+	  if (iGremote_packsize <= 64 || ! fGshort_packets)
 	    csize = iGremote_packsize;
 	  else
 	    {
@@ -825,7 +843,7 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
       /* If the remote packet size is larger than 64, the default, we
 	 can assume they can handle a smaller packet as well, which
 	 will be more efficient to send.  */
-      if (iGremote_packsize > 64)
+      if (iGremote_packsize > 64 && fGshort_packets)
 	{
 	  /* The packet size is 1 << (iseg + 4).  */
 	  iseg = 1;
@@ -1229,7 +1247,8 @@ fggot_ack (qdaemon, iack)
    accordingly.  */
 
 static boolean
-fgcheck_errors ()
+fgcheck_errors (qdaemon)
+     struct sdaemon *qdaemon;
 {
   int corder;
 
@@ -1244,7 +1263,8 @@ fgcheck_errors ()
   if ((cGbad_hdr + cGbad_checksum + corder + cGremote_rejects)
       > cGmax_errors)
     {
-      ulog (LOG_ERROR, "Too many 'g' protocol errors");
+      ulog (LOG_ERROR, "Too many '%c' protocol errors",
+	    qdaemon->qproto->bname);
       return FALSE;
     }
 
@@ -1352,7 +1372,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			   ^ ab[IFRAME_CHECKHIGH]
 			   ^ ab[IFRAME_CONTROL]) & 0xff);
 
-	  if (! fgcheck_errors ())
+	  if (! fgcheck_errors (qdaemon))
 	    return FALSE;
 
 	  iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
@@ -1378,7 +1398,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fgprocess_data: Bad header: control packet with data");
 
-	      if (! fgcheck_errors ())
+	      if (! fgcheck_errors (qdaemon))
 		return FALSE;
 
 	      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
@@ -1402,7 +1422,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 	      DEBUG_MESSAGE0 (DEBUG_PROTO | DEBUG_ABNORMAL,
 			      "fgprocess_data: Bad header: data packet is type CONTROL");
 
-	      if (! fgcheck_errors ())
+	      if (! fgcheck_errors (qdaemon))
 		return FALSE;
 
 	      iPrecstart = (iPrecstart + 1) % CRECBUFLEN;
@@ -1470,7 +1490,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			  ihdrcheck, idatcheck);
 
 	  ++cGbad_checksum;
-	  if (! fgcheck_errors ())
+	  if (! fgcheck_errors (qdaemon))
 	    return FALSE;
 
 	  /* If the checksum failed for a data packet, then if it was
@@ -1541,7 +1561,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 			      INEXTSEQ (iGrecseq));
 
 	      ++cGbad_order;
-	      if (! fgcheck_errors ())
+	      if (! fgcheck_errors (qdaemon))
 		return FALSE;
 
 	      /* This code used to send an RR to encourage the other
@@ -1697,7 +1717,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
 
 	      ++cGresent_packets;
 	      ++cGremote_rejects;
-	      if (! fgcheck_errors ())
+	      if (! fgcheck_errors (qdaemon))
 		return FALSE;
 	      zpack = zgadjust_ack (iGretransmit_seq);
 	      if (! fsend_data (qdaemon->qconn, zpack,

@@ -129,6 +129,7 @@ extern int iPrecend;
 
 extern struct uuconf_cmdtab asGproto_params[];
 extern boolean fgstart P((struct sdaemon *qdaemon));
+extern boolean fbiggstart P((struct sdaemon *qdaemon));
 extern boolean fgshutdown P((struct sdaemon *qdaemon));
 extern boolean fgsendcmd P((struct sdaemon *qdaemon, const char *z,
 			    int ilocal, int iremote));
