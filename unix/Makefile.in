@@ -101,7 +101,7 @@ EXTRA_libunix_a_SOURCES = getcwd.c mkdir.c rmdir.c dirent.c dup2.c ftw.c \
 @HAVE_MKDIR_TRUE@UUDIRFLAGS = 
 @HAVE_MKDIR_FALSE@UUDIRFLAGS = -DUUDIR_PROGRAM=\"$(sbindir)/util/uudir\"
 
-AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS) $(UUDIRFLAGS)
+AM_CFLAGS = -I.. -I$(srcdir)/.. $(WARN_CFLAGS) $(UUDIRFLAGS) -DSBINDIR=\"$(sbindir)\"
 subdir = unix
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h

@@ -1,5 +1,9 @@
 2002-03-05  Ian Lance Taylor  <ian@airs.com>
 
+	* configure.in: Don't define SBINDIR.
+	* unix/Makefile.am (AM_CFLAGS): Define SBINDIR.
+	* configure, config.h.in, unix/Makefile.in: Rebuild.
+
 	* Makefile.am (EXTRA_DIST): Define.
 	* Makefile.in: Rebuild.
 

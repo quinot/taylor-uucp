@@ -29,7 +29,6 @@ AC_ARG_WITH(oldconfigdir,
 AC_DEFINE_UNQUOTED(OLDCONFIGLIB, "$oldconfigdir",
                    [old config file directory; normally /usr/lib/uucp])
 dnl
-AC_DEFINE_UNQUOTED(SBINDIR, "$sbindir", [sbin directory])
 AC_PREFIX_PROGRAM(gcc)
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL

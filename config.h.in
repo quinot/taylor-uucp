@@ -378,9 +378,6 @@
 /* old config file directory; normally /usr/lib/uucp */
 #undef OLDCONFIGLIB
 
-/* sbin directory */
-#undef SBINDIR
-
 /* Whether the compiler supports prototypes */
 #undef HAVE_PROTOTYPES
 
