@@ -78,7 +78,7 @@ const char serial_rcsid[] = "$Id$";
 #define FD_CLOEXEC 1
 #endif
 
-#if HAVE_SYS_IOCTL_H
+#if HAVE_SYS_IOCTL_H || HAVE_TXADDCD
 #include <sys/ioctl.h>
 #endif
 
@@ -1837,7 +1837,7 @@ fsserial_hardflow (qconn, fhardflow)
 #define HAVE_HARDFLOW 0
 #endif
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
-#ifndef TXADDCD
+#if ! HAVE_TXADDCD
 #ifndef CRTSFL
 #ifndef CRTSCTS
 #ifndef CTSCD
@@ -1855,11 +1855,11 @@ fsserial_hardflow (qconn, fhardflow)
 #if HAVE_HARDFLOW
   if (fhardflow)
     {
-#ifdef TXADDCD
+#if HAVE_TXADDCD
       /* The return value does not reliably indicate whether this
 	 actually succeeded.  */
       (void) ioctl (q->o, TXADDCD, "rts");
-#else /* ! defined (TXADDCD) */
+#else /* ! HAVE_TXADDCD */
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
 #ifdef CRTSFL
       q->snew.c_cflag |= CRTSFL;
@@ -1878,15 +1878,15 @@ fsserial_hardflow (qconn, fhardflow)
 		strerror (errno));
 	  return FALSE;
 	}
-#endif /* ! defined (TXADDCD) */
+#endif /* ! HAVE_TXADDCD */
     }
   else
     {
-#ifdef TXDELCD
+#if HAVE_TXADDCD
       /* The return value does not reliably indicate whether this
 	 actually succeeded.  */
       (void) ioctl (q->o, TXDELCD, "rts");
-#else /* ! defined (TXDELCD) */
+#else /* ! HAVE_TXADDCD */
 #if HAVE_SYSV_TERMIO || HAVE_POSIX_TERMIOS
 #ifdef CRTSFL
       q->snew.c_cflag &=~ CRTSFL;
@@ -1905,7 +1905,7 @@ fsserial_hardflow (qconn, fhardflow)
 		strerror (errno));
 	  return FALSE;
 	}
-#endif /* ! defined (TXDELCD) */
+#endif /* ! HAVE_TXADDCD */
     }
 #endif /* HAVE_HARDFLOW */
 
