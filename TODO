@@ -362,3 +362,8 @@ without an extension is refuse to send any new jobs ourselves.  Of
 course, we could just drop the connection.
 
 169.
+
+Franc,ois Pinard: when given uustat -k00FC, check each possible job ID
+and use it if there is an unambiguous one.
+
+170.
