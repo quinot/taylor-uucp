@@ -874,6 +874,15 @@ information will be generated whenever the call comes in.  See the
 @code{debug} command in the main configuration file (@pxref{config
 file}) for more details.
 
+@item max-remote-debug @var{number}
+@findex max-remote-debug
+
+When the system calls in, it may request that the debugging level be set
+to a certain value.  This command may be used to put a limit on the
+debugging level which the system may request, to avoid filling up the
+disk with debugging information.  The default value is 5 (debugging
+levels range from 0 for no debugging to 9 for full debugging).
+
 @item time @var{string}
 @findex time
 

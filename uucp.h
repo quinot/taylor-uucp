@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.50  1992/03/09  05:08:16  ian
+   Added status for wrong time to call, not used if system can't be called
+
    Revision 1.49  1992/03/08  16:42:41  ian
    Ted Lindgreen: report port and login name in log file
 
@@ -542,6 +545,8 @@ struct ssysteminfo
   struct schat_info scalled_chat;
   /* Debugging level to set during a call.  */
   int idebug;
+  /* Maximum remote debugging level.  */
+  int imax_remote_debug;
   /* Whether the other system may request things when we call them.  */
   boolean fcall_request;
   /* Whether the other system may request things when they call us.  */

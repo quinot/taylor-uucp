@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.74  1992/03/09  19:52:50  ian
+   Ted Lindgreen: strip parity from initial handshake strings
+
    Revision 1.73  1992/03/09  19:42:43  ian
    Ted Lindgreen: don't send mail for nonexistent file
 
@@ -1701,7 +1704,7 @@ faccept_call (zlogin, qport, pqsys)
 
   if (zspace == NULL)
     {
-      if (qsys != NULL && qsys->fsequence)
+      if (qsys->fsequence)
 	{
 	  (void) fsend_uucp_cmd ("RBADSEQ");
 	  ulog (LOG_ERROR, "No sequence number (call rejected)");
@@ -1720,6 +1723,7 @@ faccept_call (zlogin, qport, pqsys)
 	{
 	  boolean frecognized;
 	  char *znext;
+	  int iwant;
 	  
 	  frecognized = FALSE;
 	  if (*zspace == '-')
@@ -1728,9 +1732,15 @@ faccept_call (zlogin, qport, pqsys)
 		{
 		case 'x':
 		  frecognized = TRUE;
-		  iDebug = atoi (zspace + 2);
-		  ulog (LOG_NORMAL, "Setting debugging mode to %d",
-			iDebug);
+		  iwant = atoi (zspace + 2);
+		  if (iwant > qsys->imax_remote_debug)
+		    iwant = qsys->imax_remote_debug;
+		  if (iwant > iDebug)
+		    {
+		      ulog (LOG_NORMAL, "Setting debugging mode to %d",
+			    iwant);
+		      iDebug = iwant;
+		    }
 		  break;
 		case 'Q':
 		  frecognized = TRUE;
