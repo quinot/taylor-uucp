@@ -8,15 +8,16 @@
 #include "system.h"
 
 boolean
-fsysdep_sync (e)
+fsysdep_sync (e, zmsg)
      openfile_t e;
+     const char *zmsg;
 {
   int o;
 
 #if USE_STDIO
   if (fflush (e) == EOF)
     {
-      ulog (LOG_ERROR, "fflush: %s", strerror (errno));
+      ulog (LOG_ERROR, "%s: fflush: %s", zmsg, strerror (errno));
       return FALSE;
     }
 #endif
@@ -30,7 +31,7 @@ fsysdep_sync (e)
 #if FSYNC_ON_CLOSE
   if (fsync (o) < 0)
     {
-      ulog (LOG_ERROR, "fsync: %s", strerror (errno));
+      ulog (LOG_ERROR, "%s: fsync: %s", zmsg, strerror (errno));
       return FALSE;
     }
 #endif
