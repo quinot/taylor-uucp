@@ -412,8 +412,6 @@ struct uuconf_port
   int uuconf_ireliable;
   /* The lock file name to use.  */
   char *uuconf_zlockname;
-  /* System dependent information set when the port is opened.  */
-  UUCONF_POINTER uuconf_psysdep;
   /* Memory allocation block for the port.  */
   UUCONF_POINTER uuconf_palloc;
   /* The type specific information.  */

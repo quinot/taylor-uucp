@@ -49,6 +49,5 @@ _uuconf_uclear_port (qport)
 			    | UUCONF_RELIABLE_EIGHT);
 
   qport->uuconf_zlockname = NULL;
-  qport->uuconf_psysdep = NULL;
   qport->uuconf_palloc = NULL;
 }
