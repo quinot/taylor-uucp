@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.4  1991/11/12  19:47:04  ian
+   Add called-chat set of commands to run a chat script on an incoming call
+
    Revision 1.3  1991/11/11  23:47:24  ian
    Added chat-program to run a program to do a chat script
 
@@ -694,6 +697,7 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "debugfile /usr/tmp/tstuu/Debug2\n");
       fprintf (e, "passwdfile /usr/tmp/tstuu/Pass2\n");
       fprintf (e, "pubdir /usr/tmp/tstuu\n");
+      fprintf (e, "portfile /usr/tmp/tstuu/Port2\n");
       if (cDebug > 0)
 	fprintf (e, "debug 9\n");
 
@@ -705,6 +709,8 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "system test1\n");
       fprintf (e, "called-login test1\n");
       fprintf (e, "called-request true\n");
+      if (zProtocols != NULL)
+	fprintf (e, "protocol %s\n", zProtocols);
 
       eprog = xfopen ("/usr/tmp/tstuu/Chat2", "w");
 
@@ -724,6 +730,9 @@ uprepare_test (itest, fcall_uucico, zsys)
       fprintf (e, "# Call in password file\n");
       fprintf (e, "test1 pass1\n");
 
+      xfclose (e);
+
+      e = xfopen ("/usr/tmp/tstuu/Port2", "w");
       xfclose (e);
     }
 
