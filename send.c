@@ -825,9 +825,10 @@ fremote_rec_reply (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-  char absend[20];
+  char absend[50];
 
-  sprintf (absend, "RY 0%o", qtrans->s.imode);
+  sprintf (absend, "RY 0%o 0x%lx", qtrans->s.imode,
+	   (unsigned long) qinfo->cbytes);
   if (! (*qdaemon->qproto->pfsendcmd) (qdaemon, absend, qtrans->ilocal,
 				       qtrans->iremote))
     {
