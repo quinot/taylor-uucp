@@ -246,9 +246,9 @@ main (argc, argv)
     ++zProgram;
 
 #if COHERENT_C_OPTION
-  zopts = "c:CDefi:I:lp:qr:s:S:u:x:X:vw";
+  zopts = "c:CDefi:I:lp:qr:s:S:u:x:X:vwz";
 #else
-  zopts = "cCDefi:I:lp:qr:s:S:u:x:X:vw";
+  zopts = "cCDefi:I:lp:qr:s:S:u:x:X:vwz";
 #endif
 
   while ((iopt = getopt_long (argc, argv, zopts,
@@ -802,6 +802,7 @@ uhelp ()
   printf (" -D,--nodetach: Don't detach from controlling terminal\n");
   printf (" -u,--login: Set login name (privileged users only)\n");
   printf (" -i,--stdin type: Type of standard input (only TLI supported)\n");
+  printf (" -z,--try-next: If a call fails, try the next alternate\n");
   printf (" -x,-X,--debug debug: Set debugging level\n");
 #if HAVE_TAYLOR_CONFIG
   printf (" -I,--config file: Set configuration file to use\n");
