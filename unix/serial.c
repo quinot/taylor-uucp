@@ -2017,7 +2017,8 @@ fsysdep_modem_end_dial (qconn, qdial)
 	    if (! fbad)
 	      {
 		iflags = fcntl (onew, F_GETFL, 0);
-		if (iflags < 0)
+		if (iflags < 0
+		    || ! fsetterminfo (onew, &q->snew))
 		  fbad = TRUE;
 	      }
 
