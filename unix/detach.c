@@ -25,6 +25,8 @@
 
 #include "uucp.h"
 
+#include "sysdep.h"
+
 #include <errno.h>
 
 #if HAVE_SYS_IOCTL_H
@@ -52,7 +54,6 @@
 #endif
 
 #include "uudefs.h"
-#include "sysdep.h"
 #include "system.h"
 
 /* Detach from the controlling terminal.  This is called by uucico if
