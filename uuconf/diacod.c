@@ -48,7 +48,7 @@ uuconf_dialcode (pglobal, zdial, pznum)
   int iret;
 
   as[0].uuconf_zcmd = zdial;
-  as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 2;
+  as[0].uuconf_itype = UUCONF_CMDTABTYPE_FN | 0;
   as[0].uuconf_pvar = (pointer) pznum;
   as[0].uuconf_pifn = idcode;
 
@@ -106,7 +106,17 @@ idcode (pglobal, argc, argv, pvar, pinfo)
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pznum = (char **) pvar;
 
-  *pznum = strdup (argv[1]);
+  if (argc == 1)
+    {
+      *pznum = malloc (1);
+      if (*pznum != NULL)
+	**pznum = '\0';
+    }
+  else if (argc == 2)
+    *pznum = strdup (argv[1]);
+  else
+    return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
+
   if (*pznum == NULL)
     {
       qglobal->ierrno = errno;
