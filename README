@@ -1,274 +1,112 @@
-This is the README file for release 1.01 of the Taylor UUCP package.
+This is the README file for release 1.02 of the Taylor UUCP package.
 
 It was written by Ian Lance Taylor.  I can be reached at ian@airs.com,
-or, equivalently, uunet!airs!ian, or c/o AIRS P.O. Box 520, Waltham
-MA, 02254.
+or, equivalently, uunet!airs!ian, or c/o Infinity Development, P.O.
+Box 520, Waltham MA, 02254.
+
+There is a mailing list for discussion of the package.  To join the
+list, send a message to taylor-uucp-request@gnu.ai.mit.edu.  Make sure
+you include the address you want to receive messages at; do not rely
+on the From: header.  To send a message to the list, send it to
+taylor-uucp@gnu.ai.mit.edu.
 
 This package is covered by the Gnu Public License.  See the file
 COPYING for details.  If you would like to do something with this
 package that you feel is reasonable but you feel is prohibited by the
 license, contact me to see if we can work it out.
 
-CONFIGURATION
+WHAT IT IS
 
-You will have to decide what types of configuration files you want to
-use.  This package supports a new sort of configuration file,
-described in the file CONFIG.  It also supports V2 configuration files
-(L.sys, L-devices, etc.) and BNU configuration files (Systems,
-Devices, etc.).  No documentation is provided for V2 or BNU
-configuration files.  All types of configuration files can be used at
-once, if you are so inclined.  Currently using just V2 configuration
-files is not really possible, because there is no way to specify a
-dialer (there are no built in dialers, and the program does not know
-how to read acucap or modemcap); however, V2 configuration files can
-be used with a dialer file as described in CONFIG, or with a BNU
-Dialers file.
+This is the complete source code for a basic UUCP package.  It
+includes the programs uucico, uuxqt, uux and uucp, as well as uuchk (a
+program to check configuration files) and tstuu (a test harness for
+the package).
 
-If you are installing a new system, or you want to use the new form of
-configuration files, you must write the configuration files.
+The package currently supports the 'f', 'g' (in all window and packet
+sizes), 't' and 'e' protocols.  If you have a Berkeley sockets
+library, it can make TCP connections.  It supports a new configuration
+file mechanism which I like (but other people dislike).
 
-You must also decide what sort of spool directory you want to use.  If
-you will only be using these programs, I recommend SPOOLDIR_TAYLOR;
-otherwise select the spool directory corresponding to your existing
-UUCP package.  The details of the spool directory choices are
-described in sys3.unx.
+The package has a few features not supplied by regular UUCP:
 
-COMPILATION
+    You can specify a chat script to run when a system calls in,
+    allowing adjustment of modem parameters on a per system basis.
 
-1) Take a look at the top of Makefile to make sure the definitions are
-reasonable for your system.  I highly recommend using gcc, but it is
-not required; if you don't have it, change CC and CFLAGS accordingly.
-On some systems, you may want to make entries for LIBS.  I'm told that
-on some systems uucico will crash within realloc unless -lmalloc is
-added to LIBS.
+    You can specify failure strings for chat scripts, allowing the
+    chat script to fail immediately if the modem returns ``BUSY''.
 
-2) This package uses the alloca function.  When compiled with gcc, it
-will automatically use the builtin function.  If your system has
-alloca in some special library, add the library to LIBS (e.g. -lPW).
-On SCO 3.2.2 I had to extract alloca.o from /lib/libPW.a and set LIBS
-to alloca.o.  If you have no alloca, you can indicate this in conf.h;
-a simplistic substitute will be used.  You may also be able to use the
-public domain alloca available with the emacs distribution.
+    If you are talking to another instance of the package, you can
+    restrict file transfers by size based on the time of day and who
+    placed the call.
 
-3) Type ``make configure-unix'' to prepare to compile for a Unix
-system (there are no other choices now, but someday there may be).
-This will link the sys?.unx files to sysdep.h and sys?.c.  Separating
-the system dependent files into *.unx is intended to be the start of
-supporting several systems with this package.
+On the other hand:
 
-4) Edit conf.h for your local system.  The comments should explain the
-various choices.
+    You don't get uulog, uustat, uusched, etc.  I hope to provide
+    uustat in the next release, and uulog is pretty simple so it might
+    get in there too.  If you have current copies of these programs,
+    you may be able to use them.
 
-5) Edit sysdep.h for your local system.  Again, the comments should
-explain the various choices.  The intent is that system dependent
-definitions are kept in sysdep.h whereas general, system independent
-definitions are kept in conf.h.
+    The package does not read modemcap or acucap files, although you
+    can use V2 configuration files with a BNU Dialers file or a dialer
+    file written in my new configuration file format.
 
-6) Type ``make'' to compile everything.
+    The package cannot use BNU dialer programs directly, although it
+    can with a simple shell script interface.
 
-7) I've tested compilation on a DECSystem 3100 running Ultrix 4.0, a
-VAXStation II/GPX running Ultrix 3.1, and a 386 box running SCO Unix
-3.2.2 (I have only tested under real world conditions on the VAX,
-although I have run my test programs on all the machines).  On all of
-these I have compiled using gcc and cc (on SCO, with rcc as well).  On
-other platforms there are likely to be compilation problems.  Please
-let me know what problems you have, and any solutions or workarounds
-you come up with.  You may have trouble with tstuu.c; it is only used
-for testing, and is not nearly as portable as the rest of the code.
+If you start using this package, I suggest that you join the mailing
+list (see above) to keep up to date on patches and new versions.  I am
+also open to suggestions for improvements and modifications.
 
-TESTING
+CHANGES SINCE 1.01
 
-This code has been pretty solid for my use for a few months now.
-However, it will doubtless fail in some situations.  Do not rely on
-this code until you have proven to yourself that it will work.
+For a complete list, see ChangeLog.
 
-You can use the uuchk program to test your configuration files.  It
-will read them and print out a verbose description.  This is
-particularly important if you are using V2 or BNU configuration files,
-because there may be bugs in how they are read.  This program should
-not be made suid, because it will display passwords if it can read
-them.
+    Many bugs were fixed.
 
-If your system supports BSD style pseudo-terminals, and you compiled
-the code to support the new style of configuration files, you should
-be able to use the tstuu program to test the uucico daemon.  Just type
-tstuu with no arguments while logged in to the compilation directory
-(since it runs ./uucp, ./uux and ./uucico) to run a lengthy series of
-tests (it takes over ten minutes on a slow VAX).  You will need a fair
-amount of space available in /usr/tmp.  You will probably want to put
-it in the background.  Do not use ^Z, because the program traps on
-SIGCHLD and winds up dying.  It will create a directory /usr/tmp/tstuu
-and fill it with configuration files, and create spool directories
-/usr/tmp/tstuu/spool1 and /usr/tmp/tstuu/spool2.
+    Many configuration options were added.
 
-The program will finish with an execute file (X.something) and a data
-file (D.something) in /usr/tmp/tstuu/spool1 (or, more likely, in
-subdirectories, depending on the choice of SPOOLDIR in sysdep.h).  The
-log files /usr/tmp/tstuu/Log1 and /usr/tmp/tstuu/Log2 should look
-fairly normal; an error at the end of Log2 is expected, as tstuu shuts
-down the slave uucico using a signal.  You can test uuxqt by typing
-``./uuxqt -I /usr/tmp/tstuu/Config1''.  This should leave a command
-file (C.something) and a data file (D.something) in
-/usr/tmp/tstuu/spool1 or in subdirectories.  Again, there should be no
-errors in the log file /usr/tmp/tstuu/Log1.
+    The 'e' protocol was added.
 
-The -x switch will put tstuu in debugging mode, and generate far more
-output than you will ever want to see.  The uucico daemons will put
-debugging output in /usr/tmp/tstuu/Debug1 and /usr/tmp/tstuu/Debug2.
-At this point you're pretty much on your own.
+    The default protocol ordering was changed to 't', 'e', 'g', 'f'.
 
-On some systems you can also use tstuu to test my uucico against the
-system uucico, by using the -u switch.  For this to work, change the
-definitions of ZUUCICO_CMD and UUCICO_EXECL at the top of tstuu.c to
-something appropriate for your system.  The definitions in tstuu.c are
-what I used for Ultrix 4.0, in which /usr/lib/uucp/uucico is
-particularly obstinate about being run as a child; I was only able to
-run it by creating a login name with no password whose shell was
-/usr/lib/uucp/uucico.  Calling login in this way will leave fake
-entries in wtmp and utmp; if you compile tstout.c as an suid root
-program, tstuu will run it to clear those entries out.  On most
-systems, such hackery should not be necessary, although on SCO I had
-to su to root (uucp might also have worked) before I could run
-/usr/lib/uucp/uucico.
+    The package can now generate BNU (HDB) and V2 style log files.
 
-You can test uucp and uux with the -r switch to make sure they create
-the right sorts of files (see Appendix A of the Nutshell Handbook
-``Managing UUCP and Usenet'' for the sorts of files that should be
-created).
+    Chat scripts can now request eight bit characters, although by
+    default input characters will be stripped to seven bits.
 
-If tstuu passes, or you can't run it for some reason or other, move on
-to testing with some other system.  Set up the configuration files as
-described in CONFIG, or use an existing configuration.  Tell uucico to
-dial out to the system by using the -s system switch (e.g.  ``uucico
--s uunet'').  The log file should tell you what happens.  You can use
-debugging mode to get a great deal of information about what sort of
-data is flowing back and forth; use -x number (e.g. ``uucico -s uunet
--x 9''), giving a number from 1 to 9.  The higher the number, the more
-debugging information you will get.  The debugging information is
-written to a file, normally /usr/spool/uucp/Debug although the default
-can be changed in sysdep.h and the configuration file can override the
-name with the ``debugfile'' command.  The debugging file will contain
-passwords and some file contents as they are transmitted over the
-line, so the debugging file is only readable by uucp.  On most systems
-you can redirect the debugging output to the terminal by using
-``debugfile /dev/tty''; similar tricks can be done with ``logfile''
-and ``statfile''.
+    The modem complete and abort strings can now be specified as chat
+    scripts.
 
-You can use the -f switch to force uucico to call out even if the last
-call failed recently, or use -S when naming a system.  Otherwise the
-status file (in the .Status subdirectory of the main spool directory,
-normally /usr/spool/uucp) will prevent too many attempts from
-occurring in rapid succession.
+    The uuxqt daemon was changed to by default not send mail messages.
 
-Again, let me know about any problems you have and how you got around
-them.
+    Failed file transfers are now recorded in the statistics file.
 
-INSTALLATION
+    A new 'g' protocol parameter ``errors'' was added, to set the
+    maximum number of errors permitted before the connection is
+    dropped.
 
-You can install by suing to root and typing make install.  Or you can
-look at what make install does and do it by hand.  It's pretty
-simplistic.
+    Statistics file entries are now kept in fractions of a second.
 
-USE
+    The format of the log and statistics files was changed to include
+    the year and the time down to hundredths of a second.
 
-This package does not come with any fancy shell scripts or scheduling
-programs.  Maybe someday.  If you have another package, you may well
-be able to use the scheduling mechanisms it provides.
+    The debugging level can be set for a specific system.
 
-Otherwise, the program can be used by making crontab entries.
-Whenever you want to call all systems with outstanding work, use
-	uucico -r1
-Whenever you want to call a specific system foo, use
-	uucico -s foo
-If you want to make sure that a system foo gets retried if the
-original call fails, create an empty work file for it.  For example,
-if using SPOOLDIR_TAYLOR
-	touch /usr/spool/uucp/foo/C./C.A0000
-Under SPOOLDIR_BNU, use
-	touch /usr/spool/uucp/foo/C.fooA0000
+    A '#' can now appear in a configuration file if it is preceded by
+    a backslash; this will quietly change the meaning of any current
+    configuration files which contain the sequence "\#".
 
-I use the following crontab entries locally:
+    The 'g' and 'f' protocols now log informative messages about the
+    amount of data transferred when they finish.
 
-45 * * * * /bin/echo /usr/lib/uucp/uucico -r1 | /bin/su uucpa
-40 4,10,15 * * * touch /usr/spool/uucp/uunet/C./C.A0000
-
-Every hour, at 45 minutes past, this will check if there is any work
-to be done.  Also, at 4:40am, 10:40am and 3:40pm this will create an
-empty work file for uunet, forcing the next check to call uunet.
-
-You will also want to periodically trim the log files,
-/usr/spool/uucp/Log and /usr/spool/uucp/Stats.
-
-TCP
-
-If your system has a Berkeley style socket library, you can compile
-the code to permit making connections over TCP.  Specifying that a
-system should be reached via TCP is easy, but nonobvious.
-
-If you are using the new style configuration files, see CONFIG;
-basically when definining the system put in the line ``port type tcp''
-and, if necessary, ``port service xxx'' where xxx is the port number
-to use (the default is to look up "uucp" in /etc/services and if not
-found to use port 540).  You can specify the address of the remote
-host with ``address a.b.c''.  If you don't specify an address, the
-remote system name will be used.
-
-If you are using V2 configuration files, add a line like this to
-L.sys:
-
-	foo Any TCP uucp foo.domain chat-script
-
-This will make an entry for system foo, to be called at any time, over
-TCP, using port number "uucp" (as found in /etc/services; this may be
-specified as a number), using remote host "foo.domain", with some chat
-script.
-
-If you are using BNU configuration files, add a line like this to
-Systems:
-
-	foo Any TCP - foo.domain chat-script
-
-and a line like this to Devices:
-
-	TCP uucp - -
-
-You only need one line in Devices regardless of how many systems you
-contact over TCP.  This will make an entry for system foo, to be
-called at any time, over TCP, using port number "uucp" (as found in
-/etc/services; this may be specified as a number), using remote host
-"foo.domain", with some chat script.
-
-The uucico daemon can also be run as a TCP server.  This code is
-probably not completely solid, although it does work.  I don't
-recommend investigating it unless you are willing to tinker a bit.
-Basically, you must define a port, either using the port file as
-described in CONFIG if you are using the new configuration methord or
-with an entry in Devices if you are using BNU (there is no way to
-define a port using V2).  If you are using BNU the port must be named
-"TCP" (a line as shown above will suffice).  You can then start uucico
-as "uucico -p TCP" (after the -p, name the port; in BNU it must be
-"TCP").  This will wait for incoming connections, and fork off a child
-for each one.  Each connection will be prompted with "login: " and
-"Password:", and the results will be checked against the UUCP (not the
-system) password file (see CONFIG for details).  Of course, you can
-get a similar effect by using the BSD uucpd program.
+    The ``Call complete'' message includes the conversation length.
 
 COMMENTS
 
 First of all, let me know about any comments you have.
 
-Obviously, there are several more programs that need to be written
-eventually, such as uulog, uustat, and, perhaps, uusched.
+See the INSTALL file for instructions about installation and use.
 
-The -j options to uucp and uux do not do anything (and they are
-meaningless without uustat).
+See the TODO file for things which should be done.
 
-The -z option to uux means to send mail to the user if the command
-fails.  I have heard that under HDB -z means to send mail if the
-command succeeds.  If this is true, there should probably be a compile
-time switch to select which behaviour to follow.
-
-The -b and -s options to uux are not implemented by uuxqt.  
-
-The log and statistics files are not in the same format as any
-existing package.
+See the THANKS file for people who have helped.
