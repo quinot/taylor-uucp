@@ -969,7 +969,6 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
 
       fprintf (e, "port stdin\n");
       fprintf (e, "type stdin\n");
-      fprintf (e, "pty true\n");
 
       xfclose (e);
 
