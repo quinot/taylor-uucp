@@ -611,7 +611,8 @@ floop (qdaemon)
 
 	  fhangup = FALSE;
 
-	  if (qdaemon->fhangup_requested)
+	  if (qdaemon->fhangup_requested
+	      && qTsend == NULL)
 	    {
 	      /* The remote system has requested that we transfer
 		 control by sending CYM after receiving a file.  */
