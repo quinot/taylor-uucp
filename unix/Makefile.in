@@ -125,6 +125,7 @@ tmpfil.o: $(srcdir)/../uudefs.h $(srcdir)/../uuconf.h $(srcdir)/../system.h
 trunc.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uacces.o: $(srcdir)/../uudefs.h
 ufopen.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
+uid.o: $(srcdir)/../uudefs.h
 ultspl.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 unknwn.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 uuto.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
