@@ -64,3 +64,5 @@ status.o: $(srcdir)/../uudefs.h
 xfree.o: $(srcdir)/../uudefs.h
 xmall.o: $(srcdir)/../uudefs.h
 xreall.o: $(srcdir)/../uudefs.h
+
+.PHONY: all clean distclean mostlyclean realclean dist

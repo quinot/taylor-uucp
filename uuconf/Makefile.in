@@ -78,3 +78,5 @@ alloc.o: alloc.h
 freblk.o: alloc.h
 free.o: alloc.h
 mrgblk.o: alloc.h
+
+.PHONY: all clean distclean mostlyclean realclean dist

@@ -265,7 +265,8 @@ unix/libunix.a: FORCE sysdep.h
 lib/libuucp.a: FORCE
 	(cd lib; $(MAKE) $(MDEFINES) libuucp.a)
 
-FORCE:;
+FORCE:
+	@: Dummy command needed to work around QNX make bug.
 
 clean:
 	(cd unix; $(MAKE) $(MDEFINES) clean)
@@ -404,3 +405,6 @@ util.o: uudefs.h uuconf.h system.h
 copy.o: uudefs.h system.h sysdep.h
 
 .NOEXPORT:
+
+.PHONY: all install uninstall clean distclean mostlyclean realclean
+.PHONY: dist doc-dist info info install-info dvi ps

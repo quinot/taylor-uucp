@@ -127,3 +127,5 @@ wldcrd.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 work.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
 xqtfil.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h
 xqtsub.o: $(srcdir)/../uudefs.h $(srcdir)/../system.h $(srcdir)/../uuconf.h
+
+.PHONY: all clean distclean mostlyclean realclean dist
