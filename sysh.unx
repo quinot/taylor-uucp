@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.57  1992/04/28  21:08:32  ian
+   Preserve file status flags
+
    Revision 1.56  1992/04/25  00:42:53  ian
    Change standard type definitions for new autoconf
 
@@ -576,9 +579,6 @@ extern boolean fsdo_lock P((const char *, boolean fspooldir));
 
 /* Unlock a string.  */
 extern boolean fsdo_unlock P((const char *, boolean fspooldir));
-
-/* See whether a directory exists.  */
-extern boolean fsdirectory_exists P((const char *));
 
 /* Expand a leading tilde to the public directory or a user's home
    directory.  Each system may have a different public directory, so
