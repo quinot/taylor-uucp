@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.23  1992/02/08  03:54:18  ian
+   Include <string.h> only in <uucp.h>, added 1992 copyright
+
    Revision 1.22  1992/02/01  00:56:20  ian
    Chip Salzenberg: change default window size to 7
 
@@ -507,7 +510,7 @@ fgexchange_init (fmaster, ictl, ival, piset)
 	    return FALSE;
 	}
 
-      itime = isysdep_time ();
+      itime = isysdep_time ((long *) NULL);
       ctimeout = cGexchange_init_timeout;
 
       do
@@ -554,7 +557,7 @@ fgexchange_init (fmaster, ictl, ival, piset)
 		return FALSE;
 	    }
 
-	  inewtime = isysdep_time ();
+	  inewtime = isysdep_time ((long *) NULL);
 	  ctimeout -= inewtime - itime;
 	}
       while (ctimeout > 0);

@@ -24,6 +24,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/02/08  22:33:32  ian
+   Only get the current working directory if it's going to be needed
+
    Revision 1.18  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -196,26 +199,29 @@ extern boolean fsysdep_mail P((const char *zto, const char *zsubject,
 			       int cstrs, const char **paz));
 
 /* Get the time in seconds since some epoch.  The actual epoch is
-   unimportant, so long as the time values are consistent.  */
-extern long isysdep_time P((void));
+   unimportant, so long as the time values are consistent across calls
+   to the program, and the value is never negative.  If the pimicros
+   argument is not NULL, it should be set to the number of
+   microseconds (if this is not available, *pimicros should be set to
+   zero).  */
+ extern long isysdep_time P((long *pimicros));
 
 /* Get the time in seconds and microseconds (millionths of a second)
-   since some epoch.  If microseconds can not be determined, *pimicros
-   can just be set to zero.  */
-extern void usysdep_full_time P((long *pisecs, long *pimicros));
+   since some epoch.  The actual epoch is not important, and it may
+   change in between program invocations; this is provided because on
+   Unix the times function may be used.  If microseconds can not be
+   determined, *pimicros can just be set to zero.  */
+extern long isysdep_process_time P((long *pimicros));
 
-/* Get the current time in a struct tm, and also get microseconds.  I
+/* Parse the value returned by isysdep_time into a struct tm.  I
    assume that this structure is defined in <time.h>.  This is
-   basically just localtime, except that it also returns the current
-   number of microseconds.  It is a system dependent function because
-   there is no way in ANSI way to get microseconds, and there's no
-   reason to expect that I can pass the seconds returned from
-   usysdep_full_time to localtime.  The typedef is a hack to avoid the
-   problem of mentioning a structure for the first time in a prototype
-   while remaining compatible with standard C.  The type tm_ptr is
-   never again referred to.  */
+   basically just localtime, except that the ANSI function takes a
+   time_t which may not be what is returned by isysdep_time.  The
+   typedef is a hack to avoid the problem of mentioning a structure
+   for the first time in a prototype while remaining compatible with
+   standard C.  The type tm_ptr is never again referred to.  */
 typedef struct tm *tm_ptr;
-extern void usysdep_localtime P((tm_ptr q, long *pimicros));
+extern void usysdep_localtime P((long itime, tm_ptr q));
 
 /* Sleep for a number of seconds.  */
 extern void usysdep_sleep P((int cseconds));

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.21  1992/02/18  04:33:38  ian
+   Don't use headers when outputting to terminal
+
    Revision 1.20  1992/02/14  07:51:49  ian
    Michael Nolan: don't refer to eLdebug if DEBUG is 0
 
@@ -560,8 +563,8 @@ ustats_close ()
 static const char *
 zldate_and_time ()
 {
+  long isecs, imicros;
   struct tm s;
-  long imicros;
 #if HAVE_TAYLOR_LOGGING
   static char ab[sizeof "1991-12-31 12:00:00.00"];
 #endif
@@ -572,7 +575,8 @@ zldate_and_time ()
   static char ab[sizeof "12/31-12:00:00"];
 #endif
 
-  usysdep_localtime (&s, &imicros);
+  isecs = isysdep_time (&imicros);
+  usysdep_localtime (isecs, &s);
 
 #if HAVE_TAYLOR_LOGGING
   sprintf (ab, "%04d-%02d-%02d %02d:%02d:%02d.%02d",

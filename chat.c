@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.14  1992/02/19  05:24:07  ian
+   Bob Denny: if no trailing send string, don't send a carriage return
+
    Revision 1.13  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -395,7 +398,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
   zhave = (char *) alloca (cmax);
   chave = 0;
 
-  iendtime = isysdep_time () + ctimeout;
+  iendtime = isysdep_time ((long *) NULL) + ctimeout;
 
 #if DEBUG > 6
   if (iDebug > 6)
@@ -445,7 +448,7 @@ icexpect (cstrings, azstrings, aclens, ctimeout, fstrip)
 	    return i;
 	}
 
-      ctimeout = (int) (iendtime - isysdep_time ());
+      ctimeout = (int) (iendtime - isysdep_time ((long *) NULL));
     }
 }
 

@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.52  1992/02/14  21:32:50  ian
+   Niels Baggesen: under HAVE_BNU_LOGGING, don't lost system name when dieing
+
    Revision 1.51  1992/02/09  05:21:55  ian
    Bob Denny: call fmail_transfer before fsysdep_did_work
 
@@ -733,7 +736,7 @@ static boolean fcall (qsys, qport, fforce, bgrade)
 #endif /* defined (CMAXRETRIES) */
 
       if (sstat.ttype != STATUS_COMPLETE
-	  && sstat.ilast + sstat.cwait > isysdep_time ())
+	  && sstat.ilast + sstat.cwait > isysdep_time ((long *) NULL))
 	{
 	  ulog (LOG_NORMAL, "Retry time not reached");
 	  return FALSE;
@@ -790,7 +793,7 @@ static boolean fcall (qsys, qport, fforce, bgrade)
 
       /* We should probably indicate that it was the wrong time to
 	 call in the status file.  */
-      sstat.ilast = isysdep_time ();
+      sstat.ilast = isysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qorigsys, &sstat);
     }
 
@@ -876,7 +879,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
     }
 
   qstat->ttype = STATUS_TALKING;
-  qstat->ilast = isysdep_time ();
+  qstat->ilast = isysdep_time ((long *) NULL);
   qstat->cretries = 0;
   qstat->cwait = 0;
   if (! fsysdep_set_status (qsys, qstat))
@@ -885,7 +888,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
   ulog (LOG_NORMAL, "Login successful", qsys->zname);
 
   *pfcalled = TRUE;
-  istart_time = isysdep_time ();
+  istart_time = isysdep_time ((long *) NULL);
 
   /* We should now see "Shere" from the other system.  Apparently
      some systems send "Shere=foo" where foo is the remote name.  */
@@ -1175,7 +1178,7 @@ static boolean fdo_call (qsys, qport, qstat, cretry, pfcalled, quse)
       }
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
-	  isysdep_time () - istart_time);
+	  isysdep_time ((long *) NULL) - istart_time);
 
     if (! fret)
       {
@@ -1208,7 +1211,7 @@ fcall_failed (qsys, twhy, qstat, cretry)
 #endif
   qstat->ttype = twhy;
   qstat->cretries++;
-  qstat->ilast = isysdep_time ();
+  qstat->ilast = isysdep_time ((long *) NULL);
   if (cretry == 0)
     qstat->cwait = CRETRY_WAIT (qstat->cretries);
   else
@@ -1291,7 +1294,7 @@ static boolean faccept_call (zlogin, qport)
 #endif
 
   ulog (LOG_NORMAL, "Incoming call");
-  istart_time = isysdep_time ();
+  istart_time = isysdep_time ((long *) NULL);
 
   /* Figure out protocol parameters determined by the port.  If no
      port was specified we're reading standard input, so try to get
@@ -1564,7 +1567,7 @@ static boolean faccept_call (zlogin, qport)
     }
 
   sstat.ttype = STATUS_TALKING;
-  sstat.ilast = isysdep_time ();
+  sstat.ilast = isysdep_time ((long *) NULL);
   (void) fsysdep_set_status (qsys, &sstat);
 
   /* Check the arguments of the remote system.  We accept -x# to set
@@ -1855,7 +1858,7 @@ static boolean faccept_call (zlogin, qport)
       }
 
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
-	  isysdep_time () - istart_time);
+	  isysdep_time ((long *) NULL) - istart_time);
     if (fret)
       sstat.ttype = STATUS_COMPLETE;
     else
@@ -2986,7 +2989,7 @@ zget_uucp_cmd (frequired)
   int cgot;
   long iendtime;
 
-  iendtime = isysdep_time ();
+  iendtime = isysdep_time ((long *) NULL);
   if (frequired)
     iendtime += CTIMEOUT;
   else
@@ -2997,7 +3000,8 @@ zget_uucp_cmd (frequired)
     {
       int b;
       
-      b = breceive_char ((int) (iendtime - isysdep_time ()), frequired);
+      b = breceive_char ((int) (iendtime - isysdep_time ((long *) NULL)),
+			 frequired);
       /* Now b == -1 on timeout, -2 on error.  */
       if (b < 0)
 	{
