@@ -8177,6 +8177,7 @@ Daniel Hagerty @code{<hag@@eddie.mit.edu>}
 @code{jh@@moon.nbn.com} (John Harkin)
 @code{guy@@auspex.auspex.com} (Guy Harris)
 @code{hsw1@@papa.attmail.com} (Stephen Harris)
+Tom Ivar Helbekkmo @code{<tih@@Norway.EU.net>}
 Petri Helenius @code{<pete@@fidata.fi>}
 @code{gabe@@edi.com} (B. Gabriel Helou)
 Bob Hemedinger @code{<bob@@dalek.mwc.com>}
