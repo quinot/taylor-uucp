@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.19  1992/02/08  20:33:57  ian
+   Handle all possible signals raised by abort
+
    Revision 1.18  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -448,11 +451,13 @@ ulog_close ()
       eLlog = NULL;
       fLlog_tried = FALSE;
     }
+#if DEBUG > 0
   if (eLdebug != NULL)
     {
       (void) fclose (eLdebug);
       eLdebug = NULL;
     }
+#endif
 }
 
 /* Add an entry to the statistics file.  We may eventually want to put
