@@ -34,18 +34,23 @@ fsysdep_make_dirs (zfile, fpublic)
 	  if (z[-1] == '/')
 	    continue;
 	  *z = '\0';
-	  if (mkdir (zcopy, imode) != 0
-	      && errno != EEXIST
-	      && errno != EISDIR
-#ifdef EROFS
-	      && errno != EROFS
-#endif
-	      && (errno != EACCES || ! fsysdep_directory (zcopy)))
+	  if (mkdir (zcopy, imode) != 0)
 	    {
-	      ulog (LOG_ERROR, "mkdir (%s): %s", zcopy,
-		    strerror (errno));
-	      ubuffree (zcopy);
-	      return FALSE;
+	      int ierr;
+
+	      ierr = errno;
+	      if (ierr != EEXIST
+		  && ierr != EISDIR
+#ifdef EROFS
+		  && ierr != EROFS
+#endif
+		  && (ierr != EACCES || ! fsysdep_directory (zcopy)))
+		{
+		  ulog (LOG_ERROR, "mkdir (%s): %s", zcopy,
+			strerror (ierr));
+		  ubuffree (zcopy);
+		  return FALSE;
+		}
 	    }
 	  *z = '/';
 	}
