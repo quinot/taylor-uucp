@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.31  1992/01/13  06:11:39  ian
+   David Nugent: can't declare open or fcntl
+
    Revision 1.30  1992/01/13  05:53:04  ian
    Mike Park: added HAVE_WAITPID and HAVE_WAIT4 configuration parameters
 
@@ -204,7 +207,7 @@ typedef int wait_t;
 
 /* External functions.  */
 
-extern int select (), ioctl (), close (), dup2 (), execl (), access ();
+extern int select (), ioctl (), close (), dup2 (), access ();
 extern int read (), write (), unlink (), kill (), mkdir ();
 extern int fclose (), fflush (), rand ();
 extern unsigned int sleep ();
