@@ -175,6 +175,9 @@ static boolean fCulocalecho;
 /* Whether we need to call fsysdep_cu_finish.  */
 static boolean fCustarted;
 
+/* Whether ZCONNMSG has been printed yet.  */
+static boolean fCuconnprinted = FALSE;
+
 /* A structure used to pass information to icuport_lock.  */
 struct sconninfo
 {
@@ -523,9 +526,6 @@ main (argc, argv)
 	      sport.uuconf_u.uuconf_sdirect.uuconf_zdevice = NULL;
 	      sport.uuconf_u.uuconf_sdirect.uuconf_ibaud = ibaud;
 
-	      if (! fsysdep_port_access (&sport))
-		ulog (LOG_FATAL, "%s: Permission denied", zline);
-
 	      if (! fconn_init (&sport, &sconn))
 		ucuabort ();
 
@@ -533,6 +533,13 @@ main (argc, argv)
 		ulog (LOG_FATAL, "%s: Line in use", zline);
 
 	      qCuconn = &sconn;
+
+	      /* Check user access after locking the port, because on
+		 some systems shared lines affect the ownership and
+		 permissions.  In such a case ``Line in use'' is more
+		 clear than ``Permission denied.''  */
+	      if (! fsysdep_port_access (&sport))
+		ulog (LOG_FATAL, "%s: Permission denied", zline);
 	    }
 	  ihighbaud = 0L;
 	}
@@ -694,6 +701,7 @@ main (argc, argv)
      only comes out when a special command is received from the
      terminal.  */
   printf ("%s\n", ZCONNMSG);
+  fCuconnprinted = TRUE;
 
   if (! fsysdep_terminal_raw (fCulocalecho))
     ucuabort ();
@@ -720,7 +728,8 @@ main (argc, argv)
   (void) fconn_unlock (&sconn);
   uconn_free (&sconn);
 
-  printf ("\n%s\n", ZDISMSG);
+  if (fCuconnprinted)
+    printf ("\n%s\n", ZDISMSG);
 
   ulog_close ();
 
@@ -806,7 +815,8 @@ ucuabort ()
 
   ulog_close ();
 
-  printf ("\n%s\n", ZDISMSG);
+  if (fCuconnprinted)
+    printf ("\n%s\n", ZDISMSG);
 
   usysdep_exit (FALSE);
 }
