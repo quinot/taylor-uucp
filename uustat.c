@@ -2152,11 +2152,9 @@ fsmachines ()
       struct tm stime;
 
       usysdep_localtime (sstat.ilast, &stime);
-      printf ("%-14s %04d-%02d-%02d %02d:%02d:%02d %s", zsystem,
-	      stime.tm_year + 1900, stime.tm_mon + 1,
-	      stime.tm_mday, stime.tm_hour,
-	      stime.tm_min, stime.tm_sec,
-	      azStatus[(int) sstat.ttype]);
+      printf ("%-14s %02d-%02d %02d:%02d %s", zsystem,
+	      stime.tm_mon + 1, stime.tm_mday, stime.tm_hour,
+	      stime.tm_min, azStatus[(int) sstat.ttype]);
       ubuffree (zsystem);
       if (sstat.ttype != STATUS_TALKING
 	  && sstat.cwait > 0)
@@ -2166,10 +2164,9 @@ fsmachines ()
 	  if (sstat.ilast + sstat.cwait > isysdep_time ((long *) NULL))
 	    {
 	      usysdep_localtime (sstat.ilast + sstat.cwait, &stime);
-	      printf (", next %04d-%02d-%02d %02d:%02d:%02d",
-		      stime.tm_year + 1900, stime.tm_mon + 1,
-		      stime.tm_mday, stime.tm_hour,
-		      stime.tm_min, stime.tm_sec);
+	      printf (", next after %02d-%02d %02d:%02d",
+		      stime.tm_mon + 1, stime.tm_mday, stime.tm_hour,
+		      stime.tm_min);
 	    }
 	  printf (")");
 	}
