@@ -112,23 +112,37 @@ zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds)
       return NULL;
     }
 
-  z = zscmd_file (qsys, bgrade);
-  if (z == NULL)
+  /* The filename returned by zscmd_file is subject to some unlikely
+     race conditions, so keep trying the link until the destination
+     file does not already exist.  Each call to zscmd_file should
+     return a file name which does not already exist, so we don't have
+     to do anything special before calling it again.  */
+  while (TRUE)
     {
-      (void) remove (ztemp);
-      ubuffree (ztemp);
-      return NULL;
-    }
+      z = zscmd_file (qsys, bgrade);
+      if (z == NULL)
+	{
+	  (void) remove (ztemp);
+	  ubuffree (ztemp);
+	  return NULL;
+	}
 
-  if (! fsysdep_move_file (ztemp, z, FALSE, FALSE, FALSE,
-			   (const char *) NULL))
-    {
-      (void) remove (ztemp);
-      ubuffree (ztemp);
+      if (link (ztemp, z) >= 0)
+	break;
+
+      if (errno != EEXIST)
+	{
+	  ulog (LOG_ERROR, "link (%s, %s): %s", ztemp, z, strerror (errno));
+	  (void) remove (ztemp);
+	  ubuffree (ztemp);
+	  ubuffree (z);
+	  return NULL;
+	}
+
       ubuffree (z);
-      return NULL;
     }
 
+  (void) remove (ztemp);
   ubuffree (ztemp);
 
   zjobid = zsfile_to_jobid (qsys, z, bgrade);
