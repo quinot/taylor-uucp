@@ -302,8 +302,6 @@ flocal_send_fail (qtrans, qcmd, qdaemon, zwhy)
      struct sdaemon *qdaemon;
      const char *zwhy;
 {
-  struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
-
   if (zwhy != NULL)
     {
       const char *zfrom;
@@ -346,9 +344,10 @@ flocal_send_fail (qtrans, qcmd, qdaemon, zwhy)
 
   /* We can only mark this job as complete if we are not going to try
      to send a separate execution file.  */
-  if (qtrans->s.bcmd != 'E'
+  if (qtrans == NULL
+      || qtrans->s.bcmd != 'E'
       || (qdaemon->ifeatures & FEATURE_EXEC) != 0
-      || qinfo->zexec != NULL)
+      || ((struct ssendinfo *) qtrans->pinfo)->zexec != NULL)
     (void) fsysdep_did_work (qcmd->pseq);
 
   if (qtrans != NULL)
