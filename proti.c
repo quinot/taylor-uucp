@@ -1041,6 +1041,17 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
       int iack;
       boolean fdelayed;
 
+      /* If we're closing the connection, ignore any data remaining in
+	 the input buffer.  */
+      if (fIclosing)
+	{
+	  if (pfexit != NULL)
+	    *pfexit = TRUE;
+	  if (pcneed != NULL)
+	    *pcneed = 0;
+	  return TRUE;
+	}
+
       /* Look for the IINTRO character.  */
       if (abPrecbuf[iPrecstart] != IINTRO)
 	{
@@ -1542,13 +1553,19 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
       }
 
     case CLOSE:
-      if (fLog_sighup && ! fIclosing)
-	ulog (LOG_ERROR, "Received unexpected CLOSE packet");
-      else
-	DEBUG_MESSAGE0 (DEBUG_PROTO, "fiprocess_packet: Got CLOSE packet");
+      {
+	boolean fexpected;
 
-      *pfexit = TRUE;
-      return ! fLog_sighup || fIclosing;
+	fexpected = ! fLog_sighup || fIclosing;
+	if (! fexpected)
+	  ulog (LOG_ERROR, "Received unexpected CLOSE packet");
+	else
+	  DEBUG_MESSAGE0 (DEBUG_PROTO, "fiprocess_packet: Got CLOSE packet");
+
+	fIclosing = TRUE;
+	*pfexit = TRUE;
+	return fexpected;
+      }
 
     default:
       /* Just ignore unrecognized packet types, for future protocol
