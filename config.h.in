@@ -35,6 +35,7 @@
 #define HAVE_XTI_H 0 /* <xti.h> */
 #define HAVE_STROPTS_H 0 /* <stropts.h> */
 #define HAVE_FTW_H 0 /* <ftw.h> */
+#define HAVE_GLOB_H 0 /* <glob.h> */
 #define HAVE_SYS_SELECT_H 0 /* <sys/select.h> */
 
 /* If major and minor are not defined in <sys/types.h>, but are in
@@ -194,6 +195,7 @@
 #define HAVE_LTRUNC 0
 #define HAVE_WAITPID 0
 #define HAVE_WAIT4 0
+#define HAVE_GLOB 0
 
 /* There are several functions which are replaced in the subdirectory
    lib.  If they are missing, the configure script will automatically

@@ -31,7 +31,7 @@ dnl
 AC_HAVE_HEADERS(stddef.h string.h strings.h unistd.h stdlib.h limits.h)
 AC_HAVE_HEADERS(time.h sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
-AC_HAVE_HEADERS(poll.h tiuser.h xti.h stropts.h ftw.h sys/select.h)
+AC_HAVE_HEADERS(poll.h tiuser.h xti.h stropts.h ftw.h glob.h sys/select.h)
 AC_HAVE_HEADERS(sys/statvfs.h sys/fstyp.h sys/statfs.h mntent.h)
 AC_HAVE_HEADERS(sys/mount.h sys/fs_types.h)
 dnl
@@ -141,7 +141,7 @@ AC_HAVE_FUNCS(getdtablesize sysconf)
 AC_HAVE_FUNCS(setpgrp setsid)
 AC_HAVE_FUNCS(gethostname uname)
 AC_HAVE_FUNCS(gettimeofday)
-AC_HAVE_FUNCS(ftw getline)
+AC_HAVE_FUNCS(ftw getline glob)
 dnl Check for the SCO buggy ftime; the code can cope with the bug,
 dnl though it would prefer not to, so if we're cross-configuring we
 dnl accept that ftime exists.
