@@ -62,10 +62,6 @@
 /* We want to be able to mark the Taylor UUCP system files as close on
    exec.  */
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #else
