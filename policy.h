@@ -407,6 +407,18 @@
    it will be refused.  */
 #define DEFAULT_FREE_SPACE (50000)
 
+/* While a file is being received, Taylor UUCP will periodically check
+   to see if there is enough free space remaining on the disk.  If
+   there is not enough space available on the disk (as determined by
+   DEFAULT_FREE_SPACE, above, or the ``free-space'' command for the
+   system) the communication will be aborted.  The disk will be
+   checked each time FREE_SPACE_DELTA bytes are received.  Lower
+   values of FREE_SPACE_DELTA are less likely to fill up the disk, but
+   will also waste more time checking the amount of free space.  To
+   avoid checking the disk while the file is being received, set
+   FREE_SPACE_DELTA to 0.  */
+#define FREE_SPACE_DELTA (10240)
+
 /* It is possible for an execute job to request to be executed using
    sh(1), rather than execve(2).  This is such a security risk, it is
    being disabled by default; to allow such jobs, set the following

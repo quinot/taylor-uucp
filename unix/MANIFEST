@@ -5,6 +5,7 @@ addbas.c
 app3.c
 app4.c
 basnam.c
+bytfre.c
 chmod.c
 cohtty.c
 cwd.c
@@ -16,6 +17,8 @@ efopen.c
 epopen.c
 exists.c
 filnam.c
+fsusg.c
+fsusg.h
 ftw.c
 getcwd.c
 indir.c

@@ -318,10 +318,6 @@ extern void ustats P((boolean fsucceeded, const char *zuser,
 		      const char *zsystem, boolean fsent,
 		      long cbytes, long csecs, long cmicros));
 
-/* We have lost the connection; record any in progress file transfers
-   in the statistics file.  */
-extern void ustats_failed P((const struct uuconf_system *qsys));
-
 /* Close the statistics file.  */
 extern void ustats_close P((void));
 

@@ -43,8 +43,6 @@ AC_HAVE_HEADERS(time.h sys/wait.h sys/ioctl.h dirent.h memory.h sys/param.h)
 AC_HAVE_HEADERS(utime.h fcntl.h sys/file.h sys/times.h libc.h sysexits.h)
 AC_HAVE_HEADERS(poll.h tiuser.h xti.h stropts.h ftw.h glob.h)
 AC_HAVE_HEADERS(sys/types.tcp.h)
-AC_HAVE_HEADERS(sys/statvfs.h sys/fstyp.h sys/statfs.h mntent.h)
-AC_HAVE_HEADERS(sys/mount.h sys/fs_types.h)
 dnl
 AC_COMPILE_CHECK([sys/select.h],
 [#include <sys/select.h>
@@ -116,20 +114,40 @@ AC_COMPILE_CHECK([time_t in sys/types.h],
 [#include <sys/types.h>], [time_t i;],
 AC_DEFINE([HAVE_TIME_T_IN_TYPES_H]))
 dnl
-dnl The filesystem info code is from David MacKenzie's fileutils 3.1
+dnl The filesystem info code is from David MacKenzie's fileutils 3.4
 dnl package.
-echo checking how to get filesystem info
-case $DEFS in
-*HAVE_SYS_STATVFS_H*HAVE_SYS_FSTYP_H*) AC_DEFINE(FS_STATVFS) ;;
-*HAVE_SYS_FSTYP_H*HAVE_SYS_STATVFS_H*) AC_DEFINE(FS_STATVFS) ;;
-*HAVE_SYS_STATFS_H*HAVE_SYS_FSTYP_H*) AC_DEFINE(FS_USG_STATFS) ;;
-*HAVE_SYS_FSTYP_H*HAVE_SYS_STATFS_H*) AC_DEFINE(FS_USG_STATFS) ;;
-*HAVE_MNTENT_H*) AC_DEFINE(FS_MNTENT) ;;
-*HAVE_SYS_MOUNT_H*HAVE_SYS_FS_TYPES_H*) AC_DEFINE(FS_GETMNT) ;;
-*HAVE_SYS_FS_TYPES_H*HAVE_SYS_MOUNT_H*) AC_DEFINE(FS_GETMNT) ;;
-*) AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h, AC_DEFINE(FS_STATFS),
-   AC_FUNC_CHECK(ustat, [AC_DEFINE(FS_USTAT)])) ;;
-esac
+echo checking how to get filesystem space usage
+# SVR4
+AC_TEST_CPP([#include <sys/statvfs.h>],
+  AC_DEFINE(STAT_STATVFS) space=1)
+if test -z "$space"; then
+# AIX
+AC_HEADER_EGREP(f_nlsdirtype, sys/statfs.h, 
+  AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
+fi
+if test -z "$space"; then
+# SVR3
+AC_TEST_CPP([#include <sys/statfs.h>], 
+  AC_DEFINE(STAT_STATFS4) space=1)
+fi
+if test -z "$space"; then
+# 4.3BSD
+AC_TEST_CPP([#include <sys/vfs.h>],
+  AC_DEFINE(STAT_STATFS2_BSIZE) space=1)
+fi
+if test -z "$space"; then
+# 4.4BSD
+AC_HEADER_EGREP(MOUNT_UFS, sys/mount.h,
+  AC_DEFINE(STAT_STATFS2_FSIZE) space=1)
+fi
+if test -z "$space"; then
+# Ultrix
+AC_TEST_CPP([#include <sys/mount.h>],
+  AC_DEFINE(STAT_STATFS2_FS_DATA) space=1)
+fi
+if test -z "$space"; then
+AC_FUNC_CHECK(ustat, AC_DEFINE(STAT_USTAT))
+fi
 dnl
 AC_COMPILE_CHECK([void],
 [], [extern void foo (); (void) exit (0);],

@@ -58,34 +58,6 @@
 #define FD_CLOEXEC 1
 #endif
 
-/* Get the right header files for statfs and friends.  This stuff is
-   from David MacKenzie's df program.  */
-
-#if FS_STATVFS
-#include <sys/statvfs.h>
-#endif
-
-#if FS_USG_STATFS
-#include <sys/statfs.h>
-#endif
-
-#if FS_MNTENT
-#include <sys/vfs.h>
-#endif
-
-#if FS_GETMNT
-#include <sys/param.h>
-#include <sys/mount.h>
-#endif
-
-#if FS_STATFS
-#include <sys/mount.h>
-#endif
-
-#if FS_USTAT
-#include <ustat.h>
-#endif
-
 #ifndef time
 extern time_t time ();
 #endif
@@ -158,129 +130,22 @@ esysdep_open_send (qsys, zfile, fcheck, zuser)
   return e;
 }
 
-/* Get a temporary file name to receive into.  This is supposed to set
-   *pcbytes to the size of the largest file that can be accepted.  We
-   use the ztemp argument to pick the file name, so that we relocate
-   the file if the transmission is aborted.  */
+/* Get a temporary file name to receive into.  We use the ztemp
+   argument to pick the file name, so that we relocate the file if the
+   transmission is aborted.  */
 
 char *
-zsysdep_receive_temp (qsys, zto, ztemp, pcbytes)
+zsysdep_receive_temp (qsys, zto, ztemp)
      const struct uuconf_system *qsys;
      const char *zto;
      const char *ztemp;
-     long *pcbytes;
 {
-  char *zret;
-  long c1, c2;
-  char *z1, *z2, *zslash;
-
   if (ztemp != NULL
       && *ztemp == 'D'
       && strcmp (ztemp, "D.0") != 0)
-    zret = zsappend3 (".Temp", qsys->uuconf_zname, ztemp);
+    return zsappend3 (".Temp", qsys->uuconf_zname, ztemp);
   else
-    zret = zstemp_file (qsys);
-  if (zret == NULL)
-    return NULL;
-
-  /* Try to determine the amount of free space available for the
-     temporary file and for the final destination.  This code is
-     mostly from David MacKenzie's df program.  */
-  c1 = (long) -1;
-  c2 = (long) -1;
-
-  z1 = zbufcpy (zret);
-  zslash = strrchr (z1, '/');
-  if (zslash != NULL)
-    *zslash = '\0';
-  else
-    {
-      z1[0] = '.';
-      z1[1] = '\0';
-    }
-
-  z2 = zbufcpy (zto);
-  zslash = strrchr (z2, '/');
-  if (zslash != NULL)
-    *zslash = '\0';
-  else
-    {
-      z2[0] = '.';
-      z2[1] = '\0';
-    }
-
-  {
-#if FS_STATVFS
-    struct statvfs s;
-
-    if (statvfs (z1, &s) >= 0)
-      c1 = (long) s.f_bavail * (long) s.f_frsize;
-    if (statvfs (z2, &s) >= 0)
-      c2 = (long) s.f_bavail * (long) s.f_frsize;
-#endif
-#if FS_USG_STATFS
-    struct statfs s;
-
-    /* This structure has an f_bsize field, but on many systems
-       f_bfree is measured in 512 byte blocks.  On some systems,
-       f_bfree is measured in f_bsize byte blocks.  Rather than
-       overestimate the amount of free space, this code assumes that
-       f_bfree is measuring 512 byte blocks.  */
-    if (statfs (z1, &s, sizeof s, 0) >= 0)
-      c1 = (long) s.f_bfree * (long) 512;
-    if (statfs (z2, &s, sizeof s, 0) >= 0)
-      c2 = (long) s.f_bfree * (long) 512;
-#endif
-#if FS_MNTENT
-    struct statfs s;
-
-    if (statfs (z1, &s) == 0)
-      c1 = (long) s.f_bavail * (long) s.f_bsize;
-    if (statfs (z2, &s) == 0)
-      c2 = (long) s.f_bavail * (long) s.f_bsize;
-#endif
-#if FS_GETMNT
-    struct fs_data s;
-
-    if (statfs (z1, &s) == 1)
-      c1 = (long) s.fd_req.bfreen * (long) 1024;
-    if (statfs (z2, &s) == 1)
-      c2 = (long) s.fd_req.bfreen * (long) 1024;
-#endif
-#if FS_STATFS
-    struct statfs s;
-
-    if (statfs (z1, &s) >= 0)
-      c1 = (long) s.f_bavail * (long) s.f_fsize;
-    if (statfs (z2, &s) >= 0)
-      c2 = (long) s.f_bavail * (long) s.f_fsize;
-#endif
-#if FS_USTAT
-    struct stat sstat;
-    struct ustat s;
-
-    if (stat (z1, &sstat) == 0
-	&& ustat (sstat.st_dev, &s) == 0)
-      c1 = (long) s.f_tfree * (long) 512;
-    if (stat (z2, &sstat) == 0
-	&& ustat (sstat.st_dev, &s) == 0)
-      c2 = (long) s.f_tfree * (long) 512;
-#endif
-  }
-
-  ubuffree (z1);
-  ubuffree (z2);
-
-  if (c1 == (long) -1)
-    *pcbytes = c2;
-  else if (c2 == (long) -1)
-    *pcbytes = c1;
-  else if (c1 < c2)
-    *pcbytes = c1;
-  else
-    *pcbytes = c2;
-
-  return zret;
+    return zstemp_file (qsys);
 }  
 
 /* Open a temporary file to receive into.  This should, perhaps, check

@@ -210,6 +210,20 @@ extern boolean fremote_xcmd_init P((struct sdaemon *qdaemon,
 				    struct scmd *qcmd,
 				    int iremote));
 
+/* We have lost the connection; record any in progress file transfers
+   in the statistics file and discard any temporary files.  */
+extern void ufailed P((struct sdaemon *qdaemon));
+
+/* Check that there is enough disk space for a file receive.  Return
+   FALSE if there is not.  */
+extern boolean frec_check_free P((struct stransfer *qtrans,
+				  long cfree_space));
+
+/* Discard the temporary file being used to receive a file, if
+   appropriate.  */
+extern boolean frec_discard_temp P((struct sdaemon *qdaemon,
+				    struct stransfer *qtrans));
+
 /* Handle data received by a protocol.  This is called by the protocol
    specific routines as data comes in.  The data is passed as two
    buffers because that is convenient for packet based protocols, but

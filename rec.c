@@ -37,6 +37,11 @@ const char rec_rcsid[] = "$Id$";
 #include "prot.h"
 #include "trans.h"
 
+/* If the other side does not tell us the size of a file it wants to
+   send us, we assume it is this long.  This is only used for free
+   space checking.  */
+#define CASSUMED_FILE_SIZE (10240)
+
 /* We keep this information in the pinfo field of the stransfer
    structure.  */
 struct srecinfo
@@ -299,19 +304,25 @@ flocal_rec_send_request (qtrans, qdaemon)
      struct sdaemon *qdaemon;
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
-  long cbytes;
+  long cbytes, cbytes2;
   size_t clen;
   char *zsend;
   boolean fret;
 
   qinfo->ztemp = zsysdep_receive_temp (qdaemon->qsys, qinfo->zfile,
-				       (const char *) NULL, &cbytes);
+				       (const char *) NULL);
   if (qinfo->ztemp == NULL)
     {
       urrec_free (qtrans);
       return FALSE;
     }
 
+  /* Check the amount of free space available for both the temporary
+     file and the real file.  */
+  cbytes = csysdep_bytes_free (qinfo->ztemp);
+  cbytes2 = csysdep_bytes_free (qinfo->zfile);
+  if (cbytes < cbytes2)
+    cbytes = cbytes2;
   if (cbytes != -1)
     {
       cbytes -= qdaemon->qsys->uuconf_cfree_space;
@@ -461,6 +472,30 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
   return TRUE;
 }
 
+/* Make sure there is still enough disk space available to receive a
+   file.  */
+
+boolean
+frec_check_free (qtrans, cfree_space)
+     struct stransfer *qtrans;
+     long cfree_space;
+{
+  struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+  long cfree1, cfree2;
+
+  cfree1 = csysdep_bytes_free (qinfo->ztemp);
+  cfree2 = csysdep_bytes_free (qinfo->zfile);
+  if (cfree1 < cfree2)
+    cfree1 = cfree2;
+  if (cfree1 != -1 && cfree1 < cfree_space)
+    {
+      ulog (LOG_ERROR, "%s: too big to receive now", qinfo->zfile);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
 /* A remote request to send a file to the local system, meaning that
    we are going to receive a file.
 
@@ -501,7 +536,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
   char *zfile;
   FILE *e;
   char *ztemp;
-  long cbytes;
+  long cbytes, cbytes2;
   long crestart;
   struct srecinfo *qinfo;
   struct stransfer *qtrans;
@@ -574,28 +609,38 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 	}
     }
 
-  ztemp = zsysdep_receive_temp (qsys, zfile, qcmd->ztemp, &cbytes);
+  ztemp = zsysdep_receive_temp (qsys, zfile, qcmd->ztemp);
 
-  if (qcmd->cbytes != -1)
+  /* Adjust the number of bytes we are prepared to receive according
+     to the amount of free space we are supposed to leave available
+     and the maximum file size we are permitted to transfer.  */
+  cbytes = csysdep_bytes_free (ztemp);
+  cbytes2 = csysdep_bytes_free (zfile);
+  if (cbytes < cbytes2)
+    cbytes = cbytes2;
+
+  if (cbytes != -1)
     {
-      /* Adjust the number of bytes we are prepared to receive
-	 according to the amount of free space we are supposed to
-	 leave available and the maximum file size we are permitted to
-	 transfer.  */
-      if (cbytes != -1)
-	{
-	  cbytes -= qsys->uuconf_cfree_space;
-	  if (cbytes < 0)
-	    cbytes = 0;
-	}
-	      
-      if (qdaemon->cremote_size != -1
-	  && (cbytes == -1 || qdaemon->cremote_size < cbytes))
-	cbytes = qdaemon->cremote_size;
+      cbytes -= qsys->uuconf_cfree_space;
+      if (cbytes < 0)
+	cbytes = 0;
+    }
 
-      /* If the number of bytes we are prepared to receive is less
-	 than the file size, we must fail.  */
-      if (cbytes != -1 && cbytes < qcmd->cbytes)
+  if (qdaemon->cremote_size != -1
+      && (cbytes == -1 || qdaemon->cremote_size < cbytes))
+    cbytes = qdaemon->cremote_size;
+
+  /* If the number of bytes we are prepared to receive is less than
+     the file size, we must fail.  If the remote did not tell us the
+     file size, arbitrarily assumed that it is 10240 bytes.  */
+  if (cbytes != -1)
+    {
+      long csize;
+
+      csize = qcmd->cbytes;
+      if (csize == -1)
+	csize = CASSUMED_FILE_SIZE;
+      if (cbytes < csize)
 	{
 	  ulog (LOG_ERROR, "%s: too big to receive", zfile);
 	  ubuffree (ztemp);
@@ -979,7 +1024,6 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
   if (qtrans->s.bcmd == 'E' && zerr == NULL)
     {
       char *zxqt, *zxqtfile, *ztemp;
-      long cdummy;
       FILE *e;
       boolean fbad;
 
@@ -1004,8 +1048,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 	 uuxqt might pick up the file before we have finished writing
 	 it.  */
       e = NULL;
-      ztemp = zsysdep_receive_temp (qdaemon->qsys, zxqtfile, "D.0",
-				    &cdummy);
+      ztemp = zsysdep_receive_temp (qdaemon->qsys, zxqtfile, "D.0");
       if (ztemp != NULL)
 	e = esysdep_fopen (ztemp, FALSE, FALSE, TRUE);
 
@@ -1034,6 +1077,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
       if (fclose (e) == EOF)
 	{
 	  ulog (LOG_ERROR, "fclose: %s", strerror (errno));
+	  (void) remove (ztemp);
 	  fbad = TRUE;
 	}
 
@@ -1103,4 +1147,24 @@ frec_file_send_confirm (qtrans, qdaemon)
 
   urrec_free (qtrans);
   return fret;
+}
+
+/* Discard a temporary file if it is not useful.  A temporary file is
+   useful if it could be used to restart a receive.  This is called if
+   the connection is lost.  It is only called if qtrans->frecfile is
+   TRUE.  */
+
+boolean
+frec_discard_temp (qdaemon, qtrans)
+     struct sdaemon *qdaemon;
+     struct stransfer *qtrans;
+{
+  struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
+
+  if ((qdaemon->ifeatures & FEATURE_RESTART) == 0
+      || qtrans->s.ztemp == NULL
+      || qtrans->s.ztemp[0] != 'D'
+      || strcmp (qtrans->s.ztemp, "D.0") == 0)
+    (void) remove (qinfo->ztemp);
+  return TRUE;
 }

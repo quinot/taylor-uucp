@@ -825,7 +825,7 @@ floop (qdaemon)
   if (fret)
     uwindow_acked (qdaemon, TRUE);
   else
-    ustats_failed (qdaemon->qsys);
+    ufailed (qdaemon);
 
   return fret;
 }
@@ -855,7 +855,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
   long inextsecs, inextmicros;
   struct stransfer *q;
   int cwrote;
-  int calcs;
   boolean fret;
 
   /* If we haven't initialized the time, initialize it now.  We also
@@ -973,8 +972,6 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 
   ulog_user (q->s.zuser);
 
-  calcs = q->calcs;
-
   fret = TRUE;
 
   /* If we're receiving a command, then accumulate it up to the null
@@ -1075,6 +1072,24 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
 	      cwrote = cfilewrite (q->e, (char *) zfirst, cfirst);
 	      if (cwrote == cfirst)
 		{
+#if FREE_SPACE_DELTA > 0
+		  long cfree_space;
+
+		  /* Check that there is still enough space on the
+		     disk.  If there isn't, we drop the connection,
+		     because we have no way to abort a file transfer
+		     in progress.  */
+		  cfree_space = qdaemon->qsys->uuconf_cfree_space;
+		  if (cfree_space > 0
+		      && ((q->cbytes / FREE_SPACE_DELTA)
+			  != (q->cbytes + cfirst) / FREE_SPACE_DELTA)
+		      && ! frec_check_free (q, cfree_space))
+		    {
+		      fret = FALSE;
+		      break;
+		    }
+#endif
+
 		  q->cbytes += cfirst;
 		  q->ipos += cfirst;
 		}
@@ -1318,14 +1333,15 @@ uwindow_acked (qdaemon, fallacked)
 }
 
 /* This routine is called when an error occurred and we are crashing
-   out of the connection.  It is only used to report statistics on
-   failed transfers to the statistics file.  Note that the number of
-   bytes we report as having been sent has little or nothing to do
-   with the number of bytes the remote site actually received.  */
+   out of the connection.  It is used to report statistics on failed
+   transfers to the statistics file, and it also discards useless
+   temporary files for file receptions.  Note that the number of bytes
+   we report as having been sent has little or nothing to do with the
+   number of bytes the remote site actually received.  */
 
 void
-ustats_failed (qsys)
-     const struct uuconf_system *qsys;
+ufailed (qdaemon)
+     struct sdaemon *qdaemon;
 {
   register struct stransfer *q;
 
@@ -1335,8 +1351,10 @@ ustats_failed (qsys)
       do
 	{
 	  if (q->fsendfile || q->frecfile)
-	    ustats (FALSE, q->s.zuser, qsys->uuconf_zname, q->fsendfile,
-		    q->cbytes, q->isecs, q->imicros);
+	    ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
+		    q->fsendfile, q->cbytes, q->isecs, q->imicros);
+	  if (q->frecfile)
+	    (void) frec_discard_temp (qdaemon, q);
 	  q = q->qnext;
 	}
       while (q != qTsend);
@@ -1348,8 +1366,10 @@ ustats_failed (qsys)
       do
 	{
 	  if (q->fsendfile || q->frecfile)
-	    ustats (FALSE, q->s.zuser, qsys->uuconf_zname, q->fsendfile,
-		    q->cbytes, q->isecs, q->imicros);
+	    ustats (FALSE, q->s.zuser, qdaemon->qsys->uuconf_zname,
+		    q->fsendfile, q->cbytes, q->isecs, q->imicros);
+	  if (q->frecfile)
+	    (void) frec_discard_temp (qdaemon, q);
 	  q = q->qnext;
 	}
       while (q != qTreceive);

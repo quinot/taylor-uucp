@@ -90,6 +90,10 @@ static const struct sprotocol asProtocols[] =
 static boolean fLocked_system;
 static struct uuconf_system sLocked_system;
 
+/* Daemon structure holding information about the remote system (must
+   be global so the error handler can see it.  */
+static struct sdaemon sDaemon;
+
 /* Open connection.  */
 static struct sconnection *qConn;
 
@@ -683,7 +687,7 @@ static void
 uabort ()
 {
   if (fLocked_system)
-    ustats_failed (&sLocked_system);
+    ufailed (&sDaemon);
 
   ulog_user ((const char *) NULL);
 
@@ -730,7 +734,6 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 {
   struct sstatus sstat;
   long inow;
-  struct sdaemon sdaem;
   boolean fbadtime, fnevertime;
   const struct uuconf_system *qsys;
 
@@ -762,23 +765,23 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 	}
     }
 
-  sdaem.puuconf = puuconf;
-  sdaem.qsys = NULL;
-  sdaem.zlocalname = NULL;
-  sdaem.qconn = NULL;
-  sdaem.qproto = NULL;
-  sdaem.clocal_size = -1;
-  sdaem.cremote_size = -1;
-  sdaem.cmax_ever = -2;
-  sdaem.cmax_receive = -1;
-  sdaem.ifeatures = 0;
-  sdaem.frequest_hangup = FALSE;
-  sdaem.fhangup_requested = FALSE;
-  sdaem.fhangup = FALSE;
-  sdaem.fmaster = TRUE;
-  sdaem.fcaller = TRUE;
-  sdaem.ireliable = 0;
-  sdaem.bgrade = '\0';
+  sDaemon.puuconf = puuconf;
+  sDaemon.qsys = NULL;
+  sDaemon.zlocalname = NULL;
+  sDaemon.qconn = NULL;
+  sDaemon.qproto = NULL;
+  sDaemon.clocal_size = -1;
+  sDaemon.cremote_size = -1;
+  sDaemon.cmax_ever = -2;
+  sDaemon.cmax_receive = -1;
+  sDaemon.ifeatures = 0;
+  sDaemon.frequest_hangup = FALSE;
+  sDaemon.fhangup_requested = FALSE;
+  sDaemon.fhangup = FALSE;
+  sDaemon.fmaster = TRUE;
+  sDaemon.fcaller = TRUE;
+  sDaemon.ireliable = 0;
+  sDaemon.bgrade = '\0';
 
   fbadtime = TRUE;
   fnevertime = TRUE;
@@ -801,10 +804,10 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 			     &cretry))
 	continue;
 
-      sdaem.qsys = qsys;
+      sDaemon.qsys = qsys;
 
       /* Queue up any work there is to do.  */
-      if (! fqueue (&sdaem, &fany))
+      if (! fqueue (&sDaemon, &fany))
 	return FALSE;
 
       /* If we are only supposed to call if there is work, and there
@@ -813,15 +816,15 @@ fcall (puuconf, qorigsys, qport, fifwork, fforce, fdetach, ftimewarn)
 	 with fewer restrictions on grade or file transfer size.  */
       if (fifwork && ! fany)
 	{
-	  uclear_queue (&sdaem);
+	  uclear_queue (&sDaemon);
 	  continue;
 	}
 
       fbadtime = FALSE;
 
-      fret = fconn_call (&sdaem, qport, &sstat, cretry, &fcalled);
+      fret = fconn_call (&sDaemon, qport, &sstat, cretry, &fcalled);
 
-      uclear_queue (&sdaem);
+      uclear_queue (&sDaemon);
 
       if (fret)
 	return TRUE;
@@ -1565,7 +1568,6 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   struct uuconf_system ssys;
   const struct uuconf_system *qsys;
   const struct uuconf_system *qany;
-  struct sdaemon sdaem;
   char *zloc;
   struct sstatus sstat;
   boolean fgotseq, fgotn;
@@ -1646,33 +1648,33 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	ftcp_port = TRUE;
     }
 
-  sdaem.puuconf = puuconf;
-  sdaem.qsys = NULL;
-  sdaem.zlocalname = NULL;
-  sdaem.qconn = qconn;
-  sdaem.qproto = NULL;
-  sdaem.clocal_size = -1;
-  sdaem.cremote_size = -1;
-  sdaem.cmax_ever = -2;
-  sdaem.cmax_receive = -1;
-  sdaem.ifeatures = 0;
-  sdaem.frequest_hangup = FALSE;
-  sdaem.fhangup_requested = FALSE;
-  sdaem.fhangup = FALSE;
-  sdaem.fmaster = FALSE;
-  sdaem.fcaller = FALSE;
-  sdaem.ireliable = 0;
-  sdaem.bgrade = UUCONF_GRADE_LOW;
+  sDaemon.puuconf = puuconf;
+  sDaemon.qsys = NULL;
+  sDaemon.zlocalname = NULL;
+  sDaemon.qconn = qconn;
+  sDaemon.qproto = NULL;
+  sDaemon.clocal_size = -1;
+  sDaemon.cremote_size = -1;
+  sDaemon.cmax_ever = -2;
+  sDaemon.cmax_receive = -1;
+  sDaemon.ifeatures = 0;
+  sDaemon.frequest_hangup = FALSE;
+  sDaemon.fhangup_requested = FALSE;
+  sDaemon.fhangup = FALSE;
+  sDaemon.fmaster = FALSE;
+  sDaemon.fcaller = FALSE;
+  sDaemon.ireliable = 0;
+  sDaemon.bgrade = UUCONF_GRADE_LOW;
 
   /* Get the local name to use.  If uuconf_login_localname returns a
      value, it is not always freed up, although it should be.  */
   iuuconf = uuconf_login_localname (puuconf, zlogin, &zloc);
   if (iuuconf == UUCONF_SUCCESS)
-    sdaem.zlocalname = zloc;
+    sDaemon.zlocalname = zloc;
   else if (iuuconf == UUCONF_NOT_FOUND)
     {
-      sdaem.zlocalname = zsysdep_localname ();
-      if (sdaem.zlocalname == NULL)
+      sDaemon.zlocalname = zsysdep_localname ();
+      if (sDaemon.zlocalname == NULL)
 	return FALSE;
     }
   else
@@ -1682,8 +1684,8 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     }
 
   /* Tell the remote system who we are.   */
-  zsend = zbufalc (strlen (sdaem.zlocalname) + sizeof "Shere=");
-  sprintf (zsend, "Shere=%s", sdaem.zlocalname);
+  zsend = zbufalc (strlen (sDaemon.zlocalname) + sizeof "Shere=");
+  sprintf (zsend, "Shere=%s", sDaemon.zlocalname);
   fret = fsend_uucp_cmd (qconn, zsend);
   ubuffree (zsend);
   if (! fret)
@@ -1782,7 +1784,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
-  sdaem.qsys = qsys;
+  sDaemon.qsys = qsys;
 
   if (pzsystem != NULL)
     *pzsystem = zbufcpy (qsys->uuconf_zname);
@@ -1898,18 +1900,18 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		     for octal.  */
 		  fgotn = TRUE;
 		  if (optarg == NULL)
-		    sdaem.ifeatures |= FEATURE_SIZES | FEATURE_V103;
+		    sDaemon.ifeatures |= FEATURE_SIZES | FEATURE_V103;
 		  else
-		    sdaem.ifeatures |= (int) strtol (optarg,
-						     (char **) NULL,
-						     0);
+		    sDaemon.ifeatures |= (int) strtol (optarg,
+						       (char **) NULL,
+						       0);
 		  break;
 
 		case 'p':
 		  /* The argument is the lowest grade of work the
 		     local system should send.  */
 		  if (UUCONF_GRADE_LEGAL (optarg[0]))
-		    sdaem.bgrade = optarg[0];
+		    sDaemon.bgrade = optarg[0];
 		  break;
 
 		case 'Q':
@@ -1931,7 +1933,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
 		case 'R':
 		  /* The remote system supports file restart.  */
-		  sdaem.ifeatures |= FEATURE_RESTART;
+		  sDaemon.ifeatures |= FEATURE_RESTART;
 		  break;
 
 		case 'U':
@@ -1940,7 +1942,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		     is 512 bytes.  */
 		  c = strtol (optarg, (char **) NULL, 0);
 		  if (c > 0 && c < LONG_MAX / (long) 512)
-		    sdaem.cmax_receive = c * (long) 512;
+		    sDaemon.cmax_receive = c * (long) 512;
 		  break;
 
 		case 'v':
@@ -1950,7 +1952,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 		    {
 		      b = optarg[sizeof "grade=" - 1];
 		      if (UUCONF_GRADE_LEGAL (b))
-			sdaem.bgrade = b;
+			sDaemon.bgrade = b;
 		    }
 		  break;
 
@@ -2000,18 +2002,18 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
     if (! fgotn)
       {
-	if ((sdaem.ifeatures & FEATURE_RESTART) == 0)
+	if ((sDaemon.ifeatures & FEATURE_RESTART) == 0)
 	  zreply = "ROK";
 	else
 	  {
 	    /* We got -R without -N, so assume that this is SVR4 UUCP.
 	       SVR4 UUCP expects ROK -R to signal support for file
 	       restart.  */
-	    sdaem.ifeatures |= FEATURE_SVR4 | FEATURE_SIZES;
+	    sDaemon.ifeatures |= FEATURE_SVR4 | FEATURE_SIZES;
 	    zreply = "ROK -R";
 	  }
       }
-    else if ((sdaem.ifeatures & FEATURE_V103) != 0)
+    else if ((sDaemon.ifeatures & FEATURE_V103) != 0)
       zreply = "ROKN";
     else
       {
@@ -2034,29 +2036,29 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
      information, default to a reliable eight-bit full-duplex
      connection.  */
   if (ftcp_port)
-    sdaem.ireliable = (UUCONF_RELIABLE_SPECIFIED
-		       | UUCONF_RELIABLE_ENDTOEND
-		       | UUCONF_RELIABLE_RELIABLE
-		       | UUCONF_RELIABLE_EIGHT
-		       | UUCONF_RELIABLE_FULLDUPLEX);
+    sDaemon.ireliable = (UUCONF_RELIABLE_SPECIFIED
+			 | UUCONF_RELIABLE_ENDTOEND
+			 | UUCONF_RELIABLE_RELIABLE
+			 | UUCONF_RELIABLE_EIGHT
+			 | UUCONF_RELIABLE_FULLDUPLEX);
   else
     {
       if (qport != NULL
 	  && (qport->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
-	sdaem.ireliable = qport->uuconf_ireliable;
+	sDaemon.ireliable = qport->uuconf_ireliable;
       if (qdialer != NULL
 	  && (qdialer->uuconf_ireliable & UUCONF_RELIABLE_SPECIFIED) != 0)
 	{
-	  if (sdaem.ireliable != 0)
-	    sdaem.ireliable &= qdialer->uuconf_ireliable;
+	  if (sDaemon.ireliable != 0)
+	    sDaemon.ireliable &= qdialer->uuconf_ireliable;
 	  else
-	    sdaem.ireliable = qdialer->uuconf_ireliable;
+	    sDaemon.ireliable = qdialer->uuconf_ireliable;
 	}
-      if (sdaem.ireliable == 0)
-	sdaem.ireliable = (UUCONF_RELIABLE_RELIABLE
-			   | UUCONF_RELIABLE_EIGHT
-			   | UUCONF_RELIABLE_FULLDUPLEX
-			   | UUCONF_RELIABLE_SPECIFIED);
+      if (sDaemon.ireliable == 0)
+	sDaemon.ireliable = (UUCONF_RELIABLE_RELIABLE
+			     | UUCONF_RELIABLE_EIGHT
+			     | UUCONF_RELIABLE_FULLDUPLEX
+			     | UUCONF_RELIABLE_SPECIFIED);
     }
 
   if (qsys->uuconf_zprotocols != NULL ||
@@ -2087,7 +2089,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 	  int ipr;
 
 	  ipr = asProtocols[i].ireliable;
-	  if ((ipr & sdaem.ireliable) != ipr)
+	  if ((ipr & sDaemon.ireliable) != ipr)
 	    continue;
 	  *zset++ = asProtocols[i].bname;
 	}
@@ -2144,7 +2146,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
       return FALSE;
     }
 
-  sdaem.qproto = &asProtocols[i];
+  sDaemon.qproto = &asProtocols[i];
 
   /* Run the chat script for when a call is received.  */
   if (! fchat (qconn, puuconf, &qsys->uuconf_scalled_chat, qsys,
@@ -2158,21 +2160,21 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     }
 
   /* Run any protocol parameter commands.  */
-  if (sdaem.qproto->qcmds != NULL)
+  if (sDaemon.qproto->qcmds != NULL)
     {
       if (qsys->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, sdaem.qproto->bname,
-			     sdaem.qproto->qcmds,
+	uapply_proto_params (puuconf, sDaemon.qproto->bname,
+			     sDaemon.qproto->qcmds,
 			     qsys->uuconf_qproto_params);
       if (qport != NULL
 	  && qport->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, sdaem.qproto->bname,
-			     sdaem.qproto->qcmds,
+	uapply_proto_params (puuconf, sDaemon.qproto->bname,
+			     sDaemon.qproto->qcmds,
 			     qport->uuconf_qproto_params);
       if (qdialer != NULL
 	  && qdialer->uuconf_qproto_params != NULL)
-	uapply_proto_params (puuconf, sdaem.qproto->bname,
-			     sdaem.qproto->qcmds,
+	uapply_proto_params (puuconf, sDaemon.qproto->bname,
+			     sDaemon.qproto->qcmds,
 			     qdialer->uuconf_qproto_params);
     }
 
@@ -2182,10 +2184,10 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
 
   /* Get any jobs queued for the system, and turn on the selected
      protocol.  */
-  if (! fqueue (&sdaem, (boolean *) NULL)
-      || ! (*sdaem.qproto->pfstart) (&sdaem, &zlog))
+  if (! fqueue (&sDaemon, (boolean *) NULL)
+      || ! (*sDaemon.qproto->pfstart) (&sDaemon, &zlog))
     {
-      uclear_queue (&sdaem);
+      uclear_queue (&sDaemon);
       sstat.ttype = STATUS_FAILED;
       sstat.ilast = ixsysdep_time ((long *) NULL);
       (void) fsysdep_set_status (qsys, &sstat);
@@ -2195,14 +2197,14 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   if (zlog == NULL)
     {
       zlog = zbufalc (sizeof "protocol ''" + 1);
-      sprintf (zlog, "protocol '%c'", sdaem.qproto->bname);
+      sprintf (zlog, "protocol '%c'", sDaemon.qproto->bname);
     }
 
   zgrade = zbufalc (sizeof "grade  " + 1);
-  if (sdaem.bgrade == UUCONF_GRADE_LOW)
+  if (sDaemon.bgrade == UUCONF_GRADE_LOW)
     *zgrade = '\0';
   else
-    sprintf (zgrade, "grade %c ", sdaem.bgrade);
+    sprintf (zgrade, "grade %c ", sDaemon.bgrade);
 
   /* If we are using HAVE_HDB_LOGGING, then the previous ``incoming
      call'' message went to the general log, since we didn't know the
@@ -2223,7 +2225,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
   {
     long iend_time;
 
-    fret = floop (&sdaem);
+    fret = floop (&sDaemon);
 
     /* Hangup.  As the answerer, we send seven O's and expect to see
        six.  We don't even bother to look for the characters from the
@@ -2236,7 +2238,7 @@ faccept_call (puuconf, zlogin, qconn, pzsystem)
     ulog (LOG_NORMAL, "Call complete (%ld seconds)",
 	  iend_time - istart_time);
 
-    uclear_queue (&sdaem);
+    uclear_queue (&sDaemon);
 
     if (fret)
       sstat.ttype = STATUS_COMPLETE;

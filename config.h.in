@@ -160,18 +160,18 @@
    disk.  Note that this space check is only useful when talking to
    another instance of Taylor UUCP.
 
-   FS_STATVFS    the statvfs function
-   FS_USG_STATFS the four argument statfs function
-   FS_MNTENT     the two argument statfs function with the f_bsize field
-   FS_STATFS     the two argument statfs function with the f_fsize field
-   FS_GETMNT     the two argument statfs function with the fd_req field
-   FS_USTAT      the ustat function with 512 byte blocks.  */
-#define FS_STATVFS 0
-#define FS_USG_STATFS 0
-#define FS_MNTENT 0
-#define FS_STATFS 0
-#define FS_GETMNT 0
-#define FS_USTAT 0
+   STAT_STATVFS          statvfs function
+   STAT_STATFS2_BSIZE    two argument statfs function with f_bsize field
+   STAT_STATFS2_FSIZE    two argument statfs function with f_fsize field
+   STAT_STATFS2_FS_DATA  two argument statfs function with fd_req field
+   STAT_STATFS4          four argument statfs function
+   STAT_USTAT            the ustat function with 512 byte blocks.  */
+#define STAT_STATVFS 0
+#define STAT_STATFS2_BSIZE 0
+#define STAT_STATFS2_FSIZE 0
+#define STAT_STATFS2_FS_DATA 0
+#define STAT_STATFS4 0
+#define STAT_USTAT 0
 
 /* Set HAVE_VOID to 1 if the compiler supports declaring functions with
    a return type of void and casting values to void.  */

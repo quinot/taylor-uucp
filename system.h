@@ -400,17 +400,11 @@ extern openfile_t esysdep_open_send P((const struct uuconf_system *qsys,
    the file is coming from, the zto argument is the name the file will
    have after it has been fully received, and the ztemp argument, if
    it is not NULL, is from the command sent by the remote system.  The
-   return value must be freed using ubuffree.  The amount of free
-   space should be returned in *pcbytes; ideally it should be the
-   lesser of the amount of free space on the file system of the
-   temporary file and the amount of free space on the file system of
-   the final destination.  If the amount of free space is not
-   available, *pcbytes should be set to -1.  The function should
+   return value must be freed using ubuffree.  The function should
    return NULL on error.  */
 extern char *zsysdep_receive_temp P((const struct uuconf_system *qsys,
 				     const char *zfile,
-				     const char *ztemp,
-				     long *pcbytes));
+				     const char *ztemp));
 
 /* Open a file to receive from another system.  The zreceive argument
    is the return value of zsysdep_receive_temp with the same qsys,
@@ -789,6 +783,11 @@ extern long ixsysdep_file_time P((const char *zfile));
    should not give an error message, but should return -1.  If some
    other error occurs, this should return -2.  */
 extern long csysdep_size P((const char *zfile));
+
+/* Return the amount of free space on the containing the given file
+   name (the file may or may not exist).  If the amount of free space
+   cannot be determined, the function should return -1.  */
+extern long csysdep_bytes_free P((const char *zfile));
 
 /* Start getting status information for all systems with available
    status information.  There may be status information for unknown
