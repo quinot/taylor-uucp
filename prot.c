@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.13  1992/02/08  19:41:24  ian
+   Simplify pffile calls for ancient stupid compilers
+
    Revision 1.12  1992/02/08  03:54:18  ian
    Include <string.h> only in <uucp.h>, added 1992 copyright
 
@@ -229,10 +232,10 @@ fsend_file (fmaster, e, qcmd, zmail, ztosys, fnew)
 	  (void) ffileclose (e);
 	  if (fnever)
 	    {
-	      (void) fsysdep_did_work (qcmd->pseq);
 	      (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
 				     qcmd->zfrom, zLocalname,
 				     qcmd->zto, ztosys);
+	      (void) fsysdep_did_work (qcmd->pseq);
 	    }
 	  return TRUE;
 	}
@@ -417,10 +420,10 @@ freceive_file (fmaster, e, qcmd, zmail, zfromsys, fnew)
 	    }
 	  ulog (LOG_ERROR, "Can't receive %s: %s", qcmd->zfrom, zerr);
 	  (void) ffileclose (e);
-	  (void) fsysdep_did_work (qcmd->pseq);
 	  (void) fmail_transfer (FALSE, qcmd->zuser, zmail, zerr,
 				 qcmd->zfrom, zfromsys,
 				 qcmd->zto, zLocalname);
+	  (void) fsysdep_did_work (qcmd->pseq);
 	  return TRUE;
 	}
       

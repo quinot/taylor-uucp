@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.50  1992/02/08  22:33:32  ian
+   Only get the current working directory if it's going to be needed
+
    Revision 1.49  1992/02/08  20:33:57  ian
    Handle all possible signals raised by abort
 
@@ -2023,12 +2026,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 						 (const char *) NULL);
 		  if (zuse == NULL)
 		    {
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, zLocalname,
 					     s.zto, qsys->zname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 
@@ -2036,12 +2039,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 				     s.zuser))
 		    {
 		      ulog (LOG_ERROR, "Not permitted to send %s", zuse);
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "not permitted to send",
 					     s.zfrom, zLocalname,
 					     s.zto, qsys->zname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 
@@ -2063,12 +2066,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		  zuse = zsysdep_spool_file_name (qsys, s.ztemp);
 		  if (zuse == NULL)
 		    {
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, zLocalname,
 					     s.zto, qsys->zname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 		  e = esysdep_open_send (qsys, zuse, &idummy, &s.cbytes);
@@ -2076,12 +2079,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 
 	      if (! ffileisopen (e))
 		{
-		  (void) fsysdep_did_work (s.pseq);
 		  (void) fmail_transfer (FALSE, s.zuser,
 					 (const char *) NULL,
 					 "cannot open file",
 					 s.zfrom, zLocalname,
 					 s.zto, qsys->zname);
+		  (void) fsysdep_did_work (s.pseq);
 		  break;
 		}
 
@@ -2098,12 +2101,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 			{
 			  ulog (LOG_ERROR, "File %s is too large to send",
 				s.zfrom);
-			  (void) fsysdep_did_work (s.pseq);
 			  (void) fmail_transfer (FALSE, s.zuser,
 						 (const char *) NULL,
 						 "too large to send",
 						 s.zfrom, zLocalname,
 						 s.zto, qsys->zname);
+			  (void) fsysdep_did_work (s.pseq);
 			}
 		      (void) ffileclose (e);
 		      break;
@@ -2140,24 +2143,24 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		    {
 		      ulog (LOG_ERROR, "Not permitted to receive %s",
 			    s.zto);
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "not permitted to receive",
 					     s.zfrom, qsys->zname,
 					     s.zto, zLocalname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 
 		  zuse = zsysdep_spool_file_name (qsys, s.zto);
 		  if (zuse == NULL)
 		    {
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, qsys->zname,
 					     s.zto, zLocalname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 		}
@@ -2166,12 +2169,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		  zuse = zsysdep_real_file_name (qsys, s.zto, s.zfrom);
 		  if (zuse == NULL)
 		    {
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "cannot form file name",
 					     s.zfrom, qsys->zname,
 					     s.zto, zLocalname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 
@@ -2180,12 +2183,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		    {
 		      ulog (LOG_ERROR, "Not permitted to receive %s",
 			    s.zto);
-		      (void) fsysdep_did_work (s.pseq);
 		      (void) fmail_transfer (FALSE, s.zuser,
 					     (const char *) NULL,
 					     "not permitted to receive",
 					     s.zfrom, qsys->zname,
 					     s.zto, zLocalname);
+		      (void) fsysdep_did_work (s.pseq);
 		      break;
 		    }
 
@@ -2195,12 +2198,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 		    {
 		      if (! fsysdep_make_dirs (zuse, TRUE))
 			{
-			  (void) fsysdep_did_work (s.pseq);
 			  (void) fmail_transfer (FALSE, s.zuser,
 						 (const char *) NULL,
 						 "cannot create directories",
 						 s.zfrom, qsys->zname,
 						 s.zto, zLocalname);
+			  (void) fsysdep_did_work (s.pseq);
 			  break;
 			}
 		    }
@@ -2209,12 +2212,12 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	      e = esysdep_open_receive (qsys, zuse, &s.ztemp, &s.cbytes);
 	      if (! ffileisopen (e))
 		{
-		  (void) fsysdep_did_work (s.pseq);
 		  (void) fmail_transfer (FALSE, s.zuser,
 					 (const char *) NULL,
 					 "cannot open file",
 					 s.zfrom, qsys->zname,
 					 s.zto, zLocalname);
+		  (void) fsysdep_did_work (s.pseq);
 		  break;
 		}
 
@@ -2266,13 +2269,13 @@ fuucp (fmaster, qsys, bgrade, fnew)
 	      if (! fxcmd (&s, &fnever))
 		return FALSE;
 
-	      (void) fsysdep_did_work (s.pseq);
 	      if (fnever)
 		(void) fmail_transfer (FALSE, s.zuser,
 				       (const char *) NULL,
 				       "wildcard request denied",
 				       s.zfrom, qsys->zname,
 				       s.zto, zLocalname);
+	      (void) fsysdep_did_work (s.pseq);
 	      break;
 
 	    case 'H':
