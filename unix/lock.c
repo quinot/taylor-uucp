@@ -171,6 +171,7 @@ fsdo_lock (zlock, fspooldir, pferr)
     {
       int cgot;
       int ipid;
+      boolean freadonly;
 
       fret = FALSE;
 
@@ -183,11 +184,20 @@ fsdo_lock (zlock, fspooldir, pferr)
 	  break;
 	}
 
+      freadonly = FALSE;
       o = open ((char *) zpath, O_RDWR | O_NOCTTY, 0);
       if (o < 0)
 	{
-	  zerr = "open";
-	  break;
+	  if (errno == EACCES)
+	    {
+	      freadonly = TRUE;
+	      o = open ((char *) zpath, O_RDONLY, 0);
+	    }
+	  if (o < 0)
+	    {
+	      zerr = "open";
+	      break;
+	    }
 	}
 
       /* The race starts here.  See below for a discussion.  */
@@ -239,12 +249,14 @@ fsdo_lock (zlock, fspooldir, pferr)
       /* This is a stale lock, created by a process that no longer
 	 exists.
 
-	 Now we could remove the file, but that would be a race
-	 condition.  If we were interrupted any time after we did the
-	 read until we did the remove, another process could get in,
-	 open the file, find that it was a stale lock, remove the file
-	 and create a new one.  When we woke up we would remove the
-	 file the other process just created.
+	 Now we could remove the file (and, if the file mode disallows
+	 writing, that's what we have to do), but we try to avoid
+	 doing so since it causes a race condition.  If we remove the
+	 file, and are interrupted any time after we do the read until
+	 we do the remove, another process could get in, open the
+	 file, find that it was a stale lock, remove the file and
+	 create a new one.  When we regained control we would remove
+	 the file the other process just created.
 
 	 These files are being generated partially for the benefit of
 	 cu, and it would be nice to avoid the race however cu avoids
@@ -286,6 +298,14 @@ fsdo_lock (zlock, fspooldir, pferr)
 
 	 For the benefit of cu, we stat the file after the sleep, to
 	 make sure some cu program hasn't deleted it for us.  */
+
+      if (freadonly)
+	{
+	  (void) close (o);
+	  o = -1;
+	  (void) remove (zpath);
+	  continue;
+	}
 
       if (lseek (o, (off_t) 0, SEEK_SET) != 0)
 	{
