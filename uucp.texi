@@ -24,7 +24,7 @@ a taylor.texi file.  Many things remain to do, among which:
 @end ignore
 
 @ifinfo
-This file documents Taylor UUCP, version 1.03.
+This file documents the beta release of Taylor UUCP, version 1.04.
 
 Copyright @copyright{} 1992 Free Software Foundation, Inc.
 
@@ -53,7 +53,7 @@ translation approved by the author instead of in the original English.
 
 @titlepage
 @title Taylor UUCP
-@subtitle Version 1.03
+@subtitle Version beta1.04
 @author Ian Lance Taylor @file{<ian@@airs.com>}
 
 @page
@@ -79,9 +79,9 @@ translation approved by the author instead of in the original English.
 @end titlepage
 
 @node Top, Copying, (dir), (dir)
-@top Taylor UUCP 1.03
+@top Taylor UUCP beta1.04
 
-This is the documentation for the Taylor UUCP package, version 1.03.
+This is the documentation for the Taylor UUCP package, version beta1.04.
 The programs were written by Ian Lance Taylor.  The author can be
 reached at @file{<ian@@airs.com>}, or, equivalently,
 @file{<uunet!airs!ian>}, or @cite{c/o Infinity Development, P.O. Box
@@ -2231,7 +2231,7 @@ which is both reliable and eight bit.
 The @samp{i} protocol is a bidirectional protocol.  It requires an
 eight-bit connection.  It will run over a half-duplex link, such as
 Telebit modems in PEP mode, but for efficient use of such a connection
-you must use the @code{half-duplex} command (@pxref {port File}).
+you must use the @code{half-duplex} command (@pxref{port File}).
 
 The @samp{g} protocol is robust, but requires an eight-bit connection.
 
@@ -2402,6 +2402,7 @@ be used over a connection which does not transmit certain control
 characters, such as @code{XON} or @code{XOFF}.  The connection must
 still transmit eight bit characters other than control characters.  The
 default is false.
+@end table
 
 The @samp{f} protocol is intended for use with error-correcting modems
 only; it checksums each file as a whole, so any error causes the entire
@@ -3096,11 +3097,7 @@ system, it will by default copy the file into the UUCP spool directory.
 When the @code{uux} program is used, the @samp{-C} switch must be used
 to copy the file into the UUCP spool directory.  In any case, once the
 file has been copied into the spool directory, other local users will
-not be able to access it.  In version 1.03 there is a security hole in
-that for the file to be copied it must be readable by @code{uucp}.
-Changing the group of the file to @code{uucp-group} and making it group
-readable will permit UUCP to read it without granting access to other
-users.
+not be able to access it.
 
 When a file is requested from a remote system, UUCP will only permit it
 to be placed in a directory which is writable by the requesting user.
