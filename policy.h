@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.6  1992/03/27  05:31:09  ian
+   David J. MacKenzie: various cleanups
+
    Revision 1.5  1992/03/16  01:23:08  ian
    Make blocking writes optional
 
@@ -107,20 +110,16 @@
    If writes to a serial port always block even when requested not to,
    you should set HAVE_UNBLOCKED_WRITES to 0; otherwise you should set
    it to 1.  In general on System V HAVE_UNBLOCKED_WRITES should be 0
-   and on BSD it should be 1.  If you have BSD style pseudo terminals
-   you may be able to use the block program in the contrib directory
-   to find out the correct value for this parameter.  Otherwise, just
-   guess.
+   and on BSD it should be 1.
 
    If HAVE_UNBLOCKED_WRITES is set to 1 when it should be 0 you may
    see an unexpectedly large number of transmission errors, or, if you
    have hardware handshaking, transfer times may be lower than
    expected (but then, they always are).  If HAVE_UNBLOCKED_WRITES is
    set to 0 when it should be 1, file transfer will use more CPU time
-   than necessary, and you may get the error "write: Operation would
-   block" (if you get this error HAVE_UNBLOCKED_WRITES should
-   definitely be set to 1).  */
-#define HAVE_UNBLOCKED_WRITES 1
+   than necessary.  If you are unsure, setting HAVE_UNBLOCKED_WRITES
+   to 0 should always be safe.  */
+#define HAVE_UNBLOCKED_WRITES 0
 
 /* When the code does do a blocking write, it wants to write the
    largest amount of data which the kernel will accept as a single
@@ -176,19 +175,30 @@
 /* #define LOCKDIR "/usr/spool/locks" */
 
 /* You must also specify the format of the lock files by setting
-   exactly one of the following macros to 1.  The BNU style is to
-   write the locking process ID in ASCII, passed to ten characters,
-   followed by a newline.  The V2 style is to write the locking
-   process ID as four binary bytes in the host byte order.  Check an
-   existing lock file to decide which of these choices is more
-   appropriate.  SCO lock files are similar to BNU lock files, but
-   always lock the lowercase version of the tty (i.e., LCK..tty2a is
-   created if you are locking tty2A).  They are appropriate if you are
-   using Taylor UUCP on an SCO Unix, SCO Xenix, or SCO Open Desktop
-   system. */
+   exactly one of the following macros to 1.  Check an existing lock
+   file to decide which of these choices is more appropriate.
+
+   The BNU style is to write the locking process ID in ASCII, passed
+   to ten characters, followed by a newline.
+
+   The V2 style is to write the locking process ID as four binary
+   bytes in the host byte order.
+
+   SCO lock files are similar to BNU lock files, but always lock the
+   lowercase version of the tty (i.e., LCK..tty2a is created if you
+   are locking tty2A).  They are appropriate if you are using Taylor
+   UUCP on an SCO Unix, SCO Xenix, or SCO Open Desktop system.
+
+   SVR4 lock files are also similar to BNU lock files, but they use a
+   different naming convention.  The filenames are LK.xxx.yyy.zzz,
+   where xxx is the major device number of the device holding the
+   special device file, yyy is the major device number of the port
+   device itself, and zzz is the minor device number of the port
+   device.  */
 #define HAVE_V2_LOCKFILES 0
 #define HAVE_BNU_LOCKFILES 1
 #define HAVE_SCO_LOCKFILES 0
+#define HAVE_SVR4_LOCKFILES 0
 
 /* If your system supports Internet mail addresses, HAVE_INTERNET_MAIL
    should be set to 1.  This is checked by uuxqt when sending error
