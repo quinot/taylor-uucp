@@ -3,6 +3,7 @@
 
 #include "uucp.h"
 
+#include "sysdep.h"
 #include "system.h"
 
 /* See whether the user is privileged (for example, only privileged
