@@ -456,22 +456,6 @@ floop (qdaemon)
   int cchans;
   boolean fret;
 
-  /* Clear all the variables in case this is not the first call.  */
-  qTlocal = NULL;
-  qTremote = NULL;
-  qTsend = NULL;
-  qTreceive = NULL;
-  cTchans = 0;
-  iTchan = 0;
-  iTsecs = 0;
-  iTmicros = 0;
-  cTcmdlen = 0;
-  for (i = 0; i < IMAX_CHAN + 1; i++)
-    {
-      aqTchan[i] = NULL;
-      aqTremote[i] = NULL;
-    }
-
   /* If we are using a half-duplex line, act as though we have only a
      single channel; otherwise we might start a send and a receive at
      the same time.  */
@@ -669,6 +653,22 @@ floop (qdaemon)
 
   if (! fret)
     ustats_failed (qdaemon->qsys);
+
+  /* Clear all the variables in case we make another call.  */
+  qTlocal = NULL;
+  qTremote = NULL;
+  qTsend = NULL;
+  qTreceive = NULL;
+  cTchans = 0;
+  iTchan = 0;
+  iTsecs = 0;
+  iTmicros = 0;
+  cTcmdlen = 0;
+  for (i = 0; i < IMAX_CHAN + 1; i++)
+    {
+      aqTchan[i] = NULL;
+      aqTremote[i] = NULL;
+    }
 
   return fret;
 }
