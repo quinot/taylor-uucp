@@ -233,3 +233,12 @@ Marty Shannon: log reason for dial failure (chat-fail string) in
 .Status file.
 
 82.
+
+Support restart of failed transfers a la SVR4 UUCP.  Also support SVR4
+-U flag.
+
+83.
+
+Switch between 'M' and 'S' correctly in the BNU log file output.
+
+84.
