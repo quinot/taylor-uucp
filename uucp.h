@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.12  1991/11/21  22:17:06  ian
+   Add version string, print version when printing usage
+
    Revision 1.11  1991/11/21  21:20:41  ian
    Brian Campbell: offer str{n}icmp as an alternative to str{n}casecmp
 
@@ -648,12 +651,12 @@ extern void ulog_user P((const char *zuser));
 /* Close the log file.  */
 extern void ulog_close P((void));
 
+/* Make an entry in the statistics file.  */
+extern void ustats P((const char *zuser, const char *zsystem,
+		      boolean fsent, long cbytes, long csecs));
+
 /* Close the statistics file.  */
 extern void ustats_close P((void));
-
-/* Return the date and time in the form used for a log entry (this
-   returns a pointer to a static buffer).  */
-extern const char *zdate_and_time P((void));
 
 /* Copy one file to another.  */
 extern boolean fcopy_file P((const char *zfrom, const char *zto,
