@@ -1,5 +1,7 @@
 2002-02-22  Ian Lance Taylor  <ian@airs.com>
 
+	* John Hughes: uucp.c (asClongopts): Correct --noexpand to -W.
+
 	* uuto.in: Add support for --version and --help options.
 	* Makefile.am (uuto): Substitute version number for @VERS@.
 	* Makefile.in: Rebuild.

@@ -71,7 +71,7 @@ static const struct option asClongopts[] =
   { "status", required_argument, NULL, 's' },
   { "uuto", no_argument, NULL, 't' },
   { "user", required_argument, NULL, 'u' },
-  { "noexpand", no_argument, NULL, 'w' },
+  { "noexpand", no_argument, NULL, 'W' },
   { "config", required_argument, NULL, 'I' },
   { "debug", required_argument, NULL, 'x' },
   { "version", no_argument, NULL, 'v' },
