@@ -41,7 +41,7 @@ const char spool_rcsid[] = "$Id$";
    Command files
    These contain instructions for uucico indicating what files to transfer
    to and from what systems.  Each line of a work file is a command
-   beginning with S, R or X.
+   beginning with S, R, X, or E.
    #if ! SPOOLDIR_TAYLOR
    They are named C.ssssssgqqqq, where ssssss is the system name to
    transfer to or from, g is the grade and qqqq is the sequence number.
@@ -55,15 +55,17 @@ const char spool_rcsid[] = "$Id$";
    #elif SPOOLDIR_ULTRIX
    If the directory sys/ssssss exists, they are put in the directory
    sys/ssssss/C; otherwise, they are put in the directory sys/DEFAULT/C.
-   #endif
    #elif SPOOLDIR_SVR4
    They are put in the directory sys/g, where sys is the system name
    and g is the grade.
    #endif
    #else SPOOLDIR_TAYLOR
-   They are named C.gqqqq, where g is the grade and qqqq is the sequence
-   number, and are placed in the directory ssssss/C. where ssssss is
-   the system name to transfer to or from.
+   They are named C.gqqqq, where g is the grade and qqqq is the
+   sequence number, and are placed in the directory ssssss/C. where
+   ssssss is the system name to transfer to or from.  The sequence
+   number for a C. file is actually a long string; it is not based on
+   the sequence number file, but is generated via a process which
+   attempts to produce a unique string each time it is run.
    #endif
 
    Data files
