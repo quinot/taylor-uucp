@@ -85,8 +85,7 @@ DOCUMENTATION
 The documentation is in the file uucp.texi, which is a Texinfo file.
 Texinfo is a format used by the Free Software Foundation.  You can
 print the documentation using TeX in combination with the file
-texinfo.tex.  DVI, PostScript and info versions of the documentation
-are available in a separate package, uucp-doc-1.06.tar.gz.
+texinfo.tex.
 
 See the TODO file for things which should be done.  Please feel free
 to do them, although you may want to check with me first.  Send me
