@@ -213,10 +213,12 @@ uulog: $(UULOGOBJS) $(UULIBS)
 	$(CC) $(LDFLAGS) -o uulog $(UULOGOBJS) $(UULIBS) $(LIBS)
 
 uusched: uusched.in Makefile
+	-rm -f uusched
 	sed 's,@SBINDIR@,$(sbindir),' < $(srcdir)/uusched.in > uusched
 	chmod 0555 uusched
 
 uuto: uuto.in Makefile
+	-rm -f uuto
 	sed 's,@BINDIR@,$(bindir),' < $(srcdir)/uuto.in > uuto
 	chmod 0555 uuto
 
