@@ -1,91 +1,459 @@
-# This is the Makefile for the Taylor UUCP uuconf library
-#
-# The file Makefile.in should be processed by configure to generate
-# Makefile.  If you want to generate Makefile by hand, you must find
-# all variables surrounded by @ and replace them with the correct
-# value (e.g. @CC@ must be replaced by something like cc or gcc).
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
 
-SHELL = /bin/sh
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
 
-# These values are overriden by the top level Makefile
-prefix = @prefix@
-newconfigdir = $(prefix)/conf/uucp
-oldconfigdir = /usr/lib/uucp
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
 
-# These values are overridden by the top level Makefile
-CC = @CC@
-CPPFLAGS = @CPPFLAGS@
-CFLAGS = @CFLAGS@
-AR = @AR@
-RANLIB = @RANLIB@
-LN_S = @LN_S@
+@SET_MAKE@
 
-# Source directory and, if necessary, VPATH
+# This is the auto-Makefile for the uuconf subdirectory of Taylor UUCP.
+
+SHELL = @SHELL@
+
 srcdir = @srcdir@
+top_srcdir = @top_srcdir@
 VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
-MORECFLAGS = -I. -I$(srcdir) -I.. -I$(srcdir)/.. -DNEWCONFIGLIB=\"$(newconfigdir)\" -DOLDCONFIGLIB=\"$(oldconfigdir)\"
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = ..
 
-OBJS = addblk.o addstr.o allblk.o alloc.o base.o bool.o callin.o \
-	calout.o chatc.o cmdarg.o cmdfil.o cmdlin.o debfil.o deblev.o \
-	diacod.o dial.o diasub.o dnams.o errno.o errstr.o filnam.o \
-	freblk.o fredia.o free.o freprt.o fresys.o grdcmp.o hdial.o \
-	hdnams.o hinit.o hlocnm.o hport.o hrmunk.o hsinfo.o hsnams.o \
-	hsys.o hunk.o iniglb.o init.o int.o lckdir.o lineno.o llocnm.o \
-	local.o locnm.o logfil.o maxuxq.o mrgblk.o paramc.o port.o \
-	prtsub.o pubdir.o rdlocs.o rdperm.o reliab.o remunk.o runuxq.o \
-	sinfo.o snams.o split.o spool.o stafil.o strip.o syssub.o \
-	tcalou.o tdial.o tdialc.o tdnams.o tgcmp.o thread.o time.o \
-	tinit.o tlocnm.o tport.o tportc.o tsinfo.o tsnams.o tsys.o \
-	tval.o ugtlin.o unk.o val.o vinit.o vport.o vsinfo.o vsnams.o \
-	vsys.o
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
 
-all: libuuconf.a
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+AMTAR = @AMTAR@
+AR = @AR@
+AWK = @AWK@
+CC = @CC@
+DEPDIR = @DEPDIR@
+EXEEXT = @EXEEXT@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LIBOBJS = @LIBOBJS@
+LN_S = @LN_S@
+MAINT = @MAINT@
+OBJEXT = @OBJEXT@
+OWNER = @OWNER@
+PACKAGE = @PACKAGE@
+POUNDBANG = @POUNDBANG@
+RANLIB = @RANLIB@
+UNIXOBJS = @UNIXOBJS@
+VERSION = @VERSION@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
 
-libuuconf.a: $(OBJS)
-	rm -f libuuconf.a
-	$(AR) rc libuuconf.a $(OBJS)
-	-$(RANLIB) libuuconf.a
+noinst_LIBRARIES = libuuconf.a
+
+libuuconf_a_SOURCES = addblk.c addstr.c allblk.c alloc.c base.c bool.c \
+	callin.c calout.c chatc.c cmdarg.c cmdfil.c cmdlin.c debfil.c \
+	deblev.c diacod.c dial.c diasub.c dnams.c errno.c errstr.c filnam.c \
+	freblk.c fredia.c free.c freprt.c fresys.c grdcmp.c hdial.c \
+	hdnams.c hinit.c hlocnm.c hport.c hrmunk.c hsinfo.c hsnams.c \
+	hsys.c hunk.c iniglb.c init.c int.c lckdir.c lineno.c llocnm.c \
+	local.c locnm.c logfil.c maxuxq.c mrgblk.c paramc.c port.c \
+	prtsub.c pubdir.c rdlocs.c rdperm.c reliab.c remunk.c runuxq.c \
+	sinfo.c snams.c split.c spool.c stafil.c strip.c syssub.c \
+	tcalou.c tdial.c tdialc.c tdnams.c tgcmp.c thread.c time.c \
+	tinit.c tlocnm.c tport.c tportc.c tsinfo.c tsnams.c tsys.c \
+	tval.c ugtlin.c unk.c val.c vinit.c vport.c vsinfo.c vsnams.c \
+	vsys.c
+
+
+AM_CFLAGS = -I.. -I$(srcdir)/..
+subdir = uuconf
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = $(top_builddir)/config.h
+CONFIG_CLEAN_FILES =
+LIBRARIES = $(noinst_LIBRARIES)
+
+libuuconf_a_AR = $(AR) cru
+libuuconf_a_LIBADD =
+am_libuuconf_a_OBJECTS = addblk.$(OBJEXT) addstr.$(OBJEXT) \
+	allblk.$(OBJEXT) alloc.$(OBJEXT) base.$(OBJEXT) bool.$(OBJEXT) \
+	callin.$(OBJEXT) calout.$(OBJEXT) chatc.$(OBJEXT) \
+	cmdarg.$(OBJEXT) cmdfil.$(OBJEXT) cmdlin.$(OBJEXT) \
+	debfil.$(OBJEXT) deblev.$(OBJEXT) diacod.$(OBJEXT) \
+	dial.$(OBJEXT) diasub.$(OBJEXT) dnams.$(OBJEXT) errno.$(OBJEXT) \
+	errstr.$(OBJEXT) filnam.$(OBJEXT) freblk.$(OBJEXT) \
+	fredia.$(OBJEXT) free.$(OBJEXT) freprt.$(OBJEXT) \
+	fresys.$(OBJEXT) grdcmp.$(OBJEXT) hdial.$(OBJEXT) \
+	hdnams.$(OBJEXT) hinit.$(OBJEXT) hlocnm.$(OBJEXT) \
+	hport.$(OBJEXT) hrmunk.$(OBJEXT) hsinfo.$(OBJEXT) \
+	hsnams.$(OBJEXT) hsys.$(OBJEXT) hunk.$(OBJEXT) iniglb.$(OBJEXT) \
+	init.$(OBJEXT) int.$(OBJEXT) lckdir.$(OBJEXT) lineno.$(OBJEXT) \
+	llocnm.$(OBJEXT) local.$(OBJEXT) locnm.$(OBJEXT) \
+	logfil.$(OBJEXT) maxuxq.$(OBJEXT) mrgblk.$(OBJEXT) \
+	paramc.$(OBJEXT) port.$(OBJEXT) prtsub.$(OBJEXT) \
+	pubdir.$(OBJEXT) rdlocs.$(OBJEXT) rdperm.$(OBJEXT) \
+	reliab.$(OBJEXT) remunk.$(OBJEXT) runuxq.$(OBJEXT) \
+	sinfo.$(OBJEXT) snams.$(OBJEXT) split.$(OBJEXT) spool.$(OBJEXT) \
+	stafil.$(OBJEXT) strip.$(OBJEXT) syssub.$(OBJEXT) \
+	tcalou.$(OBJEXT) tdial.$(OBJEXT) tdialc.$(OBJEXT) \
+	tdnams.$(OBJEXT) tgcmp.$(OBJEXT) thread.$(OBJEXT) \
+	time.$(OBJEXT) tinit.$(OBJEXT) tlocnm.$(OBJEXT) tport.$(OBJEXT) \
+	tportc.$(OBJEXT) tsinfo.$(OBJEXT) tsnams.$(OBJEXT) \
+	tsys.$(OBJEXT) tval.$(OBJEXT) ugtlin.$(OBJEXT) unk.$(OBJEXT) \
+	val.$(OBJEXT) vinit.$(OBJEXT) vport.$(OBJEXT) vsinfo.$(OBJEXT) \
+	vsnams.$(OBJEXT) vsys.$(OBJEXT)
+libuuconf_a_OBJECTS = $(am_libuuconf_a_OBJECTS)
+
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/addblk.Po $(DEPDIR)/addstr.Po \
+@AMDEP_TRUE@	$(DEPDIR)/allblk.Po $(DEPDIR)/alloc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/base.Po $(DEPDIR)/bool.Po \
+@AMDEP_TRUE@	$(DEPDIR)/callin.Po $(DEPDIR)/calout.Po \
+@AMDEP_TRUE@	$(DEPDIR)/chatc.Po $(DEPDIR)/cmdarg.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cmdfil.Po $(DEPDIR)/cmdlin.Po \
+@AMDEP_TRUE@	$(DEPDIR)/debfil.Po $(DEPDIR)/deblev.Po \
+@AMDEP_TRUE@	$(DEPDIR)/diacod.Po $(DEPDIR)/dial.Po \
+@AMDEP_TRUE@	$(DEPDIR)/diasub.Po $(DEPDIR)/dnams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/errno.Po $(DEPDIR)/errstr.Po \
+@AMDEP_TRUE@	$(DEPDIR)/filnam.Po $(DEPDIR)/freblk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fredia.Po $(DEPDIR)/free.Po \
+@AMDEP_TRUE@	$(DEPDIR)/freprt.Po $(DEPDIR)/fresys.Po \
+@AMDEP_TRUE@	$(DEPDIR)/grdcmp.Po $(DEPDIR)/hdial.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hdnams.Po $(DEPDIR)/hinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hlocnm.Po $(DEPDIR)/hport.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hrmunk.Po $(DEPDIR)/hsinfo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hsnams.Po $(DEPDIR)/hsys.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hunk.Po $(DEPDIR)/iniglb.Po \
+@AMDEP_TRUE@	$(DEPDIR)/init.Po $(DEPDIR)/int.Po \
+@AMDEP_TRUE@	$(DEPDIR)/lckdir.Po $(DEPDIR)/lineno.Po \
+@AMDEP_TRUE@	$(DEPDIR)/llocnm.Po $(DEPDIR)/local.Po \
+@AMDEP_TRUE@	$(DEPDIR)/locnm.Po $(DEPDIR)/logfil.Po \
+@AMDEP_TRUE@	$(DEPDIR)/maxuxq.Po $(DEPDIR)/mrgblk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/paramc.Po $(DEPDIR)/port.Po \
+@AMDEP_TRUE@	$(DEPDIR)/prtsub.Po $(DEPDIR)/pubdir.Po \
+@AMDEP_TRUE@	$(DEPDIR)/rdlocs.Po $(DEPDIR)/rdperm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/reliab.Po $(DEPDIR)/remunk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/runuxq.Po $(DEPDIR)/sinfo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/snams.Po $(DEPDIR)/split.Po \
+@AMDEP_TRUE@	$(DEPDIR)/spool.Po $(DEPDIR)/stafil.Po \
+@AMDEP_TRUE@	$(DEPDIR)/strip.Po $(DEPDIR)/syssub.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tcalou.Po $(DEPDIR)/tdial.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tdialc.Po $(DEPDIR)/tdnams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tgcmp.Po $(DEPDIR)/thread.Po \
+@AMDEP_TRUE@	$(DEPDIR)/time.Po $(DEPDIR)/tinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tlocnm.Po $(DEPDIR)/tport.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tportc.Po $(DEPDIR)/tsinfo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tsnams.Po $(DEPDIR)/tsys.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tval.Po $(DEPDIR)/ugtlin.Po \
+@AMDEP_TRUE@	$(DEPDIR)/unk.Po $(DEPDIR)/val.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vinit.Po $(DEPDIR)/vport.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vsinfo.Po $(DEPDIR)/vsnams.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vsys.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+DIST_SOURCES = $(libuuconf_a_SOURCES)
+DIST_COMMON = README COPYING.LIB Makefile.am Makefile.in
+SOURCES = $(libuuconf_a_SOURCES)
+
+all: all-am
+
+.SUFFIXES:
+.SUFFIXES: .c .o .obj
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --gnu  uuconf/Makefile
+Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
+
+AR = ar
+
+clean-noinstLIBRARIES:
+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+libuuconf.a: $(libuuconf_a_OBJECTS) $(libuuconf_a_DEPENDENCIES) 
+	-rm -f libuuconf.a
+	$(libuuconf_a_AR) libuuconf.a $(libuuconf_a_OBJECTS) $(libuuconf_a_LIBADD)
+	$(RANLIB) libuuconf.a
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/addblk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/addstr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/allblk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/alloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/base.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/bool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/callin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/calout.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/chatc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmdarg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmdfil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmdlin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/debfil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/deblev.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diacod.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diasub.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dnams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/errno.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/errstr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/filnam.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/freblk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fredia.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/free.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/freprt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fresys.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/grdcmp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hdial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hdnams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hlocnm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hport.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hrmunk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hsinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hsnams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hsys.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hunk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/iniglb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/init.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/int.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/lckdir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/lineno.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/llocnm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/local.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/locnm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/logfil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/maxuxq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mrgblk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/paramc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/port.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/prtsub.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/pubdir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rdlocs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/rdperm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/reliab.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/remunk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/runuxq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/sinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/snams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/split.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/spool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stafil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/syssub.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tcalou.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tdial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tdialc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tdnams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tgcmp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/thread.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/time.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tlocnm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tport.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tportc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tsinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tsnams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tsys.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tval.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ugtlin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/unk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/val.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vport.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vsinfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vsnams.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vsys.Po@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
 
 .c.o:
-	$(CC) -c $(MORECFLAGS) $(CPPFLAGS) $(CFLAGS) $<
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
 
-syshdr.h: syshdr.unx
-	rm -f syshdr.h
-	$(LN_S) $(srcdir)/syshdr.unx syshdr.h
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
 
-clean:
-	rm -f $(OBJS) libuuconf.a syshdr.h
+tags: TAGS
 
-distclean: clean
-	rm -f Makefile
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
 
-mostlyclean: clean
-maintainer-clean realclean: distclean
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
 
-dist:
-	mkdir ../uucp-$(VERSION)/uuconf
-	ln `cat $(srcdir)/MANIFEST | sed -e 's|^|$(srcdir)/|'` ../uucp-$(VERSION)/uuconf
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
 
-Makefile: Makefile.in
-	cd .. && CONFIG_FILES=uuconf/Makefile CONFIG_HEADERS= $(SHELL) ./config.status
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
 
-# Header file dependencies
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
-$(OBJS): uucnfi.h syshdr.h $(srcdir)/../uucp.h ../config.h $(srcdir)/../policy.h $(srcdir)/../uuconf.h
+top_distdir = ..
+distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
-addblk.o: alloc.h
-allblk.o: alloc.h
-alloc.o: alloc.h
-callin.o: Makefile ../Makefile
-freblk.o: alloc.h
-free.o: alloc.h
-hinit.o: Makefile ../Makefile
-hrmunk.o: Makefile ../Makefile
-maxuxq.o: Makefile ../Makefile
-mrgblk.o: alloc.h
-rdperm.o: Makefile ../Makefile
-tinit.o: Makefile ../Makefile
-vinit.o: Makefile ../Makefile
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+check-am: all-am
+check: check-am
+all-am: Makefile $(LIBRARIES)
 
-.PHONY: all clean distclean mostlyclean maintainer-clean realclean dist
+installdirs:
+
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
+clean-am: clean-generic clean-noinstLIBRARIES mostlyclean-am
+
+distclean: distclean-am
+
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-tags
+
+dvi: dvi-am
+
+dvi-am:
+
+info: info-am
+
+info-am:
+
+install-data-am:
+
+install-exec-am:
+
+install-info: install-info-am
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-am
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-am
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
+
+uninstall-am: uninstall-info-am
+
+.PHONY: GTAGS all all-am check check-am clean clean-generic \
+	clean-noinstLIBRARIES distclean distclean-compile \
+	distclean-depend distclean-generic distclean-tags distdir dvi \
+	dvi-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic tags uninstall uninstall-am \
+	uninstall-info-am
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

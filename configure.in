@@ -4,12 +4,35 @@ dnl Copyright (c) 1992, 1993, 1994, 1995 Ian Lance Taylor
 dnl
 AC_REVISION([$Id$])
 AC_INIT(policy.h)
-AC_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(uucp, 1.07)
+AM_CONFIG_HEADER(config.h)
+AM_MAINTAINER_MODE
+dnl
+AC_ARG_WITH(user,
+[  --with-user=USERNAME    user ID for programs; default uucp],
+[OWNER=${withval}],
+[OWNER="uucp"])
+AC_DEFINE_UNQUOTED(OWNER, "$OWNER", [user ID for programs; normally uucp])
+AC_SUBST(OWNER)
+dnl
+AC_ARG_WITH(newconfigdir,
+[  --with-newconfigdir=DIRNAME  new config file directory; default PREFIX/conf/uucp],
+[newconfigdir=${withval}],
+[newconfigdir="${prefix}/conf/uucp"])
+AC_DEFINE_UNQUOTED(NEWCONFIGLIB, "$newconfigdir",
+                   [new config file directory; normally PREFIX/conf/uucp])
+dnl
+AC_ARG_WITH(oldconfigdir,
+[  --with-oldconfigdir=DIRNAME  old config file directory; default /usr/lib/uucp],
+[oldconfigdir=${withval}],
+[oldconfigdir="/usr/lib/uucp"])
+AC_DEFINE_UNQUOTED(OLDCONFIGLIB, "$oldconfigdir",
+                   [old config file directory; normally /usr/lib/uucp])
+dnl
+AC_DEFINE_UNQUOTED(SBINDIR, "$sbindir", [sbin directory])
 AC_PREFIX_PROGRAM(gcc)
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
-AC_PROG_INSTALL
-AC_PROG_MAKE_SET
 dnl AR was added to the Makefiles to allow building on funny systems.
 dnl Adding it here allows the environment value of AR at configure time to
 dnl be cached in config.status and in the Makefiles.
@@ -20,7 +43,6 @@ AC_ISC_POSIX
 AC_MINIX
 AC_AIX
 AC_CHECK_LIB(sun, getpwnam)
-AC_C_CROSS
 AC_C_CONST
 AC_MSG_CHECKING([for prototypes])
 AC_CACHE_VAL(uucp_cv_c_prototypes,
@@ -30,12 +52,8 @@ int foo(short i) { return i; }],
 uucp_cv_c_prototypes=yes, uucp_cv_c_prototypes=no)])
 AC_MSG_RESULT($uucp_cv_c_prototypes)
 if test $uucp_cv_c_prototypes = yes; then
-  AC_DEFINE(HAVE_PROTOTYPES)
+  AC_DEFINE(HAVE_PROTOTYPES, 1, [Whether the compiler supports prototypes])
 fi
-dnl
-CFLAGS=${CFLAGS--g}
-AC_SUBST(CFLAGS)dnl
-AC_SUBST(LDFLAGS)dnl
 dnl
 AC_SYS_INTERPRETER
 POUNDBANG=$ac_cv_sys_interpreter
@@ -43,12 +61,16 @@ AC_SUBST(POUNDBANG)
 dnl
 AC_MSG_CHECKING(for echo)
 if (PATH= echo test) 2>/dev/null | grep test >/dev/null 2>&1; then
- AC_DEFINE([ECHO_PROGRAM], "echo") AC_MSG_RESULT(shell builtin)
+ echo_program='"echo"'
+ AC_MSG_RESULT(shell builtin)
 elif test -s /bin/echo; then
- AC_DEFINE([ECHO_PROGRAM], "/bin/echo") AC_MSG_RESULT(/bin/echo)
+ echo_program="/bin/echo"
+ AC_MSG_RESULT(/bin/echo)
 else
  AC_MSG_RESULT(not found)
 fi
+AC_DEFINE_UNQUOTED([ECHO_PROGRAM], $echo_program,
+                   [echo program--if shell builtin, use "echo"])
 AC_PROG_LN_S
 dnl
 AC_CHECK_HEADERS(stddef.h stdarg.h string.h strings.h unistd.h stdlib.h)
@@ -68,7 +90,8 @@ AC_CACHE_VAL(uucp_cv_header_dirent_h,
 uucp_cv_header_dirent_h=yes, uucp_cv_header_dirent_h=no)])
 AC_MSG_RESULT($uucp_cv_header_dirent_h)
 if test $uucp_cv_header_dirent_h = yes; then
-  AC_DEFINE(HAVE_DIRENT_H)
+  AC_DEFINE(HAVE_DIRENT_H, 1,
+            [Whether you have a <dirent.h> which defines struct direct])
 fi
 dnl
 # Under Next 3.2 <utime.h> apparently does not define struct utimbuf
@@ -84,7 +107,8 @@ AC_CACHE_VAL(uucp_cv_header_utime_h,
 uucp_cv_header_utime_h=yes, uucp_cv_header_utime_h=no)])
 AC_MSG_RESULT($uucp_cv_header_utime_h)
 if test $uucp_cv_header_utime_h = yes; then
-  AC_DEFINE(HAVE_UTIME_H)
+  AC_DEFINE(HAVE_UTIME_H, 1,
+            [Whether you have a <utime.h> which defines struct utimbuf])
 fi
 dnl
 AC_MSG_CHECKING([for sys/select.h])
@@ -95,7 +119,8 @@ AC_CACHE_VAL(uucp_cv_header_sys_select_h,
 uucp_cv_header_sys_select_h=yes, uucp_cv_header_sys_select_h=no)])
 AC_MSG_RESULT($uucp_cv_header_sys_select_h)
 if test $uucp_cv_header_sys_select_h = yes; then
-  AC_DEFINE(HAVE_SYS_SELECT_H)
+  AC_DEFINE(HAVE_SYS_SELECT_H, 1,
+            [Whether you have <sys/select.h>])
 fi
 dnl
 AC_HEADER_MAJOR
@@ -115,7 +140,8 @@ AC_CACHE_VAL(uucp_cv_header_termios_and_ioctl,
 uucp_cv_header_termios_and_ioctl=yes, uucp_cv_header_termios_and_ioctl=no)])
 AC_MSG_RESULT($uucp_cv_header_termios_and_ioctl)
 if test $uucp_cv_header_termios_and_ioctl = yes; then
-  AC_DEFINE(HAVE_TERMIOS_AND_SYS_IOCTL_H)
+  AC_DEFINE(HAVE_TERMIOS_AND_SYS_IOCTL_H, 1,
+            [Whether <termios.h> and <sys/ioctl.h> may both be included])
 fi
 dnl
 AC_MSG_CHECKING(for CBREAK)
@@ -124,7 +150,7 @@ AC_CACHE_VAL(uucp_cv_decl_cbreak,
 uucp_cv_decl_cbreak=yes, uucp_cv_decl_cbreak=no)])
 AC_MSG_RESULT($uucp_cv_decl_cbreak)
 if test $uucp_cv_decl_cbreak = yes; then
-  AC_DEFINE(HAVE_CBREAK)
+  AC_DEFINE(HAVE_CBREAK, 1, [Whether CBREAK is defined])
 fi
 dnl
 AC_MSG_CHECKING(for pid_t in sys/types.h)
@@ -133,7 +159,7 @@ AC_CACHE_VAL(uucp_cv_decl_pid_t,
 uucp_cv_decl_pid_t=yes, uucp_cv_decl_pid_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_pid_t)
 if test $uucp_cv_decl_pid_t = no; then
-  AC_DEFINE(PID_T, int)
+  AC_DEFINE(PID_T, int, [Type to use for pid_t if not defined--typically int])
 fi
 dnl
 AC_MSG_CHECKING(for uid_t in sys/types.h)
@@ -142,7 +168,7 @@ AC_CACHE_VAL(uucp_cv_decl_uid_t,
 uucp_cv_decl_uid_t=yes, uucp_cv_decl_uid_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_uid_t)
 if test $uucp_cv_decl_uid_t = no; then
-  AC_DEFINE(UID_T, int)
+  AC_DEFINE(UID_T, int, [Type to use for uid_t if not defined--typically int])
 fi
 dnl
 AC_MSG_CHECKING(for gid_t in sys/types.h)
@@ -151,7 +177,7 @@ AC_CACHE_VAL(uucp_cv_decl_gid_t,
 uucp_cv_decl_gid_t=yes, uucp_cv_decl_gid_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_gid_t)
 if test $uucp_cv_decl_gid_t = no; then
-  AC_DEFINE(GID_T, int)
+  AC_DEFINE(GID_T, int, [Type to use for gid_t if not defined--typically int])
 fi
 dnl
 AC_MSG_CHECKING(for off_t in sys/types.h)
@@ -160,7 +186,8 @@ AC_CACHE_VAL(uucp_cv_decl_off_t,
 uucp_cv_decl_off_t=yes, uucp_cv_decl_off_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_off_t)
 if test $uucp_cv_decl_off_t = no; then
-  AC_DEFINE(OFF_T, long)
+  AC_DEFINE(OFF_T, long,
+            [Type to use for off_t if not defined--typically long])
 fi
 dnl
 dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
@@ -171,7 +198,8 @@ uucp_cv_decl_sig_atomic_t_signal_h=yes,
 uucp_cv_decl_sig_atomic_t_signal_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_sig_atomic_t_signal_h)
 if test $uucp_cv_decl_sig_atomic_t_signal_h = yes; then
-  AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H])
+  AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_SIGNAL_H], 1,
+            [Whether sig_atomic_t is defined in <signal.h>])
 fi
 dnl
 AC_MSG_CHECKING(for sig_atomic_t in sys/types.h)
@@ -181,7 +209,8 @@ uucp_cv_decl_sig_atomic_t_types_h=yes,
 uucp_cv_decl_sig_atomic_t_types_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_sig_atomic_t_types_h)
 if test $uucp_cv_decl_sig_atomic_t_types_h = yes; then
-  AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H])
+  AC_DEFINE([HAVE_SIG_ATOMIC_T_IN_TYPES_H], 1,
+            [Whether sig_atomic_t is defined in <types.h>])
 fi
 dnl
 if test $ac_cv_header_stddef_h = yes; then
@@ -191,7 +220,8 @@ if test $ac_cv_header_stddef_h = yes; then
   uucp_cv_decl_size_t_stddef_h=yes, uucp_cv_decl_size_t_stddef_h=no)])
   AC_MSG_RESULT($uucp_cv_decl_size_t_stddef_h)
   if test $uucp_cv_decl_size_t_stddef_h = yes; then
-    AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H])
+    AC_DEFINE([HAVE_SIZE_T_IN_STDDEF_H], 1,
+              [Whether size_t is defined in <stddef.h>])
   fi
 fi
 dnl
@@ -201,7 +231,8 @@ AC_CACHE_VAL(uucp_cv_decl_size_t_types_h,
 uucp_cv_decl_size_t_types_h=yes, uucp_cv_decl_size_t_types_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_size_t_types_h)
 if test $uucp_cv_decl_size_t_types_h = yes; then
-  AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H])
+  AC_DEFINE([HAVE_SIZE_T_IN_TYPES_H], 1,
+            [Whether size_t is defined in <types.h>])
 fi
 dnl
 AC_MSG_CHECKING(for time_t in time.h)
@@ -210,7 +241,8 @@ AC_CACHE_VAL(uucp_cv_decl_time_t_time_h,
 uucp_cv_decl_time_t_time_h=yes, uucp_cv_decl_time_t_time_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_time_t_time_h)
 if test $uucp_cv_decl_time_t_time_h = yes; then
-  AC_DEFINE([HAVE_TIME_T_IN_TIME_H])
+  AC_DEFINE([HAVE_TIME_T_IN_TIME_H], 1,
+            [Whether time_t is defined in <time.h>])
 fi
 dnl
 AC_MSG_CHECKING(time_t in sys/types.h)
@@ -219,7 +251,8 @@ AC_CACHE_VAL(uucp_cv_decl_time_t_types_h,
 uucp_cv_decl_time_t_types_h=yes, uucp_cv_decl_time_t_types_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_time_t_types_h)
 if test $uucp_cv_decl_time_t_types_h = yes; then
-  AC_DEFINE([HAVE_TIME_T_IN_TYPES_H])
+  AC_DEFINE([HAVE_TIME_T_IN_TYPES_H], 1,
+            [Whether time_t is defined in <types.h>])
 fi
 dnl
 AC_MSG_CHECKING(for void)
@@ -228,7 +261,7 @@ AC_CACHE_VAL(uucp_cv_c_void,
 uucp_cv_c_void=yes, uucp_cv_c_void=no)])
 AC_MSG_RESULT($uucp_cv_c_void)
 if test $uucp_cv_c_void = yes; then
-  AC_DEFINE([HAVE_VOID])
+  AC_DEFINE([HAVE_VOID], 1, [Whether the compiler supports void])
 fi
 dnl
 AC_MSG_CHECKING(for unsigned char)
@@ -237,7 +270,8 @@ AC_CACHE_VAL(uucp_cv_c_unsigned_char,
 uucp_cv_c_unsigned_char=yes, uucp_cv_c_unsigned_char=no)])
 AC_MSG_RESULT($uucp_cv_c_unsigned_char)
 if test $uucp_cv_c_unsigned_char = yes; then
-  AC_DEFINE([HAVE_UNSIGNED_CHAR])
+  AC_DEFINE([HAVE_UNSIGNED_CHAR], 1,
+            [Whether the compiler supports unsigned char])
 fi
 dnl
 AC_MSG_CHECKING(for errno declaration)
@@ -246,7 +280,8 @@ AC_CACHE_VAL(uucp_cv_decl_errno,
 uucp_cv_decl_errno=yes, uucp_cv_decl_errno=no)])
 AC_MSG_RESULT($uucp_cv_decl_errno)
 if test $uucp_cv_decl_errno = yes; then
-  AC_DEFINE([HAVE_ERRNO_DECLARATION])
+  AC_DEFINE([HAVE_ERRNO_DECLARATION], 1,
+            [Whether errno is declared in <errno.h>])
 fi
 dnl
 AC_MSG_CHECKING(for TXADDCD)
@@ -255,7 +290,7 @@ AC_CACHE_VAL(uucp_cv_txaddcd,
 uucp_cv_txaddcd=yes, uucp_cv_txaddcd=no)])
 AC_MSG_RESULT($uucp_cv_txaddcd)
 if test $uucp_cv_txaddcd = yes; then
-  AC_DEFINE([HAVE_TXADDCD])
+  AC_DEFINE([HAVE_TXADDCD], 1, [Whether TXADDCD is defined])
 fi
 dnl
 dnl On some systems, memset, memcmp, and memcpy must be called with
@@ -266,7 +301,7 @@ AC_CACHE_VAL(ac_cv_func_memset,
 ac_cv_func_memset=yes, ac_cv_func_memset=no)])
 AC_MSG_RESULT($ac_cv_func_memset)
 if test $ac_cv_func_memset = yes; then
-  AC_DEFINE([HAVE_MEMSET])
+  AC_DEFINE([HAVE_MEMSET], 1, [Whether you have memset])
 fi
 dnl
 AC_MSG_CHECKING(for memcmp)
@@ -275,7 +310,7 @@ AC_CACHE_VAL(ac_cv_func_memcmp,
 ac_cv_func_memcmp=yes, ac_cv_func_memcmp=no)])
 AC_MSG_RESULT($ac_cv_func_memcmp)
 if test $ac_cv_func_memcmp = yes; then
-  AC_DEFINE([HAVE_MEMCMP])
+  AC_DEFINE([HAVE_MEMCMP], 1, [Whether you have memcmp])
 fi
 dnl
 AC_MSG_CHECKING(for memcpy)
@@ -284,7 +319,7 @@ AC_CACHE_VAL(ac_cv_func_memcpy,
 ac_cv_func_memcpy=yes, ac_cv_func_memcpy=no)])
 AC_MSG_RESULT($ac_cv_func_memcpy)
 if test $ac_cv_func_memcpy = yes; then
-  AC_DEFINE([HAVE_MEMCPY])
+  AC_DEFINE([HAVE_MEMCPY], 1, [Whether you have memcpy])
 fi
 dnl
 undefine([index])
@@ -335,11 +370,14 @@ uucp_cv_sys_ftime_ok=yes,
 uucp_cv_sys_ftime_ok=no,
 uucp_cv_sys_ftime_ok=runtime)])
 case $uucp_cv_sys_ftime_ok in
-yes) AC_DEFINE(HAVE_FTIME) AC_MSG_RESULT(yes) ;;
+yes) AC_MSG_RESULT(yes) ;;
 no)  AC_MSG_RESULT(no) AC_MSG_WARN(ftime seems to be buggy) ;;
-runtime) AC_DEFINE(HAVE_FTIME) AC_MSG_RESULT(will check at run time) ;;
+runtime) AC_MSG_RESULT(will check at run time) ;;
 esac
 ])
+if test $uucp_cv_sys_ftime_ok = yes || test $uucp_cv_sys_ftime_ok = runtime; then
+  AC_DEFINE(HAVE_FTIME, 1, [Whether you have ftime])
+fi
 dnl
 AC_CHECK_FUNCS(times)
 AC_CHECK_FUNCS(napms nap usleep poll select)
@@ -377,27 +415,24 @@ if test $ac_cv_func_getcwd != yes \
    && test $ac_cv_func_getwd != yes; then
   UNIXOBJS="$UNIXOBJS getcwd.o"
   if test -s /bin/pwd; then
-    AC_DEFINE([PWD_PROGRAM], "/bin/pwd")
+    AC_DEFINE([PWD_PROGRAM], "/bin/pwd", [Program to print working directory])
   fi
 fi
 dnl
 AC_CHECK_FUNCS(mkdir)
-if test $ac_cv_func_mkdir = yes; then
-  UUDIR='# '
-else
-  UUDIR=
+AM_CONDITIONAL(HAVE_MKDIR, [test $ac_cv_func_mkdir = yes])
+if test $ac_cv_func_mkdir != yes; then
   UNIXOBJS="$UNIXOBJS mkdir.o"
   if test -s /bin/mkdir; then
-    AC_DEFINE([MKDIR_PROGRAM], "/bin/mkdir")
+    AC_DEFINE([MKDIR_PROGRAM], "/bin/mkdir", [Program to make a directory])
   fi
 fi
-AC_SUBST(UUDIR)dnl
 dnl
 AC_CHECK_FUNCS(rmdir)
 if test $ac_cv_func_rmdir != yes; then
   UNIXOBJS="$UNIXOBJS rmdir.o"
   if test -s /bin/rmdir; then
-    AC_DEFINE([RMDIR_PROGRAM], "/bin/rmdir")
+    AC_DEFINE([RMDIR_PROGRAM], "/bin/rmdir", [Program to remove a directory])
   fi
 fi
 dnl
@@ -480,7 +515,8 @@ if test $ac_cv_func_sigvec = yes; then
   uucp_cv_struct_sv_flags=yes, uucp_cv_struct_sv_flags=no)])
   AC_MSG_RESULT($uucp_cv_struct_sv_flags)
   if test $uucp_cv_struct_sv_flags = yes; then
-    AC_DEFINE([HAVE_SIGVEC_SV_FLAGS])
+    AC_DEFINE([HAVE_SIGVEC_SV_FLAGS], 1,
+              [Whether struct sigvec has sv_flags member])
   fi
 fi
 
@@ -495,7 +531,7 @@ if test $space = no; then
   AC_CHECK_FUNCS(statvfs)
   if test $ac_cv_func_statvfs = yes; then
     space=yes
-    AC_DEFINE(STAT_STATVFS)
+    AC_DEFINE(STAT_STATVFS, 1, [Whether you have statvfs])
   fi
 fi
 
@@ -519,7 +555,7 @@ if test $space = no; then
   AC_MSG_RESULT($uucp_cv_sys_stat_statfs3_osf1)
   if test $uucp_cv_sys_stat_statfs3_osf1 = yes; then
     space=yes
-    AC_DEFINE(STAT_STATFS3_OSF1)
+    AC_DEFINE(STAT_STATFS3_OSF1, 1, [Whether you have 3 argument statfs])
   fi
 fi
 
@@ -550,7 +586,8 @@ member (AIX, 4.3BSD)])
   AC_MSG_RESULT($uucp_cv_sys_stat_statfs2_bsize)
   if test $uucp_cv_sys_stat_statfs2_bsize = yes; then
     space=yes
-    AC_DEFINE(STAT_STATFS2_BSIZE)
+    AC_DEFINE(STAT_STATFS2_BSIZE, 1,
+              [Whether you have two argument statfs with bsize])
   fi
 fi
 
@@ -571,7 +608,7 @@ if test $space = no; then
   AC_MSG_RESULT($uucp_cv_sys_stat_statfs4)
   if test $uucp_cv_sys_stat_statfs4 = yes; then
     space=yes
-    AC_DEFINE(STAT_STATFS4)
+    AC_DEFINE(STAT_STATFS4, 1, [Whether you have four argument statfs])
   fi
 fi
 
@@ -599,7 +636,8 @@ member (4.4BSD and NetBSD)])
   AC_MSG_RESULT($uucp_cv_sys_stat_statfs2_fsize)
   if test $uucp_cv_sys_stat_statfs2_fsize = yes; then
     space=yes
-    AC_DEFINE(STAT_STATFS2_FSIZE)
+    AC_DEFINE(STAT_STATFS2_FSIZE, 1,
+              [Whether you have two argument statfs with fsize])
   fi
 fi
 
@@ -630,7 +668,8 @@ if test $space = no; then
   AC_MSG_RESULT($uucp_cv_sys_stat_fs_data)
   if test $uucp_cv_sys_stat_fs_data = yes; then
     space=yes
-    AC_DEFINE(STAT_STATFS2_FS_DATA)
+    AC_DEFINE(STAT_STATFS2_FS_DATA, 1,
+              [Whether you have two argument statfs with fd_req])
   fi
 fi
 
@@ -638,7 +677,7 @@ if test $space = no; then
   AC_CHECK_FUNCS(ustat)
   if test $ac_cv_func_ustat = yes; then
     space=yes
-    AC_DEFINE(STAT_USTAT)
+    AC_DEFINE(STAT_USTAT, 1, [Whether you have ustat])
   fi
 fi
 
@@ -647,7 +686,7 @@ if test $space = no; then
   AC_CHECK_FUNCS(disk_space)
   if test $ac_cv_func_disk_space = yes; then
     space=yes
-    AC_DEFINE(STAT_DISK_SPACE)
+    AC_DEFINE(STAT_DISK_SPACE, 1, [Whether you have disk_space])
   fi
 fi
 
@@ -668,10 +707,8 @@ extern $2 $1 ();], [int i = 0;],
 eval "uucp_cv_decl_$1=yes", eval "uucp_cv_decl_$1=no")])
 if eval "test \"`echo '$uucp_cv_decl_'$1`\" = yes"; then
   AC_MSG_RESULT(yes)
-changequote(, )dnl
-  uucp_tr_decl=`echo $1 | tr '[a-z]' '[A-Z]'`_DECLARATION_OK
-changequote([, ])dnl
-  AC_DEFINE_UNQUOTED($uucp_tr_decl)
+  AC_DEFINE_UNQUOTED(translit($1, [a-z], [A-Z])_DECLARATION_OK, 1,
+                     [Whether $1 is declared as $2])
 else
   AC_MSG_RESULT(no)
 fi
@@ -691,7 +728,7 @@ AC_CACHE_VAL(uucp_cv_decl_setpgrp,
 uucp_cv_decl_setpgrp=yes, uucp_cv_decl_setpgrp=no)])
 AC_MSG_RESULT($uucp_cv_decl_setpgrp)
 if test $uucp_cv_decl_setpgrp = yes; then
-  AC_DEFINE([HAVE_BSD_PGRP])
+  AC_DEFINE([HAVE_BSD_PGRP], 1, [Whether you have BSD style setpgrp])
 fi
 dnl
 AC_MSG_CHECKING(for union wait)
@@ -704,7 +741,7 @@ AC_CACHE_VAL(uucp_cv_struct_wait,
 uucp_cv_struct_wait=yes, uucp_cv_struct_wait=no)])
 AC_MSG_RESULT($uucp_cv_struct_wait)
 if test $uucp_cv_struct_wait = yes; then
-  AC_DEFINE([HAVE_UNION_WAIT])
+  AC_DEFINE([HAVE_UNION_WAIT], 1, [Whether you have union wait])
 fi
 dnl
 if test "$cross_compiling" = yes; then
@@ -715,5 +752,4 @@ else
  AC_SYS_LONG_FILE_NAMES
 fi
 dnl
-AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile,
-[case x$CONFIG_HEADERS in xconfig.h) echo > stamp-h ;; esac])
+AC_OUTPUT(Makefile uuconf/Makefile lib/Makefile unix/Makefile)

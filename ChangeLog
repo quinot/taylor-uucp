@@ -1,3 +1,39 @@
+2002-01-16  Ian Lance Taylor  <ian@airs.com>
+
+	* Makefile.am: New file.
+	* lib/Makefile.am: New file.
+	* uuconf/Makefile.am: New file.
+	* unix/Makefile.am: New file.
+	* configure.in: Call AM_INIT_AUTOMAKE.  Change AC_CONFIG_HEADER to
+	AM_CONFIG_HEADER.  Call AM_MAINTAINER_MODE.  Call AC_ARG_WITH for
+	user name and configuration directories.  Define SBINDIR.  Don't
+	call AC_PROG_INSTALL, AC_PROG_MAKE_SET, AC_C_CROSS.  Add
+	descriptions to all AC_DEFINE calls.  Don't set or substitute
+	CFLAGS or LDFLAGS.  Add UUDIR conditional.  Don't create stamp-h
+	in AC_OUTPUT.
+	* Makefile.in: Build using automake.
+	* lib/Makefile.in: Likewise.
+	* uuconf/Makefile.in: Likewise.
+	* unix/Makefile.in: Likewise.
+	* aclocal.m4: Build using aclocal.
+	* config.h.in: Build using autoheader.
+	* configure: Rebuild.
+	* stamp-h.in: New timestamp file.
+
+	* sysdep.h: Rename from sysh.unx.  A non-Unix port looks
+	unlikely.
+	* uuconf/syshdr.h: Rename from uuconf/syshdr.unx.
+
+	* AUTHORS: New file, required by automake --gnu.
+	* INSTALL: Likewise.  Generic version at least for now.
+	* compile: New file, required by automake --gnu.
+	* depcomp: Likewise.
+	* missing: Likewise.
+	* mkinstalldirs: Likewise.
+	* texinfo.tex: Likewise.
+
+	* .cvsignore: Ignore uucp.info* files.
+
 Mon Sep 16 21:29:10 1996  Ian Lance Taylor  <ian@airs.com>
 
 	* trans.c (floop): Don't request a hangup if we are waiting for
