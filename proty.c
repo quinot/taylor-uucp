@@ -128,6 +128,7 @@ struct uuconf_cmdtab asYproto_params[] =
 
 /* Local functions.  */
 
+static boolean fyxchg_syncs P((struct sdaemon *qdaemon));
 static boolean fywait_for_packet P((struct sdaemon *qdaemon,
 				    boolean *pfexit));
 static unsigned short iychecksum P((const char *z, size_t c));

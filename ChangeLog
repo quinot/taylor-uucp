@@ -1,3 +1,7 @@
+2003-05-28  Ian Lance Taylor  <ian@airs.com>
+
+	* proty.c: Add prototype declaration for fyxchg_syncs.
+
 2002-03-07  Ian Lance Taylor  <ian@airs.com>
 
 	* configure.in: Substitute NEWCONFIGDIR and OLDCONFIGDIR rather
@@ -87,7 +91,7 @@
 	* uucp.c (main): Don't check for whitespace in notification
 	address--revert patch of 2002-02-16.
 	* uudefs.h: Declare fparse_cmd, fcmd_needs_quotes, uquote_cmd,
-	ufree_uoted_cmd, and zquote_cmd_string.
+	ufree_quoted_cmd, and zquote_cmd_string.
 	* uucp.texi (Execution File Format): Document "Q" command.
 	(The Initial Handshake): Document feature bitmask 040--
 	FEATURE_QUOTES.
