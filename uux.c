@@ -23,6 +23,9 @@
    c/o AIRS, P.O. Box 520, Waltham, MA 02254.
 
    $Log$
+   Revision 1.7  1991/11/13  23:08:40  ian
+   Expand remote pathnames in uucp and uux; fix up uux special cases
+
    Revision 1.6  1991/11/08  21:53:17  ian
    Brian Campbell: fix argument handling when looking for '-'
 
@@ -778,6 +781,7 @@ main (argc, argv)
       char abtname[CFILE_NAME_LEN];
       char abdname[CFILE_NAME_LEN];
       FILE *e;
+      int cread;
       char ab[1024];
 
       zdata = zsysdep_data_file_name (qxqtsys, bgrade, abtname, abdname,
@@ -795,9 +799,25 @@ main (argc, argv)
 	  usysdep_exit (FALSE);
 	}
 
-      while (fgets (ab, sizeof ab, stdin) != NULL)
-	if (fputs (ab, e) == EOF)
-	  ulog (LOG_FATAL, "fputs: %s", strerror (errno));
+      do
+	{
+	  int cwrite;
+
+	  cread = fread (ab, sizeof (char), sizeof ab, stdin);
+	  if (cread > 0)
+	    {
+	      cwrite = fwrite (ab, sizeof (char), cread, e);
+	      if (cwrite != cread)
+		{
+		  if (cwrite == EOF)
+		    ulog (LOG_FATAL, "fwrite: %s", strerror (errno));
+		  else
+		    ulog (LOG_FATAL, "fwrite: Wrote %d when attempted %d",
+			  cwrite, cread);
+		}
+	    }
+	}
+      while (cread == sizeof ab);
 
       if (fclose (e) != 0)
 	ulog (LOG_FATAL, "fclose: %s", strerror (errno));
