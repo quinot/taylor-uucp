@@ -248,7 +248,7 @@ dnl
 AC_HAVE_FUNCS(getcwd getwd)
 case $DEFS in
 *HAVE_GETCWD*) ;;
-*HAVE_GETCD*) ;;
+*HAVE_GETWD*) ;;
 *) UNIXOBJS="$UNIXOBJS getcwd.o"
    if test -s /bin/pwd; then
      AC_DEFINE([PWD_PROGRAM], `echo '"/bin/pwd"'`)
