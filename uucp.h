@@ -301,6 +301,7 @@ extern int strncasecmp P((const char *z1, const char *z2, size_t clen));
 
 #if ! HAVE_STRERROR
 /* Get a string corresponding to an error message.  */
+#undef strerror
 extern char *strerror P((int ierr));
 #endif
 
