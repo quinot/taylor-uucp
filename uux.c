@@ -176,19 +176,21 @@ main (argc, argv)
   zProgram = argv[0];
 
   /* We need to be able to read a single - as an option, which getopt
-     won't do.  So that we can still use getopt, we run through the
-     options looking for an option "-"; if we find one we change it to
-     "-p", which is equivalent to "-".  */
-  for (i = 1; i < argc; i++)
+     won't do.  We handle this by using getopt to scan the argument
+     list multiple times, replacing any single "-" with "-p".  */
+  opterr = 0;
+  while (1)
     {
-      if (argv[i][0] != '-')
+      while (getopt_long (argc, argv, "+a:bcCg:I:jlnprs:Wvx:z",
+			  asXlongopts, (int *) NULL) != EOF)
+	;
+      if (optind >= argc || strcmp (argv[optind], "-") != 0)
 	break;
-      if (argv[i][1] == '\0')
-	argv[i] = zbufcpy ("-p");
-      /* This won't work right if "-" is given as an argument to one
-	 of the options which takes an argument.  Too bad.  Such an
-	 argument doesn't really make sense anyhow.  */
+      argv[optind] = zbufcpy ("-p");
+      optind = 0;
     }
+  opterr = 1;
+  optind = 0;
 
   /* The leading + in the getopt string means to stop processing
      options as soon as a non-option argument is seen.  */
