@@ -4417,6 +4417,7 @@ Marc Boucher @file{<marc@@CAM.ORG>}
 @file{gordon@@sneaky.lonestar.org} (Gordon Burditt)
 @file{mib@@gnu.ai.mit.edu} (Michael I Bushnell)
 Brian Campbell @file{<brianc@@quantum.on.ca>}
+Ed Carp @file{<erc@@apple.com>}
 @file{verbus@@westmark.westmark.com} (Verbus M. Counts)
 @file{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
 @file{hubert@@arakis.fdn.org} (Hubert Delahaye)
