@@ -751,6 +751,14 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
     }
 
   zfile = zsysdep_local_file (qcmd->zfrom, qsys->uuconf_zpubdir);
+  if (zfile != NULL)
+    {
+      char *zbased;
+
+      zbased = zsysdep_add_base (zfile, qcmd->zto);
+      ubuffree (zfile);
+      zfile = zbased;
+    }
   if (zfile == NULL)
     return fremote_rec_fail (FAILURE_PERM, iremote);
 
