@@ -550,8 +550,6 @@ iqout (puuconf, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  const char *zbase = (const char *) pinfo;
-
   if (argc > 1)
     zQoutfile = zbufcpy (argv[1]);
   if (argc > 2)
@@ -571,8 +569,6 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  const char *zbase = (const char *) pinfo;
-
   if (argc < 2)
     return UUCONF_CMDTABRET_CONTINUE;
 
@@ -606,8 +602,6 @@ iqrequestor (puuconf, argc, argv, pvar, pinfo)
      pointer pvar;
      pointer pinfo;
 {
-  const char *zbase = (const char *) pinfo;
-
   /* We normally have a single argument, which is the ``requestor''
      address, to which we should send any success or error messages.
      Apparently the DOS program UUPC sends two arguments, which are
