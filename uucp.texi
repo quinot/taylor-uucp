@@ -22,9 +22,9 @@ a taylor.texi file.  Many things remain to do, among which:
 @end ignore
 
 @ifinfo
-This file documents Taylor UUCP, version 1.05.
+This file documents Taylor UUCP, version 1.06.
 
-Copyright @copyright{} 1992, 1993, 1994 Ian Lance Taylor
+Copyright @copyright{} 1992, 1993, 1994, 1995 Ian Lance Taylor
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -51,12 +51,12 @@ translation approved by the author instead of in the original English.
 
 @titlepage
 @title Taylor UUCP
-@subtitle Version 1.05
+@subtitle Version 1.06
 @author Ian Lance Taylor @code{<ian@@airs.com>}
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993, 1994 Ian Lance Taylor
+Copyright @copyright{} 1992, 1993, 1994, 1995 Ian Lance Taylor
 
 Published by Ian Lance Taylor @code{<ian@@airs.com>}.
 
@@ -77,12 +77,12 @@ translation approved by the author instead of in the original English.
 @end titlepage
 
 @node Top, Copying, (dir), (dir)
-@top Taylor UUCP 1.05
+@top Taylor UUCP 1.06
 
-This is the documentation for the Taylor UUCP package, version 1.05.
+This is the documentation for the Taylor UUCP package, version 1.06.
 The programs were written by Ian Lance Taylor.  The author can be
-reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, Building
-200, 1 Kendall Square, Cambridge, MA, 02139, USA}.
+reached at @code{<ian@@airs.com>}, or @samp{c/o Cygnus Support, 48 Grove
+Street, Somerville, MA, 02144, USA}.
 
 There is a mailing list for discussion of the package.  To join (or get
 off) the list, send mail to
@@ -2238,9 +2238,10 @@ is no job of sufficiently high grade the system will not be called, and
 given to @code{uucico}) only jobs of sufficiently high grade will be
 transferred.  However, if the other system calls in, the
 @code{timegrade} commands are ignored, and jobs of any grade may be
-transferred (but see @code{call-timegrade} below).  Also, the
-@code{timegrade} command will not prevent the other system from
-transferring any job it chooses, regardless of who placed the call.
+transferred (but see @code{call-timegrade} and @code{called-timegrade}
+below).  Also, the @code{timegrade} command will not prevent the other
+system from transferring any job it chooses, regardless of who placed
+the call.
 
 The @code{timegrade} command may appear multiple times without using
 @code{alternate}.  When the @code{timegrade} command is used for a
@@ -2285,6 +2286,28 @@ The @code{call-timegrade} command may appear multiple times without
 using @code{alternate}.  If this command does not appear, or if none of
 the time strings match, the remote system will be allowed to send
 whatever grades of work it chooses.
+
+@item called-timegrade @var{character} @var{string}
+@findex called-timegrade
+
+The @var{character} is a single character @kbd{A} to @kbd{Z}, @kbd{a} to
+@kbd{z}, or @kbd{0} to @kbd{9} and specifies a grade.  The @var{string}
+is a time string as described under the @code{time} command.  If a call
+is received from the other system during a time which matches the time
+string, only jobs of grade @var{character} or higher will be sent to the
+remote system.  This allows the job grade to be set for incoming calls,
+overriding any request made by the remote uucico.  As noted above, job
+grades are historically somewhat arbitrary, so specifying a grade will
+only be meaningful if the other system cooperates in assigning grades.
+This grade restriction only applies to jobs on the local system; it does
+not affect the jobs transferred by the remote system.  This grade
+restriction only applies when the other system calls in, not when the
+other system is called.
+
+The @code{called-timegrade} command may appear multiple times without
+using @code{alternate}.  If this command does not appear, or if none of
+the time strings match, any grade may be sent to the remote system upon
+receiving a call.
 
 @end table
 
@@ -2383,7 +2406,9 @@ ignored.
 @findex chat-program in sys file
 
 These commands describe a chat script to use when logging on to a remote
-system.  Chat scripts are explained in @ref{Chat Scripts}.
+system.  This login chat script is run after any chat script defined in
+the @file{dial} file (@pxref{dial File}).  Chat scripts are explained in
+@ref{Chat Scripts}.
 
 Two additional escape sequences may be used in send strings.
 
@@ -2581,6 +2606,14 @@ The @samp{v} protocol is the @samp{g} protocol as used by the DOS
 program UUPC/Extended.  It is provided only so that UUPC/Extended users
 can use it; there is no particular reason to select it.
 
+The @samp{y} protocol is an efficient streaming protocol.  It does error
+checking, but when it detects an error it immediately aborts the
+connection.  This requires a reliable, flow controlled, eight-bit
+connection.  In practice, it is only useful on a connection that is
+nearly always error-free.  Unlike the @samp{t} and @samp{e} protocols,
+the connection need not be entirely error-free, so the @samp{y} protocol
+can be used on a serial port.
+
 The protocols will be considered in the order shown above.  This means
 that if neither the @code{seven-bit} nor the @code{reliable} command are
 used, the @samp{t} protocol will be used over a TCP connection and the
@@ -2777,6 +2810,16 @@ takes a numeric argument:
 @table @code
 @item timeout
 The timeout in seconds before giving up.  The default is 120.
+@end table
+
+The @samp{y} protocol supports the following commands, both of which
+take numeric arguments:
+
+@table @code
+@item timeout
+The timeout in seconds when waiting for a packet.  The default is 60.
+@item packet-size
+The packet size to use.  The default is 1024.
 @end table
 
 The protocol parameters are reset to their default values after each
@@ -3295,6 +3338,20 @@ Give the address to use when running as a TLI server.  Escape sequences
 in the address are expanded as they are for chat script expect strings
 (@pxref{Chat Scripts}).
 
+The string is passed directly to the TLI @code{t_bind} function.  The
+value needed may depend upon your particular TLI implementation.  Check
+the manual pages, and, if necessary, try writing some sample programs.
+
+For AT&T 3B2 System V Release 3 using the Wollongong TCP/IP stack, which
+is probably typical, the format of TLI string is @samp{SSPPIIII}, where
+@samp{SS} is the service number (for TCP, this is 2), @samp{PP} is the
+TCP port number, and @samp{IIII} is the Internet address.  For example,
+to accept a connection from on port 540 from any interface, use
+@samp{server-address \x00\x02\x02\x1c\x00\x00\x00\x00}.  To only accept
+connections from a particular interface, replace the last four digits
+with the network address of the interface.  (Thanks to Paul Pryor for
+the information in this paragraph).
+
 @item command @var{strings} [ pipe only ]
 @findex command
 
@@ -3343,8 +3400,10 @@ Introduces and names a dialer.
 @item chat-program @var{strings}
 @findex chat-program in dial file
 
-Specify a chat script to be used to dial the phone.  See @ref{Chat
-Scripts} for full details on chat scripts.
+Specify a chat script to be used to dial the phone.  This chat script is
+used before the login chat script in the @file{sys} file, if any
+(@pxref{Logging In}).  See @ref{Chat Scripts} for full details on chat
+scripts.
 
 Taylor UUCP will sleep for one second between attempts to dial out on a
 modem.  If your modem requires a longer wait period, you must start your
@@ -3797,11 +3856,13 @@ Fran\c cois Pinard
 @end tex
 @code{<pinard@@iro.umontreal.ca>} tirelessly tested the code and
 suggested many improvements.  He also put together the initial version
-of this document.  Doug Evans contributed the zmodem protocol.  Marc
-Boucher @code{<marc@@CAM.ORG>} contributed the code supporting the pipe
-port type.  Finally, Verbus M. Counts @code{<verbus@@westmark.com>} and
-Centel Federal Systems, Inc. deserve special thanks, since they actually
-paid me money to port this code to System III.
+of this document.  Doug Evans @code{dje@@cygnus.com} contributed the
+zmodem protocol.  Marc Boucher @code{<marc@@CAM.ORG>} contributed the
+code supporting the pipe port type.  Jorge Cwik
+@code{jorge@@laser.satlink.net} contributed the @samp{y} protocol code.
+Finally, Verbus M. Counts @code{<verbus@@westmark.com>} and Centel
+Federal Systems, Inc. deserve special thanks, since they actually paid
+me money to port this code to System III.
 @end iftex
 
 In alphabetical order:
@@ -3813,6 +3874,7 @@ In alphabetical order:
 Brian W. Antoine @code{<briana@@tau-ceti.isc-br.com>}
 @code{jantypas@@soft21.s21.com} (John Antypas)
 @code{james@@bigtex.cactus.org} (James Van Artsdalen)
+@code{jima@@netcom.com} (Jim Avera)
 @code{nba@@sysware.DK} (Niels Baggesen)
 @code{uunet!hotmomma!sdb} (Scott Ballantyne)
 Zacharias Beckman @code{<zac@@dolphin.com>}
@@ -3837,16 +3899,19 @@ Ed Carp @code{<erc@@apple.com>}
 @code{verbus@@westmark.westmark.com} (Verbus M. Counts)
 @code{cbmvax!snark.thyrsus.com!cowan} (John Cowan)
 Bob Cunningham @code{<bob@@soest.hawaii.edu>}
+@code{jorge@@laser.satlink.net} (Jorge Cwik)
 @code{kdburg@@incoahe.hanse.de} (Klaus Dahlenburg)
 Damon @code{<d@@exnet.co.uk>}
 @code{hubert@@arakis.fdn.org} (Hubert Delahaye)
 @code{markd@@bushwire.apana.org.au} (Mark Delany)
 Allen Delaney @code{<allen@@brc.ubc.ca>}
+Gerriet M. Denkmann @code{gerriet@@hazel.north.de}
 @code{denny@@dakota.alisa.com} (Bob Denny)
 @code{ssd@@nevets.oau.org} (Steven S. Dick)
 @code{gert@@greenie.gold.sub.org} (Gert Doering)
 @code{gemini@@geminix.in-berlin.de} (Uwe Doering)
 Hans-Dieter Doll @code{<hd2@@Insel.DE>}
+@code{deane@@deane.teleride.on.ca} (Dean Edmonds)
 Mark W. Eichin @code{<eichin@@cygnus.com>}
 Andrew Evans @code{<andrew@@airs.com>}
 @code{dje@@cygnus.com} (Doug Evans)
@@ -3857,6 +3922,7 @@ Dan Everhart @code{<dan@@dyndata.com>}
 @code{jaf@@inference.com} (Jose A. Fernandez)
 "David J. Fiander" @code{<golem!david@@news.lsuc.on.ca>}
 Thomas Fischer @code{<batman@@olorin.dark.sub.org>}
+Mister Flash @code{<flash@@sam.imash.ras.ru>}
 @code{louis@@marco.de} (Ju"rgen Fluk)
 @code{erik@@eab.retix.com} (Erik Forsberg)
 @code{andy@@scp.caltech.edu} (Andy Fyfe)
@@ -3871,10 +3937,12 @@ Benoit Grange @code{<ben@@fizz.fdn.org>}
 @code{ryan@@cs.umb.edu} (Daniel R. Guilderson)
 @code{greg@@gagme.chi.il.us} (Gregory Gulik)
 Richard H. Gumpertz @code{<rhg@@cps.com>}
+Scott Guthridge @code{<scooter@@cube.rain.com>}
 Michael Haberler @code{<mah@@parrot.prv.univie.ac.at>}
 Daniel Hagerty @code{<hag@@eddie.mit.edu>}
 @code{jh@@moon.nbn.com} (John Harkin)
 @code{guy@@auspex.auspex.com} (Guy Harris)
+@code{hsw1@@papa.attmail.com} (Stephen Harris)
 Petri Helenius @code{<pete@@fidata.fi>}
 @code{gabe@@edi.com} (B. Gabriel Helou)
 Bob Hemedinger @code{<bob@@dalek.mwc.com>}
@@ -3883,21 +3951,27 @@ Peter Honeyman @code{<honey@@citi.umich.edu>}
 @code{jhood@@smoke.marlboro.vt.us} (John Hood)
 Bill Irwin @code{<bill@@twg.bc.ca>}
 @code{pmcgw!personal-media.co.jp!ishikawa} (Chiaki Ishikawa)
+@code{ai@@easy.in-chemnitz.de} (Andreas Israel)
+@code{iverson@@lionheart.com} (Tim Iverson)
 @code{bei@@dogface.austin.tx.us} (Bob Izenberg)
 @code{djamiga!djjames@@fsd.com} (D.J.James)
 Rob Janssen @code{<cmgit!rob@@relay.nluug.nl>}
 @code{harvee!esj} (Eric S Johansson)
 Kevin Johnson @code{<kjj@@pondscum.phx.mcd.mot.com>}
+@code{rj@@rainbow.in-berlin.de} (Robert Joop)
 Alan Judge @code{<aj@@dec4ie.IEunet.ie>}
 @code{chris@@cj_net.in-berlin.de} (Christof Junge)
 @code{tron@@Veritas.COM} (Ronald S. Karr)
 Brendan Kehoe @code{<brendan@@cs.widener.edu>}
 @code{warlock@@csuchico.edu} (John Kennedy)
 @code{kersing@@nlmug.nl.mugnet.org} (Jac Kersing)
+@code{ok@@daveg.PFM-Mainz.de} (Olaf Kirch)
 Gabor Kiss @code{<kissg@@sztaki.hu>}
 @code{gero@@gkminix.han.de} (Gero Kuhlmann)
 @code{rob@@pact.nl} (Rob Kurver)
+"C.A. Lademann" @code{<cal@@zls.gtn.com>}
 @code{kent@@sparky.IMD.Sterling.COM} (Kent Landfield)
+Tin Le @code{<tin@@saigon.com>}
 @code{lebaron@@inrs-telecom.uquebec.ca}  (Gregory LeBaron)
 @code{karl@@sugar.NeoSoft.Com} (Karl Lehenbauer)
 @code{alex@@hal.rhein-main.de} (Alexander Lehmann)
@@ -3922,11 +3996,13 @@ Yanek Martinson @code{<yanek@@mthvax.cs.miami.edu>}
 @code{jm@@aristote.univ-paris8.fr} (Jean Mehat)
 @code{me@@halfab.freiburg.sub.org} (Udo Meyer)
 @code{les@@chinet.chi.il.us} (Leslie Mikesell)
+@code{bug@@cyberdex.cuug.ab.ca} (Trever Miller)
 @code{mmitchel@@digi.lonestar.org} (Mitch Mitchell)
 Emmanuel Mogenet @code{<mgix@@krainte.jpn.thomson-di.fr>}
 @code{rmohr@@infoac.rmi.de} (Rupert Mohr)
 Jason Molenda @code{<molenda@@sequent.com>}
 @code{ianm@@icsbelf.co.uk} (Ian Moran)
+@code{jmorriso@@bogomips.ee.ubc.ca} (John Paul Morrison)
 @code{brian@@ilinx.wimsey.bc.ca} (Brian J. Murrell)
 @code{service@@infohh.rmi.de} (Dirk Musstopf)
 @code{lyndon@@cs.athabascau.ca} (Lyndon Nerenberg)
@@ -3938,6 +4014,7 @@ Richard E. Nickle @code{<trystro!rick@@Think.COM>}
 @code{nolan@@helios.unl.edu} (Michael Nolan)
 david nugent @code{<david@@csource.oz.au>}
 Jim O'Connor @code{<jim@@bahamut.fsc.com>}
+@code{kevin%kosman.uucp@@nrc.com} (Kevin O'Gorman)
 Petri Ojala @code{<ojala@@funet.fi>}
 @code{oneill@@cs.ulowell.edu} (Brian 'Doc' O'Neill)
 @code{abekas!dragoman!mikep@@decwrl.dec.com} (Mike Park)
@@ -3949,6 +4026,7 @@ John Plate @code{<plate@@infotek.dk>}
 @code{eldorado@@tharr.UUCP} (Mark Powell)
 Mark Powell @code{<mark@@inet-uk.co.uk>}
 @code{pozar@@kumr.lns.com} (Tim Pozar)
+Paul Pryor @code{ptp@@fallschurch-acirs2.army.mil}
 @code{putsch@@uicc.com} (Jeff Putsch)
 @code{ar@@nvmr.robin.de} (Andreas Raab)
 Jarmo Raiha @code{<jarmo@@ksvltd.FI>}
@@ -3957,6 +4035,7 @@ Scott Reynolds @code{<scott@@clmqt.marquette.Mi.US>}
 Kenji Rikitake @code{<kenji@@rcac.astem.or.jp>}
 @code{arnold@@cc.gatech.edu} (Arnold Robbins)
 @code{steve@@Nyongwa.cam.org} (Steve M. Robbins)
+Ollivier Robert @code{<Ollivier.Robert@@keltia.frmug.fr.net>}
 Serge Robyns @code{<sr@@denkart.be>}
 Lawrence E. Rosenman @code{<ler@@lerami.lerctr.org>}
 Jeff Ross @code{<jeff@@wisdom.bubble.org>}
@@ -3992,6 +4071,7 @@ Ralf Stephan @code{<ralf@@ark.abg.sub.org>}
 Shigeya Suzuki @code{<shigeya@@dink.foretune.co.jp>}
 @code{swiers@@plains.NoDak.edu}
 Oleg Tabarovsky @code{<olg@@olghome.pccentre.msk.su>}
+@code{ikeda@@honey.misystems.co.jp} (Takatoshi Ikeda)
 John Theus @code{<john@@theus.rain.com>}
 @code{rd@@aii.com} (Bob Thrush)
 ppKarsten Thygesen @code{<karthy@@dannug.dk>}
@@ -4001,7 +4081,9 @@ Martin Tomes @code{<mt00@@controls.eurotherm.co.uk>}
 Len Tower @code{<tower-prep@@ai.mit.edu>}
 Mark Towfiq @code{<justice!towfiq@@Eingedi.Newton.MA.US>}
 @code{mju@@mudos.ann-arbor.mi.us} (Marc Unangst)
+Matthias Urlichs @code{<urlichs@@smurf.noris.de>}
 Tomi Vainio @code{<tomppa@@fidata.fi>}
+@code{a3@@a3.xs4all.nl} (Adri Verhoef)
 Andrew Vignaux @code{<ajv@@ferrari.datamark.co.nz>}
 @code{vogel@@omega.ssw.de} (Andreas Vogel)
 @code{jos@@bull.nl} (Jos Vos)
