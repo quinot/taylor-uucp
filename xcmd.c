@@ -361,7 +361,7 @@ fremote_xcmd_init (qdaemon, qcmd)
 
   ubuffree (zdestfile);
   if (qdestsys != NULL)
-    (void) uuconf_system_free (puuconf, &sdestsys);
+    (void) uuconf_system_free (qdaemon->puuconf, &sdestsys);
 
   ubuffree (zfrom);
   ubuffree (zuser);
