@@ -72,10 +72,9 @@
    figure out what's happening if something goes wrong.  */
 
 #if HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS == 0
-#ifdef __QNX__
-#undef HAVE_POSIX_TERMIOS
+#if HAVE_TERMIOS_H
 #define HAVE_POSIX_TERMIOS 1
-#else /* ! defined (__QNX__) */
+#else /* ! HAVE_TERMIOS_H */
 #if HAVE_CBREAK
 #undef HAVE_BSD_TTY
 #define HAVE_BSD_TTY 1
@@ -83,7 +82,7 @@
 #undef HAVE_SYSV_TERMIO
 #define HAVE_SYSV_TERMIO 1
 #endif /* ! HAVE_CBREAK */
-#endif /* ! defined (__QNX__) */
+#endif /* ! HAVE_TERMIOS_H */
 #endif /* HAVE_BSD_TTY + HAVE_SYSV_TERMIO + HAVE_POSIX_TERMIOS == 0 */
 
 /* On some systems a write to a serial port will block even if the
