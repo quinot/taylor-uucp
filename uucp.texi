@@ -490,7 +490,9 @@ type tcp} and, if necessary, @samp{port service @var{xxx}} where
 @samp{uucp} in @file{/etc/services} and if not found to use port 540).
 You can specify the address of the remote host with @samp{address
 a.b.c}.  If you don't specify an address, the remote system name will be
-used.
+used.  You should give an explicit chat script for the system when you
+use TCP; the default chat script begins with a carriage return, which
+will not work with some UUCP TCP servers.
 
 If you are using V2 configuration files, add a line like this to
 @file{L.sys}:
