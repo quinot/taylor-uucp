@@ -312,6 +312,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 #else /* HAVE_HDB_LOGGING */
 	  {
 	    const char *zsys;
+	    char *zbase;
 	    char *zfile;
 
 	    /* We want to write to .Log/program/system, e.g.  	
@@ -321,11 +322,15 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 	    else
 	      zsys = zLsystem;
 
+	    zbase = zsysdep_base_name (zProgram);
+	    if (zbase == NULL)
+	      zbase = zbufcpy (zProgram);
 	    zfile = zbufalc (strlen (zLogfile)
-			     + strlen (zProgram)
+			     + strlen (zbase)
 			     + strlen (zsys)
 			     + 1);
-	    sprintf (zfile, zLogfile, zProgram, zsys);
+	    sprintf (zfile, zLogfile, zbase, zsys);
+	    ubuffree (zbase);
 	    eLlog = esysdep_fopen (zfile, TRUE, TRUE, TRUE);
 	    ubuffree (zfile);
 	  }
@@ -411,9 +416,17 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
       else
 	{
 #if HAVE_TAYLOR_LOGGING
-	  fprintf (e, "%s ", zProgram);
-	  if (edebug != NULL)
-	    fprintf (edebug, "%s ", zProgram);
+	  {
+	    char *zbase;
+
+	    zbase = zsysdep_base_name (zProgram);
+	    if (zbase == NULL)
+	      zbase = zbufcpy (zProgram);
+	    fprintf (e, "%s ", zbase);
+	    if (edebug != NULL)
+	      fprintf (edebug, "%s ", zbase);
+	    ubuffree (zbase);
+	  }
 #else /* ! HAVE_TAYLOR_LOGGING */
 	  fprintf (e, "%s ", zLuser == NULL ? "uucp" : zLuser);
 	  if (edebug != NULL)
