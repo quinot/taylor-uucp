@@ -164,6 +164,7 @@ simpler way?
 
 David Nugent: it would be nice to be able to set debugging, log, and
 statistics files on a site by site basis.
+Brian Murrell: heck, set those files on a port by port basis as well.
 
 74.
 
@@ -417,3 +418,15 @@ the following values which determine when uuxqt should be run:
 Sort jobs in the send queue by size.  Pretty easy.
 
 164.
+
+Ed Carp: preserve files if uuxqt execution fails.
+
+165.
+
+Marc Sheldon: use exit codes from <sysexits.h> in uux and uucp.
+
+166.
+
+Chip Salzenberg: allow chat failure strings to specify a retry time.
+
+166.
