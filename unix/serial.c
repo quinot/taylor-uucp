@@ -1616,7 +1616,7 @@ fsysdep_modem_begin_dial (qconn, qdial)
 
 	  (void) fsetterminfodrain (qsysdep->o, &sbaud);
 	  sleep (2);
-	  (void) fsetterminfo (q->o, &q->snew);
+	  (void) fsetterminfo (qsysdep->o, &qsysdep->snew);
 	}
 #endif /* ! defined (TIOCCDTR) */
 
