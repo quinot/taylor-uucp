@@ -1349,6 +1349,8 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	      afInaked[iseq] = FALSE;
 	    }
 
+	  afInaked[iseq] = FALSE;
+
 	  /* If we haven't handled all previous packets, we must save
 	     off this packet and deal with it later.  */
 	  if (iseq != INEXTSEQ (iIrecseq))
