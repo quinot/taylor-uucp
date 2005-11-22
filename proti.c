@@ -1346,7 +1346,6 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 		   i != iseq;
 		   i = INEXTSEQ (i))
 		afInaked[i] = FALSE;
-	      afInaked[iseq] = FALSE;
 	    }
 
 	  afInaked[iseq] = FALSE;
