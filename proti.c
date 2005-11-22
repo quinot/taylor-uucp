@@ -1374,19 +1374,19 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 				  "fiprocess_data: Saving unexpected packet %d (recseq %d)",
 				  iseq, iIrecseq);
 
-		  if (azIrecbuffers[iseq] == NULL)
+		  if (azIrecbuffers[iseq] != NULL)
+		    ubuffree (azIrecbuffers[iseq]);
+
+		  azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN
+							   + csize));
+		  memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
+		  if (csize > 0)
 		    {
-		      azIrecbuffers[iseq] = zbufalc ((size_t) (CHDRLEN
-							       + csize));
-		      memcpy (azIrecbuffers[iseq], ab, CHDRLEN);
-		      if (csize > 0)
-			{
-			  memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
-				  (size_t) cfirst);
-			  if (csecond > 0)
-			    memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
-				    zsecond, (size_t) csecond);
-			}
+		      memcpy (azIrecbuffers[iseq] + CHDRLEN, zfirst,
+			      (size_t) cfirst);
+		      if (csecond > 0)
+			memcpy (azIrecbuffers[iseq] + CHDRLEN + cfirst,
+				zsecond, (size_t) csecond);
 		    }
 		}
 
