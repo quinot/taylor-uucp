@@ -1,7 +1,7 @@
 2005-11-21  Ian Lance Taylor  <ian@airs.com>
 
 	* proti.c (fiprocess_data): After receiving a packet successfully,
-	set afInaked for that packet to FALSE.
+	set afInaked and azIrecbuffers for that packet to FALSE.
 
 2003-05-29  Ian Lance Taylor  <ian@airs.com>
 

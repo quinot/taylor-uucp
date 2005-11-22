@@ -1350,6 +1350,11 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	    }
 
 	  afInaked[iseq] = FALSE;
+	  if (azIrecbuffers[iseq] != NULL)
+	    {
+	      ubuffree (azIrecbuffers[iseq]);
+	      azIrecbuffers[iseq] = NULL;
+	    }
 
 	  /* If we haven't handled all previous packets, we must save
 	     off this packet and deal with it later.  */
