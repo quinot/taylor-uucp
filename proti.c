@@ -847,13 +847,10 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 
       zspos[IHDR_INTRO] = IINTRO;
       zspos[IHDR_LOCAL] = IHDRWIN_SET (iIsendseq, 0);
-      zspos[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
-      iIlocal_ack = iIrecseq;
       zspos[IHDR_CONTENTS1] = IHDRCON_SET1 (SPOS, qdaemon->fcaller,
 					    CCKSUMLEN);
       zspos[IHDR_CONTENTS2] = IHDRCON_SET2 (SPOS, qdaemon->fcaller,
 					    CCKSUMLEN);
-      zspos[IHDR_CHECK] = IHDRCHECK_VAL (zspos);
       UCKSUM_SET (zspos + CHDRLEN, (unsigned long) ipos);
       icksum = icrc (zspos + CHDRLEN, CCKSUMLEN, ICRCINIT);
       UCKSUM_SET (zspos + CHDRLEN + CCKSUMLEN, icksum);
@@ -865,6 +862,11 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 	  if (! fiwindow_wait (qdaemon))
 	    return FALSE;
 	}
+
+      /* Fill in IHDR_REMOTE with the correct value of iIrecseq.  */
+      zspos[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
+      iIlocal_ack = iIrecseq;
+      zspos[IHDR_CHECK] = IHDRCHECK_VAL (zspos);
 
       DEBUG_MESSAGE1 (DEBUG_PROTO, "fisenddata: Sending SPOS %ld",
 		      ipos);

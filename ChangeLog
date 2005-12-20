@@ -1,3 +1,8 @@
+2005-12-19  Ian Lance Taylor  <ian@airs.com>
+
+	* proti.c (fisenddata): Don't fill in IHDR_REMOTE until after
+	waiting for space in the send window.
+
 2005-11-21  Ian Lance Taylor  <ian@airs.com>
 
 	* proti.c (fiprocess_data): After receiving a packet successfully,
