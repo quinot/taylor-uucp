@@ -1,3 +1,13 @@
+2006-01-03  Ian Lance Taylor  <ian@airs.com>
+
+	* trans.h (FEATURE_ICOMPL): Define.
+	* proti.c (IHDRCHECK_VAL): Add qdaemon parameter.  Change all
+	uses.
+	* uucico.c (fdo_call): Set FEATURE_ICOMPL in feature bitmask.
+	(faccept_call): Likewise.
+	* uucp.texi (The Initial Handshake): Document new feature bit.
+	(i Protocol): Document affect of new feature bit.
+
 2005-12-19  Ian Lance Taylor  <ian@airs.com>
 
 	* proti.c (fisenddata): Don't fill in IHDR_REMOTE until after

@@ -53,6 +53,11 @@
    backslash quoted.  */
 #define FEATURE_QUOTES (040)
 
+/* Use the ones complement for the header checksum byte for the 'i'
+   protocol.  This was added after version 1.07 to avoid getting
+   confused if the modem spits out a series of identical bytes.  */
+#define FEATURE_ICOMPL (0100)
+
 /* This structure is used to hold information concerning the
    communication link established with the remote system.  */
 

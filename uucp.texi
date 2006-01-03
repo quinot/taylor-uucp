@@ -6440,6 +6440,11 @@ be used.
 @item 040
 UUCP supports the @samp{q} option in the @samp{S}, @samp{R}, @samp{X},
 and @samp{E} commands.
+
+@item 0100
+For the @samp{i} protocol, the header checksum byte is ones
+complemented.  This guards against modem errors in which the same byte
+is sent multiple times.
 @end table
 
 After the protocol has been selected and the initial handshake has been
@@ -7494,8 +7499,10 @@ The lower eight bits of the data length.  The twelve bits of data length
 permit packets ranging in size from 0 to 4095 bytes.
 
 @item @var{check}
-The exclusive or of the second through fifth bytes of the header.  This
-provides an additional check that the header is valid.
+The exclusive or of the second through fifth bytes of the header.  If
+the feature bitmask field from the remote uucico has bit @code{0100}
+set, this value is ones complemented.  This provides an additional
+check that the header is valid.
 @end table
 
 If the data length is non-zero, the packet is immediately followed by

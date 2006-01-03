@@ -99,12 +99,15 @@ const char proti_rcsid[] = "$Id$";
 #define CHDRCON_GETBYTES(i1, i2) ((((i1) & 0x0f) << 8) | ((i2) & 0xff))
 
 /* Macros for the IHDR_CHECK field.  */
-#define IHDRCHECK_VAL(zhdr) \
-  ((zhdr[IHDR_LOCAL] \
-    ^ zhdr[IHDR_REMOTE] \
-    ^ zhdr[IHDR_CONTENTS1] \
-    ^ zhdr[IHDR_CONTENTS2]) \
-   & 0xff)
+#define IHDRCHECK_VAL(qdaemon, zhdr)				\
+  (((zhdr[IHDR_LOCAL]						\
+     ^ zhdr[IHDR_REMOTE]					\
+     ^ zhdr[IHDR_CONTENTS1]					\
+     ^ zhdr[IHDR_CONTENTS2])					\
+    & 0xff)							\
+   ^ ((qdaemon->ifeatures & FEATURE_ICOMPL)			\
+      ? 0xff							\
+      : 0))
 
 /* Length of the packet header.  */
 #define CHDRLEN (6)
@@ -468,7 +471,7 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
   ab[IHDR_LOCAL] = ab[IHDR_REMOTE] = IHDRWIN_SET (0, 0);
   ab[IHDR_CONTENTS1] = IHDRCON_SET1 (SYNC, qdaemon->fcaller, 4);
   ab[IHDR_CONTENTS2] = IHDRCON_SET2 (SYNC, qdaemon->fcaller, 4);
-  ab[IHDR_CHECK] = IHDRCHECK_VAL (ab);
+  ab[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, ab);
   ab[CHDRLEN + 0] = (iIrequest_packsize >> 8) & 0xff;
   ab[CHDRLEN + 1] = iIrequest_packsize & 0xff;
   ab[CHDRLEN + 2] = iIrequest_winsize;
@@ -622,7 +625,7 @@ fishutdown (qdaemon)
   iIlocal_ack = iIrecseq;
   z[IHDR_CONTENTS1] = IHDRCON_SET1 (CLOSE, qdaemon->fcaller, 0);
   z[IHDR_CONTENTS2] = IHDRCON_SET2 (CLOSE, qdaemon->fcaller, 0);
-  z[IHDR_CHECK] = IHDRCHECK_VAL (z);
+  z[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, z);
 
   DEBUG_MESSAGE0 (DEBUG_PROTO, "fishutdown: Sending CLOSE");
 
@@ -713,7 +716,7 @@ finak (qdaemon, iseq)
   iIlocal_ack = iIrecseq;
   abnak[IHDR_CONTENTS1] = IHDRCON_SET1 (NAK, qdaemon->fcaller, 0);
   abnak[IHDR_CONTENTS2] = IHDRCON_SET2 (NAK, qdaemon->fcaller, 0);
-  abnak[IHDR_CHECK] = IHDRCHECK_VAL (abnak);
+  abnak[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, abnak);
 
   afInaked[iseq] = TRUE;
 
@@ -751,7 +754,7 @@ firesend (qdaemon)
 
       iremote = IHDRWIN_GETCHAN (zhdr[IHDR_REMOTE]);
       zhdr[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
-      zhdr[IHDR_CHECK] = IHDRCHECK_VAL (zhdr);
+      zhdr[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, zhdr);
       iIlocal_ack = iIrecseq;
     }
 
@@ -866,7 +869,7 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
       /* Fill in IHDR_REMOTE with the correct value of iIrecseq.  */
       zspos[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, 0);
       iIlocal_ack = iIrecseq;
-      zspos[IHDR_CHECK] = IHDRCHECK_VAL (zspos);
+      zspos[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, zspos);
 
       DEBUG_MESSAGE1 (DEBUG_PROTO, "fisenddata: Sending SPOS %ld",
 		      ipos);
@@ -906,7 +909,7 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
      correct value of iIrecseq.  */
   zhdr[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
   iIlocal_ack = iIrecseq;
-  zhdr[IHDR_CHECK] = IHDRCHECK_VAL (zhdr);
+  zhdr[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, zhdr);
 
   DEBUG_MESSAGE4 (DEBUG_PROTO,
 		  "fisenddata: Sending packet %d size %d local %d remote %d",
@@ -1060,7 +1063,7 @@ ficheck_errors (qdaemon)
 	  iIlocal_ack = iIrecseq;
 	  absync[IHDR_CONTENTS1] = IHDRCON_SET1 (SYNC, qdaemon->fcaller, 3);
 	  absync[IHDR_CONTENTS2] = IHDRCON_SET2 (SYNC, qdaemon->fcaller, 3);
-	  absync[IHDR_CHECK] = IHDRCHECK_VAL (absync);
+	  absync[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, absync);
 	  absync[CHDRLEN + 0] = (iIrequest_packsize >> 8) & 0xff;
 	  absync[CHDRLEN + 1] = iIrequest_packsize & 0xff;
 	  absync[CHDRLEN + 2] = iIrequest_winsize;
@@ -1163,7 +1166,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  return TRUE;
 	}
 
-      if ((ab[IHDR_CHECK] & 0xff) != IHDRCHECK_VAL (ab)
+      if ((ab[IHDR_CHECK] & 0xff) != IHDRCHECK_VAL (qdaemon, ab)
 	  || (FHDRCON_GETCALLER (ab[IHDR_CONTENTS1], ab[IHDR_CONTENTS2])
 	      ? qdaemon->fcaller : ! qdaemon->fcaller))
 	{
@@ -1464,7 +1467,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 	  iIlocal_ack = iIrecseq;
 	  aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
 	  aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
-	  aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
+	  aback[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, aback);
 
 	  DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_data: Sending ACK %d",
 			  iIrecseq);
@@ -1613,7 +1616,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 	    iIlocal_ack = iIrecseq;
 	    aback[IHDR_CONTENTS1] = IHDRCON_SET1 (ACK, qdaemon->fcaller, 0);
 	    aback[IHDR_CONTENTS2] = IHDRCON_SET2 (ACK, qdaemon->fcaller, 0);
-	    aback[IHDR_CHECK] = IHDRCHECK_VAL (aback);
+	    aback[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, aback);
 
 	    DEBUG_MESSAGE1 (DEBUG_PROTO, "fiprocess_packet: Sending ACK %d",
 			    iIrecseq);
@@ -1645,7 +1648,7 @@ fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
 
 		iremote = IHDRWIN_GETCHAN (zsend[IHDR_REMOTE]);
 		zsend[IHDR_REMOTE] = IHDRWIN_SET (iIrecseq, iremote);
-		zsend[IHDR_CHECK] = IHDRCHECK_VAL (zsend);
+		zsend[IHDR_CHECK] = IHDRCHECK_VAL (qdaemon, zsend);
 		iIlocal_ack = iIrecseq;
 	      }
 	      
