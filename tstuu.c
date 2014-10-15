@@ -150,10 +150,6 @@ extern char *ptsname ();
 #define TIMES_TICK CLK_TCK
 #endif
 
-#if TIMES_DECLARATION_OK
-extern long times ();
-#endif
-
 #ifndef SIGCHLD
 #define SIGCHLD SIGCLD
 #endif
@@ -216,9 +212,7 @@ static char abLogout2[sizeof "tstout /dev/ptyp0"];
 static char *zProtocols;
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int iopt;
   const char *zcmd1, *zcmd2;
@@ -642,8 +636,7 @@ main (argc, argv)
 /* When a child dies, kill them both.  */
 
 static RETSIGTYPE
-uchild (isig)
-     int isig ATTRIBUTE_UNUSED;
+uchild (int isig ATTRIBUTE_UNUSED)
 {
   struct tms sbase, s1, s2;
 
@@ -719,9 +712,7 @@ uchild (isig)
 /* Open a file without error.  */
 
 static FILE *
-xfopen (zname, zmode)
-     const char *zname;
-     const char *zmode;
+xfopen (const char *zname, const char *zmode)
 {
   FILE *eret;
 
@@ -739,8 +730,7 @@ xfopen (zname, zmode)
 static void xfclose P((FILE *e));
 
 static void
-xfclose (e)
-     FILE *e;
+xfclose (FILE *e)
 {
   if (fclose (e) != 0)
     {
@@ -752,9 +742,7 @@ xfclose (e)
 /* Create a test file.  */
 
 static void
-umake_file (z, c)
-     const char *z;
-     int c;
+umake_file (const char *z, int c)
 {
   int i;
   FILE *e;
@@ -778,10 +766,7 @@ umake_file (z, c)
 /* Check a test file.  */
 
 static void
-ucheck_file (z, zerr, c)
-     const char *z;
-     const char *zerr;
-     int c;
+ucheck_file (const char *z, const char *zerr, int c)
 {
   int i;
   FILE *e;
@@ -837,11 +822,7 @@ ucheck_file (z, zerr, c)
 /* Prepare all the configuration files for testing.  */
 
 static void
-uprepare_test (fmake, itest, fcall_uucico, zsys)
-     boolean fmake;
-     int itest;
-     boolean fcall_uucico;
-     const char *zsys;
+uprepare_test (boolean fmake, int itest, boolean fcall_uucico, const char *zsys)
 {
   FILE *e;
   const char *zuucp1, *zuucp2;
@@ -1216,9 +1197,7 @@ uprepare_test (fmake, itest, fcall_uucico, zsys)
 /* Try to make sure the file transfers were successful.  */
 
 static void
-ucheck_test (itest, fcall_uucico)
-     int itest;
-     boolean fcall_uucico;
+ucheck_test (int itest, boolean fcall_uucico)
 {
   if (itest == 0 || itest == 1)
     {
@@ -1271,9 +1250,7 @@ ucheck_test (itest, fcall_uucico)
 /* A debugging routine used when displaying buffers.  */
 
 static int
-cpshow (z, ichar)
-     char *z;
-     int ichar;
+cpshow (char *z, int ichar)
 {
   if (isprint (BUCHAR (ichar)) && ichar != '\"')
     {
@@ -1305,9 +1282,7 @@ cpshow (z, ichar)
    leave it alone; otherwise set it to -1.  */
 
 static void
-uchoose (po1, po2)
-     int *po1;
-     int *po2;
+uchoose (int *po1, int *po2)
 {
 #if HAVE_SELECT
 
@@ -1362,9 +1337,7 @@ uchoose (po1, po2)
    one of the reads gets no data.  */
 
 static long
-cread (o, pqbuf)
-     int o;
-     struct sbuf **pqbuf;
+cread (int o, struct sbuf **pqbuf)
 {
   long ctotal;
 
@@ -1463,10 +1436,7 @@ cread (o, pqbuf)
    data.  */
 
 static boolean
-fsend (o, oslave, pqbuf)
-     int o;
-     int oslave;
-     struct sbuf **pqbuf;
+fsend (int o, int oslave, struct sbuf **pqbuf)
 {
   long ctotal;
 
@@ -1537,8 +1507,7 @@ fsend (o, oslave, pqbuf)
 /* Check whether a file descriptor can be written to.  */
 
 static boolean
-fwritable (o)
-     int o;
+fwritable (int o)
 {
 #if HAVE_SELECT
 
@@ -1587,8 +1556,7 @@ fwritable (o)
 /* A version of the system command that checks for errors.  */
 
 static void
-xsystem (zcmd)
-     const char *zcmd;
+xsystem (const char *zcmd)
 {
   int istat;
 

@@ -32,18 +32,8 @@
 
 #if HAVE_GETGRENT
 #include <grp.h>
-#if GETGRENT_DECLARATION_OK
-#ifndef getgrent
-extern struct group *getgrent ();
-#endif
-#endif
 #endif /* HAVE_GETGRENT */
 
-#if GETPWNAM_DECLARATION_OK
-#ifndef getpwnam
-extern struct passwd *getpwnam ();
-#endif
-#endif
 
 /* Do access(2) on a stat structure, except that the user name is
    provided.  If the user name in zuser is NULL, require the file to
@@ -51,10 +41,7 @@ extern struct passwd *getpwnam ();
    FALSE otherwise.  This does not log an error message.  */
 
 boolean
-fsuser_access (q, imode, zuser)
-     const struct stat *q;
-     int imode;
-     const char *zuser;
+fsuser_access (const struct stat *q, int imode, const char *zuser)
 {
   static char *zuser_hold;
   static uid_t iuid_hold;

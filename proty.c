@@ -146,8 +146,7 @@ static boolean fyread_data P((struct sdaemon *qdaemon, size_t clen,
 /* Exchange sync packets at protocol startup.  */
 
 static boolean
-fyxchg_syncs (qdaemon)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+fyxchg_syncs (struct sdaemon *qdaemon)
 {
   char inithdr[Y_INIT_HDR_LEN];
   unsigned short header[3];
@@ -214,9 +213,7 @@ fyxchg_syncs (qdaemon)
 /* Start the protocol.  */
 
 boolean
-fystart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+fystart (struct sdaemon *qdaemon, char **pzlog)
 {
   *pzlog = NULL;
 
@@ -251,8 +248,7 @@ fystart (qdaemon, pzlog)
 /* Shutdown the protocol.  */
 
 boolean 
-fyshutdown (qdaemon)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+fyshutdown (struct sdaemon *qdaemon ATTRIBUTE_UNUSED)
 {
   xfree ((pointer) zYbuf);
   zYbuf = NULL;
@@ -266,11 +262,7 @@ fyshutdown (qdaemon)
 
 /*ARGSUSED*/
 boolean
-fysendcmd (qdaemon, z, ilocal, iremote)
-     struct sdaemon *qdaemon;
-     const char *z;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
+fysendcmd (struct sdaemon *qdaemon, const char *z, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED)
 {
   size_t clen;
 
@@ -300,9 +292,7 @@ fysendcmd (qdaemon, z, ilocal, iremote)
    allocated from the heap.  */
 
 char *
-zygetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     size_t *pclen;
+zygetspace (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, size_t *pclen)
 {
   *pclen = iYremote_packsize;
   return zYbuf + CYFRAMELEN;
@@ -311,13 +301,7 @@ zygetspace (qdaemon, pclen)
 /* Send out a data packet.  */
 
 boolean
-fysenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
-     struct sdaemon *qdaemon;
-     char *zdata;
-     size_t cdata;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
-     long ipos ATTRIBUTE_UNUSED;
+fysenddata (struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED, long int ipos ATTRIBUTE_UNUSED)
 {
 #if DEBUG > 0
   if (cdata > iYremote_packsize)
@@ -338,8 +322,7 @@ fysenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
    command or a file.  */
 
 boolean
-fywait (qdaemon)
-     struct sdaemon *qdaemon;
+fywait (struct sdaemon *qdaemon)
 {
   boolean fexit = FALSE;
 
@@ -356,13 +339,7 @@ fywait (qdaemon)
    but this is cleaner and better for future expansions */
 
 boolean
-fyfile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
-     struct sdaemon *qdaemon;
-     struct stransfer *qtrans ATTRIBUTE_UNUSED;
-     boolean fstart;
-     boolean fsend;
-     long cbytes ATTRIBUTE_UNUSED;
-     boolean *pfhandled;
+fyfile (struct sdaemon *qdaemon, struct stransfer *qtrans ATTRIBUTE_UNUSED, boolean fstart, boolean fsend, long int cbytes ATTRIBUTE_UNUSED, boolean *pfhandled)
 {
   unsigned short header[3];
 
@@ -403,9 +380,7 @@ fyfile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
    transmission.  */
 
 static boolean
-fysend_control (qdaemon, itype)
-     struct sdaemon *qdaemon;
-     int itype;
+fysend_control (struct sdaemon *qdaemon, int itype)
 {
   char header[CYFRAMELEN];
 
@@ -422,10 +397,7 @@ fysend_control (qdaemon, itype)
    for avoiding memory copies.  Somebody may want to do it otherwise */
 
 static boolean
-fysend_pkt (qdaemon, zdata, cdata)
-     struct sdaemon *qdaemon;
-     const void *zdata;
-     size_t cdata;
+fysend_pkt (struct sdaemon *qdaemon, const void *zdata, size_t cdata)
 {
   char header[CYFRAMELEN];
 
@@ -443,10 +415,7 @@ fysend_pkt (qdaemon, zdata, cdata)
    doesn't need to perform any kind of action while waiting.  */
 
 static boolean
-fyread_data (qdaemon, clen, timeout)
-     struct sdaemon *qdaemon;
-     size_t clen;
-     int timeout;
+fyread_data (struct sdaemon *qdaemon, size_t clen, int timeout)
 {
   int cinbuf;
   size_t crec;
@@ -481,10 +450,7 @@ fyread_data (qdaemon, clen, timeout)
 /* Receive a remote packet header, check for correct sequence number.  */
 
 static boolean
-fywait_for_header (qdaemon, header, timeout)
-     struct sdaemon *qdaemon;
-     unsigned short header[3];
-     int timeout;
+fywait_for_header (struct sdaemon *qdaemon, short unsigned int *header, int timeout)
 {
   if (! fyread_data (qdaemon, CYFRAMELEN, timeout))
     return FALSE;
@@ -530,9 +496,7 @@ fywait_for_header (qdaemon, header, timeout)
 /* Receive a remote data packet */
 
 static boolean
-fywait_for_packet (qdaemon, pfexit)
-     struct sdaemon *qdaemon;
-     boolean *pfexit;
+fywait_for_packet (struct sdaemon *qdaemon, boolean *pfexit)
 {
   unsigned short header[3], ichk;
   size_t clen, cfirst;
@@ -614,9 +578,7 @@ fywait_for_packet (qdaemon, pfexit)
 #endif
 
 static unsigned short
-iychecksum (z, c)
-     register const char *z;
-     register size_t c;
+iychecksum (register const char *z, register size_t c)
 {
   register unsigned short ichk;
 
@@ -632,11 +594,7 @@ iychecksum (z, c)
 }
 
 static unsigned short
-iychecksum2 (zfirst, cfirst, zsecond, csecond)
-	const char *zfirst;
-	size_t cfirst;
-	const char *zsecond;
-	size_t csecond;
+iychecksum2 (const char *zfirst, size_t cfirst, const char *zsecond, size_t csecond)
 {
   register unsigned short ichk;
   register const char *z;

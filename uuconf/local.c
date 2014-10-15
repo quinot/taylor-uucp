@@ -33,9 +33,7 @@ const char _uuconf_local_rcsid[] = "$Id$";
 /* Get default information about the local system.  */
 
 int
-uuconf_system_local (pglobal, qsys)
-     pointer pglobal;
-     struct uuconf_system *qsys;
+uuconf_system_local (pointer pglobal, struct uuconf_system *qsys)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

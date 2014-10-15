@@ -10,8 +10,7 @@
 #include <errno.h>
 
 unsigned int
-ixsysdep_user_file_mode (zfile)
-     const char *zfile;
+ixsysdep_user_file_mode (const char *zfile)
 {
   uid_t ieuid;
   gid_t iegid;

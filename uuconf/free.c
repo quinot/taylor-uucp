@@ -40,9 +40,7 @@ const char _uuconf_free_rcsid[] = "$Id$";
 #if UUCONF_ANSI_C
 void
 #endif
-uuconf_free (pblock, pbuf)
-     pointer pblock;
-     pointer pbuf;
+uuconf_free (pointer pblock, pointer pbuf)
 {
   struct sblock *q = (struct sblock *) pblock;
 

@@ -6,8 +6,7 @@
 #include "uudefs.h"
 
 pointer
-xmalloc (c)
-     size_t c;
+xmalloc (size_t c)
 {
   pointer pret;
 

@@ -10,8 +10,7 @@
 #include <errno.h>
 
 long
-csysdep_size (zfile)
-     const char *zfile;
+csysdep_size (const char *zfile)
 {
   struct stat s;
 

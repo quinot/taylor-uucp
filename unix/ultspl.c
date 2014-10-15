@@ -8,8 +8,7 @@
 #include "system.h"
 
 boolean
-fsultrix_has_spool (zsystem)
-     const char *zsystem;
+fsultrix_has_spool (const char *zsystem)
 {
   char *z;
   boolean fret;

@@ -35,10 +35,7 @@ const char _uuconf_tval_rcsid[] = "$Id$";
    one.  */
 
 int
-uuconf_taylor_validate (pglobal, qsys, zlogin)
-     pointer pglobal;
-     const struct uuconf_system *qsys;
-     const char *zlogin;
+uuconf_taylor_validate (pointer pglobal, const struct uuconf_system *qsys, const char *zlogin)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct svalidate *q;

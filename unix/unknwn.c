@@ -14,9 +14,7 @@
    in.  If the execution fails, we return TRUE.  */
 
 boolean
-fsysdep_unknown_caller (zscript, zsystem)
-     const char *zscript;
-     const char *zsystem;
+fsysdep_unknown_caller (const char *zscript, const char *zsystem)
 {
   const char *azargs[3];
   int aidescs[3];

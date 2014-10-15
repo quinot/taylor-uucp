@@ -31,10 +31,7 @@ const char _uuconf_snams_rcsid[] = "$Id$";
 /* Get all known system names.  */
 
 int
-uuconf_system_names (pglobal, ppzsystems, falias)
-     pointer pglobal;
-     char ***ppzsystems;
-     int falias;
+uuconf_system_names (pointer pglobal, char ***ppzsystems, int falias)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pztaylor;

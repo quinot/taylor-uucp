@@ -31,10 +31,7 @@ const char _uuconf_dial_rcsid[] = "$Id$";
 /* Find a dialer by name.  */
 
 int
-uuconf_dialer_info (pglobal, zdialer, qdialer)
-     pointer pglobal;
-     const char *zdialer;
-     struct uuconf_dialer *qdialer;
+uuconf_dialer_info (pointer pglobal, const char *zdialer, struct uuconf_dialer *qdialer)
 {
 #if HAVE_HDB_CONFIG
   struct sglobal *qglobal = (struct sglobal *) pglobal;

@@ -93,10 +93,7 @@ static const unsigned long aicrc32tab[] = { /* CRC polynomial 0xedb88320 */
   (aicrc32tab[((int) (ick) ^ (b)) & 0xff] ^ (((ick) >> 8) & 0x00ffffffL))
 
 unsigned long
-icrc (z, c, ick)
-     const char *z;
-     size_t c;
-     unsigned long ick;
+icrc (const char *z, size_t c, long unsigned int ick)
 {
   while (c > 4)
     {

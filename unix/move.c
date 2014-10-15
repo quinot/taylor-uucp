@@ -45,13 +45,7 @@
    has write access to the new file.  */
 
 boolean
-fsysdep_move_file (zorig, zto, fmkdirs, fpublic, fcheck, zuser)
-     const char *zorig;
-     const char *zto;
-     boolean fmkdirs;
-     boolean fpublic;
-     boolean fcheck;
-     const char *zuser;
+fsysdep_move_file (const char *zorig, const char *zto, boolean fmkdirs, boolean fpublic, boolean fcheck, const char *zuser)
 {
   struct stat s;
   int o;

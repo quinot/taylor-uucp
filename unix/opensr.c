@@ -57,19 +57,12 @@
 #define FD_CLOEXEC 1
 #endif
 
-#ifndef time
-extern time_t time ();
-#endif
 
 /* Open a file to send to another system, and return the mode and
    the size.  */
 
 openfile_t
-esysdep_open_send (qsys, zfile, fcheck, zuser)
-     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
-     const char *zfile;
-     boolean fcheck;
-     const char *zuser;
+esysdep_open_send (const struct uuconf_system *qsys ATTRIBUTE_UNUSED, const char *zfile, boolean fcheck, const char *zuser)
 {
   struct stat s;
   openfile_t e;
@@ -134,11 +127,7 @@ esysdep_open_send (qsys, zfile, fcheck, zuser)
    transmission is aborted.  */
 
 char *
-zsysdep_receive_temp (qsys, zto, ztemp, frestart)
-     const struct uuconf_system *qsys;
-     const char *zto ATTRIBUTE_UNUSED;
-     const char *ztemp;
-     boolean frestart;
+zsysdep_receive_temp (const struct uuconf_system *qsys, const char *zto ATTRIBUTE_UNUSED, const char *ztemp, boolean frestart)
 {
   if (frestart
       && ztemp != NULL
@@ -158,12 +147,7 @@ zsysdep_receive_temp (qsys, zto, ztemp, frestart)
    doesn't.  */
 
 openfile_t
-esysdep_open_receive (qsys, zto, ztemp, zreceive, pcrestart)
-     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
-     const char *zto ATTRIBUTE_UNUSED;
-     const char *ztemp;
-     const char *zreceive;
-     long *pcrestart;
+esysdep_open_receive (const struct uuconf_system *qsys ATTRIBUTE_UNUSED, const char *zto ATTRIBUTE_UNUSED, const char *ztemp, const char *zreceive, long int *pcrestart)
 {
   int o;
   openfile_t e;

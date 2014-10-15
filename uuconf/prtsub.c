@@ -33,8 +33,7 @@ const char _uuconf_prtsub_rcsid[] = "$Id$";
    cleared when the type of the port is set.  */
 
 void
-_uuconf_uclear_port (qport)
-     struct uuconf_port *qport;
+_uuconf_uclear_port (struct uuconf_port *qport)
 {
   qport->uuconf_zname = NULL;
   qport->uuconf_ttype = UUCONF_PORTTYPE_UNKNOWN;

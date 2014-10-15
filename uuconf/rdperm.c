@@ -178,20 +178,20 @@ _uuconf_ihread_permissions (qglobal)
       if (centries == 0)
 	continue;
 
-      shperm.pzlogname = (char **) &_uuconf_unset;
-      shperm.pzmachine = (char **) &_uuconf_unset;
+      shperm.pzlogname = UUCONF_UNSET;
+      shperm.pzmachine = UUCONF_UNSET;
       shperm.frequest = -1;
       shperm.fsendfiles = -1;
-      shperm.pzread = (char **) &_uuconf_unset;
-      shperm.pzwrite = (char **) &_uuconf_unset;
+      shperm.pzread = UUCONF_UNSET;
+      shperm.pzwrite = UUCONF_UNSET;
       shperm.fcallback = -1;
-      shperm.pzcommands = (char **) &_uuconf_unset;
-      shperm.pzvalidate = (char **) &_uuconf_unset;
-      shperm.zmyname = (char *) &_uuconf_unset;
-      shperm.zpubdir = (char *) &_uuconf_unset;
-      shperm.pzalias = (char **) &_uuconf_unset;
-      pznoread = (char **) &_uuconf_unset;
-      pznowrite = (char **) &_uuconf_unset;
+      shperm.pzcommands = UUCONF_UNSET;
+      shperm.pzvalidate = UUCONF_UNSET;
+      shperm.zmyname = UUCONF_UNSET;
+      shperm.zpubdir = UUCONF_UNSET;
+      shperm.pzalias = UUCONF_UNSET;
+      pznoread = UUCONF_UNSET;
+      pznowrite = UUCONF_UNSET;
 
       for (i = 0; i < centries; i++)
 	{
@@ -236,8 +236,8 @@ _uuconf_ihread_permissions (qglobal)
       if (iret != UUCONF_SUCCESS)
 	break;
 
-      if (shperm.pzmachine == (char **) &_uuconf_unset
-	  && shperm.pzlogname == (char **) &_uuconf_unset)
+      if (shperm.pzmachine == UUCONF_UNSET
+	  && shperm.pzlogname == UUCONF_UNSET)
 	{
 	  iret = UUCONF_SYNTAX_ERROR;
 	  qglobal->qprocess->fhdb_read_permissions = TRUE;
@@ -417,7 +417,7 @@ ihadd_norw (qglobal, ppz, pzno)
 {
   register char **pz;
 
-  if (pzno == (char **) &_uuconf_unset)
+  if (pzno == UUCONF_UNSET)
     return UUCONF_SUCCESS;
 
   for (pz = pzno; *pz != NULL; pz++)

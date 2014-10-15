@@ -33,10 +33,7 @@ const char _uuconf_tsnams_rcsid[] = "$Id$";
    function is pretty simple.  */
 
 int
-uuconf_taylor_system_names (pglobal, ppzsystems, falias)
-     pointer pglobal;
-     char ***ppzsystems;
-     int falias;
+uuconf_taylor_system_names (pointer pglobal, char ***ppzsystems, int falias)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

@@ -8,9 +8,7 @@
 #include "system.h"
 
 char *
-zsysdep_in_dir (zdir, zfile)
-     const char *zdir;
-     const char *zfile;
+zsysdep_in_dir (const char *zdir, const char *zfile)
 {
   size_t cdir, cfile;
   char *zret;

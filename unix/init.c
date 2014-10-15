@@ -81,35 +81,6 @@
 #endif /* ! defined (MAXPATHLEN) */
 #endif /* HAVE_GETWD */
 
-/* External functions.  */
-#ifndef getlogin
-extern char *getlogin ();
-#endif
-#if GETPWNAM_DECLARATION_OK
-#ifndef getpwnam
-extern struct passwd *getpwnam ();
-#endif
-#endif
-#if GETPWUID_DECLARATION_OK
-#ifndef getpwuid
-extern struct passwd *getpwuid ();
-#endif
-#endif
-#if HAVE_GETCWD
-#ifndef getcwd
-extern char *getcwd ();
-#endif
-#endif
-#if HAVE_GETWD
-#ifndef getwd
-extern char *getwd ();
-#endif
-#endif
-#if HAVE_SYSCONF
-#ifndef sysconf
-extern long sysconf ();
-#endif
-#endif
 
 /* Initialize the system dependent routines.  We will probably be running
    suid to uucp, so we make sure that nothing is obviously wrong.  We
@@ -148,9 +119,7 @@ size_t cSysdep_max_name_len = 14;
 /* Initialize the system dependent routines.  */
 
 void
-usysdep_initialize (puuconf,iflags)
-     pointer puuconf;
-     int iflags;
+usysdep_initialize (pointer puuconf, int iflags)
 {
   int iuuconf;
   char *z;
@@ -349,8 +318,7 @@ usysdep_initialize (puuconf,iflags)
 /* Exit the program.  */
 
 void
-usysdep_exit (fsuccess)
-     boolean fsuccess;
+usysdep_exit (boolean fsuccess)
 {
   exit (fsuccess ? EXIT_SUCCESS : EXIT_FAILURE);
 }
@@ -367,8 +335,7 @@ usysdep_exit (fsuccess)
    modem ports.  */
 
 /*ARGSUSED*/
-boolean fsysdep_other_config (z)
-     const char *z ATTRIBUTE_UNUSED;
+boolean fsysdep_other_config (const char *z ATTRIBUTE_UNUSED)
 {
   (void) setuid (getuid ());
   (void) setgid (getgid ());
@@ -379,7 +346,7 @@ boolean fsysdep_other_config (z)
    file.  */
 
 const char *
-zsysdep_localname ()
+zsysdep_localname (void)
 {
   return zSlocalname;
 }
@@ -389,7 +356,7 @@ zsysdep_localname ()
    real uid.  */
 
 const char *
-zsysdep_login_name ()
+zsysdep_login_name (void)
 {
   if (zSlogin == NULL)
     ulog (LOG_FATAL, "Can't get login name");

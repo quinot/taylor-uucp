@@ -34,8 +34,7 @@ const char _uuconf_thread_rcsid[] = "$Id$";
    which points to the same sprocess structure.  */
 
 int
-uuconf_init_thread (ppglobal)
-     pointer *ppglobal;
+uuconf_init_thread (pointer *ppglobal)
 {
   struct sglobal **pqglob = (struct sglobal **) ppglobal;
   pointer pblock;

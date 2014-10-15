@@ -31,9 +31,7 @@ const char _uuconf_lckdir_rcsid[] = "$Id$";
 /* Get the name of the UUCP lock directory.  */
 
 int
-uuconf_lockdir (pglobal, pzlock)
-     pointer pglobal;
-     const char **pzlock;
+uuconf_lockdir (pointer pglobal, const char **pzlock)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

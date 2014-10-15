@@ -34,12 +34,7 @@ const char _uuconf_reliab_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-_uuconf_iseven_bit (pglobal,argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+_uuconf_iseven_bit (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int *pi = (int *) pvar;
@@ -65,12 +60,7 @@ _uuconf_iseven_bit (pglobal,argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 int
-_uuconf_ireliable (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+_uuconf_ireliable (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int *pi = (int *) pvar;
@@ -96,12 +86,7 @@ _uuconf_ireliable (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 int
-_uuconf_ihalf_duplex (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+_uuconf_ihalf_duplex (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int *pi = (int *) pvar;

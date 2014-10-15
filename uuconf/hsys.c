@@ -33,10 +33,7 @@ const char _uuconf_hsys_rcsid[] = "$Id$";
    gets a default value.  */
 
 int
-uuconf_hdb_system_info (pglobal, zsystem, qsys)
-     pointer pglobal;
-     const char *zsystem;
-     struct uuconf_system *qsys;
+uuconf_hdb_system_info (pointer pglobal, const char *zsystem, struct uuconf_system *qsys)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

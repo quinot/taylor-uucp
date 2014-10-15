@@ -37,9 +37,7 @@ static int indialer P((pointer pglobal, int argc, char **argv, pointer pvar,
    files.  */
 
 int
-uuconf_taylor_dialer_names (pglobal, ppzdialers)
-     pointer pglobal;
-     char ***ppzdialers;
+uuconf_taylor_dialer_names (pointer pglobal, char ***ppzdialers)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_cmdtab as[2];
@@ -99,12 +97,7 @@ uuconf_taylor_dialer_names (pglobal, ppzdialers)
 
 /*ARGSUSED*/
 static int
-indialer (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+indialer (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char ***ppzdialers = (char ***) pvar;

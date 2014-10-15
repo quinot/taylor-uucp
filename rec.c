@@ -108,8 +108,7 @@ static boolean frec_file_send_confirm P((struct stransfer *qtrans,
 /* Free up a receive stransfer structure.  */
 
 static void
-urrec_free (qtrans)
-     struct stransfer *qtrans;
+urrec_free (struct stransfer *qtrans)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
 
@@ -138,9 +137,7 @@ urrec_free (qtrans)
    */
 
 boolean
-flocal_rec_file_init (qdaemon, qcmd)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
+flocal_rec_file_init (struct sdaemon *qdaemon, struct scmd *qcmd)
 {
   const struct uuconf_system *qsys;
   boolean fspool;
@@ -273,11 +270,7 @@ flocal_rec_file_init (qdaemon, qcmd)
 /* Report an error for a local receive request.  */
 
 static boolean
-flocal_rec_fail (qtrans, qcmd, qsys, zwhy)
-     struct stransfer *qtrans;
-     struct scmd *qcmd;
-     const struct uuconf_system *qsys;
-     const char *zwhy;
+flocal_rec_fail (struct stransfer *qtrans, struct scmd *qcmd, const struct uuconf_system *qsys, const char *zwhy)
 {
   if (zwhy != NULL)
     {
@@ -297,9 +290,7 @@ flocal_rec_fail (qtrans, qcmd, qsys, zwhy)
    other system.  */
 
 static boolean
-flocal_rec_send_request (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+flocal_rec_send_request (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   long cbytes, cbytes2;
@@ -397,11 +388,7 @@ flocal_rec_send_request (qtrans, qdaemon)
 
 /*ARGSUSED*/
 static boolean
-flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata ATTRIBUTE_UNUSED;
+flocal_rec_await_reply (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata, size_t cdata ATTRIBUTE_UNUSED)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   const char *zlog;
@@ -515,9 +502,7 @@ flocal_rec_await_reply (qtrans, qdaemon, zdata, cdata)
    file.  */
 
 boolean
-frec_check_free (qtrans, cfree_space)
-     struct stransfer *qtrans;
-     long cfree_space;
+frec_check_free (struct stransfer *qtrans, long int cfree_space)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   long cfree1, cfree2;
@@ -565,10 +550,7 @@ frec_check_free (qtrans, cfree_space)
    to send requests.  */
 
 boolean
-fremote_send_file_init (qdaemon, qcmd, iremote)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
-     int iremote;
+fremote_send_file_init (struct sdaemon *qdaemon, struct scmd *qcmd, int iremote)
 {
   const struct uuconf_system *qsys;
   boolean fspool;
@@ -787,9 +769,7 @@ fremote_send_file_init (qdaemon, qcmd, iremote)
 /* Reply to a send request, and prepare to receive the file.  */
 
 static boolean
-fremote_send_reply (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fremote_send_reply (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   boolean fret;
@@ -846,11 +826,7 @@ fremote_send_reply (qtrans, qdaemon)
    system.  */
 
 static boolean
-fremote_send_fail (qdaemon, qcmd, twhy, iremote)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
-     enum tfailure twhy;
-     int iremote;
+fremote_send_fail (struct sdaemon *qdaemon, struct scmd *qcmd, enum tfailure twhy, int iremote)
 {
   struct srecfailinfo *qinfo;
   struct stransfer *qtrans;
@@ -876,9 +852,7 @@ fremote_send_fail (qdaemon, qcmd, twhy, iremote)
    this is called when we are ready to reply to the command.  */
 
 static boolean
-fremote_send_fail_send (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fremote_send_fail_send (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct srecfailinfo *qinfo = (struct srecfailinfo *) qtrans->pinfo;
   char ab[4];
@@ -939,11 +913,7 @@ fremote_send_fail_send (qtrans, qdaemon)
 
 /*ARGSUSED*/
 static boolean
-fremote_discard (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     const char *zdata ATTRIBUTE_UNUSED;
-     size_t cdata;
+fremote_discard (struct stransfer *qtrans, struct sdaemon *qdaemon ATTRIBUTE_UNUSED, const char *zdata ATTRIBUTE_UNUSED, size_t cdata)
 {
   struct srecfailinfo *qinfo = (struct srecfailinfo *) qtrans->pinfo;
 
@@ -971,11 +941,7 @@ fremote_discard (qtrans, qdaemon, zdata, cdata)
 
 /*ARGSUSED*/
 static boolean
-frec_file_end (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata ATTRIBUTE_UNUSED;
-     size_t cdata ATTRIBUTE_UNUSED;
+frec_file_end (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata ATTRIBUTE_UNUSED, size_t cdata ATTRIBUTE_UNUSED)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   char *zalc;
@@ -1303,9 +1269,7 @@ frec_file_end (qtrans, qdaemon, zdata, cdata)
 /* Send the final confirmation string to the remote system.  */
 
 static boolean
-frec_file_send_confirm (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+frec_file_send_confirm (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
   const char *zsend;
@@ -1347,9 +1311,7 @@ frec_file_send_confirm (qtrans, qdaemon)
    TRUE.  */
 
 boolean
-frec_discard_temp (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
-     struct stransfer *qtrans;
+frec_discard_temp (struct sdaemon *qdaemon, struct stransfer *qtrans)
 {
   struct srecinfo *qinfo = (struct srecinfo *) qtrans->pinfo;
 

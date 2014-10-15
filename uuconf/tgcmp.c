@@ -33,9 +33,7 @@ const char _uuconf_tgcmp_rcsid[] = "$Id$";
    _uuconf_itime_parse wants a function takes longs as arguments.  */
 
 int
-_uuconf_itime_grade_cmp (i1, i2)
-     long i1;
-     long i2;
+_uuconf_itime_grade_cmp (long int i1, long int i2)
 {
   return UUCONF_GRADE_CMP ((int) i1, (int) i2);
 }

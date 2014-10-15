@@ -7,8 +7,7 @@
 #include "system.h"
 
 void
-usysdep_sleep (c)
-     int c;
+usysdep_sleep (int c)
 {
 #if HAVE_NAPMS || HAVE_NAP || HAVE_USLEEP || HAVE_SELECT || HAVE_POLL
   int i;

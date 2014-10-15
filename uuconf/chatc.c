@@ -65,12 +65,7 @@ static const struct cmdtab_offset asChat_cmds[] =
    UUCONF_CMDTABRET_EXIT.  */
 
 int
-_uuconf_ichat_cmd (qglobal, argc, argv, qchat, pblock)
-     struct sglobal *qglobal;
-     int argc;
-     char **argv;
-     struct uuconf_chat *qchat;
-     pointer pblock;
+_uuconf_ichat_cmd (struct sglobal *qglobal, int argc, char **argv, struct uuconf_chat *qchat, pointer pblock)
 {
   char *zchat;
   struct uuconf_cmdtab as[CCHAT_CMDS];
@@ -104,12 +99,7 @@ _uuconf_ichat_cmd (qglobal, argc, argv, qchat, pblock)
    strings, and sticks the arguments into a NULL terminated array.  */
 
 static int
-icchat (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+icchat (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char ***ppz = (char ***) pvar;
@@ -179,12 +169,7 @@ icchat (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icchat_fail (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+icchat_fail (pointer pglobal, int argc ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char ***ppz = (char ***) pvar;
@@ -197,12 +182,7 @@ icchat_fail (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+icunknown (pointer pglobal ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   return UUCONF_SYNTAX_ERROR;
 }

@@ -10,11 +10,11 @@
 #include <errno.h>
 
 boolean
-fsysdep_sync (e, zmsg)
-     openfile_t e;
-     const char *zmsg;
+fsysdep_sync (openfile_t e, const char *zmsg)
 {
+#if FSYNC_ON_CLOSE
   int o;
+#endif
 
 #if USE_STDIO
   if (fflush (e) == EOF)
@@ -24,13 +24,13 @@ fsysdep_sync (e, zmsg)
     }
 #endif
 
+#if FSYNC_ON_CLOSE
 #if USE_STDIO
   o = fileno (e);
 #else
   o = e;
 #endif
 
-#if FSYNC_ON_CLOSE
   if (fsync (o) < 0)
     {
       ulog (LOG_ERROR, "%s: fsync: %s", zmsg, strerror (errno));

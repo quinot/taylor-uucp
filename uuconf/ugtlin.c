@@ -32,11 +32,7 @@ const char _uuconf_ugtlin_rcsid[] = "$Id$";
    the qglobal->ilineno count for each additional line it reads.  */
 
 int
-_uuconf_getline (qglobal, pzline, pcline, e)
-     struct sglobal *qglobal;
-     char **pzline;
-     size_t *pcline;
-     FILE *e;
+_uuconf_getline (struct sglobal *qglobal, char **pzline, size_t *pcline, FILE *e)
 {
   int ctot;
   char *zline;

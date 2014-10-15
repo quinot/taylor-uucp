@@ -34,9 +34,7 @@ const char _uuconf_mrgblk_rcsid[] = "$Id$";
    memory block.  */
 
 pointer
-_uuconf_pmalloc_block_merge (p1, p2)
-     pointer p1;
-     pointer p2;
+_uuconf_pmalloc_block_merge (pointer p1, pointer p2)
 {
   struct sblock *q1 = (struct sblock *) p1;
   struct sblock *q2 = (struct sblock *) p2;

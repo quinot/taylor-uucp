@@ -112,8 +112,7 @@ static const struct sconncmds stcpcmds =
 /* Initialize a TCP connection.  */
 
 boolean
-fsysdep_tcp_init (qconn)
-     struct sconnection *qconn;
+fsysdep_tcp_init (struct sconnection *qconn)
 {
   struct ssysdep_conn *q;
 
@@ -136,8 +135,7 @@ fsysdep_tcp_init (qconn)
 /* Free a TCP connection.  */
 
 static void
-utcp_free (qconn)
-     struct sconnection *qconn;
+utcp_free (struct sconnection *qconn)
 {
   xfree (qconn->psysdep);
 }
@@ -147,9 +145,7 @@ utcp_free (qconn)
 /* Set the hints for an addrinfo structure from the IP version.  */
 
 static boolean
-ftcp_set_hints (iversion, qhints)
-     int iversion;
-     struct addrinfo *qhints;
+ftcp_set_hints (int iversion, struct addrinfo *qhints)
 {
   switch (iversion)
     {
@@ -179,8 +175,7 @@ ftcp_set_hints (iversion, qhints)
 /* Set the close on exec flag for a socket.  */
 
 static boolean
-ftcp_set_flags (qsysdep)
-     struct ssysdep_conn *qsysdep;
+ftcp_set_flags (struct ssysdep_conn *qsysdep)
 {
   if (fcntl (qsysdep->o, F_SETFD,
 	     fcntl (qsysdep->o, F_GETFD, 0) | FD_CLOEXEC) < 0)
@@ -208,11 +203,7 @@ ftcp_set_flags (qsysdep)
    system.  */
 
 static boolean
-ftcp_open (qconn, ibaud, fwait, fuser)
-     struct sconnection *qconn;
-     long ibaud ATTRIBUTE_UNUSED;
-     boolean fwait;
-     boolean fuser ATTRIBUTE_UNUSED;
+ftcp_open (struct sconnection *qconn, long int ibaud ATTRIBUTE_UNUSED, boolean fwait, boolean fuser ATTRIBUTE_UNUSED)
 {
   struct ssysdep_conn *qsysdep;
   const char *zport;
@@ -395,7 +386,7 @@ ftcp_open (qconn, ibaud, fwait, fuser)
   while (! FGOT_SIGNAL ())
     {
       sockaddr_storage speer;
-      size_t clen;
+      socklen_t clen;
       int onew;
       pid_t ipid;
 
@@ -454,11 +445,7 @@ ftcp_open (qconn, ibaud, fwait, fuser)
 
 /*ARGSUSED*/
 static boolean
-ftcp_close (qconn, puuconf, qdialer, fsuccess)
-     struct sconnection *qconn;
-     pointer puuconf ATTRIBUTE_UNUSED;
-     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
-     boolean fsuccess ATTRIBUTE_UNUSED;
+ftcp_close (struct sconnection *qconn, pointer puuconf ATTRIBUTE_UNUSED, struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED, boolean fsuccess ATTRIBUTE_UNUSED)
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -487,13 +474,7 @@ ftcp_close (qconn, puuconf, qdialer, fsuccess)
 
 /*ARGSUSED*/
 static boolean
-ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const struct uuconf_system *qsys;
-     const char *zphone;
-     struct uuconf_dialer *qdialer;
-     enum tdialerfound *ptdialer;
+ftcp_dial (struct sconnection *qconn, pointer puuconf, const struct uuconf_system *qsys, const char *zphone, struct uuconf_dialer *qdialer, enum tdialerfound *ptdialer)
 {
   struct ssysdep_conn *qsysdep;
   const char *zhost;
@@ -613,7 +594,7 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
 
 	  sin.sin_family = AF_INET;
 	  sin.sin_addr.s_addr = inet_addr ((char *) zhost);
-	  if ((long) sin.sin_addr.s_addr == (long) -1)
+	  if (sin.sin_addr.s_addr == INADDR_NONE)
 	    {
 	      ulog (LOG_ERROR, "%s: unknown host name", zhost);
 	      return FALSE;
@@ -651,8 +632,7 @@ ftcp_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
    network byte order.  This returns -1 on error.  */
 
 static int
-itcp_port_number (zname)
-     const char *zname;
+itcp_port_number (const char *zname)
 {
   boolean fuucp;
   static int iuucp;

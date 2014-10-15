@@ -7,11 +7,7 @@
 #include "sysdep.h"
 
 char *
-zsappend4 (zdir1, zdir2, zdir3, zfile)
-     const char *zdir1;
-     const char *zdir2;
-     const char *zdir3;
-     const char *zfile;
+zsappend4 (const char *zdir1, const char *zdir2, const char *zdir3, const char *zfile)
 {
   size_t cdir1, cdir2, cdir3, cfile;
   char *zret;

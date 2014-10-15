@@ -39,9 +39,7 @@
 /* Switch to permissions of the invoking user.  */
 
 boolean
-fsuser_perms (pieuid, piegid)
-     uid_t *pieuid;
-     gid_t *piegid;
+fsuser_perms (uid_t *pieuid, gid_t *piegid)
 {
   uid_t ieuid, iuid;
   gid_t iegid, igid;
@@ -105,9 +103,7 @@ fsuser_perms (pieuid, piegid)
 
 /*ARGSUSED*/
 boolean
-fsuucp_perms (ieuid, iegid)
-     long ieuid ATTRIBUTE_UNUSED;
-     long iegid ATTRIBUTE_UNUSED;
+fsuucp_perms (long int ieuid ATTRIBUTE_UNUSED, long int iegid ATTRIBUTE_UNUSED)
 {
 #if HAVE_SETREUID
   /* Swap effective and real user id's back to what they were.  */

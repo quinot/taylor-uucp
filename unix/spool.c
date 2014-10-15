@@ -190,10 +190,7 @@ const char spool_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 char *
-zsfind_file (zsimple, zsystem, bgrade)
-     const char *zsimple;
-     const char *zsystem;
-     int bgrade ATTRIBUTE_UNUSED;
+zsfind_file (const char *zsimple, const char *zsystem, int bgrade ATTRIBUTE_UNUSED)
 {
   /* zsysdep_spool_commands calls this with TMPXXX which we must treat
      as a C. file.  */

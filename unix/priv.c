@@ -15,7 +15,7 @@
    program.  */
 
 boolean
-fsysdep_privileged ()
+fsysdep_privileged (void)
 {
   uid_t iuid;
 

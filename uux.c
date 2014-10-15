@@ -171,9 +171,7 @@ static const struct option asXlongopts[] =
 /* The main routine.  */
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -a: requestor address for status reports.  */
   const char *zrequestor = NULL;
@@ -1395,7 +1393,7 @@ main (argc, argv)
 /* Report command usage.  */
 
 static void
-uxhelp ()
+uxhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
@@ -1422,7 +1420,7 @@ uxhelp ()
 }
 
 static void
-uxusage ()
+uxusage (void)
 {
   fprintf (stderr,
 	   "Usage: %s [options] [-] command\n", zProgram);
@@ -1433,10 +1431,7 @@ uxusage ()
 /* Add a line to the execute file.  */
 
 static void
-uxadd_xqt_line (bchar, z1, z2)
-     int bchar;
-     const char *z1;
-     const char *z2;
+uxadd_xqt_line (int bchar, const char *z1, const char *z2)
 {
   char *z1q;
   char *z2q;
@@ -1499,12 +1494,7 @@ uxadd_xqt_line (bchar, z1, z2)
 /* Add a file to be sent to the execute system.  */
 
 static void
-uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward)
-     const char *zfrom;
-     const char *zto;
-     const char *zoptions;
-     const char *ztemp;
-     const char *zforward;
+uxadd_send_file (const char *zfrom, const char *zto, const char *zoptions, const char *ztemp, const char *zforward)
 {
   struct scmd s;
 
@@ -1598,8 +1588,7 @@ uxadd_send_file (zfrom, zto, zoptions, ztemp, zforward)
    call setjmp.  */
 
 static void
-uxcopy_stdin (e)
-     FILE *e;
+uxcopy_stdin (FILE *e)
 {
   CATCH_PROTECT size_t cread;
   char ab[1024];
@@ -1662,8 +1651,7 @@ static int cXfiles;
 static const char **pXaz;
 
 static void
-uxrecord_file (zfile)
-     const char *zfile;
+uxrecord_file (const char *zfile)
 {
   pXaz = (const char **) xrealloc ((pointer) pXaz,
 				   (cXfiles + 1) * sizeof (const char *));
@@ -1674,7 +1662,7 @@ uxrecord_file (zfile)
 /* The function called for a LOG_FATAL error.  */
 
 static void
-uxfatal ()
+uxfatal (void)
 {
   uxabort (EX_UNAVAILABLE);
 }
@@ -1682,8 +1670,7 @@ uxfatal ()
 /* Delete all the files we have recorded and exit.  */
 
 static void
-uxabort (istat)
-     int istat;
+uxabort (int istat)
 {
   int i;
 
@@ -1704,8 +1691,7 @@ uxabort (istat)
    will appear.  */
 
 static void
-uxadd_name (z)
-     const char *z;
+uxadd_name (const char *z)
 {
   if (zXnames == NULL)
     zXnames = zbufcpy (z);

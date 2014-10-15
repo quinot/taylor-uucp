@@ -7,8 +7,7 @@
 #include "system.h"
 
 boolean
-fsysdep_file_exists (zfile)
-     const char *zfile;
+fsysdep_file_exists (const char *zfile)
 {
   struct stat s;
 

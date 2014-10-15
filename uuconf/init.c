@@ -33,10 +33,7 @@ const char _uuconf_init_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_init (ppglobal, zprogram, zname)
-     pointer *ppglobal;
-     const char *zprogram;
-     const char *zname;
+uuconf_init (pointer *ppglobal, const char *zprogram, const char *zname)
 {
   struct sglobal **pqglob = (struct sglobal **) ppglobal;
   int iret;

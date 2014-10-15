@@ -8,8 +8,7 @@
 #include "uudefs.h"
 
 size_t
-cescape (z)
-     char *z;
+cescape (char *z)
 {
   char *zto, *zfrom;
   

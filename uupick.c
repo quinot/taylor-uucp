@@ -59,9 +59,7 @@ static void upusage P((void));
 static void uphelp P((void));
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -s: system name.  */
   const char *zsystem = NULL;
@@ -307,7 +305,7 @@ main (argc, argv)
 /* Print usage message and die.  */
 
 static void
-upusage ()
+upusage (void)
 {
   fprintf (stderr,
 	   "Usage: %s [-s system] [-I config] [-x debug]\n", zProgram);
@@ -318,7 +316,7 @@ upusage ()
 /* Print help message.  */
 
 static void
-uphelp ()
+uphelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
@@ -336,10 +334,7 @@ uphelp ()
    contents of an entire directory.  */
 
 static void
-upmovedir (zfull, zrelative, pinfo)
-     const char *zfull;
-     const char *zrelative;
-     pointer pinfo;
+upmovedir (const char *zfull, const char *zrelative, pointer pinfo)
 {
   const char *ztodir = (const char *) pinfo;
   char *zto;
@@ -354,9 +349,7 @@ upmovedir (zfull, zrelative, pinfo)
 /* Move a file.  */
 
 static void
-upmove (zfrom, zto)
-     const char *zfrom;
-     const char *zto;
+upmove (const char *zfrom, const char *zto)
 {
   (void) fsysdep_move_file (zfrom, zto, TRUE, TRUE, FALSE,
 			    (const char *) NULL);

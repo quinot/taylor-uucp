@@ -44,9 +44,7 @@ static void ulunquote_cmd P((struct scmd *qcmd));
    successfully parsed, FALSE otherwise.  */
 
 boolean
-fparse_cmd (zcmd, qcmd)
-     char *zcmd;
-     struct scmd *qcmd;
+fparse_cmd (char *zcmd, struct scmd *qcmd)
 {
   char *z, *zend;
 
@@ -232,8 +230,7 @@ fparse_cmd (zcmd, qcmd)
    relevant strings.  */
 
 static void
-ulunquote_cmd (qcmd)
-     struct scmd *qcmd;
+ulunquote_cmd (struct scmd *qcmd)
 {
   if (qcmd->zoptions == NULL || strchr (qcmd->zoptions, 'q') == NULL)
     return;

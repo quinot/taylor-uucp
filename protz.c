@@ -524,9 +524,7 @@ static winpos_t lzupdate_rxpos P((achdrval_t rx_hdr, winpos_t rxpos,
  */
 
 boolean
-fzstart(qdaemon, pzlog)
-struct sdaemon *qdaemon;
-char **pzlog;
+fzstart(struct sdaemon *qdaemon, char **pzlog)
 {
 	*pzlog = zbufalc (sizeof "protocol 'a' starting: , , , , , " + 100);
 	sprintf (*pzlog, "protocol 'a' starting: %d, %d, %d, %d, %d, %d",
@@ -610,8 +608,7 @@ char **pzlog;
  */
 
 boolean
-fzshutdown(qdaemon)
-struct sdaemon *qdaemon;
+fzshutdown(struct sdaemon *qdaemon)
 {
 	(void) fzshutdown_proto (qdaemon);
 
@@ -669,11 +666,7 @@ struct sdaemon *qdaemon;
 
 /*ARGSUSED*/
 boolean
-fzsendcmd(qdaemon, z, ilocal, iremote)
-struct sdaemon *qdaemon;
-const char *z;
-int ilocal ATTRIBUTE_UNUSED;
-int iremote ATTRIBUTE_UNUSED;
+fzsendcmd(struct sdaemon *qdaemon, const char *z, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED)
 {
 	size_t n,clen;
 	long lredo;
@@ -719,9 +712,7 @@ int iremote ATTRIBUTE_UNUSED;
 
 /*ARGSUSED*/
 char *
-zzgetspace(qdaemon, pclen)
-struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-size_t *pclen;
+zzgetspace(struct sdaemon *qdaemon ATTRIBUTE_UNUSED, size_t *pclen)
 {
 	*pclen = cZblklen;
 	return zZtx_buf;
@@ -735,15 +726,9 @@ size_t *pclen;
 
 /*ARGSUSED*/
 boolean
-fzsenddata(qdaemon, zdata, cdata, ilocal, iremote, ipos)
-struct sdaemon *qdaemon;
-char *zdata;
-size_t cdata;
-int ilocal ATTRIBUTE_UNUSED;
-int iremote ATTRIBUTE_UNUSED;
-long ipos ATTRIBUTE_UNUSED;
+fzsenddata(struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED, long int ipos ATTRIBUTE_UNUSED)
 {
-	DEBUG_MESSAGE1 (DEBUG_PROTO, "fzsenddata: %d bytes", cdata);
+	DEBUG_MESSAGE1 (DEBUG_PROTO, "fzsenddata: %d bytes", (int) cdata);
 
 	if (! fzsend_data (qdaemon, zdata, cdata, cdata == 0))
 		return FALSE;
@@ -760,11 +745,7 @@ long ipos ATTRIBUTE_UNUSED;
 extern struct stransfer *qTsend;
 
 static boolean
-fzsend_data(qdaemon, zdata, cdata, fendofmessage)
-struct sdaemon *qdaemon;
-char *zdata;
-size_t cdata;
-boolean fendofmessage;
+fzsend_data(struct sdaemon *qdaemon, char *zdata, size_t cdata, boolean fendofmessage)
 {
 	size_t n;
 
@@ -820,7 +801,7 @@ boolean fendofmessage;
 		}
 		DEBUG_MESSAGE3 (DEBUG_PROTO,
 				"fzsend_data: %s, pos 0x%lx, %d bytes",
-				type, wpZtxpos, n);
+				type, wpZtxpos, (int) n);
 	}
 #endif
 
@@ -911,8 +892,7 @@ boolean fendofmessage;
  */
 
 static boolean
-fzprocess(qdaemon)
-struct sdaemon *qdaemon;
+fzprocess(struct sdaemon *qdaemon)
 {
 	int c,ch;
 
@@ -977,8 +957,7 @@ struct sdaemon *qdaemon;
  */
 
 boolean
-fzwait(qdaemon)
-struct sdaemon *qdaemon;
+fzwait(struct sdaemon *qdaemon)
 {
 	int c,cerr,rxcount;
 	boolean fexit;
@@ -1206,13 +1185,7 @@ moredata:
  */
 
 boolean
-fzfile(qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
-struct sdaemon *qdaemon;
-struct stransfer *qtrans;
-boolean fstart;
-boolean fsend;
-long cbytes ATTRIBUTE_UNUSED;
-boolean *pfhandled;
+fzfile(struct sdaemon *qdaemon, struct stransfer *qtrans, boolean fstart, boolean fsend, long int cbytes ATTRIBUTE_UNUSED, boolean *pfhandled)
 {
 	long iredo;
 
@@ -1437,8 +1410,7 @@ static unsigned long crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
  */
 
 static boolean
-fzstart_proto(qdaemon)
-struct sdaemon *qdaemon;
+fzstart_proto(struct sdaemon *qdaemon)
 {
 	int i;
 	achdrval_t tx_hdr,rx_hdr;
@@ -1501,11 +1473,7 @@ struct sdaemon *qdaemon;
  */
 
 static int
-izexchange_init(qdaemon, send_type, send_val, recv_val)
-struct sdaemon *qdaemon;
-int send_type;
-achdrval_t send_val;
-achdrval_t recv_val;
+izexchange_init(struct sdaemon *qdaemon, int send_type, unsigned char *send_val, unsigned char *recv_val)
 {
 	int i,recv_type,count;
 
@@ -1584,8 +1552,7 @@ achdrval_t recv_val;
  */
 
 static boolean
-fzshutdown_proto(qdaemon)
-struct sdaemon *qdaemon;
+fzshutdown_proto(struct sdaemon *qdaemon)
 {
 	(void) fzsend_hdr (qdaemon, ZHEX, ZFIN, 0L, FALSE);
 	return TRUE;
@@ -1596,7 +1563,7 @@ struct sdaemon *qdaemon;
  */
 
 static boolean
-fzstart_tx()
+fzstart_tx(void)
 {
 	iZlast_tx_data_packet = -1;
 
@@ -1632,9 +1599,7 @@ fzstart_tx()
  */
 
 static boolean
-fzfinish_tx(qdaemon, plredo)
-struct sdaemon *qdaemon;
-long *plredo;
+fzfinish_tx(struct sdaemon *qdaemon, long int *plredo)
 {
 	int c,cerr,ctimeouts;
 	achdrval_t rx_hdr;
@@ -1770,7 +1735,7 @@ long *plredo;
  */
 
 static boolean
-fzstart_rx()
+fzstart_rx(void)
 {
 	wpZrxbytes = (wpZrxbytes + 1024L) & ~1023L; /* next packet boundary */
 
@@ -1784,8 +1749,7 @@ fzstart_rx()
  */
 
 static boolean
-fzfinish_rx(qdaemon)
-struct sdaemon *qdaemon;
+fzfinish_rx(struct sdaemon *qdaemon)
 {
 	DEBUG_MESSAGE0 (DEBUG_PROTO, "fzfinish_rx: message/file received");
 
@@ -1798,12 +1762,7 @@ struct sdaemon *qdaemon;
  */
 
 static boolean
-fzsend_hdr(qdaemon, ipkttype, ihdrtype, hdrval, fcheckreceive)
-struct sdaemon *qdaemon;
-int ipkttype;
-int ihdrtype;
-hdrval_t hdrval;
-boolean fcheckreceive;
+fzsend_hdr(struct sdaemon *qdaemon, int ipkttype, int ihdrtype, hdrval_t hdrval, boolean fcheckreceive)
 {
 	int cpacketlen;
 
@@ -1846,12 +1805,7 @@ boolean fcheckreceive;
  */
 
 static boolean
-fzsend_data_packet(qdaemon, zdata, cdata, frameend, fcheckreceive)
-struct sdaemon *qdaemon;
-char *zdata;
-size_t cdata;
-int frameend;
-boolean fcheckreceive;
+fzsend_data_packet(struct sdaemon *qdaemon, char *zdata, size_t cdata, int frameend, boolean fcheckreceive)
 {
 	int cpacketlen;
 
@@ -1871,11 +1825,7 @@ boolean fcheckreceive;
  */
 
 static int
-czbuild_header(zresult, ipkttype, ihdrtype, hdrval)
-char *zresult;
-int ipkttype;
-int ihdrtype;
-hdrval_t hdrval;
+czbuild_header(char *zresult, int ipkttype, int ihdrtype, hdrval_t hdrval)
 {
 	char *p;
 	int i;
@@ -1943,11 +1893,7 @@ hdrval_t hdrval;
  */
 
 static int
-czbuild_data_packet(zresult, zdata, cdata, frameend)
-char *zresult;
-const char *zdata;
-size_t cdata;
-int frameend;
+czbuild_data_packet(char *zresult, const char *zdata, size_t cdata, int frameend)
 {
 	char *p;
 	unsigned long crc;
@@ -1988,9 +1934,7 @@ int frameend;
  */
 
 static int
-izrecv_hdr(qdaemon, hdr)
-struct sdaemon *qdaemon;
-achdrval_t hdr;
+izrecv_hdr(struct sdaemon *qdaemon, unsigned char *hdr)
 {
 	int c,cerr;
 
@@ -2093,9 +2037,7 @@ fifi:
  */
 
 static int
-zrbhdr32(qdaemon, hdr)
-struct sdaemon *qdaemon;
-achdrval_t hdr;
+zrbhdr32(struct sdaemon *qdaemon, unsigned char *hdr)
 {
 	int c,i,type;
 	unsigned long crc;
@@ -2128,9 +2070,7 @@ achdrval_t hdr;
  */
 
 static int
-zrhhdr(qdaemon, hdr)
-struct sdaemon *qdaemon;
-achdrval_t hdr;
+zrhhdr(struct sdaemon *qdaemon, unsigned char *hdr)
 {
 	int c,i,type;
 	unsigned long crc;
@@ -2163,11 +2103,7 @@ achdrval_t hdr;
  */
 
 static int
-zrdat32(qdaemon, buf, length, iprxcount)
-struct sdaemon *qdaemon;
-char *buf;
-int length;
-int *iprxcount;
+zrdat32(struct sdaemon *qdaemon, char *buf, int length, int *iprxcount)
 {
 	int c,d;
 	unsigned long crc;
@@ -2223,9 +2159,7 @@ crcfoo:
  */
 
 static int
-getinsync(qdaemon, flag)
-struct sdaemon *qdaemon;
-boolean flag;
+getinsync(struct sdaemon *qdaemon, boolean flag)
 {
 	int c,cerr;
 	achdrval_t rx_hdr;
@@ -2302,9 +2236,7 @@ boolean flag;
  */
 
 static char *
-zputhex(p, ch)
-char *p;
-int ch;
+zputhex(char *p, int ch)
 {
 	static char digits[] = "0123456789abcdef";
 
@@ -2322,9 +2254,7 @@ int ch;
  */
 
 static char *
-zputchar(p, ch)
-char *p;
-int ch;
+zputchar(char *p, int ch)
 {
 	char c = ch;
 
@@ -2370,8 +2300,7 @@ int ch;
  */
 
 static int
-zgethex(qdaemon)
-struct sdaemon *qdaemon;
+zgethex(struct sdaemon *qdaemon)
 {
 	int c,n;
 
@@ -2399,8 +2328,7 @@ struct sdaemon *qdaemon;
  */
 
 static int
-zdlread(qdaemon)
-struct sdaemon *qdaemon;
+zdlread(struct sdaemon *qdaemon)
 {
 	int c;
 
@@ -2461,8 +2389,7 @@ again2:
  */
 
 static int
-noxrd7(qdaemon)
-struct sdaemon *qdaemon;
+noxrd7(struct sdaemon *qdaemon)
 {
 	int c;
 
@@ -2494,9 +2421,7 @@ struct sdaemon *qdaemon;
  */
 
 static int
-realreadchar(qdaemon, timeout)
-struct sdaemon *qdaemon;
-int timeout;
+realreadchar(struct sdaemon *qdaemon, int timeout)
 {
 	int c;
 
@@ -2524,7 +2449,7 @@ int timeout;
  */
 
 static boolean
-fzreceive_ready()
+fzreceive_ready(void)
 {
 	return iPrecstart != iPrecend;
 }
@@ -2534,9 +2459,7 @@ fzreceive_ready()
  */
 
 static void
-stohdr(val, hdr)
-hdrval_t val;
-achdrval_t hdr;
+stohdr(hdrval_t val, unsigned char *hdr)
 {
 	hdr[ZP0] = (char) val;
 	hdr[ZP1] = (char) (val >> 8);
@@ -2549,8 +2472,7 @@ achdrval_t hdr;
  */
 
 static hdrval_t
-rclhdr(hdr)
-achdrval_t hdr;
+rclhdr(unsigned char *hdr)
 {
 	hdrval_t v;
 
@@ -2571,8 +2493,7 @@ achdrval_t hdr;
  */
 
 static hdrval_t
-hvzencode_data_hdr(cbytes)
-winpos_t cbytes;
+hvzencode_data_hdr(winpos_t cbytes)
 {
 	return (hdrval_t) cbytes;
 }
@@ -2586,9 +2507,7 @@ winpos_t cbytes;
  */
 
 static void
-zdecode_data_hdr(hdrval, pcbytes)
-hdrval_t hdrval;
-winpos_t *pcbytes;
+zdecode_data_hdr(hdrval_t hdrval, winpos_t *pcbytes)
 {
 	*pcbytes = hdrval;
 }
@@ -2600,9 +2519,7 @@ winpos_t *pcbytes;
  */
 
 static winpos_t
-lzupdate_rxpos(rx_hdr, rxpos, lrxpos, txpos)
-achdrval_t rx_hdr;
-winpos_t rxpos,lrxpos,txpos;
+lzupdate_rxpos(unsigned char *rx_hdr, winpos_t rxpos, winpos_t lrxpos, winpos_t txpos)
 {
 	winpos_t rx_pktpos;
 

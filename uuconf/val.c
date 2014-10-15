@@ -32,10 +32,7 @@ const char _uuconf_val_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_validate (pglobal, qsys, zlogin)
-     pointer pglobal;
-     const struct uuconf_system *qsys;
-     const char *zlogin;
+uuconf_validate (pointer pglobal, const struct uuconf_system *qsys, const char *zlogin)
 {
 #if HAVE_TAYLOR_CONFIG
   return uuconf_taylor_validate (pglobal, qsys, zlogin);

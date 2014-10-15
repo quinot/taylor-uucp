@@ -104,8 +104,7 @@ static struct ssfile *qSwork_file;
 /* Given a system name, return a directory to search for work.  */
 
 static char *
-zswork_directory (zsystem)
-     const char *zsystem;
+zswork_directory (const char *zsystem)
 {
 #if SPOOLDIR_V2
   return zbufcpy (".");
@@ -134,10 +133,7 @@ zswork_directory (zsystem)
 
 /*ARGSUSED*/
 static boolean
-fswork_file (zsystem, zfile, pbgrade)
-     const char *zsystem ATTRIBUTE_UNUSED;
-     const char *zfile;
-     char *pbgrade;
+fswork_file (const char *zsystem ATTRIBUTE_UNUSED, const char *zfile, char *pbgrade)
 {
 #if SPOOLDIR_V2 || SPOOLDIR_BSD42 || SPOOLDIR_BSD43 || SPOOLDIR_ULTRIX
   int cfilesys, csys;
@@ -190,9 +186,7 @@ fswork_file (zsystem, zfile, pbgrade)
 /* A comparison function to look through the list of file names.  */
 
 static int
-iswork_cmp (pkey, pdatum)
-     constpointer pkey;
-     constpointer pdatum;
+iswork_cmp (constpointer pkey, constpointer pdatum)
 {
   const struct ssfilename *qkey = (const struct ssfilename *) pkey;
   const struct ssfilename *qdatum = (const struct ssfilename *) pdatum;
@@ -203,8 +197,7 @@ iswork_cmp (pkey, pdatum)
 /* See whether there is any work to do for a particular system.  */
 
 boolean
-fsysdep_has_work (qsys)
-     const struct uuconf_system *qsys;
+fsysdep_has_work (const struct uuconf_system *qsys)
 {
   char *zdir;
   DIR *qdir;
@@ -276,10 +269,7 @@ fsysdep_has_work (qsys)
 #define CWORKFILES (10)
 
 boolean
-fsysdep_get_work_init (qsys, bgrade, cmax)
-     const struct uuconf_system *qsys;
-     int bgrade;
-     unsigned int cmax;
+fsysdep_get_work_init (const struct uuconf_system *qsys, int bgrade, unsigned int cmax)
 {
   char *zdir;
   DIR *qdir;
@@ -428,11 +418,7 @@ fsysdep_get_work_init (qsys, bgrade, cmax)
 
 /*ARGSUSED*/
 boolean
-fsysdep_get_work (qsys, bgrade, cmax, qcmd)
-     const struct uuconf_system *qsys;
-     int bgrade ATTRIBUTE_UNUSED;
-     unsigned int cmax ATTRIBUTE_UNUSED;
-     struct scmd *qcmd;
+fsysdep_get_work (const struct uuconf_system *qsys, int bgrade ATTRIBUTE_UNUSED, unsigned int cmax ATTRIBUTE_UNUSED, struct scmd *qcmd)
 {
   char *zdir;
 
@@ -608,8 +594,7 @@ fsysdep_get_work (qsys, bgrade, cmax, qcmd)
    works.  */
 
 boolean
-fsysdep_did_work (pseq)
-     pointer pseq;
+fsysdep_did_work (pointer pseq)
 {
   struct ssfile *qfile;
   struct ssline *qline;
@@ -666,8 +651,7 @@ fsysdep_did_work (pseq)
 
 /*ARGSUSED*/
 void
-usysdep_get_work_free (qsys)
-     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
+usysdep_get_work_free (const struct uuconf_system *qsys ATTRIBUTE_UNUSED)
 {
   if (asSwork_files != NULL)
     {
@@ -703,8 +687,7 @@ usysdep_get_work_free (qsys)
    file is not completely lost.  */
 
 const char *
-zsysdep_save_temp_file (pseq)
-     pointer pseq;
+zsysdep_save_temp_file (pointer pseq)
 {
   struct ssline *qline = (struct ssline *) pseq;
   char *zto, *zslash;
@@ -748,9 +731,7 @@ zsysdep_save_temp_file (pseq)
 /* Get the jobid of a work file.  This is needed by uustat.  */
 
 char *
-zsysdep_jobid (qsys, pseq)
-     const struct uuconf_system *qsys;
-     pointer pseq;
+zsysdep_jobid (const struct uuconf_system *qsys, pointer pseq)
 {
   return zsfile_to_jobid (qsys, ((struct ssline *) pseq)->qfile->zfile,
 			  bsgrade (pseq));
@@ -762,8 +743,7 @@ zsysdep_jobid (qsys, pseq)
    the right thing.  */
 
 int
-bsgrade (pseq)
-     pointer pseq;
+bsgrade (pointer pseq)
 {
   const char *zfile;
   char bgrade;

@@ -396,9 +396,7 @@ static int igchecksum2 P((const char *zfirst, size_t cfirst,
    INITB packet contains the packet size.  */
 
 boolean
-fgstart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+fgstart (struct sdaemon *qdaemon, char **pzlog)
 {
   int iseg;
   int i;
@@ -538,9 +536,7 @@ fgstart (qdaemon, pzlog)
    short packets are never supported.  */
 
 boolean
-fbiggstart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+fbiggstart (struct sdaemon *qdaemon, char **pzlog)
 {
   fGshort_packets = FALSE;
   return fgstart (qdaemon, pzlog);
@@ -553,9 +549,7 @@ fbiggstart (qdaemon, pzlog)
    packet-size 64.  */
 
 boolean
-fvstart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+fvstart (struct sdaemon *qdaemon, char **pzlog)
 {
   if (iGrequest_packsize == IPACKSIZE)
     iGrequest_packsize = 1024;
@@ -591,11 +585,7 @@ fvstart (qdaemon, pzlog)
    time out and resend INITA.  */
 
 static boolean
-fgexchange_init (qdaemon, ictl, ival, piset)
-     struct sdaemon *qdaemon;
-     int ictl;
-     int ival;
-     int *piset;
+fgexchange_init (struct sdaemon *qdaemon, int ictl, int ival, int *piset)
 {
   int i;
 
@@ -686,8 +676,7 @@ fgexchange_init (qdaemon, ictl, ival, piset)
 /* Shut down the protocol.  */
 
 boolean
-fgshutdown (qdaemon)
-     struct sdaemon *qdaemon;
+fgshutdown (struct sdaemon *qdaemon)
 {
   (void) fgsend_control (qdaemon, CLOSE, 0);
   (void) fgsend_control (qdaemon, CLOSE, 0);
@@ -736,11 +725,7 @@ fgshutdown (qdaemon)
 
 /*ARGSUSED*/
 boolean
-fgsendcmd (qdaemon, z, ilocal, iremote)
-     struct sdaemon *qdaemon;
-     const char *z;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
+fgsendcmd (struct sdaemon *qdaemon, const char *z, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED)
 {
   size_t clen;
   boolean fagain;
@@ -819,8 +804,7 @@ fgsendcmd (qdaemon, z, ilocal, iremote)
 static char *azGsendbuffers[CSENDBUFFERS];
 
 static boolean
-fginit_sendbuffers (fallocate)
-     boolean fallocate;
+fginit_sendbuffers (boolean fallocate)
 {
   int i;
 
@@ -856,9 +840,7 @@ fginit_sendbuffers (fallocate)
 
 /*ARGSUSED*/
 char *
-zggetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     size_t *pclen;
+zggetspace (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, size_t *pclen)
 {
   *pclen = iGremote_packsize;
   return azGsendbuffers[iGsendseq] + CFRAMELEN + 2;
@@ -870,13 +852,7 @@ zggetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
-     struct sdaemon *qdaemon;
-     char *zdata;
-     size_t cdata;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
-     long ipos ATTRIBUTE_UNUSED;
+fgsenddata (struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED, long int ipos ATTRIBUTE_UNUSED)
 {
   char *z;
   int itt, iseg;
@@ -1008,7 +984,7 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 
   DEBUG_MESSAGE2 (DEBUG_PROTO,
 		  "fgsenddata: Sending packet %d (%d bytes)",
-		  CONTROL_XXX (z[IFRAME_CONTROL]), cdata);
+		  CONTROL_XXX (z[IFRAME_CONTROL]), (int) cdata);
 
   return fsend_data (qdaemon->qconn, z, CFRAMELEN + csize, TRUE);
 }
@@ -1021,8 +997,7 @@ fgsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
    azGsendbuffers[iseq].  */
 
 static char *
-zgadjust_ack (iseq)
-     int iseq;
+zgadjust_ack (int iseq)
 {
   register char *z;
   unsigned short icheck;
@@ -1067,10 +1042,7 @@ zgadjust_ack (iseq)
    message.  If I'm wrong, it can be changed easily enough.  */
 
 static boolean
-fgsend_control (qdaemon, ixxx, iyyy)
-     struct sdaemon *qdaemon;
-     int ixxx;
-     int iyyy;
+fgsend_control (struct sdaemon *qdaemon, int ixxx, int iyyy)
 {
   char ab[CFRAMELEN];
   int ictl;
@@ -1103,8 +1075,7 @@ fgsend_control (qdaemon, ixxx, iyyy)
    complete file or command has been received.  */
 
 boolean
-fgwait (qdaemon)
-     struct sdaemon *qdaemon;
+fgwait (struct sdaemon *qdaemon)
 {
   return fgwait_for_packet (qdaemon, FALSE, cGtimeout, cGretries);
 }
@@ -1119,11 +1090,7 @@ fgwait (qdaemon)
    exceeded.  */
 
 static boolean
-fgwait_for_packet (qdaemon, freturncontrol, ctimeout, cretries)
-     struct sdaemon *qdaemon;
-     boolean freturncontrol;
-     int ctimeout;
-     int cretries;
+fgwait_for_packet (struct sdaemon *qdaemon, boolean freturncontrol, int ctimeout, int cretries)
 {
   int ctimeouts;
   int cgarbage;
@@ -1136,7 +1103,7 @@ fgwait_for_packet (qdaemon, freturncontrol, ctimeout, cretries)
   while (TRUE)
     {
       boolean fexit;
-      size_t cneed;
+      size_t cneed = 0;
       boolean ffound;
       size_t crec;
   
@@ -1240,8 +1207,7 @@ fgwait_for_packet (qdaemon, freturncontrol, ctimeout, cretries)
 /* Send acks for all packets we haven't acked yet.  */
 
 static boolean
-fgsend_acks (qdaemon)
-     struct sdaemon *qdaemon;
+fgsend_acks (struct sdaemon *qdaemon)
 {
   while (iGlocal_ack != iGrecseq)
     {
@@ -1260,9 +1226,7 @@ fgsend_acks (qdaemon)
    retransmission.  */
 
 static boolean
-fggot_ack (qdaemon, iack)
-     struct sdaemon *qdaemon;
-     int iack;
+fggot_ack (struct sdaemon *qdaemon, int iack)
 {
   int inext;
   char *zsend;
@@ -1325,8 +1289,7 @@ fggot_ack (qdaemon, iack)
    accordingly.  */
 
 static boolean
-fgcheck_errors (qdaemon)
-     struct sdaemon *qdaemon;
+fgcheck_errors (struct sdaemon *qdaemon)
 {
   if (cGerror_level > cGmax_errors && cGmax_errors >= 0)
     {
@@ -1356,13 +1319,7 @@ fgcheck_errors (qdaemon)
    otherwise they must be acknowledged later.  */
 
 static boolean
-fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
-     struct sdaemon *qdaemon;
-     boolean fdoacks;
-     boolean freturncontrol;
-     boolean *pfexit;
-     size_t *pcneed;
-     boolean *pffound;
+fgprocess_data (struct sdaemon *qdaemon, boolean fdoacks, boolean freturncontrol, boolean *pfexit, size_t *pcneed, boolean *pffound)
 {
   *pfexit = FALSE;
   if (pffound != NULL)
@@ -1914,9 +1871,7 @@ fgprocess_data (qdaemon, fdoacks, freturncontrol, pfexit, pcneed, pffound)
       --c
 
 static int
-igchecksum (z, c)
-     register const char *z;
-     register size_t c;
+igchecksum (register const char *z, register size_t c)
 {
   register unsigned long ichk1, ichk2;
 
@@ -1944,11 +1899,7 @@ igchecksum (z, c)
    actually only has a few more instructions in the inner loop.  */
 
 static int
-igchecksum2 (zfirst, cfirst, zsecond, csecond)
-     const char *zfirst;
-     size_t cfirst;
-     const char *zsecond;
-     size_t csecond;
+igchecksum2 (const char *zfirst, size_t cfirst, const char *zsecond, size_t csecond)
 {
   register unsigned long ichk1, ichk2;
   register const char *z;

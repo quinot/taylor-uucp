@@ -66,7 +66,7 @@
    independent of the terminal.  */
 
 void
-usysdep_detach ()
+usysdep_detach (void)
 {
   pid_t igrp;
 

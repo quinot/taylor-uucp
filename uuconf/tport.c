@@ -251,12 +251,7 @@ uuconf_taylor_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo,
 
 /*ARGSUSED*/
 static int
-ipport (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+ipport (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pz = (char **) pvar;
@@ -280,12 +275,7 @@ ipport (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-ipunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+ipunknown (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_port *qport = (struct uuconf_port *) pinfo;

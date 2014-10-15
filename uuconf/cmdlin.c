@@ -39,14 +39,7 @@ const char _uuconf_cmdlin_rcsid[] = "$Id$";
 #define CSTACK (16)
 
 int
-uuconf_cmd_line (pglobal, zline, qtab, pinfo, pfiunknown, iflags, pblock)
-     pointer pglobal;
-     char *zline;
-     const struct uuconf_cmdtab *qtab;
-     pointer pinfo;
-     int (*pfiunknown) P((pointer, int, char **, pointer, pointer));
-     int iflags;
-     pointer pblock;
+uuconf_cmd_line (pointer pglobal, char *zline, const struct uuconf_cmdtab *qtab, pointer pinfo, int (*pfiunknown) (pointer, int, char **, pointer, pointer), int iflags, pointer pblock)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char *z;

@@ -40,12 +40,7 @@ const char copy_rcsid[] = "$Id$";
 #if USE_STDIO
 
 boolean
-fcopy_file (zfrom, zto, fpublic, fmkdirs, fsignals)
-     const char *zfrom;
-     const char *zto;
-     boolean fpublic;
-     boolean fmkdirs;
-     boolean fsignals;
+fcopy_file (const char *zfrom, const char *zto, boolean fpublic, boolean fmkdirs, boolean fsignals)
 {
   FILE *efrom;
   boolean fret;
@@ -63,12 +58,7 @@ fcopy_file (zfrom, zto, fpublic, fmkdirs, fsignals)
 }
 
 boolean
-fcopy_open_file (efrom, zto, fpublic, fmkdirs, fsignals)
-     FILE *efrom;
-     const char *zto;
-     boolean fpublic;
-     boolean fmkdirs;
-     boolean fsignals;
+fcopy_open_file (FILE *efrom, const char *zto, boolean fpublic, boolean fmkdirs, boolean fsignals)
 {
   FILE *eto;
   char ab[8192];

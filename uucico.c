@@ -193,9 +193,7 @@ static const struct option asLongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -c: Whether to be quiet.  */
   boolean fquiet = FALSE;
@@ -779,7 +777,7 @@ main (argc, argv)
 /* Print out a usage message and die.  */
 
 static void
-uusage ()
+uusage (void)
 {
   fprintf (stderr, "Usage: %s [options]\n", zProgram);
   fprintf (stderr, "Use %s --help for help\n", zProgram);
@@ -789,7 +787,7 @@ uusage ()
 /* Print a help message.  */
 
 static void
-uhelp ()
+uhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	   VERSION);
@@ -822,7 +820,7 @@ uhelp ()
 /* This function is called when a LOG_FATAL error occurs.  */
 
 static void
-uabort ()
+uabort (void)
 {
   if (fLocked_system)
     ufailed (&sDaemon);
@@ -1076,18 +1074,13 @@ fcall (puuconf, zconfig, fuuxqt, qorigsys, qport, fifwork, fforce, fdetach,
    routine is responsible for opening and closing the connection.  */
 
 static boolean
-fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
-     struct sdaemon *qdaemon;
-     struct uuconf_port *qport;
-     struct sstatus *qstat;
-     int cretry;
-     boolean *pfcalled;
+fconn_call (struct sdaemon *qdaemon, struct uuconf_port *qport, struct sstatus *qstat, int cretry, boolean *pfcalled)
 {
   pointer puuconf;
   const struct uuconf_system *qsys;
   struct uuconf_port sport;
   struct sconnection sconn;
-  enum tstatus_type terr;
+  enum tstatus_type terr = STATUS_COMPLETE;
   boolean fret;
 
   puuconf = qdaemon->puuconf;
@@ -1239,12 +1232,7 @@ fconn_call (qdaemon, qport, qstat, cretry, pfcalled)
    error occurs *pterr is set to the status type to record.  */
 
 static boolean
-fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
-     struct sdaemon *qdaemon;
-     struct sstatus *qstat;
-     const struct uuconf_dialer *qdialer;
-     boolean *pfcalled;
-     enum tstatus_type *pterr;
+fdo_call (struct sdaemon *qdaemon, struct sstatus *qstat, const struct uuconf_dialer *qdialer, boolean *pfcalled, enum tstatus_type *pterr)
 {
   pointer puuconf;
   const struct uuconf_system *qsys;
@@ -1721,9 +1709,7 @@ fdo_call (qdaemon, qstat, qdialer, pfcalled, pterr)
    for the next matching port.  */
 
 static int
-iuport_lock (qport, pinfo)
-     struct uuconf_port *qport;
-     pointer pinfo;
+iuport_lock (struct uuconf_port *qport, pointer pinfo)
 {
   struct spass *q = (struct spass *) pinfo;
 
@@ -1755,13 +1741,7 @@ struct scallin_info
 /* Prompt for a login name and a password, and run as the slave.  */
 
 static boolean
-flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin, pzsystem)
-     pointer puuconf;
-     const char *zconfig;
-     boolean fuuxqt;
-     struct sconnection *qconn;
-     const char *zlogin;
-     const char **pzsystem;
+flogin_prompt (pointer puuconf, const char *zconfig, boolean fuuxqt, struct sconnection *qconn, const char *zlogin, const char **pzsystem)
 {
   int iuuconf;
   int istrip;
@@ -1857,10 +1837,7 @@ flogin_prompt (puuconf, zconfig, fuuxqt, qconn, zlogin, pzsystem)
    expands escape sequences in the password.  */
 
 static int
-icallin_cmp (iwhich, pinfo, zfile)
-     int iwhich;
-     pointer pinfo;
-     const char *zfile;
+icallin_cmp (int iwhich, pointer pinfo, const char *zfile)
 {
   struct scallin_info *qinfo = (struct scallin_info *) pinfo;
   char *zcopy;
@@ -1885,13 +1862,7 @@ icallin_cmp (iwhich, pinfo, zfile)
    will be set to the system that called in if known.  */
 
 static boolean
-faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
-     pointer puuconf;
-     const char *zconfig;
-     boolean fuuxqt;
-     const char *zlogin;
-     struct sconnection *qconn;
-     const char **pzsystem;
+faccept_call (pointer puuconf, const char *zconfig, boolean fuuxqt, const char *zlogin, struct sconnection *qconn, const char **pzsystem)
 {
   long istart_time;
   int iuuconf;
@@ -2713,12 +2684,7 @@ faccept_call (puuconf, zconfig, fuuxqt, zlogin, qconn, pzsystem)
 /* Clean up after faccept_call.  */
 
 static void
-uaccept_call_cleanup (puuconf, qfreesys, qport, qfreeport, zloc)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     struct uuconf_system *qfreesys;
-     struct uuconf_port *qport;
-     struct uuconf_port *qfreeport;
-     char *zloc;
+uaccept_call_cleanup (pointer puuconf ATTRIBUTE_UNUSED, struct uuconf_system *qfreesys, struct uuconf_port *qport, struct uuconf_port *qfreeport, char *zloc)
 {
   if (fLocked_system)
     {
@@ -2736,11 +2702,7 @@ uaccept_call_cleanup (puuconf, qfreesys, qport, qfreeport, zloc)
 /* Apply protocol parameters, once we know the protocol.  */
 
 static void
-uapply_proto_params (puuconf, bproto, qcmds, pas)
-     pointer puuconf;
-     int bproto;
-     struct uuconf_cmdtab *qcmds;
-     struct uuconf_proto_param *pas;
+uapply_proto_params (pointer puuconf, int bproto, struct uuconf_cmdtab *qcmds, struct uuconf_proto_param *pas)
 {
   struct uuconf_proto_param *qp;
 
@@ -2777,9 +2739,7 @@ uapply_proto_params (puuconf, bproto, qcmds, pas)
    used when no protocol is in force.  */
 
 static boolean
-fsend_uucp_cmd (qconn, z)
-     struct sconnection *qconn;
-     const char *z;
+fsend_uucp_cmd (struct sconnection *qconn, const char *z)
 {
   size_t cwrite;
   char *zalc;
@@ -2810,10 +2770,7 @@ fsend_uucp_cmd (qconn, z)
 #define CINCREMENT (100)
 
 static char *
-zget_uucp_cmd (qconn, frequired, fstrip)
-     struct sconnection *qconn;
-     boolean frequired;
-     boolean fstrip;
+zget_uucp_cmd (struct sconnection *qconn, boolean frequired, boolean fstrip)
 {
   char *zalc;
   size_t calc;
@@ -2960,9 +2917,7 @@ zget_uucp_cmd (qconn, frequired, fstrip)
    did, ignore a leading \n to account for \r\n pairs.  */
 
 static char *
-zget_typed_line (qconn, fstrip)
-     struct sconnection *qconn;
-     boolean fstrip;
+zget_typed_line (struct sconnection *qconn, boolean fstrip)
 {
   static boolean flastcr; 
   char *zalc;
@@ -3086,10 +3041,7 @@ zget_typed_line (qconn, fstrip)
    used it permits one system to hog the uuxqt jobs.  */
 
 boolean
-fspawn_uuxqt (ffork, zsys, zconfig)
-     boolean ffork;
-     const char *zsys ATTRIBUTE_UNUSED;
-     const char *zconfig;
+fspawn_uuxqt (boolean ffork, const char *zsys ATTRIBUTE_UNUSED, const char *zconfig)
 {
   char *zconfigarg;
   boolean fret;

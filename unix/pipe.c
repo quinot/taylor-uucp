@@ -83,8 +83,7 @@ static const struct sconncmds spipecmds =
 /* Initialize a pipe connection.  */
 
 boolean
-fsysdep_pipe_init (qconn)
-     struct sconnection *qconn;
+fsysdep_pipe_init (struct sconnection *qconn)
 {
   struct ssysdep_conn *q;
 
@@ -105,8 +104,7 @@ fsysdep_pipe_init (qconn)
 }
 
 static void
-uspipe_free (qconn)
-     struct sconnection *qconn;
+uspipe_free (struct sconnection *qconn)
 {
   xfree (qconn->psysdep);
 }
@@ -115,11 +113,7 @@ uspipe_free (qconn)
 
 /*ARGSUSED*/
 static boolean
-fspipe_open (qconn, ibaud, fwait, fuser)
-     struct sconnection *qconn ATTRIBUTE_UNUSED;
-     long ibaud ATTRIBUTE_UNUSED;
-     boolean fwait;
-     boolean fuser ATTRIBUTE_UNUSED;
+fspipe_open (struct sconnection *qconn ATTRIBUTE_UNUSED, long int ibaud ATTRIBUTE_UNUSED, boolean fwait, boolean fuser ATTRIBUTE_UNUSED)
 {
   /* We don't do incoming waits on pipes.  */
   if (fwait)
@@ -132,11 +126,7 @@ fspipe_open (qconn, ibaud, fwait, fuser)
 
 /*ARGSUSED*/
 static boolean
-fspipe_close (qconn, puuconf, qdialer, fsuccess)
-     struct sconnection *qconn;
-     pointer puuconf ATTRIBUTE_UNUSED;
-     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
-     boolean fsuccess ATTRIBUTE_UNUSED;
+fspipe_close (struct sconnection *qconn, pointer puuconf ATTRIBUTE_UNUSED, struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED, boolean fsuccess ATTRIBUTE_UNUSED)
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -188,13 +178,7 @@ fspipe_close (qconn, puuconf, qdialer, fsuccess)
 
 /*ARGSUSED*/
 static boolean
-fspipe_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialer)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
-     const char *zphone ATTRIBUTE_UNUSED;
-     struct uuconf_dialer *qdialer;
-     enum tdialerfound *ptdialer;
+fspipe_dial (struct sconnection *qconn, pointer puuconf, const struct uuconf_system *qsys ATTRIBUTE_UNUSED, const char *zphone ATTRIBUTE_UNUSED, struct uuconf_dialer *qdialer, enum tdialerfound *ptdialer)
 {
   struct ssysdep_conn *q;
   int aidescs[3];

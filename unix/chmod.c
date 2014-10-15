@@ -12,9 +12,7 @@
 /* Change the mode of a file.  */
 
 boolean
-fsysdep_change_mode (zfile, imode)
-     const char *zfile;
-     unsigned int imode;
+fsysdep_change_mode (const char *zfile, unsigned int imode)
 {
   if (chmod ((char *) zfile, imode) < 0)
     {

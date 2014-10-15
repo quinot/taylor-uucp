@@ -14,8 +14,7 @@
    they may include a grade set by another system.  */
 
 boolean
-fspool_file (zfile)
-     const char *zfile;
+fspool_file (const char *zfile)
 {
   const char *z;
 

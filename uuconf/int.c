@@ -36,11 +36,7 @@ const char _uuconf_int_rcsid[] = "$Id$";
 
 /*ARGSIGNORED*/
 int
-_uuconf_iint (qglobal, zval, p, fint)
-     struct sglobal *qglobal ATTRIBUTE_UNUSED;
-     const char *zval;
-     pointer p;
-     boolean fint;
+_uuconf_iint (struct sglobal *qglobal ATTRIBUTE_UNUSED, const char *zval, pointer p, boolean fint)
 {
   long i;
   char *zend;

@@ -72,10 +72,6 @@
 #define USE_POSIX_LOCKS 0
 #endif
 
-/* External functions.  */
-#ifndef lseek
-extern off_t lseek ();
-#endif
 
 #define ZCHARS \
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -95,9 +91,7 @@ static char *zsfile_name P((int btype, const char *zsystem,
    characters long.  */
 
 static boolean
-fscmd_seq (zsystem, zseq)
-     const char *zsystem;
-     char *zseq;
+fscmd_seq (const char *zsystem, char *zseq)
 {
   int cdelay;
   char *zfree;
@@ -329,15 +323,7 @@ fscmd_seq (zsystem, zseq)
 
 /*ARGSUSED*/
 static char *
-zsfile_name (btype, zsystem, zlocalname, bgrade, fxqt, ztname, zdname, zxname)
-     int btype;
-     const char *zsystem;
-     const char *zlocalname;
-     int bgrade;
-     boolean fxqt;
-     char *ztname;
-     char *zdname;
-     char *zxname;
+zsfile_name (int btype, const char *zsystem, const char *zlocalname, int bgrade, boolean fxqt, char *ztname, char *zdname, char *zxname)
 {
   char abseq[CSEQLEN + 1];
   char absimple[11 + CSEQLEN];
@@ -443,10 +429,7 @@ zsysdep_data_file_name (qsys, zlocalname, bgrade, fxqt, ztname, zdname,
 static void usput62 P((long i, char *, int c));
 
 static void
-usput62 (i, z, c)
-     long i;
-     char *z;
-     int c;
+usput62 (long int i, char *z, int c)
 {
   for (--c; c >= 0; --c)
     {
@@ -468,9 +451,7 @@ usput62 (i, z, c)
 /* Get a command file name.  */
 
 char *
-zscmd_file (qsys, bgrade)
-     const struct uuconf_system *qsys;
-     int bgrade;
+zscmd_file (const struct uuconf_system *qsys, int bgrade)
 {
 #if ! SPOOLDIR_TAYLOR
   return zsfile_name ('C', qsys->uuconf_zname, (const char *) NULL,
@@ -556,7 +537,7 @@ zscmd_file (qsys, bgrade)
    used by uux to execute a command locally with remote files.  */
 
 char *
-zsysdep_xqt_file_name ()
+zsysdep_xqt_file_name (void)
 {
   char abseq[CSEQLEN + 1];
   char absx[11 + CSEQLEN];

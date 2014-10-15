@@ -38,11 +38,7 @@
 #endif
 
 FILE *
-esysdep_fopen (zfile, fpublic, fappend, fmkdirs)
-     const char *zfile;
-     boolean fpublic;
-     boolean fappend;
-     boolean fmkdirs;
+esysdep_fopen (const char *zfile, boolean fpublic, boolean fappend, boolean fmkdirs)
 {
   int imode;
   int o;

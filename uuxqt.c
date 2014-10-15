@@ -76,9 +76,7 @@ static const struct option asQlongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* The type of command to execute (NULL for any type).  */
   const char *zcmd = NULL;
@@ -364,7 +362,7 @@ main (argc, argv)
 }
 
 static void
-uqhelp ()
+uqhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	   VERSION);
@@ -381,7 +379,7 @@ uqhelp ()
 }
 
 static void
-uqusage ()
+uqusage (void)
 {
   fprintf (stderr,
 	   "Usage: %s [-c,--command cmd] [-s,--system system]\n", zProgram);
@@ -392,7 +390,7 @@ uqusage ()
 /* This is the abort function called when we get a fatal error.  */
 
 static void
-uqabort ()
+uqabort (void)
 {
 #if ! HAVE_HDB_LOGGING
   /* When using HDB logging, it's a pain to have no system name.  */
@@ -526,12 +524,7 @@ static const struct uuconf_cmdtab asQcmds[] =
 
 /*ARGSUSED*/
 static int
-iqcmd (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iqcmd (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   int i;
   size_t clen;
@@ -564,12 +557,7 @@ iqcmd (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iqout (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iqout (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   if (argc > 1)
     zQoutfile = zbufcpy (argv[1]);
@@ -583,12 +571,7 @@ iqout (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iqfile (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iqfile (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   if (argc < 2)
     return UUCONF_CMDTABRET_CONTINUE;
@@ -616,12 +599,7 @@ iqfile (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iqrequestor (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iqrequestor (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   /* We normally have a single argument, which is the ``requestor''
      address, to which we should send any success or error messages.
@@ -643,12 +621,7 @@ iqrequestor (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iquser (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iquser (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   if (argc > 1)
     zQuser = argv[1];
@@ -661,12 +634,7 @@ iquser (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iqset (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED; 
+iqset (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   boolean *pf = (boolean *) pvar;
 
@@ -694,14 +662,7 @@ iqset (puuconf, argc, argv, pvar, pinfo)
    file is ready to be executed.  */
 
 static void
-uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
-     pointer puuconf;
-     const char *zfile;
-     const char *zbase;
-     const struct uuconf_system *qsys;
-     const char *zlocalname;
-     const char *zcmd;
-     boolean *pfprocessed;
+uqdo_xqt_file (pointer puuconf, const char *zfile, const char *zbase, const struct uuconf_system *qsys, const char *zlocalname, const char *zcmd, boolean *pfprocessed)
 {
   char *zabsolute;
   boolean ferr;
@@ -1570,11 +1531,7 @@ uqdo_xqt_file (puuconf, zfile, zbase, qsys, zlocalname, zcmd, pfprocessed)
    saved files.  */
 
 static int
-isave_files (qsys, zmail, zfile, iclean)
-     const struct uuconf_system *qsys;
-     const char *zmail;
-     const char *zfile;
-     int iclean;
+isave_files (const struct uuconf_system *qsys, const char *zmail, const char *zfile, int iclean)
 {
   long cspace;
   char *zsavecmd;
@@ -1689,9 +1646,7 @@ isave_files (qsys, zmail, zfile, iclean)
 /* Clean up the results of uqdo_xqt_file.  */
 
 static void
-uqcleanup (zfile, iflags)
-     const char *zfile;
-     int iflags;
+uqcleanup (const char *zfile, int iflags)
 {
   int i;
 
@@ -1763,11 +1718,7 @@ uqcleanup (zfile, iflags)
 /* Check whether forwarding is permitted.  */
 
 static boolean
-fqforward (zfile, pzallowed, zlog, zmail)
-     const char *zfile;
-     char **pzallowed;
-     const char *zlog;
-     const char *zmail;
+fqforward (const char *zfile, char **pzallowed, const char *zlog, const char *zmail)
 {
   const char *zexclam;
 

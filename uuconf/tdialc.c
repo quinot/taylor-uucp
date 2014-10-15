@@ -85,11 +85,7 @@ static const struct cmdtab_offset asDialer_cmds[] =
    qdialer->uuconf_zname.  */
 
 int
-_uuconf_idialer_cmd (qglobal, argc, argv, qdialer)
-     struct sglobal *qglobal;
-     int argc;
-     char **argv;
-     struct uuconf_dialer *qdialer;
+_uuconf_idialer_cmd (struct sglobal *qglobal, int argc, char **argv, struct uuconf_dialer *qdialer)
 {
   struct uuconf_cmdtab as[CDIALER_CMDS];
   int iret;
@@ -106,12 +102,7 @@ _uuconf_idialer_cmd (qglobal, argc, argv, qdialer)
 /* Reroute a chat script command.  */
 
 static int
-idchat (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+idchat (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_chat *qchat = (struct uuconf_chat *) pvar;
@@ -125,12 +116,7 @@ idchat (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iddtr_toggle (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iddtr_toggle (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_dialer *qdialer = (struct uuconf_dialer *) pinfo;
@@ -157,12 +143,7 @@ iddtr_toggle (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int 
-idcomplete (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+idcomplete (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_chat *qchat = (struct uuconf_chat *) pvar;
@@ -180,12 +161,7 @@ idcomplete (pglobal, argc, argv, pvar, pinfo)
 /* Handle the "protocol-parameter" command.  */
 
 static int
-idproto_param (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+idproto_param (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_proto_param **pqparam = (struct uuconf_proto_param **) pvar;
@@ -199,12 +175,7 @@ idproto_param (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-idcunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+idcunknown (pointer pglobal ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }

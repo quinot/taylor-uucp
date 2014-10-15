@@ -79,9 +79,7 @@ static const struct option asKlongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int iopt;
   const char *zsystem = NULL;
@@ -312,7 +310,7 @@ main (argc, argv)
 
 /* Print a usage message and die.  */
 
-static void ukusage ()
+static void ukusage (void)
 {
   fprintf (stderr, "Usage: %s [-s system] [-I file]\n", zKprogram);
   fprintf (stderr, "Use %s --help for help\n", zKprogram);
@@ -322,7 +320,7 @@ static void ukusage ()
 /* Print a help message.  */
 
 static void
-ukhelp ()
+ukhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
@@ -336,9 +334,7 @@ ukhelp ()
 
 /* Print a list of configuration file names.  */
 static void
-ukshow_names (zheader, pznames)
-     const char *zheader;
-     const char * const *pznames;
+ukshow_names (const char *zheader, const char *const *pznames)
 {
   if (pznames == NULL)
     return;
@@ -357,9 +353,7 @@ ukshow_names (zheader, pznames)
 /* Dump out the information for a system.  */
 
 static void
-ukshow (qsys, puuconf)
-     const struct uuconf_system *qsys;
-     pointer puuconf;
+ukshow (const struct uuconf_system *qsys, pointer puuconf)
 {
   char **pz;
   int i;
@@ -757,9 +751,7 @@ ukshow (qsys, puuconf)
 
 /*ARGSUSED*/
 static int
-ikshow_port (qport, pinfo)
-     struct uuconf_port *qport;
-     pointer pinfo;
+ikshow_port (struct uuconf_port *qport, pointer pinfo)
 {
   struct sinfo *qi = (struct sinfo *) pinfo;
   char **pz;
@@ -942,8 +934,7 @@ ikshow_port (qport, pinfo)
 /* Show information about a dialer.  */
 
 static void
-ukshow_dialer (q)
-     struct uuconf_dialer *q;
+ukshow_dialer (struct uuconf_dialer *q)
 {
   ukshow_chat (&q->uuconf_schat, "    Chat");
   printf ("    Wait for dialtone %s\n", q->uuconf_zdialtone);
@@ -969,9 +960,7 @@ ukshow_dialer (q)
 /* Show a chat script.  */
 
 static void
-ukshow_chat (qchat, zhdr)
-     const struct uuconf_chat *qchat;
-     const char *zhdr;
+ukshow_chat (const struct uuconf_chat *qchat, const char *zhdr)
 {
   char **pz;
 
@@ -1010,10 +999,7 @@ ukshow_chat (qchat, zhdr)
 /* Show a size/time restriction.  */
 
 static void
-ukshow_size (qspan, fcall, flocal)
-     struct uuconf_timespan *qspan;
-     boolean fcall;
-     boolean flocal;
+ukshow_size (struct uuconf_timespan *qspan, boolean fcall, boolean flocal)
 {
   struct uuconf_timespan *q;
   boolean fother;
@@ -1053,9 +1039,7 @@ ukshow_size (qspan, fcall, flocal)
 /* Show reliability information.  */
 
 static void
-ukshow_reliable (i, zhdr)
-     int i;
-     const char *zhdr;
+ukshow_reliable (int i, const char *zhdr)
 {
   printf ("%sCharacteristics:", zhdr);
   if ((i & UUCONF_RELIABLE_EIGHT) != 0)
@@ -1076,9 +1060,7 @@ ukshow_reliable (i, zhdr)
 /* Show protocol parameters.  */
 
 static void
-ukshow_proto_params (pas, cindent)
-     struct uuconf_proto_param *pas;
-     int cindent;
+ukshow_proto_params (struct uuconf_proto_param *pas, int cindent)
 {
   struct uuconf_proto_param *q;
 
@@ -1107,8 +1089,7 @@ ukshow_proto_params (pas, cindent)
 /* Display a time span.  */
 
 static void
-ukshow_time (q)
-     const struct uuconf_timespan *q;
+ukshow_time (const struct uuconf_timespan *q)
 {
   int idaystart, idayend;
   int ihourstart, ihourend;
@@ -1142,8 +1123,7 @@ ukshow_time (q)
    nicer when printed out.  */
 
 static struct uuconf_timespan *
-qcompress_span (qlist)
-     struct uuconf_timespan *qlist;
+qcompress_span (struct uuconf_timespan *qlist)
 {
   struct uuconf_timespan **pq;
 
@@ -1170,9 +1150,7 @@ qcompress_span (qlist)
 /* Display a uuconf error and exit.  */
 
 static void
-ukuuconf_error (puuconf, iret)
-     pointer puuconf;
-     int iret;
+ukuuconf_error (pointer puuconf, int iret)
 {
   char ab[512];
 

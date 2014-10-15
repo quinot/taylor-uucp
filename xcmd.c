@@ -50,9 +50,7 @@ static boolean fremote_xcmd_reply P((struct stransfer *qtrans,
    transmission.  */
 
 boolean
-flocal_xcmd_init (qdaemon, qcmd)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
+flocal_xcmd_init (struct sdaemon *qdaemon, struct scmd *qcmd)
 {
   struct stransfer *qtrans;
 
@@ -65,9 +63,7 @@ flocal_xcmd_init (qdaemon, qcmd)
 /* Send the execution request to the remote system.  */
 
 static boolean
-flocal_xcmd_request (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+flocal_xcmd_request (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   boolean fquote;
   const struct scmd *qcmd;
@@ -135,11 +131,7 @@ flocal_xcmd_request (qtrans, qdaemon)
 
 /*ARGSUSED*/
 static boolean
-flocal_xcmd_await_reply (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata ATTRIBUTE_UNUSED;
+flocal_xcmd_await_reply (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata, size_t cdata ATTRIBUTE_UNUSED)
 {
   qtrans->precfn = NULL;
 
@@ -171,10 +163,7 @@ flocal_xcmd_await_reply (qtrans, qdaemon, zdata, cdata)
    later processing.  */
 
 boolean
-fremote_xcmd_init (qdaemon, qcmd, iremote)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
-     int iremote;
+fremote_xcmd_init (struct sdaemon *qdaemon, struct scmd *qcmd, int iremote)
 {
   const struct uuconf_system *qsys;
   const char *zexclam;
@@ -414,9 +403,7 @@ fremote_xcmd_init (qdaemon, qcmd, iremote)
 /* Reply to a remote work request.  */
 
 static boolean
-fremote_xcmd_reply (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fremote_xcmd_reply (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   boolean fret;
 

@@ -37,12 +37,7 @@
    holding all the commands passed in.  It returns a jobid.  */
 
 char *
-zsysdep_spool_commands (qsys, bgrade, ccmds, pascmds, pftemp)
-     const struct uuconf_system *qsys;
-     int bgrade;
-     int ccmds;
-     const struct scmd *pascmds;
-     boolean *pftemp;
+zsysdep_spool_commands (const struct uuconf_system *qsys, int bgrade, int ccmds, const struct scmd *pascmds, boolean *pftemp)
 {
   char abtempfile[sizeof "TMP1234567890"];
   char *ztemp;

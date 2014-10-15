@@ -36,10 +36,7 @@ const char _uuconf_vsnams_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_v2_system_names (pglobal, ppzsystems, falias)
-     pointer pglobal;
-     char ***ppzsystems;
-     int falias ATTRIBUTE_UNUSED;
+uuconf_v2_system_names (pointer pglobal, char ***ppzsystems, int falias ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   FILE *e;

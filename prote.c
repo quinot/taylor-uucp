@@ -79,9 +79,7 @@ static boolean feprocess_data P((struct sdaemon *qdaemon, boolean *pfexit,
 /* Start the protocol.  */
 
 boolean
-festart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+festart (struct sdaemon *qdaemon, char **pzlog)
 {
   *pzlog = NULL;
   if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
@@ -97,8 +95,7 @@ festart (qdaemon, pzlog)
 
 /*ARGSUSED*/
 boolean 
-feshutdown (qdaemon)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+feshutdown (struct sdaemon *qdaemon ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED)
 {
   xfree ((pointer) zEbuf);
   zEbuf = NULL;
@@ -111,11 +108,7 @@ feshutdown (qdaemon)
 
 /*ARGSUSED*/
 boolean
-fesendcmd (qdaemon, z, ilocal, iremote)
-     struct sdaemon *qdaemon;
-     const char *z;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
+fesendcmd (struct sdaemon *qdaemon, const char *z, int ilocal ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED)
 {
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fesendcmd: Sending command \"%s\"", z);
 
@@ -127,9 +120,7 @@ fesendcmd (qdaemon, z, ilocal, iremote)
 
 /*ARGSUSED*/
 char *
-zegetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     size_t *pclen;
+zegetspace (struct sdaemon *qdaemon ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED, size_t *pclen)
 {
   *pclen = CEBUFSIZE;
   return zEbuf;
@@ -141,13 +132,7 @@ zegetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-fesenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
-     struct sdaemon *qdaemon;
-     char *zdata;
-     size_t cdata;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
-     long ipos ATTRIBUTE_UNUSED;
+fesenddata (struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED, long int ipos ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED)
 {
 #if DEBUG > 0
   /* Keep track of the number of bytes we send out to make sure it all
@@ -168,10 +153,7 @@ fesenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 /* Process data and return the amount we need in *pfneed.  */
 
 static boolean
-feprocess_data (qdaemon, pfexit, pcneed)
-     struct sdaemon *qdaemon;
-     boolean *pfexit;
-     size_t *pcneed;
+feprocess_data (struct sdaemon *qdaemon, boolean *pfexit, size_t *pcneed)
 {
   int cinbuf, cfirst, clen;
 
@@ -317,13 +299,12 @@ feprocess_data (qdaemon, pfexit, pcneed)
    of a command or a file.  */
 
 boolean
-fewait (qdaemon)
-     struct sdaemon *qdaemon;
+fewait (struct sdaemon *qdaemon)
 {
   while (TRUE)
     {
       boolean fexit;
-      size_t cneed, crec;
+      size_t cneed = 0, crec;
 
       if (! feprocess_data (qdaemon, &fexit, &cneed))
 	return FALSE;
@@ -345,13 +326,7 @@ fewait (qdaemon)
    to set fEfile correctly.  */
 
 boolean
-fefile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
-     struct sdaemon *qdaemon;
-     struct stransfer *qtrans ATTRIBUTE_UNUSED;
-     boolean fstart;
-     boolean fsend;
-     long cbytes;
-     boolean *pfhandled;
+fefile (struct sdaemon *qdaemon, struct stransfer *qtrans ATTRIBUTE_UNUSED ATTRIBUTE_UNUSED, boolean fstart, boolean fsend, long int cbytes, boolean *pfhandled)
 {
   *pfhandled = FALSE;
 

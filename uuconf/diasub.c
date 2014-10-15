@@ -38,8 +38,7 @@ const char _uuconf_diasub_rcsid[] = "$Id$";
    (q)->uuconf_fstrip = TRUE)
 
 void
-_uuconf_uclear_dialer (qdialer)
-     struct uuconf_dialer *qdialer;
+_uuconf_uclear_dialer (struct uuconf_dialer *qdialer)
 {
   qdialer->uuconf_zname = NULL;
   INIT_CHAT (&qdialer->uuconf_schat);

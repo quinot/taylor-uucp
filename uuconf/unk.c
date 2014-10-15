@@ -40,9 +40,7 @@ const char _uuconf_unk_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_system_unknown (pglobal, qsys)
-     pointer pglobal;
-     struct uuconf_system *qsys;
+uuconf_system_unknown (pointer pglobal, struct uuconf_system *qsys)
 {
 #if HAVE_TAYLOR_CONFIG
   return uuconf_taylor_system_unknown (pglobal, qsys);

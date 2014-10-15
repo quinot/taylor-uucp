@@ -13,9 +13,7 @@
 static boolean fslock_sys P((boolean, const char *));
 
 static boolean
-fslock_sys (flock, zname)
-     boolean flock;
-     const char *zname;
+fslock_sys (boolean flock, const char *zname)
 {
   size_t clen;
   char *z;
@@ -46,8 +44,7 @@ fslock_sys (flock, zname)
 /* Lock a remote system.  */
 
 boolean
-fsysdep_lock_system (qsys)
-     const struct uuconf_system *qsys;
+fsysdep_lock_system (const struct uuconf_system *qsys)
 {
   return fslock_sys (TRUE, qsys->uuconf_zname);
 }
@@ -55,8 +52,7 @@ fsysdep_lock_system (qsys)
 /* Unlock a remote system.  */
 
 boolean
-fsysdep_unlock_system (qsys)
-     const struct uuconf_system *qsys;
+fsysdep_unlock_system (const struct uuconf_system *qsys)
 {
   return fslock_sys (FALSE, qsys->uuconf_zname);
 }

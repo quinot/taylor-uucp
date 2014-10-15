@@ -143,10 +143,7 @@ static struct sreceive_ack *qTreceive_ack;
    or the tail of the list headed by *pq.  */
 
 static void
-utqueue (pq, q, fhead)
-     struct stransfer **pq;
-     struct stransfer *q;
-     boolean fhead;
+utqueue (struct stransfer **pq, struct stransfer *q, boolean fhead)
 {
   if (*pq == NULL)
     {
@@ -168,8 +165,7 @@ utqueue (pq, q, fhead)
 /* Dequeue a transfer structure.  */
 
 static void
-utdequeue (q)
-     struct stransfer *q;
+utdequeue (struct stransfer *q)
 {
   if (q->pqqueue != NULL)
     {
@@ -194,9 +190,7 @@ utdequeue (q)
 
 /*ARGSIGNORED*/
 boolean
-fqueue_local (qdaemon, qtrans)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     struct stransfer *qtrans;
+fqueue_local (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, struct stransfer *qtrans)
 {
   utdequeue (qtrans);
   utqueue (&qTlocal, qtrans, FALSE);
@@ -209,9 +203,7 @@ fqueue_local (qdaemon, qtrans)
    channel can be routed to the right place.  */
 
 boolean
-fqueue_remote (qdaemon, qtrans)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     struct stransfer *qtrans;
+fqueue_remote (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, struct stransfer *qtrans)
 {
   DEBUG_MESSAGE1 (DEBUG_UUCP_PROTO, "fqueue_remote: Channel %d",
 		  qtrans->iremote);
@@ -225,9 +217,7 @@ fqueue_remote (qdaemon, qtrans)
 /* Queue up a transfer with something to send.  */
 
 boolean
-fqueue_send (qdaemon, qtrans)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     struct stransfer *qtrans;
+fqueue_send (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, struct stransfer *qtrans)
 {
 #if DEBUG > 0
   if (qtrans->psendfn == NULL)
@@ -274,9 +264,7 @@ fqueue_send (qdaemon, qtrans)
 /* Queue up a transfer with something to receive.  */
 
 boolean
-fqueue_receive (qdaemon, qtrans)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     struct stransfer *qtrans;
+fqueue_receive (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, struct stransfer *qtrans)
 {
 #if DEBUG > 0
   if (qtrans->precfn == NULL)
@@ -298,9 +286,7 @@ fqueue_receive (qdaemon, qtrans)
 /* Get a new local channel number.  */
 
 static void
-utchanalc (qdaemon, qtrans)
-     struct sdaemon *qdaemon;
-     struct stransfer *qtrans;
+utchanalc (struct sdaemon *qdaemon, struct stransfer *qtrans)
 {
   do
     {
@@ -319,8 +305,7 @@ utchanalc (qdaemon, qtrans)
 
 __inline__
 static struct stransfer *
-qtchan (ic)
-     int ic;
+qtchan (int ic)
 {
   return aqTchan[ic];
 }
@@ -329,8 +314,7 @@ qtchan (ic)
 
 __inline__
 static void
-utchanfree (qt)
-     struct stransfer *qt;
+utchanfree (struct stransfer *qt)
 {
   if (qt->ilocal != 0)
     {
@@ -343,8 +327,7 @@ utchanfree (qt)
 /* Allocate a new transfer structure.  */
 
 struct stransfer *
-qtransalc (qcmd)
-     struct scmd *qcmd;
+qtransalc (struct scmd *qcmd)
 {
   register struct stransfer *q;
 
@@ -401,8 +384,7 @@ qtransalc (qcmd)
    information that may have been allocated.  */
 
 void
-utransfree (q)
-     struct stransfer *q;
+utransfree (struct stransfer *q)
 {
   ubuffree (q->zcmd);
   ubuffree ((char *) q->s.zfrom);
@@ -450,8 +432,7 @@ utransfree (q)
 /* Free a queue of transfer structures.  */
 
 static void
-utfree_queue (pq)
-     struct stransfer **pq;
+utfree_queue (struct stransfer **pq)
 {
   while (*pq != NULL)
     utransfree (*pq);
@@ -462,10 +443,7 @@ utfree_queue (pq)
    the work queue.  */
 
 static boolean
-fttime (qdaemon, pisecs, pimicros)
-     struct sdaemon *qdaemon;
-     long *pisecs;
-     long *pimicros;
+fttime (struct sdaemon *qdaemon, long int *pisecs, long int *pimicros)
 {
   *pisecs = ixsysdep_process_time (pimicros);
   if (*pisecs - iTchecktime >= CCHECKWAIT)
@@ -480,9 +458,7 @@ fttime (qdaemon, pisecs, pimicros)
    recompute time based control values.  */
 
 boolean
-fqueue (qdaemon, pfany)
-     struct sdaemon *qdaemon;
-     boolean *pfany;
+fqueue (struct sdaemon *qdaemon, boolean *pfany)
 {
   const struct uuconf_system *qsys;
   long ival;
@@ -600,8 +576,7 @@ fqueue (qdaemon, pfany)
    complete, or if the call is never made.  */
 
 void
-uclear_queue (qdaemon)
-     struct sdaemon *qdaemon;
+uclear_queue (struct sdaemon *qdaemon)
 {
   int i;
 
@@ -629,8 +604,7 @@ uclear_queue (qdaemon)
    queue was checked.  */
 
 static boolean
-fcheck_queue (qdaemon)
-     struct sdaemon *qdaemon;
+fcheck_queue (struct sdaemon *qdaemon)
 {
   /* Only check if we are the master, or if there are multiple
      channels, or if we aren't already trying to get the other side to
@@ -661,8 +635,7 @@ fcheck_queue (qdaemon)
    its time in this function.  */
 
 boolean
-floop (qdaemon)
-     struct sdaemon *qdaemon;
+floop (struct sdaemon *qdaemon)
 {
   boolean fret;
 
@@ -1244,12 +1217,7 @@ fgot_data (qdaemon, zfirst, cfirst, zsecond, csecond, ilocal, iremote, ipos,
    start up a new transfer.  */
 
 static boolean
-ftadd_cmd (qdaemon, z, clen, iremote, flast)
-     struct sdaemon *qdaemon;
-     const char *z;
-     size_t clen;
-     int iremote;
-     boolean flast;
+ftadd_cmd (struct sdaemon *qdaemon, const char *z, size_t clen, int iremote, boolean flast)
 {
   static char *zbuf;
   static size_t cbuf;
@@ -1352,9 +1320,7 @@ ftadd_cmd (qdaemon, z, clen, iremote, flast)
    don't bother to wait for it) and hang up.  */
 
 static boolean
-fremote_hangup_reply (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fremote_hangup_reply (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   boolean fret;
 
@@ -1392,9 +1358,7 @@ fremote_hangup_reply (qtrans, qdaemon)
 static struct sreceive_ack *qTfree_receive_ack;
 
 void
-usent_receive_ack (qdaemon, qtrans)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     struct stransfer *qtrans;
+usent_receive_ack (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, struct stransfer *qtrans)
 {
   struct sreceive_ack *q;
 
@@ -1417,8 +1381,7 @@ usent_receive_ack (qdaemon, qtrans)
 /* Free an sreceive_ack structure.  */
 
 static void
-utfree_receive_ack (q)
-     struct sreceive_ack *q;
+utfree_receive_ack (struct sreceive_ack *q)
 {
   ubuffree (q->zto);
   ubuffree (q->ztemp);
@@ -1434,9 +1397,7 @@ utfree_receive_ack (q)
    been acked.  */
 
 void
-uwindow_acked (qdaemon, fallacked)
-     struct sdaemon *qdaemon;
-     boolean fallacked;
+uwindow_acked (struct sdaemon *qdaemon, boolean fallacked)
 {
   register struct sreceive_ack **pq;
 
@@ -1463,7 +1424,7 @@ uwindow_acked (qdaemon, fallacked)
 /* Free the qTreceive_ack list.  */
 
 static void
-utfree_acked ()
+utfree_acked (void)
 {
   struct sreceive_ack *q;
 
@@ -1487,8 +1448,7 @@ utfree_acked ()
    number of bytes the remote site actually received.  */
 
 void
-ufailed (qdaemon)
-     struct sdaemon *qdaemon;
+ufailed (struct sdaemon *qdaemon)
 {
   register struct stransfer *q;
 
@@ -1547,9 +1507,7 @@ ufailed (qdaemon)
 
 /*ARGSUSED*/
 static boolean
-flocal_poll_file (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+flocal_poll_file (struct stransfer *qtrans, struct sdaemon *qdaemon ATTRIBUTE_UNUSED)
 {
   boolean fret;
 

@@ -183,9 +183,7 @@ static const struct option asSlongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -a: list all jobs.  */
   boolean fall = FALSE;
@@ -586,7 +584,7 @@ main (argc, argv)
 /* Print a usage message and die.  */
 
 static void
-ususage ()
+ususage (void)
 {
   fprintf (stderr, "Usage: %s [options]\n", zProgram);
   fprintf (stderr, "Use %s --help for help\n", zProgram);
@@ -596,7 +594,7 @@ ususage ()
 /* Print a help message.  */
 
 static void
-ushelp ()
+ushelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
@@ -673,9 +671,7 @@ static const struct uuconf_cmdtab asSxqt_cmds[] =
 /* Read an execution file, setting the above variables.  */
 
 static boolean
-fsxqt_file_read (puuconf, e)
-     pointer puuconf;
-     FILE *e;
+fsxqt_file_read (pointer puuconf, FILE *e)
 {
   int iuuconf;
   boolean fret;
@@ -716,7 +712,7 @@ fsxqt_file_read (puuconf, e)
 /* Free up the information read from an execution file.  */
 
 static void
-usxqt_file_free ()
+usxqt_file_free (void)
 {
   int i;
 
@@ -741,12 +737,7 @@ usxqt_file_free ()
 
 /*ARGSUSED*/
 static int
-isxqt_cmd (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+isxqt_cmd (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   size_t clen;
   int i;
@@ -776,12 +767,7 @@ isxqt_cmd (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-isxqt_file (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+isxqt_file (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   if (argc != 2 && argc != 3)
     return UUCONF_CMDTABRET_CONTINUE;
@@ -803,12 +789,7 @@ isxqt_file (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-isxqt_user (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+isxqt_user (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   zSxqt_user = zbufcpy (argv[1]);
   zSxqt_system = zbufcpy (argv[2]);
@@ -1366,12 +1347,7 @@ fsworkfile_show (puuconf, icmd, qsys, qcmd, itime, ccommands, pazcommands,
 /* Show the header of the line describing a workfile.  */
 
 static void
-usworkfile_header (qsys, qcmd, zjobid, itime, ffirst)
-     const struct uuconf_system *qsys;
-     const struct scmd *qcmd;
-     const char *zjobid;
-     long itime;
-     boolean ffirst;
+usworkfile_header (const struct uuconf_system *qsys, const struct scmd *qcmd, const char *zjobid, long int itime, boolean ffirst)
 {
   const char *zshowid;
   struct tm stime;
@@ -1969,13 +1945,7 @@ static boolean fsquery_show P((const struct uuconf_system *qsys, int cwork,
 			       boolean fnotsystems, long iold, long iyoung));
 
 static boolean
-fsquery (puuconf, csystems, pazsystems, fnotsystems, iold, iyoung)
-     pointer puuconf;
-     int csystems;
-     char **pazsystems;
-     boolean fnotsystems;
-     long iold;
-     long iyoung;
+fsquery (pointer puuconf, int csystems, char **pazsystems, boolean fnotsystems, long int iold, long int iyoung)
 {
   int iuuconf;
   const char *zlocalname;
@@ -2345,8 +2315,7 @@ fsquery_show (qsys, cwork, ifirstwork, qxqt, inow, zlocalname,
 /* Print a time difference in the largest applicable units.  */
 
 static int
-csunits_show (idiff)
-     long idiff;
+csunits_show (long int idiff)
 {
   const char *zunit;
   long iunits;
@@ -2394,7 +2363,7 @@ csunits_show (idiff)
    systems.  */
 
 static boolean
-fsmachines ()
+fsmachines (void)
 {
   pointer phold;
   char *zsystem;

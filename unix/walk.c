@@ -22,11 +22,7 @@ static void (*puSfn) P((const char *zfull, const char *zrelative,
 static pointer pSinfo;
 
 boolean
-usysdep_walk_tree (zdir, pufn, pinfo)
-     const char *zdir;
-     void (*pufn) P((const char *zfull, const char *zrelative,
-		     pointer pinfo));
-     pointer pinfo;
+usysdep_walk_tree (const char *zdir, void (*pufn) (const char *, const char *, pointer), pointer pinfo)
 {
   cSlen = strlen (zdir) + 1;
   puSfn = pufn;
@@ -39,10 +35,7 @@ usysdep_walk_tree (zdir, pufn, pinfo)
 
 /*ARGSUSED*/
 static int
-iswalk_dir (zname, qstat, iflag)
-     const char *zname;
-     const struct stat *qstat ATTRIBUTE_UNUSED;
-     int iflag;
+iswalk_dir (const char *zname, const struct stat *qstat ATTRIBUTE_UNUSED, int iflag)
 {
   char *zcopy;
 

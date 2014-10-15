@@ -7,8 +7,7 @@
 #include "uudefs.h"
 
 void
-xfree (p)
-     pointer p;
+xfree (pointer p)
 {
   if (p != NULL)
     free (p);

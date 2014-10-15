@@ -40,8 +40,7 @@ __inline__ static boolean fneeds_quotes P((const char *z));
 
 __inline__
 static boolean
-fneeds_quotes (z)
-     const char *z;
+fneeds_quotes (const char *z)
 {
   return z != NULL && z[strcspn (z, " \t\n")] != '\0';
 }
@@ -49,8 +48,7 @@ fneeds_quotes (z)
 /* Return whether a command needs quotes.  */
 
 boolean
-fcmd_needs_quotes (qcmd)
-     const struct scmd *qcmd;
+fcmd_needs_quotes (const struct scmd *qcmd)
 {
   if (fneeds_quotes (qcmd->zfrom)
       || fneeds_quotes (qcmd->zto)
@@ -70,9 +68,7 @@ fcmd_needs_quotes (qcmd)
    freshly allocated strings.  */
 
 void
-uquote_cmd (qorig, qnew)
-     const struct scmd *qorig;
-     struct scmd *qnew;
+uquote_cmd (const struct scmd *qorig, struct scmd *qnew)
 {
   qnew->bcmd = qorig->bcmd;
   qnew->bgrade = qorig->bgrade;
@@ -110,8 +106,7 @@ uquote_cmd (qorig, qnew)
 /* Free a command structure created by uquote_cmd.  */
 
 void
-ufree_quoted_cmd (qcmd)
-     struct scmd *qcmd;
+ufree_quoted_cmd (struct scmd *qcmd)
 {
   ubuffree ((char *) qcmd->zfrom);
   ubuffree ((char *) qcmd->zto);

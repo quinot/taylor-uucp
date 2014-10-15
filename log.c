@@ -132,8 +132,7 @@ void (*pfLend) P((void));
 /* Set the function to call on a LOG_FATAL error.  */
 
 void
-ulog_fatal_fn (pfn)
-     void (*pfn) P((void));
+ulog_fatal_fn (void (*pfn) (void))
 {
   pfLfatal = pfn;
 }
@@ -141,9 +140,7 @@ ulog_fatal_fn (pfn)
 /* Decide whether to send log message to the file or not.  */
 
 void
-ulog_to_file (puuconf, ffile)
-     pointer puuconf;
-     boolean ffile;
+ulog_to_file (pointer puuconf, boolean ffile)
 {
   int iuuconf;
 
@@ -168,8 +165,7 @@ ulog_to_file (puuconf, ffile)
    if there is something sensible to set it to.  */
 
 void
-ulog_id (i)
-     int i;
+ulog_id (int i)
 {
   iLid = i;
 }
@@ -178,8 +174,7 @@ ulog_id (i)
    copied into memory.  */
 
 void
-ulog_user (zuser)
-     const char *zuser;
+ulog_user (const char *zuser)
 {
   ubuffree (zLuser);
   zLuser = zbufcpy (zuser);
@@ -189,8 +184,7 @@ ulog_user (zuser)
    into memory.  */
 
 void
-ulog_system (zsystem)
-  const char *zsystem;
+ulog_system (const char *zsystem)
 {
   if (zsystem == NULL
       || zLsystem == NULL
@@ -208,8 +202,7 @@ ulog_system (zsystem)
 /* Set the device name.  This is copied into memory.  */
 
 void
-ulog_device (zdevice)
-     const char *zdevice;
+ulog_device (const char *zdevice)
 {
   ubuffree (zLdevice);
   zLdevice = zbufcpy (zdevice);
@@ -218,9 +211,7 @@ ulog_device (zdevice)
 /* A helper function for ulog.  */
 
 __inline__ static char *
-zstpcpy (zto, zfrom)
-     char *zto;
-     const char *zfrom;
+zstpcpy (char *zto, const char *zfrom)
 {
   while ((*zto++ = *zfrom++) != '\0')
     ;
@@ -603,10 +594,7 @@ ulog (ttype, zmsg, a, b, c, d, f, g, h, i, j)
 /* Log a uuconf error.  */
 
 void
-ulog_uuconf (ttype, puuconf, iuuconf)
-     enum tlog ttype;
-     pointer puuconf;
-     int iuuconf;
+ulog_uuconf (enum tlog ttype, pointer puuconf, int iuuconf)
 {
   char ab[512];
 
@@ -618,7 +606,7 @@ ulog_uuconf (ttype, puuconf, iuuconf)
    so we don't check for them.  */
 
 void
-ulog_close ()
+ulog_close (void)
 {
   /* Make sure we logged any signal we received.  */
   ulog (LOG_ERROR, (const char *) NULL);
@@ -645,15 +633,7 @@ ulog_close ()
 
 /*ARGSUSED*/
 void
-ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fcaller)
-     boolean fsucceeded;
-     const char *zuser;
-     const char *zsystem;
-     boolean fsent;
-     long cbytes;
-     long csecs;
-     long cmicros;
-     boolean fcaller ATTRIBUTE_UNUSED;
+ustats (boolean fsucceeded, const char *zuser, const char *zsystem, boolean fsent, long int cbytes, long int csecs, long int cmicros, boolean fcaller ATTRIBUTE_UNUSED)
 {
   long cbps;
 
@@ -755,7 +735,7 @@ ustats (fsucceeded, zuser, zsystem, fsent, cbytes, csecs, cmicros, fcaller)
 /* Close the statistics file.  */
 
 void
-ustats_close ()
+ustats_close (void)
 {
   if (eLstats != NULL)
     {
@@ -769,7 +749,7 @@ ustats_close ()
 /* Return the date and time in a form used for a log entry.  */
 
 static const char *
-zldate_and_time ()
+zldate_and_time (void)
 {
   long isecs, imicros;
   struct tm s;

@@ -36,9 +36,7 @@ const char _uuconf_addblk_rcsid[] = "$Id$";
    failure. */
 
 int
-uuconf_add_block (pblock, padd)
-     pointer pblock;
-     pointer padd;
+uuconf_add_block (pointer pblock, pointer padd)
 {
   struct sblock *q = (struct sblock *) pblock;
   struct sadded *qnew;

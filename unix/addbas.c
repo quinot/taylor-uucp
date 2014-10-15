@@ -10,9 +10,7 @@
 /* If we have a directory, add a base name.  */
 
 char *
-zsysdep_add_base (zfile, zname)
-     const char *zfile;
-     const char *zname;
+zsysdep_add_base (const char *zfile, const char *zname)
 {
   size_t clen;
   const char *zlook;

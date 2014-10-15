@@ -63,7 +63,7 @@ struct pollfd
 #endif
 
 void
-usysdep_pause ()
+usysdep_pause (void)
 {
 #if HAVE_NAPMS
   napms (500);

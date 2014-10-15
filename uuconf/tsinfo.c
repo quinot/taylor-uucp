@@ -187,10 +187,7 @@ static const struct cmdtab_offset asIcmds[] =
    default information is set.  */
 
 int
-_uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
-     struct sglobal *qglobal;
-     const char *zsystem;
-     struct uuconf_system *qsys;
+_uuconf_itaylor_system_internal (struct sglobal *qglobal, const char *zsystem, struct uuconf_system *qsys)
 {
   int iret;
   struct stsysloc *qloc;
@@ -304,10 +301,10 @@ _uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
   if (iret == UUCONF_SUCCESS)
     {
       qsys->uuconf_fcalled = TRUE;
-      if (qsys->uuconf_zport != (char *) &_uuconf_unset
-	  || qsys->uuconf_qport != (struct uuconf_port *) &_uuconf_unset
+      if (qsys->uuconf_zport != UUCONF_UNSET
+	  || qsys->uuconf_qport != UUCONF_UNSET
 	  || qsys->uuconf_ibaud >= 0
-	  || qsys->uuconf_zphone != (char *) &_uuconf_unset)
+	  || qsys->uuconf_zphone != UUCONF_UNSET)
 	qsys->uuconf_fcall = TRUE;
     }
 
@@ -328,20 +325,19 @@ _uuconf_itaylor_system_internal (qglobal, zsystem, qsys)
    used.  */
 
 static void
-uiset_call (qsys)
-     struct uuconf_system *qsys;
+uiset_call (struct uuconf_system *qsys)
 {
   qsys->uuconf_fcall =
-    (qsys->uuconf_qtimegrade != (struct uuconf_timespan *) &_uuconf_unset
-     || qsys->uuconf_zport != (char *) &_uuconf_unset
-     || qsys->uuconf_qport != (struct uuconf_port *) &_uuconf_unset
+    (qsys->uuconf_qtimegrade != UUCONF_UNSET
+     || qsys->uuconf_zport != UUCONF_UNSET
+     || qsys->uuconf_qport != UUCONF_UNSET
      || qsys->uuconf_ibaud >= 0
-     || qsys->uuconf_zphone != (char *) &_uuconf_unset
-     || qsys->uuconf_schat.uuconf_pzchat != (char **) &_uuconf_unset
-     || qsys->uuconf_schat.uuconf_pzprogram != (char **) &_uuconf_unset);
+     || qsys->uuconf_zphone != UUCONF_UNSET
+     || qsys->uuconf_schat.uuconf_pzchat != UUCONF_UNSET
+     || qsys->uuconf_schat.uuconf_pzprogram != UUCONF_UNSET);
 
   qsys->uuconf_fcalled =
-    qsys->uuconf_zcalled_login != (char *) &_uuconf_unset;
+    qsys->uuconf_zcalled_login != UUCONF_UNSET;
 }
 
 /* Handle the "system" command.  Because we skip directly to the
@@ -349,12 +345,7 @@ uiset_call (qsys)
    end of it.  */
 
 static int
-iisystem (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iisystem (pointer pglobal ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   return UUCONF_CMDTABRET_EXIT;
 }
@@ -363,12 +354,7 @@ iisystem (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iialias (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iialias (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -389,12 +375,7 @@ iialias (pglobal, argc, argv, pvar, pinfo)
    of the list of alternates in sIalternate.  */
 
 static int
-iialternate (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iialternate (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -458,12 +439,7 @@ iialternate (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iidefault_alternates (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iidefault_alternates (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -478,12 +454,7 @@ iidefault_alternates (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iitime (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+iitime (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   char *aznew[4];
   char ab[2];
@@ -507,12 +478,7 @@ iitime (pglobal, argc, argv, pvar, pinfo)
    arguments.  */
 
 static int
-iitimegrade (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+iitimegrade (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_timespan **pqspan = (struct uuconf_timespan **) pvar;
@@ -546,12 +512,7 @@ iitimegrade (pglobal, argc, argv, pvar, pinfo)
 /* Handle the "baud-range" command, also known as "speed-range".  */
 
 static int
-iibaud_range (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iibaud_range (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_system *qsys = (struct uuconf_system *) pvar;
@@ -572,12 +533,7 @@ iibaud_range (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iisize (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+iisize (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_timespan **pqspan = (struct uuconf_timespan **) pvar;
@@ -599,9 +555,7 @@ iisize (pglobal, argc, argv, pvar, pinfo)
 /* A comparison function for sizes to pass to _uuconf_itime_parse.  */
 
 static int
-iisizecmp (i1, i2)
-     long i1;
-     long i2;
+iisizecmp (long int i1, long int i2)
 {
   /* We can't just return i1 - i2 because that would be a long.  */
   if (i1 < i2)
@@ -618,12 +572,7 @@ iisizecmp (i1, i2)
 
 /*ARGSUSED*/
 static int
-iiport (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iiport (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -640,7 +589,7 @@ iiport (pglobal, argc, argv, pvar, pinfo)
       int iret;
 
       if (qinfo->qsys->uuconf_qport
-	  == (struct uuconf_port *) &_uuconf_unset)
+	  == UUCONF_UNSET)
 	{
 	  struct uuconf_port *qnew;
 
@@ -703,12 +652,7 @@ iiport (pglobal, argc, argv, pvar, pinfo)
    hand off to the generic chat script function.  */
 
 static int
-iichat (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+iichat (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -726,12 +670,7 @@ iichat (pglobal, argc, argv, pvar, pinfo)
    the "debug" command.  */
 
 static int
-iidebug (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+iidebug (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -750,12 +689,7 @@ iidebug (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iicalled_login (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iicalled_login (pointer pglobal ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   char **pz = (char **) pvar;
 
@@ -769,18 +703,13 @@ iicalled_login (pglobal, argc, argv, pvar, pinfo)
    the generic protocol parameter handler.  */
 
 static int
-iiproto_param (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+iiproto_param (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_proto_param **pqparam = (struct uuconf_proto_param **) pvar;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
 
-  if (*pqparam == (struct uuconf_proto_param *) &_uuconf_unset)
+  if (*pqparam == UUCONF_UNSET)
     *pqparam = NULL;
   return _uuconf_iadd_proto_param (qglobal, argc - 1, argv + 1, pqparam,
 				   qinfo->qsys->uuconf_palloc);
@@ -791,12 +720,7 @@ iiproto_param (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iirequest (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iirequest (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -815,12 +739,7 @@ iirequest (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iitransfer (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iitransfer (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -839,12 +758,7 @@ iitransfer (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iiforward (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+iiforward (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -877,12 +791,7 @@ iiforward (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-iiunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iiunknown (pointer pglobal ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }
@@ -892,9 +801,7 @@ iiunknown (pglobal, argc, argv, pvar, pinfo)
    functions out of this file.  Perhaps I will do it sometime.  */
 
 int
-uuconf_taylor_system_unknown (pglobal, qsys)
-     pointer pglobal;
-     struct uuconf_system *qsys;
+uuconf_taylor_system_unknown (pointer pglobal, struct uuconf_system *qsys)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_cmdtab as[CSYSTEM_CMDS];

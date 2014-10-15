@@ -10,9 +10,7 @@
 #include <errno.h>
 
 boolean
-fsysdep_make_dirs (zfile, fpublic)
-     const char *zfile;
-     boolean fpublic;
+fsysdep_make_dirs (const char *zfile, boolean fpublic)
 {
   char *zcopy, *z;
   int imode;

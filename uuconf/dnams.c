@@ -31,9 +31,7 @@ const char _uuconf_dnams_rcsid[] = "$Id$";
 /* Get all known dialer names.  */
 
 int
-uuconf_dialer_names (pglobal, ppzdialers)
-     pointer pglobal;
-     char ***ppzdialers;
+uuconf_dialer_names (pointer pglobal, char ***ppzdialers)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pztaylor;

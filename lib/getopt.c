@@ -138,8 +138,7 @@ static int last_nonopt;
    the new indices of the non-options in ARGV after they are moved.  */
 
 static void
-exchange (argv)
-     char **argv;
+exchange (char **argv)
 {
   size_t nonopts_size = (last_nonopt - first_nonopt) * sizeof (char *);
   char **temp = (char **) malloc (nonopts_size);
@@ -221,13 +220,7 @@ exchange (argv)
    long-named options.  */
 
 int
-_getopt_internal (argc, argv, optstring, longopts, longind, long_only)
-     int argc;
-     char *const *argv;
-     const char *optstring;
-     const struct option *longopts;
-     int *longind;
-     int long_only;
+_getopt_internal (int argc, char *const *argv, const char *optstring, const struct option *longopts, int *longind, int long_only)
 {
   int option_index;
 
@@ -364,7 +357,7 @@ _getopt_internal (argc, argv, optstring, longopts, longind, long_only)
 	   p++, option_index++)
 	if (!strncmp (p->name, nextchar, (size_t) (s - nextchar)))
 	  {
-	    if (s - nextchar == strlen (p->name))
+	    if ((unsigned) (s - nextchar) == strlen (p->name))
 	      {
 		/* Exact match found.  */
 		pfound = p;

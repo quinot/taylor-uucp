@@ -33,8 +33,7 @@ const char _uuconf_iniglb_rcsid[] = "$Id$";
 /* Initialize the global information structure.  */
 
 int
-_uuconf_iinit_global (pqglobal)
-     struct sglobal **pqglobal;
+_uuconf_iinit_global (struct sglobal **pqglobal)
 {
   pointer pblock;
   register struct sprocess *qprocess;
@@ -153,12 +152,7 @@ _uuconf_iinit_global (pqglobal)
 
 /*ARGSUSED*/
 int
-_uuconf_itimetable (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+_uuconf_itimetable (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

@@ -40,10 +40,7 @@ const char conn_rcsid[] = "$Id$";
    use.  */
 
 boolean
-fconn_init (qport, qconn, ttype)
-     struct uuconf_port *qport;
-     struct sconnection *qconn;
-     enum uuconf_porttype ttype;
+fconn_init (struct uuconf_port *qport, struct sconnection *qconn, enum uuconf_porttype ttype)
 {
   qconn->qport = qport;
   switch (qport == NULL ? ttype : qport->uuconf_ttype)
@@ -75,8 +72,7 @@ fconn_init (qport, qconn, ttype)
 /* Free a connection.  */
 
 void
-uconn_free (qconn)
-     struct sconnection *qconn;
+uconn_free (struct sconnection *qconn)
 {
   (*qconn->qcmds->pufree) (qconn);
 }
@@ -84,10 +80,7 @@ uconn_free (qconn)
 /* Lock a connection.   */
 
 boolean
-fconn_lock (qconn, fin, fuser)
-     struct sconnection *qconn;
-     boolean fin;
-     boolean fuser;
+fconn_lock (struct sconnection *qconn, boolean fin, boolean fuser)
 {
   boolean (*pflock) P((struct sconnection *, boolean, boolean));
 
@@ -100,8 +93,7 @@ fconn_lock (qconn, fin, fuser)
 /* Unlock a connection.  */
 
 boolean
-fconn_unlock (qconn)
-     struct sconnection *qconn;
+fconn_unlock (struct sconnection *qconn)
 {
   boolean (*pfunlock) P((struct sconnection *));
 
@@ -114,12 +106,7 @@ fconn_unlock (qconn)
 /* Open a connection.  */
 
 boolean
-fconn_open (qconn, ibaud, ihighbaud, fwait, fuser)
-     struct sconnection *qconn;
-     long ibaud;
-     long ihighbaud;
-     boolean fwait;
-     boolean fuser;
+fconn_open (struct sconnection *qconn, long int ibaud, long int ihighbaud, boolean fwait, boolean fuser)
 {
   boolean fret;
 
@@ -188,11 +175,7 @@ fconn_open (qconn, ibaud, ihighbaud, fwait, fuser)
 /* Close a connection.  */
 
 boolean
-fconn_close (qconn, puuconf, qdialer, fsuccess)
-     struct sconnection *qconn;
-     pointer puuconf;
-     struct uuconf_dialer *qdialer;
-     boolean fsuccess;
+fconn_close (struct sconnection *qconn, pointer puuconf, struct uuconf_dialer *qdialer, boolean fsuccess)
 {
   boolean fret;
 
@@ -217,13 +200,7 @@ fconn_close (qconn, puuconf, qdialer, fsuccess)
 /* Dial out on the connection.  */
 
 boolean
-fconn_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialerfound)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const struct uuconf_system *qsys;
-     const char *zphone;
-     struct uuconf_dialer *qdialer;
-     enum tdialerfound *ptdialerfound;
+fconn_dial (struct sconnection *qconn, pointer puuconf, const struct uuconf_system *qsys, const char *zphone, struct uuconf_dialer *qdialer, enum tdialerfound *ptdialerfound)
 {
   struct uuconf_dialer sdialer;
   enum tdialerfound tfound;
@@ -248,13 +225,7 @@ fconn_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialerfound)
 /* Read data from the connection.  */
 
 boolean
-fconn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
-     struct sconnection *qconn;
-     char *zbuf;
-     size_t *pclen;
-     size_t cmin;
-     int ctimeout;
-     boolean freport;
+fconn_read (struct sconnection *qconn, char *zbuf, size_t *pclen, size_t cmin, int ctimeout, boolean freport)
 {
   boolean fret;
 
@@ -274,10 +245,7 @@ fconn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 /* Write data to the connection.  */
 
 boolean
-fconn_write (qconn, zbuf, clen)
-     struct sconnection *qconn;
-     const char *zbuf;
-     size_t clen;
+fconn_write (struct sconnection *qconn, const char *zbuf, size_t clen)
 {
 #if DEBUG > 1
   if (FDEBUGGING (DEBUG_OUTGOING))
@@ -292,12 +260,7 @@ fconn_write (qconn, zbuf, clen)
 /* Read and write data.  */
 
 boolean
-fconn_io (qconn, zwrite, pcwrite, zread, pcread)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t *pcwrite;
-     char *zread;
-     size_t *pcread;
+fconn_io (struct sconnection *qconn, const char *zwrite, size_t *pcwrite, char *zread, size_t *pcread)
 {
   boolean fret;
 #if DEBUG > 1
@@ -333,8 +296,7 @@ fconn_io (qconn, zwrite, pcwrite, zread, pcread)
    support break characters, in which case we just return TRUE.  */
 
 boolean
-fconn_break (qconn)
-     struct sconnection *qconn;
+fconn_break (struct sconnection *qconn)
 {
   boolean (*pfbreak) P((struct sconnection *));
 
@@ -351,11 +313,7 @@ fconn_break (qconn)
    support this, in which case we just return TRUE.  */
 
 boolean
-fconn_set (qconn, tparity, tstrip, txonxoff)
-     struct sconnection *qconn;
-     enum tparitysetting tparity;
-     enum tstripsetting tstrip;
-     enum txonxoffsetting txonxoff;
+fconn_set (struct sconnection *qconn, enum tparitysetting tparity, enum tstripsetting tstrip, enum txonxoffsetting txonxoff)
 {
   boolean (*pfset) P((struct sconnection *, enum tparitysetting,
 		      enum tstripsetting, enum txonxoffsetting));
@@ -374,9 +332,7 @@ fconn_set (qconn, tparity, tstrip, txonxoff)
 /* Require or ignore carrier on a connection.  */
 
 boolean
-fconn_carrier (qconn, fcarrier)
-     struct sconnection *qconn;
-     boolean fcarrier;
+fconn_carrier (struct sconnection *qconn, boolean fcarrier)
 {
   boolean (*pfcarrier) P((struct sconnection *, boolean));
 
@@ -389,9 +345,7 @@ fconn_carrier (qconn, fcarrier)
 /* Run a chat program on a connection.  */
 
 boolean
-fconn_run_chat (qconn, pzprog)
-     struct sconnection *qconn;
-     char **pzprog;
+fconn_run_chat (struct sconnection *qconn, char **pzprog)
 {
   return (*qconn->qcmds->pfchat) (qconn, pzprog);
 }
@@ -399,8 +353,7 @@ fconn_run_chat (qconn, pzprog)
 /* Get the baud rate of a connection.  */
 
 long
-iconn_baud (qconn)
-     struct sconnection *qconn;
+iconn_baud (struct sconnection *qconn)
 {
   long (*pibaud) P((struct sconnection *));
 
@@ -519,13 +472,7 @@ fconn_dial_sequence (qconn, puuconf, pzdialer, qsys, zphone, qdialer,
 
 /*ARGSUSED*/
 boolean
-fmodem_dial (qconn, puuconf, qsys, zphone, qdialer, ptdialerfound)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const struct uuconf_system *qsys;
-     const char *zphone;
-     struct uuconf_dialer *qdialer;
-     enum tdialerfound *ptdialerfound;
+fmodem_dial (struct sconnection *qconn, pointer puuconf, const struct uuconf_system *qsys, const char *zphone, struct uuconf_dialer *qdialer, enum tdialerfound *ptdialerfound)
 {
   char **pzdialer;
 

@@ -31,14 +31,7 @@ const char _uuconf_port_rcsid[] = "$Id$";
 /* Find a port by name, baud rate, and special purpose function.  */
 
 int
-uuconf_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
-     pointer pglobal;
-     const char *zname;
-     long ibaud;
-     long ihighbaud;
-     int (*pifn) P((struct uuconf_port *, pointer));
-     pointer pinfo;
-     struct uuconf_port *qport;
+uuconf_find_port (pointer pglobal, const char *zname, long int ibaud, long int ihighbaud, int (*pifn) (struct uuconf_port *, pointer), pointer pinfo, struct uuconf_port *qport)
 {
 #if HAVE_V2_CONFIG || HAVE_HDB_CONFIG
   struct sglobal *qglobal = (struct sglobal *) pglobal;

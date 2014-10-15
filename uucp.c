@@ -137,9 +137,7 @@ static boolean fCneeds_cwd;
 /* The main program.  */
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
@@ -149,8 +147,6 @@ main (argc, argv)
   boolean fuucico = TRUE;
   /* -R: copy directories recursively.  */
   boolean frecursive = FALSE;
-  /* -s: report status to named file.  */
-  const char *zstatus_file = NULL;
   /* -t: emulate uuto.  */
   boolean fuuto = FALSE;
   int iopt;
@@ -227,11 +223,6 @@ main (argc, argv)
 	case 'R':
 	  /* Copy directories recursively.  */
 	  frecursive = TRUE;
-	  break;
-
-	case 's':
-	  /* Report status to named file.  */
-	  zstatus_file = optarg;
 	  break;
 
 	case 't':
@@ -624,7 +615,7 @@ main (argc, argv)
 /* Print usage message and die.  */
 
 static void
-ucusage ()
+ucusage (void)
 {
   fprintf (stderr,
 	   "Usage: %s [options] file1 [file2 ...] dest\n", zProgram);
@@ -635,7 +626,7 @@ ucusage ()
 /* Print help message.  */
 
 static void
-uchelp ()
+uchelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	   VERSION);
@@ -666,10 +657,7 @@ uchelp ()
 /* This is called for each file in a directory heirarchy.  */
 
 static void
-ucdirfile (zfull, zrelative, pinfo)
-     const char *zfull;
-     const char *zrelative;
-     pointer pinfo;
+ucdirfile (const char *zfull, const char *zrelative, pointer pinfo)
 {
   const char *zdestfile = (const char *) pinfo;
   char *zto;
@@ -689,10 +677,7 @@ ucdirfile (zfull, zrelative, pinfo)
    absolute path.  */
 
 static void
-uccopy (zfile, zdest, fforcelocal)
-     const char *zfile;
-     const char *zdest;
-     boolean fforcelocal;
+uccopy (const char *zfile, const char *zdest, boolean fforcelocal)
 {
   struct scmd s;
   char *zexclam;
@@ -1134,10 +1119,7 @@ struct sjob
 static struct sjob *qCjobs;
 
 static void
-ucadd_cmd (qsys, qcmd, zlog)
-     const struct uuconf_system *qsys;
-     const struct scmd *qcmd;
-     const char *zlog;
+ucadd_cmd (const struct uuconf_system *qsys, const struct scmd *qcmd, const char *zlog)
 {
   struct sjob *qjob;
 
@@ -1173,8 +1155,7 @@ ucadd_cmd (qsys, qcmd, zlog)
 }
 
 static void
-ucspool_cmds (fjobid)
-     boolean fjobid;
+ucspool_cmds (boolean fjobid)
 {
   struct sjob *qjob;
   char *zjobid;
@@ -1232,8 +1213,7 @@ ucspool_cmds (fjobid)
    FALSE if we didn't create work for any system.  */
 
 static const char *
-zcone_system (pfany)
-     boolean *pfany;
+zcone_system (boolean *pfany)
 {
   if (qCjobs == NULL)
     {
@@ -1256,8 +1236,7 @@ static int cCfiles;
 static const char **pCaz;
 
 static void
-ucrecord_file (zfile)
-     const char *zfile;
+ucrecord_file (const char *zfile)
 {
   pCaz = (const char **) xrealloc ((pointer) pCaz,
 				   (cCfiles + 1) * sizeof (const char *));
@@ -1268,7 +1247,7 @@ ucrecord_file (zfile)
 /* Delete all the files we have recorded and exit.  */
 
 static void
-ucabort ()
+ucabort (void)
 {
   int i;
 

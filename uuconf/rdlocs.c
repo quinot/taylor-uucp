@@ -80,8 +80,7 @@ struct sinfo
    necessary.  */
 
 int
-_uuconf_iread_locations (qglobal)
-     struct sglobal *qglobal;
+_uuconf_iread_locations (struct sglobal *qglobal)
 {
   char *zline;
   size_t cline;
@@ -183,12 +182,7 @@ _uuconf_iread_locations (qglobal)
 
 /*ARGSUSED*/
 static int
-itsystem (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+itsystem (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -234,12 +228,7 @@ itsystem (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-itcalled_login (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+itcalled_login (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct sinfo *qinfo = (struct sinfo *) pinfo;
@@ -290,12 +279,7 @@ itcalled_login (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-itmyname (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+itmyname (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

@@ -33,12 +33,7 @@
 /* See whether a file is in a directory, and optionally check access.  */
 
 boolean
-fsysdep_in_directory (zfile, zdir, fcheck, freadable, zuser)
-     const char *zfile;
-     const char *zdir;
-     boolean fcheck;
-     boolean freadable;
-     const char *zuser;
+fsysdep_in_directory (const char *zfile, const char *zdir, boolean fcheck, boolean freadable, const char *zuser)
 {
   size_t c;
   char *zcopy, *zslash;

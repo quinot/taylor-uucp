@@ -143,9 +143,7 @@ static long cFrec_retries;
 /* Start the protocol.  */
 
 boolean
-ffstart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+ffstart (struct sdaemon *qdaemon, char **pzlog)
 {
   *pzlog = NULL;
 
@@ -172,8 +170,7 @@ ffstart (qdaemon, pzlog)
 
 /*ARGSIGNORED*/
 boolean
-ffshutdown (qdaemon)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+ffshutdown (struct sdaemon *qdaemon ATTRIBUTE_UNUSED)
 {
   xfree ((pointer) zFbuf);
   zFbuf = NULL;
@@ -193,11 +190,7 @@ ffshutdown (qdaemon)
 
 /*ARGSUSED*/
 boolean
-ffsendcmd (qdaemon, z, ilocal, iremote)
-     struct sdaemon *qdaemon;
-     const char *z;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
+ffsendcmd (struct sdaemon *qdaemon, const char *z, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED)
 {
   size_t clen;
   char *zalc;
@@ -220,9 +213,7 @@ ffsendcmd (qdaemon, z, ilocal, iremote)
 
 /*ARGSIGNORED*/
 char *
-zfgetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     size_t *pclen;
+zfgetspace (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, size_t *pclen)
 {
   *pclen = CFBUFSIZE;
   if (zFbuf == NULL)
@@ -235,13 +226,7 @@ zfgetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-ffsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
-     struct sdaemon *qdaemon;
-     char *zdata;
-     size_t cdata;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
-     long ipos ATTRIBUTE_UNUSED;
+ffsenddata (struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED, long int ipos ATTRIBUTE_UNUSED)
 {
   char ab[CFBUFSIZE * 2];
   char *ze;
@@ -319,10 +304,7 @@ ffsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
    for the checksum.  */
 
 static boolean
-ffprocess_data (qdaemon, pfexit, pcneed)
-     struct sdaemon *qdaemon;
-     boolean *pfexit;
-     size_t *pcneed;
+ffprocess_data (struct sdaemon *qdaemon, boolean *pfexit, size_t *pcneed)
 {
   int i;
   register unsigned int itmpchk;
@@ -507,7 +489,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
 	{
 	  DEBUG_MESSAGE1 (DEBUG_PROTO,
 			  "ffprocess_data: Got %d bytes",
-			  zto - zstart);
+			  (int) (zto - zstart));
 
 	  cFrec_data += zto - zstart;
 	  if (! fgot_data (qdaemon, zstart, (size_t) (zto - zstart),
@@ -543,8 +525,7 @@ ffprocess_data (qdaemon, pfexit, pcneed)
    command or a file.  */
 
 boolean
-ffwait (qdaemon)
-     struct sdaemon *qdaemon;
+ffwait (struct sdaemon *qdaemon)
 {
   while (TRUE)
     {
@@ -579,13 +560,7 @@ ffwait (qdaemon)
 
 /*ARGSUSED*/
 boolean
-fffile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
-     struct sdaemon *qdaemon;
-     struct stransfer *qtrans;
-     boolean fstart;
-     boolean fsend;
-     long cbytes ATTRIBUTE_UNUSED;
-     boolean *pfhandled;
+fffile (struct sdaemon *qdaemon, struct stransfer *qtrans, boolean fstart, boolean fsend, long int cbytes ATTRIBUTE_UNUSED, boolean *pfhandled)
 {
   DEBUG_MESSAGE3 (DEBUG_PROTO, "fffile: fstart %s; fsend %s; fFacked %s",
 		  fstart ? "true" : "false", fsend ? "true" : "false",
@@ -668,11 +643,7 @@ fffile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
 /* Wait for the ack after sending a file and the checksum.  */
 
 static boolean
-ffawait_ack (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata ATTRIBUTE_UNUSED;
+ffawait_ack (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata, size_t cdata ATTRIBUTE_UNUSED)
 {
   struct sfinfo *qinfo = (struct sfinfo *) qtrans->pinfo;
 
@@ -737,11 +708,7 @@ ffawait_ack (qtrans, qdaemon, zdata, cdata)
 
 /*ARGSUSED*/
 static boolean
-ffawait_cksum (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata ATTRIBUTE_UNUSED;
+ffawait_cksum (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata, size_t cdata ATTRIBUTE_UNUSED)
 {
   struct sfinfo *qinfo = (struct sfinfo *) qtrans->pinfo;
   unsigned int icheck;
@@ -816,9 +783,7 @@ ffawait_cksum (qtrans, qdaemon, zdata, cdata)
    file.  */
 
 static boolean
-ffsend_ack (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+ffsend_ack (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct sfinfo *qinfo = (struct sfinfo *) qtrans->pinfo;
   char ab[2];

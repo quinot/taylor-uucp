@@ -10,8 +10,7 @@
 #include <errno.h>
 
 unsigned int
-ixsysdep_file_mode (zfile)
-     const char *zfile;
+ixsysdep_file_mode (const char *zfile)
 {
   struct stat s;
 

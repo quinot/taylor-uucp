@@ -35,10 +35,7 @@ const char _uuconf_bool_rcsid[] = "$Id$";
    UUCONF_CMDTABRET_EXIT if appropriate.  */
 
 int
-_uuconf_iboolean (qglobal, zval, pi)
-     struct sglobal *qglobal ATTRIBUTE_UNUSED;
-     const char *zval;
-     boolean *pi;
+_uuconf_iboolean (struct sglobal *qglobal ATTRIBUTE_UNUSED, const char *zval, boolean *pi)
 {
   switch (*zval)
     {

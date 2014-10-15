@@ -34,9 +34,7 @@ const char _uuconf_fresys_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_system_free (pglobal, qsys)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     struct uuconf_system *qsys;
+uuconf_system_free (pointer pglobal ATTRIBUTE_UNUSED, struct uuconf_system *qsys)
 {
   uuconf_free_block (qsys->uuconf_palloc);
   return UUCONF_SUCCESS;

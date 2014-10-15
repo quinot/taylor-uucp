@@ -34,10 +34,7 @@ const char _uuconf_hdial_rcsid[] = "$Id$";
 /* Find a dialer in the HDB configuration files by name.  */
 
 int
-uuconf_hdb_dialer_info (pglobal, zname, qdialer)
-     pointer pglobal;
-     const char *zname;
-     struct uuconf_dialer *qdialer;
+uuconf_hdb_dialer_info (pointer pglobal, const char *zname, struct uuconf_dialer *qdialer)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pz;

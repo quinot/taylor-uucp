@@ -54,8 +54,7 @@ static char *zSwildcard;
    is available, and otherwise use the shell.  */
 
 boolean
-fsysdep_wildcard_start (zfile)
-     const char *zfile;
+fsysdep_wildcard_start (const char *zfile)
 {
 #if HAVE_GLOB
 
@@ -154,8 +153,7 @@ fsysdep_wildcard_start (zfile)
 
 /*ARGSUSED*/
 char *
-zsysdep_wildcard (zfile)
-     const char *zfile ATTRIBUTE_UNUSED;
+zsysdep_wildcard (const char *zfile ATTRIBUTE_UNUSED)
 {
 #if HAVE_GLOB
 
@@ -198,7 +196,7 @@ zsysdep_wildcard (zfile)
 /* Finish up getting wildcard specs.  */
 
 boolean
-fsysdep_wildcard_end ()
+fsysdep_wildcard_end (void)
 {
 #if HAVE_GLOB
   globfree (&sSglob);

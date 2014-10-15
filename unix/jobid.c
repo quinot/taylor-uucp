@@ -33,10 +33,7 @@
    These job ids are used by uustat.  */
 
 char *
-zsfile_to_jobid (qsys, zfile, bgrade)
-     const struct uuconf_system *qsys;
-     const char *zfile;
-     int bgrade ATTRIBUTE_UNUSED;
+zsfile_to_jobid (const struct uuconf_system *qsys, const char *zfile, int bgrade ATTRIBUTE_UNUSED)
 {
   size_t clen;
   char *zret;
@@ -92,10 +89,7 @@ zsfile_to_jobid (qsys, zfile, bgrade)
 /* Turn a job id back into a file name.  */
 
 char *
-zsjobid_to_file (zid, pzsystem, pbgrade)
-     const char *zid;
-     char **pzsystem;
-     char *pbgrade;
+zsjobid_to_file (const char *zid, char **pzsystem, char *pbgrade)
 {
 #if ! SPOOLDIR_TAYLOR
   size_t clen;

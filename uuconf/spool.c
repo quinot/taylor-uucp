@@ -31,9 +31,7 @@ const char _uuconf_spool_rcsid[] = "$Id$";
 /* Get the name of the UUCP spool directory.  */
 
 int
-uuconf_spooldir (pglobal, pzspool)
-     pointer pglobal;
-     const char **pzspool;
+uuconf_spooldir (pointer pglobal, const char **pzspool)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

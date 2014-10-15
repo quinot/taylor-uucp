@@ -144,9 +144,7 @@ static boolean fjprocess_data P((size_t *pcneed));
    TRAILER.  There is no error checking done on this string.  */
 
 boolean
-fjstart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+fjstart (struct sdaemon *qdaemon, char **pzlog)
 {
   size_t clen;
   char *zsend;
@@ -283,8 +281,7 @@ fjstart (qdaemon, pzlog)
 /* Shut down the protocol.  */
 
 boolean
-fjshutdown (qdaemon)
-     struct sdaemon *qdaemon;
+fjshutdown (struct sdaemon *qdaemon)
 {
   boolean fret;
 
@@ -299,11 +296,7 @@ fjshutdown (qdaemon)
    header, the body, and the trailer) would waste even more time.  */
 
 static boolean
-fjsend_data (qconn, zsend, csend, fdoread)
-     struct sconnection *qconn;
-     const char *zsend;
-     size_t csend;
-     boolean fdoread;
+fjsend_data (struct sconnection *qconn, const char *zsend, size_t csend, boolean fdoread)
 {
   char *zput, *zindex;
   const char *zfrom, *zend;
@@ -446,12 +439,7 @@ fjsend_data (qconn, zsend, csend, fdoread)
    points to the start of the undecoded data.  */
 
 static boolean
-fjreceive_data (qconn, cineed, pcrec, ctimeout, freport)
-     struct sconnection *qconn;
-     size_t cineed;
-     size_t *pcrec;
-     int ctimeout;
-     boolean freport;
+fjreceive_data (struct sconnection *qconn, size_t cineed, size_t *pcrec, int ctimeout, boolean freport)
 {
   int iprecendstart;
   size_t cjneed;
@@ -518,8 +506,7 @@ fjreceive_data (qconn, cineed, pcrec, ctimeout, freport)
    bytes needed to complete the next packet.  */
 
 static boolean
-fjprocess_data (pcneed)
-     size_t *pcneed;
+fjprocess_data (size_t *pcneed)
 {
   int istart;
 

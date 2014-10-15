@@ -14,8 +14,7 @@
 #endif
 
 long
-csysdep_bytes_free (zfile)
-     const char *zfile;
+csysdep_bytes_free (const char *zfile)
 {
   struct fs_usage s;
 

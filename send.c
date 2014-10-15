@@ -98,8 +98,7 @@ static boolean fsend_exec_file P((struct stransfer *qtrans,
 /* Free up a send stransfer structure.  */
 
 static void
-usfree_send (qtrans)
-     struct stransfer *qtrans;
+usfree_send (struct stransfer *qtrans)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
 
@@ -180,9 +179,7 @@ usfree_send (qtrans)
    fake execution file is being sent.  */
 
 boolean
-flocal_send_file_init (qdaemon, qcmd)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
+flocal_send_file_init (struct sdaemon *qdaemon, struct scmd *qcmd)
 {
   const struct uuconf_system *qsys;
   boolean fspool;
@@ -298,10 +295,7 @@ flocal_send_file_init (qdaemon, qcmd)
    this reports an error to the log file and to the user.  */
 
 static boolean
-flocal_send_fail (qcmd, qdaemon, zwhy)
-     struct scmd *qcmd;
-     struct sdaemon *qdaemon;
-     const char *zwhy;
+flocal_send_fail (struct scmd *qcmd, struct sdaemon *qdaemon, const char *zwhy)
 {
   if (zwhy != NULL)
     {
@@ -354,9 +348,7 @@ flocal_send_fail (qcmd, qdaemon, zwhy)
    response; otherwise we can start sending the file immediately.  */
 
 static boolean
-flocal_send_request (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+flocal_send_request (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   boolean fquote;
@@ -532,11 +524,7 @@ flocal_send_request (qtrans, qdaemon)
    even finished sending the file.  */
 
 static boolean
-flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata ATTRIBUTE_UNUSED;
+flocal_send_await_reply (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata, size_t cdata ATTRIBUTE_UNUSED)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char bcmd;
@@ -701,9 +689,7 @@ flocal_send_await_reply (qtrans, qdaemon, zdata, cdata)
 /* Open the file, if any, and prepare to send it.  */
 
 static boolean
-flocal_send_open_file (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+flocal_send_open_file (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   const char *zuser;
@@ -823,9 +809,7 @@ flocal_send_open_file (qtrans, qdaemon)
    agree as to when a channel is no longer needed.  */
 
 static boolean
-flocal_send_cancelled (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+flocal_send_cancelled (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
 
@@ -853,10 +837,7 @@ flocal_send_cancelled (qtrans, qdaemon)
    */
 
 boolean
-fremote_rec_file_init (qdaemon, qcmd, iremote)
-     struct sdaemon *qdaemon;
-     struct scmd *qcmd;
-     int iremote;
+fremote_rec_file_init (struct sdaemon *qdaemon, struct scmd *qcmd, int iremote)
 {
   const struct uuconf_system *qsys;
   char *zfile;
@@ -970,9 +951,7 @@ fremote_rec_file_init (qdaemon, qcmd, iremote)
    start sending the file.  */
 
 static boolean
-fremote_rec_reply (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fremote_rec_reply (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char absend[50];
@@ -1030,10 +1009,7 @@ fremote_rec_reply (qtrans, qdaemon)
    a failure reply which will be sent when possible.  */
 
 static boolean
-fremote_rec_fail (qdaemon, twhy, iremote)
-     struct sdaemon *qdaemon;
-     enum tfailure twhy;
-     int iremote;
+fremote_rec_fail (struct sdaemon *qdaemon, enum tfailure twhy, int iremote)
 {
   enum tfailure *ptinfo;
   struct stransfer *qtrans;
@@ -1053,9 +1029,7 @@ fremote_rec_fail (qdaemon, twhy, iremote)
    this is called when we are ready to reply to the command.  */
 
 static boolean
-fremote_rec_fail_send (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fremote_rec_fail_send (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   enum tfailure *ptinfo = (enum tfailure *) qtrans->pinfo;
   const char *z;
@@ -1091,9 +1065,7 @@ fremote_rec_fail_send (qtrans, qdaemon)
    request.  */
 
 static boolean
-fsend_file_end (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fsend_file_end (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
 
@@ -1128,11 +1100,7 @@ fsend_file_end (qtrans, qdaemon)
 
 /*ARGSUSED*/
 static boolean
-fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
-     const char *zdata;
-     size_t cdata ATTRIBUTE_UNUSED;
+fsend_await_confirm (struct stransfer *qtrans, struct sdaemon *qdaemon, const char *zdata, size_t cdata ATTRIBUTE_UNUSED)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   boolean fnever;
@@ -1247,9 +1215,7 @@ fsend_await_confirm (qtrans, qdaemon, zdata, cdata)
    the buffer we have created.  */
 
 static boolean
-fsend_exec_file_init (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fsend_exec_file_init (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char *zxqtfile;
@@ -1333,14 +1299,7 @@ fsend_exec_file_init (qtrans, qdaemon)
 /* Add a line to the fake execution file.  */
 
 static void
-usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2, fquote)
-     char **pz;
-     size_t *pcalc;
-     size_t *pclen;
-     int bcmd;
-     const char *z1;
-     const char *z2;
-     boolean fquote;
+usadd_exec_line (char **pz, size_t *pcalc, size_t *pclen, int bcmd, const char *z1, const char *z2, boolean fquote)
 {
   char *z1q;
   char *z2q;
@@ -1417,9 +1376,7 @@ usadd_exec_line (pz, pcalc, pclen, bcmd, z1, z2, fquote)
    packet, and then calls fsend_file_end.  */
 
 static boolean
-fsend_exec_file (qtrans, qdaemon)
-     struct stransfer *qtrans;
-     struct sdaemon *qdaemon;
+fsend_exec_file (struct stransfer *qtrans, struct sdaemon *qdaemon)
 {
   struct ssendinfo *qinfo = (struct ssendinfo *) qtrans->pinfo;
   char *zdata;

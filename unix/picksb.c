@@ -44,11 +44,6 @@ const char picksb_rcsid[] = "$Id$";
 #endif /* ! HAVE_DIRENT_H */
 #endif /* HAVE_OPENDIR */
 
-#if GETPWUID_DECLARATION_OK
-#ifndef getpwuid
-extern struct passwd *getpwuid ();
-#endif
-#endif
 
 /* Local variables.  */
 
@@ -68,9 +63,7 @@ static char *zSsysdir;
 
 /*ARGSUSED*/
 boolean
-fsysdep_uupick_init (zsystem, zpubdir)
-     const char *zsystem ATTRIBUTE_UNUSED;
-     const char *zpubdir;
+fsysdep_uupick_init (const char *zsystem ATTRIBUTE_UNUSED, const char *zpubdir)
 {
   const char *zuser;
 
@@ -98,11 +91,7 @@ fsysdep_uupick_init (zsystem, zpubdir)
 
 /*ARGSUSED*/
 char *
-zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
-     const char *zsysarg;
-     const char *zpubdir ATTRIBUTE_UNUSED;
-     char **pzfrom;
-     char **pzfull;
+zsysdep_uupick (const char *zsysarg, const char *zpubdir ATTRIBUTE_UNUSED, char **pzfrom, char **pzfull)
 {
   struct dirent *qentry;
 
@@ -178,9 +167,7 @@ zsysdep_uupick (zsysarg, zpubdir, pzfrom, pzfull)
 
 /*ARGSUSED*/
 boolean
-fsysdep_uupick_free (zsystem, zpubdir)
-     const char *zsystem ATTRIBUTE_UNUSED;
-     const char *zpubdir ATTRIBUTE_UNUSED;
+fsysdep_uupick_free (const char *zsystem ATTRIBUTE_UNUSED, const char *zpubdir ATTRIBUTE_UNUSED)
 {
   xfree ((pointer) zStopdir);
   if (qStopdir != NULL)
@@ -202,9 +189,7 @@ fsysdep_uupick_free (zsystem, zpubdir)
 /* Expand a local file name for uupick.  */
 
 char *
-zsysdep_uupick_local_file (zfile, pfbadname)
-     const char *zfile;
-     boolean *pfbadname;
+zsysdep_uupick_local_file (const char *zfile, boolean *pfbadname)
 {
   struct passwd *q;
 

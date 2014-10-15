@@ -8,8 +8,7 @@
 #include "system.h"
 
 char *
-zsysdep_save_corrupt_file (zfile)
-     const char *zfile;
+zsysdep_save_corrupt_file (const char *zfile)
 {
   const char *zslash;
   char *zto;

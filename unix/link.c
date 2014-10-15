@@ -10,10 +10,7 @@
 #include <errno.h>
 
 boolean
-fsysdep_link (zfrom, zto, pfworked)
-     const char *zfrom;
-     const char *zto;
-     boolean *pfworked;
+fsysdep_link (const char *zfrom, const char *zto, boolean *pfworked)
 {
   *pfworked = FALSE;
   if (link (zfrom, zto) == 0)

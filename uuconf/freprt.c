@@ -34,9 +34,7 @@ const char _uuconf_freprt_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_port_free (pglobal, qport)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     struct uuconf_port *qport;
+uuconf_port_free (pointer pglobal ATTRIBUTE_UNUSED, struct uuconf_port *qport)
 {
   uuconf_free_block (qport->uuconf_palloc);
   return UUCONF_SUCCESS;

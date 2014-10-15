@@ -361,8 +361,7 @@ static int iSunblock = O_NDELAY | O_NONBLOCK;
 volatile sig_atomic_t fSalarm;
 
 static RETSIGTYPE
-usalarm (isig)
-     int isig ATTRIBUTE_UNUSED;
+usalarm (int isig ATTRIBUTE_UNUSED)
 {
 #if ! HAVE_SIGACTION && ! HAVE_SIGVEC && ! HAVE_SIGSET
   (void) signal (isig, usalarm);
@@ -393,7 +392,7 @@ usalarm (isig)
 static sigset_t isblocksigs P((void));
 
 static sigset_t
-isblocksigs ()
+isblocksigs (void)
 {
   sigset_t sblock, sold;
 
@@ -480,10 +479,7 @@ usunblocksigs (i)
 /* Initialize a connection for use on a serial port.  */
 
 static boolean
-fsserial_init (qconn, qcmds, zdevice)
-     struct sconnection *qconn;
-     const struct sconncmds *qcmds;
-     const char *zdevice;
+fsserial_init (struct sconnection *qconn, const struct sconncmds *qcmds, const char *zdevice)
 {
   struct ssysdep_conn *q;
 
@@ -518,8 +514,7 @@ fsserial_init (qconn, qcmds, zdevice)
 /* Initialize a connection for use on standard input.  */
 
 boolean
-fsysdep_stdin_init (qconn)
-     struct sconnection *qconn;
+fsysdep_stdin_init (struct sconnection *qconn)
 {
   /* chmod /dev/tty to prevent other users from writing messages to
      it.  This is essentially `mesg n'.  */
@@ -530,8 +525,7 @@ fsysdep_stdin_init (qconn)
 /* Initialize a connection for use on a modem port.  */
 
 boolean
-fsysdep_modem_init (qconn)
-     struct sconnection *qconn;
+fsysdep_modem_init (struct sconnection *qconn)
 {
   return fsserial_init (qconn, &smodemcmds,
 			qconn->qport->uuconf_u.uuconf_smodem.uuconf_zdevice);
@@ -540,8 +534,7 @@ fsysdep_modem_init (qconn)
 /* Initialize a connection for use on a direct port.  */
 
 boolean
-fsysdep_direct_init (qconn)
-     struct sconnection *qconn;
+fsysdep_direct_init (struct sconnection *qconn)
 {
   return fsserial_init (qconn, &sdirectcmds,
 			qconn->qport->uuconf_u.uuconf_sdirect.uuconf_zdevice);
@@ -550,8 +543,7 @@ fsysdep_direct_init (qconn)
 /* Free up a serial port.  */
 
 static void
-usserial_free (qconn)
-     struct sconnection *qconn;
+usserial_free (struct sconnection *qconn)
 {
   struct ssysdep_conn *qsysdep;
 
@@ -573,9 +565,7 @@ usserial_free (qconn)
    nothing and returns TRUE.  */
 
 static boolean
-fsserial_lockfile (flok, qconn)
-     boolean flok;
-     const struct sconnection *qconn;
+fsserial_lockfile (boolean flok, const struct sconnection *qconn)
 {
   struct ssysdep_conn *qsysdep;
   const char *z;
@@ -733,10 +723,7 @@ fsserial_lockfile (flok, qconn)
    open because we can't fail out if it is locked then.  */
 
 static boolean
-fsserial_lock (qconn, fin, fuser)
-     struct sconnection *qconn;
-     boolean fin;
-     boolean fuser;
+fsserial_lock (struct sconnection *qconn, boolean fin, boolean fuser)
 {
   if (! fsserial_lockfile (TRUE, qconn))
     return FALSE;
@@ -872,8 +859,7 @@ fsserial_lock (qconn, fin, fuser)
 /* Unlock a modem or direct port.  */
 
 static boolean
-fsserial_unlock (qconn)
-     struct sconnection *qconn;
+fsserial_unlock (struct sconnection *qconn)
 {
   boolean fret;
   struct ssysdep_conn *qsysdep;
@@ -1017,12 +1003,7 @@ static int cSmin;
    parameter indicates whether to set, clear, or ignore CLOCAL.  */
 
 static boolean
-fsserial_open (qconn, ibaud, fwait, fuser, tlocal)
-     struct sconnection *qconn;
-     long ibaud;
-     boolean fwait;
-     boolean fuser;
-     enum tclocal_setting tlocal;
+fsserial_open (struct sconnection *qconn, long int ibaud, boolean fwait, boolean fuser, enum tclocal_setting tlocal)
 {
   struct ssysdep_conn *q;
   baud_code ib;
@@ -1308,11 +1289,7 @@ fsserial_open (qconn, ibaud, fwait, fuser, tlocal)
    call to fsblock.  */
 
 static boolean
-fsstdin_open (qconn, ibaud, fwait, fuser)
-     struct sconnection *qconn;
-     long ibaud;
-     boolean fwait;
-     boolean fuser;
+fsstdin_open (struct sconnection *qconn, long int ibaud, boolean fwait, boolean fuser)
 {
   struct ssysdep_conn *q;
 
@@ -1335,11 +1312,7 @@ fsstdin_open (qconn, ibaud, fwait, fuser)
 /* Open a modem port.  */
 
 static boolean
-fsmodem_open (qconn, ibaud, fwait, fuser)
-     struct sconnection *qconn;
-     long ibaud;
-     boolean fwait;
-     boolean fuser;
+fsmodem_open (struct sconnection *qconn, long int ibaud, boolean fwait, boolean fuser)
 {
   struct uuconf_modem_port *qm;
 
@@ -1366,11 +1339,7 @@ fsmodem_open (qconn, ibaud, fwait, fuser)
 /* Open a direct port.  */
 
 static boolean
-fsdirect_open (qconn, ibaud, fwait, fuser)
-     struct sconnection *qconn;
-     long ibaud;
-     boolean fwait;
-     boolean fuser;
+fsdirect_open (struct sconnection *qconn, long int ibaud, boolean fwait, boolean fuser)
 {
   struct uuconf_direct_port *qd;
 
@@ -1391,9 +1360,7 @@ fsdirect_open (qconn, ibaud, fwait, fuser)
    turns out to be surprisingly expensive, at least on Ultrix.  */
 
 static boolean
-fsblock (qs, fblock)
-     struct ssysdep_conn *qs;
-     boolean fblock;
+fsblock (struct ssysdep_conn *qs, boolean fblock)
 {
   int iwant;
   int isys;
@@ -1460,8 +1427,7 @@ fsblock (qs, fblock)
 /* Close a serial port.  */
 
 static boolean
-fsserial_close (q)
-     struct ssysdep_conn *q;
+fsserial_close (struct ssysdep_conn *q)
 {
   if (q->o >= 0)
     {
@@ -1513,11 +1479,7 @@ fsserial_close (q)
 
 /*ARGSUSED*/
 static boolean
-fsstdin_close (qconn, puuconf, qdialer, fsuccess)
-     struct sconnection *qconn;
-     pointer puuconf ATTRIBUTE_UNUSED;
-     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
-     boolean fsuccess ATTRIBUTE_UNUSED;
+fsstdin_close (struct sconnection *qconn, pointer puuconf ATTRIBUTE_UNUSED, struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED, boolean fsuccess ATTRIBUTE_UNUSED)
 {
   struct ssysdep_conn *qsysdep;
 
@@ -1531,11 +1493,7 @@ fsstdin_close (qconn, puuconf, qdialer, fsuccess)
 /* Close a modem port.  */
 
 static boolean
-fsmodem_close (qconn, puuconf, qdialer, fsuccess)
-     struct sconnection *qconn;
-     pointer puuconf;
-     struct uuconf_dialer *qdialer;
-     boolean fsuccess;
+fsmodem_close (struct sconnection *qconn, pointer puuconf, struct uuconf_dialer *qdialer, boolean fsuccess)
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -1681,11 +1639,7 @@ fsmodem_close (qconn, puuconf, qdialer, fsuccess)
 
 /*ARGSUSED*/
 static boolean
-fsdirect_close (qconn, puuconf, qdialer, fsuccess)
-     struct sconnection *qconn;
-     pointer puuconf ATTRIBUTE_UNUSED;
-     struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED;
-     boolean fsuccess ATTRIBUTE_UNUSED;
+fsdirect_close (struct sconnection *qconn, pointer puuconf ATTRIBUTE_UNUSED, struct uuconf_dialer *qdialer ATTRIBUTE_UNUSED, boolean fsuccess ATTRIBUTE_UNUSED)
 {
   return fsserial_close ((struct ssysdep_conn *) qconn->psysdep);
 }
@@ -1694,9 +1648,7 @@ fsdirect_close (qconn, puuconf, qdialer, fsuccess)
    there is one.  */
 
 boolean
-fsysdep_modem_begin_dial (qconn, qdial)
-     struct sconnection *qconn;
-     struct uuconf_dialer *qdial;
+fsysdep_modem_begin_dial (struct sconnection *qconn, struct uuconf_dialer *qdial)
 {
   struct ssysdep_conn *qsysdep;
   const char *z;
@@ -1799,9 +1751,7 @@ fsysdep_modem_begin_dial (qconn, qdial)
    dialer supports carrier.  */
 
 static boolean
-fsmodem_carrier (qconn, fcarrier)
-     struct sconnection *qconn;
-     boolean fcarrier;
+fsmodem_carrier (struct sconnection *qconn, boolean fcarrier)
 {
   register struct ssysdep_conn *q;
   struct uuconf_modem_port *qm;
@@ -1942,9 +1892,7 @@ fsmodem_carrier (qconn, fcarrier)
    it and send me the patches.  */
 
 static boolean
-fsserial_hardflow (qconn, fhardflow)
-     struct sconnection *qconn;
-     boolean fhardflow;
+fsserial_hardflow (struct sconnection *qconn, boolean fhardflow)
 {
   register struct ssysdep_conn *q;
 
@@ -2105,9 +2053,7 @@ fsserial_hardflow (qconn, fhardflow)
    for carrier.  */
 
 boolean
-fsysdep_modem_end_dial (qconn, qdial)
-     struct sconnection *qconn;
-     struct uuconf_dialer *qdial;
+fsysdep_modem_end_dial (struct sconnection *qconn, struct uuconf_dialer *qdial)
 {
   struct ssysdep_conn *q;
 
@@ -2273,13 +2219,7 @@ fsysdep_modem_end_dial (qconn, qdial)
    and SIGALRM will be ignored.  */
 
 boolean
-fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
-     struct sconnection *qconn;
-     char *zbuf;
-     size_t *pclen;
-     size_t cmin;
-     int ctimeout;
-     boolean freport;
+fsysdep_conn_read (struct sconnection *qconn, char *zbuf, size_t *pclen, size_t cmin, int ctimeout, boolean freport)
 {
   CATCH_PROTECT size_t cwant;
   boolean fret;
@@ -2579,13 +2519,7 @@ fsysdep_conn_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
 /* Read from a port with separate read/write file descriptors.  */
 
 boolean
-fsdouble_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
-     struct sconnection *qconn;
-     char *zbuf;
-     size_t *pclen;
-     size_t cmin;
-     int ctimeout;
-     boolean freport;
+fsdouble_read (struct sconnection *qconn, char *zbuf, size_t *pclen, size_t cmin, int ctimeout, boolean freport)
 {
   struct ssysdep_conn *qsysdep;
 
@@ -2598,10 +2532,7 @@ fsdouble_read (qconn, zbuf, pclen, cmin, ctimeout, freport)
    connections, including TLI.  */
 
 boolean
-fsysdep_conn_write (qconn, zwrite, cwrite)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t cwrite;
+fsysdep_conn_write (struct sconnection *qconn, const char *zwrite, size_t cwrite)
 {
   struct ssysdep_conn *q;
   int czero;
@@ -2690,10 +2621,7 @@ fsysdep_conn_write (qconn, zwrite, cwrite)
 /* Write to a port with separate read/write file descriptors.  */
 
 boolean
-fsdouble_write (qconn, zwrite, cwrite)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t cwrite;
+fsdouble_write (struct sconnection *qconn, const char *zwrite, size_t cwrite)
 {
   struct ssysdep_conn *qsysdep;
 
@@ -2712,12 +2640,7 @@ fsdouble_write (qconn, zwrite, cwrite)
    including TLI.  */
 
 boolean
-fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t *pcwrite;
-     char *zread;
-     size_t *pcread;
+fsysdep_conn_io (struct sconnection *qconn, const char *zwrite, size_t *pcwrite, char *zread, size_t *pcread)
 {
   struct ssysdep_conn *q;
   size_t cwrite, cread;
@@ -3129,8 +3052,7 @@ fsysdep_conn_io (qconn, zwrite, pcwrite, zread, pcread)
 /* Send a break character to a serial port.  */
 
 static boolean
-fsserial_break (qconn)
-     struct sconnection *qconn;
+fsserial_break (struct sconnection *qconn)
 {
   struct ssysdep_conn *q;
 
@@ -3154,8 +3076,7 @@ fsserial_break (qconn)
 /* Send a break character to a stdin port.  */
 
 static boolean
-fsstdin_break (qconn)
-     struct sconnection *qconn;
+fsstdin_break (struct sconnection *qconn)
 {
   struct ssysdep_conn *qsysdep;
 
@@ -3168,11 +3089,7 @@ fsstdin_break (qconn)
 
 /*ARGSUSED*/
 static boolean
-fsserial_set (qconn, tparity, tstrip, txonxoff)
-     struct sconnection *qconn;
-     enum tparitysetting tparity;
-     enum tstripsetting tstrip;
-     enum txonxoffsetting txonxoff;
+fsserial_set (struct sconnection *qconn, enum tparitysetting tparity, enum tstripsetting tstrip, enum txonxoffsetting txonxoff)
 {
   register struct ssysdep_conn *q;
   boolean fchanged, fdo;
@@ -3481,11 +3398,7 @@ fsserial_set (qconn, tparity, tstrip, txonxoff)
 /* Change settings of a stdin port.  */
 
 static boolean
-fsstdin_set (qconn, tparity, tstrip, txonxoff)
-     struct sconnection *qconn;
-     enum tparitysetting tparity;
-     enum tstripsetting tstrip;
-     enum txonxoffsetting txonxoff;
+fsstdin_set (struct sconnection *qconn, enum tparitysetting tparity, enum tstripsetting tstrip, enum txonxoffsetting txonxoff)
 {
   struct ssysdep_conn *qsysdep;
 
@@ -3497,10 +3410,7 @@ fsstdin_set (qconn, tparity, tstrip, txonxoff)
 /* Run a chat program.  */
 
 static boolean
-fsrun_chat (oread, owrite, pzprog)
-     int oread;
-     int owrite;
-     char **pzprog;
+fsrun_chat (int oread, int owrite, char **pzprog)
 {
   int aidescs[3];
   FILE *e;
@@ -3558,9 +3468,7 @@ fsrun_chat (oread, owrite, pzprog)
    descriptors.  */
 
 boolean
-fsdouble_chat (qconn, pzprog)
-     struct sconnection *qconn;
-     char **pzprog;
+fsdouble_chat (struct sconnection *qconn, char **pzprog)
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -3575,9 +3483,7 @@ fsdouble_chat (qconn, pzprog)
 /* Run a chat program on any general type of connection.  */
 
 boolean
-fsysdep_conn_chat (qconn, pzprog)
-     struct sconnection *qconn;
-     char **pzprog;
+fsysdep_conn_chat (struct sconnection *qconn, char **pzprog)
 {
   struct ssysdep_conn *qsysdep;
   boolean fret;
@@ -3592,8 +3498,7 @@ fsysdep_conn_chat (qconn, pzprog)
 /* Return baud rate of a serial port.  */
 
 static long
-isserial_baud (qconn)
-     struct sconnection *qconn;
+isserial_baud (struct sconnection *qconn)
 {
   struct ssysdep_conn *qsysdep;
 

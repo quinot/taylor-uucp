@@ -210,11 +210,7 @@ static const struct cmdtab_offset asPpipe_cmds[] =
    be UUCONF_PORTTYPE_UNKNOWN.  */
 
 int
-_uuconf_iport_cmd (qglobal, argc, argv, qport)
-     struct sglobal *qglobal;
-     int argc;
-     char **argv;
-     struct uuconf_port *qport;
+_uuconf_iport_cmd (struct sglobal *qglobal, int argc, char **argv, struct uuconf_port *qport)
 {
   boolean fgottype;
   const struct cmdtab_offset *qcmds;
@@ -367,12 +363,7 @@ _uuconf_iport_cmd (qglobal, argc, argv, qport)
 /* Handle the "protocol-parameter" command.  */
 
 static int
-ipproto_param (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+ipproto_param (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_proto_param **pqparam = (struct uuconf_proto_param **) pvar;
@@ -386,12 +377,7 @@ ipproto_param (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-ipbaud_range (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+ipbaud_range (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_modem_port *qmodem = (struct uuconf_modem_port *) pvar;
@@ -413,12 +399,7 @@ ipbaud_range (pglobal, argc, argv, pvar, pinfo)
    describing the dialer.  */
 
 static int
-ipdialer (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+ipdialer (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_modem_port *qmodem = (struct uuconf_modem_port *) pvar;
@@ -497,12 +478,7 @@ ipdialer (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-ipcunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+ipcunknown (pointer pglobal ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   return UUCONF_SYNTAX_ERROR | UUCONF_CMDTABRET_EXIT;
 }

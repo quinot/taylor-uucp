@@ -10,9 +10,7 @@
 /* Translate a uuto destination for Unix.  */
 
 char *
-zsysdep_uuto (zdest, zlocalname)
-     const char *zdest;
-     const char *zlocalname;
+zsysdep_uuto (const char *zdest, const char *zlocalname)
 {
   const char *zexclam;
   char *zto;

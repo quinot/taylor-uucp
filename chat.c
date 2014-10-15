@@ -78,16 +78,7 @@ static boolean fcprogram P((struct sconnection *qconn, pointer puuconf,
    holds the expect and send strings separated by a single space.  */
 
 boolean
-fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const struct uuconf_chat *qchat;
-     const struct uuconf_system *qsys;
-     const struct uuconf_dialer *qdial;
-     const char *zphone;
-     boolean ftranslate;
-     const char *zport;
-     long ibaud;
+fchat (struct sconnection *qconn, pointer puuconf, const struct uuconf_chat *qchat, const struct uuconf_system *qsys, const struct uuconf_dialer *qdial, const char *zphone, boolean ftranslate, const char *zport, long int ibaud)
 {
   int cstrings;
   char **azstrings;
@@ -297,13 +288,7 @@ fchat (qconn, puuconf, qchat, qsys, qdial, zphone, ftranslate, zport, ibaud)
    arrives, or -1 on timeout, or -2 on error.  */
 
 static int
-icexpect (qconn, cstrings, azstrings, aclens, ctimeout, fstrip)
-     struct sconnection *qconn;
-     int cstrings;
-     char **azstrings;
-     size_t *aclens;
-     int ctimeout;
-     boolean fstrip;
+icexpect (struct sconnection *qconn, int cstrings, char **azstrings, size_t *aclens, int ctimeout, boolean fstrip)
 {
   int i;
   size_t cmax;
@@ -459,10 +444,7 @@ static int iColddebug;
 static boolean fcsend_debug P((boolean, size_t, const char *));
 
 static boolean
-fcsend_debug (fquote, clen, zbuf)
-     boolean fquote;
-     size_t clen;
-     const char *zbuf;
+fcsend_debug (boolean fquote, size_t clen, const char *zbuf)
 {
   size_t cwas;
 
@@ -510,9 +492,7 @@ fcsend_debug (fquote, clen, zbuf)
 static void ucsend_debug_end P((boolean, boolean));
 
 static void
-ucsend_debug_end (fquote, ferr)
-     boolean fquote;
-     boolean ferr;
+ucsend_debug_end (boolean fquote, boolean ferr)
 {
   if (! FDEBUGGING (DEBUG_CHAT))
     return;
@@ -543,15 +523,7 @@ ucsend_debug_end (fquote, ferr)
    although they make no sense for chatting with a system.  */
 
 static boolean
-fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const char *z;
-     const struct uuconf_system *qsys;
-     const struct uuconf_dialer *qdial;
-     const char *zphone;
-     boolean ftranslate;
-     boolean fstrip;
+fcsend (struct sconnection *qconn, pointer puuconf, const char *z, const struct uuconf_system *qsys, const struct uuconf_dialer *qdial, const char *zphone, boolean ftranslate, boolean fstrip)
 {
   boolean fnocr;
   boolean (*pfwrite) P((struct sconnection *, const char *, size_t));
@@ -952,15 +924,7 @@ fcsend (qconn, puuconf, z, qsys, qdial, zphone, ftranslate, fstrip)
    pfquote argument is only used for debugging.  */
 
 static boolean
-fcphone (qconn, puuconf, qdial, zphone, pfwrite, ftranslate, pfquote)
-     struct sconnection *qconn;
-     pointer puuconf;
-     const struct uuconf_dialer *qdial;
-     const char *zphone;
-     boolean (*pfwrite) P((struct sconnection *qc, const char *zwrite,
-			   size_t cwrite));
-     boolean ftranslate;
-     boolean *pfquote;
+fcphone (struct sconnection *qconn, pointer puuconf, const struct uuconf_dialer *qdial, const char *zphone, boolean (*pfwrite) (struct sconnection *, const char *, size_t), boolean ftranslate, boolean *pfquote)
 {
   const char *zprefix, *zsuffix;
 
@@ -1021,11 +985,7 @@ fcphone (qconn, puuconf, qdial, zphone, pfwrite, ftranslate, pfquote)
    returning two strings.  */
 
 static boolean
-fctranslate (puuconf, zphone, pzprefix, pzsuffix)
-     pointer puuconf;
-     const char *zphone;
-     const char **pzprefix;
-     const char **pzsuffix;
+fctranslate (pointer puuconf, const char *zphone, const char **pzprefix, const char **pzsuffix)
 {
   int iuuconf;
   char *zdialcode, *zto;
@@ -1076,29 +1036,19 @@ fctranslate (puuconf, zphone, pzprefix, pzsuffix)
    library some day.  */
 
 static boolean
-fcecho_send_strip (qconn, zwrite, cwrite)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t cwrite;
+fcecho_send_strip (struct sconnection *qconn, const char *zwrite, size_t cwrite)
 {
   return fcecho_send (qconn, zwrite, cwrite, TRUE);
 }
 
 static boolean
-fcecho_send_nostrip (qconn, zwrite, cwrite)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t cwrite;
+fcecho_send_nostrip (struct sconnection *qconn, const char *zwrite, size_t cwrite)
 {
   return fcecho_send (qconn, zwrite, cwrite, FALSE);
 }
 
 static boolean
-fcecho_send (qconn, zwrite, cwrite, fstrip)
-     struct sconnection *qconn;
-     const char *zwrite;
-     size_t cwrite;
-     boolean fstrip;
+fcecho_send (struct sconnection *qconn, const char *zwrite, size_t cwrite, boolean fstrip)
 {
   const char *zend;
 
@@ -1138,15 +1088,7 @@ fcecho_send (qconn, zwrite, cwrite, fstrip)
    dependent program to run it.  */
 
 static boolean
-fcprogram (qconn, puuconf, pzprogram, qsys, qdial, zphone, zport, ibaud)
-     struct sconnection *qconn;
-     pointer puuconf;
-     char **pzprogram;
-     const struct uuconf_system *qsys;
-     const struct uuconf_dialer *qdial;
-     const char *zphone;
-     const char *zport;
-     long ibaud;
+fcprogram (struct sconnection *qconn, pointer puuconf, char **pzprogram, const struct uuconf_system *qsys, const struct uuconf_dialer *qdial, const char *zphone, const char *zport, long int ibaud)
 {
   size_t cargs;
   char **pzpass, **pzarg;

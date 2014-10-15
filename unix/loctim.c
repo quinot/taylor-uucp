@@ -11,14 +11,8 @@
 
 #include "system.h"
 
-#ifndef localtime
-extern struct tm *localtime ();
-#endif
-
 void
-usysdep_localtime (itime, q)
-     long itime;
-     struct tm *q;
+usysdep_localtime (long int itime, struct tm *q)
 {
   time_t i;
 

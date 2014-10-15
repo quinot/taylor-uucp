@@ -34,11 +34,7 @@ const char _uuconf_calout_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_callout (pglobal, qsys, pzlog, pzpass)
-     pointer pglobal;
-     const struct uuconf_system *qsys;
-     char **pzlog;
-     char **pzpass;
+uuconf_callout (pointer pglobal, const struct uuconf_system *qsys, char **pzlog, char **pzpass)
 {
 #if HAVE_TAYLOR_CONFIG
 

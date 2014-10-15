@@ -10,8 +10,7 @@
 /* Get the base name of a file name.  */
 
 char *
-zsysdep_base_name (zfile)
-     const char *zfile;
+zsysdep_base_name (const char *zfile)
 {
   const char *z;
 

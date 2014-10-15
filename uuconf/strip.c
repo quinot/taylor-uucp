@@ -34,9 +34,7 @@ const char _uuconf_strip_rcsid[] = "$Id$";
    don't need to have a special function to set the values correctly.  */
 
 int
-uuconf_strip (pglobal, pistrip)
-     pointer pglobal;
-     int *pistrip;
+uuconf_strip (pointer pglobal, int *pistrip)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

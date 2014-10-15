@@ -40,10 +40,7 @@ const char util_rcsid[] = "$Id$";
    name is not too long, but takes no other useful action.  */
 
 boolean
-funknown_system (puuconf, zsystem, qsys)
-     pointer puuconf;
-     const char *zsystem;
-     struct uuconf_system *qsys;
+funknown_system (pointer puuconf, const char *zsystem, struct uuconf_system *qsys)
 {
   char *z;
   int iuuconf;
@@ -99,9 +96,7 @@ funknown_system (puuconf, zsystem, qsys)
    string.  This is used by uucp and uux.  */
 
 char *
-zremove_local_sys (qlocalsys, z)
-     struct uuconf_system *qlocalsys;
-     char *z;
+zremove_local_sys (struct uuconf_system *qlocalsys, char *z)
 {
   size_t clen;
   char *zexclam;
@@ -138,13 +133,7 @@ zremove_local_sys (qlocalsys, z)
    has appropriate access.  */
 
 boolean
-fin_directory_list (zfile, pzdirs, zpubdir, fcheck, freadable, zuser)
-     const char *zfile;
-     char **pzdirs;
-     const char *zpubdir;
-     boolean fcheck;
-     boolean freadable;
-     const char *zuser;
+fin_directory_list (const char *zfile, char **pzdirs, const char *zpubdir, boolean fcheck, boolean freadable, const char *zuser)
 {
   boolean fmatch;
   char **pz;

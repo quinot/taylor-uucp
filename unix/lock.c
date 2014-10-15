@@ -70,10 +70,6 @@ const char lock_rcsid[] = "$Id$";
 #define SEEK_SET 0
 #endif
 
-#ifndef localtime
-extern struct tm *localtime ();
-#endif
-
 #if HAVE_QNX_LOCKFILES
 static boolean fsqnx_stale P((unsigned long ipid, unsigned long inme,
 			     unsigned long inid, boolean *pferr));
@@ -85,10 +81,7 @@ static boolean fsqnx_stale P((unsigned long ipid, unsigned long inme,
    directory (under HDB this is /etc/locks).  */
 
 boolean
-fsdo_lock (zlock, fspooldir, pferr)
-     const char *zlock;
-     boolean fspooldir;
-     boolean *pferr;
+fsdo_lock (const char *zlock, boolean fspooldir, boolean *pferr)
 {
   char *zfree;
   const char *zpath, *zslash;
@@ -573,9 +566,7 @@ fsdo_lock (zlock, fspooldir, pferr)
 /* Unlock something.  The fspooldir argument is as in fsdo_lock.  */
 
 boolean
-fsdo_unlock (zlock, fspooldir)
-     const char *zlock;
-     boolean fspooldir;
+fsdo_unlock (const char *zlock, boolean fspooldir)
 {
   char *zfree;
   const char *zpath;

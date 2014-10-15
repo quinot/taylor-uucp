@@ -34,11 +34,7 @@ static char *zeprint_num P((char *zbuf, size_t cbuf, int ival));
    uuconf error code, but instead returns the total buffer length.  */
 
 int
-uuconf_error_string (pglobal, ierr, zbuf, cbuf)
-     pointer pglobal;
-     int ierr;
-     char *zbuf;
-     size_t cbuf;
+uuconf_error_string (pointer pglobal, int ierr, char *zbuf, size_t cbuf)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   const char *zfile;
@@ -220,10 +216,7 @@ uuconf_error_string (pglobal, ierr, zbuf, cbuf)
    it's more interesting to not call it here either.  */
 
 static char *
-zeprint_num (ab, c, i)
-     char *ab;
-     size_t c;
-     register int i;
+zeprint_num (char *ab, size_t c, register int i)
 {
   register char *z;
 

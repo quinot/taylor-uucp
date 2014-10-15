@@ -31,9 +31,7 @@ const char _uuconf_debfil_rcsid[] = "$Id$";
 /* Get the name of the UUCP debugging file.  */
 
 int
-uuconf_debugfile (pglobal, pzdebug)
-     pointer pglobal;
-     const char **pzdebug;
+uuconf_debugfile (pointer pglobal, const char **pzdebug)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

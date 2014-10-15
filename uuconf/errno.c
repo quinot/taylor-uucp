@@ -33,8 +33,7 @@ const char _uuconf_errno_rcsid[] = "$Id$";
 /* Return the saved errno value.  */
 
 int
-uuconf_error_errno (pglobal)
-     pointer pglobal;
+uuconf_error_errno (pointer pglobal)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

@@ -58,10 +58,7 @@
 
 /*ARGSUSED*/
 openfile_t
-esysdep_user_fopen (zfile, frd, fbinary)
-     const char *zfile;
-     boolean frd;
-     boolean fbinary ATTRIBUTE_UNUSED;
+esysdep_user_fopen (const char *zfile, boolean frd, boolean fbinary ATTRIBUTE_UNUSED)
 {
   uid_t ieuid;
   gid_t iegid;

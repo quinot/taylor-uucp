@@ -47,6 +47,9 @@
    rotten, you should leave this as 1.  */
 #define USE_STDIO 1
 
+/* Ensure getline(3) is provided by stdio.h.  */
+#define _BSD_SOURCE 1
+
 /* Exactly one of the following macros must be set to 1.  Many modern
    systems support more than one of these choices through some form of
    compilation environment, in which case the setting will depend on

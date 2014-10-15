@@ -37,9 +37,7 @@ const char _uuconf_runuxq_rcsid[] = "$Id$";
    for V2_CONFIG, to emulate traditional HDB and V2 emulations.  */
 
 int
-uuconf_runuuxqt (pglobal, pirunuuxqt)
-     pointer pglobal;
-     int *pirunuuxqt;
+uuconf_runuuxqt (pointer pglobal, int *pirunuuxqt)
 {
 #if HAVE_TAYLOR_CONFIG
   {

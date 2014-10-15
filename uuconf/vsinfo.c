@@ -36,10 +36,7 @@ const char _uuconf_vsinfo_rcsid[] = "$Id$";
    values are set.  */
 
 int
-_uuconf_iv2_system_internal (qglobal, zsystem, qsys)
-     struct sglobal *qglobal;
-     const char *zsystem;
-     struct uuconf_system *qsys;
+_uuconf_iv2_system_internal (struct sglobal *qglobal, const char *zsystem, struct uuconf_system *qsys)
 {
   char *zline;
   size_t cline;
@@ -471,7 +468,7 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	    return iret | UUCONF_ERROR_FILENAME | UUCONF_ERROR_LINENO;
 	  }
 
-	if (qsys->uuconf_pzlocal_send == (char **) &_uuconf_unset
+	if (qsys->uuconf_pzlocal_send == UUCONF_UNSET
 	    && pzlocal != NULL)
 	  {
 	    for (q = qsys; q != NULL; q = q->uuconf_qalternate)
@@ -482,7 +479,7 @@ _uuconf_iv2_system_internal (qglobal, zsystem, qsys)
 	      }
 	  }
 
-	if (qsys->uuconf_pzremote_send == (char **) &_uuconf_unset
+	if (qsys->uuconf_pzremote_send == UUCONF_UNSET
 	    && pzremote != NULL)
 	  {
 	    for (q = qsys; q != NULL; q = q->uuconf_qalternate)

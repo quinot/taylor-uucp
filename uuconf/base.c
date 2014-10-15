@@ -32,11 +32,7 @@ const char _uuconf_base_rcsid[] = "$Id$";
    offset is adjusted by a base value.  */
 
 void
-_uuconf_ucmdtab_base (qoff, celes, pbase, qset)
-     register const struct cmdtab_offset *qoff;
-     size_t celes;
-     char *pbase;
-     register struct uuconf_cmdtab *qset;
+_uuconf_ucmdtab_base (register const struct cmdtab_offset *qoff, size_t celes, char *pbase, register struct uuconf_cmdtab *qset)
 {
   register size_t i;
 

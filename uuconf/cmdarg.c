@@ -30,12 +30,6 @@ const char _uuconf_cmdarg_rcsid[] = "$Id$";
 
 #include <ctype.h>
 
-#undef strcmp
-#if HAVE_STRCASECMP
-#undef strcasecmp
-#endif
-extern int strcmp (), strcasecmp ();
-
 /* Look up a command with arguments in a table and execute it.  */
 
 int

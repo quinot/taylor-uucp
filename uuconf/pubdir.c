@@ -31,9 +31,7 @@ const char _uuconf_pubdir_rcsid[] = "$Id$";
 /* Get the name of the UUCP public directory.  */
 
 int
-uuconf_pubdir (pglobal, pzpub)
-     pointer pglobal;
-     const char **pzpub;
+uuconf_pubdir (pointer pglobal, const char **pzpub)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

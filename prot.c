@@ -54,11 +54,7 @@ int iPrecend;
    can send it, we may run out of buffer space.  */
 
 boolean
-fsend_data (qconn, zsend, csend, fdoread)
-     struct sconnection *qconn;
-     const char *zsend;
-     size_t csend;
-     boolean fdoread;
+fsend_data (struct sconnection *qconn, const char *zsend, size_t csend, boolean fdoread)
 {
   if (! fdoread)
     return fconn_write (qconn, zsend, csend);
@@ -103,12 +99,7 @@ fsend_data (qconn, zsend, csend, fdoread)
    argument is FALSE, no error should be reported.  */
 
 boolean
-freceive_data (qconn, cneed, pcrec, ctimeout, freport)
-     struct sconnection *qconn;
-     size_t cneed;
-     size_t *pcrec;
-     int ctimeout;
-     boolean freport;
+freceive_data (struct sconnection *qconn, size_t cneed, size_t *pcrec, int ctimeout, boolean freport)
 {
   /* Set *pcrec to the maximum amount of data we can read.  fconn_read
      expects *pcrec to be the buffer size, and sets it to the amount
@@ -155,10 +146,7 @@ freceive_data (qconn, cneed, pcrec, ctimeout, freport)
    error.  */
 
 int
-breceive_char (qconn, ctimeout, freport)
-     struct sconnection *qconn;
-     int ctimeout;
-     boolean freport;
+breceive_char (struct sconnection *qconn, int ctimeout, boolean freport)
 {
   char b;
 

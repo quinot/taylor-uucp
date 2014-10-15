@@ -30,20 +30,12 @@
 
 #include <pwd.h>
 
-#if GETPWNAM_DECLARATION_OK
-#ifndef getpwnam
-extern struct passwd *getpwnam ();
-#endif
-#endif
 
 /* Turn a file name into an absolute path, by doing tilde expansion
    and moving any other type of file into the public directory.  */
 
 char *
-zsysdep_local_file (zfile, zpubdir, pfbadname)
-     const char *zfile;
-     const char *zpubdir;
-     boolean *pfbadname;
+zsysdep_local_file (const char *zfile, const char *zpubdir, boolean *pfbadname)
 {
   const char *zdir;
 

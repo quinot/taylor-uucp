@@ -31,9 +31,7 @@ const char _uuconf_cnfnms_rcsid[] = "$Id$";
 #include <errno.h>
 
 int
-uuconf_config_files (pglobal, qnames)
-     pointer pglobal;
-     struct uuconf_config_file_names* qnames;
+uuconf_config_files (pointer pglobal, struct uuconf_config_file_names *qnames)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

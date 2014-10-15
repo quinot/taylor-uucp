@@ -108,8 +108,7 @@ static RETSIGTYPE uscu_alarm_kill P((int isig));
 /* Return the device name for a port, or NULL if none.  */
 
 static const char *
-zsport_line (qport)
-     const struct uuconf_port *qport;
+zsport_line (const struct uuconf_port *qport)
 {
   const char *zline;
 
@@ -141,8 +140,7 @@ zsport_line (qport)
 /* Check whether the user has legitimate access to a port.  */
 
 boolean
-fsysdep_port_access (qport)
-     struct uuconf_port *qport;
+fsysdep_port_access (struct uuconf_port *qport)
 {
   const char *zline;
   char *zfree;
@@ -168,9 +166,7 @@ fsysdep_port_access (qport)
 /* Return whether the given port is named by the given line.  */
 
 boolean
-fsysdep_port_is_line (qport, zline)
-     struct uuconf_port *qport;
-     const char *zline;
+fsysdep_port_is_line (struct uuconf_port *qport, const char *zline)
 {
   const char *zpline;
   char *zfree1, *zfree2;
@@ -230,8 +226,7 @@ static int oSpipe;
 /* Initialize the subprocess, and have it start copying data.  */
 
 boolean
-fsysdep_cu_init (qconn)
-     struct sconnection *qconn;
+fsysdep_cu_init (struct sconnection *qconn)
 {
   int ai[2];
 
@@ -301,10 +296,7 @@ fsysdep_cu_init (qconn)
    next character and return it.  */
 
 boolean
-fsysdep_cu (qconn, pbcmd, zlocalname)
-     struct sconnection *qconn;
-     char *pbcmd;
-     const char *zlocalname;
+fsysdep_cu (struct sconnection *qconn, char *pbcmd, const char *zlocalname)
 {
   boolean fstart;
   char b;
@@ -372,8 +364,7 @@ fsysdep_cu (qconn, pbcmd, zlocalname)
 volatile sig_atomic_t fScu_alarm;
 
 static RETSIGTYPE
-uscu_alarm (isig)
-     int isig ATTRIBUTE_UNUSED;
+uscu_alarm (int isig ATTRIBUTE_UNUSED)
 {
 #if ! HAVE_SIGACTION && ! HAVE_SIGVEC && ! HAVE_SIGSET
   (void) signal (isig, uscu_alarm);
@@ -393,9 +384,7 @@ uscu_alarm (isig)
    mostly to be fancy; it lets ~~ look smoother.  */
 
 static int
-cscu_escape (pbcmd, zlocalname)
-     char *pbcmd;
-     const char *zlocalname;
+cscu_escape (char *pbcmd, const char *zlocalname)
 {
   CATCH_PROTECT int c;
 
@@ -446,8 +435,7 @@ cscu_escape (pbcmd, zlocalname)
 static volatile sig_atomic_t iSsend_sig;
 
 static RETSIGTYPE
-uscu_alarm_kill (isig)
-     int isig ATTRIBUTE_UNUSED;
+uscu_alarm_kill (int isig ATTRIBUTE_UNUSED)
 {
 #if ! HAVE_SIGACTION && ! HAVE_SIGVEC && ! HAVE_SIGSET
   (void) signal (isig, uscu_alarm_kill);
@@ -465,8 +453,7 @@ uscu_alarm_kill (isig)
    SIGUSR1 to make it start copying, and SIGUSR2 to make it stop.  */
 
 boolean
-fsysdep_cu_copy (fcopy)
-     boolean fcopy;
+fsysdep_cu_copy (boolean fcopy)
 {
   int ierr;
   int c;
@@ -524,7 +511,7 @@ fsysdep_cu_copy (fcopy)
 /* Shut down cu by killing the child process.  */
 
 boolean
-fsysdep_cu_finish ()
+fsysdep_cu_finish (void)
 {
   (void) close (oSpipe);
 
@@ -557,8 +544,7 @@ fsysdep_cu_finish ()
 static volatile sig_atomic_t iSchild_sig;
 
 static RETSIGTYPE
-uscu_child_handler (isig)
-     int isig;
+uscu_child_handler (int isig)
 {
 #if ! HAVE_SIGACTION && ! HAVE_SIGVEC && ! HAVE_SIGSET
   (void) signal (isig, uscu_child_handler);
@@ -580,9 +566,7 @@ uscu_child_handler (isig)
    work reasonably on 680x0 versions of MINIX.  */
 
 static void
-uscu_child (qconn, opipe)
-     struct sconnection *qconn;
-     int opipe;
+uscu_child (struct sconnection *qconn, int opipe)
 {
   CATCH_PROTECT int oport;
   CATCH_PROTECT boolean fstopped, fgot;
@@ -773,8 +757,7 @@ static boolean fStstp_ignored;
 /* Set the terminal into raw mode.  */
 
 boolean
-fsysdep_terminal_raw (flocalecho)
-     boolean flocalecho;
+fsysdep_terminal_raw (boolean flocalecho)
 {
   fSlocalecho = flocalecho;
 
@@ -871,7 +854,7 @@ fsysdep_terminal_raw (flocalecho)
 /* Restore the terminal to its original setting.  */
 
 boolean
-fsysdep_terminal_restore ()
+fsysdep_terminal_restore (void)
 {
   if (! fSterm)
     return TRUE;
@@ -888,8 +871,7 @@ fsysdep_terminal_restore ()
    fsysdep_terminal_raw has been called.  */
 
 char *
-zsysdep_terminal_line (zprompt)
-     const char *zprompt;
+zsysdep_terminal_line (const char *zprompt)
 {
   CATCH_PROTECT size_t cbuf = 0;
   CATCH_PROTECT char *zbuf = NULL;
@@ -1005,8 +987,7 @@ zsysdep_terminal_line (zprompt)
 /* Write a line to the terminal with a trailing newline.  */
 
 boolean
-fsysdep_terminal_puts (zline)
-     const char *zline;
+fsysdep_terminal_puts (const char *zline)
 {
   char *zalc, *zprint;
   size_t clen;
@@ -1055,8 +1036,7 @@ fsysdep_terminal_puts (zline)
 /* Allow or disallow signals from the terminal.  */
 
 boolean
-fsysdep_terminal_signals (faccept)
-     boolean faccept;
+fsysdep_terminal_signals (boolean faccept)
 {
 #if HAVE_BSD_TTY
 
@@ -1105,10 +1085,7 @@ fsysdep_terminal_signals (faccept)
    rather than copying the data ourselves.  */
 
 boolean
-fsysdep_shell (qconn, zcmd, tcmd)
-     struct sconnection *qconn;
-     const char *zcmd;
-     enum tshell_cmd tcmd;
+fsysdep_shell (struct sconnection *qconn, const char *zcmd, enum tshell_cmd tcmd)
 {
   const char *azargs[4];
   int oread, owrite;
@@ -1182,8 +1159,7 @@ fsysdep_shell (qconn, zcmd, tcmd)
 /* Change directories.  */
 
 boolean
-fsysdep_chdir (zdir)
-     const char *zdir;
+fsysdep_chdir (const char *zdir)
 {
   if (zdir == NULL || *zdir == '\0')
     {
@@ -1205,7 +1181,7 @@ fsysdep_chdir (zdir)
 /* Suspend the current process.  */
 
 boolean
-fsysdep_suspend ()
+fsysdep_suspend (void)
 {
 #ifndef SIGTSTP
   return fsysdep_terminal_puts ("[process suspension not supported]");

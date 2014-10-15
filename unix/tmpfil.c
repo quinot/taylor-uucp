@@ -35,8 +35,7 @@
 
 /*ARGSUSED*/
 char *
-zstemp_file (qsys)
-     const struct uuconf_system *qsys ATTRIBUTE_UNUSED;
+zstemp_file (const struct uuconf_system *qsys ATTRIBUTE_UNUSED)
 {
   static unsigned int icount;
   const char *const zdigs = ZDIGS;

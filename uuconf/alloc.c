@@ -36,9 +36,7 @@ const char _uuconf_alloc_rcsid[] = "$Id$";
    routine may return UUCONF_MALLOC_FAILED | UUCONF_ERROR_ERRNO.  */
 
 pointer
-uuconf_malloc (pblock, c)
-     pointer pblock;
-     size_t c;
+uuconf_malloc (pointer pblock, size_t c)
 {
   struct sblock *q = (struct sblock *) pblock;
   pointer pret;

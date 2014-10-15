@@ -31,9 +31,7 @@ const char _uuconf_logfil_rcsid[] = "$Id$";
 /* Get the name of the UUCP log file.  */
 
 int
-uuconf_logfile (pglobal, pzlog)
-     pointer pglobal;
-     const char **pzlog;
+uuconf_logfile (pointer pglobal, const char **pzlog)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

@@ -23,8 +23,6 @@
 #include "sysdep.h"
 #include "fsusg.h"
 
-int statfs ();
-
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
@@ -55,7 +53,6 @@ int statfs ();
 
 #if HAVE_SYS_STATVFS_H		/* SVR4.  */
 #include <sys/statvfs.h>
-int statvfs ();
 #endif
 
 #if HAVE_USTAT_H		/* SVR2 and others.  */
@@ -97,9 +94,7 @@ static long adjust_blocks P((long blocks, int fromsize, int tosize));
    TOSIZE must be positive.  Return -1 if FROMSIZE is not positive.  */
 
 static long
-adjust_blocks (blocks, fromsize, tosize)
-     long blocks;
-     int fromsize, tosize;
+adjust_blocks (long int blocks, int fromsize, int tosize)
 {
   if (tosize <= 0)
     abort ();
@@ -123,9 +118,7 @@ adjust_blocks (blocks, fromsize, tosize)
    Return 0 if successful, -1 if not. */
 
 int
-get_fs_usage (path, disk, fsp)
-     char *path, *disk ATTRIBUTE_UNUSED;
-     struct fs_usage *fsp;
+get_fs_usage (char *path, char *disk ATTRIBUTE_UNUSED, struct fs_usage *fsp)
 {
 #if STAT_NONE
   return -1;

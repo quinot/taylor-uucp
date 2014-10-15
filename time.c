@@ -39,13 +39,6 @@ const char time_rcsid[] = "$Id$";
 #include "uudefs.h"
 #include "uuconf.h"
 
-/* External functions.  */
-#ifndef time
-extern time_t time ();
-#endif
-#ifndef localtime
-extern struct tm *localtime ();
-#endif
 
 /* See if the current time matches a time span.  If it does, return
    TRUE, set *pival to the value for the matching span, and set
@@ -53,10 +46,7 @@ extern struct tm *localtime ();
    FALSE.  */
 
 boolean
-ftimespan_match (qspan, pival, pcretry)
-     const struct uuconf_timespan *qspan;
-     long *pival;
-     int *pcretry;
+ftimespan_match (const struct uuconf_timespan *qspan, long int *pival, int *pcretry)
 {
   time_t inow;
   struct tm *qtm;
@@ -91,8 +81,7 @@ ftimespan_match (qspan, pival, pcretry)
    to a timesize span.  This returns -1 if there is no limit.  */
 
 long
-cmax_size_ever (qtimesize)
-     const struct uuconf_timespan *qtimesize;
+cmax_size_ever (const struct uuconf_timespan *qtimesize)
 {
   long imax;
   const struct uuconf_timespan *q;

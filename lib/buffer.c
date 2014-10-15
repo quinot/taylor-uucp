@@ -54,8 +54,7 @@ static struct sbuf *qBlist;
    ubuffree function.  */
 
 char *
-zbufalc (c)
-     size_t c;
+zbufalc (size_t c)
 {
   register struct sbuf *q;
 
@@ -81,8 +80,7 @@ zbufalc (c)
 /* Free up a buffer back onto the linked list.  */
 
 void
-ubuffree (z)
-     char *z;
+ubuffree (char *z)
 {
   struct sbuf *q;
   /* The type of ioff should be size_t, but making it int avoids a bug
@@ -136,8 +134,7 @@ ubuffree (z)
 /* Get a buffer holding a given string.  */
 
 char *
-zbufcpy (z)
-     const char *z;
+zbufcpy (const char *z)
 {
   size_t csize;
   char *zret;

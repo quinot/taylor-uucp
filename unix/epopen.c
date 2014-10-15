@@ -34,10 +34,7 @@
    process ID of the child.  */
 
 FILE *
-espopen (pazargs, frd, pipid)
-     const char **pazargs;
-     boolean frd;
-     pid_t *pipid;
+espopen (const char **pazargs, boolean frd, pid_t *pipid)
 {
   int aidescs[3];
   pid_t ipid;

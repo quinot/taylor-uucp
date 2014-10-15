@@ -34,10 +34,7 @@ const char _uuconf_hlocnm_rcsid[] = "$Id$";
    configuration files.  */
 
 int
-uuconf_hdb_login_localname (pglobal, zlogin, pzname)
-     pointer pglobal;
-     const char *zlogin;
-     char **pzname;
+uuconf_hdb_login_localname (pointer pglobal, const char *zlogin, char **pzname)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct shpermissions *qperm;
@@ -56,9 +53,9 @@ uuconf_hdb_login_localname (pglobal, zlogin, pzname)
        qperm = qperm->qnext)
     {
       if (qperm->zmyname != NULL
-	  && qperm->zmyname != (char *) &_uuconf_unset
+	  && qperm->zmyname != UUCONF_UNSET
 	  && qperm->pzlogname != NULL
-	  && qperm->pzlogname != (char **) &_uuconf_unset)
+	  && qperm->pzlogname != UUCONF_UNSET)
 	{
 	  char **pz;
 

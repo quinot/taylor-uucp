@@ -35,12 +35,7 @@ const char _uuconf_paramc_rcsid[] = "$Id$";
    and UUCONF_CMDTABRET_EXIT, if appropriate.  */
 
 int
-_uuconf_iadd_proto_param (qglobal, argc, argv, pqparam, pblock)
-     struct sglobal *qglobal;
-     int argc;
-     char **argv;
-     struct uuconf_proto_param **pqparam;
-     pointer pblock;
+_uuconf_iadd_proto_param (struct sglobal *qglobal, int argc, char **argv, struct uuconf_proto_param **pqparam, pointer pblock)
 {
   struct uuconf_proto_param *q;
   size_t c;

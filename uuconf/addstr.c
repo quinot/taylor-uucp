@@ -39,7 +39,7 @@ const char _uuconf_addstr_rcsid[] = "$Id$";
    file which merely declarates a variable.  This functions happens to
    be pulled in by almost everything.  */
 
-char *_uuconf_unset;
+struct _uuconf_unset_t {} _uuconf_unset;
 
 /* Add a string to a list of strings.  The list is maintained as an
    array of elements ending in NULL.  The total number of available
@@ -54,13 +54,7 @@ char *_uuconf_unset;
 #define CSLOTS (8)
 
 int
-_uuconf_iadd_string (qglobal, zadd, fcopy, fcheck, ppzstrings, pblock)
-     struct sglobal *qglobal;
-     char *zadd;
-     boolean fcopy;
-     boolean fcheck;
-     char ***ppzstrings;
-     pointer pblock;
+_uuconf_iadd_string (struct sglobal *qglobal, char *zadd, boolean fcopy, boolean fcheck, char ***ppzstrings, pointer pblock)
 {
   char **pz;
   size_t c;
@@ -90,7 +84,7 @@ _uuconf_iadd_string (qglobal, zadd, fcopy, fcheck, ppzstrings, pblock)
     }
 
   pz = *ppzstrings;
-  if (pz == NULL || pz == (char **) &_uuconf_unset)
+  if (pz == NULL || pz == UUCONF_UNSET)
     {
       pz = (char **) uuconf_malloc (pblock, CSLOTS * sizeof (char *));
       if (pz == NULL)

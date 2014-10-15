@@ -70,9 +70,7 @@ static char *zsreceived_name P((const struct uuconf_system *qsys,
    no name.  */
 
 static char *
-zsreceived_name (qsys, ztemp)
-     const struct uuconf_system *qsys;
-     const char *ztemp;
+zsreceived_name (const struct uuconf_system *qsys, const char *ztemp)
 {
   if (ztemp != NULL
       && *ztemp == 'D'
@@ -86,10 +84,7 @@ zsreceived_name (qsys, ztemp)
 
 /*ARGSUSED*/
 boolean
-fsysdep_remember_reception (qsys, zto, ztemp)
-     const struct uuconf_system *qsys;
-     const char *zto ATTRIBUTE_UNUSED;
-     const char *ztemp;
+fsysdep_remember_reception (const struct uuconf_system *qsys, const char *zto ATTRIBUTE_UNUSED, const char *ztemp)
 {
   char *zfile;
   int o;
@@ -143,10 +138,7 @@ fsysdep_remember_reception (qsys, zto, ztemp)
 
 /*ARGSUSED*/
 boolean
-fsysdep_already_received (qsys, zto, ztemp)
-     const struct uuconf_system *qsys;
-     const char *zto ATTRIBUTE_UNUSED;
-     const char *ztemp;
+fsysdep_already_received (const struct uuconf_system *qsys, const char *zto ATTRIBUTE_UNUSED, const char *ztemp)
 {
   char *zfile;
   struct stat s;
@@ -179,10 +171,7 @@ fsysdep_already_received (qsys, zto, ztemp)
 
 /*ARGSUSED*/
 boolean
-fsysdep_forget_reception (qsys, zto, ztemp)
-     const struct uuconf_system *qsys;
-     const char *zto ATTRIBUTE_UNUSED;
-     const char *ztemp;
+fsysdep_forget_reception (const struct uuconf_system *qsys, const char *zto ATTRIBUTE_UNUSED, const char *ztemp)
 {
   char *zfile;
 

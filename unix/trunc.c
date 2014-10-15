@@ -25,10 +25,6 @@
 #define SEEK_SET 0
 #endif
 
-/* External functions.  */
-#ifndef lseek
-extern off_t lseek ();
-#endif
 
 /* Truncate a file to zero length.  If this fails, it closes and
    removes the file.  We support a number of different means of
@@ -51,9 +47,7 @@ extern off_t lseek ();
 #endif /* ! HAVE_FTRUNCATE && ! HAVE_LTRUNC */
 
 openfile_t
-esysdep_truncate (e, zname)
-     openfile_t e;
-     const char *zname;
+esysdep_truncate (openfile_t e, const char *zname)
 {
   int o;
 

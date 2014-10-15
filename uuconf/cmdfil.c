@@ -34,14 +34,7 @@ const char _uuconf_cmdfil_rcsid[] = "$Id$";
    appropriate.  */
 
 int
-uuconf_cmd_file (pglobal, e, qtab, pinfo, pfiunknown, iflags, pblock)
-     pointer pglobal;
-     FILE *e;
-     const struct uuconf_cmdtab *qtab;
-     pointer pinfo;
-     int (*pfiunknown) P((pointer, int, char **, pointer, pointer));
-     int iflags;
-     pointer pblock;
+uuconf_cmd_file (pointer pglobal, FILE *e, const struct uuconf_cmdtab *qtab, pointer pinfo, int (*pfiunknown) (pointer, int, char **, pointer, pointer), int iflags, pointer pblock)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   boolean fcont;

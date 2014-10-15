@@ -40,8 +40,7 @@ int iDebug;
 static const char * const azDebug_names[] = DEBUG_NAMES;
 
 int
-idebug_parse (z)
-     const char *z;
+idebug_parse (const char *z)
 {
   char *zend;
   int i, iret;
@@ -97,9 +96,7 @@ idebug_parse (z)
 /* A debugging routine used when displaying buffers.  */
 
 size_t
-cdebug_char (z, ichar)
-     char *z;
-     int ichar;
+cdebug_char (char *z, int ichar)
 {
   char b;
 
@@ -143,10 +140,7 @@ cdebug_char (z, ichar)
 /* Display a buffer when debugging.  */
 
 void
-udebug_buffer (zhdr, zbuf, clen)
-     const char *zhdr;
-     const char *zbuf;
-     size_t clen;
+udebug_buffer (const char *zhdr, const char *zbuf, size_t clen)
 {
   char *z, *zalc;
   size_t i;

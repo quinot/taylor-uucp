@@ -39,8 +39,7 @@
    used if specified in the information for that system.  */
 
 long
-ixsysdep_get_sequence (qsys)
-     const struct uuconf_system *qsys;
+ixsysdep_get_sequence (const struct uuconf_system *qsys)
 {
   FILE *e;
   char *zname;

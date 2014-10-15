@@ -183,8 +183,16 @@ typedef const char *constpointer;
 #define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
 #endif /* ATTRIBUTE_NORETURN */
 
+/* We want our ATTRIBUTE_PRINTF functions to also permit
+   a NULL format string.  */
+#ifdef __GNUC__
+# define ATTRIBUTE_PRINTF_NULL_OK __printf0__
+#else
+# define ATTRIBUTE_PRINTF_NULL_OK __printf__
+#endif
+
 #ifndef ATTRIBUTE_PRINTF
-#define ATTRIBUTE_PRINTF(m, n) __attribute__ ((__format__ (__printf__, m, n)))
+#define ATTRIBUTE_PRINTF(m, n) __attribute__ ((__format__ (ATTRIBUTE_PRINTF_NULL_OK, m, n)))
 #define ATTRIBUTE_PRINTF_1 ATTRIBUTE_PRINTF(1, 2)
 #define ATTRIBUTE_PRINTF_2 ATTRIBUTE_PRINTF(2, 3)
 #define ATTRIBUTE_PRINTF_3 ATTRIBUTE_PRINTF(3, 4)

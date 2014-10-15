@@ -31,9 +31,7 @@ const char _uuconf_deblev_rcsid[] = "$Id$";
 /* Get the UUCP debugging level.  */
 
 int
-uuconf_debuglevel (pglobal, pzdebug)
-     pointer pglobal;
-     const char **pzdebug;
+uuconf_debuglevel (pointer pglobal, const char **pzdebug)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

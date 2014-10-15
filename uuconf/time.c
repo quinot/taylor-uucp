@@ -69,21 +69,14 @@ static const struct
    use.  */
 
 int
-_uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
-     struct sglobal *qglobal;
-     char *ztime;
-     long ival;
-     int cretry;
-     int (*picmp) P((long, long));
-     struct uuconf_timespan **pqspan;
-     pointer pblock;
+_uuconf_itime_parse (struct sglobal *qglobal, char *ztime, long int ival, int cretry, int (*picmp) (long int, long int), struct uuconf_timespan **pqspan, pointer pblock)
 {
   struct uuconf_timespan *qlist;
   char bfirst;
   const char *z;
 
   qlist = *pqspan;
-  if (qlist == (struct uuconf_timespan *) &_uuconf_unset)
+  if (qlist == UUCONF_UNSET)
     qlist = NULL;
 
   /* Expand the string using a timetable.  Keep rechecking the string
@@ -227,15 +220,7 @@ _uuconf_itime_parse (qglobal, ztime, ival, cretry, picmp, pqspan, pblock)
    (the binary operator)).  */
 
 static int
-itadd_span (qglobal, istart, iend, ival, cretry, picmp, pqspan, pblock)
-     struct sglobal *qglobal;
-     int istart;
-     int iend;
-     long ival;
-     int cretry;
-     int (*picmp) P((long, long));
-     struct uuconf_timespan **pqspan;
-     pointer pblock;
+itadd_span (struct sglobal *qglobal, int istart, int iend, long int ival, int cretry, int (*picmp) (long int, long int), struct uuconf_timespan **pqspan, pointer pblock)
 {
   struct uuconf_timespan **pq;
   int iret;
@@ -374,15 +359,7 @@ itadd_span (qglobal, istart, iend, ival, cretry, picmp, pqspan, pblock)
 /* A utility function to create a new uuconf_timespan structure.  */
 
 static int
-itnew (qglobal, pqset, qnext, istart, iend, ival, cretry, pblock)
-     struct sglobal *qglobal;
-     struct uuconf_timespan **pqset;
-     struct uuconf_timespan *qnext;
-     int istart;
-     int iend;
-     long ival;
-     int cretry;
-     pointer pblock;
+itnew (struct sglobal *qglobal, struct uuconf_timespan **pqset, struct uuconf_timespan *qnext, int istart, int iend, long int ival, int cretry, pointer pblock)
 {
   register struct uuconf_timespan *qnew;
 

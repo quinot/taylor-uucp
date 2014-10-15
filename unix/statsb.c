@@ -81,9 +81,7 @@ static boolean fskill_or_rejuv P((pointer puuconf, const char *zid,
    routine is not time critical, so we never rely on NULL.  */
 
 static int
-issettime(z, inow)
-     const char *z;
-     time_t inow;
+issettime(const char *z, time_t inow)
 {
 #if HAVE_UTIME_H
   struct utimbuf s;
@@ -103,9 +101,7 @@ issettime(z, inow)
 /* Kill a job, given the jobid.  */
 
 boolean
-fsysdep_kill_job (puuconf, zid)
-     pointer puuconf;
-     const char *zid;
+fsysdep_kill_job (pointer puuconf, const char *zid)
 {
   return fskill_or_rejuv (puuconf, zid, TRUE);
 }
@@ -113,9 +109,7 @@ fsysdep_kill_job (puuconf, zid)
 /* Rejuvenate a job, given the jobid.  */
 
 boolean
-fsysdep_rejuvenate_job (puuconf, zid)
-     pointer puuconf;
-     const char *zid;
+fsysdep_rejuvenate_job (pointer puuconf, const char *zid)
 {
   return fskill_or_rejuv (puuconf, zid, FALSE);
 }
@@ -123,10 +117,7 @@ fsysdep_rejuvenate_job (puuconf, zid)
 /* Kill or rejuvenate a job, given the jobid.  */
 
 static boolean
-fskill_or_rejuv (puuconf, zid, fkill)
-     pointer puuconf;
-     const char *zid;
-     boolean fkill;
+fskill_or_rejuv (pointer puuconf, const char *zid, boolean fkill)
 {
   char *zfile;
   char *zsys;
@@ -261,9 +252,7 @@ fskill_or_rejuv (puuconf, zid, fkill)
 /* Get the time a work job was queued.  */
 
 long
-ixsysdep_work_time (qsys, pseq)
-     const struct uuconf_system *qsys;
-     pointer pseq;
+ixsysdep_work_time (const struct uuconf_system *qsys, pointer pseq)
 {
   char *zjobid, *zfile;
   long iret;
@@ -282,8 +271,7 @@ ixsysdep_work_time (qsys, pseq)
    modified).  */
 
 long
-ixsysdep_file_time (zfile)
-     const char *zfile;
+ixsysdep_file_time (const char *zfile)
 {
   struct stat s;
 
@@ -300,8 +288,7 @@ ixsysdep_file_time (zfile)
 /* Set the time of a file to the current time.  */
 
 boolean
-fsysdep_touch_file (zfile)
-     const char *zfile;
+fsysdep_touch_file (const char *zfile)
 {
   if (issettime (zfile, time ((time_t *) NULL)) != 0)
     {
@@ -315,8 +302,7 @@ fsysdep_touch_file (zfile)
 /* Start getting the status files.  */
 
 boolean
-fsysdep_all_status_init (phold)
-     pointer *phold;
+fsysdep_all_status_init (pointer *phold)
 {
   DIR *qdir;
 
@@ -334,10 +320,7 @@ fsysdep_all_status_init (phold)
 /* Get the next status file.  */
 
 char *
-zsysdep_all_status (phold, pferr, qstat)
-     pointer phold;
-     boolean *pferr;
-     struct sstatus *qstat;
+zsysdep_all_status (pointer phold, boolean *pferr, struct sstatus *qstat)
 {
   DIR *qdir = (DIR *) phold;
   struct dirent *qentry;
@@ -380,8 +363,7 @@ zsysdep_all_status (phold, pferr, qstat)
 /* Finish getting the status file.  */
 
 void
-usysdep_all_status_free (phold)
-     pointer phold;
+usysdep_all_status_free (pointer phold)
 {
   DIR *qdir = (DIR *) phold;
 
@@ -392,7 +374,7 @@ usysdep_all_status_free (phold)
    invoking ps after we've figured out the process entries to use.  */
 
 boolean
-fsysdep_lock_status ()
+fsysdep_lock_status (void)
 {
   DIR *qdir;
   struct dirent *qentry;

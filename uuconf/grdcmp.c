@@ -39,9 +39,7 @@ const char _uuconf_grdcmp_rcsid[] = "$Id$";
    sequence, and that the lower case letters are in sequence.  */
 
 int
-uuconf_grade_cmp (barg1, barg2)
-     int barg1;
-     int barg2;
+uuconf_grade_cmp (int barg1, int barg2)
 {
   int b1, b2;
 

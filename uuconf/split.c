@@ -39,11 +39,7 @@ const char _uuconf_split_rcsid[] = "$Id$";
    it can fail is if malloc or realloc fails.  */
 
 int
-_uuconf_istrsplit (zline, bsep, ppzsplit, pcsplit)
-     register char *zline;
-     int bsep;
-     char ***ppzsplit;
-     size_t *pcsplit;
+_uuconf_istrsplit (register char *zline, int bsep, char ***ppzsplit, size_t *pcsplit)
 {
   size_t i;
 

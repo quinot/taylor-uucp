@@ -32,9 +32,7 @@ const char _uuconf_remunk_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_remote_unknown (pglobal, pzname)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     char **pzname ATTRIBUTE_UNUSED;
+uuconf_remote_unknown (pointer pglobal ATTRIBUTE_UNUSED, char **pzname ATTRIBUTE_UNUSED)
 {
 #if ! HAVE_HDB_CONFIG
   return UUCONF_NOT_FOUND;

@@ -38,10 +38,7 @@ static int idunknown P((pointer pglobal, int argc, char **argv, pointer pvar,
 /* Find a dialer in the Taylor UUCP configuration files by name.  */
 
 int
-uuconf_taylor_dialer_info (pglobal, zname, qdialer)
-     pointer pglobal;
-     const char *zname;
-     struct uuconf_dialer *qdialer;
+uuconf_taylor_dialer_info (pointer pglobal, const char *zname, struct uuconf_dialer *qdialer)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   FILE *e;
@@ -179,12 +176,7 @@ uuconf_taylor_dialer_info (pglobal, zname, qdialer)
 
 /*ARGSUSED*/
 static int
-iddialer (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+iddialer (pointer pglobal, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pz = (char **) pvar;
@@ -212,12 +204,7 @@ iddialer (pglobal, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-idunknown (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+idunknown (pointer pglobal, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_dialer *qdialer = (struct uuconf_dialer *) pinfo;

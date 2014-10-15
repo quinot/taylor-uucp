@@ -232,9 +232,7 @@ static const struct option asCulongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -c: phone number.  */
   char *zphone = NULL;
@@ -250,8 +248,6 @@ main (argc, argv)
   const char *zport = NULL;
   /* -s: speed.  */
   long ibaud = 0L;
-  /* -t: map cr to crlf.  */
-  boolean fmapcr = FALSE;
   /* -z: system.  */
   const char *zsystem = NULL;
   /* --nostop: turn off XON/XOFF.  */
@@ -351,11 +347,6 @@ main (argc, argv)
 	case 's':
 	  /* Speed.  */
 	  ibaud = strtol (optarg, (char **) NULL, 10);
-	  break;
-
-	case 't':
-	  /* Map cr to crlf.  */
-	  fmapcr = TRUE;
 	  break;
 
 	case 'z':
@@ -818,7 +809,7 @@ main (argc, argv)
 /* Print a usage message and die.  */
 
 static void
-ucuusage ()
+ucuusage (void)
 {
   fprintf (stderr, "Usage: %s [options] [system or phone-number]\n",
 	   zProgram);
@@ -829,7 +820,7 @@ ucuusage ()
 /* Print a help message.  */
 
 static void
-ucuhelp ()
+ucuhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	  VERSION);
@@ -860,7 +851,7 @@ ucuhelp ()
 /* This function is called when a fatal error occurs.  */
 
 static void
-ucuabort ()
+ucuabort (void)
 {
   if (fCustarted)
     {
@@ -909,7 +900,7 @@ static boolean fCulog_restore;
    since CRMOD will not be on.  */
 
 static void
-uculog_start ()
+uculog_start (void)
 {
   if (! fCurestore_terminal)
     fCulog_restore = FALSE;
@@ -926,7 +917,7 @@ uculog_start ()
    sets the terminal back, if necessary.  */
 
 static void
-uculog_end ()
+uculog_end (void)
 {
   if (fCulog_restore)
     {
@@ -941,9 +932,7 @@ uculog_end ()
    connection and lock it.  */
 
 static int
-icuport_lock (qport, pinfo)
-     struct uuconf_port *qport;
-     pointer pinfo;
+icuport_lock (struct uuconf_port *qport, pointer pinfo)
 {
   struct sconninfo *q = (struct sconninfo *) pinfo;
 
@@ -972,10 +961,7 @@ icuport_lock (qport, pinfo)
    continue, or FALSE if the connection should be terminated.  */
 
 static boolean
-fcudo_cmd (puuconf, qconn, bcmd)
-     pointer puuconf;
-     struct sconnection *qconn;
-     int bcmd;
+fcudo_cmd (pointer puuconf, struct sconnection *qconn, int bcmd)
 {
   char *zline;
   char *z;
@@ -1166,8 +1152,7 @@ fcudo_cmd (puuconf, qconn, bcmd)
 /* List ~% functions.  */
 
 static void
-uculist_fns (zescape)
-     const char *zescape;
+uculist_fns (const char *zescape)
 {
   char abbuf[100];
 
@@ -1188,9 +1173,7 @@ uculist_fns (zescape)
 /* Set a variable.  */
 
 static boolean
-fcuset_var (puuconf, zline)
-     pointer puuconf;
-     char *zline;
+fcuset_var (pointer puuconf, char *zline)
 {
   char *zvar, *zval;
   char *azargs[2];
@@ -1239,12 +1222,7 @@ fcuset_var (puuconf, zline)
 
 /*ARGSUSED*/
 static int
-icuunrecogvar (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+icuunrecogvar (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   char abescape[5];
 
@@ -1263,7 +1241,7 @@ icuunrecogvar (puuconf, argc, argv, pvar, pinfo)
 /* List all the variables with their values.  */
 
 static void
-uculist_vars ()
+uculist_vars (void)
 {
   const struct uuconf_cmdtab *q;
   char abbuf[100];
@@ -1371,10 +1349,7 @@ static const struct uuconf_cmdtab asCucmds[] =
 /* Do a subcommand.  This is called by commands beginning with ~%.  */
 
 static boolean
-fcudo_subcmd (puuconf, qconn, zline)
-     pointer puuconf;
-     struct sconnection *qconn;
-     char *zline;
+fcudo_subcmd (pointer puuconf, struct sconnection *qconn, char *zline)
 {
   char *azargs[3];
   int iarg;
@@ -1406,12 +1381,7 @@ fcudo_subcmd (puuconf, qconn, zline)
 
 /*ARGSUSED*/
 static int
-icuunrecogfn (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+icuunrecogfn (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   char abescape[5];
 
@@ -1434,12 +1404,7 @@ icuunrecogfn (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icubreak (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo;
+icubreak (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo)
 {
   struct sconnection *qconn = (struct sconnection *) pinfo;
 
@@ -1452,12 +1417,7 @@ icubreak (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icuchdir (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+icuchdir (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
   const char *zarg;
 
@@ -1473,12 +1433,7 @@ icuchdir (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icudebug (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar ATTRIBUTE_UNUSED;
-     pointer pinfo ATTRIBUTE_UNUSED;
+icudebug (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar ATTRIBUTE_UNUSED, pointer pinfo ATTRIBUTE_UNUSED)
 {
 #if DEBUG > 1
   if (iDebug != 0)
@@ -1496,12 +1451,7 @@ icudebug (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icunostop (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
-     pointer pvar;
-     pointer pinfo;
+icunostop (pointer puuconf ATTRIBUTE_UNUSED, int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED, pointer pvar, pointer pinfo)
 {
   struct sconnection *qconn = (struct sconnection *) pinfo;
 
@@ -1522,12 +1472,7 @@ icunostop (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icuput (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+icuput (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sconnection *qconn = (struct sconnection *) pinfo;
   char *zfrom;
@@ -1734,12 +1679,7 @@ icuput (puuconf, argc, argv, pvar, pinfo)
 
 /*ARGSUSED*/
 static int
-icutake (puuconf, argc, argv, pvar, pinfo)
-     pointer puuconf ATTRIBUTE_UNUSED;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+icutake (pointer puuconf ATTRIBUTE_UNUSED, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sconnection *qconn = (struct sconnection *) pinfo;
   const char *zeof;
@@ -1974,10 +1914,7 @@ icutake (puuconf, argc, argv, pvar, pinfo)
    occurrs, it calls ucuabort.  */
 
 static boolean
-fcusend_buf (qconn, zbufarg, cbufarg)
-     struct sconnection *qconn;
-     const char *zbufarg;
-     size_t cbufarg;
+fcusend_buf (struct sconnection *qconn, const char *zbufarg, size_t cbufarg)
 {
   const char *zbuf;
   size_t cbuf;

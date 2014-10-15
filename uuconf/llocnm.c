@@ -33,10 +33,7 @@ const char _uuconf_llocnm_rcsid[] = "$Id$";
 /* Get the local name to use, given a login name.  */
 
 int
-uuconf_login_localname (pglobal, zlogin, pzname)
-     pointer pglobal;
-     const char *zlogin;
-     char **pzname;
+uuconf_login_localname (pointer pglobal, const char *zlogin, char **pzname)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

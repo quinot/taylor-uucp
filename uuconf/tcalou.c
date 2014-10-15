@@ -37,11 +37,7 @@ static int icsys P((pointer pglobal, int argc, char **argv, pointer pvar,
    Taylor UUCP configuration files.  */
 
 int
-uuconf_taylor_callout (pglobal, qsys, pzlog, pzpass)
-     pointer pglobal;
-     const struct uuconf_system *qsys;
-     char **pzlog;
-     char **pzpass;
+uuconf_taylor_callout (pointer pglobal, const struct uuconf_system *qsys, char **pzlog, char **pzpass)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   boolean flookup;
@@ -156,12 +152,7 @@ uuconf_taylor_callout (pglobal, qsys, pzlog, pzpass)
    argument is passed in pinfo.  */
 
 static int
-icsys (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo;
+icsys (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pzlog = (char **) pvar;

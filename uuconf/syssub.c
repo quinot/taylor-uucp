@@ -127,16 +127,15 @@ const char _uuconf_syssub_rcsid[] = "$Id$";
 /* Clear the contents of a struct uuconf_system.  */
 
 void
-_uuconf_uclear_system (q)
-     struct uuconf_system *q;
+_uuconf_uclear_system (struct uuconf_system *q)
 {
-#define CLEAR(x) q->x = (char *) &_uuconf_unset
+#define CLEAR(x) q->x = UUCONF_UNSET
   SYSTEM_STRINGS (CLEAR);
 #undef CLEAR
-#define CLEAR(x) q->x = (char **) &_uuconf_unset
+#define CLEAR(x) q->x = UUCONF_UNSET
   SYSTEM_STRING_ARRAYS (CLEAR);
 #undef CLEAR
-#define CLEAR(x) q->x = (struct uuconf_timespan *) &_uuconf_unset
+#define CLEAR(x) q->x = UUCONF_UNSET
   SYSTEM_TIMESPANS (CLEAR);
 #undef CLEAR
 #define CLEAR(x) q->x = -1
@@ -144,9 +143,9 @@ _uuconf_uclear_system (q)
   SYSTEM_INTEGERS (CLEAR);
 #undef CLEAR
   q->uuconf_qalternate = NULL;
-  q->uuconf_zport = (char *) &_uuconf_unset;
-  q->uuconf_qport = (struct uuconf_port *) &_uuconf_unset;
-  q->uuconf_qproto_params = (struct uuconf_proto_param *) &_uuconf_unset;
+  q->uuconf_zport = UUCONF_UNSET;
+  q->uuconf_qport = UUCONF_UNSET;
+  q->uuconf_qproto_params = UUCONF_UNSET;
   q->uuconf_palloc = NULL;
 }
 
@@ -159,11 +158,7 @@ _uuconf_uclear_system (q)
    qdefault.  */
 
 int
-_uuconf_isystem_default (qglobal, qset, qdefault, faddalternates)
-     struct sglobal *qglobal;
-     struct uuconf_system *qset;
-     struct uuconf_system *qdefault;
-     boolean faddalternates;
+_uuconf_isystem_default (struct sglobal *qglobal, struct uuconf_system *qset, struct uuconf_system *qdefault, boolean faddalternates)
 {
   struct uuconf_system *qalt;
 
@@ -203,15 +198,15 @@ _uuconf_isystem_default (qglobal, qset, qdefault, faddalternates)
   for (qalt = qset; qalt != NULL; qalt = qalt->uuconf_qalternate)
     {
 #define DEFAULT(x) \
-  if (qalt->x == (char *) &_uuconf_unset) qalt->x = qdefault->x
+  if (qalt->x == UUCONF_UNSET) qalt->x = qdefault->x
       SYSTEM_STRINGS (DEFAULT);
 #undef DEFAULT
 #define DEFAULT(x) \
-  if (qalt->x == (char **) &_uuconf_unset) qalt->x = qdefault->x
+  if (qalt->x == UUCONF_UNSET) qalt->x = qdefault->x
       SYSTEM_STRING_ARRAYS (DEFAULT);
 #undef DEFAULT
 #define DEFAULT(x) \
-  if (qalt->x == (struct uuconf_timespan *) &_uuconf_unset) \
+  if (qalt->x == UUCONF_UNSET) \
     qalt->x = qdefault->x
       SYSTEM_TIMESPANS (DEFAULT);
 #undef DEFAULT
@@ -223,14 +218,14 @@ _uuconf_isystem_default (qglobal, qset, qdefault, faddalternates)
       /* We only copy over zport if both zport and qport are NULL,
 	 because otherwise a default zport would override a specific
 	 qport.  */
-      if (qalt->uuconf_zport == (char *) &_uuconf_unset
-	  && qalt->uuconf_qport == (struct uuconf_port *) &_uuconf_unset)
+      if (qalt->uuconf_zport == UUCONF_UNSET
+	  && qalt->uuconf_qport == UUCONF_UNSET)
 	qalt->uuconf_zport = qdefault->uuconf_zport;
-      if (qalt->uuconf_qport == (struct uuconf_port *) &_uuconf_unset)
+      if (qalt->uuconf_qport == UUCONF_UNSET)
 	qalt->uuconf_qport = qdefault->uuconf_qport;
 
       if (qalt->uuconf_qproto_params
-	  == (struct uuconf_proto_param *) &_uuconf_unset)
+	  == UUCONF_UNSET)
 	qalt->uuconf_qproto_params = qdefault->uuconf_qproto_params;
       else if (qdefault->uuconf_qproto_params != NULL)
 	{
@@ -309,9 +304,7 @@ _uuconf_isystem_default (qglobal, qset, qdefault, faddalternates)
    on every uuconf_system structure.  */
 
 int
-_uuconf_isystem_basic_default (qglobal, q)
-     struct sglobal *qglobal;
-     register struct uuconf_system *q;
+_uuconf_isystem_basic_default (struct sglobal *qglobal, register struct uuconf_system *q)
 {
   int iret;
 
@@ -322,7 +315,7 @@ _uuconf_isystem_basic_default (qglobal, q)
       /* The default of 26 allowable retries is traditional.  */
       if (q->uuconf_cmax_retries < 0)
 	q->uuconf_cmax_retries = 26;
-      if (q->uuconf_schat.uuconf_pzchat == (char **) &_uuconf_unset)
+      if (q->uuconf_schat.uuconf_pzchat == UUCONF_UNSET)
 	{
 	  q->uuconf_schat.uuconf_pzchat = NULL;
 	  iret = _uuconf_iadd_string (qglobal, (char *) "\"\"", FALSE,
@@ -402,7 +395,7 @@ _uuconf_isystem_basic_default (qglobal, q)
 	q->uuconf_fcall_transfer = TRUE;
       if (q->uuconf_fcalled_transfer < 0)
 	q->uuconf_fcalled_transfer = TRUE;
-      if (q->uuconf_pzlocal_send == (char **) &_uuconf_unset)
+      if (q->uuconf_pzlocal_send == UUCONF_UNSET)
 	{
 	  q->uuconf_pzlocal_send = NULL;
 	  iret = _uuconf_iadd_string (qglobal, (char *) ZROOTDIR, FALSE,
@@ -411,7 +404,7 @@ _uuconf_isystem_basic_default (qglobal, q)
 	  if (iret != UUCONF_SUCCESS)
 	    return iret;
 	}
-      if (q->uuconf_pzremote_send == (char **) &_uuconf_unset)
+      if (q->uuconf_pzremote_send == UUCONF_UNSET)
 	{
 	  q->uuconf_pzremote_send = NULL;
 	  iret = _uuconf_iadd_string (qglobal, (char *) "~", FALSE, FALSE,
@@ -420,7 +413,7 @@ _uuconf_isystem_basic_default (qglobal, q)
 	  if (iret != UUCONF_SUCCESS)
 	    return iret;
 	}
-      if (q->uuconf_pzlocal_receive == (char **) &_uuconf_unset)
+      if (q->uuconf_pzlocal_receive == UUCONF_UNSET)
 	{
 	  q->uuconf_pzlocal_receive = NULL;
 	  iret = _uuconf_iadd_string (qglobal, (char *) "~", FALSE, FALSE,
@@ -429,7 +422,7 @@ _uuconf_isystem_basic_default (qglobal, q)
 	  if (iret != UUCONF_SUCCESS)
 	    return iret;
 	}
-      if (q->uuconf_pzremote_receive == (char **) &_uuconf_unset)
+      if (q->uuconf_pzremote_receive == UUCONF_UNSET)
 	{
 	  q->uuconf_pzremote_receive = NULL;
 	  iret = _uuconf_iadd_string (qglobal, (char *) "~", FALSE, FALSE,
@@ -439,7 +432,7 @@ _uuconf_isystem_basic_default (qglobal, q)
 	    return iret;
 	}
 
-      if (q->uuconf_pzpath == (char **) &_uuconf_unset)
+      if (q->uuconf_pzpath == UUCONF_UNSET)
 	{
 	  char *zdup;
 	  char **pz;
@@ -475,7 +468,7 @@ _uuconf_isystem_basic_default (qglobal, q)
 	  free ((pointer) pz);
 	}
 
-      if (q->uuconf_pzcmds == (char **) &_uuconf_unset)
+      if (q->uuconf_pzcmds == UUCONF_UNSET)
 	{
 	  q->uuconf_pzcmds = ((char **)
 			      uuconf_malloc (q->uuconf_palloc,
@@ -493,17 +486,17 @@ _uuconf_isystem_basic_default (qglobal, q)
       if (q->uuconf_cfree_space < 0)
 	q->uuconf_cfree_space = DEFAULT_FREE_SPACE;
 
-      if (q->uuconf_zpubdir == (const char *) &_uuconf_unset)
+      if (q->uuconf_zpubdir == UUCONF_UNSET)
 	q->uuconf_zpubdir = qglobal->qprocess->zpubdir;
 
-#define SET(x) if (q->x == (char *) &_uuconf_unset) q->x = NULL
+#define SET(x) if (q->x == UUCONF_UNSET) q->x = NULL
       SYSTEM_STRINGS(SET);
 #undef SET
-#define SET(x) if (q->x == (char **) &_uuconf_unset) q->x = NULL
+#define SET(x) if (q->x == UUCONF_UNSET) q->x = NULL
       SYSTEM_STRING_ARRAYS(SET);
 #undef SET
 #define SET(x) \
-  if (q->x == (struct uuconf_timespan *) &_uuconf_unset) q->x = NULL
+  if (q->x == UUCONF_UNSET) q->x = NULL
       SYSTEM_TIMESPANS (SET);
 #undef SET
 #define SET(x) if (q->x < 0) q->x = 0
@@ -511,12 +504,12 @@ _uuconf_isystem_basic_default (qglobal, q)
       SYSTEM_INTEGERS (SET);
 #undef SET
 
-      if (q->uuconf_zport == (char *) &_uuconf_unset)
+      if (q->uuconf_zport == UUCONF_UNSET)
 	q->uuconf_zport = NULL;
-      if (q->uuconf_qport == (struct uuconf_port *) &_uuconf_unset)
+      if (q->uuconf_qport == UUCONF_UNSET)
 	q->uuconf_qport = NULL;
       if (q->uuconf_qproto_params
-	  == (struct uuconf_proto_param *) &_uuconf_unset)
+	  == UUCONF_UNSET)
 	q->uuconf_qproto_params = NULL;
     }
 

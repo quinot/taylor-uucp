@@ -7,8 +7,7 @@
 #include "sysdep.h"
 
 boolean
-fsysdep_directory (z)
-     const char *z;
+fsysdep_directory (const char *z)
 {
   struct stat s;
 

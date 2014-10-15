@@ -35,9 +35,7 @@ const char _uuconf_hunk_rcsid[] = "$Id$";
    that's too system dependent.  */
 
 int
-uuconf_hdb_system_unknown (pglobal, qsys)
-     pointer pglobal;
-     struct uuconf_system *qsys;
+uuconf_hdb_system_unknown (pointer pglobal, struct uuconf_system *qsys)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;
@@ -69,7 +67,7 @@ uuconf_hdb_system_unknown (pglobal, qsys)
       char **pz;
 
       if (qperm->pzlogname == NULL
-	  || qperm->pzlogname == (char **) &_uuconf_unset)
+	  || qperm->pzlogname == UUCONF_UNSET)
 	continue;
 
       for (pz = qperm->pzlogname; *pz != NULL; pz++)

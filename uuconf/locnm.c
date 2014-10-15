@@ -31,9 +31,7 @@ const char _uuconf_locnm_rcsid[] = "$Id$";
 /* Get the local node name.  */
 
 int
-uuconf_localname (pglobal, pzname)
-     pointer pglobal;
-     const char **pzname;
+uuconf_localname (pointer pglobal, const char **pzname)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

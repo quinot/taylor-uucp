@@ -55,10 +55,7 @@ static const int aiMapstatus[] =
    directory.  */
 
 boolean
-fsysdep_get_status (qsys, qret, pfnone)
-     const struct uuconf_system *qsys;
-     struct sstatus *qret;
-     boolean *pfnone;
+fsysdep_get_status (const struct uuconf_system *qsys, struct sstatus *qret, boolean *pfnone)
 {
   char *zname;
   FILE *e;
@@ -204,9 +201,7 @@ fsysdep_get_status (qsys, qret, pfnone)
    directory.  */
 
 boolean
-fsysdep_set_status (qsys, qset)
-     const struct uuconf_system *qsys;
-     const struct sstatus *qset;
+fsysdep_set_status (const struct uuconf_system *qsys, const struct sstatus *qset)
 {
   char *zname;
   FILE *e;

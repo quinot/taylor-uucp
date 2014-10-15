@@ -34,9 +34,7 @@ const char _uuconf_fredia_rcsid[] = "$Id$";
 
 /*ARGSUSED*/
 int
-uuconf_dialer_free (pglobal, qdialer)
-     pointer pglobal ATTRIBUTE_UNUSED;
-     struct uuconf_dialer *qdialer;
+uuconf_dialer_free (pointer pglobal ATTRIBUTE_UNUSED, struct uuconf_dialer *qdialer)
 {
   uuconf_free_block (qdialer->uuconf_palloc);
   return UUCONF_SUCCESS;

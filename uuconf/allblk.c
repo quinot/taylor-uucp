@@ -35,7 +35,7 @@ const char _uuconf_allblk_rcsid[] = "$Id$";
    UUCONF_ERROR_ERRNO.  */
 
 pointer
-uuconf_malloc_block ()
+uuconf_malloc_block (void)
 {
   struct sblock *qret;
 

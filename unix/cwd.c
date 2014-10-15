@@ -12,8 +12,7 @@
    determining the cwd if it will not be needed.  */
 
 boolean
-fsysdep_needs_cwd (zfile)
-     const char *zfile;
+fsysdep_needs_cwd (const char *zfile)
 {
   return *zfile != '/' && *zfile != '~';
 }
@@ -24,10 +23,7 @@ fsysdep_needs_cwd (zfile)
    consistent with other UUCP packages.  */
 
 char *
-zsysdep_local_file_cwd (zfile, zpubdir, pfbadname)
-     const char *zfile;
-     const char *zpubdir;
-     boolean *pfbadname;
+zsysdep_local_file_cwd (const char *zfile, const char *zpubdir, boolean *pfbadname)
 {
   if (pfbadname != NULL)
     *pfbadname = FALSE;
@@ -42,8 +38,7 @@ zsysdep_local_file_cwd (zfile, zpubdir, pfbadname)
 /* Add the current working directory to a remote file name.  */
 
 char *
-zsysdep_add_cwd (zfile)
-     const char *zfile;
+zsysdep_add_cwd (const char *zfile)
 {
   if (*zfile == '/' || *zfile == '~')
     return zbufcpy (zfile);

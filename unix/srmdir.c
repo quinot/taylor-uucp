@@ -49,8 +49,7 @@ static struct sdirlist *qSdirlist;
 /* Remove a directory and all files in it.  */
 
 boolean
-fsysdep_rmdir (zdir)
-     const char *zdir;
+fsysdep_rmdir (const char *zdir)
 {
   boolean fret;
   struct sdirlist *q;
@@ -87,10 +86,7 @@ fsysdep_rmdir (zdir)
 
 /*ARGSUSED*/
 static int
-isremove_dir (zfile, qstat, iflag)
-     const char *zfile;
-     const struct stat *qstat ATTRIBUTE_UNUSED;
-     int iflag;
+isremove_dir (const char *zfile, const struct stat *qstat ATTRIBUTE_UNUSED, int iflag)
 {
   if (iflag == FTW_D || iflag == FTW_DNR)
     {

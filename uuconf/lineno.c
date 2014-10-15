@@ -31,8 +31,7 @@ const char _uuconf_lineno_rcsid[] = "$Id$";
 /* Return the saved line number.  */
 
 int
-uuconf_error_lineno (pglobal)
-     pointer pglobal;
+uuconf_error_lineno (pointer pglobal)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

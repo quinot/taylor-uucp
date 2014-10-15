@@ -10,10 +10,7 @@
 /* Get the real name of a spool file.  */
 
 char *
-zsysdep_spool_file_name (qsys, zfile, pseq)
-     const struct uuconf_system *qsys;
-     const char *zfile;
-     pointer pseq;
+zsysdep_spool_file_name (const struct uuconf_system *qsys, const char *zfile, pointer pseq)
 {
   return zsfind_file (zfile, qsys->uuconf_zname, bsgrade (pseq));
 }

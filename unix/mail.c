@@ -34,18 +34,11 @@
 #include <time.h>
 #endif
 
-#ifndef ctime
-extern char *ctime ();
-#endif
 
 /* Mail a message to a user.  */
 
 boolean
-fsysdep_mail (zto, zsubject, cstrs, paz)
-     const char *zto;
-     const char *zsubject;
-     int cstrs;
-     const char **paz;
+fsysdep_mail (const char *zto, const char *zsubject, int cstrs, const char **paz)
 {
   char **pazargs;
   char *zcopy, *ztok;

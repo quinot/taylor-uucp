@@ -64,9 +64,7 @@ static const struct option asLlongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -D: display Debug file */
   boolean fdebug = FALSE;
@@ -82,8 +80,10 @@ main (argc, argv)
   const char *zuser = NULL;
   /* -I: configuration file name.  */
   const char *zconfig = NULL;
+#if HAVE_HDB_LOGGING
   /* -x: display uuxqt log file.  */
   boolean fuuxqt = FALSE;
+#endif
   int i;
   int iopt;
   pointer puuconf;
@@ -170,10 +170,12 @@ main (argc, argv)
 	  /* User name.  */
 	  zuser = optarg;
 	  break;
-
+ 
 	case 'x':
-	  /* Display uuxqt log file.  */
+#if HAVE_HDB_LOGGING
+	  /* Display uuxqt log file (HDB only).  */
 	  fuuxqt = TRUE;
+#endif
 	  break;
 
 	case 'X':
@@ -450,7 +452,7 @@ main (argc, argv)
 /* Print a usage message and die.  */
 
 static void
-ulusage ()
+ulusage (void)
 {
   fprintf (stderr,
 	   "Usage: %s [-n #] [-sf system] [-u user] [-xDSF] [-I file] [-X debug]\n",
@@ -462,7 +464,7 @@ ulusage ()
 /* Print a help message.  */
 
 static void
-ulhelp ()
+ulhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	   VERSION);

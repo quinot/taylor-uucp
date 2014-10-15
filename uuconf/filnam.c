@@ -31,8 +31,7 @@ const char _uuconf_filnam_rcsid[] = "$Id$";
 /* Return the saved file name.  */
 
 UUCONF_CONST char *
-uuconf_error_filename (pglobal)
-     pointer pglobal;
+uuconf_error_filename (pointer pglobal)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

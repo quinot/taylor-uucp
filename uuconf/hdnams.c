@@ -34,9 +34,7 @@ const char _uuconf_hdnams_rcsid[] = "$Id$";
 /* Get all the dialer names from the HDB Dialers file.  */
 
 int
-uuconf_hdb_dialer_names (pglobal, ppzdialers)
-     pointer pglobal;
-     char ***ppzdialers;
+uuconf_hdb_dialer_names (pointer pglobal, char ***ppzdialers)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

@@ -8,8 +8,7 @@
 #include "system.h"
 
 char *
-zsysdep_save_failed_file (zfile)
-     const char *zfile;
+zsysdep_save_failed_file (const char *zfile)
 {
   char *zto;
 

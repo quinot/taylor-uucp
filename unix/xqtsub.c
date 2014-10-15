@@ -83,11 +83,7 @@ static boolean fclean_uuxqt_dir P((const char *zxqtdir));
    permitted commands and the allowed path.  */
 
 char *
-zsysdep_find_command (zcmd, pzcmds, pzpath, pferr)
-     const char *zcmd;
-     char **pzcmds;
-     char **pzpath;
-     boolean *pferr;
+zsysdep_find_command (const char *zcmd, char **pzcmds, char **pzpath, boolean *pferr)
 {
   char **pz;
   struct stat s;
@@ -152,9 +148,7 @@ zsysdep_find_command (zcmd, pzcmds, pzpath, pferr)
    error.  */
 
 char *
-zsysdep_xqt_local_file (qsys, zfile)
-     const struct uuconf_system *qsys;
-     const char *zfile;
+zsysdep_xqt_local_file (const struct uuconf_system *qsys, const char *zfile)
 {
   if (*zfile != '~')
     return NULL;
@@ -417,9 +411,7 @@ fsysdep_execute (qsys, zuser, pazargs, zfullcmd, zinput, zoutput,
 /* Lock a uuxqt process.  */
 
 int
-ixsysdep_lock_uuxqt (zcmd, cmaxuuxqts)
-     const char *zcmd;
-     int cmaxuuxqts;
+ixsysdep_lock_uuxqt (const char *zcmd, int cmaxuuxqts)
 {
   char ab[sizeof "LCK.XQT.9999"];
   int i;
@@ -454,10 +446,7 @@ ixsysdep_lock_uuxqt (zcmd, cmaxuuxqts)
 /* Unlock a uuxqt process.  */
 
 boolean
-fsysdep_unlock_uuxqt (iseq, zcmd, cmaxuuxqts)
-     int iseq;
-     const char *zcmd;
-     int cmaxuuxqts ATTRIBUTE_UNUSED;
+fsysdep_unlock_uuxqt (int iseq, const char *zcmd, int cmaxuuxqts ATTRIBUTE_UNUSED)
 {
   char ab[sizeof "LCK.XQT.9999"];
   boolean fret;
@@ -485,8 +474,7 @@ fsysdep_unlock_uuxqt (iseq, zcmd, cmaxuuxqts)
    the implementation of fsdo_lock).  */
 
 boolean
-fsysdep_uuxqt_locked (zcmd)
-     const char *zcmd;
+fsysdep_uuxqt_locked (const char *zcmd)
 {
   char ab[sizeof "LXQ.123456789"];
   struct stat s;
@@ -498,8 +486,7 @@ fsysdep_uuxqt_locked (zcmd)
 /* Lock a particular execute file.  */
 
 boolean
-fsysdep_lock_uuxqt_file (zfile)
-     const char *zfile;
+fsysdep_lock_uuxqt_file (const char *zfile)
 {
   char *zcopy, *z;
   boolean fret;
@@ -520,8 +507,7 @@ fsysdep_lock_uuxqt_file (zfile)
 /* Unlock a particular execute file.  */
 
 boolean
-fsysdep_unlock_uuxqt_file (zfile)
-     const char *zfile;
+fsysdep_unlock_uuxqt_file (const char *zfile)
 {
   char *zcopy, *z;
   boolean fret;
@@ -545,8 +531,7 @@ fsysdep_unlock_uuxqt_file (zfile)
    exists, though, and that it is empty.  */
 
 boolean
-fsysdep_lock_uuxqt_dir (iseq)
-     int iseq;
+fsysdep_lock_uuxqt_dir (int iseq)
 {
   const char *zxqtdir;
   char abxqtdir[sizeof XQTDIR + 4];
@@ -575,8 +560,7 @@ fsysdep_lock_uuxqt_dir (iseq)
    remove all the files.  */
 
 boolean
-fsysdep_unlock_uuxqt_dir (iseq)
-     int iseq;
+fsysdep_unlock_uuxqt_dir (int iseq)
 {
   const char *zxqtdir;
   char abxqtdir[sizeof XQTDIR + 4];
@@ -593,8 +577,7 @@ fsysdep_unlock_uuxqt_dir (iseq)
 }
 
 static boolean
-fclean_uuxqt_dir (zxqtdir)
-     const char *zxqtdir;
+fclean_uuxqt_dir (const char *zxqtdir)
 {
   DIR *qdir;
 
@@ -634,12 +617,7 @@ fclean_uuxqt_dir (zxqtdir)
 /* Move files into the execution directory.  */
 
 boolean
-fsysdep_copy_uuxqt_files (cfiles, pzfrom, pzto, iseq, pzinput)
-     int cfiles;
-     const char *const *pzfrom;
-     const char *const *pzto;
-     int iseq;
-     char **pzinput;
+fsysdep_copy_uuxqt_files (int cfiles, const char *const *pzfrom, const char *const *pzto, int iseq, char **pzinput)
 {
   char *zinput;
   const char *zxqtdir;

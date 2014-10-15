@@ -8,9 +8,7 @@
 #include "uudefs.h"
 
 pointer
-xrealloc (p, c)
-     pointer p;
-     size_t c;
+xrealloc (pointer p, size_t c)
 {
   pointer pret;
 

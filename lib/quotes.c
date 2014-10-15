@@ -35,9 +35,7 @@ const char quotes_rcsid[] = "$Id$";
 /* Copy a string, adding quotes if necessary.  */
 
 char *
-zquote_cmd_string (zorig, fbackslashonly)
-     const char *zorig;
-     boolean fbackslashonly;
+zquote_cmd_string (const char *zorig, boolean fbackslashonly)
 {
   const char *z;
   char *zret;

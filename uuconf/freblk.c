@@ -35,8 +35,7 @@ const char _uuconf_freblk_rcsid[] = "$Id$";
 #if UUCONF_ANSI_C
 void
 #endif
-uuconf_free_block (pblock)
-     pointer pblock;
+uuconf_free_block (pointer pblock)
 {
   struct sblock *q = (struct sblock *) pblock;
   struct sblock *qloop;

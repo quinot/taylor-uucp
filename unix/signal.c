@@ -68,8 +68,7 @@ volatile jmp_buf sSjmp_buf;
    appropriate variables, and do a longjmp if necessary.  */
 
 RETSIGTYPE
-ussignal (isig)
-     int isig;
+ussignal (int isig)
 {
   int iindex;
 
@@ -113,11 +112,7 @@ ussignal (isig)
    we give a fatal error.  */
 
 void
-usset_signal (isig, pfn, fforce, pfignored)
-     int isig;
-     RETSIGTYPE (*pfn) P((int));
-     boolean fforce;
-     boolean *pfignored;
+usset_signal (int isig, void (*pfn) (int), boolean fforce, boolean *pfignored)
 {
 #if HAVE_SIGACTION
 
@@ -200,8 +195,7 @@ usset_signal (isig, pfn, fforce, pfignored)
    uses the same signal handler.  */
 
 void
-usysdep_signal (isig)
-     int isig;
+usysdep_signal (int isig)
 {
   usset_signal (isig, ussignal, FALSE, (boolean *) NULL);
 }

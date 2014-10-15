@@ -31,9 +31,7 @@ const char _uuconf_stafil_rcsid[] = "$Id$";
 /* Get the name of the UUCP statistics file.  */
 
 int
-uuconf_statsfile (pglobal, pzstats)
-     pointer pglobal;
-     const char **pzstats;
+uuconf_statsfile (pointer pglobal, const char **pzstats)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
 

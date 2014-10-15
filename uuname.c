@@ -52,9 +52,7 @@ static const struct option asNlongopts[] =
 };
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   /* -a: display aliases.  */
   boolean falias = FALSE;
@@ -178,7 +176,7 @@ main (argc, argv)
 /* Print a usage message and die.  */
 
 static void
-unusage ()
+unusage (void)
 {
   fprintf (stderr,
 	   "Usage: %s [-a] [-l] [-I file]\n", zProgram);
@@ -188,7 +186,7 @@ unusage ()
 
 /* Print a help message.  */
 
-static void unhelp ()
+static void unhelp (void)
 {
   printf ("Taylor UUCP %s, copyright (C) 1991, 92, 93, 94, 1995, 2002 Ian Lance Taylor\n",
 	   VERSION);

@@ -33,10 +33,7 @@ const char _uuconf_sinfo_rcsid[] = "$Id$";
    by passing what we have so far into each one.  */
 
 int
-uuconf_system_info (pglobal, zsystem, qsys)
-     pointer pglobal;
-     const char *zsystem;
-     struct uuconf_system *qsys;
+uuconf_system_info (pointer pglobal, const char *zsystem, struct uuconf_system *qsys)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;

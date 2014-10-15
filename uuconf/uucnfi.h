@@ -243,8 +243,12 @@ struct cmdtab_offset
 };
 
 /* A value in a uuconf_system structure which holds the address of
-   this special variable is known to be uninitialized.  */
-extern char *_uuconf_unset;
+   this special variable is known to be uninitialized.  Note that
+   this address is used to set various access types, and must
+   therefore be made a void* to avoid strict aliasing violations.  */
+struct _uuconf_unset_t;
+extern struct _uuconf_unset_t _uuconf_unset;
+#define UUCONF_UNSET ((void*) &_uuconf_unset)
 
 /* Internal function to read a system from the Taylor UUCP
    configuration files.  This does not apply the basic defaults.  */

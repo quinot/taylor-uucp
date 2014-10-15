@@ -75,9 +75,7 @@ static boolean ftprocess_data P((struct sdaemon *qdaemon, boolean *pfexit,
 /* Start the protocol.  */
 
 boolean
-ftstart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+ftstart (struct sdaemon *qdaemon, char **pzlog)
 {
   *pzlog = NULL;
   if (! fconn_set (qdaemon->qconn, PARITYSETTING_NONE,
@@ -96,8 +94,7 @@ ftstart (qdaemon, pzlog)
 
 /*ARGSUSED*/
 boolean 
-ftshutdown (qdaemon)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
+ftshutdown (struct sdaemon *qdaemon ATTRIBUTE_UNUSED)
 {
   xfree ((pointer) zTbuf);
   zTbuf = NULL;
@@ -111,11 +108,7 @@ ftshutdown (qdaemon)
 
 /*ARGSUSED*/
 boolean
-ftsendcmd (qdaemon, z, ilocal, iremote)
-     struct sdaemon *qdaemon;
-     const char *z;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
+ftsendcmd (struct sdaemon *qdaemon, const char *z, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED)
 {
   size_t clen, csend;
   char *zalc;
@@ -145,9 +138,7 @@ ftsendcmd (qdaemon, z, ilocal, iremote)
 
 /*ARGSIGNORED*/
 char *
-ztgetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     size_t *pclen;
+ztgetspace (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, size_t *pclen)
 {
   *pclen = CTBUFSIZE;
   return zTbuf + CTFRAMELEN;
@@ -159,13 +150,7 @@ ztgetspace (qdaemon, pclen)
 
 /*ARGSIGNORED*/
 boolean
-ftsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
-     struct sdaemon *qdaemon;
-     char *zdata;
-     size_t cdata;
-     int ilocal ATTRIBUTE_UNUSED;
-     int iremote ATTRIBUTE_UNUSED;
-     long ipos ATTRIBUTE_UNUSED;
+ftsenddata (struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal ATTRIBUTE_UNUSED, int iremote ATTRIBUTE_UNUSED, long int ipos ATTRIBUTE_UNUSED)
 {
   /* Here we do htonl by hand, since it doesn't exist everywhere.  We
      know that the amount of data cannot be greater than CTBUFSIZE, so
@@ -185,10 +170,7 @@ ftsenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 /* Process data and return the amount we need in *pfneed.  */
 
 static boolean
-ftprocess_data (qdaemon, pfexit, pcneed)
-     struct sdaemon *qdaemon;
-     boolean *pfexit;
-     size_t *pcneed;
+ftprocess_data (struct sdaemon *qdaemon, boolean *pfexit, size_t *pcneed)
 {
   int cinbuf, cfirst, clen;
 
@@ -285,8 +267,7 @@ ftprocess_data (qdaemon, pfexit, pcneed)
    of a command or a file.  */
 
 boolean
-ftwait (qdaemon)
-     struct sdaemon *qdaemon;
+ftwait (struct sdaemon *qdaemon)
 {
   while (TRUE)
     {
@@ -313,13 +294,7 @@ ftwait (qdaemon)
 
 /*ARGSUSED*/
 boolean
-ftfile (qdaemon, qtrans, fstart, fsend, cbytes, pfhandled)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     struct stransfer *qtrans ATTRIBUTE_UNUSED;
-     boolean fstart;
-     boolean fsend;
-     long cbytes ATTRIBUTE_UNUSED;
-     boolean *pfhandled;
+ftfile (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, struct stransfer *qtrans ATTRIBUTE_UNUSED, boolean fstart, boolean fsend, long int cbytes ATTRIBUTE_UNUSED, boolean *pfhandled)
 {
   *pfhandled = FALSE;
 

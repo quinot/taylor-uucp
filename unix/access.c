@@ -13,8 +13,7 @@
    and uux programs handing out unauthorized access.  */
 
 boolean
-fsysdep_access (zfile)
-     const char *zfile;
+fsysdep_access (const char *zfile)
 {
   if (access (zfile, R_OK) == 0)
     return TRUE;
@@ -33,8 +32,7 @@ fsysdep_access (zfile)
    whether the UUCP programs are installed setuid or setgid.  */
 
 boolean
-fsysdep_daemon_access (zfile)
-     const char *zfile;
+fsysdep_daemon_access (const char *zfile)
 {
   struct stat s;
   uid_t ieuid, iuid, iegid, igid;

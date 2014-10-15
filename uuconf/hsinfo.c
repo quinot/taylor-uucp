@@ -43,10 +43,7 @@ static int ihadd_logname_perm P((struct sglobal *qglobal,
    values are set.  */
 
 int
-_uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
-     struct sglobal *qglobal;
-     const char *zsystem;
-     struct uuconf_system *qsys;
+_uuconf_ihdb_system_internal (struct sglobal *qglobal, const char *zsystem, struct uuconf_system *qsys)
 {
   int iret;
   struct shpermissions *qperm;
@@ -79,8 +76,8 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
     {
       if (qperm->pzalias == NULL
 	  || qperm->pzmachine == NULL
-	  || qperm->pzalias == (char **) &_uuconf_unset
-	  || qperm->pzmachine == (char **) &_uuconf_unset)
+	  || qperm->pzalias == UUCONF_UNSET
+	  || qperm->pzmachine == UUCONF_UNSET)
 	continue;
 
       for (pz = qperm->pzalias; *pz != NULL; pz++)
@@ -392,7 +389,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 	 other machine names.  */
       if (qother_machine == NULL
 	  && qperm->pzmachine != NULL
-	  && qperm->pzmachine != (char **) &_uuconf_unset
+	  && qperm->pzmachine != UUCONF_UNSET
 	  && qperm->pzmachine[0][0] == 'O'
 	  && strcmp (qperm->pzmachine[0], "OTHER") == 0)
 	qother_machine = qperm;
@@ -403,7 +400,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
       fmachine = FALSE;
       if (! ffound_machine
 	  && qperm->pzmachine != NULL
-	  && qperm->pzmachine != (char **) &_uuconf_unset)
+	  && qperm->pzmachine != UUCONF_UNSET)
 	{
 	  for (pz = qperm->pzmachine; *pz != NULL; pz++)
 	    {
@@ -437,9 +434,9 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 	 VALIDATE entry; if it does not, we make another pass to put
 	 in all the LOGNAME lines.  */
       if (qperm->pzlogname != NULL
-	  && qperm->pzlogname != (char **) &_uuconf_unset
+	  && qperm->pzlogname != UUCONF_UNSET
 	  && qperm->pzvalidate != NULL
-	  && qperm->pzvalidate != (char **) &_uuconf_unset)
+	  && qperm->pzvalidate != UUCONF_UNSET)
 	{
 	  for (pz = qperm->pzvalidate; *pz != NULL; ++pz)
 	    if ((*pz)[0] == zsystem[0]
@@ -461,7 +458,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 		  if (fmachine
 		      && (qsys->uuconf_zcalled_login == NULL
 			  || (qsys->uuconf_zcalled_login
-			      == (char *) &_uuconf_unset)))
+			      == UUCONF_UNSET)))
 		    {
 		      qsys->uuconf_zcalled_login = *pz;
 		      iret = ihadd_logname_perm (qglobal, qsys, qperm);
@@ -526,7 +523,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 	   qperm = qperm->qnext)
 	{
 	  if (qperm->pzlogname == NULL
-	      || qperm->pzlogname == (char **) &_uuconf_unset)
+	      || qperm->pzlogname == UUCONF_UNSET)
 	    continue;
 
 	  for (pz = qperm->pzlogname; *pz != NULL; pz++)
@@ -581,7 +578,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
   /* HDB does not have a maximum number of retries if a retry time is
      given in the time field.  */
   if (qsys->uuconf_qtimegrade != NULL
-      && qsys->uuconf_qtimegrade != (struct uuconf_timespan *) &_uuconf_unset
+      && qsys->uuconf_qtimegrade != UUCONF_UNSET
       && qsys->uuconf_qtimegrade->uuconf_cretry > 0)
     qsys->uuconf_cmax_retries = 0;
 
@@ -592,10 +589,7 @@ _uuconf_ihdb_system_internal (qglobal, zsystem, qsys)
 
 /*ARGSIGNORED*/
 static int
-ihadd_machine_perm (qglobal, qsys, qperm)
-     struct sglobal *qglobal ATTRIBUTE_UNUSED;
-     struct uuconf_system *qsys;
-     struct shpermissions *qperm;
+ihadd_machine_perm (struct sglobal *qglobal ATTRIBUTE_UNUSED, struct uuconf_system *qsys, struct shpermissions *qperm)
 {
   if (qperm->frequest >= 0)
     qsys->uuconf_fsend_request = qperm->frequest;
@@ -615,10 +609,7 @@ ihadd_machine_perm (qglobal, qsys, qperm)
 
 /*ARGSIGNORED*/
 static int
-ihadd_logname_perm (qglobal, qsys, qperm)
-     struct sglobal *qglobal ATTRIBUTE_UNUSED;
-     struct uuconf_system *qsys;
-     struct shpermissions *qperm;
+ihadd_logname_perm (struct sglobal *qglobal ATTRIBUTE_UNUSED, struct uuconf_system *qsys, struct shpermissions *qperm)
 {
   qsys->uuconf_fcalled = TRUE;
   if (qperm->frequest >= 0)

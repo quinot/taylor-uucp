@@ -35,14 +35,7 @@ const char _uuconf_vport_rcsid[] = "$Id$";
    special purpose function.  */
 
 int
-uuconf_v2_find_port (pglobal, zname, ibaud, ihighbaud, pifn, pinfo, qport)
-     pointer pglobal;
-     const char *zname;
-     long ibaud;
-     long ihighbaud ATTRIBUTE_UNUSED;
-     int (*pifn) P((struct uuconf_port *, pointer));
-     pointer pinfo;
-     struct uuconf_port *qport;
+uuconf_v2_find_port (pointer pglobal, const char *zname, long int ibaud, long int ihighbaud ATTRIBUTE_UNUSED, int (*pifn) (struct uuconf_port *, pointer), pointer pinfo, struct uuconf_port *qport)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   FILE *e;

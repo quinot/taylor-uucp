@@ -34,9 +34,7 @@ const char _uuconf_maxuxq_rcsid[] = "$Id$";
    Maxuuxqts.  */
 
 int
-uuconf_maxuuxqts (pglobal, pcmax)
-     pointer pglobal;
-     int *pcmax;
+uuconf_maxuuxqts (pointer pglobal, int *pcmax)
 {
 #if HAVE_TAYLOR_CONFIG
   {

@@ -35,10 +35,7 @@ const char _uuconf_hsnams_rcsid[] = "$Id$";
    read the Permissions file in order to support aliases.  */
 
 int
-uuconf_hdb_system_names (pglobal, ppzsystems, falias)
-     pointer pglobal;
-     char ***ppzsystems;
-     int falias;
+uuconf_hdb_system_names (pointer pglobal, char ***ppzsystems, int falias)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   int iret;
@@ -120,7 +117,7 @@ uuconf_hdb_system_names (pglobal, ppzsystems, falias)
 	   q = q->qnext)
 	{
 	  pz = q->pzalias;
-	  if (pz == NULL || pz == (char **) &_uuconf_unset)
+	  if (pz == NULL || pz == UUCONF_UNSET)
 	    continue;
 
 	  for (; *pz != NULL; pz++)

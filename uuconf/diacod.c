@@ -36,10 +36,7 @@ static int idcode P((pointer pglobal, int argc, char **argv,
 /* Get the name of the UUCP log file.  */
 
 int
-uuconf_dialcode (pglobal, zdial, pznum)
-     pointer pglobal;
-     const char *zdial;
-     char **pznum;
+uuconf_dialcode (pointer pglobal, const char *zdial, char **pznum)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   struct uuconf_cmdtab as[2];
@@ -95,12 +92,7 @@ uuconf_dialcode (pglobal, zdial, pznum)
 
 /*ARGSUSED*/
 static int
-idcode (pglobal, argc, argv, pvar, pinfo)
-     pointer pglobal;
-     int argc;
-     char **argv;
-     pointer pvar;
-     pointer pinfo ATTRIBUTE_UNUSED;
+idcode (pointer pglobal, int argc, char **argv, pointer pvar, pointer pinfo ATTRIBUTE_UNUSED)
 {
   struct sglobal *qglobal = (struct sglobal *) pglobal;
   char **pznum = (char **) pvar;

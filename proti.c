@@ -384,9 +384,7 @@ static boolean fiprocess_packet P((struct sdaemon *qdaemon,
    which is also called by the 'j' protocol start routine.  */
 
 boolean
-fistart (qdaemon, pzlog)
-     struct sdaemon *qdaemon;
-     char **pzlog;
+fistart (struct sdaemon *qdaemon, char **pzlog)
 {
   return fijstart (qdaemon, pzlog, IMAXPACKSIZE, fsend_data, freceive_data);
 }
@@ -400,14 +398,7 @@ fistart (qdaemon, pzlog)
    byte is the maximum window size we want to use.  */
 
 boolean
-fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
-     struct sdaemon *qdaemon;
-     char **pzlog;
-     int imaxpacksize;
-     boolean (*pfsend) P((struct sconnection *qconn, const char *zsend,
-			  size_t csend, boolean fdoread));
-     boolean (*pfreceive) P((struct sconnection *qconn, size_t cneed,
-			     size_t *pcrec, int ctimeout, boolean freport));
+fijstart (struct sdaemon *qdaemon, char **pzlog, int imaxpacksize, boolean (*pfsend) (struct sconnection *, const char *, size_t, boolean), boolean (*pfreceive) (struct sconnection *, size_t, size_t *, int, boolean))
 {
   char ab[CHDRLEN + 4 + CCKSUMLEN];
   unsigned long icksum;
@@ -609,8 +600,7 @@ fijstart (qdaemon, pzlog, imaxpacksize, pfsend, pfreceive)
    sure that all packets before the CLOSE had been received.  */
 
 boolean
-fishutdown (qdaemon)
-     struct sdaemon *qdaemon;
+fishutdown (struct sdaemon *qdaemon)
 {
   char *z;
   size_t clen;
@@ -665,11 +655,7 @@ fishutdown (qdaemon)
    ending in a packet containing a null byte.  */
 
 boolean
-fisendcmd (qdaemon, z, ilocal, iremote)
-     struct sdaemon *qdaemon;
-     const char *z;
-     int ilocal;
-     int iremote;
+fisendcmd (struct sdaemon *qdaemon, const char *z, int ilocal, int iremote)
 {
   size_t clen;
 
@@ -704,9 +690,7 @@ fisendcmd (qdaemon, z, ilocal, iremote)
 /* Send a NAK.  */
 
 static boolean
-finak (qdaemon, iseq)
-     struct sdaemon *qdaemon;
-     int iseq;
+finak (struct sdaemon *qdaemon, int iseq)
 {
   char abnak[CHDRLEN];
 
@@ -729,8 +713,7 @@ finak (qdaemon, iseq)
 /* Resend the latest packet the remote has not acknowledged.  */
 
 static boolean
-firesend (qdaemon)
-     struct sdaemon *qdaemon;
+firesend (struct sdaemon *qdaemon)
 {
   int iseq;
   char *zhdr;
@@ -772,8 +755,7 @@ firesend (qdaemon)
    system.  */
 
 static boolean
-fiwindow_wait (qdaemon)
-     struct sdaemon *qdaemon;
+fiwindow_wait (struct sdaemon *qdaemon)
 {
   /* iIsendseq is the sequence number we are sending, and iIremote_ack
      is the last sequence number acknowledged by the remote. */
@@ -800,9 +782,7 @@ fiwindow_wait (qdaemon)
 
 /*ARGSUSED*/
 char *
-zigetspace (qdaemon, pclen)
-     struct sdaemon *qdaemon ATTRIBUTE_UNUSED;
-     size_t *pclen;
+zigetspace (struct sdaemon *qdaemon ATTRIBUTE_UNUSED, size_t *pclen)
 {
   *pclen = iIremote_packsize;
   return azIsendbuffers[iIsendseq] + CHDRSKIPLEN;
@@ -813,13 +793,7 @@ zigetspace (qdaemon, pclen)
    the header information.  */
 
 boolean
-fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
-     struct sdaemon *qdaemon;
-     char *zdata;
-     size_t cdata;
-     int ilocal;
-     int iremote;
-     long ipos;
+fisenddata (struct sdaemon *qdaemon, char *zdata, size_t cdata, int ilocal, int iremote, long int ipos)
 {
   char *zhdr;
   unsigned long icksum;
@@ -938,8 +912,7 @@ fisenddata (qdaemon, zdata, cdata, ilocal, iremote, ipos)
 /* Wait for data to come in.  */
 
 boolean
-fiwait (qdaemon)
-     struct sdaemon *qdaemon;
+fiwait (struct sdaemon *qdaemon)
 {
   return fiwait_for_packet (qdaemon, cItimeout, cIretries,
 			    FALSE, (boolean *) NULL);
@@ -949,12 +922,7 @@ fiwait (qdaemon)
    window is full.  */
 
 static boolean
-fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
-     struct sdaemon *qdaemon;
-     int ctimeout;
-     int cretries;
-     boolean fone;
-     boolean *pftimedout;
+fiwait_for_packet (struct sdaemon *qdaemon, int ctimeout, int cretries, boolean fone, boolean *pftimedout)
 {
   int cshort;
   int ctimeouts;
@@ -1038,8 +1006,7 @@ fiwait_for_packet (qdaemon, ctimeout, cretries, fone, pftimedout)
 /* Make sure we haven't overflowed the permissible error level.  */
 
 static boolean
-ficheck_errors (qdaemon)
-     struct sdaemon *qdaemon;
+ficheck_errors (struct sdaemon *qdaemon)
 {
   if (cIerrors < 0)
     return TRUE;
@@ -1092,11 +1059,7 @@ ficheck_errors (qdaemon)
    fgot_data function.  */
 
 static boolean
-fiprocess_data (qdaemon, pfexit, pffound, pcneed)
-     struct sdaemon *qdaemon;
-     boolean *pfexit;
-     boolean *pffound;
-     size_t *pcneed;
+fiprocess_data (struct sdaemon *qdaemon, boolean *pfexit, boolean *pffound, size_t *pcneed)
 {
   boolean fbadhdr;
 
@@ -1486,14 +1449,7 @@ fiprocess_data (qdaemon, pfexit, pffound, pcneed)
 /* Process a single packet.  */
 
 static boolean
-fiprocess_packet (qdaemon, zhdr, zfirst, cfirst, zsecond, csecond, pfexit)
-     struct sdaemon *qdaemon;
-     const char *zhdr;
-     const char *zfirst;
-     int cfirst;
-     const char *zsecond;
-     int csecond;
-     boolean *pfexit;
+fiprocess_packet (struct sdaemon *qdaemon, const char *zhdr, const char *zfirst, int cfirst, const char *zsecond, int csecond, boolean *pfexit)
 {
   int ttype;
 
