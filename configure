@@ -5595,7 +5595,7 @@ esac
 
 fi
 
-if test $uucp_cv_sys_ftime_ok = yes || test $uucp_cv_sys_ftime_ok = runtime; then
+if test "x$uucp_cv_sys_ftime_ok" = xyes || test "x$uucp_cv_sys_ftime_ok" = xruntime; then
 
 $as_echo "#define HAVE_FTIME 1" >>confdefs.h
 
