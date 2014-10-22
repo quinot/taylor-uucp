@@ -23,6 +23,7 @@
    */
 
 /* Get the system configuration parameters.  */
+#include "ftm.h"
 #include "config.h"
 #include "policy.h"
 
@@ -211,18 +212,11 @@ extern pointer memchr ();
 
 #if HAVE_STRING_H
 #include <string.h>
-#else /* ! HAVE_STRING_H */
+#endif
+
 #if HAVE_STRINGS_H
 #include <strings.h>
-#else /* ! HAVE_STRINGS_H */
-extern char *strcpy (), *strncpy (), *strchr (), *strrchr (), *strtok ();
-extern char *strcat (), *strerror (), *strstr ();
-extern size_t strlen (), strspn (), strcspn ();
-#if ! HAVE_MEMORY_H
-extern pointer memcpy (), memchr ();
-#endif /* ! HAVE_MEMORY_H */
-#endif /* ! HAVE_STRINGS_H */
-#endif /* ! HAVE_STRING_H */
+#endif
 
 /* Get what we need from <stdlib.h>.  */
 #if HAVE_STDLIB_H

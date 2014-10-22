@@ -63,9 +63,14 @@ AC_MINIX
 AC_AIX
 AC_CHECK_LIB(sun, getpwnam)
 AC_C_CONST
+
+AC_DEFUN([UU_TRY_COMPILE],
+AC_TRY_COMPILE([#include "ftm.h"
+$1], [$2], [$3], [$4]))
+
 AC_MSG_CHECKING([for prototypes])
 AC_CACHE_VAL(uucp_cv_c_prototypes,
-[AC_TRY_COMPILE([extern int foo (short);
+[UU_TRY_COMPILE([extern int foo (short);
 int foo(short i) { return i; }],
 [int i;],
 uucp_cv_c_prototypes=yes, uucp_cv_c_prototypes=no)])
@@ -104,7 +109,7 @@ dnl
 # by default.
 AC_MSG_CHECKING([for dirent.h])
 AC_CACHE_VAL(uucp_cv_header_dirent_h,
-[AC_TRY_COMPILE([#include <dirent.h>],
+[UU_TRY_COMPILE([#include <dirent.h>],
 [struct dirent s;],
 uucp_cv_header_dirent_h=yes, uucp_cv_header_dirent_h=no)])
 AC_MSG_RESULT($uucp_cv_header_dirent_h)
@@ -117,7 +122,7 @@ dnl
 # by default.
 AC_MSG_CHECKING([for utime.h])
 AC_CACHE_VAL(uucp_cv_header_utime_h,
-[AC_TRY_COMPILE([#include <sys/types.h>
+[UU_TRY_COMPILE([#include <sys/types.h>
 #if HAVE_TIME_H
 #include <time.h>
 #endif
@@ -132,7 +137,7 @@ fi
 dnl
 AC_MSG_CHECKING([for sys/select.h])
 AC_CACHE_VAL(uucp_cv_header_sys_select_h,
-[AC_TRY_COMPILE([#include <sys/select.h>
+[UU_TRY_COMPILE([#include <sys/select.h>
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif],
@@ -155,7 +160,7 @@ AC_STRUCT_TM
 dnl
 AC_MSG_CHECKING([whether termios.h and sys/ioctl.h may both be included])
 AC_CACHE_VAL(uucp_cv_header_termios_and_ioctl,
-[AC_TRY_COMPILE([#include <termios.h>
+[UU_TRY_COMPILE([#include <termios.h>
 #include <sys/ioctl.h>],
 [int i;],
 uucp_cv_header_termios_and_ioctl=yes, uucp_cv_header_termios_and_ioctl=no)])
@@ -167,7 +172,7 @@ fi
 dnl
 AC_MSG_CHECKING(for CBREAK)
 AC_CACHE_VAL(uucp_cv_decl_cbreak,
-[AC_TRY_COMPILE([#include <sgtty.h>], [int i = CBREAK;],
+[UU_TRY_COMPILE([#include <sgtty.h>], [int i = CBREAK;],
 uucp_cv_decl_cbreak=yes, uucp_cv_decl_cbreak=no)])
 AC_MSG_RESULT($uucp_cv_decl_cbreak)
 if test $uucp_cv_decl_cbreak = yes; then
@@ -176,7 +181,7 @@ fi
 dnl
 AC_MSG_CHECKING(for pid_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_pid_t,
-[AC_TRY_COMPILE([#include <sys/types.h>], [pid_t x;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [pid_t x;],
 uucp_cv_decl_pid_t=yes, uucp_cv_decl_pid_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_pid_t)
 if test $uucp_cv_decl_pid_t = no; then
@@ -185,7 +190,7 @@ fi
 dnl
 AC_MSG_CHECKING(for uid_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_uid_t,
-[AC_TRY_COMPILE([#include <sys/types.h>], [uid_t x;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [uid_t x;],
 uucp_cv_decl_uid_t=yes, uucp_cv_decl_uid_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_uid_t)
 if test $uucp_cv_decl_uid_t = no; then
@@ -194,7 +199,7 @@ fi
 dnl
 AC_MSG_CHECKING(for gid_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_gid_t,
-[AC_TRY_COMPILE([#include <sys/types.h>], [gid_t x;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [gid_t x;],
 uucp_cv_decl_gid_t=yes, uucp_cv_decl_gid_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_gid_t)
 if test $uucp_cv_decl_gid_t = no; then
@@ -203,7 +208,7 @@ fi
 dnl
 AC_MSG_CHECKING(for off_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_off_t,
-[AC_TRY_COMPILE([#include <sys/types.h>], [off_t x;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [off_t x;],
 uucp_cv_decl_off_t=yes, uucp_cv_decl_off_t=no)])
 AC_MSG_RESULT($uucp_cv_decl_off_t)
 if test $uucp_cv_decl_off_t = no; then
@@ -214,7 +219,7 @@ dnl
 dnl On SCO 3.2.2 sig_atomic_t is in <sys/types.h> but not <signal.h>.
 AC_MSG_CHECKING(for sig_atomic_t in signal.h)
 AC_CACHE_VAL(uucp_cv_decl_sig_atomic_t_signal_h,
-[AC_TRY_COMPILE([#include <signal.h>], [sig_atomic_t x;],
+[UU_TRY_COMPILE([#include <signal.h>], [sig_atomic_t x;],
 uucp_cv_decl_sig_atomic_t_signal_h=yes,
 uucp_cv_decl_sig_atomic_t_signal_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_sig_atomic_t_signal_h)
@@ -225,7 +230,7 @@ fi
 dnl
 AC_MSG_CHECKING(for sig_atomic_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_sig_atomic_t_types_h,
-[AC_TRY_COMPILE([#include <sys/types.h>], [sig_atomic_t x;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [sig_atomic_t x;],
 uucp_cv_decl_sig_atomic_t_types_h=yes,
 uucp_cv_decl_sig_atomic_t_types_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_sig_atomic_t_types_h)
@@ -237,7 +242,7 @@ dnl
 if test $ac_cv_header_stddef_h = yes; then
   AC_MSG_CHECKING(for size_t in stddef.h)
   AC_CACHE_VAL(uucp_cv_decl_size_t_stddef_h,
-  [AC_TRY_COMPILE([#include <stddef.h>], [size_t x;],
+  [UU_TRY_COMPILE([#include <stddef.h>], [size_t x;],
   uucp_cv_decl_size_t_stddef_h=yes, uucp_cv_decl_size_t_stddef_h=no)])
   AC_MSG_RESULT($uucp_cv_decl_size_t_stddef_h)
   if test $uucp_cv_decl_size_t_stddef_h = yes; then
@@ -248,7 +253,7 @@ fi
 dnl
 AC_MSG_CHECKING(for size_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_size_t_types_h,
-[AC_TRY_COMPILE([#include <sys/types.h>], [size_t x;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [size_t x;],
 uucp_cv_decl_size_t_types_h=yes, uucp_cv_decl_size_t_types_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_size_t_types_h)
 if test $uucp_cv_decl_size_t_types_h = yes; then
@@ -258,7 +263,7 @@ fi
 dnl
 AC_MSG_CHECKING(for time_t in time.h)
 AC_CACHE_VAL(uucp_cv_decl_time_t_time_h,
-[AC_TRY_COMPILE([#include <time.h>], [time_t i;],
+[UU_TRY_COMPILE([#include <time.h>], [time_t i;],
 uucp_cv_decl_time_t_time_h=yes, uucp_cv_decl_time_t_time_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_time_t_time_h)
 if test $uucp_cv_decl_time_t_time_h = yes; then
@@ -268,7 +273,7 @@ fi
 dnl
 AC_MSG_CHECKING(time_t in sys/types.h)
 AC_CACHE_VAL(uucp_cv_decl_time_t_types_h,
-[AC_TRY_COMPILE([#include <sys/types.h>], [time_t i;],
+[UU_TRY_COMPILE([#include <sys/types.h>], [time_t i;],
 uucp_cv_decl_time_t_types_h=yes, uucp_cv_decl_time_t_types_h=no)])
 AC_MSG_RESULT($uucp_cv_decl_time_t_types_h)
 if test $uucp_cv_decl_time_t_types_h = yes; then
@@ -278,7 +283,7 @@ fi
 dnl
 AC_MSG_CHECKING(for void)
 AC_CACHE_VAL(uucp_cv_c_void,
-[AC_TRY_COMPILE([], [extern void foo (); (void) exit (0);],
+[UU_TRY_COMPILE([], [extern void foo (); (void) exit (0);],
 uucp_cv_c_void=yes, uucp_cv_c_void=no)])
 AC_MSG_RESULT($uucp_cv_c_void)
 if test $uucp_cv_c_void = yes; then
@@ -287,7 +292,7 @@ fi
 dnl
 AC_MSG_CHECKING(for unsigned char)
 AC_CACHE_VAL(uucp_cv_c_unsigned_char,
-[AC_TRY_COMPILE([], [unsigned char i = (unsigned char) -1;],
+[UU_TRY_COMPILE([], [unsigned char i = (unsigned char) -1;],
 uucp_cv_c_unsigned_char=yes, uucp_cv_c_unsigned_char=no)])
 AC_MSG_RESULT($uucp_cv_c_unsigned_char)
 if test $uucp_cv_c_unsigned_char = yes; then
@@ -297,7 +302,7 @@ fi
 dnl
 AC_MSG_CHECKING(for errno declaration)
 AC_CACHE_VAL(uucp_cv_decl_errno,
-[AC_TRY_COMPILE([#include <errno.h>], [int i = errno; errno = 1;],
+[UU_TRY_COMPILE([#include <errno.h>], [int i = errno; errno = 1;],
 uucp_cv_decl_errno=yes, uucp_cv_decl_errno=no)])
 AC_MSG_RESULT($uucp_cv_decl_errno)
 if test $uucp_cv_decl_errno = yes; then
@@ -307,7 +312,7 @@ fi
 dnl
 AC_MSG_CHECKING(for TXADDCD)
 AC_CACHE_VAL(uucp_cv_txaddcd,
-[AC_TRY_COMPILE([#include <sys/ioctl.h>], [int i = (int) TXADDCD;],
+[UU_TRY_COMPILE([#include <sys/ioctl.h>], [int i = (int) TXADDCD;],
 uucp_cv_txaddcd=yes, uucp_cv_txaddcd=no)])
 AC_MSG_RESULT($uucp_cv_txaddcd)
 if test $uucp_cv_txaddcd = yes; then
@@ -535,7 +540,7 @@ dnl
 if test $ac_cv_func_sigvec = yes; then
   AC_MSG_CHECKING(for sv_flags)
   AC_CACHE_VAL(uucp_cv_struct_sv_flags,
-  [AC_TRY_COMPILE([#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
+  [UU_TRY_COMPILE([#include <signal.h>], [struct sigvec s; s.sv_flags = 0;],
   uucp_cv_struct_sv_flags=yes, uucp_cv_struct_sv_flags=no)])
   AC_MSG_RESULT($uucp_cv_struct_sv_flags)
   if test $uucp_cv_struct_sv_flags = yes; then
@@ -718,7 +723,7 @@ dnl See whether we can make an extern declaration
 AC_DEFUN(UUCP_CHECK_DECLARATION,
 [AC_MSG_CHECKING(for $1 declared as $2)
 AC_CACHE_VAL(uucp_cv_decl_$1,
-[AC_TRY_COMPILE([#include <sys/types.h>
+[UU_TRY_COMPILE([#include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
 #ifdef HAVE_LIBC_H
@@ -745,7 +750,7 @@ UUCP_CHECK_DECLARATION(getgrent, struct group *)
 dnl
 AC_MSG_CHECKING(for BSD setpgrp)
 AC_CACHE_VAL(uucp_cv_decl_setpgrp,
-[AC_TRY_COMPILE([#ifdef HAVE_UNISTD_H
+[UU_TRY_COMPILE([#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif],
 [getpgrp (0); setpgrp (0, 0);],
@@ -757,7 +762,7 @@ fi
 dnl
 AC_MSG_CHECKING(for union wait)
 AC_CACHE_VAL(uucp_cv_struct_wait,
-[AC_TRY_COMPILE([#include <sys/wait.h>
+[UU_TRY_COMPILE([#include <sys/wait.h>
 #ifndef WIFEXITED
 #define WIFEXITED(u) ((u).w_termsig == 0)
 #endif],
@@ -770,7 +775,7 @@ fi
 dnl
 AC_MSG_CHECKING(for struct sockaddr_storage)
 AC_CACHE_VAL(uucp_cv_struct_sockaddrstorage,
-[AC_TRY_COMPILE([#include <sys/socket.h>],
+[UU_TRY_COMPILE([#include <sys/socket.h>],
 [struct sockaddr_storage s;],
 uucp_cv_struct_sockaddrstorage=yes, uucp_cv_struct_sockaddrstorage=no)])
 AC_MSG_RESULT($uucp_cv_struct_sockaddrstorage)
