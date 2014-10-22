@@ -1,4 +1,4 @@
-Taylor UUCP
+Taylor UUCP [![Build Status](https://travis-ci.org/quinot/taylor-uucp.svg?branch=master)](https://travis-ci.org/quinot/taylor-uucp)
 ===========
 
 This is the README file for the Taylor UUCP package, originally
